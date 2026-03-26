@@ -19,6 +19,7 @@ class School extends Model
         'population',
         'added_by',
         'date_added',
+        'school_name_arabic',
     ];
 
     // public function classrooms()

@@ -39,6 +39,7 @@ class SchoolController extends Controller
 
     public function createSchool()
     {
+
         $year = date('Y');
 
         $lastSchool = School::whereYear('created_at', $year)
@@ -123,19 +124,33 @@ class SchoolController extends Controller
             'school_product' => 'required',
             'phone' => 'required|string|max:20',
             'population' => 'required|string',
+            'school_name_arabic' => 'nullable|string|max:255',
         ]);
 
+        // Generate school registration code
         $registrationCode = $this->generateSchoolCode();
 
         $validated['registration_code'] = $registrationCode;
         $validated['added_by'] = Session('LoggedStudent');
         $validated['date_added'] = now();
 
-        School::create($validated);
+        // Create new school
+        $school = School::create($validated);
+
+        // Create corresponding house
+        DB::table('houses')->insert([
+            'House' => $validated['name'],
+            'House_AR' => $validated['school_name_arabic'] ?? '',
+            'Number' => $registrationCode,
+            'Location' => 'Kampala',
+            'RegistrationDate' => now(),
+            'Head' => 0,
+            'ContactPerson' => 0,
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'School created successfully.',
+            'message' => 'School created successfully and house added.',
             'registration_code' => $registrationCode
         ]);
     }

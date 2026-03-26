@@ -62,6 +62,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 Route::controller(UserController::class)->group(function () {
     Route::group(['middleware' => ['AdminAuth']], function () {
          Route::get('/', 'homePage')->name('home.page');
+         Route::get('/copy-houses-to-schools', 'copyHousesToSchools');
+
     });
                 
     Route::group(['prefix' => '/users'], function () {

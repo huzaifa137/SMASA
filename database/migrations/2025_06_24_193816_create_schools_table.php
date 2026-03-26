@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->string('population');
             $table->integer('added_by')->nullable();
             $table->string('date_added')->nullable();
-            ;
+            $table->string('school_name_arabic')->nullable();
             $table->timestamps();
         });
     }
