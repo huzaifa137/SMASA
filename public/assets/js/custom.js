@@ -340,7 +340,7 @@
 		colorMap: {
 			'7': '#a1a1a1'
 		},
-		barColor: '#0D4B1F'
+		barColor: '#2C29CA'
 	});
 	
 	// ______________ SWITCHER-toggle ______________//

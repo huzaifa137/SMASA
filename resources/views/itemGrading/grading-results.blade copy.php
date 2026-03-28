@@ -14,10 +14,10 @@
 @section('content')
 <style>
     :root {
-        --primary-green: #287c44;
-        --dark-green: #0d4b1e;
-        --deep-green: #0d4b1f;
-        --muted-green: #253f2d;
+        --primary-green: #5351e4;
+        --dark-green: #2C29CA;
+        --deep-green: #2C29CA;
+        --muted-green: #2C29CA;
         --light-green: #3a9b5a;
         --bg-light: #f8fafc;
         --text-dark: #1e293b;
@@ -1045,7 +1045,7 @@
             text: "Are you sure you want to save these grading results?",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#287c44',
+            confirmButtonColor: '#5351e4',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, save them!'
         }).then((result) => {
@@ -1067,14 +1067,14 @@
                             icon: 'success',
                             title: 'Saved!',
                             text: data.message,
-                            confirmButtonColor: '#287c44'
+                            confirmButtonColor: '#5351e4'
                         }).then(() => location.reload());
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',
                             text: data.message,
-                            confirmButtonColor: '#287c44'
+                            confirmButtonColor: '#5351e4'
                         });
                     }
                 })
@@ -1084,7 +1084,7 @@
                         icon: 'error',
                         title: 'Error!',
                         text: 'An error occurred while saving results.',
-                        confirmButtonColor: '#287c44'
+                        confirmButtonColor: '#5351e4'
                     });
                 });
             }

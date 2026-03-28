@@ -35,7 +35,7 @@
     <!-- Custom Portal Styles (green theme overrides & portal components) -->
     <style>
         :root {
-            --iteb-green: #0D4B1E;
+            --iteb-green: #2C29CA;
             --iteb-green-light: #1E7A3D;
             --iteb-green-dark: #0A3A18;
         }
@@ -158,7 +158,7 @@
 
         .grade-b {
             background-color: rgba(13, 75, 30, 0.12);
-            color: #0d4b1e;
+            color: #2C29CA;
         }
 
         .grade-c {
@@ -845,7 +845,7 @@
                         .grade-b { background: #d1ecf1; color: #0c5460; }
                         .grade-c { background: #fff3cd; color: #856404; }
                         .results-table { width: 100%; border-collapse: collapse; }
-                        .results-table th { background: #0D4B1E; color: white; padding: 12px; }
+                        .results-table th { background: #2C29CA; color: white; padding: 12px; }
                         .results-table td { padding: 10px; border-bottom: 1px solid #ddd; }
                     </style>
                 </head>

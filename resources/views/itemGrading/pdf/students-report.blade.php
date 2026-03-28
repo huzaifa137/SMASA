@@ -16,7 +16,7 @@
 
         /* Header Section */
         .header-container {
-            border-bottom: 2px solid #287c44;
+            border-bottom: 2px solid #5351e4;
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -24,7 +24,7 @@
         .header-title {
             font-size: 22px;
             font-weight: bold;
-            color: #287c44;
+            color: #5351e4;
             text-transform: uppercase;
             margin: 0;
         }
@@ -49,13 +49,13 @@
         }
 
         th {
-            background-color: #287c44;
+            background-color: #5351e4;
             color: #ffffff;
             font-weight: bold;
             text-transform: uppercase;
             font-size: 10px;
             padding: 10px 8px;
-            border: 1px solid #287c44;
+            border: 1px solid #5351e4;
         }
 
         td {

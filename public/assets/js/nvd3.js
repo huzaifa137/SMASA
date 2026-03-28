@@ -7,7 +7,7 @@ historicalBarChart = [
                 {
                     "label" : "A" ,
                     "value" : 24,
-					"color":"#0D4B1F"
+					"color":"#2C29CA"
                 } ,
                 {
                     "label" : "B" ,
@@ -32,7 +32,7 @@ historicalBarChart = [
                 {
                     "label" : "F" ,
                     "value" : 95,
-					"color":"#0D4B1F"
+					"color":"#2C29CA"
                 } ,
                 {
                     "label" : "G" ,
@@ -109,8 +109,8 @@ historicalBarChart = [
         }
 
         return [
-            {values: sin, key: "Sine Wave", color: "#0D4B1F"},
-            {values: cos, key: "Cosine Wave", color: "#0D4B1F"}
+            {values: sin, key: "Sine Wave", color: "#2C29CA"},
+            {values: cos, key: "Cosine Wave", color: "#2C29CA"}
         ];
     }
 
@@ -124,7 +124,7 @@ historicalBarChart = [
         return [{
             values: sin,
             key: "Sine Wave",
-            color: "#0D4B1F"
+            color: "#2C29CA"
         }];
     }
 
@@ -225,7 +225,7 @@ historicalBarChart = [
             {
                 values: sin,
                 key: "Sine Wave",
-                color: "#0D4B1F"
+                color: "#2C29CA"
             },
             {
                 values: cos,

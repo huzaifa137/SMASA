@@ -54,7 +54,7 @@ $(function() {
 			datasets: [{
 				label: '# of Votes',
 				data: [14, 12, 34, 25, 24, 20],
-				backgroundColor: '#0D4B1F'
+				backgroundColor: '#2C29CA'
 			}]
 		},
 		options: {
@@ -150,7 +150,7 @@ $(function() {
 			datasets: [{
 				label: '# of Votes',
 				data: [14, 12, 34, 25, 24, 20],
-				backgroundColor: ['#0D4B1F', '#f72d66', '#5ed94c', '#45aaf2', '#c344ff', '#f7592d']
+				backgroundColor: ['#2C29CA', '#f72d66', '#5ed94c', '#45aaf2', '#c344ff', '#f7592d']
 			}]
 		},
 		options: {
@@ -196,7 +196,7 @@ $(function() {
 				backgroundColor: [ '#f72d66', '#5ed94c', '#45aaf2', '#c344ff', '#f7592d']
 			}, {
 				data: [22, 30, 25, 30, 20, 40],
-				backgroundColor: '#0D4B1F'
+				backgroundColor: '#2C29CA'
 			}]
 		},
 		options: {
@@ -245,7 +245,7 @@ $(function() {
 				fill: true
 			}, {
 				data: [14, 12, 34, 25, 24, 20],
-				backgroundColor:  '#0D4B1F',
+				backgroundColor:  '#2C29CA',
 				borderWidth: 1,
 				fill: true
 			}]
@@ -296,7 +296,7 @@ $(function() {
 				fill: true
 			}, {
 				data: [14, 12, 34, 25, 24, 20],
-				backgroundColor:  '#0D4B1F',
+				backgroundColor:  '#2C29CA',
 				borderWidth: 1,
 				fill: true
 			}]
@@ -344,7 +344,7 @@ $(function() {
 			labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 			datasets: [{
 				data: [14, 12, 34, 25, 44, 36, 35, 25, 30, 32, 20, 25 ],
-				borderColor: '#0D4B1F',
+				borderColor: '#2C29CA',
 				borderWidth: 1,
 				fill: false
 			}, {
@@ -401,7 +401,7 @@ $(function() {
 			labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 			datasets: [{
 				data: [14, 12, 34, 25, 44, 36, 35, 25, 30, 32, 20, 25 ],
-				borderColor: '#0D4B1F',
+				borderColor: '#2C29CA',
 				borderWidth: 1,
 				backgroundColor: gradient1
 			}, {
@@ -449,7 +449,7 @@ $(function() {
 		labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
 		datasets: [{
 			data: [35,24,20,15,8],
-			backgroundColor: ['#0D4B1F', '#f72d66', '#5ed94c', '#45aaf2', '#c344ff', '#f7592d']
+			backgroundColor: ['#2C29CA', '#f72d66', '#5ed94c', '#45aaf2', '#c344ff', '#f7592d']
 		}]
 	};
 	var optionpie = {

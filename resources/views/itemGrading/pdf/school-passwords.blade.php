@@ -15,11 +15,11 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #287c44;
+            border-bottom: 2px solid #5351e4;
             padding-bottom: 10px;
         }
         .header h1 {
-            color: #287c44;
+            color: #5351e4;
             font-size: 24px;
             margin: 0 0 5px 0;
         }
@@ -46,7 +46,7 @@
             margin-bottom: 20px;
         }
         th {
-            background-color: #287c44;
+            background-color: #5351e4;
             color: white;
             font-weight: bold;
             padding: 10px 5px;

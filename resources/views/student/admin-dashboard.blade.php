@@ -28,7 +28,7 @@
 
     $subscriptionPlans = $subscriptionPlans ?? [
         ['plan'=>'Enterprise','schools'=>48, 'revenue'=>28800,'color'=>'#6c3fc5'],
-        ['plan'=>'Professional','schools'=>112,'revenue'=>16800,'color'=>'#287c44'],
+        ['plan'=>'Professional','schools'=>112,'revenue'=>16800,'color'=>'#5351e4'],
         ['plan'=>'Starter',    'schools'=>88, 'revenue'=>8800, 'color'=>'#e0a020'],
     ];
 
@@ -50,11 +50,11 @@
     ];
 
     $recentActivity = $recentActivity ?? [
-        ['icon'=>'fa-school',      'color'=>'#287c44','text'=>'New school registered: Al-Barakah Institute',           'time'=>'5 min ago'],
+        ['icon'=>'fa-school',      'color'=>'#5351e4','text'=>'New school registered: Al-Barakah Institute',           'time'=>'5 min ago'],
         ['icon'=>'fa-file-invoice','color'=>'#3b82f6','text'=>'Subscription renewed: Bright Futures College (Pro)',    'time'=>'22 min ago'],
         ['icon'=>'fa-triangle-exclamation','color'=>'#e0a020','text'=>'Payment overdue: Crescent Moon Institute',      'time'=>'1 hr ago'],
         ['icon'=>'fa-user-plus',   'color'=>'#6c3fc5','text'=>'New admin user created for IHS-017',                   'time'=>'2 hrs ago'],
-        ['icon'=>'fa-circle-check','color'=>'#287c44','text'=>'Exam results approved: MAF-031 — Term 2',              'time'=>'3 hrs ago'],
+        ['icon'=>'fa-circle-check','color'=>'#5351e4','text'=>'Exam results approved: MAF-031 — Term 2',              'time'=>'3 hrs ago'],
         ['icon'=>'fa-bell',        'color'=>'#ef4444','text'=>'System alert: Backup completed with 2 warnings',       'time'=>'5 hrs ago'],
     ];
 
@@ -82,7 +82,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-        --brand:        #287c44;
+        --brand:        #5351e4;
         --brand-light:  #34a85a;
         --brand-dark:   #1a5530;
         --brand-muted:  rgba(40,124,68,.12);
@@ -761,7 +761,7 @@
                             <svg class="donut-svg" viewBox="0 0 36 36" width="120" height="120">
                                 @php
                                     $catTotal  = array_sum(array_column($categoryBreakdown,'schools'));
-                                    $catColors = ['#287c44','#3b82f6','#e0a020','#6c3fc5'];
+                                    $catColors = ['#5351e4','#3b82f6','#e0a020','#6c3fc5'];
                                     $catOff    = 0;
                                     $catCircum = 2 * M_PI * 13;
                                 @endphp

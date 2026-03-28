@@ -75,7 +75,7 @@
 									<div class="card-body">
 										<div class="row text-center">
 											<div class="col-md-12 mb-4 mt-sm-0">
-												<div class="mx-auto chart-circle chart-circle-primary chart-circle-lg  mt-sm-0 mb-0 donutShadow" data-value="0.85" data-thickness="15" data-color="#0D4B1F">
+												<div class="mx-auto chart-circle chart-circle-primary chart-circle-lg  mt-sm-0 mb-0 donutShadow" data-value="0.85" data-thickness="15" data-color="#2C29CA">
 													<div class="mx-auto chart-circle-value text-center mb-2"><h1 class="mb-0 mt-2">85%</h1><small>Goal</small></div>
 												</div>
 											</div>

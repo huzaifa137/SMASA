@@ -19,9 +19,9 @@ use App\Http\Controllers\Helper; // Keep if Helper::recordMdname is still used o
 
     <div class="card shadow-sm border-0">
         <div class="card-header text-white d-flex justify-content-between align-items-center"
-            style="background-color: #253F2D;">
+            style="background-color: #2C29CA;">
             <h5 class="mb-0">All Schools</h5>
-            <a href="{{ route('school.create-school') }}" class="btn btn-sm" style="background-color: #287C44;">
+            <a href="{{ route('school.create-school') }}" class="btn btn-sm" style="background-color: #5351e4;">
                 <span class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
                     style="width: 20px; height: 20px;">
                     <i class="fas fa-plus" style="font-size: 12px;"></i>

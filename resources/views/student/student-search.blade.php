@@ -40,7 +40,7 @@ use App\Http\Controllers\Helper;
                             </div>
 
                             <div class="mt-3">
-                                <button type="submit" class="btn d-none text-white" id="searchBtn" style="background-color:#287c44;">
+                                <button type="submit" class="btn d-none text-white" id="searchBtn" style="background-color:#5351e4;">
                                     <i class="fas fa-search"></i>{{ trans('search') }} 
                                 </button>
                             </div>
@@ -50,7 +50,7 @@ use App\Http\Controllers\Helper;
 
                 <!-- Results -->
                 <div class="card mt-4 d-none" id="resultsCard">
-                    <div class="card-header text-white" style="background-color:#0d4b1f;">
+                    <div class="card-header text-white" style="background-color:#2C29CA;">
                         <h5 class="mb-0">{{ trans('search_results') }}</h5>
                     </div>
                     <div class="card-body bg-white" id="searchResults">

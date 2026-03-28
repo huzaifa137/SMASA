@@ -21,240 +21,357 @@ $controller = new Controller();
                 <div class="card shadow-lg">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">{{ $school->name }} {{ trans('common.profile') }}</h4>
-                        <a href="{{ route('school.allSchools') }}" class="btn text-white" style="background-color: #287C44;">
+                        <a href="{{ route('school.allSchools') }}" class="btn text-white" style="background-color: #5351e4;">
                             <i class="fas fa-school me-2"></i> {{ trans('common.all_schools') }}
                         </a>
                     </div>
 
-                    <div class="card-body row">
-                        <div class="col-12 mb-4">
-                            <div class="card p-4 shadow-sm border rounded">
-                                <h4 class="mb-4 text-center">{{ trans('common.school_logo') }}</h4>
+                  <div class="card-body row">
+                    <div class="col-12 mb-4">
+                        <div class="card p-4 shadow-sm border rounded">
+                            <h4 class="mb-4 text-center">School Logo</h4>
 
-                                <div class="p-3 border rounded bg-light">
-                                    <div class="text-center mb-4">
-                                        <img id="logoPreview"
-                                            src="{{ $profile?->logo ? asset('storage/' . $profile->logo) : $school->logo ?? asset('assets/images/brand/uplogolight.png') }}"
-                                            class="img-fluid rounded border p-2"
-                                            style="max-height: 180px; object-fit: contain;" alt="School Logo">
-                                    </div>
-
-                                    <form method="POST" action="{{ route('schools.store.profile') }}"
-                                        enctype="multipart/form-data" id="updateSchoolForm">
-                                        @csrf
-                                        @method('POST')
-
-                                        <input type="hidden" name="school_id" value="{{ $school->id }}">
-
-                                        <div class="form-group mb-4">
-                                            <label class="form-label">{{ trans('common.upload_new_logo') }}</label>
-                                            <input type="file" name="logo" id="logoUpload" class="form-control"
-                                                accept="image/*" onchange="previewLogo(event)">
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="schoolName" class="form-label">{{ trans('common.school_name') }}</label>
-                                                    <input type="text" name="name" id="schoolName"
-                                                        class="form-control" value="{{ $profile->name ?? $school->name }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolEmail" class="form-label">{{ trans('common.email') }}</label>
-                                                    <input type="email" name="email" id="schoolEmail"
-                                                        class="form-control"
-                                                        value="{{ $profile->email ?? $school->email }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolType" class="form-label">{{ trans('common.postal_address') }}</label>
-                                                    <input type="text" name="school_type" id="schoolType"
-                                                        class="form-control" placeholder="P.O BOX 000-00100 Kampala"
-                                                        value="{{ $profile->school_type ?? '' }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label class="form-label">{{ trans('common.boarding_status') }}</label>
-                                                    <?php
-                                                    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->boarding_status ?? $school->boarding_status, 'boarding_status', 1);
-                                                    ?>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolPopulation" class="form-label">{{ trans('common.mission') }}</label>
-                                                    <textarea name="population" id="schoolPopulation" class="form-control" rows="4" maxlength="300"
-                                                        placeholder="Enter your mission here...">{{ $profile->population ?? '' }}</textarea>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="registrationCode" class="form-label">{{ trans('common.school_name') }} (Short
-                                                        Version)</label>
-                                                    <input type="text" name="registration_code" id="registrationCode"
-                                                        class="form-control"
-                                                        value="{{ $profile->registration_code ?? '' }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolPhone" class="form-label">{{ trans('common.phone_number') }}</label>
-                                                    <input type="text" name="phone" id="schoolPhone"
-                                                        class="form-control"
-                                                        value="{{ $profile->phone ?? $school->phone }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolGender" class="form-label">{{ trans('common.gender') }}</label>
-                                                    <?php
-                                                    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->gender ?? $school->gender, 'gender');
-                                                    ?>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolMotto" class="form-label">{{ trans('common.school_motto') }}</label>
-                                                    <input type="text" name="motto" id="schoolMotto"
-                                                        class="form-control" value="{{ $profile->motto ?? '' }}">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="schoolVision" class="form-label">{{ trans('common.vision') }}</label>
-                                                    <textarea name="vision" id="schoolVision" class="form-control" rows="4" maxlength="300"
-                                                        placeholder="Enter your vision here...">{{ $profile->vision ?? '' }}</textarea>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-12">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="admissionPrefix" class="form-label">{{ trans('common.admission_
-                                                                number_Prefix') }}</label>
-                                                            <input type="text" name="admission_prefix"
-                                                                id="admissionPrefix" class="form-control"
-                                                                placeholder="e.g ADMNO/"
-                                                                value="{{ $profile->admission_prefix ?? '' }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="admissionStart" class="form-label">{{ trans('common.admission_number_begins_at') }}</label>
-                                                               
-                                                            <input type="text" name="admission_start"
-                                                                id="admissionStart" class="form-control"
-                                                                placeholder="e.g 0001/"
-                                                                value="{{ $profile->admission_start ?? '' }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group mb-0">
-                                                            <label for="admissionSuffix" class="form-label">{{ trans('common.admission_
-                                                                number_suffix') }} </label>
-                                                               
-                                                            <input type="text" name="admission_suffix"
-                                                                id="admissionSuffix" class="form-control"
-                                                                placeholder="e.g /2025"
-                                                                value="{{ $profile->admission_suffix ?? '' }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-4">
-                                            <button class="btn btn-primary w-100" type="submit">
-                                                <i class="fas fa-save me-2"></i>{{ trans('common.update_school_profile_details') }} 
-                                            </button>
-                                        </div>
-                                    </form>
+                            <div class="p-3 border rounded bg-light">
+                                <div class="text-center mb-4">
+                                    <img id="logoPreview"
+                                        src="{{ $profile?->logo ? asset('storage/' . $profile->logo) : $school->logo ?? asset('assets/images/brand/uplogolight.png') }}"
+                                        class="img-fluid rounded border p-2"
+                                        style="max-height: 180px; object-fit: contain;" alt="School Logo">
                                 </div>
 
-                                <style>
-                                    .form-control[type="file"] {
-                                        padding: 0.2rem 0.2rem;
-                                        width: 100%;
-                                        font-size: 1rem;
-                                        font-weight: 400;
-                                        line-height: 1.5;
-                                        color: #212529;
-                                        background-color: #fff;
-                                        border: 1px solid #ced4da;
-                                        border-radius: 0.25rem;
-                                        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-                                        display: block;
-                                        height: calc(1.5em + 0.75rem + 2px);
-                                        box-sizing: border-box;
-                                    }
+                                <form method="POST" action="{{ route('schools.store.profile') }}"
+                                    enctype="multipart/form-data" id="updateSchoolForm">
+                                    @csrf
+                                    @method('POST')
 
-                                    @media (max-width: 575.98px) {
-                                        .form-control[type="file"] {
-                                            min-width: unset;
-                                        }
-                                    }
-                                </style>
+                                    <input type="hidden" name="school_id" value="{{ $school->id }}">
+
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">Upload New Logo</label>
+                                        <input type="file" name="logo" id="logoUpload" class="form-control"
+                                            accept="image/*" onchange="previewLogo(event)">
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="schoolName" class="form-label">School Name</label>
+                                                <input type="text" name="name" id="schoolName"
+                                                    class="form-control" value="{{ $profile->name ?? $school->name }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolEmail" class="form-label">Email</label>
+                                                <input type="email" name="email" id="schoolEmail"
+                                                    class="form-control"
+                                                    value="{{ $profile->email ?? $school->email }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolType" class="form-label">Postal Address</label>
+                                                <input type="text" name="school_type" id="schoolType"
+                                                    class="form-control" placeholder="P.O BOX 000-00100 Kampala"
+                                                    value="{{ $profile->school_type ?? '' }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">Boarding Status</label>
+                                                <?php
+                                                echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->boarding_status ?? $school->boarding_status, 'boarding_status', 1);
+                                                ?>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolPopulation" class="form-label">Mission</label>
+                                                <textarea name="population" id="schoolPopulation" class="form-control" rows="4" maxlength="300"
+                                                    placeholder="Enter your mission here...">{{ $profile->population ?? '' }}</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="registrationCode" class="form-label">School Name (Short Version)</label>
+                                                <input type="text" name="registration_code" id="registrationCode"
+                                                    class="form-control"
+                                                    value="{{ $profile->registration_code ?? '' }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolPhone" class="form-label">Phone Number</label>
+                                                <input type="text" name="phone" id="schoolPhone"
+                                                    class="form-control"
+                                                    value="{{ $profile->phone ?? $school->phone }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolGender" class="form-label">Gender</label>
+                                                <?php
+                                                echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->gender ?? $school->gender, 'gender');
+                                                ?>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolMotto" class="form-label">School Motto</label>
+                                                <input type="text" name="motto" id="schoolMotto"
+                                                    class="form-control" value="{{ $profile->motto ?? '' }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="schoolVision" class="form-label">Vision</label>
+                                                <textarea name="vision" id="schoolVision" class="form-control" rows="4" maxlength="300"
+                                                    placeholder="Enter your vision here...">{{ $profile->vision ?? '' }}</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="admissionPrefix" class="form-label">Admission Number Prefix</label>
+                                                        <input type="text" name="admission_prefix"
+                                                            id="admissionPrefix" class="form-control"
+                                                            placeholder="e.g ADMNO/"
+                                                            value="{{ $profile->admission_prefix ?? '' }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="admissionStart" class="form-label">Admission Number Begins At</label>
+                                                        <input type="text" name="admission_start"
+                                                            id="admissionStart" class="form-control"
+                                                            placeholder="e.g 0001/"
+                                                            value="{{ $profile->admission_start ?? '' }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group mb-0">
+                                                        <label for="admissionSuffix" class="form-label">Admission Number Suffix</label>
+                                                        <input type="text" name="admission_suffix"
+                                                            id="admissionSuffix" class="form-control"
+                                                            placeholder="e.g /2025"
+                                                            value="{{ $profile->admission_suffix ?? '' }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button class="btn btn-primary w-100" type="submit">
+                                            <i class="fas fa-save me-2"></i>&nbsp; Update School Profile Details
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
+
+                            <style>
+                                .form-control[type="file"] {
+                                    padding: 0.2rem 0.2rem;
+                                    width: 100%;
+                                    font-size: 1rem;
+                                    font-weight: 400;
+                                    line-height: 1.5;
+                                    color: #212529;
+                                    background-color: #fff;
+                                    border: 1px solid #ced4da;
+                                    border-radius: 0.25rem;
+                                    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                                    display: block;
+                                    height: calc(1.5em + 0.75rem + 2px);
+                                    box-sizing: border-box;
+                                }
+
+                                @media (max-width: 575.98px) {
+                                    .form-control[type="file"] {
+                                        min-width: unset;
+                                    }
+                                }
+                            </style>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card-body row">
-                        <div class="col-md-12">
-                            <h4 class="text-center text-primary">{{ $school->name }} {{ trans('common.information') }}</h4>
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-gradient-primary text-white py-4">
+        <div class="d-flex align-items-center justify-content-between w-100 flex-wrap">
 
-                            <!-- School Info Table -->
-                            <table class="table table-bordered">
-                                <tbody>
-                                    <tr>
-                                        <th>{{ trans('common.name') }}</th>
-                                        <td>{{ $school->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.registration_code') }}</th>
-                                        <td>{{ $school->registration_code }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.email') }}</th>
-                                        <td>{{ $school->email }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.phone') }}</th>
-                                        <td>{{ $school->phone }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.school_type') }}</th>
-                                        <td>{{ Helper::recordMdname($school->school_type) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.gender') }}</th>
-                                        <td>{{ Helper::recordMdname($school->gender) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.regional_level') }}</th>
-                                        <td>{{ Helper::recordMdname($school->regional_level) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.ownership') }}</th>
-                                        <td>{{ Helper::recordMdname($school->school_ownership) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.boarding_status') }}</th>
-                                        <td>{{ Helper::recordMdname($school->boarding_status) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.products') }}</th>
-                                        <td>{{ Helper::recordMdname($school->school_product) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.population') }}</th>
-                                        <td>{{ Helper::recordMdname($school->population) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>{{ trans('common.date_added') }}</th>
-                                        <td>{{ \Carbon\Carbon::parse($school->date_added)->format('F j, Y') }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+            <!-- LEFT SIDE (icon + name grouped) -->
+            <div class="d-none d-lg-flex">
+                <i class="fas fa-school fa-2x"></i>
+                <h3 class="mb-0 ms-3"> &nbsp;{{ $school->name }}</h3>
+            </div>
+
+            <!-- RIGHT SIDE (badge) -->
+            <span class="badge bg-light text-primary px-3 py-2 mx-auto d-block d-lg-inline-block">
+                ID: {{ $school->registration_code }}
+            </span>
+
+        </div>
+    </div>
+</div>
+    
+    <div class="card-body p-4">
+        <!-- Key Metrics Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="metric-card bg-light rounded-3 p-3 text-center">
+                    <i class="fas fa-envelope text-primary fa-2x mb-2"></i>
+                    <h6 class="text-muted mb-1">Email</h6>
+                    <p class="mb-0 fw-bold">{{ $school->email }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card bg-light rounded-3 p-3 text-center">
+                    <i class="fas fa-phone-alt text-primary fa-2x mb-2"></i>
+                    <h6 class="text-muted mb-1">Phone</h6>
+                    <p class="mb-0 fw-bold">{{ $school->phone ?: '00-000-000-00' }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card bg-light rounded-3 p-3 text-center">
+                    <i class="fas fa-calendar-alt text-primary fa-2x mb-2"></i>
+                    <h6 class="text-muted mb-1">Date Added</h6>
+                    <p class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($school->date_added)->format('M d, Y') }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card bg-light rounded-3 p-3 text-center">
+                    <i class="fas fa-users text-primary fa-2x mb-2"></i>
+                    <h6 class="text-muted mb-1">Population</h6>
+                    <p class="mb-0 fw-bold">{{ Helper::recordMdname($school->population) }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Two Column Information Layout -->
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <div class="info-section">
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-info-circle me-2"></i>&nbsp;Basic Information
+                    </h5>
+                    <div class="info-list">
+                        <div class="info-item d-flex justify-content-between py-2">
+                            <span class="text-muted fw-semibold">School Type</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->school_type) }}</span>
+                        </div>
+                        <div class="info-item d-flex justify-content-between py-2 border-top">
+                            <span class="text-muted fw-semibold">Gender</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->gender) }}</span>
+                        </div>
+                        <div class="info-item d-flex justify-content-between py-2 border-top">
+                            <span class="text-muted fw-semibold">Regional Level</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->regional_level) }}</span>
+                        </div>
+                        <div class="info-item d-flex justify-content-between py-2 border-top">
+                            <span class="text-muted fw-semibold">Ownership</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->school_ownership) }}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <div class="info-section">
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-building me-2"></i>&nbsp;Operational Details
+                    </h5>
+                    <div class="info-list">
+                        <div class="info-item d-flex justify-content-between py-2">
+                            <span class="text-muted fw-semibold">Boarding Status</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->boarding_status) }}</span>
+                        </div>
+                        <div class="info-item d-flex justify-content-between py-2 border-top">
+                            <span class="text-muted fw-semibold">Products/Services</span>
+                            <span class="fw-bold">{{ Helper::recordMdname($school->school_product) }}</span>
+                        </div>
+                        <div class="info-item d-flex justify-content-between py-2 border-top">
+                            <span class="text-muted fw-semibold">Registration Code</span>
+                            <span class="fw-bold font-monospace">{{ $school->registration_code }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information Card (if needed) -->
+        @if(isset($school->description) || isset($school->address))
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="info-section">
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-file-alt me-2"></i>Additional Information
+                    </h5>
+                    <div class="additional-info">
+                        @if(isset($school->address))
+                        <div class="mb-2">
+                            <span class="text-muted fw-semibold">Address:</span>
+                            <span class="ms-2">{{ $school->address }}</span>
+                        </div>
+                        @endif
+                        @if(isset($school->description))
+                        <div>
+                            <span class="text-muted fw-semibold">Description:</span>
+                            <p class="mt-1 mb-0">{{ $school->description }}</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #2C29CA 0%, #2C29CA 100%);
+}
+
+.metric-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.info-section {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    height: 100%;
+}
+
+.info-item {
+    transition: background-color 0.2s;
+}
+
+.info-item:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+.font-monospace {
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+@media print {
+    .card-footer, .btn {
+        display: none;
+    }
+    .metric-card, .info-section {
+        break-inside: avoid;
+    }
+}
+</style>
+
+
                 </div>
             </div>
         </div>

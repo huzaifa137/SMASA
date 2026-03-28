@@ -94,7 +94,7 @@ body.card-radius .card {
 }
 
 .default-horizontal .hor-icon {
-    color: #287C44 !important;
+    color: #5351e4 !important;
     fill: #d2d6f1 !important;
 }
 
@@ -104,7 +104,7 @@ body.card-radius .card {
 }
 
 .default-horizontal .horizontalMenu>.horizontalMenu-list>li>a.active {
-    color: #0D4B1F;
+    color: #2C29CA;
     text-decoration: none;
     background: #f4f5fc;
 }
@@ -114,13 +114,13 @@ body.card-radius .card {
 }
 
 .default-horizontal .horizontalMenu>.horizontalMenu-list>li>a:hover .hor-icon {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
     fill: #d2d6f1;
 }
 
 .default-horizontal .horizontalMenu>.horizontalMenu-list>li>a.active .hor-icon,
 .default-horizontal .horizontalMenu>.horizontalMenu-list>li>a:hover {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 @media only screen and (max-width: 991px) {
@@ -336,8 +336,8 @@ body.card-radius .card {
 }
 
 .color-horizontal .horizontal-main {
-    background: #0D4B1F;
-    background: #0D4B1F;
+    background: #2C29CA;
+    background: #2C29CA;
 }
 
 .color-horizontal .hor-icon {
@@ -384,22 +384,22 @@ body.card-radius .card {
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list {
-        background: #0D4B1F;
+        background: #2C29CA;
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list>li {
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
         border-color: rgba(255, 255, 255, 0.1);
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list>li>a {
         color: rgba(255, 255, 255, 0.8) !important;
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu {
         color: rgba(255, 255, 255, 0.8);
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu>li>a {
@@ -408,7 +408,7 @@ body.card-radius .card {
 
     .color-horizontal.dark-mode .mega-menubg {
         color: rgba(255, 255, 255, 0.8);
-        background-color: #0D4B1F !important;
+        background-color: #2C29CA !important;
     }
 
     .color-horizontal.dark-mode .horizontalMenu>.horizontalMenu-list>li>.horizontal-megamenu .link-list li a {
@@ -420,26 +420,26 @@ body.card-radius .card {
     }
 
     .color-horizontal.light-mode .horizontal-main {
-        background: #0D4B1F;
+        background: #2C29CA;
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list {
-        background: #0D4B1F;
+        background: #2C29CA;
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list>li {
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
         border-color: rgba(255, 255, 255, 0.1);
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list>li>a {
         color: rgba(255, 255, 255, 0.8) !important;
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu {
         color: rgba(255, 255, 255, 0.8);
-        background-color: #0D4B1F;
+        background-color: #2C29CA;
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu>li>a {
@@ -448,7 +448,7 @@ body.card-radius .card {
 
     .color-horizontal.light-mode .mega-menubg {
         color: rgba(255, 255, 255, 0.8);
-        background-color: #0D4B1F !important;
+        background-color: #2C29CA !important;
     }
 
     .color-horizontal.light-mode .horizontalMenu>.horizontalMenu-list>li>.horizontal-megamenu .link-list li a {
@@ -542,11 +542,11 @@ body.card-radius .card {
 }
 
 .color-sidebar .first-sidemenu {
-    background: #0D4B1F;
+    background: #2C29CA;
 }
 
 .color-sidebar .second-sidemenu {
-    background: #0D4B1F;
+    background: #2C29CA;
     border-left: 1px solid rgba(255, 255, 255, 0.07);
 }
 
@@ -644,7 +644,7 @@ body.card-radius .card {
 
 .dark-sidebar .first-sidemenu li.active svg,
 .dark-sidebar .first-sidemenu li:hover svg {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .dark-sidebar .side-menu .slide.submenu a,
@@ -682,7 +682,7 @@ body.card-radius .card {
 }
 
 .default-sidebar .first-sidemenu .side-menu__icon {
-    color: #287C44;
+    color: #5351e4;
     fill: #d2d6f1;
 }
 
@@ -702,7 +702,7 @@ body.card-radius .card {
 
 .default-sidebar .first-sidemenu li.active svg,
 .default-sidebar .first-sidemenu li:hover svg {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .default-sidebar .side-menu .slide.submenu a,
@@ -716,7 +716,7 @@ body.card-radius .card {
 
 /*-- Color-sidebar closed-menu ---*/
 .color-sidebar .app-sidebar {
-    background: #0D4B1F !important;
+    background: #2C29CA !important;
     border-left: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow: 0px 10px 10px 20px rgba(38, 43, 72, 0.11), 10px 10px 15px -5px rgba(38, 43, 72, 0.13);
 }
@@ -746,7 +746,7 @@ body.card-radius .card {
 
 .color-sidebar .app-sidebar-help {
     border-top: 1px solid rgba(255, 255, 255, 0.07);
-    background: #0D4B1F;
+    background: #2C29CA;
 }
 
 .color-sidebar .app-sidebar-help a {
@@ -826,7 +826,7 @@ body.card-radius .card {
 
 .default-sidebar .slide a.active,
 .default-sidebar .slide a:hover {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .default-sidebar .app-sidebar-help {
@@ -839,30 +839,30 @@ body.card-radius .card {
 }
 
 .default-sidebar .app-sidebar-help .header-icon {
-    color: #287C44;
+    color: #5351e4;
     fill: #d2d6f1;
 }
 
 .default-sidebar .side-menu__icon {
-    color: #287C44;
+    color: #5351e4;
     fill: #d2d6f1;
 }
 
 .default-sidebar .slide-menu a.active,
 .default-sidebar .slide-menu a:hover {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
     background: transparent;
 }
 
 .default-sidebar .side-menu__label:hover {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
     background: transparent;
 }
 
 .default-sidebar .side-menu__item.active .side-menu__icon,
 .default-sidebar .side-menu__item:hover .side-menu__icon,
 .default-sidebar .side-menu__item:focus .side-menu__icon {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .default-sidebar.dark-mode .app-sidebar {
@@ -993,38 +993,38 @@ body.card-radius .card {
 .light-mode.dark-sidebar .side-menu__item:hover,
 .light-mode.dark-sidebar .side-menu__item:focus {
     text-decoration: none;
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .light-mode.dark-sidebar .slide a.active,
 .light-mode.dark-sidebar .slide a:hover,
 .light-mode.dark-sidebar .slide a:focus {
     text-decoration: none;
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .dark-mode.dark-sidebar .side-menu__item.active,
 .dark-mode.dark-sidebar .side-menu__item:hover,
 .dark-mode.dark-sidebar .side-menu__item:focus {
     text-decoration: none;
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .dark-mode.dark-sidebar .slide a.active,
 .dark-mode.dark-sidebar .slide a:hover,
 .dark-mode.dark-sidebar .slide a:focus {
     text-decoration: none;
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .dark-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu>li>a:hover,
 .dark-mode .horizontalMenu>.horizontalMenu-list>li>ul.sub-menu>li>ul.sub-menu>li>a:hover {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .dark-mode .second-sidemenu .side-menu .slide.submenu a.active,
 .dark-mode .second-sidemenu .side-menu .slide.submenu a:hover {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 /*# sourceMappingURL=skins.css.map */

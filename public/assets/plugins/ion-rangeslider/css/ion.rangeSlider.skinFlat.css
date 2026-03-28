@@ -109,16 +109,16 @@
 }
 .irs-from, .irs-to, .irs-single {
 	font-family: 'Roboto', sans-serif;
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 	border-radius: 0;
 }
 .irs-bar {
 	background-image: none;
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .irs-bar-edge {
 	background-image: none;
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 	border-top-left-radius: 0;
 	border-bottom-left-radius: 0;
 }
@@ -139,7 +139,7 @@
 	border-bottom-right-radius: 0;
 }
 .irs-from::after, .irs-to::after, .irs-single::after {
-	border-top-color: #0D4B1F;
+	border-top-color: #2C29CA;
 }
 .irs-slider {
 	background-image: none;
@@ -149,23 +149,23 @@
 	width: 2px;
 	height: 18px;
 	position: absolute;
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 	left: 50%;
 	margin-left: -1px;
 }
 .irs-slider:hover:before, .irs-slider:focus:before {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 /* #################### COLOR VARIANT SKINS #################### */
 
 .irs-primary .irs-bar, .irs-primary .irs-bar-edge, .irs-primary .irs-slider::before {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .irs-primary .irs-from, .irs-primary .irs-to, .irs-primary .irs-single {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .irs-primary .irs-from::after, .irs-primary .irs-to::after, .irs-primary .irs-single::after {
-	border-top-color: #0D4B1F;
+	border-top-color: #2C29CA;
 }
 .irs-success .irs-bar, .irs-success .irs-bar-edge, .irs-success .irs-slider::before {
 	background-color: #28c76f;
@@ -198,23 +198,23 @@
 .irs-modern .irs-slider {
 	top: 19px;
 	background-color: #fff;
-	border: 1px solid #0D4B1F;
+	border: 1px solid #2C29CA;
 	border-radius: 0;
 }
 .irs-modern .irs-slider::before {
 	width: 4px;
 	height: 9px;
 	background-color: #fff;
-	border-left: 1px solid #0D4B1F;
-	border-right: 1px solid #0D4B1F;
+	border-left: 1px solid #2C29CA;
+	border-right: 1px solid #2C29CA;
 	margin-left: -2px;
 	top: 3px;
 }
 .irs-modern.irs-primary .irs-slider {
-	border-color: #0D4B1F;
+	border-color: #2C29CA;
 }
 .irs-modern.irs-primary .irs-slider::before {
-	border-color: #0D4B1F;
+	border-color: #2C29CA;
 }
 .irs-modern.irs-success .irs-slider {
 	border-color: #28c76f;
@@ -231,7 +231,7 @@
 /* #################### OUTLINE SKIN #################### */
 
 .irs-outline .irs-line {
-	border: 1px solid #0D4B1F;
+	border: 1px solid #2C29CA;
 	height: 10px;
 	border-radius: 5px;
 }
@@ -250,7 +250,7 @@
 	top: 21px;
 	width: 18px;
 	background-color: #fff;
-	border: 1px solid #0D4B1F;
+	border: 1px solid #2C29CA;
 	border-radius: 100%;
 }
 .irs-outline .irs-slider::before {
@@ -261,13 +261,13 @@
 	border-radius: 100%;
 }
 .irs-outline .irs-slider:hover::before, .irs-outline .irs-slider:focus::before {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .irs-outline.irs-primary .irs-line, .irs-outline.irs-primary .irs-slider {
-	border-color: #0D4B1F;
+	border-color: #2C29CA;
 }
 .irs-outline.irs-primary .irs-line:hover::before, .irs-outline.irs-primary .irs-line:focus::before, .irs-outline.irs-primary .irs-slider:hover::before, .irs-outline.irs-primary .irs-slider:focus::before {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .irs-outline.irs-success .irs-line, .irs-outline.irs-success .irs-slider {
 	border-color: #28c76f;

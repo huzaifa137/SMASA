@@ -25,10 +25,10 @@ $controller = new Controller();
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title">Teachers</h3>
                         <a href="{{ route('school.add-teachers') }}" class="btn btn-sm"
-                            style="background-color: #287C44;color:#FFF;">
+                            style="background-color: #5351e4;color:#FFF;">
                             <span
                                 class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
-                                style="width: 20px; height: 20px; color:#287C44;">
+                                style="width: 20px; height: 20px; color:#5351e4;">
                                 <i class="fas fa-plus" style="font-size: 12px;"></i>
                             </span>
                             Add Teacher

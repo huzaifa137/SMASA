@@ -361,7 +361,7 @@
     width: 250px;
     max-height: 100%;
     z-index: 1000;
-    background: #0D4B1F !important;
+    background: #2C29CA !important;
     border-right: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow: 0px 10px 10px 20px rgba(176, 184, 214, 0.09), 10px 10px 15px -5px #b0b8d6;
     -webkit-transition: right 0.2s ease, width 0.2s ease;
@@ -1389,7 +1389,7 @@
     position: fixed;
     bottom: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.07);
-    background: #0D4B1F;
+    background: #2C29CA;
     z-index: 11;
     width: 250px;
     padding: 8px 13px;
@@ -1472,7 +1472,7 @@
 }
 
 .color-sidebar .app-sidebar a.text-primary {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
 }
 
 .color-sidebar .app-sidebar .dropdown-menu {
@@ -1491,7 +1491,7 @@
 }
 
 .color-sidebar .app-sidebar .dropdown-menu a:hover {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .color-sidebar .app-sidebar .dropdown-menu-arrow.dropdown-menu-right:before,

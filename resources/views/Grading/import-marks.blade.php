@@ -41,7 +41,7 @@ use App\Http\Controllers\Helper;
                 justify-content: center;
                 width: 48px;
                 height: 48px;
-                background: linear-gradient(135deg, #287C44 0%, #34A853 100%);
+                background: linear-gradient(135deg, #5351e4 0%, #34A853 100%);
                 border-radius: 10px;
                 color: white;
                 font-size: 1.25rem;
@@ -63,7 +63,7 @@ use App\Http\Controllers\Helper;
             }
 
             .exam-card:hover {
-                border-color: #287C44;
+                border-color: #5351e4;
                 box-shadow: 0 4px 12px rgba(40, 124, 68, 0.1);
             }
 
@@ -250,7 +250,7 @@ use App\Http\Controllers\Helper;
 
                     <style>
                         .bg-primary-gradient {
-                            background: linear-gradient(135deg, #0D4B1F 0%, #0D4B1F 100%);
+                            background: linear-gradient(135deg, #2C29CA 0%, #2C29CA 100%);
                         }
 
                         .bg-white-10 {
@@ -800,7 +800,7 @@ use App\Http\Controllers\Helper;
                                 icon: 'success',
                                 title: 'Success!',
                                 text: '{{ session('success') }}',
-                                confirmButtonColor: '#287C44',
+                                confirmButtonColor: '#5351e4',
                                 confirmButtonText: 'OK'
                             });
                         @endif
@@ -891,7 +891,7 @@ use App\Http\Controllers\Helper;
                                     icon: 'warning',
                                     title: 'No Active Academic Year',
                                     text: 'Please set an active academic year before importing.',
-                                    confirmButtonColor: '#287C44',
+                                    confirmButtonColor: '#5351e4',
                                     confirmButtonText: 'Set Active Year'
                                 });
                                 return false;
@@ -955,7 +955,7 @@ use App\Http\Controllers\Helper;
                                     icon: 'warning',
                                     title: 'No Active Academic Year',
                                     text: 'Please set an active academic year before importing.',
-                                    confirmButtonColor: '#287C44',
+                                    confirmButtonColor: '#5351e4',
                                     confirmButtonText: 'Set Active Year'
                                 });
                                 return false;
@@ -1051,7 +1051,7 @@ use App\Http\Controllers\Helper;
                                 icon: 'success',
                                 title: 'Upload Successful!',
                                 text: data.message || 'File uploaded successfully',
-                                confirmButtonColor: '#287C44'
+                                confirmButtonColor: '#5351e4'
                             }).then(() => {
                                 // Close modal
                                 const modal = bootstrap.Modal.getInstance(document.getElementById(formId.includes(
@@ -1124,7 +1124,7 @@ use App\Http\Controllers\Helper;
                                 icon: 'warning',
                                 title: 'No Active Academic Year',
                                 text: 'Please set an active academic year before importing.',
-                                confirmButtonColor: '#287C44',
+                                confirmButtonColor: '#5351e4',
                                 confirmButtonText: 'Set Active Year'
                             });
                             return false;
@@ -1158,7 +1158,7 @@ use App\Http\Controllers\Helper;
                                 icon: 'warning',
                                 title: 'No Active Academic Year',
                                 text: 'Please set an active academic year before importing.',
-                                confirmButtonColor: '#287C44',
+                                confirmButtonColor: '#5351e4',
                                 confirmButtonText: 'Set Active Year'
                             });
                             return false;
@@ -1218,7 +1218,7 @@ use App\Http\Controllers\Helper;
                                     title: 'Upload Not Active',
                                     text: type.charAt(0).toUpperCase() + type.slice(1) +
                                         ' upload is not currently active.',
-                                    confirmButtonColor: '#287C44'
+                                    confirmButtonColor: '#5351e4'
                                 });
 
                             });

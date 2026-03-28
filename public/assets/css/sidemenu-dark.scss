@@ -160,7 +160,7 @@
 	position: relative;
 	border-radius: 3px;
 	&:hover {
-		color: #0D4B1F;
+		color: #2C29CA;
 	}
 	&:focus, &:hover {
 		text-decoration: none;
@@ -415,10 +415,10 @@
 	margin: 5px 0;
 	&.active, &:hover, &:focus {
 		text-decoration: none;
-		color: #0D4B1F;
+		color: #2C29CA;
 	}
 	&.active .side-menu__icon, &:hover .side-menu__icon, &:focus .side-menu__icon {
-		color: #0D4B1F;
+		color: #2C29CA;
 		fill: rgba(255, 255, 255, 0.08);
 	}
 }
@@ -438,13 +438,13 @@
 	}
 }
 .slide-menu a.active {
-	color: #0D4B1F !important;
+	color: #2C29CA !important;
 	background: transparent;
 }
 .slide-item {
 	&.active, &:hover, &:focus {
 		text-decoration: none;
-		color: #0D4B1F;
+		color: #2C29CA;
 		background: transparent;
 	}
 }
@@ -742,7 +742,7 @@
 			display: inline-block;
 		}
 		.slide-item.active {
-			color: #0D4B1F;
+			color: #2C29CA;
 		}
 		.slide.is-expanded a {
 			/*color: #424e79;*/
@@ -836,19 +836,19 @@
 			margin: 0px 0px 15px 0;
 		}
 		.side-menu__item.active .side-menu__label {
-			color: #0D4B1F !important;
+			color: #2C29CA !important;
 		}
 		.slide-item.active {
 			text-decoration: none;
-			color: #0D4B1F;
+			color: #2C29CA;
 			background: transparent;
 		}
 		.slide-menu a.active {
-			color: #0D4B1F;
+			color: #2C29CA;
 			background: transparent;
 		}
 		.slide-item:hover {
-			color: #0D4B1F !important;
+			color: #2C29CA !important;
 		}
 		.side-menu {
 			margin-bottom: 0;
@@ -872,7 +872,7 @@
 			color: #424e79;
 			&.active {
 				text-decoration: none;
-				color: #0D4B1F;
+				color: #2C29CA;
 			}
 		}
 	}
@@ -892,15 +892,15 @@
 	.side-menu__item {
 		&:hover, &:focus {
 			text-decoration: none;
-			color: #0D4B1F;
+			color: #2C29CA;
 		}
 	}
 	.sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .side-menu__item.active .side-menu__icon {
-		color: #0D4B1F;
+		color: #2C29CA;
 	}
 	.side-menu__item {
 		&:hover .side-menu__icon, &:focus .side-menu__icon {
-			color: #0D4B1F;
+			color: #2C29CA;
 		}
 	}
 	.sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .slide-item.active {
@@ -913,14 +913,14 @@
 	}
 	.side-menu__item:hover {
 		.side-menu__label, .side-menu__icon, .angle {
-			color: #0D4B1F !important;
+			color: #2C29CA !important;
 			fill: rgba(255, 255, 255, 0.08);
 		}
 	}
 	.slide-item {
 		&:hover, &:focus {
 			text-decoration: none;
-			color: #0D4B1F;
+			color: #2C29CA;
 			background: transparent;
 		}
 	}

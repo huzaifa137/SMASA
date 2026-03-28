@@ -9,9 +9,9 @@ use App\Http\Controllers\Helper;
                 <div class="card mt-5">
 
                     <div class="card-header  text-white d-flex justify-content-between align-items-center"
-                        style="background-color: #253F2D;">
+                        style="background-color: #2C29CA;">
                         <h3 class="card-title">{{ trans('common.all_students') }}</h3>
-                        <a href="{{ route('students.add.new.student') }}" class="btn btn-sm" style="background-color: #287C44;">
+                        <a href="{{ route('students.add.new.student') }}" class="btn btn-sm" style="background-color: #5351e4;">
                             <span
                                 class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
                                 style="width: 20px; height: 20px;">
@@ -83,26 +83,26 @@ use App\Http\Controllers\Helper;
 
                         <!-- Students Table -->
                         @if (request()->anyFilled(['house_id', 'year', 'type']))
-                            <div class="alert mb-3 text-white rounded-0" style="background-color: #287c44;">
+                            <div class="alert mb-3 text-white rounded-0" style="background-color: #5351e4;">
                                 <strong>{{ trans('common.active_filters ') }}: </strong>
 
                                 @if (request('house_id'))
                                     @php
                                         $selectedHouse = $houses->firstWhere('ID', request('house_id'));
                                     @endphp
-                                    <span class="badge mr-2 rounded-0" style="background-color: #0d4b1f;">
+                                    <span class="badge mr-2 rounded-0" style="background-color: #2C29CA;">
                                         {{ trans('common.school') }}: {{ $selectedHouse->House ?? '' }}
                                     </span>
                                 @endif
 
                                 @if (request('year'))
-                                    <span class="badge mr-2 rounded-0" style="background-color: #0d4b1f;">
+                                    <span class="badge mr-2 rounded-0" style="background-color: #2C29CA;">
                                         Year: {{ request('year') }}
                                     </span>
                                 @endif
 
                                 @if (request('type'))
-                                    <span class="badge mr-2 rounded-0" style="background-color: #0d4b1f;">
+                                    <span class="badge mr-2 rounded-0" style="background-color: #2C29CA;">
                                         {{ trans('common.Category') }}: {{ ucfirst(request('type')) }}
                                     </span>
                                 @endif

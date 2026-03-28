@@ -90,7 +90,7 @@
     
     // Recent Activities
     $schoolActivities = $schoolActivities ?? [
-        ['icon'=>'fa-user-graduate', 'color'=>'#287c44', 'text'=>'New student enrolled: Omar Hassan (Grade 10A)', 'time'=>'1 hour ago'],
+        ['icon'=>'fa-user-graduate', 'color'=>'#5351e4', 'text'=>'New student enrolled: Omar Hassan (Grade 10A)', 'time'=>'1 hour ago'],
         ['icon'=>'fa-chalkboard-user', 'color'=>'#3b82f6', 'text'=>'Exam results uploaded for Grade 12', 'time'=>'3 hours ago'],
         ['icon'=>'fa-calendar-check', 'color'=>'#e0a020', 'text'=>'Parent meeting scheduled for next week', 'time'=>'5 hours ago'],
         ['icon'=>'fa-file-alt', 'color'=>'#6c3fc5', 'text'=>'Attendance report generated for Term 2', 'time'=>'Yesterday'],
@@ -148,9 +148,9 @@
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --brand: #287c44;
-        --brand-light: #34a85a;
-        --brand-dark: #1a5530;
+        --brand: #5351e4;
+        --brand-light: #2C29CA;
+        --brand-dark: #2C29CA;
         --brand-muted: rgba(40, 124, 68, 0.12);
         --accent: #e0a020;
         --accent-muted: rgba(224, 160, 32, 0.12);

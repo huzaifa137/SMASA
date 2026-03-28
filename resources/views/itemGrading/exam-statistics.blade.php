@@ -10,10 +10,10 @@
 
     <style>
         :root {
-            --primary-green: #287c44;
-            --dark-green: #0d4b1e;
-            --deep-green: #0d4b1f;
-            --muted-green: #253f2d;
+            --primary-green: #5351e4;
+            --dark-green: #2C29CA;
+            --deep-green: #2C29CA;
+            --muted-green: #2C29CA;
             --light-green: #3a9b5a;
             --bg-light: #f8fafc;
             --text-dark: #1e293b;
@@ -1489,7 +1489,7 @@
                 icon: 'error',
                 title: 'Missing Required Resources',
                 text: 'Some required resources are missing. Please update Server',
-                confirmButtonColor: '#287c44',
+                confirmButtonColor: '#5351e4',
                 confirmButtonText: 'OK'
             });
         }
@@ -1525,7 +1525,7 @@
                     icon: 'warning',
                     title: 'Missing Information',
                     text: 'Please select Year and Category before downloading.',
-                    confirmButtonColor: '#287c44'
+                    confirmButtonColor: '#5351e4'
                 });
                 return;
             }
@@ -1602,7 +1602,7 @@
                     icon: 'warning',
                     title: 'Missing Information',
                     text: 'Please select Year and Category before downloading.',
-                    confirmButtonColor: '#287c44'
+                    confirmButtonColor: '#5351e4'
                 });
                 return;
             }

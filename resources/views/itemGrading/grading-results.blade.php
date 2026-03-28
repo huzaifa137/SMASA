@@ -498,10 +498,10 @@
                             text-align: center;
                             margin-bottom: 30px;
                             padding-bottom: 20px;
-                            border-bottom: 2px solid #287c44;
+                            border-bottom: 2px solid #5351e4;
                         }
                         .header h2 {
-                            color: #287c44;
+                            color: #5351e4;
                             margin-bottom: 10px;
                         }
                         .header p {
@@ -515,7 +515,7 @@
                             font-size: 12px;
                         }
                         th {
-                            background: #287c44;
+                            background: #5351e4;
                             color: white;
                             padding: 12px 8px;
                             text-align: left;
@@ -550,7 +550,7 @@
         }
 
         .modern-card .card-header {
-            background: #287c44 !important;
+            background: #5351e4 !important;
             color: white !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;

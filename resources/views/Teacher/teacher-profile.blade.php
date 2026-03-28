@@ -20,7 +20,7 @@ $controller = new Controller();
                 <div class="card shadow-lg">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">{{ $teacher->firstname }} {{ $teacher->surname }} Profile</h4>
-                        <a href="{{ route('school.teachers', $school_id) }}" class="btn text-white" style="background-color: #287C44;">
+                        <a href="{{ route('school.teachers', $school_id) }}" class="btn text-white" style="background-color: #5351e4;">
                             <i class="fas fa-users"></i> All Teachers
                         </a>
                     </div>

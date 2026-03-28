@@ -173,14 +173,14 @@
 }
 /* Themes */
 .theme-white .cookie-popup {background-color: #fff;color: #424e79;}
-.theme-white .cookie-popup-accept-cookies {background-color: #0D4B1F;color: #fff;}
+.theme-white .cookie-popup-accept-cookies {background-color: #2C29CA;color: #fff;}
 .theme-white .cookie-popup-learn-more {color: #424e79;background: #f3f4f7;}
 .theme-white .cookie-popup-inner{
 	border-bottom: 1px solid #e3e3e3;
 }
 
 .theme-light .cookie-popup {background-color: #efeff5;color: #424e79;}
-.theme-light .cookie-popup-accept-cookies {background-color: #0D4B1F;color: #fff;}
+.theme-light .cookie-popup-accept-cookies {background-color: #2C29CA;color: #fff;}
 .theme-light .cookie-popup-learn-more {color: #424e79;background: #f3f4f7;}
 .theme-light .cookie-popup-inner{
 	border-bottom: 1px solid #e3e3e3;
@@ -190,7 +190,7 @@
 .theme-dark .cookie-popup-accept-cookies {background-color: rgb(68, 84, 195);color: #fff;}
 .theme-dark .cookie-popup-learn-more {color: #fff;background: rgba(0,0,0,0.31);}
 
-.theme-primary .cookie-popup {background-color: #0D4B1F;color: #fff;}
+.theme-primary .cookie-popup {background-color: #2C29CA;color: #fff;}
 .theme-primary .cookie-popup-accept-cookies {background-color: rgba(255,255,255,0.2);color: #fff;}
 .theme-primary .cookie-popup-learn-more {color: #fff;background: rgba(0,0,0,0.2);}
 

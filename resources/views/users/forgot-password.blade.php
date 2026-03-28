@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #0D4B1E;
+            --primary: #2C29CA;
             --primary-light: #1E7A3D;
             --secondary: #F2A900;
             --accent: #1A73E8;
@@ -699,7 +699,7 @@
                 html: `We will send a password reset link to:<br><strong>${email}</strong>`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#0D4B1E',
+                confirmButtonColor: '#2C29CA',
                 cancelButtonColor: '#5F6C72',
                 confirmButtonText: 'Yes, send reset link',
                 cancelButtonText: 'Cancel',

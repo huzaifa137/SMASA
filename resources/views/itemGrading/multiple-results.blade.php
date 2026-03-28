@@ -49,9 +49,9 @@
                 }
 
                 .subject-tab.active {
-                    background-color: #287c44;
+                    background-color: #5351e4;
                     color: white;
-                    border-color: #287c44;
+                    border-color: #5351e4;
                 }
 
                 .subject-tab .tab-badge {
@@ -161,7 +161,7 @@
 
             <div class="card shadow-lg border-0">
                 <div class="card-header text-white d-flex justify-content-between align-items-center"
-                    style="background-color: #253f2d;">
+                    style="background-color: #2C29CA;">
                     <h4 class="mb-0">
                         <i class="fa fa-school me-2"></i> {{ trans('common.school_id') }} - {{ $schoolNumber ?? 'N/A' }} ({{ $schoolName ?? '' }})
                     </h4>
@@ -321,7 +321,7 @@
                                                         </button>
                                                     </div>
                                                     <button type="submit" class="btn text-white"
-                                                        style="background-color: #287c44;">
+                                                        style="background-color: #5351e4;">
                                                         <i class="fa fa-save me-2"></i> {{ trans('common.save') }} {{ $subject->md_name }}
                                                     </button>
                                                 </div>

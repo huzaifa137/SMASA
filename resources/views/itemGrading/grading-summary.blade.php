@@ -64,15 +64,15 @@
             }
 
             .bg-gradient-primary {
-                background: linear-gradient(0, #0d4b1f 0%, #0d4b1f 100%);
+                background: linear-gradient(0, #2C29CA 0%, #2C29CA 100%);
             }
 
             .bg-gradient-success {
-                background: linear-gradient(135deg, #287c44 0%, #287c44 100%);
+                background: linear-gradient(135deg, #5351e4 0%, #5351e4 100%);
             }
 
             .bg-gradient-info {
-                background: linear-gradient(135deg, #253f2d 0%, #253f2d 100%);
+                background: linear-gradient(135deg, #2C29CA 0%, #2C29CA 100%);
             }
 
             @media (max-width: 768px) {
@@ -129,7 +129,7 @@
 
             .form-select:focus,
             .form-control:focus {
-                border-color: #287c44;
+                border-color: #5351e4;
                 box-shadow: 0 0 0 0.2rem rgba(40, 124, 68, 0.1);
             }
 
@@ -278,7 +278,7 @@
             /* Hover effect */
             .form-select:hover,
             .form-control:hover {
-                border-color: #287c44;
+                border-color: #5351e4;
             }
 
             /* Button hover effect */
@@ -395,7 +395,7 @@
 
             <div class="card shadow-lg border-0">
                 <div class="card-header text-white d-flex justify-content-between align-items-center"
-                    style="background-color: #287c44;">
+                    style="background-color: #5351e4;">
                     <h4 class="mb-0">
                         <i class="fas fa-chart-bar me-2"></i>
                        {{ trans('common.grading_and_examination_summary') }} 
@@ -406,7 +406,7 @@
 
                     <!-- Examination Statistics Form -->
                     <div>
-                        <h5 class="mb-3" style="color: #287c44;">
+                        <h5 class="mb-3" style="color: #5351e4;">
                             <i class="fas fa-poll me-2"></i>
                            {{ trans('common.general_examinations_report') }} 
                         </h5>
@@ -455,7 +455,7 @@
                             <div class="row mt-4 justify-content-center">
                                 <div class="col-12 col-md-4">
                                     <button type="submit" class="btn"
-                                        style="background-color: #287c44; color: white; width: 100%; min-height: 44px;">
+                                        style="background-color: #5351e4; color: white; width: 100%; min-height: 44px;">
                                         <i class="fas fa-magnifying-glass-chart me-2"></i>
                                         {{ trans('common.general_report') }}
                                     </button>
@@ -467,7 +467,7 @@
 
                     <!-- Grading Summary Form -->
                     <div class="mb-4 pb-3 mt-4 border-bottom">
-                        <h5 class="mb-3" style="color: #287c44">
+                        <h5 class="mb-3" style="color: #5351e4">
                             <i class="fas fa-calculator me-2"></i> {{ trans('common.schools_grading_report') }}
                         </h5>
 
@@ -529,7 +529,7 @@
                             <div class="row justify-content-center">
                                 <div class="col-12 col-md-4">
                                     <button type="submit" class="btn"
-                                        style="background-color: #287c44; color: white; width: 100%; min-height: 44px;">
+                                        style="background-color: #5351e4; color: white; width: 100%; min-height: 44px;">
                                         <i class="fas fa-magnifying-glass-chart me-2"></i>
                                         {{ trans('common.generate_school_reports') }}
                                     </button>

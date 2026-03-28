@@ -13,7 +13,7 @@
             margin-top: 5cm;
         }
         h1 { 
-            color: #287c44; 
+            color: #5351e4; 
             font-size: 28px;
             margin-bottom: 20px;
         }
@@ -26,7 +26,7 @@
             margin-top: 2cm;
             padding: 20px;
             background-color: #f8fafc;
-            border: 2px solid #287c44;
+            border: 2px solid #5351e4;
             border-radius: 10px;
             width: 60%;
             margin-left: auto;
@@ -59,7 +59,7 @@
     </div>
     
     <div class="summary-box">
-        <h3 style="color: #287c44;">Summary</h3>
+        <h3 style="color: #5351e4;">Summary</h3>
         <div class="summary-item">
             <strong>Total Students:</strong> {{ $registeredStudents }}
         </div>
@@ -72,8 +72,8 @@
     </div>
     
     <!-- Add Top Performers Summary -->
-    <div class="top-performers-box" style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border: 2px solid #287c44; border-radius: 10px;">
-        <h4 style="color: #287c44; margin-bottom: 15px;">🏆 Top 3 Performers</h4>
+    <div class="top-performers-box" style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border: 2px solid #5351e4; border-radius: 10px;">
+        <h4 style="color: #5351e4; margin-bottom: 15px;">🏆 Top 3 Performers</h4>
         @php
             $topThree = array_slice($all_student_ids, 0, 3);
             $topThreeData = [];

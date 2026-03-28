@@ -76,7 +76,7 @@
 	width: 100%;
 }
 .SumoSelect:focus>.CaptionCont{
-	border-color: #0D4B1F;
+	border-color: #2C29CA;
 }
 .SumoSelect>.CaptionCont {
 	position: relative;
@@ -306,9 +306,9 @@
 	padding: 6px;
 }
 .SumoSelect>.optWrapper.multiple.okCancelInMulti>.MultiControls>p:focus {
-	border-color: #0D4B1F;
+	border-color: #2C29CA;
 	outline: none;
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 }
 .SumoSelect>.optWrapper.multiple>.MultiControls>p {
 	display: inline-block;
@@ -342,7 +342,7 @@
 	padding-bottom: 43px;
 }
 .SumoSelect>.optWrapper.multiple>.options li.opt.selected span i, .SumoSelect .select-all.selected>span i, .SumoSelect .select-all.partial>span i {
-	background-color: #0D4B1F;
+	background-color: #2C29CA;
 	box-shadow: none;
 	border-color: transparent;
 	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNXG14zYAAABMSURBVAiZfc0xDkAAFIPhd2Kr1WRjcAExuIgzGUTIZ/AkImjSofnbNBAfHvzAHjOKNzhiQ42IDFXCDivaaxAJd0xYshT3QqBxqnxeHvhunpu23xnmAAAAAElFTkSuQmCC');

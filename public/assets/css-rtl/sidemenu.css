@@ -188,7 +188,7 @@
 }
 
 .app-sidebar__toggle:hover {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .app-sidebar__toggle:focus,
@@ -489,13 +489,13 @@
 .side-menu__item:hover,
 .side-menu__item:focus {
     text-decoration: none;
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .side-menu__item.active .side-menu__icon,
 .side-menu__item:hover .side-menu__icon,
 .side-menu__item:focus .side-menu__icon {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 @media (min-width: 768px) {
@@ -515,7 +515,7 @@
 }
 
 .slide-menu a.active {
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
     background: #fff;
 }
 
@@ -523,7 +523,7 @@
 .slide-item:hover,
 .slide-item:focus {
     text-decoration: none;
-    color: #0D4B1F !important;
+    color: #2C29CA !important;
     background: #fff;
 }
 
@@ -586,7 +586,7 @@
 }
 
 .slide.is-expanded .slide-menu li a:hover {
-    color: #0D4B1F;
+    color: #2C29CA;
 }
 
 .slide.is-expanded .angle {
@@ -891,25 +891,25 @@
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .side-menu__item.active {
         text-decoration: none;
-        color: #0D4B1F;
+        color: #2C29CA;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .slide-menu a.active {
-        color: #0D4B1F;
+        color: #2C29CA;
         background: #fff;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .slide-item:hover {
-        color: #0D4B1F !important;
+        color: #2C29CA !important;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .side-menu__item.active .side-menu__label {
-        color: #0D4B1F !important;
+        color: #2C29CA !important;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .slide-item.active {
         text-decoration: none;
-        color: #0D4B1F;
+        color: #2C29CA;
         background: #fff;
     }
 
@@ -1035,16 +1035,16 @@
     .side-menu__item:hover,
     .side-menu__item:focus {
         text-decoration: none;
-        color: #0D4B1F;
+        color: #2C29CA;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .side-menu__item.active .side-menu__icon {
-        color: #0D4B1F;
+        color: #2C29CA;
     }
 
     .side-menu__item:hover .side-menu__icon,
     .side-menu__item:focus .side-menu__icon {
-        color: #0D4B1F;
+        color: #2C29CA;
     }
 
     .sidebar-mini.sidenav-toggled.sidenav-toggled1 .app-sidebar .slide-item.active {
@@ -1061,13 +1061,13 @@
     .side-menu__item:hover .side-menu__label,
     .side-menu__item:hover .side-menu__icon,
     .side-menu__item:hover .angle {
-        color: #0D4B1F !important;
+        color: #2C29CA !important;
     }
 
     .slide-item:hover,
     .slide-item:focus {
         text-decoration: none;
-        color: #0D4B1F;
+        color: #2C29CA;
         background: #fff;
     }
 }
@@ -1397,8 +1397,8 @@
 .app-sidebar-help .header-icon {
     width: 30px;
     height: 30px;
-    color: #0D4B1F;
-    fill: #287C44;
+    color: #2C29CA;
+    fill: #5351e4;
 }
 
 .sub-slide-item {
@@ -1461,7 +1461,7 @@
 
 .default-sidebar .app-sidebar .dropdown-menu {
     box-shadow: 0px 10px 10px 20px rgba(16, 22, 58, 0.02), 10px 10px 15px -5px rgba(16, 22, 58, 0.08);
-    background: #0D4B1F;
+    background: #2C29CA;
     color: #fff;
     border: 1px solid #eff0f6;
 }
@@ -1486,13 +1486,13 @@ default-sidebar .app-sidebar .dropdown-menu-arrow.dropdown-menu-left:before {
 
 .default-sidebar .app-sidebar .dropdown-menu-arrow.dropdown-menu-right:after,
 .default-sidebar .app-sidebar .dropdown-menu-arrow.dropdown-menu-left:after {
-    border-bottom: 9px solid #0D4B1F;
+    border-bottom: 9px solid #2C29CA;
     bottom: -7px;
 }
 
 .light-mode .app-sidebar .dropdown-menu {
     box-shadow: 0px 10px 10px 20px rgba(16, 22, 58, 0.02), 10px 10px 15px -5px rgba(16, 22, 58, 0.08);
-    background: #0D4B1F;
+    background: #2C29CA;
     color: #fff;
     border: 1px solid #eff0f6;
 }
@@ -1517,7 +1517,7 @@ default-sidebar .app-sidebar .dropdown-menu-arrow.dropdown-menu-left:before {
 
 .light-mode .app-sidebar .dropdown-menu-arrow.dropdown-menu-right:after,
 .light-mode .app-sidebar .dropdown-menu-arrow.dropdown-menu-left:after {
-    border-bottom: 9px solid #0D4B1F;
+    border-bottom: 9px solid #2C29CA;
     bottom: -7px;
 }
 

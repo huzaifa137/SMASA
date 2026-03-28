@@ -36,7 +36,7 @@ $(function(e){
       yaxis: {
         min: 0
       },
-      colors: ['#0D4B1F'],
+      colors: ['#2C29CA'],
 
     }
 	var spark1 = new ApexCharts(document.querySelector("#spark1"), spark1);
@@ -133,7 +133,7 @@ $(function(e){
 		colorMap: {
 			'9': '#a1a1a1'
 		},
-		barColor: '#0D4B1F'
+		barColor: '#2C29CA'
 	});
 	/* sparkline_bar11 end */
 	

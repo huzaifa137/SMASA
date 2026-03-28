@@ -23,7 +23,7 @@ $controller = new Controller();
                 .google-avatar {
                     width: 80px;
                     height: 80px;
-                    background-color: #287C44;
+                    background-color: #5351e4;
                     color: white;
                     font-size: 36px;
                     font-weight: bold;
@@ -37,7 +37,7 @@ $controller = new Controller();
                 .google-avatar {
                     width: 80px;
                     height: 80px;
-                    background-color: #287C44;
+                    background-color: #5351e4;
                     color: white;
                     font-size: 36px;
                     font-weight: bold;
@@ -203,7 +203,7 @@ $controller = new Controller();
                                             @endif
                                         </div>
 
-                                        <div class="d-flex mt-2" style="color: #287C44;">
+                                        <div class="d-flex mt-2" style="color: #5351e4;">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
                                                 height="24">
                                                 <path

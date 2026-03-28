@@ -6,11 +6,11 @@ use App\Models\AcademicYear;
 use App\Models\DynamicFormValue;
 use App\Models\MasterData;
 use App\Models\School;
+use App\Models\House;
 use App\Models\SchoolProfile;
 use App\Models\TermDate;
 use App\Models\UpdateTracker;
 use Illuminate\Http\Request;
-use App\Models\House;
 use Illuminate\Support\Facades\Storage;
 use Session;
 
@@ -231,8 +231,11 @@ class SchoolController extends Controller
     public function schoolIndividualProfile($id)
     {
 
-        $school = School::findOrFail($id);
-        $profile = SchoolProfile::where('school_id', $id)->first();
+        $HouseID = House::where('ID', $id)->value('Number');
+
+        $schoolID = School::where('registration_code', $HouseID)->value('id');
+        $school = School::where('id', $schoolID)->first();
+        $profile = SchoolProfile::where('school_id', $schoolID)->first();
 
         return view('School.school-profile', compact('school', 'profile'));
     }
