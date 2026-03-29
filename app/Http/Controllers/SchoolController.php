@@ -53,9 +53,7 @@ class SchoolController extends Controller
             $newNumber = 1;
         }
 
-        $formattedNumber = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-
-        $registrationCode = "SCH-{$year}-{$formattedNumber}";
+        $registrationCode = $this->generateSchoolCode();
 
         return view('School.create-school', compact('registrationCode'));
     }
@@ -63,7 +61,7 @@ class SchoolController extends Controller
 
     public function allSchools()
     {
-        $schools = House::orderBy('id','Desc')->get();
+        $schools = House::orderBy('id', 'Desc')->get();
 
         return view('School.all-schools', compact('schools'));
     }
@@ -73,6 +71,10 @@ class SchoolController extends Controller
         $request->validate([
             'status' => 'required|in:0,8,9,10,1'
         ]);
+
+        $HouseID = House::where('ID', $id)->value('Number');
+        $schoolID = School::where('registration_code', $HouseID)->value('id');
+        $id = $schoolID;
 
         $school = School::findOrFail($id);
         $school->school_status = $request->status;
@@ -159,14 +161,20 @@ class SchoolController extends Controller
     {
         $year = date('Y');
 
+        // Get all schools created this year and only with proper 'SCH-' codes
         $lastSchool = School::whereYear('created_at', $year)
+            ->where('registration_code', 'like', 'SCH-' . $year . '-%')
             ->orderBy('id', 'desc')
             ->first();
 
-        if ($lastSchool) {
-            $lastNumber = (int) substr($lastSchool->registration_code, -4);
+        if ($lastSchool && $lastSchool->registration_code) {
+            // Extract numeric part at the end
+            preg_match('/(\d+)$/', $lastSchool->registration_code, $matches);
+            $lastNumber = isset($matches[1]) ? (int) $matches[1] : 0;
+
             $newNumber = $lastNumber + 1;
         } else {
+            // No valid records yet, start at 1
             $newNumber = 1;
         }
 
@@ -177,8 +185,11 @@ class SchoolController extends Controller
 
     public function editSchool($id)
     {
-        $school = School::findOrFail($id);
-        $school_id = $id;
+        $HouseID = House::where('ID', $id)->value('Number');
+
+        $schoolID = School::where('registration_code', $HouseID)->value('id');
+        $school = School::where('id', $schoolID)->first();
+        $school_id = $schoolID;
 
         return view('School.edit-school', compact(['school', 'school_id']));
     }
@@ -219,12 +230,17 @@ class SchoolController extends Controller
     public function deleteSchool(School $schoolId)
     {
         try {
-
+            SchoolProfile::where('school_id', $schoolId->id)->delete();
+            House::where('Number', $schoolId->registration_code)->delete();
             $schoolId->delete();
 
             return response()->json(['success' => true]);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Delete failed'], 500);
+            return response()->json([
+                'error' => 'Delete failed',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

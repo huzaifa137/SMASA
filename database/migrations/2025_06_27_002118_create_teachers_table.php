@@ -24,19 +24,23 @@ return new class extends Migration {
             $table->string('national_id')->nullable();
             $table->string('address')->nullable();
             $table->string('employee_number')->nullable();
-            $table->tinyInteger('group_teacher')->nullable(); // 1 to 5
+            $table->tinyInteger('group_teacher')->nullable(); 
             $table->string('teacher_profile')->nullable();
+
             $table->string('password')
-                ->default(Hash::make('123456789'))
-                ->after('teacher_profile');
+                ->default(Hash::make('123456789'));
+
             $table->boolean('must_change_password')
-                ->default(true)
-                ->after('password');
-            $table->timestamp('last_login_at')->nullable()->after('must_change_password');
+                ->default(true);
+
+            $table->timestamp('last_login_at')->nullable();
 
             $table->timestamps();
 
-            $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
+            $table->foreign('school_id')
+                  ->references('id')
+                  ->on('schools')
+                  ->onDelete('cascade');
         });
     }
 
@@ -44,5 +48,4 @@ return new class extends Migration {
     {
         Schema::dropIfExists('teachers');
     }
-
 };

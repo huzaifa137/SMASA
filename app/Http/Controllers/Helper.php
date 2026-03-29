@@ -41,7 +41,6 @@ class Helper extends Controller
         return $schoolName;
     }
 
-
     public static function ar_schoolName($school_id)
     {
         $schoolName = DB::table('houses')
@@ -414,6 +413,15 @@ class Helper extends Controller
                 'year' => $year
             ]
         };
+    }
+
+    public static function schoolStatus($House_Number)
+    {
+        $schoolStatus = DB::table('schools')
+            ->where('registration_code', $House_Number)
+            ->value('school_status');
+
+        return $schoolStatus;
     }
 
 }

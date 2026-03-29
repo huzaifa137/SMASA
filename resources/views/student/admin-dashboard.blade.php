@@ -83,8 +83,8 @@
 
     :root {
         --brand:        #5351e4;
-        --brand-light:  #34a85a;
-        --brand-dark:   #1a5530;
+        --brand-light:  #2C29CA;
+        --brand-dark:   #2C29CA;
         --brand-muted:  rgba(40,124,68,.12);
         --accent:       #e0a020;
         --accent-muted: rgba(224,160,32,.12);
@@ -124,7 +124,7 @@
 
     /* ── Top Hero Bar ──────────────────────────────────────────────────── */
     .hero-bar {
-        background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 55%, #3db861 100%);
+        background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 55%, #2C29CA 100%);
         padding: 32px 36px 80px;
         position: relative;
         overflow: hidden;
@@ -456,7 +456,7 @@
                 </div>
             </div>
             <div class="hero-actions" style="padding-top:4px">
-                <a href="#" class="hero-btn hero-btn-solid"><i class="fas fa-plus"></i> Add School</a>
+                <a href="{{ route('school.create-school') }}" class="hero-btn hero-btn-solid"><i class="fas fa-plus"></i> Add School</a>
                 <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-file-export"></i> Export Report</a>
                 <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-gear"></i> Settings</a>
             </div>

@@ -49,7 +49,7 @@
                         </span>
                     @else
                         <span style="line-height:40px;">
-                            Role :
+                            Admin :
                             <span class="text-primary font-weight-bold">
                                 {{ Helper::logged_admin_user() }}
                             </span>

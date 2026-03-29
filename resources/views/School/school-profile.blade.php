@@ -19,10 +19,16 @@ $controller = new Controller();
             <div class="col-md-12">
 
                 <div class="card shadow-lg">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">{{ $school->name }} {{ trans('common.profile') }}</h4>
-                        <a href="{{ route('school.allSchools') }}" class="btn text-white" style="background-color: #5351e4;">
-                            <i class="fas fa-school me-2"></i> {{ trans('common.all_schools') }}
+                    <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+                        
+                        <h4 class="mb-2 mb-lg-0 text-center w-100 w-lg-auto">
+                            {{ $school->name }}
+                        </h4>
+
+                        <a href="{{ route('school.allSchools') }}" 
+                        class="btn text-white w-100 w-lg-auto" 
+                        style="background-color: #5351e4;">
+                            <i class="fas fa-school me-2"></i> All Schools
                         </a>
                     </div>
 
@@ -155,12 +161,12 @@ $controller = new Controller();
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="mt-4">
-                                        <button class="btn btn-primary w-100" type="submit">
-                                            <i class="fas fa-save me-2"></i>&nbsp; Update School Profile Details
-                                        </button>
-                                    </div>
+<div class="mt-4">
+    <button class="btn btn-primary w-100 w-lg-auto text-wrap text-break" type="submit">
+        <i class="fas fa-save me-2"></i>
+        Update School Profile Details
+    </button>
+</div>
                                 </form>
                             </div>
 
@@ -238,7 +244,7 @@ $controller = new Controller();
                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                     <i class="fas fa-users text-primary fa-2x mb-2"></i>
                     <h6 class="text-muted mb-1">Population</h6>
-                    <p class="mb-0 fw-bold">{{ Helper::recordMdname($school->population) }}</p>
+                    <p class="mb-0 fw-bold">{{ Helper::recordMdname($school->population) ?: '0 - 0'}}</p>
                 </div>
             </div>
         </div>

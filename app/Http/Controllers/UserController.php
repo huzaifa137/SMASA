@@ -219,7 +219,7 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $schools = House::where('Head', 0)->where('ContactPerson',0)->get();
+        $schools = House::where('Head', 0)->where('ContactPerson', 0)->get();
 
         return view('users.login', compact(['schools']));
     }
@@ -265,7 +265,7 @@ class UserController extends Controller
         $loginValue = $request->username;
         $role = $request->role;
         $isEmail = filter_var($loginValue, FILTER_VALIDATE_EMAIL);
-      
+
         // Role-specific validations
         if ($role === 'student' && $isEmail) {
             return response()->json([
@@ -331,8 +331,8 @@ class UserController extends Controller
 
         $redirectUrl = match ($user->user_role) {
             'student' => '/student/dashboard',
-            'admin'   => '/admin/dashboard',
-            // default   => '/student/dashboard',
+            'admin' => '/admin/dashboard',
+        // default   => '/student/dashboard',
         };
 
         return response()->json([
@@ -870,32 +870,32 @@ class UserController extends Controller
         return view('public-portal');
     }
 
-// public function copyHousesToSchools()
-// {
-//     $houses = DB::table('houses')->get();
+    public function copyHousesToSchools()
+    {
+        $houses = DB::table('houses')->get();
 
-//     foreach ($houses as $house) {
-//         School::create([
-//             'school_type' => 24,
-// 'email' => 'school_'.$house->ID.'@example.com', // default empty
-//             'gender' => 4,
-//             'regional_level' => 10,
-//             'school_ownership' => 7,
-//             'boarding_status' => 4,
-//             'name' => $house->House,
-//             'school_name_arabic' => $house->House_AR,
-//             'school_product' => 1,
-//             'registration_code' => $house->Number,
-//             'phone' => '', // default empty
-//             'school_status' => 10,
-//             'population' => 20,
-//             'added_by' => Session('LoggedStudent') ?? 0, // integer or 0
-//             'date_added' => now(),
-//             'created_at' => now(),
-//             'updated_at' => now(),
-//         ]);
-//     }
+        foreach ($houses as $house) {
+            School::create([
+                'school_type' => 24,
+                'email' => 'school_' . $house->ID . '@example.com', // default empty
+                'gender' => 4,
+                'regional_level' => 10,
+                'school_ownership' => 7,
+                'boarding_status' => 4,
+                'name' => $house->House,
+                'school_name_arabic' => $house->House_AR,
+                'school_product' => 1,
+                'registration_code' => $house->Number,
+                'phone' => '', // default empty
+                'school_status' => 10,
+                'population' => 20,
+                'added_by' => Session('LoggedStudent') ?? 0, // integer or 0
+                'date_added' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
-//     dd('All houses copied to schools successfully.');
-// }
+        dd('All houses copied to schools successfully.');
+    }
 }

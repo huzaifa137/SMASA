@@ -19,9 +19,10 @@ $controller = new Controller();
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0 text-white">{{ trans('common.Edit_School_Information') }}</h4>
-                        <a href="{{ route('school.allSchools') }}" class="btn text-white" style="background-color: #5351e4;">
-                            <i class="fas fa-school me-2"></i> {{ trans('common.All_Schools') }}
+                        <h4 class="card-title mb-0 text-white">Edit School Information</h4>
+                        <a href="{{ route('school.allSchools') }}" class="btn text-white"
+                            style="background-color: #5351e4;">
+                            <i class="fas fa-school me-2"></i> All Schools
                         </a>
                     </div>
                     <div class="card-body bg-light">
@@ -30,36 +31,36 @@ $controller = new Controller();
                                 <input type="hidden" name="school_id" value="{{ $school_id }}">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.school_type') }}</label>
+                                        <label class="form-label">School Type</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.SCHOOL_TYPE'), $school->school_type, 'school_type');
                                         ?>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label" for="example-email">{{ trans('common.email') }}</label>
+                                        <label class="form-label" for="example-email">Email</label>
                                         <input type="email" id="example-email" name="email" class="form-control"
                                             placeholder="Email" value="{{ $school->email }}">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.gender') }}</label>
+                                        <label class="form-label">Gender</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->gender, 'gender');
                                         ?>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.regional_level') }}</label>
+                                        <label class="form-label">Regional Level</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.REGIONAL_LEVEL'), $school->regional_level, 'regional_level');
                                         ?>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.school_ownership') }}</label>
+                                        <label class="form-label">School Ownership</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.SCHOOL_OWNERSHIP'), $school->school_ownership, 'school_ownership', 1);
                                         ?>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.boarding_status') }}</label>
+                                        <label class="form-label">Boarding Status</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->boarding_status, 'boarding_status', 1);
                                         ?>
@@ -67,28 +68,28 @@ $controller = new Controller();
                                 </div>
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.school_name') }}</label>
+                                        <label class="form-label">School Name</label>
                                         <input class="form-control" type="text" name="name"
                                             value="{{ $school->name }}">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.school_products') }}</label>
+                                        <label class="form-label">School Products</label>
                                         <?php
                                         echo Helper::DropMasterData(config('constants.options.SCHOOL_PRODUCTS'), $school->school_product, 'school_product', 1);
                                         ?>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.Registration_Code') }}</label>
+                                        <label class="form-label">Registration Code</label>
                                         <input class="form-control" type="search" name="registration_code"
-                                            value="{{ $school->registration_code }}" disabled>
+                                            id="registration_code" value="{{ $school->registration_code }}" readonly>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.Contact_Phone_Number') }}</label>
+                                        <label class="form-label">Contact Phone Number</label>
                                         <input class="form-control" type="tel" name="phone"
                                             value="{{ $school->phone }}">
                                     </div>
                                     <div class="form-group mb-0">
-                                        <label class="form-label">{{ trans('common.population') }}</label>
+                                        <label class="form-label">Population</label>
                                         <?php
                                         echo Helper::DropMasterDataAsc(config('constants.options.SCHOOL_POPULATION'), $school->population, 'population', 1);
                                         ?>
@@ -97,7 +98,7 @@ $controller = new Controller();
                             </div>
                             <div class="mt-4 text-left">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i> {{ trans('common.update_information') }}
+                                    <i class="fas fa-paper-plane"></i> Update Information
                                 </button>
                             </div>
                         </form>
@@ -170,12 +171,17 @@ $controller = new Controller();
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                Swal.fire(
-                                    'Success!',
-                                    'School has been updated successfully.',
-                                    'success'
-                                );
-                                $form[0].reset();
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'School has been updated successfully.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location
+                                    .reload(); // 🔥 reload page here
+                                    }
+                                });
                             },
                             error: function(data) {
                                 $('body').html(data.responseText);

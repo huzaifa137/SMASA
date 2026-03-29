@@ -69,6 +69,10 @@ use App\Http\Controllers\Helper; // Keep if Helper::recordMdname is still used o
                         @endphp
 
                         @forelse ($schools as $key => $school)
+                            @php
+                                $HouseID = \App\Models\House::where('ID', $school->ID)->value('Number');
+                                $schoolID = \App\Models\School::where('registration_code', $HouseID)->value('id');
+                            @endphp
                             <tr>
                                 <td class="fw-bold" style="width: 1px;">{{ $key + 1 }}</td>
                                 <td class="fw-bold" style="text-align: left;">{{ $school->House }}</td>
@@ -76,7 +80,7 @@ use App\Http\Controllers\Helper; // Keep if Helper::recordMdname is still used o
                                 <td class="fw-bold" style="text-align: left;">{{ $school->Number }}</td>
                                 <td>
                                     @php
-                                        $status = $statusConfig[$school->school_status] ?? [
+                                        $status = $statusConfig[Helper::schoolStatus($school->Number)] ?? [
                                             'label' => 'Active',
                                             'class' => 'text-success',
                                             'icon' => 'fas fa-check-circle',
@@ -96,23 +100,23 @@ use App\Http\Controllers\Helper; // Keep if Helper::recordMdname is still used o
                                         </a>
 
                                         <a href="javascript:void(0);"
-                                            class="btn btn-sm btn-outline-secondary btn-change-school-status disabled"
-                                            data-id="{{ $school->ID }}" data-status="{{ $school->school_status }}"
+                                            class="btn btn-sm btn-outline-secondary btn-change-school-status"
+                                            data-id="{{ $school->ID }}" data-status="{{ Helper::schoolStatus($school->Number) }}"
                                             title="Change Status" style="margin-right:6px;">
                                             <i class="fas fa-sync-alt"></i>
                                         </a>
 
                                         <a href="javascript:void(0);"
-                                            class="btn btn-sm btn-outline-primary btn-edit disabled"
+                                            class="btn btn-sm btn-outline-primary btn-edit"
                                             data-id="{{ $school->ID }}"
-                                            data-edit-url="{{ url('edit.school', $school->ID) }}" title="Edit"
+                                            data-edit-url="{{ route('edit.school', $school->ID) }}" title="Edit"
                                             style="margin-right:6px;">
                                             <i class="fas fa-edit"></i>
                                         </a>
 
                                         <a href="javascript:void(0);"
                                             class="btn btn-sm btn-outline-danger btn-delete disabled"
-                                            data-id="{{ $school->ID }}" title="Delete">
+                                            data-id="{{ $schoolID }}" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
 
