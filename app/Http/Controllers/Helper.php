@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use DB;
 use Session;
 use App\Models\User;
 use App\Models\StudentBasic;
@@ -21,6 +19,16 @@ class Helper extends Controller
         return $schoolName;
     }
 
+
+    public static function schoolIDFromHouseID($house_id)
+    {
+        $schoolID = DB::table('schools')
+            ->where('registration_code', $house_id)
+            ->value('id');
+
+        return $schoolID;
+    }
+
     public static function activeIndividualLoggedIn()
     {
         if (!Session('LoggedSchool')) {
@@ -34,12 +42,13 @@ class Helper extends Controller
 
     public static function schoolNameByID($school_id)
     {
-        $schoolName = DB::table('houses')
-            ->where('ID', $school_id)
-            ->value('House');
+        $schoolName = DB::table('schools')
+            ->where('id', $school_id)
+            ->value('name');  
 
         return $schoolName;
     }
+ 
 
     public static function ar_schoolName($school_id)
     {
@@ -407,6 +416,23 @@ class Helper extends Controller
             'school' => $Student_School,
             'student' => $Student_Name,
             'year' => $year,
+            default => [
+                'school' => $Student_School,
+                'student' => $Student_Name,
+                'year' => $year
+            ]
+        };
+    }
+
+    public static function schoolStatus($House_Number)
+    {
+        $schoolStatus = DB::table('schools')
+            ->where('registration_code', $House_Number)
+            ->value('school_status');
+
+        return $schoolStatus;
+    }
+
             default => [
                 'school' => $Student_School,
                 'student' => $Student_Name,

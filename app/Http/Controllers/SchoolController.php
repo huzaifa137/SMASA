@@ -1,22 +1,22 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use DB;
 use App\Models\AcademicYear;
 use App\Models\DynamicFormValue;
+use App\Models\House;
 use App\Models\MasterData;
 use App\Models\School;
-use App\Models\House;
 use App\Models\SchoolProfile;
 use App\Models\TermDate;
 use App\Models\UpdateTracker;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Session;
 
 class SchoolController extends Controller
 {
-
     public function adminUser(Request $request)
     {
         session()->flush();
@@ -58,7 +58,6 @@ class SchoolController extends Controller
         return view('School.create-school', compact('registrationCode'));
     }
 
-
     public function allSchools()
     {
         $schools = House::orderBy('id', 'Desc')->get();
@@ -69,7 +68,7 @@ class SchoolController extends Controller
     public function changeStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:0,8,9,10,1'
+            'status' => 'required|in:0,8,9,10,1',
         ]);
 
         $HouseID = House::where('ID', $id)->value('Number');
@@ -98,11 +97,9 @@ class SchoolController extends Controller
         }
 
         return response()->json([
-            'message' => 'School and teacher statuses updated successfully.'
+            'message' => 'School and teacher statuses updated successfully.',
         ]);
     }
-
-
 
     public function termDates($school_Id)
     {
@@ -153,7 +150,7 @@ class SchoolController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'School created successfully and house added.',
-            'registration_code' => $registrationCode
+            'registration_code' => $registrationCode,
         ]);
     }
 
@@ -163,7 +160,7 @@ class SchoolController extends Controller
 
         // Get all schools created this year and only with proper 'SCH-' codes
         $lastSchool = School::whereYear('created_at', $year)
-            ->where('registration_code', 'like', 'SCH-' . $year . '-%')
+            ->where('registration_code', 'like', 'SCH-'.$year.'-%')
             ->orderBy('id', 'desc')
             ->first();
 
@@ -239,7 +236,7 @@ class SchoolController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Delete failed',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -262,6 +259,7 @@ class SchoolController extends Controller
 
             $school = School::findOrFail(Session('LoggedSchool'));
             $profile = SchoolProfile::where('school_id', Session('LoggedSchool'))->first();
+
             return view('School.school-profile', compact('school', 'profile'));
 
         } else {
@@ -333,7 +331,7 @@ class SchoolController extends Controller
             $logoFile = $request->file('logo');
             $logoPath = $logoFile->store('logos', 'public');
             $validated['logo'] = $logoPath;
-        } else if ($profile) {
+        } elseif ($profile) {
             $validated['logo'] = $profile->logo;
         } else {
             $validated['logo'] = null;
@@ -421,7 +419,7 @@ class SchoolController extends Controller
         $academicYear = AcademicYear::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:academic_years,name,' . $id,
+            'name' => 'required|string|max:255|unique:academic_years,name,'.$id,
             'is_active' => 'required|boolean',
         ]);
 
@@ -477,5 +475,26 @@ class SchoolController extends Controller
         $academicTerm->delete();
 
         return response()->json(['message' => 'Term deleted successfully.']);
+    }
+
+    public function selectSchool(Request $request)
+    {
+
+        $schoolId = $request->input('school_id');
+        $school = School::find($schoolId);
+
+        if (!$school) {
+            return response()->json([
+                'status' => false,
+                'message' => 'School not found.',
+            ]);
+        }
+
+        $request->session()->put('LoggedSchool', $schoolId);
+
+        return response()->json([
+            'status' => true,
+            'message' => "School switched to {$school->name}",
+        ]);
     }
 }
