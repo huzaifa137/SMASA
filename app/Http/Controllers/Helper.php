@@ -1,15 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-use Session;
-use App\Models\User;
-use App\Models\StudentBasic;
-use App\Models\Student;
+
 use App\Models\AcademicYear;
+use App\Models\Student;
+use App\Models\StudentBasic;
+use App\Models\User;
+use DB;
+use Session;
 
 class Helper extends Controller
 {
-
     public static function schoolName($school_id)
     {
         $schoolName = DB::table('houses')
@@ -17,6 +18,15 @@ class Helper extends Controller
             ->value('House');
 
         return $schoolName;
+    }
+
+    public static function requireSchool()
+    {
+        if (!Session::has('LoggedSchool')) {
+            abort(redirect()->back());
+        }
+
+        return Session::get('LoggedSchool');
     }
 
 
@@ -29,26 +39,23 @@ class Helper extends Controller
         return $schoolID;
     }
 
-    public static function activeIndividualLoggedIn()
+    public static function schoolNameByHouseID($house_id)
     {
-        if (!Session('LoggedSchool')) {
-            $passwordStatus = User::where('id', Session::get('LoggedStudent'))->first();
-
-            return $passwordStatus;
-        }
-
-        return false;
-    }
-
-    public static function schoolNameByID($school_id)
-    {
-        $schoolName = DB::table('schools')
-            ->where('id', $school_id)
-            ->value('name');  
+        $schoolName = DB::table('houses')
+            ->where('ID', $house_id)
+            ->value('House');
 
         return $schoolName;
     }
- 
+
+    public static function schoolNameBySchoolID($school_id)
+    {
+        $schoolName = DB::table('schools')
+            ->where('id', $school_id)
+            ->value('name');
+
+        return $schoolName;
+    }
 
     public static function ar_schoolName($school_id)
     {
@@ -57,6 +64,17 @@ class Helper extends Controller
             ->value('House');
 
         return $schoolName;
+    }
+
+    public static function activeIndividualLoggedIn()
+    {
+        if (! Session('LoggedSchool')) {
+            $passwordStatus = User::where('id', Session::get('LoggedStudent'))->first();
+
+            return $passwordStatus;
+        }
+
+        return false;
     }
 
     public static function subjectName($subject_id)
@@ -88,9 +106,10 @@ class Helper extends Controller
         return 'Guest';
     }
 
-    public static function student_username($user = "")
+    public static function student_username($user = '')
     {
         $user = (int) $user;
+
         return DB::table('users')
             ->where('id', $user)
             ->where('user_role', 1)
@@ -106,27 +125,28 @@ class Helper extends Controller
             ->value('firstname') ?? 'No Record Found';
     }
 
-    public static function category_name($user = "")
+    public static function category_name($user = '')
     {
         $user = (int) $user;
         $admin = DB::table('users')->where('id', '=', $user)->where('user_role', '!=', 1)->first();
 
-        return $user = @$admin->firstname . ' ' . @$admin->lastname;
+        return $user = @$admin->firstname.' '.@$admin->lastname;
     }
 
-    public static function language_name($user = "")
+    public static function language_name($user = '')
     {
         $user = (int) $user;
         $admin = DB::table('users')->where('id', '=', $user)->where('user_role', '!=', 1)->first();
 
-        return $user = @$admin->firstname . ' ' . @$admin->lastname;
+        return $user = @$admin->firstname.' '.@$admin->lastname;
     }
 
     public static function active_user()
     {
 
         $admin = DB::table('users')->where('id', '=', Session('LoggedAdmin'))->first();
-        return $user = @$admin->firstname . ' ' . @$admin->lastname;
+
+        return $user = @$admin->firstname.' '.@$admin->lastname;
     }
 
     public static function item_md_name($md_id)
@@ -165,32 +185,32 @@ class Helper extends Controller
         return $courseName;
     }
 
-    public static function DropMasterData($code_id = "", $selected = "", $id = "", $part = 2, $disabled = 0)
+    public static function DropMasterData($code_id = '', $selected = '', $id = '', $part = 2, $disabled = 0)
     {
 
-        if (!$code_id) {
-            $select = DB::table("master_datas")->get();
+        if (! $code_id) {
+            $select = DB::table('master_datas')->get();
         } else {
-            $select = DB::table("master_datas")->where("md_master_code_id", $code_id)->orderBy("md_name", "asc")->get();
+            $select = DB::table('master_datas')->where('md_master_code_id', $code_id)->orderBy('md_name', 'asc')->get();
         }
 
-        $disabled = ($disabled) ? "disabled" : "";
+        $disabled = ($disabled) ? 'disabled' : '';
 
-        $string = "";
-        $string .= '<select name="' . $id . '" id="' . $id . '" class="form-control select2" ' . $disabled . '>';
+        $string = '';
+        $string .= '<select name="'.$id.'" id="'.$id.'" class="form-control select2" '.$disabled.'>';
         $string .= '<option value=""> -- Select -- </option>';
         foreach ($select as $row) {
             if ($part == 1) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . '</option>';
+                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.'</option>';
                 } else {
-                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . '</option>';
+                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.'</option>';
                 }
-            } else if ($part == 2) {
+            } elseif ($part == 2) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
+                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
                 } else {
-                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
+                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
                 }
             }
         }
@@ -200,32 +220,32 @@ class Helper extends Controller
         return $string;
     }
 
-    public static function DropMasterDataAsc($code_id = "", $selected = "", $id = "", $part = 2, $disabled = 0)
+    public static function DropMasterDataAsc($code_id = '', $selected = '', $id = '', $part = 2, $disabled = 0)
     {
 
-        if (!$code_id) {
-            $select = DB::table("master_datas")->get();
+        if (! $code_id) {
+            $select = DB::table('master_datas')->get();
         } else {
-            $select = DB::table("master_datas")->where("md_master_code_id", $code_id)->orderBy("md_id", "asc")->get();
+            $select = DB::table('master_datas')->where('md_master_code_id', $code_id)->orderBy('md_id', 'asc')->get();
         }
 
-        $disabled = ($disabled) ? "disabled" : "";
+        $disabled = ($disabled) ? 'disabled' : '';
 
-        $string = "";
-        $string .= '<select name="' . $id . '" id="' . $id . '" class="form-control" ' . $disabled . '>';
+        $string = '';
+        $string .= '<select name="'.$id.'" id="'.$id.'" class="form-control" '.$disabled.'>';
         $string .= '<option value=""> -- Select -- </option>';
         foreach ($select as $row) {
             if ($part == 1) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . '</option>';
+                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.'</option>';
                 } else {
-                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . '</option>';
+                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.'</option>';
                 }
-            } else if ($part == 2) {
+            } elseif ($part == 2) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
+                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
                 } else {
-                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
+                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
                 }
             }
         }
@@ -267,7 +287,6 @@ class Helper extends Controller
         return $recordName;
     }
 
-
     public static function MasterRecordMerge($item1, $item2)
     {
         $items = [$item1, $item2];
@@ -278,7 +297,6 @@ class Helper extends Controller
 
         return $records;
     }
-
 
     public static function fetchAllSubjects()
     {
@@ -297,7 +315,6 @@ class Helper extends Controller
 
         return $records;
     }
-
 
     public static function MasterRecords($md_master_code_id)
     {
@@ -322,7 +339,7 @@ class Helper extends Controller
         return $specificItem;
     }
 
-    public static function school_student_fullName($user = "")
+    public static function school_student_fullName($user = '')
     {
         $user = (int) $user;
 
@@ -385,7 +402,6 @@ class Helper extends Controller
         return $activeUploadingYear ?? 'Upload Year Not Set';
     }
 
-
     public static function getStudentName($studentId)
     {
 
@@ -395,7 +411,6 @@ class Helper extends Controller
 
         return $Student_Name;
     }
-
 
     public static function parseStudentId($studentId, $type = null)
     {
@@ -419,7 +434,7 @@ class Helper extends Controller
             default => [
                 'school' => $Student_School,
                 'student' => $Student_Name,
-                'year' => $year
+                'year' => $year,
             ]
         };
     }
@@ -432,22 +447,4 @@ class Helper extends Controller
 
         return $schoolStatus;
     }
-
-            default => [
-                'school' => $Student_School,
-                'student' => $Student_Name,
-                'year' => $year
-            ]
-        };
-    }
-
-    public static function schoolStatus($House_Number)
-    {
-        $schoolStatus = DB::table('schools')
-            ->where('registration_code', $House_Number)
-            ->value('school_status');
-
-        return $schoolStatus;
-    }
-
 }

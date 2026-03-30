@@ -377,7 +377,7 @@ class UserController extends Controller
 
         $request->session()->regenerate();
 
-        $request->session()->put('LoggedSchool', $school->ID);
+        $request->session()->put('LoggedSchool', Helper::schoolIDFromHouseID($school->ID));
         $request->session()->put('LoggedSchoolCode', $school->Number);
         $request->session()->put('LoggedSchoolName', $school->House);
         $request->session()->put('LoggedSchoolNameAr', $school->House_AR ?? $school->House);

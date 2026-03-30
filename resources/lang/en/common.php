@@ -572,17 +572,17 @@ return [
         'confirm_submit_text' => 'You are about to submit the data.',
         'confirm_submit_yes' => 'Yes, submit it!',
         'saving' => 'Saving...',
-    'school_profile' => 'School Profile',
-    'user_profile' => 'User Profile',
-    'sign_out' => 'Sign Out',
-    'rights_privileges' => 'Rights & Privileges',
-    'exams' => 'Exams',
-    'help_info' => 'Help Info',
-    'support_team' => 'UP Support Team',
-    'email_addresses' => 'Email Addresses',
-    'phone_numbers' => 'Phone numbers',
-    'administrator' => 'Administrator',
-    'search_school_placeholder' => 'Search school...'
+        'school_profile' => 'School Profile',
+        'user_profile' => 'User Profile',
+        'sign_out' => 'Sign Out',
+        'rights_privileges' => 'Rights & Privileges',
+        'exams' => 'Exams',
+        'help_info' => 'Help Info',
+        'support_team' => 'UP Support Team',
+        'email_addresses' => 'Email Addresses',
+        'phone_numbers' => 'Phone numbers',
+        'administrator' => 'Administrator',
+        'search_school_placeholder' => 'Search school...'
 
     ,
     // Newly added keys (coverage for remaining hardcoded UI strings)

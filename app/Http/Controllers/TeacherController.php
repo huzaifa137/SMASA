@@ -1,16 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use DB;
-use Mail;
 use App\Models\Role;
-use App\Models\User;
 use App\Models\Teacher;
-use Illuminate\Support\Str;
-use App\Models\password_reset_table;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Session;
 
 class TeacherController extends Controller
 {
@@ -47,7 +43,7 @@ class TeacherController extends Controller
 
         if ($userExistsInSchool) {
             return response()->json([
-                'message' => 'This teacher is already registered under this school.'
+                'message' => 'This teacher is already registered under this school.',
             ], 422);
         }
 
@@ -56,7 +52,7 @@ class TeacherController extends Controller
         if ($userExists) {
             return response()->json([
                 'exists' => true,
-                'message' => 'A user with this email already exists in another school.'
+                'message' => 'A user with this email already exists in another school.',
             ]);
         }
 
@@ -74,8 +70,10 @@ class TeacherController extends Controller
 
     public function teacherProfile($id)
     {
-        $teacher = Teacher::where('school_id',$id)->findOrFail($id);
-        $school_id = $teacher->school_id;
+        Helper::requireSchool();
+
+        $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
+        $school_id = Helper::requireSchool();
 
         return view('Teacher.teacher-profile', compact('teacher', 'school_id'));
     }
@@ -83,13 +81,13 @@ class TeacherController extends Controller
     public function updateteacherProfile($id)
     {
 
+        Helper::requireSchool();
+
         $roles = Role::all();
 
-        $teacher = DB::table('users')
-            ->where('id', $id)
-            ->first();
+        $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
 
-        return view('Users.update-user-info', compact('teacher','roles'));
+        return view('Users.update-user-info', compact('teacher', 'roles'));
     }
 
     public function storeUpdatedTeacherProfile(Request $request, Teacher $teacher)
@@ -120,7 +118,7 @@ class TeacherController extends Controller
             $logoFile = $request->file('teacher_profile');
             $logoPath = $logoFile->store('teacherProfiles', 'public');
             $validated['teacher_profile'] = $logoPath;
-        } else if ($profile) {
+        } elseif ($profile) {
             $validated['teacher_profile'] = $profile->teacher_profile;
         } else {
             $validated['teacher_profile'] = null;
@@ -133,11 +131,13 @@ class TeacherController extends Controller
 
     public function schoolTeachers()
     {
-        $teachers = Teacher::where('school_id', Session('LoggedSchool'))
+        Helper::requireSchool();
+
+        $teachers = Teacher::where('school_id', Helper::requireSchool())
             ->orderBy('surname')
             ->get();
 
-        $school_id = Session('LoggedSchool');
+        $school_id = Helper::requireSchool();
 
         return view('Teacher.teachers-in-school', compact('teachers', 'school_id'));
     }
@@ -161,5 +161,4 @@ class TeacherController extends Controller
 
         return response()->json(['message' => 'Teacher deleted successfully.']);
     }
-
 }

@@ -483,7 +483,7 @@ class SchoolController extends Controller
         $schoolId = $request->input('school_id');
         $school = School::find($schoolId);
 
-        if (!$school) {
+        if (! $school) {
             return response()->json([
                 'status' => false,
                 'message' => 'School not found.',
@@ -496,5 +496,22 @@ class SchoolController extends Controller
             'status' => true,
             'message' => "School switched to {$school->name}",
         ]);
+    }
+
+    public function clearSchool(Request $request)
+    {
+        if ($request->session()->has('LoggedSchool')) {
+            $request->session()->forget('LoggedSchool'); // remove the session
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Selected school has been cleared.',
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'No school is currently selected.',
+            ]);
+        }
     }
 }

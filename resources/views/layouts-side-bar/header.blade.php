@@ -11,6 +11,32 @@
                 use App\Http\Controllers\Helper;
             @endphp
 
+            <style>
+                /* Hide by default (small devices) */
+                .responsive-user-section {
+                    display: none !important;
+                }
+
+                /* Show only on large screens (1372px and above) */
+                @media (min-width: 1372px) {
+                    .responsive-user-section {
+                        display: flex !important;
+                    }
+                }
+
+                @media (max-width: 576px) {
+                    .dropdown-menu {
+                        width: 95% !important;
+                        left: 2.5% !important;
+                    }
+                }
+
+                .dropdown-menu .form-control {
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+            </style>
+
             <div class="dropdown side-nav">
                 <div class="app-sidebar__toggle" data-toggle="sidebar">
                     <a class="open-toggle" href="#">
@@ -39,14 +65,24 @@
 
             @php
                 use Illuminate\Support\Facades\DB;
-                $schools = DB::table('schools')->latest()->get();
+
+                // Fetch only id and name for the dropdown
+                $schools = DB::table('schools')
+                    ->select('id', 'name') // select only needed columns
+                    ->latest()
+                    ->get();
+
+                // Fetch only id and name for the selected school
                 $selectedSchool = session('LoggedSchool')
-                    ? DB::table('schools')->where('id', session('LoggedSchool'))->first()
+                    ? DB::table('schools')
+                        ->select('id', 'name') // select only needed columns
+                        ->where('id', session('LoggedSchool'))
+                        ->first()
                     : null;
             @endphp
 
             @if (session('LoggedAdmin'))
-                <div class="mt-3 ml-3 col-6">
+                <div class="mt-3 ml-3 col-12 col-md-6">
                     <div class="dropdown">
                         <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
                             id="schoolDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -57,6 +93,11 @@
                             <input type="text" class="form-control mb-2" id="schoolSearch"
                                 placeholder="Search school...">
                             <div id="schoolList">
+                               <a class="dropdown-item clear-school bg-light text-primary font-weight-bold rounded" 
+                                    href="#" 
+                                    style="border: 1px dashed #2C29CA; margin-bottom: 5px;">
+                                        <i class="fas fa-undo-alt mr-2"></i> Clear School Selection
+                                    </a>
                                 @forelse ($schools as $school)
                                     <a class="dropdown-item school-item" href="#" data-id="{{ $school->id }}"
                                         data-name="{{ $school->name }}">
@@ -72,12 +113,12 @@
             @endif
 
             <div class="d-flex order-lg-2 ml-auto" style="margin-top:0.7rem;">
-                <div class="display-name">
+                <div class="display-name responsive-user-section">
                     @if (Session('LoggedSchool'))
                         <span style="line-height:40px;">
                             School :
                             <span class="text-primary font-weight-bold">
-                                {{ Helper::schoolNameByID(Session('LoggedSchool')) }}
+                                {{ Helper::schoolNameBySchoolID(Session('LoggedSchool')) }}
                             </span>
                         </span>
                     @else
@@ -159,60 +200,123 @@
                 </div>
             </div>
 
-                                    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function () {
-                                const searchInput = document.getElementById('schoolSearch');
-                                const schoolItems = document.querySelectorAll('.school-item');
-                                const dropdownBtn = document.getElementById('schoolDropdownButton');
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const searchInput = document.getElementById('schoolSearch');
+                    const schoolItems = document.querySelectorAll('.school-item');
+                    const dropdownBtn = document.getElementById('schoolDropdownButton');
 
-                                // Live filtering
-                                searchInput.addEventListener('keyup', function () {
-                                    const searchValue = this.value.toLowerCase();
-                                    schoolItems.forEach(item => {
-                                        const schoolName = item.textContent.toLowerCase();
-                                        item.style.display = schoolName.includes(searchValue) ? '' : 'none';
-                                    });
-                                });
+                    // Live filtering
+                    searchInput.addEventListener('keyup', function() {
+                        const searchValue = this.value.toLowerCase();
+                        schoolItems.forEach(item => {
+                            const schoolName = item.textContent.toLowerCase();
+                            item.style.display = schoolName.includes(searchValue) ? '' : 'none';
+                        });
+                    });
 
-                                // School select and SweetAlert
-                                schoolItems.forEach(item => {
-                                    item.addEventListener('click', function (e) {
-                                        e.preventDefault();
-                                        const schoolId = this.dataset.id;
-                                        const schoolName = this.dataset.name;
+                    // School select and SweetAlert
+                    schoolItems.forEach(item => {
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const schoolId = this.dataset.id;
+                            const schoolName = this.dataset.name;
 
-                                        Swal.fire({
-                                            title: "Switch School?",
-                                            text: `Are you sure you want to switch to "${schoolName}"?`,
-                                            icon: "warning",
-                                            showCancelButton: true,
-                                            confirmButtonText: "Yes, switch",
-                                            cancelButtonText: "Cancel"
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                // Send to backend via AJAX
-fetch("{{ route('school.select') }}", {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-    },
-    body: JSON.stringify({ school_id: schoolId })
-})
-.then(response => response.text()) // 👈 change this
-.then(data => {
-    document.body.innerHTML = data; // 👈 show dd() output
-})
-.catch(() => {
-    alert("Something went wrong!");
-});
+                            Swal.fire({
+                                title: "Switch School?",
+                                text: `Are you sure you want to switch to "${schoolName}"?`,
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "Yes, switch",
+                                cancelButtonText: "Cancel"
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Send to backend via AJAX
+                                    fetch("{{ route('school.select') }}", {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({
+                                                school_id: schoolId
+                                            })
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.status) {
+                                                Swal.fire({
+                                                    title: "School Changed!",
+                                                    text: data.message,
+                                                    icon: "success",
+                                                    timer: 1500,
+                                                    showConfirmButton: false
+                                                }).then(() => {
+                                                    location
+                                                        .reload(); // reload to reflect session change
+                                                });
+                                            } else {
+                                                Swal.fire("Error", data.message, "error");
                                             }
+                                        })
+                                        .catch(() => {
+                                            Swal.fire("Error", "Something went wrong!",
+                                                "error");
                                         });
-                                    });
-                                });
+                                }
                             });
-                        </script>
+                        });
+                    });
+                });
+            </script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const clearSchoolBtn = document.querySelector('.clear-school');
+
+                    clearSchoolBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+
+                        Swal.fire({
+                            title: "Clear School?",
+                            text: "Do you want to clear the selected school?",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Yes, clear",
+                            cancelButtonText: "Cancel"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch("{{ route('school.clear') }}", {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.status) {
+                                            Swal.fire({
+                                                title: "Cleared!",
+                                                text: data.message,
+                                                icon: "success",
+                                                timer: 1500,
+                                                showConfirmButton: false
+                                            }).then(() => {
+                                                window.location.href = '/'; // <-- redirect instead of reload
+                                            });
+                                        } else {
+                                            Swal.fire("Error", data.message, "error");
+                                        }
+                                    })
+                                    .catch(() => {
+                                        Swal.fire("Error", "Something went wrong!", "error");
+                                    });
+                            }
+                        });
+                    });
+                });
+            </script>
         </div>
     </div>
 </div>

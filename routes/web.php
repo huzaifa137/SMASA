@@ -1,23 +1,19 @@
 <?php
 
+use App\Http\Controllers\ClassandSubjectController;
+use App\Http\Controllers\ExamController;
+use App\Http\Controllers\GradingController;
+use App\Http\Controllers\ItebController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SchoolsController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SchoolController;
-use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserRightsAndPreviledges;
-use App\Http\Controllers\ExamController;
-use App\Http\Controllers\ItebController;
-use App\Http\Controllers\SchoolsController;
-use App\Http\Controllers\GradingController;
-use App\Http\Controllers\ClassandSubjectController;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use App\Http\Controllers\LanguageController;
-
-use App\Models\House;
-use App\Models\SchoolPassword;
-use Illuminate\Support\Facades\Hash;
 
 Route::get('/show-sessions', function () {
     $allSessions = Session::all();
@@ -27,6 +23,7 @@ Route::get('/show-sessions', function () {
 Route::get('/set-admin-session', function () {
     // session(['LoggedAdminMaster' => 1]);
     session(['LoggedAdmin' => 1]);
+
     return redirect('/');
 });
 
@@ -44,13 +41,13 @@ Route::get('/set-school', function () {
 
 Route::get('/logout', function () {
     session()->flush();
+
     return redirect('/');
 })->name('logout');
 
 Route::get('/coming-soon', function () {
     return view('coming-soon');
 })->name('coming.soon');
-
 
 // Route::group(['middleware' => ['AdminAuth']], function () {
 //     Route::get('/', 'dashboardMasterDataDashboard')->name('dashboard.masterdata');
@@ -152,7 +149,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     $userEmail = session('userEmail');
                     $userPassword = session('userPassword');
 
-                    if (!$userId || !$userEmail) {
+                    if (! $userId || ! $userEmail) {
                         return redirect()->route('users.login')->with('fail', 'You must be logged in');
                     }
 
@@ -209,7 +206,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         Route::delete('/academic-years/{id}', 'destroyTerm')->name('academic-years.destroy');
         Route::post('/store-term-dates', 'storeTermDate')->name('term-dates.store');
-            Route::post('/select-school', 'selectSchool')->name('school.select');
+        Route::post('/select-school', 'selectSchool')->name('school.select');
+        Route::post('/school/clear', 'clearSchool')->name('school.clear');
     });
 
     Route::controller(TeacherController::class)->group(function () {
@@ -242,13 +240,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         Route::delete('/streams/{stream}', 'deleteStream')->name('streams.delete');
 
-
         // Route to display the edit form for a specific assignment
         // Route::get('/assign-subjects/{assignmentId}/edit', [ClassandSubjectController::class, 'edit'])->name('assign.subjects.edit');
 
         // // Route to handle the update submission for a specific assignment
         // Route::put('/assign-subjects/{assignmentId}', [ClassandSubjectController::class, 'update'])->name('assign.subjects.update');
-
 
         Route::post('/assign-class-subject-teacher-one', 'assignSubjectTeacher1')->name('class.assignSubjectTeacher1');
         Route::post('/remove-class-subject-teacher-one', 'removeSubjectTeacher1')->name('class.removeSubjectTeacher1');
@@ -318,7 +314,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     Route::post('/students/store', 'storeStudent')->name('students.store');
 
                     Route::get('/transfer-form', 'moveStudentForm')->name('students.transfer');
-
 
                     Route::get('/streams/by-class', 'getStreamsByClass')->name('streams.by.class');
                     Route::get('/students/search', 'searchStudentsByClassStream')->name('students.search');
@@ -410,7 +405,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     });
 
-
     Route::group(['middleware' => ['AdminAuth']], function () {
 
         Route::prefix('school-passwords')
@@ -424,8 +418,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
             });
     });
-
-
 
     Route::controller(SchoolsController::class)->group(function () {
         Route::group(['middleware' => ['SchoolAuth']], function () {
