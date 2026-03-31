@@ -1,5 +1,5 @@
 <?php
-use App\Http\Controllers\Helper;
+use App\Http\Controllers\Helper; 
 ?>
 @extends('layouts-side-bar.master')
 @section('content')
@@ -20,18 +20,18 @@ use App\Http\Controllers\Helper;
             <div class="col-lg-12">
                 <div class="card bg-primary">
                     <div class="card-header">
-                        <h4 class="text-white mb-0">{{ trans('search_students') }}</h4>
+                        <h4 class="text-white mb-0">Search Students</h4>
                     </div>
                     <div class="card-body bg-light">
                         <form id="studentSearchForm">
                             <div class="form-group mb-3">
-                                <label for="search_criteria">{{ trans('select_search_criteria') }}</label>
+                                <label for="search_criteria">Select Search Criteria</label>
                                 <select id="search_criteria" class="form-control">
-                                    <option value="" selected disabled>{{ trans('select') }}...</option>
-                                    <option value="admission_number">{{ trans('admission_number') }}</option>
-                                    {{-- <option value="name">Name & Class</option> --}}
-                                    {{-- <option value="phone">Phone Number</option> --}}
-                                    {{-- <option value="student_id">Student ID</option> --}}
+                                    <option value="" selected disabled>Select...</option>
+                                    <option value="admission_number">Admission Number</option>
+                                    <option value="name">Name & Class</option>
+                                    <option value="phone">Phone Number</option>
+                                    <option value="student_id">Student ID</option>
                                 </select>
                             </div>
 
@@ -40,8 +40,8 @@ use App\Http\Controllers\Helper;
                             </div>
 
                             <div class="mt-3">
-                                <button type="submit" class="btn d-none text-white" id="searchBtn" style="background-color:#5351e4;">
-                                    <i class="fas fa-search"></i>{{ trans('search') }} 
+                                <button type="submit" class="btn btn-success d-none" id="searchBtn">
+                                    <i class="fas fa-search"></i> Search
                                 </button>
                             </div>
                         </form>
@@ -50,8 +50,8 @@ use App\Http\Controllers\Helper;
 
                 <!-- Results -->
                 <div class="card mt-4 d-none" id="resultsCard">
-                    <div class="card-header text-white" style="background-color:#2C29CA;">
-                        <h5 class="mb-0">{{ trans('search_results') }}</h5>
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Search Results</h5>
                     </div>
                     <div class="card-body bg-white" id="searchResults">
                         <!-- Results will be rendered here -->
@@ -71,7 +71,7 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             const searchInputs = {
                 admission_number: `
                             <div class="form-group">
@@ -80,26 +80,27 @@ use App\Http\Controllers\Helper;
                             </div>
                         `,
                 name: `
-                            <div class="form-group">
-                                <label for="firstname">First Name</label>
-                                <input type="text" name="firstname" class="form-control" placeholder="Enter first name">
-                            </div>
-                            <div class="form-group">
-                                <label for="lastname">Last Name</label>
-                                <input type="text" name="lastname" class="form-control" placeholder="Enter last name">
-                            </div>
-                            <div class="form-group">
-                                <label for="senior">Class</label>
-                                <select class="form-control select2" name="senior">
-                                    <option value="">-- Select --</option>
-                                    @foreach ($classRecord as $class)
-                                        <option value="{{ $class->md_id }}">
-                                            {{ $class->md_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        `,
+        <div class="form-group">
+            <label for="firstname">First Name</label>
+            <input type="text" name="firstname" class="form-control" placeholder="Enter first name">
+        </div>
+        <div class="form-group">
+            <label for="lastname">Last Name</label>
+            <input type="text" name="lastname" class="form-control" placeholder="Enter last name">
+        </div>
+        <div class="form-group">
+            <label for="senior">Class</label>
+            <select class="form-control select2" name="senior">
+                <option value="">-- Select --</option>
+                @foreach ($classRecord as $class)
+                    <option value="{{ $class->class_name }}">
+                        {{ Helper::recordMdname($class->class_name) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    `,
+
                 phone: `
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
@@ -114,14 +115,14 @@ use App\Http\Controllers\Helper;
                         `
             };
 
-            $('#search_criteria').on('change', function() {
+            $('#search_criteria').on('change', function () {
                 const selected = $(this).val();
                 $('#search_inputs').html(searchInputs[selected] || '');
                 $('#searchBtn').removeClass('d-none');
                 $('#resultsCard').addClass('d-none');
             });
 
-            $('#studentSearchForm').on('submit', function(e) {
+            $('#studentSearchForm').on('submit', function (e) {
                 e.preventDefault();
 
                 const criteria = $('#search_criteria').val();
@@ -132,26 +133,24 @@ use App\Http\Controllers\Helper;
                     return;
                 }
 
-                $('#searchBtn').prop('disabled', true).html(
-                    'Searching... <i class="fas fa-spinner fa-spin"></i>');
+                $('#searchBtn').prop('disabled', true).html('Searching... <i class="fas fa-spinner fa-spin"></i>');
 
                 $.ajax({
-                    url: '{{ route('students.search.ajax') }}',
+                    url: '{{ route("students.search.ajax") }}',
                     method: 'GET',
                     data: formData + '&criteria=' + criteria,
-                    success: function(response) {
+                    success: function (response) {
                         $('#resultsCard').removeClass('d-none');
                         $('#searchResults').html(response.html);
                     },
                     // error: function (xhr) {
                     //     Swal.fire('Error', xhr.responseJSON?.message || 'Something went wrong.', 'error');
                     // },
-                    error: function(data) {
+                    error: function (data) {
                         $('body').html(data.responseText);
                     },
-                    complete: function() {
-                        $('#searchBtn').prop('disabled', false).html(
-                            '<i class="fas fa-search"></i> Search');
+                    complete: function () {
+                        $('#searchBtn').prop('disabled', false).html('<i class="fas fa-search"></i> Search');
                     }
                 });
             });
@@ -160,6 +159,7 @@ use App\Http\Controllers\Helper;
 @endsection
 
 @section('js')
+
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
@@ -174,5 +174,7 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
-    <script></script>
+    <script>
+
+    </script>
 @endsection

@@ -2,31 +2,25 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Models\User;
-use App\Models\Classroom;
-use App\Models\Stream;
-use App\Models\StudentBasic;
-use App\Models\House;
-use App\Models\Student;
-use App\Models\Subject;
-use DB;
-use App\Models\MasterData;
-use Illuminate\Http\Request;
 use App\Exports\StudentsExamExport;
+use App\Imports\StudentExamImport;
+use App\Models\Classroom;
+use App\Models\Exam;
+use App\Models\Grading;
+use App\Models\House;
+use App\Models\MasterData;
+use App\Models\School;
+use App\Models\Stream;
+use App\Models\Student;
+use App\Models\StudentBasic;
+use App\Models\Subject;
+use App\Models\User;
+use App\Services\GradingService;
+use DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Mail;
-use App\Models\School;
-use App\Imports\StudentExamImport;
-use App\Models\Exam;
-use App\Services\GradingService;
-use App\Models\Mark;
-use App\Models\ClassAllocation;
-use App\Models\Grading;
-use App\Models\StudentResult;
-use App\Http\Controllers\Helper;
-
 
 class StudentController extends Controller
 {
@@ -125,6 +119,7 @@ class StudentController extends Controller
                 });
             } catch (Exception $e) {
                 DB::table('users')->where('email', $request->email)->delete();
+
                 return back()->with('error', 'Email Not, Check Internet or re-register');
             }
 
@@ -155,7 +150,7 @@ class StudentController extends Controller
         $otp_4 = $request->input('otp_4');
         $otp_5 = $request->input('otp_5');
 
-        $new_otp = $otp_1 . $otp_2 . $otp_3 . $otp_4 . $otp_5;
+        $new_otp = $otp_1.$otp_2.$otp_3.$otp_4.$otp_5;
         $user_id = $request->input('hidden_otp');
 
         $temp_otp_stored = DB::table('users')->where('id', $user_id)->value('temp_otp');
@@ -210,7 +205,6 @@ class StudentController extends Controller
         return view('student.admin-dashboard');
     }
 
-
     private function getSubjectIdsForCategory($category)
     {
         // Implement this based on your subject-category mapping
@@ -232,20 +226,20 @@ class StudentController extends Controller
                 ->pluck('school_id')
                 ->unique();
 
-
             $schoolsInExistance = DB::table('schools')
                 ->whereIn('id', $teacherSchools)
                 ->get()
                 ->map(function ($school) {
                     $profile = DB::table('school_profiles')->where('school_id', $school->id)->first();
                     $school->profile = $profile;
+
                     return $school;
                 });
-
 
             return view('users.schools-teacher-belongs-in', compact(['schoolsInExistance', 'userInfo', 'email']));
         } else {
             session()->flush();
+
             return redirect('/');
         }
     }
@@ -286,6 +280,8 @@ class StudentController extends Controller
 
     public function addNewStudent()
     {
+        Helper::requireSchool();
+
         $years = StudentBasic::selectRaw('DISTINCT SUBSTRING_INDEX(Student_ID, "-", -1) as year')
             ->whereRaw('Student_ID REGEXP ".*-[0-9]{4}$"')
             ->orderBy('year', 'desc')
@@ -295,11 +291,20 @@ class StudentController extends Controller
 
         $defaultSchoolNumber = $schools->first() ? $schools->first()->Number : 'IT-001';
         $currentYear = date('Y');
-        $newStudentId = $defaultSchoolNumber . '-ID-001-' . $currentYear;
+        $newStudentId = $defaultSchoolNumber.'-ID-001-'.$currentYear;
 
-        return view('student.add-new-student', compact('schools', 'years', 'newStudentId'));
+        // $classRecord = Helper::MasterRecordMerge(
+        //     config('constants.options.O_LEVEL'),
+        //     config('constants.options.A_LEVEL')
+        // );
+
+                $classRecord = Helper::MasterDataRecords(
+            config('constants.options.O_LEVEL'),
+            // config('constants.options.A_LEVEL')
+        );
+    
+        return view('student.add-new-student', compact('schools', 'years', 'newStudentId','classRecord'));
     }
-
 
     public function generateStudentID(Request $request)
     {
@@ -307,19 +312,19 @@ class StudentController extends Controller
         $category = $request->category;
         $year = $request->year;
 
-        if (!$schoolId || !$category || !$year) {
+        if (! $schoolId || ! $category || ! $year) {
             return response()->json(['student_id' => ''], 200);
         }
 
         $school = DB::table('houses')->where('ID', $schoolId)->first();
-        if (!$school) {
+        if (! $school) {
             return response()->json(['student_id' => ''], 200);
         }
 
         $schoolNumber = $school->Number;
 
         $lastNumber = DB::table('students_basic')
-            ->where('Student_ID', 'LIKE', $schoolNumber . '-' . $category . '-%-' . $year)
+            ->where('Student_ID', 'LIKE', $schoolNumber.'-'.$category.'-%-'.$year)
             ->selectRaw("
             MAX(
                 CAST(
@@ -335,7 +340,7 @@ class StudentController extends Controller
 
         $newNumber = str_pad(($lastNumber ?? 0) + 1, 3, '0', STR_PAD_LEFT);
 
-        $newStudentID = $schoolNumber . '-' . $category . '-' . $newNumber . '-' . $year;
+        $newStudentID = $schoolNumber.'-'.$category.'-'.$newNumber.'-'.$year;
 
         return response()->json(['student_id' => $newStudentID]);
     }
@@ -343,100 +348,103 @@ class StudentController extends Controller
     public function storeStudent(Request $request)
     {
 
-    
         $validated = $request->validate([
-            'school_id' => 'required|string|max:45',
+            'School' => 'required|integer|exists:houses,ID',
             'Category' => 'required|string|max:10',
             'Admission_Year' => 'required|integer',
-            'Student_ID' => 'required|string|max:25|unique:students_basic,Student_ID',
-            'Student_Name' => 'required|string|max:100',
-            'Student_Name_AR' => 'nullable|string|max:45',
-            'Date_of_Birth' => 'nullable|date',
-            'StudentSex' => 'required|string|in:Male,Female',
-            'StudentNationality' => 'nullable|string|max:45',
+            'Student_ID' => 'required|string|max:25|unique:students,registration_number',
+            'firstname' => 'required|string|max:100',
+            'lastname' => 'required|string|max:100',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'date_of_birth' => 'nullable|date',
+            'primary_contact' => 'nullable|string|max:20',
+            'other_contact' => 'nullable|string|max:20',
+            'student_photo' => 'nullable|image|mimes:jpg,png,gif',
         ]);
 
         DB::beginTransaction();
 
         try {
 
-            $student = StudentBasic::create([
-                'Student_ID' => $validated['Student_ID'],
-                'Student_Name' => $validated['Student_Name'],
-                'Student_Name_AR' => $validated['Student_Name_AR'] ?? null,
-                'Date_of_Birth' => $validated['Date_of_Birth'] ?? null,
-                'StudentSex' => $validated['StudentSex'],
-                'StudentsNationality' => $validated['StudentNationality'] ?? null,
-                'House' => Helper::ar_schoolName($validated['school_id']),
-                'Class' => $validated['Category'],
-                'admnyr' => $validated['Admission_Year'],
-                'EntryDate' => now(),
-            ]);
+            $photoPath = null;
+            if ($request->hasFile('student_photo')) {
+                $file = $request->file('student_photo');
 
-            ClassAllocation::create([
-                'Student_ID' => $student->Student_ID,
-                'Class_ID' => 001,
+                $destinationPath = public_path('uploads/studentPhotos');
+
+                if (! file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                $filename = time().'_'.$file->getClientOriginalName();
+
+                $file->move($destinationPath, $filename);
+
+                $photoPath = 'uploads/studentPhotos/'.$filename;
+            }
+
+            // Create student record
+            $student = Student::create([
+                'firstname' => $validated['firstname'],
+                'lastname' => $validated['lastname'],
+                'senior' => $validated['Category'],
+                'stream' => $request->input('stream', null), // optional
+                'registration_number' => $validated['Student_ID'], // or null
+                'admission_number' => $request->input('Admission_Number', null),
+                'gender' => $validated['gender'],
+                'school_id' => $validated['School'],
+                'primary_contact' => $validated['primary_contact'] ?? null,
+                'other_contact' => $validated['other_contact'] ?? null,
+                'student_photo' => $photoPath,
+                'date_of_admission' => $request->input('date_of_admission', null),
+                'ple_score' => $request->input('ple_score', null),
+                'uce_score' => $request->input('uce_score', null),
+                'previous_school' => $request->input('previous_school', null),
+                'primary_school_name' => $request->input('primary_school_name', null),
+                'guardian_names' => $request->input('guardian_names', null),
+                'relation' => $request->input('relation', null),
+                'guardian_phone' => $request->input('guardian_phone', null),
+                'guardian_email' => $request->input('guardian_email', null),
+                'home_address' => $request->input('home_address', null),
+                'date_of_birth' => $validated['date_of_birth'] ?? null,
+                'place_of_birth' => $request->input('place_of_birth', null),
+                'birth_certificate_entry_number' => $request->input('birth_certificate_entry_number', null),
+                'nationality' => $request->input('StudentNationality', null),
+                'medical_history' => $request->input('medical_history', null),
+                'comments' => $request->input('comments', null),
+                'added_by' => session('LoggedTeacher') ?? session('LoggedAdmin'), // assuming you want to track who added
             ]);
 
             DB::commit();
 
             return response()->json([
                 'message' => 'Student added successfully!',
-                'student_id' => $student->Student_ID
+                'student_id' => $student->id,
             ]);
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-
-    public function allStudentsInformation(Request $request)
+    public function allStudents()
     {
-        $houses = House::orderBy('House')->get();
+        Helper::requireSchool();
 
-        $years = StudentBasic::selectRaw('DISTINCT SUBSTRING_INDEX(Student_ID, "-", -1) as year')
-            ->whereRaw('Student_ID REGEXP ".*-[0-9]{4}$"')
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        $students = Student::where('school_id', session('LoggedSchool'))
+            ->orderBy('senior')
+            ->orderBy('stream')
+            ->get();
 
-        $studentsQuery = StudentBasic::with('house');
+        $groupedStudents = $students->groupBy('senior')->map(function ($seniorGroup) {
+            return $seniorGroup->groupBy('stream');
+        });
 
-        if ($request->filled('house_id')) {
-            $selectedHouse = House::find($request->house_id);
-            if ($selectedHouse) {
-                $studentsQuery->where('House', $selectedHouse->House);
-            }
-        }
-
-        if ($request->filled('year')) {
-            $studentsQuery->where('Student_ID', 'LIKE', '%-' . $request->year);
-        }
-
-        if ($request->filled('type')) {
-            $type = $request->type;
-            if ($type === 'idaad') {
-                $studentsQuery->where('Student_ID', 'LIKE', '%-ID-%');
-            } elseif ($type === 'thanawi') {
-                $studentsQuery->where('Student_ID', 'LIKE', '%-TH-%');
-            }
-        }
-
-        $students = $studentsQuery
-            ->orderBy('Student_ID', 'asc')
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('student.all-students', compact(
-            'students',
-            'houses',
-            'years'
-        ));
+        return view('student.all-students', compact('groupedStudents'));
     }
 
     public function exportStudents($schoolId, $type)
@@ -447,7 +455,7 @@ class StudentController extends Controller
             return back()->with('error', 'No Active Academic Year Set.');
         }
 
-        $school = \App\Models\School::findOrFail($schoolId);
+        $school = School::findOrFail($schoolId);
 
         $students = Student::where('school_id', $schoolId)->get();
 
@@ -466,7 +474,7 @@ class StudentController extends Controller
         $cleanSchoolName = str_replace(' ', '_', $school->name);
         $cleanYear = str_replace(' ', '_', $activeYear);
 
-        $fileName = $type . '_exams_' . $cleanYear . '_' . $cleanSchoolName . '.xlsx';
+        $fileName = $type.'_exams_'.$cleanYear.'_'.$cleanSchoolName.'.xlsx';
 
         return Excel::download(
             new StudentsExamExport($students, $subjects, $activeYear),
@@ -479,7 +487,7 @@ class StudentController extends Controller
         $request->validate([
             'school_id' => 'required|exists:schools,id',
             'type' => 'required|in:thanawi,idaad',
-            'file' => 'required|file|mimes:xlsx,xls'
+            'file' => 'required|file|mimes:xlsx,xls',
         ]);
 
         $activeYear = Helper::active_year();
@@ -499,7 +507,7 @@ class StudentController extends Controller
         $exam = Exam::create([
             'school_id' => $request->school_id,
             'exam_type' => $request->type,
-            'academic_year' => $activeYear
+            'academic_year' => $activeYear,
         ]);
 
         // Import Excel
@@ -510,53 +518,47 @@ class StudentController extends Controller
 
     public function searchStudent()
     {
-        $classRecord = Helper::MasterRecordMerge(
-            config('constants.options.O_LEVEL'),
-            config('constants.options.A_LEVEL')
-        );
+        Helper::requireSchool();
+     
+        // $classRecord = Helper::MasterRecordMerge(
+        //     config('constants.options.O_LEVEL'),
+        //     config('constants.options.A_LEVEL')
+        // );
+        $classRecord = Classroom::where('school_id', session('LoggedSchool'))->get();
 
         return view('student.student-search', compact(['classRecord']));
     }
 
     public function searchAjax(Request $request)
     {
-
         $criteria = $request->input('criteria');
 
         switch ($criteria) {
             case 'admission_number':
-                $students = StudentBasic::where('Student_ID', $request->admission_number)->get();
+                $students = Student::where('admission_number', $request->admission_number)->get();
                 break;
-
             case 'name':
-                $students = Student::where('firstname', 'like', '%' . $request->firstname . '%')
-                    ->where('lastname', 'like', '%' . $request->lastname . '%')
+                $students = Student::where('firstname', 'like', '%'.$request->firstname.'%')
+                    ->where('lastname', 'like', '%'.$request->lastname.'%')
                     ->where('senior', $request->senior)
                     ->get();
                 break;
-
             case 'phone':
                 $students = Student::where('primary_contact', $request->phone)
                     ->orWhere('other_contact', $request->phone)
                     ->get();
                 break;
-
             case 'student_id':
                 $students = Student::where('id', $request->student_id)->get();
                 break;
-
             default:
                 return response()->json(['message' => 'Invalid criteria'], 400);
         }
 
-        $html = view(
-            'student.partials.results',
-            compact('students')
-        )->render();
+        $html = view('student.partials.results', compact('students'))->render();
 
         return response()->json(['html' => $html]);
     }
-
 
     public function updateProfiles()
     {
@@ -583,7 +585,7 @@ class StudentController extends Controller
             'stream' => 'required|max:255',
             'gender' => 'required|in:Male,Female,Other',
             'school_id' => 'required|integer|exists:schools,id',
-            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,' . $student->id,
+            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,'.$student->id,
 
         ]);
 
@@ -591,7 +593,6 @@ class StudentController extends Controller
 
         return redirect()->route('students.index')->with('success', 'Student updated successfully!');
     }
-
 
     public function showStudentInformation($id)
     {
@@ -615,7 +616,7 @@ class StudentController extends Controller
             'date_of_birth' => $student->date_of_birth,
             'nationality' => $student->nationality,
             'guardian_names' => $student->guardian_names,
-            'guardian_phone' => $student->guardian_phone
+            'guardian_phone' => $student->guardian_phone,
         ]);
     }
 
@@ -630,7 +631,7 @@ class StudentController extends Controller
             'gender' => 'required|in:Male,Female,Other',
             'school_id' => 'sometimes|integer|exists:schools,id',
 
-            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,' . $id,
+            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,'.$id,
             'primary_contact' => 'nullable|string|max:255',
             'other_contact' => 'nullable|string|max:255',
             'date_of_admission' => 'nullable|date',
@@ -729,6 +730,7 @@ class StudentController extends Controller
 
         return response()->json($streams);
     }
+
     public function searchStudentsByClassStream(Request $request)
     {
 
@@ -774,7 +776,7 @@ class StudentController extends Controller
 
             return response()->json([
                 'message' => 'Failed to move student(s).',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

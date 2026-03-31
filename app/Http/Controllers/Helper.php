@@ -22,18 +22,31 @@ class Helper extends Controller
 
     public static function requireSchool()
     {
-        if (!Session::has('LoggedSchool')) {
-            abort(redirect()->back());
+        if (! Session::has('LoggedSchool')) {
+            redirect()->route('school.dashboard')->send();
+            exit;
         }
 
         return Session::get('LoggedSchool');
     }
 
-
     public static function schoolIDFromHouseID($house_id)
     {
         $schoolID = DB::table('schools')
             ->where('registration_code', $house_id)
+            ->value('id');
+
+        return $schoolID;
+    }
+
+    public static function houseIdFromSchoolId($school_id)
+    {
+        $registrationCode = DB::table('schools')
+            ->where('id', $school_id)
+            ->value('registration_code');
+
+        $schoolID = DB::table('houses')
+            ->where('Number', $registrationCode)
             ->value('id');
 
         return $schoolID;
@@ -290,6 +303,17 @@ class Helper extends Controller
     public static function MasterRecordMerge($item1, $item2)
     {
         $items = [$item1, $item2];
+
+        $records = DB::table('master_datas')
+            ->whereIn('md_master_code_id', $items)
+            ->get();
+
+        return $records;
+    }
+
+    public static function MasterDataRecords($item1)
+    {
+        $items = [$item1];
 
         $records = DB::table('master_datas')
             ->whereIn('md_master_code_id', $items)

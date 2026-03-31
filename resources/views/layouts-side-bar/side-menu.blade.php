@@ -62,12 +62,12 @@
                 </a>
             </li>
 
-            <li class="slide">
+            {{-- <li class="slide">
                 <a class="side-menu__item" href="{{ url('/user-rights-and-previledges/setup') }}">
                     <i class="fas fa-user-shield fa-2x mr-3"></i>
                     Rights & Privileges
                 </a>
-            </li>
+            </li> --}}
         @elseif(Session('LoggedAdmin'))
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">

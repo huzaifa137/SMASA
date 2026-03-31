@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Teacher;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class TeacherController extends Controller
@@ -90,6 +91,15 @@ class TeacherController extends Controller
         return view('Users.update-user-info', compact('teacher', 'roles'));
     }
 
+    public function getTeacherData($id)
+    {
+        $teacher = Teacher::where('school_id', Helper::requireSchool())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return response()->json($teacher);
+    }
+
     public function storeUpdatedTeacherProfile(Request $request, Teacher $teacher)
     {
         $validated = $request->validate([
@@ -157,6 +167,11 @@ class TeacherController extends Controller
     public function destroyTeacher($id)
     {
         $teacher = Teacher::findOrFail($id);
+
+        if ($teacher->teacher_profile && File::exists(public_path($teacher->teacher_profile))) {
+            File::delete(public_path($teacher->teacher_profile));
+        }
+
         $teacher->delete();
 
         return response()->json(['message' => 'Teacher deleted successfully.']);

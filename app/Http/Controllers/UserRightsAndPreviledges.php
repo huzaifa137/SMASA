@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use DB;
-use Mail;
-use App\Models\User;
-use App\Models\Teacher;
-use App\Models\Role;
+use App\Models\password_reset_table;
 use App\Models\Permission;
 use App\Models\PermissionRole;
+use App\Models\Role;
+use App\Models\Teacher;
+use App\Models\User;
+use DB;
 use Illuminate\Http\Request;
-use App\Models\password_reset_table;
 use Illuminate\Support\Str;
+use Mail;
 
 class UserRightsAndPreviledges extends Controller
 {
-
     public function setup()
     {
 
@@ -56,7 +55,6 @@ class UserRightsAndPreviledges extends Controller
         return view('UserRights.create-permissions', compact('permissions'));
     }
 
-
     public function storePermissionRole(Request $request)
     {
         $request->validate([
@@ -80,7 +78,7 @@ class UserRightsAndPreviledges extends Controller
 
         foreach ($actions as $action) {
             $permissions[] = [
-                'feature' => $action . '_' . $request->permission_feature,
+                'feature' => $action.'_'.$request->permission_feature,
                 'name' => $request->permission_feature,
                 'scope' => $request->scope,
                 'created_at' => now(),
@@ -114,10 +112,10 @@ class UserRightsAndPreviledges extends Controller
             $roleInfo = Role::find($roleId);
             $permissionName = ucfirst(Helper::item_md_name($featureName));
 
-            if (!$RolePermissionCheck) {
+            if (! $RolePermissionCheck) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Role ({$roleInfo->name}) is not assigned ({$permissionName}) permission access."
+                    'message' => "Role ({$roleInfo->name}) is not assigned ({$permissionName}) permission access.",
                 ], 403);
             }
 
@@ -175,7 +173,6 @@ class UserRightsAndPreviledges extends Controller
         return view('UserRights.assign-permissions', compact('permissions', 'roles', 'permissionsByRole', 'users', 'rolePermissions'));
     }
 
-
     public function storeRolePermissions(Request $request, $roleId)
     {
         $request->validate([
@@ -192,7 +189,7 @@ class UserRightsAndPreviledges extends Controller
             ->where('permission_scope', $permissionScope)
             ->first();
 
-        if (!$checkExistance) {
+        if (! $checkExistance) {
             DB::table('permission_role')->insert([
                 'permission_id' => $permissionId,
                 'role_id' => $roleId,
@@ -201,12 +198,12 @@ class UserRightsAndPreviledges extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permissions updated successfully!'
+                'message' => 'Permissions updated successfully!',
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Permission already exists!'
+                'message' => 'Permission already exists!',
             ]);
         }
     }
@@ -214,6 +211,7 @@ class UserRightsAndPreviledges extends Controller
     public function editRole($id)
     {
         $role = Role::findOrFail($id);
+
         return response()->json($role);
     }
 
@@ -222,8 +220,8 @@ class UserRightsAndPreviledges extends Controller
         $role = Role::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'scope' => 'required'
+            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
+            'scope' => 'required',
         ]);
 
         $role->update($validated);
@@ -252,13 +250,13 @@ class UserRightsAndPreviledges extends Controller
         if ($deleted) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Permission group deleted successfully.'
+                'message' => 'Permission group deleted successfully.',
             ]);
         }
 
         return response()->json([
             'status' => 'error',
-            'message' => 'No matching permissions found.'
+            'message' => 'No matching permissions found.',
         ], 404);
     }
 
@@ -284,12 +282,12 @@ class UserRightsAndPreviledges extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permission removed successfully!'
+                'message' => 'Permission removed successfully!',
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Permission not found!'
+                'message' => 'Permission not found!',
             ]);
         }
     }
@@ -309,7 +307,7 @@ class UserRightsAndPreviledges extends Controller
             if ($existingAssignment) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User already has this role.'
+                    'message' => 'User already has this role.',
                 ]);
             }
 
@@ -337,6 +335,7 @@ class UserRightsAndPreviledges extends Controller
 
             return response()->json(['success' => true]);
         }
+
         return response()->json(['success' => false, 'message' => 'Failed to remove user from role.'], 400);
     }
 
@@ -372,7 +371,7 @@ class UserRightsAndPreviledges extends Controller
         $token = Str::random(60);
         $resetUrl = url('password/set-password', $token);
 
-        $post = new password_reset_table();
+        $post = new password_reset_table;
 
         $post->email = $teacher->email;
         $post->token = $resetUrl;
@@ -396,20 +395,72 @@ class UserRightsAndPreviledges extends Controller
 
     public function updateUserInformation(Request $request)
     {
+        $teacherFields = [
+            'school_id',
+            'staff_number',
+            'surname',
+            'firstname',
+            'email',
+            'othername',
+            'initials',
+            'phonenumber',
+            'registration_number',
+            'gender',
+            'national_id',
+            'address',
+            'employee_number',
+            'group_teacher',
+            'teacher_profile',
+        ];
+
+        // Get only the fields you want
+        $data = $request->only($teacherFields);
+
+        // Validation rules
         $validated = $request->validate([
-            'username' => 'required|string|max:255',
-            'email' => 'required|email',
-            'user_id' => 'required|exists:users,id',
+            'surname' => 'nullable|string|max:255',
+            'firstname' => 'nullable|string|max:255',
+            'othername' => 'nullable|string|max:255',
+            'initials' => 'nullable|string|max:255',
+            'gender' => 'nullable|in:male,female',
+            'phonenumber' => 'nullable|string|max:20',
+            'registration_number' => 'nullable|string|max:50',
+            'national_id' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
+            'employee_number' => 'nullable|string|max:50',
+            'group_teacher' => 'nullable|integer|between:1,5',
+            'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // accept image
+            'school_id' => 'required|exists:schools,id',
+            'staff_number' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
         ]);
 
-        $user = User::findOrFail($validated['user_id']);
+        $teacher = Teacher::findOrFail($request->teacher_id);
 
-        unset($validated['user_id']);
+        // Handle profile image upload
+        if ($request->hasFile('teacher_profile')) {
 
-        $user->update($validated);
-        $user->roles()->sync($request->roles ?? []);
+            if ($teacher->teacher_profile && file_exists(public_path($teacher->teacher_profile))) {
+                unlink(public_path($teacher->teacher_profile));
+            }
 
-        return response()->json(['message' => 'User information updated successfully']);
+            $file = $request->file('teacher_profile');
+            $destinationPath = public_path('uploads/teacherProfiles');
+            if (! file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move($destinationPath, $filename);
+
+            $data['teacher_profile'] = 'uploads/teacherProfiles/'.$filename;
+        }
+
+        // Update teacher record
+        $teacher->update($data);
+
+        return response()->json([
+            'message' => 'Teacher information updated successfully!',
+        ]);
     }
 
     public function deleteUser(User $userId)
@@ -428,7 +479,7 @@ class UserRightsAndPreviledges extends Controller
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
@@ -438,7 +489,7 @@ class UserRightsAndPreviledges extends Controller
     public function changeStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:0,8,9,10'
+            'status' => 'required|in:0,8,9,10',
         ]);
 
         $user = User::findOrFail($id);
@@ -472,7 +523,7 @@ class UserRightsAndPreviledges extends Controller
 
         $currentRoles = $user->roles()->pluck('roles.id')->toArray();
 
-        if (!in_array($request->role_id, $currentRoles)) {
+        if (! in_array($request->role_id, $currentRoles)) {
             $currentRoles[] = $request->role_id;
             $user->roles()->sync($currentRoles);
         }
@@ -490,13 +541,10 @@ class UserRightsAndPreviledges extends Controller
         $user = User::findOrFail($request->user_id);
 
         $currentRoles = $user->roles()->pluck('roles.id')->toArray();
-        $updatedRoles = array_filter($currentRoles, fn($id) => $id != $request->role_id);
+        $updatedRoles = array_filter($currentRoles, fn ($id) => $id != $request->role_id);
 
         $user->roles()->sync($updatedRoles);
 
         return response()->json(['message' => 'User removed from role successfully']);
     }
-
-
-
 }

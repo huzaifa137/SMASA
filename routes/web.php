@@ -217,7 +217,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/individual-school-teachers/{id}', 'individualSchoolTeachers')->name('individual.school.teachers');
         Route::get('/teacher-profile/{id}', 'teacherProfile')->name('teacher.profile');
         Route::get('/update-teacher-profile/{id}', 'updateteacherProfile')->name('update.teacher.profile');
-
+        Route::get('/teacher/profile/{id}/data', 'getTeacherData')->name('teacher.data');
         Route::post('/store-teachers', 'storeTeacher')->name('teachers.store');
         Route::post('/teachers/update/{teacher}', 'storeUpdatedTeacherProfile')->name('teachers.update');
 
@@ -254,6 +254,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     });
 
     Route::controller(UserRightsAndPreviledges::class)->group(function () {
+        Route::post('/update-user-information', 'updateUserInformation')->name('users.update.information');
         Route::group(['middleware' => ['AdminAuth']], function () {
             Route::group(['prefix' => '/user-rights-and-previledges'], function () {
                 Route::get('/setup', 'setup')->name('all.roles.setup');
@@ -287,7 +288,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/remove-user-from-role', 'removeUserFromRole')->name('removeUserFromRole');
 
             Route::post('/store-new-user', 'storeNewUser')->name('users.store.new.user');
-            Route::post('/update-user-information', 'updateUserInformation')->name('users.update.information');
+
             Route::post('/users/{id}/change-status', 'changeStatus');
         });
 
@@ -298,8 +299,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     Route::get('students-dashboard', 'studentPortal')->name('all.students.dashboard');
                     Route::get('update-profile', action: 'updateProfiles')->name('students.update.profile');
                     Route::get('/search', 'searchStudent')->name('students.individual.search');
-                    // Route::get('/all-students', 'allStudents')->name('students.all.students');
-                    Route::get('/all-students', 'allStudentsInformation')->name('students.all.students');
+                    Route::get('/all-students', 'allStudents')->name('students.all.students');
                     Route::get('/search/ajax', 'searchAjax')->name('students.search.ajax');
 
                     Route::get('/export/{schoolId}/{type}', 'exportStudents')->name('students.export');
