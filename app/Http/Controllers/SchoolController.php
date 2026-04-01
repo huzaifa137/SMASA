@@ -482,7 +482,7 @@ class SchoolController extends Controller
 
         $schoolId = $request->input('school_id');
         $school = School::find($schoolId);
-
+        // dd($school);
         if (! $school) {
             return response()->json([
                 'status' => false,

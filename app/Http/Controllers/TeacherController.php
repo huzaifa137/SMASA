@@ -13,7 +13,9 @@ class TeacherController extends Controller
 {
     public function addTeachers()
     {
-        $school_id = Session('LoggedSchool');
+        Helper::requireSchool();
+
+        $school_id = Helper::requireSchool();
 
         return view('Teacher.add-teachers', compact('school_id'));
     }

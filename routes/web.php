@@ -18,6 +18,7 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::get('/show-sessions', function () {
     $allSessions = Session::all();
     dd($allSessions);
+dd($allSessions);
 })->name('show.sessions');
 
 Route::get('/set-admin-session', function () {
@@ -310,7 +311,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
                     Route::get('/add-new-student', 'addNewStudent')->name('students.add.new.student');
 
-                    Route::put('/update/{id}', 'updateStudentInformation');
+                    // Route::put('/update/{id}', 'updateStudentInformation');
                     Route::post('/students/store', 'storeStudent')->name('students.store');
 
                     Route::get('/transfer-form', 'moveStudentForm')->name('students.transfer');
@@ -320,7 +321,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     Route::post('/students/move', 'moveStudent')->name('students.move');
 
                     Route::get('students/generate-id', 'generateStudentID')->name('students.generate-id');
+                    Route::get('/view/{id}', 'viewStudent')->name('students.view');
+                    Route::post('/update/{id}', 'updateStudent');
 
+                    Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
+    
                 });
             });
     });

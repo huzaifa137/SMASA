@@ -210,45 +210,45 @@ $controller = new Controller();
                             $form[0].reset();
                         }
                     },
-                    //  error: function (data) {
-                    //         $('body').html(data.responseText);
-                    //     },
-                    error: function (xhr) {
-                        if (xhr.status === 422) {
-                            let errors = xhr.responseJSON.errors;
+                     error: function (data) {
+                            $('body').html(data.responseText);
+                        },
+                    // error: function (xhr) {
+                    //     if (xhr.status === 422) {
+                    //         let errors = xhr.responseJSON.errors;
 
-                            if (errors) {
-                                for (let field in errors) {
-                                    let input = $form.find(`[name="${field}"]`);
-                                    input.addClass('is-invalid');
-                                    if (input.next('.invalid-feedback').length === 0) {
-                                        input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
-                                    }
-                                }
-                            }
+                    //         if (errors) {
+                    //             for (let field in errors) {
+                    //                 let input = $form.find(`[name="${field}"]`);
+                    //                 input.addClass('is-invalid');
+                    //                 if (input.next('.invalid-feedback').length === 0) {
+                    //                     input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
+                    //                 }
+                    //             }
+                    //         }
 
-                            if (xhr.responseJSON.message) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Validation Error',
-                                    text: xhr.responseJSON.message
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Validation Error',
-                                    text: 'Please fix the errors and try again.'
-                                });
-                            }
-                        } else {
-                            let errorMessage = xhr.responseJSON?.message || xhr.statusText || 'An unexpected error occurred';
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Server Error',
-                                html: `<pre>${errorMessage}</pre>`,
-                            });
-                        }
-                    },
+                    //         if (xhr.responseJSON.message) {
+                    //             Swal.fire({
+                    //                 icon: 'error',
+                    //                 title: 'Validation Error',
+                    //                 text: xhr.responseJSON.message
+                    //             });
+                    //         } else {
+                    //             Swal.fire({
+                    //                 icon: 'error',
+                    //                 title: 'Validation Error',
+                    //                 text: 'Please fix the errors and try again.'
+                    //             });
+                    //         }
+                    //     } else {
+                    //         let errorMessage = xhr.responseJSON?.message || xhr.statusText || 'An unexpected error occurred';
+                    //         Swal.fire({
+                    //             icon: 'error',
+                    //             title: 'Server Error',
+                    //             html: `<pre>${errorMessage}</pre>`,
+                    //         });
+                    //     }
+                    // },
                     complete: function () {
                         $submitBtn.prop('disabled', false).html(originalBtnHtml);
                     }

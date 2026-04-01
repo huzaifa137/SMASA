@@ -160,6 +160,65 @@ use App\Http\Controllers\Helper;
             .student-form-grid label {
                 margin-bottom: 3px;
             }
+
+            .date-input-wrapper {
+                position: relative;
+                width: 100%;
+            }
+
+            .date-picker {
+                padding-right: 40px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .date-picker:focus {
+                border-color: #5351e4;
+                box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.1);
+                outline: none;
+            }
+
+            .calendar-icon {
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #6c757d;
+                pointer-events: none;
+                font-size: 16px;
+                transition: color 0.3s ease;
+            }
+
+            .date-picker:focus+.calendar-icon {
+                color: #5351e4;
+            }
+
+            .date-picker::-webkit-calendar-picker-indicator {
+                opacity: 0;
+                position: absolute;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+
+            .date-picker::-webkit-datetime-edit {
+                color: #495057;
+            }
+
+            .date-picker:invalid::-webkit-datetime-edit {
+                color: #6c757d;
+            }
+
+            @media (max-width: 768px) {
+                .date-picker {
+                    font-size: 16px;
+                }
+            }
         </style>
 
         <div class="row">
@@ -177,12 +236,13 @@ use App\Http\Controllers\Helper;
                             @csrf
 
                             <div class="student-form-grid">
-                                
-                                <input type="hidden" name="School" id="School" value="{{ Helper::houseIdFromSchoolId(Helper::requireSchool());  }}">
-                                
+
+                                <input type="hidden" name="School" id="School" value="{{ Helper::requireSchool() }}">
+
                                 <div class="form-group">
                                     <label>School <span class="text-danger">*</span></label>
-                                    <input type="text" name="Student_ID" class="form-control" value="{{ Helper::schoolNameBySchoolID(Helper::requireSchool()); }}" readonly>
+                                    <input type="text" name="Student_ID" class="form-control"
+                                        value="{{ Helper::schoolNameBySchoolID(Helper::requireSchool()) }}" readonly>
                                 </div>
 
                                 <div class="form-group">
@@ -223,14 +283,14 @@ use App\Http\Controllers\Helper;
                                 </div>
 
                                 <div class="form-group">
-    <label>Senior <span class="text-danger">*</span></label>
-    <select name="senior" class="form-control" >
-        <option value="">-- Select Senior --</option>
-        @foreach($classRecord as $record)
-            <option value="{{ $record->md_code }}">{{ $record->md_name }}</option>
-        @endforeach
-    </select>
-</div>
+                                    <label>Senior <span class="text-danger">*</span></label>
+                                    <select name="senior" class="form-control">
+                                        <option value="">-- Select Senior --</option>
+                                        @foreach ($classRecord as $record)
+                                            <option value="{{ $record->md_code }}">{{ $record->md_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
                                 <div class="form-group">
                                     <label>Stream <span class="text-danger">*</span></label>
@@ -327,92 +387,6 @@ use App\Http\Controllers\Helper;
                                     <small class="form-text text-muted">Select the student's date of birth</small>
                                 </div>
 
-                                <style>
-                                    .date-input-wrapper {
-                                        position: relative;
-                                        width: 100%;
-                                    }
-
-                                    .date-picker {
-                                        padding-right: 40px;
-                                        cursor: pointer;
-                                        transition: all 0.3s ease;
-                                        border: 1px solid #dee2e6;
-                                        border-radius: 6px;
-                                        padding: 8px 12px;
-                                        font-size: 14px;
-                                    }
-
-                                    .date-picker:focus {
-                                        border-color: #5351e4;
-                                        box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.1);
-                                        outline: none;
-                                    }
-
-                                    .calendar-icon {
-                                        position: absolute;
-                                        right: 12px;
-                                        top: 50%;
-                                        transform: translateY(-50%);
-                                        color: #6c757d;
-                                        pointer-events: none;
-                                        font-size: 16px;
-                                        transition: color 0.3s ease;
-                                    }
-
-                                    .date-picker:focus+.calendar-icon {
-                                        color: #5351e4;
-                                    }
-
-                                    .date-picker::-webkit-calendar-picker-indicator {
-                                        opacity: 0;
-                                        position: absolute;
-                                        right: 0;
-                                        width: 100%;
-                                        height: 100%;
-                                        cursor: pointer;
-                                    }
-
-                                    .date-picker::-webkit-datetime-edit {
-                                        color: #495057;
-                                    }
-
-                                    .date-picker:invalid::-webkit-datetime-edit {
-                                        color: #6c757d;
-                                    }
-
-                                    @media (max-width: 768px) {
-                                        .date-picker {
-                                            font-size: 16px;
-                                        }
-                                    }
-                                </style>
-
-                                <script>
-                                    // JavaScript fallback to ensure future dates are disabled
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        const dateInput = document.getElementById('dateOfBirth');
-                                        if (dateInput) {
-                                            // Set max date to today
-                                            const today = new Date();
-                                            const yyyy = today.getFullYear();
-                                            const mm = String(today.getMonth() + 1).padStart(2, '0');
-                                            const dd = String(today.getDate()).padStart(2, '0');
-                                            const maxDate = `${yyyy}-${mm}-${dd}`;
-
-                                            dateInput.setAttribute('max', maxDate);
-
-                                            // Optional: Add validation to prevent manual entry of future dates
-                                            dateInput.addEventListener('change', function() {
-                                                if (this.value > maxDate) {
-                                                    this.value = '';
-                                                    alert('Date of birth cannot be in the future');
-                                                }
-                                            });
-                                        }
-                                    });
-                                </script>
-
                                 <div class="form-group">
                                     <label>Birth Certificate Entry Number</label>
                                     <input type="text" name="birth_certificate_entry_number" class="form-control">
@@ -472,38 +446,60 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-$(document).ready(function() {
+    <script>
+        $(document).ready(function() {
 
-    function updateStudentID() {
-        let schoolId = $('#School').val(); // read from hidden input
-        let category = $('select[name="Category"]').val();
-        let year = $('select[name="Admission_Year"]').val();
+            function updateStudentID() {
+                let schoolId = $('#School').val(); // read from hidden input
+                let category = $('select[name="Category"]').val();
+                let year = $('select[name="Admission_Year"]').val();
 
-        if (schoolId && category && year) {
-            $.ajax({
-                url: '{{ route('students.generate-id') }}',
-                data: {
-                    school_id: schoolId,
-                    category: category,
-                    year: year
-                },
-                success: function(res) {
-                    $('#Student_ID').val(res.student_id);
+                if (schoolId && category && year) {
+                    $.ajax({
+                        url: '{{ route('students.generate-id') }}',
+                        data: {
+                            school_id: schoolId,
+                            category: category,
+                            year: year
+                        },
+                        success: function(res) {
+                            $('#Student_ID').val(res.student_id);
+                        }
+                    });
+                } else {
+                    $('#Student_ID').val('');
                 }
-            });
-        } else {
-            $('#Student_ID').val('');
-        }
-    }
+            }
 
-    // Trigger Student ID update when category or year changes
-    $('select[name="Category"], select[name="Admission_Year"]').on('change', updateStudentID);
+            // Trigger Student ID update when category or year changes
+            $('select[name="Category"], select[name="Admission_Year"]').on('change', updateStudentID);
 
-    // Optionally, trigger on page load if you want initial value
-    updateStudentID();
-});
-</script>
+            // Optionally, trigger on page load if you want initial value
+            updateStudentID();
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('dateOfBirth');
+            if (dateInput) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const maxDate = `${yyyy}-${mm}-${dd}`;
+
+                dateInput.setAttribute('max', maxDate);
+
+                dateInput.addEventListener('change', function() {
+                    if (this.value > maxDate) {
+                        this.value = '';
+                        alert('Date of birth cannot be in the future');
+                    }
+                });
+            }
+        });
+    </script>
 
     <script>
         $(document).ready(function() {
@@ -557,20 +553,20 @@ $(document).ready(function() {
 
                 // Confirm before submission
                 Swal.fire({
-    title: 'Are you sure?',
-    text: "You are about to submit the student data.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, submit it!',
-    cancelButtonText: 'Cancel',
-    confirmButtonColor: '#5351e4',
-    cancelButtonColor: '#6c757d'
-}).then((result) => {
-    if (result.isConfirmed) {
-        // Show custom loader with progress
-        Swal.fire({
-            title: 'Saving Student',
-            html: `
+                    title: 'Are you sure?',
+                    text: "You are about to submit the student data.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, submit it!',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#5351e4',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show custom loader with progress
+                        Swal.fire({
+                            title: 'Saving Student',
+                            html: `
                 <div class="custom-loader-container">
                     <div class="loader-spinner"></div>
                     <div class="loader-text">Processing student data...</div>
@@ -584,14 +580,14 @@ $(document).ready(function() {
                     </div>
                 </div>
             `,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            width: '400px',
-            didOpen: () => {
-                // Add custom styles
-                const style = document.createElement('style');
-                style.textContent = `
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            width: '400px',
+                            didOpen: () => {
+                                // Add custom styles
+                                const style = document.createElement('style');
+                                style.textContent = `
                     .custom-loader-container {
                         text-align: center;
                         padding: 10px 0;
@@ -645,99 +641,118 @@ $(document).ready(function() {
                         color: #28a745;
                     }
                 `;
-                document.head.appendChild(style);
-                
-                // Animate progress
-                let progress = 0;
-                const progressBar = Swal.getHtmlContainer().querySelector('.progress-bar');
-                const steps = Swal.getHtmlContainer().querySelectorAll('.step');
-                
-                const updateProgress = (percent, stepIndex) => {
-                    progressBar.style.width = percent + '%';
-                    steps.forEach((step, idx) => {
-                        if (idx < stepIndex) {
-                            step.classList.add('completed');
-                            step.classList.remove('active');
-                        } else if (idx === stepIndex) {
-                            step.classList.add('active');
-                            step.classList.remove('completed');
-                        }
-                    });
-                };
-                
-                updateProgress(30, 0);
-            }
-        });
-        
-        // Make the AJAX request
-        $.ajax({
-            url: $form.attr('action'),
-            type: 'POST',
-            data: new FormData($form[0]),
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('input[name="_token"]').val()
-            },
-            xhr: function() {
-                const xhr = new window.XMLHttpRequest();
-                xhr.upload.addEventListener('progress', function(e) {
-                    if (e.lengthComputable) {
-                        const percent = (e.loaded / e.total) * 100;
-                        // Update progress for file upload
-                        const progressBar = Swal.getHtmlContainer().querySelector('.progress-bar');
-                        const steps = Swal.getHtmlContainer().querySelectorAll('.step');
-                        if (progressBar) {
-                            progressBar.style.width = Math.min(percent, 50) + '%';
-                        }
-                        if (percent > 30 && steps[1]) {
-                            steps[1].classList.add('active');
-                        }
+                                document.head.appendChild(style);
+
+                                // Animate progress
+                                let progress = 0;
+                                const progressBar = Swal.getHtmlContainer()
+                                    .querySelector('.progress-bar');
+                                const steps = Swal.getHtmlContainer().querySelectorAll(
+                                    '.step');
+
+                                const updateProgress = (percent, stepIndex) => {
+                                    progressBar.style.width = percent + '%';
+                                    steps.forEach((step, idx) => {
+                                        if (idx < stepIndex) {
+                                            step.classList.add('completed');
+                                            step.classList.remove('active');
+                                        } else if (idx === stepIndex) {
+                                            step.classList.add('active');
+                                            step.classList.remove(
+                                                'completed');
+                                        }
+                                    });
+                                };
+
+                                updateProgress(30, 0);
+                            }
+                        });
+
+                        // Make the AJAX request
+                        $.ajax({
+                            url: $form.attr('action'),
+                            type: 'POST',
+                            data: new FormData($form[0]),
+                            processData: false,
+                            contentType: false,
+                            headers: {
+                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                            },
+                            xhr: function() {
+                                const xhr = new window.XMLHttpRequest();
+                                xhr.upload.addEventListener('progress', function(e) {
+                                    if (e.lengthComputable) {
+                                        const percent = (e.loaded / e.total) *
+                                            100;
+                                        // Update progress for file upload
+                                        const progressBar = Swal
+                                            .getHtmlContainer().querySelector(
+                                                '.progress-bar');
+                                        const steps = Swal.getHtmlContainer()
+                                            .querySelectorAll('.step');
+                                        if (progressBar) {
+                                            progressBar.style.width = Math.min(
+                                                percent, 50) + '%';
+                                        }
+                                        if (percent > 30 && steps[1]) {
+                                            steps[1].classList.add('active');
+                                        }
+                                    }
+                                });
+                                return xhr;
+                            },
+                            success: function(response) {
+                                // Update to 100% and mark complete
+                                const progressBar = Swal.getHtmlContainer()
+                                    .querySelector('.progress-bar');
+                                const steps = Swal.getHtmlContainer().querySelectorAll(
+                                    '.step');
+                                const loaderText = Swal.getHtmlContainer()
+                                    .querySelector('.loader-text');
+
+                                progressBar.style.width = '100%';
+                                steps.forEach(step => {
+                                    step.classList.remove('active');
+                                    step.classList.add('completed');
+                                });
+                                loaderText.textContent = 'Student saved successfully!';
+
+                                setTimeout(() => {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: 'Student data has been submitted successfully.',
+                                        confirmButtonColor: '#5351e4',
+                                        confirmButtonText: 'OK',
+                                        showConfirmButton: true
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            if (response.redirect) {
+                                                window.location.href =
+                                                    response.redirect;
+                                            } else {
+                                                location
+                                                    .reload(); // fallback refresh
+                                            }
+                                        }
+                                    });
+                                }, 500);
+                            },
+                            error: function(data) {
+                                $('body').html(data.responseText);
+                            }
+                            // error: function(xhr, status, error) {
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Submission Failed',
+                            //         text: 'There was an error saving the student data. Please try again.',
+                            //         confirmButtonColor: '#5351e4',
+                            //         confirmButtonText: 'Try Again'
+                            //     });
+                            // }
+                        });
                     }
                 });
-                return xhr;
-            },
-            success: function(response) {
-                // Update to 100% and mark complete
-                const progressBar = Swal.getHtmlContainer().querySelector('.progress-bar');
-                const steps = Swal.getHtmlContainer().querySelectorAll('.step');
-                const loaderText = Swal.getHtmlContainer().querySelector('.loader-text');
-                
-                progressBar.style.width = '100%';
-                steps.forEach(step => {
-                    step.classList.remove('active');
-                    step.classList.add('completed');
-                });
-                loaderText.textContent = 'Student saved successfully!';
-                
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Student data has been submitted successfully.',
-                        confirmButtonColor: '#5351e4',
-                        confirmButtonText: 'OK',
-                        timer: 2000,
-                        showConfirmButton: true
-                    }).then(() => {
-                        if (response.redirect) {
-                            window.location.href = response.redirect;
-                        }
-                    });
-                }, 500);
-            },
-            error: function(xhr, status, error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Submission Failed',
-                    text: 'There was an error saving the student data. Please try again.',
-                    confirmButtonColor: '#5351e4',
-                    confirmButtonText: 'Try Again'
-                });
-            }
-        });
-    }
-});
             });
         });
     </script>
@@ -822,6 +837,7 @@ $(document).ready(function() {
             }
         });
     </script>
+
 @endsection
 
 @section('js')

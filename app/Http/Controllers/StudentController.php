@@ -207,8 +207,6 @@ class StudentController extends Controller
 
     private function getSubjectIdsForCategory($category)
     {
-        // Implement this based on your subject-category mapping
-        // This is a placeholder - adjust according to your database structure
         return Subject::where('category', $category)->pluck('id')->toArray();
     }
 
@@ -298,12 +296,12 @@ class StudentController extends Controller
         //     config('constants.options.A_LEVEL')
         // );
 
-                $classRecord = Helper::MasterDataRecords(
+        $classRecord = Helper::MasterDataRecords(
             config('constants.options.O_LEVEL'),
             // config('constants.options.A_LEVEL')
         );
-    
-        return view('student.add-new-student', compact('schools', 'years', 'newStudentId','classRecord'));
+
+        return view('student.add-new-student', compact('schools', 'years', 'newStudentId', 'classRecord'));
     }
 
     public function generateStudentID(Request $request)
@@ -435,9 +433,18 @@ class StudentController extends Controller
     {
         Helper::requireSchool();
 
-        $students = Student::where('school_id', session('LoggedSchool'))
+        $students = Student::where('school_id', Helper::requireSchool())
             ->orderBy('senior')
             ->orderBy('stream')
+            ->select(
+                'id',
+                'firstname',
+                'lastname',
+                'gender',
+                'student_photo',
+                'senior',
+                'stream'
+            )
             ->get();
 
         $groupedStudents = $students->groupBy('senior')->map(function ($seniorGroup) {
@@ -445,6 +452,92 @@ class StudentController extends Controller
         });
 
         return view('student.all-students', compact('groupedStudents'));
+    }
+
+    public function viewStudent($id)
+    {
+        $student = Student::findOrFail($id);
+
+        return response()->json([
+            'student' => $student,
+        ]);
+    }
+
+    public function updateStudent(Request $request, $id)
+    {
+
+        $student = Student::findOrFail($id);
+
+        $validated = $request->validate([
+            'firstname' => 'required|string|max:100',
+            'lastname' => 'required|string|max:100',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'date_of_birth' => 'nullable|date',
+            'student_photo' => 'nullable|image|mimes:jpg,png,gif',
+        ]);
+
+        if ($request->hasFile('student_photo')) {
+            // Delete old photo if exists
+            if ($student->student_photo && file_exists(public_path($student->student_photo))) {
+                unlink(public_path($student->student_photo));
+            }
+            $file = $request->file('student_photo');
+            $destinationPath = public_path('uploads/studentPhotos');
+            if (! file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move($destinationPath, $filename);
+            $validated['student_photo'] = 'uploads/studentPhotos/'.$filename;
+        }
+
+        $student->update(array_merge($validated, [
+            'place_of_birth' => $request->place_of_birth,
+            'nationality' => $request->nationality,
+            'birth_certificate_entry_number' => $request->birth_certificate_entry_number,
+            'registration_number' => $request->registration_number,
+            'admission_number' => $request->admission_number,
+            'admission_year' => $request->admission_year,
+            'date_of_admission' => $request->date_of_admission,
+            'senior' => $request->senior,
+            'stream' => $request->stream,
+            'ple_score' => $request->ple_score,
+            'uce_score' => $request->uce_score,
+            'previous_school' => $request->previous_school,
+            'primary_school_name' => $request->primary_school_name,
+            'primary_contact' => $request->primary_contact,
+            'other_contact' => $request->other_contact,
+            'home_address' => $request->home_address,
+            'guardian_names' => $request->guardian_names,
+            'relation' => $request->relation,
+            'guardian_phone' => $request->guardian_phone,
+            'guardian_email' => $request->guardian_email,
+            'medical_history' => $request->medical_history,
+            'comments' => $request->comments,
+        ]));
+
+        return response()->json(['message' => 'Student updated successfully!']);
+    }
+
+    public function destroyStudent(Student $student)
+    {
+        try {
+            if ($student->student_photo && file_exists(public_path($student->student_photo))) {
+                unlink(public_path($student->student_photo));
+            }
+
+            $student->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student deleted successfully!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete student.',
+            ], 500);
+        }
     }
 
     public function exportStudents($schoolId, $type)
@@ -519,7 +612,7 @@ class StudentController extends Controller
     public function searchStudent()
     {
         Helper::requireSchool();
-     
+
         // $classRecord = Helper::MasterRecordMerge(
         //     config('constants.options.O_LEVEL'),
         //     config('constants.options.A_LEVEL')
@@ -620,43 +713,43 @@ class StudentController extends Controller
         ]);
     }
 
-    public function updateStudentInformation(Request $request, $id)
-    {
+    // public function updateStudentInformation(Request $request, $id)
+    // {
 
-        $validated = $request->validate([
-            'firstname' => 'required|string|max:255',
-            'lastname' => 'required|string|max:255',
-            'senior' => 'nullable|max:255',
-            'stream' => 'nullable|max:255',
-            'gender' => 'required|in:Male,Female,Other',
-            'school_id' => 'sometimes|integer|exists:schools,id',
+    //     $validated = $request->validate([
+    //         'firstname' => 'required|string|max:255',
+    //         'lastname' => 'required|string|max:255',
+    //         'senior' => 'nullable|max:255',
+    //         'stream' => 'nullable|max:255',
+    //         'gender' => 'required|in:Male,Female,Other',
+    //         'school_id' => 'sometimes|integer|exists:schools,id',
 
-            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,'.$id,
-            'primary_contact' => 'nullable|string|max:255',
-            'other_contact' => 'nullable|string|max:255',
-            'date_of_admission' => 'nullable|date',
-            'date_of_birth' => 'nullable|date',
-            'place_of_birth' => 'nullable|string|max:255',
-            'nationality' => 'nullable|string|max:255',
-            'ple_score' => 'nullable|numeric|between:0,999.99',
-            'uce_score' => 'nullable|numeric|between:0,999.99',
-            'previous_school' => 'nullable|string|max:255',
-            'primary_school_name' => 'nullable|string|max:255',
-            'guardian_names' => 'nullable|string|max:255',
-            'relation' => 'nullable|string|max:255',
-            'guardian_phone' => 'nullable|string|max:255',
-            'guardian_email' => 'nullable|email|max:255',
-            'home_address' => 'nullable|string',
-            'birth_certificate_entry_number' => 'nullable|string|max:255',
-            'medical_history' => 'nullable|string',
-            'comments' => 'nullable|string',
-        ]);
+    //         'admission_number' => 'nullable|string|max:255|unique:students,admission_number,'.$id,
+    //         'primary_contact' => 'nullable|string|max:255',
+    //         'other_contact' => 'nullable|string|max:255',
+    //         'date_of_admission' => 'nullable|date',
+    //         'date_of_birth' => 'nullable|date',
+    //         'place_of_birth' => 'nullable|string|max:255',
+    //         'nationality' => 'nullable|string|max:255',
+    //         'ple_score' => 'nullable|numeric|between:0,999.99',
+    //         'uce_score' => 'nullable|numeric|between:0,999.99',
+    //         'previous_school' => 'nullable|string|max:255',
+    //         'primary_school_name' => 'nullable|string|max:255',
+    //         'guardian_names' => 'nullable|string|max:255',
+    //         'relation' => 'nullable|string|max:255',
+    //         'guardian_phone' => 'nullable|string|max:255',
+    //         'guardian_email' => 'nullable|email|max:255',
+    //         'home_address' => 'nullable|string',
+    //         'birth_certificate_entry_number' => 'nullable|string|max:255',
+    //         'medical_history' => 'nullable|string',
+    //         'comments' => 'nullable|string',
+    //     ]);
 
-        $student = Student::findOrFail($id);
-        $student->update($validated);
+    //     $student = Student::findOrFail($id);
+    //     $student->update($validated);
 
-        return response()->json(['message' => 'Student updated successfully']);
-    }
+    //     return response()->json(['message' => 'Student updated successfully']);
+    // }
 
     public function moveStudentForm()
     {
