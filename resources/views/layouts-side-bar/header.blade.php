@@ -37,11 +37,12 @@
                 }
 
                 /* Hide for screen width below 990px and height below 703px */
-@media (max-width: 989px), (max-height: 702px) {
-    .admin-school-dropdown {
-        display: none !important;
-    }
-}
+                @media (max-width: 989px),
+                (max-height: 702px) {
+                    .admin-school-dropdown {
+                        display: none !important;
+                    }
+                }
             </style>
 
             <div class="dropdown side-nav">
@@ -88,35 +89,35 @@
                     : null;
             @endphp
 
-@if (session('LoggedAdmin'))
-    <div class="admin-school-dropdown mt-3 ml-3 col-12 col-md-6">
-        <div class="dropdown">
-            <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
-                id="schoolDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {{ $selectedSchool ? $selectedSchool->name : 'Select School' }}
-            </button>
-            <div class="dropdown-menu w-100 p-2" aria-labelledby="schoolDropdownButton"
-                style="max-height: 300px; overflow-y: auto;">
-                <input type="text" class="form-control mb-2" id="schoolSearch"
-                    placeholder="Search school...">
-                <div id="schoolList">
-                    <a class="dropdown-item clear-school bg-light text-primary font-weight-bold rounded"
-                        href="#" style="border: 1px dashed #2C29CA; margin-bottom: 5px;">
-                        <i class="fas fa-undo-alt mr-2"></i> Clear School Selection
-                    </a>
-                    @forelse ($schools as $school)
-                        <a class="dropdown-item school-item" href="#" data-id="{{ $school->id }}"
-                            data-name="{{ $school->name }}">
-                            {{ $school->name }}
-                        </a>
-                    @empty
-                        <a class="dropdown-item" href="#">No schools found.</a>
-                    @endforelse
+            @if (session('LoggedAdmin'))
+                <div class="admin-school-dropdown mt-3 ml-3 col-12 col-md-6">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
+                            id="schoolDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{ $selectedSchool ? $selectedSchool->name : 'Select School' }}
+                        </button>
+                        <div class="dropdown-menu w-100 p-2" aria-labelledby="schoolDropdownButton"
+                            style="max-height: 300px; overflow-y: auto;">
+                            <input type="text" class="form-control mb-2" id="schoolSearch"
+                                placeholder="Search school...">
+                            <div id="schoolList">
+                                <a class="dropdown-item clear-school bg-light text-primary font-weight-bold rounded"
+                                    href="#" style="border: 1px dashed #2C29CA; margin-bottom: 5px;">
+                                    <i class="fas fa-undo-alt mr-2"></i> Clear School Selection
+                                </a>
+                                @forelse ($schools as $school)
+                                    <a class="dropdown-item school-item" href="#" data-id="{{ $school->id }}"
+                                        data-name="{{ $school->name }}">
+                                        {{ $school->name }}
+                                    </a>
+                                @empty
+                                    <a class="dropdown-item" href="#">No schools found.</a>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-@endif
+            @endif
 
             <div class="d-flex order-lg-2 ml-auto" style="margin-top:0.7rem;">
                 <div class="display-name responsive-user-section">
@@ -272,30 +273,30 @@
                                         });
                                 }
                             });
-//                             }).then((result) => {
-//     if (result.isConfirmed) {
+                            //                             }).then((result) => {
+                            //     if (result.isConfirmed) {
 
-//         fetch("{{ route('school.select') }}", {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-//                 },
-//                 body: JSON.stringify({
-//                     school_id: schoolId
-//                 })
-//             })
-//             .then(response => response.text()) // 👈 change THIS
-//             .then(data => {
-//                 document.open();
-//                 document.write(data);  // 👈 show dd() output
-//                 document.close();
-//             })
-//             .catch(() => {
-//                 Swal.fire("Error", "Something went wrong!", "error");
-//             });
-//     }
-// });
+                            //         fetch("{{ route('school.select') }}", {
+                            //                 method: 'POST',
+                            //                 headers: {
+                            //                     'Content-Type': 'application/json',
+                            //                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            //                 },
+                            //                 body: JSON.stringify({
+                            //                     school_id: schoolId
+                            //                 })
+                            //             })
+                            //             .then(response => response.text()) // 👈 change THIS
+                            //             .then(data => {
+                            //                 document.open();
+                            //                 document.write(data);  // 👈 show dd() output
+                            //                 document.close();
+                            //             })
+                            //             .catch(() => {
+                            //                 Swal.fire("Error", "Something went wrong!", "error");
+                            //             });
+                            //     }
+                            // });
                         });
                     });
                 });
@@ -334,7 +335,7 @@
                                                 showConfirmButton: false
                                             }).then(() => {
                                                 window.location.href =
-                                                '/'; // <-- redirect instead of reload
+                                                    '/'; // <-- redirect instead of reload
                                             });
                                         } else {
                                             Swal.fire("Error", data.message, "error");
@@ -344,6 +345,40 @@
                                         Swal.fire("Error", "Something went wrong!", "error");
                                     });
                             }
+                        });
+                    });
+                });
+            </script>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    // Function to set sidebar state
+                    function setSidebarState(isMinimized) {
+                        if (isMinimized) {
+                            document.body.classList.add('sidenav-toggled');
+                            localStorage.setItem('sidebarMinimized', 'true');
+                        } else {
+                            document.body.classList.remove('sidenav-toggled');
+                            localStorage.setItem('sidebarMinimized', 'false');
+                        }
+                    }
+
+                    // Restore sidebar state on page load
+                    const savedState = localStorage.getItem('sidebarMinimized');
+                    if (savedState === 'true') {
+                        document.body.classList.add('sidenav-toggled');
+                    }
+
+                    // Listen for sidebar toggle clicks
+                    const toggleButtons = document.querySelectorAll('.app-sidebar__toggle');
+                    toggleButtons.forEach(button => {
+                        button.addEventListener('click', function(e) {
+                            // Small delay to allow the sidebar to toggle
+                            setTimeout(() => {
+                                const isMinimized = document.body.classList.contains(
+                                    'sidenav-toggled');
+                                localStorage.setItem('sidebarMinimized', isMinimized);
+                            }, 100);
                         });
                     });
                 });
