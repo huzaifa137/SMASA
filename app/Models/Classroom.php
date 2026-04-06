@@ -16,8 +16,8 @@ class Classroom extends Model
     ];
 
 
-    // public function school()
-    // {
-    //     return $this->belongsTo(School::class);
-    // }
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
 }

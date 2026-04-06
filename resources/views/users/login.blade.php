@@ -575,7 +575,7 @@
 
             <!-- Username / Registration field -->
             <div class="form-group">
-                <label for="username" class="form-label" id="usernameLabel">REGISTRATION NUMBER</label>
+                <label for="username" class="form-label" id="usernameLabel">REGISTRATION NUMBER121</label>
                 <div class="input-group">
                     <i class="fas fa-id-card input-icon"></i>
                     <input type="text" id="username" name="username" class="form-input"

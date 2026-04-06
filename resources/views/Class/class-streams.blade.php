@@ -47,73 +47,78 @@ $controller = new Controller();
                                 id="termDatesTable">
                                 <thead>
                                     <tr>
-                                        <th colspan="8" class="bg-primary text-white">Streams - {{ Helper::recordMdname($class_id) }}</th>
+                                        <th colspan="8" class="bg-primary text-white text-center">
+                                            Streams - {{ Helper::recordMdname($class_id) }}
+                                        </th>
                                     </tr>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Class</th>
-                                        <th>Stream</th>
-                                        <th>Boys</th>
-                                        <th>Girls</th>
-                                        <th>Total Students</th>
-                                        <th>Class Teacher</th>
-                                        <th colspan="2" style="text-align: center">Action</th>
+                                        <th class="text-center">#</th>
+                                        <th class="text-center">Class</th>
+                                        <th class="text-center">Stream</th>
+                                        <th class="text-center">Boys</th>
+                                        <th class="text-center">Girls</th>
+                                        <th class="text-center">Total Students</th>
+                                        <th class="text-center">Class Teacher</th>
+                                        <th colspan="2" class="text-center">Action</th>
                                     </tr>
                                 </thead>
-                               <tbody>
-    @forelse ($Streams as $key => $stream)
-        <tr data-id="{{ $stream->id }}">
-            <td style="width:1px;">{{ $key + 1 }}</td>
-            <td>{{ Helper::recordMdname($stream->class_id) }}</td>
-            <td>{{ Helper::recordMdname($stream->stream_id) }}</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>
-                <div class="d-flex align-items-center gap-2">
-                    <select name="teacher_id"
-                        class="form-select form-select-sm assign-class-teacher form-control"
-                        data-class-id="{{ $stream->id }}"
-                        data-current-supervisor="{{ $stream->class_teacher }}"
-                        {{ $stream->class_teacher ? 'disabled' : '' }}>
-                        <option value="">Select Class Teacher</option>
-                        @foreach ($Teachers as $teacher)
-                            <option value="{{ $teacher->id }}"
-                                {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
-                                {{ $teacher->surname }} {{ $teacher->firstname }}
-                            </option>
-                        @endforeach
-                    </select>
+                                <tbody>
+                                    @forelse ($Streams as $key => $stream)
+                                        <tr data-id="{{ $stream->id }}">
+                                            <td class="text-center" style="width:1px;">{{ $key + 1 }}</td>
+                                            <td class="text-center">{{ Helper::recordMdname($stream->class_id) }}</td>
+                                            <td class="text-center">{{ $stream->stream_id }}</td>
+                                            <td class="text-center">0</td>
+                                            <td class="text-center">0</td>
+                                            <td class="text-center">0</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2 justify-content-center">
+                                                    <select name="teacher_id"
+                                                        class="form-select form-select-sm assign-class-teacher form-control"
+                                                        data-class-id="{{ $stream->id }}"
+                                                        data-current-supervisor="{{ $stream->class_teacher }}"
+                                                        {{ $stream->class_teacher ? 'disabled' : '' }}>
+                                                        <option value="">Select Class Teacher</option>
+                                                        @foreach ($Teachers as $teacher)
+                                                            <option value="{{ $teacher->id }}"
+                                                                {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
+                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
-                    @if ($stream->class_teacher)
-                    &nbsp;
-                        <button class="btn btn-md btn-danger btn-remove-supervisor"
-                            data-class-id="{{ $stream->id }}" title="Remove Supervisor">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    @endif
-                </div>
-            </td>
-            <td style="text-align: center;">
-                <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}" class="btn btn-sm btn-dark">
-                    <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
-                </a>
+                                                    @if ($stream->class_teacher)
+                                                        &nbsp;
+                                                        <button class="btn btn-md btn-danger btn-remove-supervisor"
+                                                            data-class-id="{{ $stream->id }}" title="Remove Supervisor">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
+                                                    class="btn btn-sm btn-dark mb-1">
+                                                    <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
+                                                </a>
 
-                <a href="#" class="btn btn-sm btn-info btn-delete-stream" data-stream-id="{{ $stream->id }}">
-                    <i class="fas fa-plus-circle me-2"></i> Add More Subjects
-                </a>
+                                                <a href="#" class="btn btn-sm btn-info btn-edit-stream mb-1"
+                                                    data-stream-id="{{ $stream->id }}">
+                                                    <i class="fas fa-plus-circle me-2"></i> Add More Subjects
+                                                </a>
 
-                <a href="#" class="btn btn-sm btn-danger btn-delete-stream" data-stream-id="{{ $stream->id }}">
-                    <i class="fas fa-trash-alt me-2"></i> Delete Stream
-                </a>
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="8" class="text-center">No streams found.</td>
-        </tr>
-    @endforelse
-</tbody>
+                                                <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
+                                                    data-stream-id="{{ $stream->id }}">
+                                                    <i class="fas fa-trash-alt me-2"></i> Delete Stream
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="text-center">No streams found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -129,156 +134,159 @@ $controller = new Controller();
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        
-        $('.assign-class-teacher').on('change', function () {
-            let classId = $(this).data('class-id');
-            let teacherId = $(this).val();
-            let selectElement = $(this);
+    <script>
+        $(document).ready(function() {
 
-            let current = selectElement.data('current-supervisor');
-            if (teacherId == current) {
-                return; 
-            }
+            $('.assign-class-teacher').on('change', function() {
+                let classId = $(this).data('class-id');
+                let teacherId = $(this).val();
+                let selectElement = $(this);
 
-            if (teacherId !== '') {
-                $.ajax({
-                    url: "{{ route('class.assignClassTeacher') }}",
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        class_id: classId,
-                        teacher_id: teacherId
-                    },
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Assigned!',
-                                text: 'Class Teacher assigned successfully.',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            selectElement.prop('disabled', true);
-                            // Optionally reload the page or row to show the delete icon
-                            setTimeout(() => location.reload(), 1600);
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function () {
-                        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
-                    }
-                    // error: function(data) {
-                    // $('body').html(data.responseText);
-                    // }
-                });
-            }
-        });
+                let current = selectElement.data('current-supervisor');
+                if (teacherId == current) {
+                    return;
+                }
 
-        // Remove Supervisor
-        $('.btn-remove-supervisor').on('click', function () {
-            let classId = $(this).data('class-id');
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Remove the assigned Class Teacher?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, remove it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
+                if (teacherId !== '') {
                     $.ajax({
-                        url: "{{ route('class.removeClassTeacher') }}",
+                        url: "{{ route('class.assignClassTeacher') }}",
                         type: "POST",
                         data: {
                             _token: "{{ csrf_token() }}",
-                            class_id: classId
+                            class_id: classId,
+                            teacher_id: teacherId
                         },
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status === 'success') {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Removed!',
-                                    text: 'ClassTeacher removed successfully.',
+                                    title: 'Assigned!',
+                                    text: 'Class Teacher assigned successfully.',
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
+                                selectElement.prop('disabled', true);
+                                // Optionally reload the page or row to show the delete icon
                                 setTimeout(() => location.reload(), 1600);
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
-                        // error: function () {
-                        //     Swal.fire('Oops', 'Something went wrong.', 'error');
+                        error: function() {
+                            Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                        }
+                        // error: function(data) {
+                        // $('body').html(data.responseText);
                         // }
-                         error: function(data) {
-                        $('body').html(data.responseText);
-                        }
                     });
                 }
             });
-        });
-    });
-</script>
 
-<script>
-    // Ensure jQuery is loaded before this script
-    $(document).ready(function() {
-        // ... (your existing .btn-remove-supervisor script) ...
-
-        $('.btn-delete-stream').on('click', function (e) {
-            e.preventDefault(); // Prevent the default link behavior
-            let streamId = $(this).data('stream-id');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this! This will delete the stream and all associated data.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ route('streams.delete', ':streamId') }}".replace(':streamId', streamId),
-                        type: "POST",
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            _method: "DELETE" 
-                        },
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: 'Stream deleted successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                      
-                                $('tr[data-id="' + streamId + '"]').remove();
-                                setTimeout(() => location.reload(), 1600); 
-                            } else {
-                                Swal.fire('Error', response.message || 'Failed to delete stream.', 'error');
+            // Remove Supervisor
+            $('.btn-remove-supervisor').on('click', function() {
+                let classId = $(this).data('class-id');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Remove the assigned Class Teacher?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, remove it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('class.removeClassTeacher') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                class_id: classId
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Removed!',
+                                        text: 'ClassTeacher removed successfully.',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                    setTimeout(() => location.reload(), 1600);
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            // error: function () {
+                            //     Swal.fire('Oops', 'Something went wrong.', 'error');
+                            // }
+                            error: function(data) {
+                                $('body').html(data.responseText);
                             }
-                        },
-                        error: function (xhr) {
-                            let errorMessage = 'Something went wrong. Please try again.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            }
-                            Swal.fire('Oops', errorMessage, 'error');
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
+
+    <script>
+        // Ensure jQuery is loaded before this script
+        $(document).ready(function() {
+            // ... (your existing .btn-remove-supervisor script) ...
+
+            $('.btn-delete-stream').on('click', function(e) {
+                e.preventDefault(); // Prevent the default link behavior
+                let streamId = $(this).data('stream-id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this! This will delete the stream and all associated data.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('streams.delete', ':streamId') }}".replace(
+                                ':streamId', streamId),
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                _method: "DELETE"
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: 'Stream deleted successfully.',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+
+                                    $('tr[data-id="' + streamId + '"]').remove();
+                                    setTimeout(() => location.reload(), 1600);
+                                } else {
+                                    Swal.fire('Error', response.message ||
+                                        'Failed to delete stream.', 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                let errorMessage =
+                                    'Something went wrong. Please try again.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                Swal.fire('Oops', errorMessage, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 
 @endsection
 @section('js')

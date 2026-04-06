@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\House;
 use App\Models\password_reset_table;
-use App\Models\User;
+use App\Models\School;
 use App\Models\Teacher;
+use App\Models\User;
 use DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Mail;
-use App\Models\House;
-use App\Models\School;
 
 class UserController extends Controller
 {
     public function createNewPassword($id)
     {
-        $generated_id = url('password/reset/' . $id);
+        $generated_id = url('password/reset/'.$id);
         $resetEntry = DB::table('password_reset_tables')->where('token', $generated_id)->first();
 
         if ($resetEntry) {
@@ -26,7 +26,7 @@ class UserController extends Controller
                 if (now()->diffInMinutes($resetEntry->created_at) <= 30) {
                     return view('users.reset-password-2', compact(['generated_id']));
                 } else {
-                    return ('users.login')->with('fail', 'This reset password link has expired');
+                    return 'users.login'->with('fail', 'This reset password link has expired');
                 }
             } else {
                 return redirect()->route('users.login')->with('fail', 'This link has already been used, request for a new link');
@@ -38,7 +38,7 @@ class UserController extends Controller
 
     public function createFirstPassword($id)
     {
-        $generated_id = url('password/set-password/' . $id);
+        $generated_id = url('password/set-password/'.$id);
         $resetEntry = DB::table('password_reset_tables')->where('token', $generated_id)->first();
         $useremail = $resetEntry->email;
 
@@ -47,7 +47,7 @@ class UserController extends Controller
                 if (now()->diffInMinutes($resetEntry->created_at) <= 30) {
                     return view('users.set-first-pasword', compact(['generated_id', 'useremail']));
                 } else {
-                    return ('users.login')->with('fail', 'This reset password link has expired');
+                    return 'users.login'->with('fail', 'This reset password link has expired');
                 }
             } else {
                 return redirect()->route('users.login')->with('fail', 'This link has already been used, request for a new link');
@@ -78,7 +78,7 @@ class UserController extends Controller
             $token = Str::random(60);
             $resetUrl = url('password/reset', $token);
 
-            $post = new password_reset_table();
+            $post = new password_reset_table;
 
             $post->email = $email;
             $post->token = $resetUrl;
@@ -97,7 +97,7 @@ class UserController extends Controller
                 $message->to($data['email'], $data['email'])->subject($data['title']);
             });
 
-            return back()->with('success', 'Link has been sent to your email : ' . ' ' . $email);
+            return back()->with('success', 'Link has been sent to your email : '.' '.$email);
         }
     }
 
@@ -151,7 +151,6 @@ class UserController extends Controller
         }
     }
 
-
     public function store_first_password(Request $request)
     {
         $request->validate(
@@ -204,11 +203,14 @@ class UserController extends Controller
     public function adminLogout()
     {
         session()->flush();
+
         return redirect('/');
     }
+
     public function studentLogout()
     {
         session()->flush();
+
         return redirect('/');
     }
 
@@ -236,7 +238,6 @@ class UserController extends Controller
 
     public function checkUser(Request $request)
     {
-
         $validator = Validator::make(
             $request->all(),
             [
@@ -258,7 +259,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -270,8 +271,8 @@ class UserController extends Controller
         if ($role === 'student' && $isEmail) {
             return response()->json([
                 'errors' => [
-                    'username' => ['Students must log in using their registration number.']
-                ]
+                    'username' => ['Students must log in using their registration number.'],
+                ],
             ], 422);
         }
 
@@ -286,11 +287,11 @@ class UserController extends Controller
                 : $query->where('username', $loginValue);
         })->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'errors' => [
-                    'username' => ['Account not found. Please check your credentials.']
-                ]
+                    'username' => ['Account not found. Please check your credentials.'],
+                ],
             ], 422);
         }
 
@@ -298,25 +299,25 @@ class UserController extends Controller
             return response()->json([
                 'errors' => [
                     'username' => [
-                        "This account belongs to a {$user->user_role}. Please use the correct login section."
-                    ]
-                ]
+                        "This account belongs to a {$user->user_role}. Please use the correct login section.",
+                    ],
+                ],
             ], 422);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return response()->json([
                 'errors' => [
-                    'username' => ['This account is currently disabled.']
-                ]
+                    'username' => ['This account is currently disabled.'],
+                ],
             ], 422);
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'errors' => [
-                    'password' => ['Invalid credentials. Please check your login details.']
-                ]
+                    'password' => ['Invalid credentials. Please check your login details.'],
+                ],
             ], 422);
         }
 
@@ -332,7 +333,7 @@ class UserController extends Controller
         $redirectUrl = match ($user->user_role) {
             'student' => '/student/dashboard',
             'admin' => '/admin/dashboard',
-        // default   => '/student/dashboard',
+            // default   => '/student/dashboard',
         };
 
         return response()->json([
@@ -344,48 +345,50 @@ class UserController extends Controller
 
     private function authenticateSchool(Request $request)
     {
-        $school = House::where('ID', $request->school_id)
-            ->first();
 
-        if (!$school) {
+        $school_id = Helper::schoolIDFromHouseID(Helper::schoolNumber($request->school_id));
+
+        $school = School::where('id', $school_id)->first(); 
+
+        if (! $school) {
             return response()->json([
                 'errors' => [
-                    'username' => ['School not found. Please check your center number.']
-                ]
+                    'username' => ['School not found. Please check your center number.'],
+                ],
             ], 422);
         }
 
         $schoolTeacher = Teacher::where('phonenumber', $request->username)
-            ->where('school_id', $request->school_id)
+            ->where('school_id', $school_id)
             ->first();
 
-        if (!$schoolTeacher) {
+        if (! $schoolTeacher) {
             return response()->json([
                 'errors' => [
-                    'username' => ['No Teacher found belonging in this school yet. Please contact administrator.']
-                ]
+                    'username' => ['No Teacher found belonging in this school yet. Please contact administrator.'],
+                ],
             ], 422);
         }
 
-        if (!Hash::check($request->password, $schoolTeacher->password)) {
+        if (! Hash::check($request->password, $schoolTeacher->password)) {
             return response()->json([
                 'errors' => [
-                    'password' => ['Invalid password. Please check your credentials.']
-                ]
+                    'password' => ['Invalid password or phonenumber. Please check your credentials.'],
+                ],
             ], 422);
         }
 
         $request->session()->regenerate();
-
-        $request->session()->put('LoggedSchool', Helper::schoolIDFromHouseID($school->ID));
-        $request->session()->put('LoggedSchoolCode', $school->Number);
-        $request->session()->put('LoggedSchoolName', $school->House);
-        $request->session()->put('LoggedSchoolNameAr', $school->House_AR ?? $school->House);
+        // dd($school->id);
+        $request->session()->put('LoggedSchool', $school->id);
+        $request->session()->put('LoggedSchoolCode', $school->registration_code);
+        $request->session()->put('LoggedSchoolName', $school->name);
+        $request->session()->put('LoggedSchoolNameAr', $school->school_name_arabic ?? $school->name);
         $request->session()->put('LoggedTeacher', $schoolTeacher->id);
 
         // Optional: Store last login time
         $schoolTeacher->update([
-            'last_login_at' => now()
+            'last_login_at' => now(),
         ]);
 
         return response()->json([
@@ -480,7 +483,7 @@ class UserController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'New OTP code has been sent to your email' . ' ' . $user_mail,
+            'message' => 'New OTP code has been sent to your email'.' '.$user_mail,
         ]);
     }
 
@@ -495,7 +498,7 @@ class UserController extends Controller
     public function userRegister()
     {
 
-        $user_supervisors = DB::table("users")
+        $user_supervisors = DB::table('users')
             ->select('firstname', 'lastname')
             ->get();
 
@@ -539,6 +542,7 @@ class UserController extends Controller
                     if ($user->user_role == 5) {
                         return Helper::get_teacher_name($user->username);
                     }
+
                     return $user->username;
                 })
                 ->addColumn('user_role', function ($user) {
@@ -555,16 +559,16 @@ class UserController extends Controller
                 })
                 ->addColumn('action', function ($user) {
                     $links = [];
-                    $links[] = '<a class="dropdown-item" href="' . route('users.account-information', $user->id) . '"><i class="fa fa-fw fa-eye"></i> View</a>';
-                    $links[] = '<a class="dropdown-item" href="' . route('users.edit-specific-user', $user->id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
-                    $links[] = '<a class="dropdown-item delete-user" href="' . route('users.delete-user', $user->id) . '" data-name="' . $user->firstname . ' ' . $user->lastname . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
+                    $links[] = '<a class="dropdown-item" href="'.route('users.account-information', $user->id).'"><i class="fa fa-fw fa-eye"></i> View</a>';
+                    $links[] = '<a class="dropdown-item" href="'.route('users.edit-specific-user', $user->id).'"><i class="fa fa-fw fa-edit"></i> Edit</a>';
+                    $links[] = '<a class="dropdown-item delete-user" href="'.route('users.delete-user', $user->id).'" data-name="'.$user->firstname.' '.$user->lastname.'"><i class="fa fa-fw fa-times"></i> Delete</a>';
 
                     return '<div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton' . $user->id . '" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton'.$user->id.'" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $user->id . '">
-                                    ' . implode('', $links) . '
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton'.$user->id.'">
+                                    '.implode('', $links).'
                                 </ul>
                             </div>';
                 })
@@ -860,8 +864,10 @@ class UserController extends Controller
 
         if ($user) {
             $user->delete();
-            return redirect()->back()->with('success', 'user ' . $user->username . ' has been deleted successfully');
+
+            return redirect()->back()->with('success', 'user '.$user->username.' has been deleted successfully');
         }
+
         return redirect()->back()->with('fail', 'User not found.');
     }
 
@@ -877,7 +883,7 @@ class UserController extends Controller
         foreach ($houses as $house) {
             School::create([
                 'school_type' => 24,
-                'email' => 'school_' . $house->ID . '@example.com', // default empty
+                'email' => 'school_'.$house->ID.'@example.com', // default empty
                 'gender' => 4,
                 'regional_level' => 10,
                 'school_ownership' => 7,

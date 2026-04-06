@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
-
-use DB;
-use App\Models\Stream;
-use App\Models\Teacher;
-use Illuminate\Http\Request;
 use App\Models\Classroom;
+use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
 use App\Models\MasterData;
-use App\Models\ClassStreamAssignment;
-use App\Http\Controllers\Helper;
-use Session;
+use App\Models\Stream;
+use App\Models\Teacher;
+use DB;
+use Illuminate\Http\Request;
 
 class ClassandSubjectController extends Controller
 {
-
     public function createClass()
     {
         $SecondaryClasses = Helper::MasterRecordMerge(
@@ -115,16 +111,17 @@ class ClassandSubjectController extends Controller
         } else {
             return response()->json(['fail' => true, 'message' => 'Stream was already created.']);
         }
+
         return response()->json(['success' => true, 'message' => 'Class created successfully.']);
     }
 
-
     public function manageClasses()
     {
-        $classRecord = Classroom::where('school_id', Session('LoggedSchool'))->orderBy('class_name', 'Asc')->get();
+        Helper::requireSchool();
+        $classRecord = Classroom::where('school_id', Helper::requireSchool())->orderBy('class_name', 'Asc')->get();
 
         $Teachers = Teacher::with('school')
-            ->where('school_id', Session('LoggedSchool'))
+            ->where('school_id', Helper::requireSchool())
             ->get();
 
         return view('Class.manage-classes', compact('classRecord', 'Teachers'));
@@ -152,7 +149,6 @@ class ClassandSubjectController extends Controller
         return response()->json(['status' => 'success']);
     }
 
-
     public function removeSupervisor(Request $request)
     {
         $request->validate([
@@ -161,7 +157,7 @@ class ClassandSubjectController extends Controller
 
         $classroom = Classroom::find($request->class_id);
 
-        if (!$classroom->class_supervisor) {
+        if (! $classroom->class_supervisor) {
             return response()->json(['status' => 'error', 'message' => 'No supervisor to remove.']);
         }
 
@@ -203,7 +199,7 @@ class ClassandSubjectController extends Controller
 
         $subject = ClassSubject::find($request->subject_id);
 
-        if (!$subject->subject_teacher_1) {
+        if (! $subject->subject_teacher_1) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
         }
 
@@ -212,7 +208,6 @@ class ClassandSubjectController extends Controller
 
         return response()->json(['status' => 'success']);
     }
-
 
     public function assignSubjectTeacher2(Request $request)
     {
@@ -246,7 +241,7 @@ class ClassandSubjectController extends Controller
 
         $subject = ClassSubject::find($request->subject_id);
 
-        if (!$subject->subject_teacher_2) {
+        if (! $subject->subject_teacher_2) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
         }
 
@@ -258,7 +253,8 @@ class ClassandSubjectController extends Controller
 
     public function manageClassStreams($class_id)
     {
-        $Streams = DB::table('streams')->where('class_id', $class_id)->orderBy('stream_id', 'Asc')->get();
+
+        $Streams = DB::table('streams')->where('class_id', $class_id)->where('school_id', Helper::requireSchool())->orderBy('stream_id', 'Asc')->get();
 
         $Teachers = Teacher::with('school')
             ->where('school_id', Session('LoggedSchool'))
@@ -297,7 +293,7 @@ class ClassandSubjectController extends Controller
 
         $stream = Stream::find($request->class_id);
 
-        if (!$stream->class_teacher) {
+        if (! $stream->class_teacher) {
             return response()->json(['status' => 'error', 'message' => 'No Class Teacher to remove.']);
         }
 
@@ -311,23 +307,30 @@ class ClassandSubjectController extends Controller
     {
         try {
             $stream->delete();
+
             return response()->json(['status' => 'success', 'message' => 'Stream deleted successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Failed to delete stream: ' . $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => 'Failed to delete stream: '.$e->getMessage()], 500);
         }
     }
 
     public function attachedStreamSubjects($classId, $streamId)
     {
-
         $assignment = ClassStreamAssignment::where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', Session('LoggedSchool'))
             ->first();
 
-        if ($assignment) {
+        $classSubjects = collect(); // empty collection by default
+        $groupedSubjects = collect();
 
-            $classSubjects = $assignment->classSubjects()->get();
+        if ($assignment) {
+            // Fetch subjects directly using class_id + stream_id
+            $classSubjects = ClassSubject::where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
+
             $groupedSubjects = $classSubjects->groupBy('subject_type');
         }
 
@@ -335,7 +338,7 @@ class ClassandSubjectController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.attached-stream-subjects', compact(['assignment', 'classSubjects', 'Teachers']));
+        return view('Class.attached-stream-subjects', compact('assignment', 'classSubjects', 'groupedSubjects', 'Teachers'));
     }
 
     public function edit($assignmentId)
@@ -343,7 +346,7 @@ class ClassandSubjectController extends Controller
         // 1. Fetch the specific ClassStreamAssignment along with its assigned subjects
         $assignment = ClassStreamAssignment::with('classSubjects')->find($assignmentId);
 
-        if (!$assignment) {
+        if (! $assignment) {
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
@@ -395,7 +398,7 @@ class ClassandSubjectController extends Controller
         // Find the existing assignment
         $assignment = ClassStreamAssignment::find($assignmentId);
 
-        if (!$assignment) {
+        if (! $assignment) {
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
@@ -464,10 +467,9 @@ class ClassandSubjectController extends Controller
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback on error
             // Log the error for debugging
-            \Log::error('Error updating subjects for assignment ' . $assignmentId . ': ' . $e->getMessage(), ['request' => $request->all()]);
+            \Log::error('Error updating subjects for assignment '.$assignmentId.': '.$e->getMessage(), ['request' => $request->all()]);
+
             return redirect()->back()->with('error', 'Failed to update subjects. Please try again or contact support.');
         }
     }
-
 }
-

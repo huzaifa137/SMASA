@@ -59,13 +59,13 @@ $controller = new Controller();
                                 </thead>
                                 <tbody> @forelse ($classSubjects as $key => $class)
                                     <?php
-                                        $classInfo = DB::table('class_stream_assignments')->where('id',$class->class_stream_assignment_id)->first();
+                                        $classInfo = DB::table('class_stream_assignments')->where('school_id',Helper::requireSchool())->where('class_id',$class->class_id)->where('stream_id',$class->stream_id)->first();
                                    ?>
 
                                     <tr data-id="{{ $class->id }}">
                                         <td style="width:1px;">{{ $key + 1 }}</td>
                                         <td>{{ Helper::recordMdname($classInfo->class_id) }}</td>
-                                        <td>{{ Helper::recordMdname($classInfo->stream_id) }}</td>
+                                        <td>{{ $classInfo->stream_id }}</td>
                                         <td>{{ Helper::recordMdname($class->subject_id) }}</td>
                                         <td>0</td>
                                         <td>

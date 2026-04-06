@@ -50,8 +50,12 @@ $controller = new Controller();
                                     <div class="form-group">
                                         <label class="form-label">Stream</label>
                                         <?php
-    echo Helper::DropMasterData(config('constants.options.CLASS_STREAMS'), '', 'class_stream', 1);
-                                                                                                                                    ?>
+    // echo Helper::DropMasterData(config('constants.options.CLASS_STREAMS'), '', 'class_stream', 1);
+    //                                   ?>
+
+                                      <input type="text" name="class_stream" id="class_stream" class="form-control" value="{{ old('class_stream') }}" 
+                                                placeholder="Enter Class Stream">
+    
                                     </div>
                                 </div>
                             </div>

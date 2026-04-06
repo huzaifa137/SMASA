@@ -70,6 +70,16 @@ class Helper extends Controller
         return $schoolName;
     }
 
+
+    public static function schoolNumber($house_id)
+    {
+        $Number = DB::table('houses')
+            ->where('ID', $house_id)
+            ->value('Number');
+
+        return $Number;
+    }
+
     public static function ar_schoolName($school_id)
     {
         $schoolName = DB::table('houses')

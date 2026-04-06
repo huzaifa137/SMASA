@@ -28,8 +28,8 @@ class Teacher extends Model
         'teacher_profile',
     ];
 
-    // public function school()
-    // {
-    //     return $this->belongsTo(School::class);
-    // }
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
 }

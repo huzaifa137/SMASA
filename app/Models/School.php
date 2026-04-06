@@ -22,9 +22,9 @@ class School extends Model
         'school_name_arabic',
     ];
 
-    // public function classrooms()
-    // {
-    //     return $this->hasMany(Classroom::class);
-    // }
+    public function classrooms()
+    {
+        return $this->hasMany(Classroom::class);
+    }
 
 }
