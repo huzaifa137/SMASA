@@ -259,8 +259,8 @@ use App\Http\Controllers\Helper;
                                     <select name="Admission_Year" id="year" class="form-control select2">
                                         <option value="">All Years</option>
                                         @foreach ($years as $year)
-                                            <option value="{{ $year }}"
-                                                {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}
+                                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                                {{ $year }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -283,18 +283,21 @@ use App\Http\Controllers\Helper;
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Senior <span class="text-danger">*</span></label>
-                                    <select name="senior" class="form-control">
+                                    <label>Class (Senior) <span class="text-danger">*</span></label>
+                                    <select name="senior" class="form-control select2">
                                         <option value="">-- Select Senior --</option>
                                         @foreach ($classRecord as $record)
-                                            <option value="{{ $record->md_code }}">{{ $record->md_name }}</option>
+                                            <option value="{{ $record->md_id }}">{{ $record->md_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Stream <span class="text-danger">*</span></label>
-                                    <input type="text" name="stream" class="form-control">
+                                    <select name="stream" id="stream" class="form-control select2">
+                                        <option value="">-- Select Stream --</option>
+                                        <!-- Options will be loaded dynamically via AJAX -->
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
@@ -417,8 +420,8 @@ use App\Http\Controllers\Helper;
                                             <i class="fas fa-camera"></i>
                                             <span>No image selected</span>
                                         </div>
-                                        <input type="file" name="student_photo" class="file-upload-input"
-                                            id="studentPhoto" accept="image/*">
+                                        <input type="file" name="student_photo" class="file-upload-input" id="studentPhoto"
+                                            accept="image/*">
                                         <label for="studentPhoto" class="file-upload-btn">
                                             <i class="fas fa-upload"></i> Choose Photo
                                         </label>
@@ -447,7 +450,7 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             function updateStudentID() {
                 let schoolId = $('#School').val(); // read from hidden input
@@ -462,7 +465,7 @@ use App\Http\Controllers\Helper;
                             category: category,
                             year: year
                         },
-                        success: function(res) {
+                        success: function (res) {
                             $('#Student_ID').val(res.student_id);
                         }
                     });
@@ -480,7 +483,7 @@ use App\Http\Controllers\Helper;
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const dateInput = document.getElementById('dateOfBirth');
             if (dateInput) {
                 const today = new Date();
@@ -491,7 +494,7 @@ use App\Http\Controllers\Helper;
 
                 dateInput.setAttribute('max', maxDate);
 
-                dateInput.addEventListener('change', function() {
+                dateInput.addEventListener('change', function () {
                     if (this.value > maxDate) {
                         this.value = '';
                         alert('Date of birth cannot be in the future');
@@ -502,8 +505,8 @@ use App\Http\Controllers\Helper;
     </script>
 
     <script>
-        $(document).ready(function() {
-            $('#createStudentForm').on('submit', function(e) {
+        $(document).ready(function () {
+            $('#createStudentForm').on('submit', function (e) {
                 e.preventDefault();
 
                 let $form = $(this);
@@ -528,7 +531,7 @@ use App\Http\Controllers\Helper;
                 };
 
                 // Validate required fields
-                $.each(requiredFields, function(fieldName, label) {
+                $.each(requiredFields, function (fieldName, label) {
                     let input = $form.find(`[name="${fieldName}"]`);
                     if (!input.val() || input.val().trim() === '') {
                         input.addClass('is-invalid');
@@ -567,19 +570,19 @@ use App\Http\Controllers\Helper;
                         Swal.fire({
                             title: 'Saving Student',
                             html: `
-                <div class="custom-loader-container">
-                    <div class="loader-spinner"></div>
-                    <div class="loader-text">Processing student data...</div>
-                    <div class="loader-progress">
-                        <div class="progress-bar"></div>
-                    </div>
-                    <div class="loader-steps">
-                        <span class="step active">Validating</span>
-                        <span class="step">Saving</span>
-                        <span class="step">Complete</span>
-                    </div>
-                </div>
-            `,
+                        <div class="custom-loader-container">
+                            <div class="loader-spinner"></div>
+                            <div class="loader-text">Processing student data...</div>
+                            <div class="loader-progress">
+                                <div class="progress-bar"></div>
+                            </div>
+                            <div class="loader-steps">
+                                <span class="step active">Validating</span>
+                                <span class="step">Saving</span>
+                                <span class="step">Complete</span>
+                            </div>
+                        </div>
+                    `,
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             showConfirmButton: false,
@@ -588,59 +591,59 @@ use App\Http\Controllers\Helper;
                                 // Add custom styles
                                 const style = document.createElement('style');
                                 style.textContent = `
-                    .custom-loader-container {
-                        text-align: center;
-                        padding: 10px 0;
-                    }
-                    .loader-spinner {
-                        width: 50px;
-                        height: 50px;
-                        border: 4px solid #e9ecef;
-                        border-top-color: #5351e4;
-                        border-radius: 50%;
-                        animation: spin 0.8s linear infinite;
-                        margin: 0 auto 20px;
-                    }
-                    @keyframes spin {
-                        to { transform: rotate(360deg); }
-                    }
-                    .loader-text {
-                        color: #495057;
-                        font-size: 14px;
-                        margin-bottom: 15px;
-                    }
-                    .loader-progress {
-                        background: #e9ecef;
-                        border-radius: 10px;
-                        height: 6px;
-                        overflow: hidden;
-                        margin-bottom: 20px;
-                    }
-                    .progress-bar {
-                        width: 0%;
-                        height: 100%;
-                        background: #5351e4;
-                        border-radius: 10px;
-                        transition: width 0.3s ease;
-                    }
-                    .loader-steps {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-top: 15px;
-                    }
-                    .loader-steps .step {
-                        font-size: 12px;
-                        color: #adb5bd;
-                        transition: color 0.3s ease;
-                    }
-                    .loader-steps .step.active {
-                        color: #5351e4;
-                        font-weight: 500;
-                    }
-                    .loader-steps .step.completed {
-                        color: #28a745;
-                    }
-                `;
+                            .custom-loader-container {
+                                text-align: center;
+                                padding: 10px 0;
+                            }
+                            .loader-spinner {
+                                width: 50px;
+                                height: 50px;
+                                border: 4px solid #e9ecef;
+                                border-top-color: #5351e4;
+                                border-radius: 50%;
+                                animation: spin 0.8s linear infinite;
+                                margin: 0 auto 20px;
+                            }
+                            @keyframes spin {
+                                to { transform: rotate(360deg); }
+                            }
+                            .loader-text {
+                                color: #495057;
+                                font-size: 14px;
+                                margin-bottom: 15px;
+                            }
+                            .loader-progress {
+                                background: #e9ecef;
+                                border-radius: 10px;
+                                height: 6px;
+                                overflow: hidden;
+                                margin-bottom: 20px;
+                            }
+                            .progress-bar {
+                                width: 0%;
+                                height: 100%;
+                                background: #5351e4;
+                                border-radius: 10px;
+                                transition: width 0.3s ease;
+                            }
+                            .loader-steps {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-top: 15px;
+                            }
+                            .loader-steps .step {
+                                font-size: 12px;
+                                color: #adb5bd;
+                                transition: color 0.3s ease;
+                            }
+                            .loader-steps .step.active {
+                                color: #5351e4;
+                                font-weight: 500;
+                            }
+                            .loader-steps .step.completed {
+                                color: #28a745;
+                            }
+                        `;
                                 document.head.appendChild(style);
 
                                 // Animate progress
@@ -678,9 +681,9 @@ use App\Http\Controllers\Helper;
                             headers: {
                                 'X-CSRF-TOKEN': $('input[name="_token"]').val()
                             },
-                            xhr: function() {
+                            xhr: function () {
                                 const xhr = new window.XMLHttpRequest();
-                                xhr.upload.addEventListener('progress', function(e) {
+                                xhr.upload.addEventListener('progress', function (e) {
                                     if (e.lengthComputable) {
                                         const percent = (e.loaded / e.total) *
                                             100;
@@ -701,7 +704,7 @@ use App\Http\Controllers\Helper;
                                 });
                                 return xhr;
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 // Update to 100% and mark complete
                                 const progressBar = Swal.getHtmlContainer()
                                     .querySelector('.progress-bar');
@@ -738,7 +741,7 @@ use App\Http\Controllers\Helper;
                                     });
                                 }, 500);
                             },
-                            error: function(data) {
+                            error: function (data) {
                                 $('body').html(data.responseText);
                             }
                             // error: function(xhr, status, error) {
@@ -758,7 +761,7 @@ use App\Http\Controllers\Helper;
     </script>
 
     <script>
-        document.getElementById('studentPhoto').addEventListener('change', function(e) {
+        document.getElementById('studentPhoto').addEventListener('change', function (e) {
             const preview = document.getElementById('photoPreview');
             const file = e.target.files[0];
 
@@ -779,7 +782,7 @@ use App\Http\Controllers\Helper;
 
                 const reader = new FileReader();
 
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     // Remove existing image if any
                     const existingImg = preview.querySelector('img');
                     if (existingImg) {
@@ -806,7 +809,7 @@ use App\Http\Controllers\Helper;
                     removeBtn.type = 'button';
                     removeBtn.className = 'remove-image-btn';
                     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    removeBtn.onclick = function(e) {
+                    removeBtn.onclick = function (e) {
                         e.stopPropagation();
                         document.getElementById('studentPhoto').value = '';
                         preview.classList.remove('has-image');
@@ -835,6 +838,43 @@ use App\Http\Controllers\Helper;
 
                 reader.readAsDataURL(file);
             }
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('select[name="senior"]').on('change', function () {
+                let seniorCode = $(this).val();
+                let $streamSelect = $('#stream');
+
+                $streamSelect.html('<option value="">Loading streams...</option>');
+
+                if (seniorCode) {
+                    $.ajax({
+                        url: '/get-streams/' + seniorCode,
+                        type: 'GET',
+                        success: function (response) {
+                            $streamSelect.empty();
+                            $streamSelect.append('<option value="">-- Select Stream --</option>');
+                            if (response.streams && response.streams.length > 0) {
+                                response.streams.forEach(function (stream) {
+                                    $streamSelect.append('<option value="' + stream.stream_id + '">' + stream.stream_id + '</option>');
+                                });
+                            } else {
+                                $streamSelect.append('<option value="">No streams found</option>');
+                            }
+                        },
+                        // error: function () {
+                        //     $streamSelect.html('<option value="">Error loading streams</option>');
+                        // }
+                        error: function(data) {
+$('body').html(data.responseText);
+}
+                    });
+                } else {
+                    $streamSelect.html('<option value="">-- Select Stream --</option>');
+                }
+            });
         });
     </script>
 

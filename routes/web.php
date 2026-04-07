@@ -18,7 +18,7 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::get('/show-sessions', function () {
     $allSessions = Session::all();
     dd($allSessions);
-dd($allSessions);
+    dd($allSessions);
 })->name('show.sessions');
 
 Route::get('/set-admin-session', function () {
@@ -150,7 +150,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     $userEmail = session('userEmail');
                     $userPassword = session('userPassword');
 
-                    if (! $userId || ! $userEmail) {
+                    if (!$userId || !$userEmail) {
                         return redirect()->route('users.login')->with('fail', 'You must be logged in');
                     }
 
@@ -222,6 +222,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/store-teachers', 'storeTeacher')->name('teachers.store');
         Route::post('/teachers/update/{teacher}', 'storeUpdatedTeacherProfile')->name('teachers.update');
 
+        // Add this route for updating teacher password
+        Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
+
         Route::delete('/teachers/{id}', 'destroyTeacher')->name('teachers.destroy');
     });
 
@@ -231,7 +234,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('manage-classes', 'manageClasses')->name('manage.classes');
         Route::get('manage-class-streams/{id}', 'manageClassStreams')->name('manage.class.streams');
         Route::get('/class-stream-subjects/{classId}/{streamId}', 'attachedStreamSubjects')->name('class.stream.subjects');
-        Route::get('edit-class-subjects', 'editClassSubjects')->name('school.edit-class-subject');
+        Route::get('edit-class-subjects/{classId}/{streamId}', 'editClassSubjects')->name('school.edit-class-subject');
+        Route::get('/get-streams/{senior}', 'getStreams');
 
         Route::post('/schools/class/store', 'storeClass')->name('schools.class-store');
         Route::post('/assign-class-supervisor', 'assignSupervisor')->name('class.assignSupervisor');
@@ -240,18 +244,17 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/assign-class-teacher', 'assignClassTeacher')->name('class.assignClassTeacher');
 
         Route::delete('/streams/{stream}', 'deleteStream')->name('streams.delete');
+        Route::delete('/classes/{id}', 'destroyClass')->name('classes.destroy');
 
-        // Route to display the edit form for a specific assignment
-        // Route::get('/assign-subjects/{assignmentId}/edit', [ClassandSubjectController::class, 'edit'])->name('assign.subjects.edit');
-
-        // // Route to handle the update submission for a specific assignment
-        // Route::put('/assign-subjects/{assignmentId}', [ClassandSubjectController::class, 'update'])->name('assign.subjects.update');
+        Route::put('/assign-subjects/{assignmentId}', 'updateClassSubjects')->name('assign.subjects.update');
 
         Route::post('/assign-class-subject-teacher-one', 'assignSubjectTeacher1')->name('class.assignSubjectTeacher1');
         Route::post('/remove-class-subject-teacher-one', 'removeSubjectTeacher1')->name('class.removeSubjectTeacher1');
 
         Route::post('/assign-class-subject-teacher-two', 'assignSubjectTeacher2')->name('class.assignSubjectTeacher2');
         Route::post('/remove-class-subject-teacher-two', 'removeSubjectTeacher2')->name('class.removeSubjectTeacher2');
+
+        
     });
 
     Route::controller(UserRightsAndPreviledges::class)->group(function () {
@@ -325,7 +328,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     Route::post('/update/{id}', 'updateStudent');
 
                     Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
-    
+
                 });
             });
     });

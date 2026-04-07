@@ -291,14 +291,9 @@ class StudentController extends Controller
         $currentYear = date('Y');
         $newStudentId = $defaultSchoolNumber.'-ID-001-'.$currentYear;
 
-        // $classRecord = Helper::MasterRecordMerge(
-        //     config('constants.options.O_LEVEL'),
-        //     config('constants.options.A_LEVEL')
-        // );
-
-        $classRecord = Helper::MasterDataRecords(
+        $classRecord = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
-            // config('constants.options.A_LEVEL')
+            config('constants.options.A_LEVEL')
         );
 
         return view('student.add-new-student', compact('schools', 'years', 'newStudentId', 'classRecord'));
@@ -463,7 +458,7 @@ class StudentController extends Controller
                 'stream',
             )
             ->get();
-        // dd($students);
+
         $groupedStudents = $students->groupBy('senior')->map(function ($seniorGroup) {
             return $seniorGroup->groupBy('stream');
         });

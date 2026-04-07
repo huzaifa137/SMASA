@@ -31,28 +31,10 @@ $controller = new Controller();
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
-                    <div class="card-header">
-                        <div class="row w-100 g-2">
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('school.allSchools') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-chalkboard-teacher me-2"></i> My Classes
-                                </a>
-                            </div>
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('manage.classes') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-sliders-h me-2"></i> Manage Classes
-                                </a>
-                            </div>
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('school.create-class') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-plus-circle me-2"></i> Add New Class
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    @include('layouts.class-buttons')
                     <div class="card-body bg-light">
                         {{-- Form action will point to the update route, using the assignment's ID --}}
-                        <form id="editSubjectAssignmentForm" action="{{ route('assign.subjects.update', $assignment->id) }}" method="POST">
+                        <form id="editSubjectAssignmentForm" action="{{ url('assign.subjects.update', $assignment->id) }}" method="POST">
                             @csrf
                             @method('PUT') {{-- Required for PUT/PATCH requests in Laravel forms --}}
 
@@ -75,13 +57,7 @@ $controller = new Controller();
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
                                         <label class="form-label">Stream</label>
-                                        <?php
-                                            // Assuming Helper::DropMasterData can accept a selected value as its second argument
-                                            // and an options array as its last argument to add 'disabled'
-                                            echo Helper::DropMasterData(config('constants.options.CLASS_STREAMS'), $assignment->stream_id, 'class_stream', 1, ['disabled' => true]);
-                                        ?>
-                                        {{-- Hidden field to still send the value if the select is disabled --}}
-                                        <input type="hidden" name="class_stream" value="{{ $assignment->stream_id }}">
+                                        <input type="text" class="form-control" value="{{ $assignment->stream_id }}" disabled>
                                     </div>
                                 </div>
                             </div>
@@ -199,7 +175,7 @@ $controller = new Controller();
 
                             <div class="mt-4 text-left">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Update Assignment
+                                    <i class="fas fa-save"></i> Update Subjects
                                 </button>
                             </div>
                         </form>
@@ -217,7 +193,7 @@ $controller = new Controller();
 
     <script>
         $(document).ready(function () {
-            $('#createSchoolForm').on('submit', function (e) {
+            $('#editSubjectAssignmentForm').on('submit', function (e) {
                 e.preventDefault();
 
                 let isValid = true;
@@ -284,21 +260,30 @@ $controller = new Controller();
                     return;
                 }
 
-                // Optional: Add validation for checkbox groups if a selection is mandatory.
-                // Example: If at least one Technical Subject must be selected
+                // Merge all selected subjects
+                const allSelectedSubjects = [
+                    ...technicalSubjects,
+                    ...optionals,
+                    ...vocationals,
+                    ...mathematics,
+                    ...languages,
+                    ...sciences,
+                    ...humanities
+                ];
 
-                // if (technicalSubjects.length === 0) {
-                //     Swal.fire({
-                //         icon: 'error',
-                //         title: 'Selection Required',
-                //         text: 'Please select at least one Technical Subject.'
-                //     });
-                //     return;
-                // }
+                // 🚫 Prevent submitting if none selected
+                if (allSelectedSubjects.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Subjects Selected',
+                        text: 'Please select at least one subject before updating.'
+                    });
+                    return;
+                }
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "You are about to create class.",
+                    text: "You are about to update class subjects.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, submit it!',
@@ -332,7 +317,7 @@ $controller = new Controller();
                         dataToSend.humanities = humanities;
 
                         $.ajax({
-                            url: '{{ route('schools.store') }}',
+                            url: "{{ route('assign.subjects.update', $assignment->id) }}",
                             method: 'POST',
                             data: JSON.stringify(dataToSend),
                             contentType: 'application/json',
@@ -340,61 +325,36 @@ $controller = new Controller();
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (response) {
-                                // ✅ Check for custom fail key
+
                                 if (response.fail) {
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
-                                        text: response.message || 'Something went wrong.'
+                                        text: response.message
                                     });
-                                    return; // Prevent further success logic
+                                    return;
                                 }
 
-                                // ✅ If it's truly successful
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Submitted!',
-                                    text: response.message || 'Class has been created successfully.',
+                                    title: 'Updated!',
+                                    text: response.message || 'Subjects updated successfully.',
                                     timer: 2000,
                                     showConfirmButton: false
+                                }).then(() => {
+                                    location.reload(); // reload after OK
                                 });
-
-                                // Reset the form
-                                $form[0].reset();
-                                $form.find('input[type="checkbox"]').prop('checked', false);
-                                $form.find('.is-invalid').removeClass('is-invalid');
-                                $form.find('.invalid-feedback').remove();
                             },
                             error: function (xhr) {
-                                try {
-                                    const errorResponse = xhr.responseJSON;
-
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Submission Error',
-                                        text: errorResponse.message || 'An unexpected error occurred.'
-                                    });
-
-                                    // Laravel Validation Errors
-                                    if (errorResponse.errors) {
-                                        $form.find('.is-invalid').removeClass('is-invalid');
-                                        $form.find('.invalid-feedback').remove();
-
-                                        for (const fieldName in errorResponse.errors) {
-                                            const errorMessage = errorResponse.errors[fieldName][0];
-
-                                            const inputField = $form.find(`[name="${fieldName}"]`);
-                                            inputField.addClass('is-invalid');
-
-                                            if (inputField.next('.invalid-feedback').length === 0) {
-                                                inputField.after(`<div class="invalid-feedback">${errorMessage}</div>`);
-                                            }
-                                        }
-                                    }
-                                } catch (e) {
-                                    $('body').html(xhr.responseText); // fallback
-                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Update Failed',
+                                    text: 'Something went wrong.'
+                                });
                             },
+                        //     error: function(data) {
+                        // $('body').html(data.responseText);
+                        // },
                             complete: function () {
                                 $submitBtn.prop('disabled', false).html(originalBtnHtml);
                             }

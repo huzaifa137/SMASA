@@ -22,25 +22,7 @@ $controller = new Controller();
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
-                    <div class="card-header">
-                        <div class="row w-100 g-2">
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('school.allSchools') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-chalkboard-teacher me-2"></i> My Classes
-                                </a>
-                            </div>
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('manage.classes') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-sliders-h me-2"></i> Manage Classes
-                                </a>
-                            </div>
-                            <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                                <a href="{{ route('school.create-class') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-plus-circle me-2"></i> Add New Class
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    @include('layouts.class-buttons')
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped card-table table-vcenter text-nowrap mb-0"
@@ -102,9 +84,9 @@ $controller = new Controller();
                                                     <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
                                                 </a>
 
-                                                <a href="#" class="btn btn-sm btn-info btn-edit-stream mb-1"
+                                                <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}" class="btn btn-sm btn-info btn-edit-stream mb-1"
                                                     data-stream-id="{{ $stream->id }}">
-                                                    <i class="fas fa-plus-circle me-2"></i> Add More Subjects
+                                                    <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
                                                 </a>
 
                                                 <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
@@ -281,6 +263,9 @@ $controller = new Controller();
                                 }
                                 Swal.fire('Oops', errorMessage, 'error');
                             }
+//                             error: function(data) {
+// $('body').html(data.responseText);
+// }
                         });
                     }
                 });

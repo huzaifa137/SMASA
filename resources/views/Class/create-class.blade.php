@@ -187,8 +187,9 @@ $controller = new Controller();
                         $(this).addClass('is-invalid');
 
                         if ($(this).next('.invalid-feedback').length === 0) {
-                            $(this).after(
-                                '<div class="invalid-feedback">This field is required.</div>');
+                            $(this).closest('.form-group').append(
+    '<div class="invalid-feedback d-block">This field is required.</div>'
+);
                         }
                         isValid = false;
                     }
@@ -239,17 +240,26 @@ $controller = new Controller();
                     return;
                 }
 
-                // Optional: Add validation for checkbox groups if a selection is mandatory.
-                // Example: If at least one Technical Subject must be selected
+                // Merge all selected subjects
+                const allSelectedSubjects = [
+                    ...technicalSubjects,
+                    ...optionals,
+                    ...vocationals,
+                    ...mathematics,
+                    ...languages,
+                    ...sciences,
+                    ...humanities
+                ];
 
-                // if (technicalSubjects.length === 0) {
-                //     Swal.fire({
-                //         icon: 'error',
-                //         title: 'Selection Required',
-                //         text: 'Please select at least one Technical Subject.'
-                //     });
-                //     return;
-                // }
+                // 🚫 Prevent submitting if none selected
+                if (allSelectedSubjects.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Subjects Selected',
+                        text: 'Please select at least one subject before updating.'
+                    });
+                    return;
+                }
 
                 Swal.fire({
                     title: 'Are you sure?',

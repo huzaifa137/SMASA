@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->string('admission_number')->unique()->nullable();
             $table->string('primary_contact')->nullable();
             $table->string('other_contact')->nullable();
-            $table->string('student_photo')->nullable(); // path to photo file
+            $table->string('student_photo')->nullable();
             $table->date('date_of_admission')->nullable();
             $table->decimal('ple_score', 5, 2)->nullable();
             $table->decimal('uce_score', 5, 2)->nullable();
@@ -39,7 +39,7 @@ return new class extends Migration {
             $table->string('nationality')->nullable();
             $table->text('medical_history')->nullable();
             $table->text('comments')->nullable();
-            $table->string('added_by')->nullable(); // could be user ID or name
+            $table->string('added_by')->nullable();
 
             $table->timestamps();
         });

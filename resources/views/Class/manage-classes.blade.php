@@ -75,6 +75,13 @@ $controller = new Controller();
                                             <a href="{{ route('manage.class.streams', ['id' => $class->class_name ]) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-link me-2"></i> Manage Streams
                                             </a>
+
+                                            <button class="btn btn-sm btn-danger btn-delete-class"
+        data-class-id="{{ $class->id }}"
+        data-class-name="{{ Helper::recordMdname($class->class_name) }}">
+        <i class="fas fa-trash-alt me-2"></i> Delete
+    </button>
+
                                         </td>
                                     </tr>
                                 @empty
@@ -98,95 +105,147 @@ $controller = new Controller();
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        
-        $('.assign-supervisor').on('change', function () {
-            let classId = $(this).data('class-id');
-            let teacherId = $(this).val();
-            let selectElement = $(this);
+    <script>
+        $(document).ready(function () {
+            
+            $('.assign-supervisor').on('change', function () {
+                let classId = $(this).data('class-id');
+                let teacherId = $(this).val();
+                let selectElement = $(this);
 
-            let current = selectElement.data('current-supervisor');
-            if (teacherId == current) {
-                return; 
-            }
+                let current = selectElement.data('current-supervisor');
+                if (teacherId == current) {
+                    return; 
+                }
 
-            if (teacherId !== '') {
-                $.ajax({
-                    url: "{{ route('class.assignSupervisor') }}",
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        class_id: classId,
-                        teacher_id: teacherId
-                    },
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Assigned!',
-                                text: 'Class supervisor assigned successfully.',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            selectElement.prop('disabled', true);
-                            // Optionally reload the page or row to show the delete icon
-                            setTimeout(() => location.reload(), 1600);
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function () {
-                        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
-                    }
-                });
-            }
-        });
-
-        // Remove Supervisor
-        $('.btn-remove-supervisor').on('click', function () {
-            let classId = $(this).data('class-id');
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Remove the assigned supervisor?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, remove it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
+                if (teacherId !== '') {
                     $.ajax({
-                        url: "{{ route('class.removeSupervisor') }}",
+                        url: "{{ route('class.assignSupervisor') }}",
                         type: "POST",
                         data: {
                             _token: "{{ csrf_token() }}",
-                            class_id: classId
+                            class_id: classId,
+                            teacher_id: teacherId
                         },
                         success: function (response) {
                             if (response.status === 'success') {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Removed!',
-                                    text: 'Supervisor removed successfully.',
+                                    title: 'Assigned!',
+                                    text: 'Class supervisor assigned successfully.',
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
+                                selectElement.prop('disabled', true);
+                                // Optionally reload the page or row to show the delete icon
                                 setTimeout(() => location.reload(), 1600);
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
                         error: function () {
-                            Swal.fire('Oops', 'Something went wrong.', 'error');
+                            Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
                         }
                     });
                 }
             });
+
+            // Remove Supervisor
+            $('.btn-remove-supervisor').on('click', function () {
+                let classId = $(this).data('class-id');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Remove the assigned supervisor?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, remove it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('class.removeSupervisor') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                class_id: classId
+                            },
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Removed!',
+                                        text: 'Supervisor removed successfully.',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                    setTimeout(() => location.reload(), 1600);
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire('Oops', 'Something went wrong.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+$(document).ready(function () {
+
+    // Delete class
+    $('.btn-delete-class').on('click', function () {
+        let classId = $(this).data('class-id');
+        let className = $(this).data('class-name');
+
+        Swal.fire({
+            title: `Delete ${className}?`,
+            text: "All streams, subjects, and students in this class will be deleted permanently!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: `/classes/${classId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: response.message || 'Class and related data deleted successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // reload page
+                        });
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Delete Failed',
+                            text: xhr.responseJSON?.message || 'Something went wrong!'
+                        });
+                    }
+//                     error: function(data) {
+// $('body').html(data.responseText);
+// }
+                });
+            }
         });
     });
-</script>
 
+});
+</script>
 @endsection
 @section('js')
     <!-- c3.js Charts js-->

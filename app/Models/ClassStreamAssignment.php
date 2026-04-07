@@ -18,15 +18,8 @@ class ClassStreamAssignment extends Model
 
     public function classSubjects()
     {
-        return $this->hasMany(ClassSubject::class, 'class_stream_assignment_id');
+        return $this->hasMany(ClassSubject::class, 'class_id', 'class_id');
     }
-
-
-    // If you have Class and Stream models, you can define relationships here
-    // public function class()
-    // {
-    //     return $this->belongsTo(Class::class);
-    // }
 
     public function stream()
     {

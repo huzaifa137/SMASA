@@ -8,6 +8,9 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+
 
 class TeacherController extends Controller
 {
@@ -178,4 +181,46 @@ class TeacherController extends Controller
 
         return response()->json(['message' => 'Teacher deleted successfully.']);
     }
+
+    public function updatePassword(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                // 'password' => 'required|min:8|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
+                'password' => 'required',
+                'teacher_id' => 'required|exists:teachers,id'
+            ], [
+                'password.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.'
+            ]);
+
+            // Find the teacher
+            $teacher = Teacher::findOrFail($request->teacher_id);
+
+            // Update password
+            $teacher->password = Hash::make($request->password);
+            $teacher->must_change_password = false; // Set to false after password change
+            $teacher->save();
+
+            // Update session if needed
+            Session::put('LoggedTeacher', $teacher->id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password updated successfully! You can now continue using the system.'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

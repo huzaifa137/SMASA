@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Classroom;
 use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
-use App\Models\MasterData;
+use App\Models\Student;
 use App\Models\Stream;
 use App\Models\Teacher;
 use DB;
@@ -115,6 +115,47 @@ class ClassandSubjectController extends Controller
         return response()->json(['success' => true, 'message' => 'Class created successfully.']);
     }
 
+    public function updateClassSubjects(Request $request, $id)
+    {
+        $assignment = ClassStreamAssignment::findOrFail($id);
+
+        // STEP 1: DELETE OLD SUBJECTS (important for sync)
+        ClassSubject::where('class_id', $assignment->class_id)
+            ->where('stream_id', $assignment->stream_id)
+            ->where('school_id', session('LoggedSchool'))
+            ->delete();
+
+        // STEP 2: RE-INSERT NEW ONES
+        $subjectCategories = [
+            'technical_subjects' => 'technical',
+            'optionals' => 'optional',
+            'vocationals' => 'vocational',
+            'mathematics' => 'mathematics',
+            'languages' => 'language',
+            'sciences' => 'science',
+            'humanities' => 'humanities',
+        ];
+
+        foreach ($subjectCategories as $requestKey => $subjectType) {
+            if ($request->has($requestKey)) {
+                foreach ($request->$requestKey as $subjectId) {
+                    ClassSubject::create([
+                        'class_id' => $assignment->class_id,
+                        'stream_id' => $assignment->stream_id,
+                        'subject_id' => $subjectId,
+                        'subject_type' => $subjectType,
+                        'school_id' => session('LoggedSchool'),
+                    ]);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subjects updated successfully.'
+        ]);
+    }
+
     public function manageClasses()
     {
         Helper::requireSchool();
@@ -125,6 +166,47 @@ class ClassandSubjectController extends Controller
             ->get();
 
         return view('Class.manage-classes', compact('classRecord', 'Teachers'));
+    }
+
+    public function destroyClass($id)
+    {
+        $class = Classroom::findOrFail($id);
+        $class_id = $class->class_name;
+        $streams = Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->get();
+
+        foreach ($streams as $stream) {
+
+            ClassSubject::where('class_id', $class_id)->where('stream_id', $stream->stream_id)->where('school_id', Helper::requireSchool())->delete();
+
+            Student::where('senior', $class->class_name)
+                ->where('stream', $stream->stream_name)
+                ->where('school_id', Helper::requireSchool())
+                ->delete();
+        }
+
+        Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->delete();
+        ClassStreamAssignment::where('school_id', Helper::requireSchool())->where('class_id', $class_id)->delete();
+        $class->delete();
+
+        return response()->json(['message' => 'Class, its streams, students, and subjects have been deleted successfully.']);
+    }
+
+    public function deleteStream(Stream $stream)
+    {
+
+        $class_id = $stream->class_id;
+        $stream_id = $stream->stream_id;
+
+        ClassSubject::where('class_id', $class_id)->where('stream_id', $stream_id)->where('school_id', Helper::requireSchool())->delete();
+        ClassStreamAssignment::where('school_id', Helper::requireSchool())->where('class_id', $class_id)->where('stream_id', $stream_id)->delete();
+
+        try {
+            $stream->delete();
+
+            return response()->json(['status' => 'success', 'message' => 'Stream deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Failed to delete stream: ' . $e->getMessage()], 500);
+        }
     }
 
     public function assignSupervisor(Request $request)
@@ -157,7 +239,7 @@ class ClassandSubjectController extends Controller
 
         $classroom = Classroom::find($request->class_id);
 
-        if (! $classroom->class_supervisor) {
+        if (!$classroom->class_supervisor) {
             return response()->json(['status' => 'error', 'message' => 'No supervisor to remove.']);
         }
 
@@ -199,7 +281,7 @@ class ClassandSubjectController extends Controller
 
         $subject = ClassSubject::find($request->subject_id);
 
-        if (! $subject->subject_teacher_1) {
+        if (!$subject->subject_teacher_1) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
         }
 
@@ -241,7 +323,7 @@ class ClassandSubjectController extends Controller
 
         $subject = ClassSubject::find($request->subject_id);
 
-        if (! $subject->subject_teacher_2) {
+        if (!$subject->subject_teacher_2) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
         }
 
@@ -293,7 +375,7 @@ class ClassandSubjectController extends Controller
 
         $stream = Stream::find($request->class_id);
 
-        if (! $stream->class_teacher) {
+        if (!$stream->class_teacher) {
             return response()->json(['status' => 'error', 'message' => 'No Class Teacher to remove.']);
         }
 
@@ -301,17 +383,6 @@ class ClassandSubjectController extends Controller
         $stream->save();
 
         return response()->json(['status' => 'success']);
-    }
-
-    public function deleteStream(Stream $stream)
-    {
-        try {
-            $stream->delete();
-
-            return response()->json(['status' => 'success', 'message' => 'Stream deleted successfully.']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Failed to delete stream: '.$e->getMessage()], 500);
-        }
     }
 
     public function attachedStreamSubjects($classId, $streamId)
@@ -338,37 +409,36 @@ class ClassandSubjectController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.attached-stream-subjects', compact('assignment', 'classSubjects', 'groupedSubjects', 'Teachers'));
+        return view('Class.attached-stream-subjects', compact('assignment', 'classSubjects', 'groupedSubjects', 'Teachers', 'classId', 'streamId'));
     }
 
-    public function edit($assignmentId)
+    public function editClassSubjects($classId, $streamId)
     {
-        // 1. Fetch the specific ClassStreamAssignment along with its assigned subjects
-        $assignment = ClassStreamAssignment::with('classSubjects')->find($assignmentId);
+        $assignment = ClassStreamAssignment::with([
+            'classSubjects' => function ($query) use ($classId, $streamId) {
+                $query->where('stream_id', $streamId)
+                    ->where('class_id', $classId)
+                    ->where('school_id', session('LoggedSchool'));
+            }
+        ])
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->first();
 
-        if (! $assignment) {
+        if (!$assignment) {
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
-        // 2. Prepare the list of currently assigned subject IDs, grouped by their type
-        // This makes it easy to check if a subject should be pre-checked in the view.
         $assignedSubjects = [];
         foreach ($assignment->classSubjects as $classSubject) {
-            // 'subject_type' should match the categories you're using (e.g., 'technical', 'optional', 'mathematics')
+
             $assignedSubjects[$classSubject->subject_type][] = $classSubject->subject_id;
         }
 
-        // 3. Fetch all available master data for dropdowns and checkboxes (same as your create page)
-        $SecondaryClasses = MasterData::where('md_type', config('constants.options.SECONDARY_CLASSES_TYPE'))->get();
-
-        // Assuming your constants for subject types are defined like this:
-        // $TECHNICAL_SUBJECTS = MasterData::where('md_type', config('constants.options.TECHNICAL_SUBJECTS_TYPE'))->get();
-        // $OPTIONALS = MasterData::where('md_type', config('constants.options.OPTIONALS_TYPE'))->get();
-        // $VOCATIONALS = MasterData::where('md_type', config('constants.options.VOCATIONALS_TYPE'))->get();
-        // $MATHEMATICS = MasterData::where('md_type', config('constants.options.MATHEMATICS_TYPE'))->get();
-        // $LANGUAGES = MasterData::where('md_type', config('constants.options.LANGUAGES_TYPE'))->get();
-        // $SCIENCES = MasterData::where('md_type', config('constants.options.SCIENCES_TYPE'))->get();
-        // $HUMANITIES = MasterData::where('md_type', config('constants.options.HUMANITIES_TYPE'))->get();
+        $SecondaryClasses = Helper::MasterRecordMerge(
+            config('constants.options.O_LEVEL'),
+            config('constants.options.A_LEVEL')
+        );
 
         $TECHNICAL_SUBJECTS = Helper::MasterRecords(config('constants.options.TECHNICAL_SUBJECTS'));
         $OPTIONALS = Helper::MasterRecords(config('constants.options.OPTIONALS'));
@@ -377,9 +447,9 @@ class ClassandSubjectController extends Controller
         $LANGUAGES = Helper::MasterRecords(config('constants.options.LANGUAGES'));
         $SCIENCES = Helper::MasterRecords(config('constants.options.SCIENCES'));
         $HUMANITIES = Helper::MasterRecords(config('constants.options.HUMANITIES'));
-        $CLASS_STREAMS = Helper::MasterRecords(config('constants.options.CLASS_STREAMS'));
 
-        return view('class_subjects.edit', compact(
+        // dd($TECHNICAL_SUBJECTS);
+        return view('Class.edit-class', compact(
             'assignment',
             'assignedSubjects',
             'SecondaryClasses',
@@ -393,12 +463,22 @@ class ClassandSubjectController extends Controller
         ));
     }
 
+    public function getStreams($senior)
+    {
+        Helper::requireSchool();
+
+        $streams = Stream::where('class_id', $senior)
+            ->where('school_id', Helper::requireSchool())
+            ->get(['stream_id', 'stream_id']);
+
+        return response()->json(['streams' => $streams]);
+    }
     public function update(Request $request, $assignmentId)
     {
         // Find the existing assignment
         $assignment = ClassStreamAssignment::find($assignmentId);
 
-        if (! $assignment) {
+        if (!$assignment) {
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
@@ -467,7 +547,7 @@ class ClassandSubjectController extends Controller
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback on error
             // Log the error for debugging
-            \Log::error('Error updating subjects for assignment '.$assignmentId.': '.$e->getMessage(), ['request' => $request->all()]);
+            \Log::error('Error updating subjects for assignment ' . $assignmentId . ': ' . $e->getMessage(), ['request' => $request->all()]);
 
             return redirect()->back()->with('error', 'Failed to update subjects. Please try again or contact support.');
         }
