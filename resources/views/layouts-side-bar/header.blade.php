@@ -183,8 +183,8 @@
                         </svg>
                     </a>
                     <a class="close-toggle" href="#">
-                        <svg class="header-icon mt-1" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                            width="24">
+                        <svg class="header-icon mt-1" xmlns="http://www.w3.org/2000/svg" height="24"
+                            viewBox="0 0 24 24" width="24">
                             <path d="M0 0h24v24H0V0z" fill="none" />
                             <path
                                 d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
@@ -224,7 +224,8 @@
                         </button>
                         <div class="dropdown-menu w-100 p-2" aria-labelledby="schoolDropdownButton"
                             style="max-height: 300px; overflow-y: auto;">
-                            <input type="text" class="form-control mb-2" id="schoolSearch" placeholder="Search school...">
+                            <input type="text" class="form-control mb-2" id="schoolSearch"
+                                placeholder="Search school...">
                             <div id="schoolList">
                                 <a class="dropdown-item clear-school bg-light text-primary font-weight-bold rounded"
                                     href="#" style="border: 1px dashed #2C29CA; margin-bottom: 5px;">
@@ -245,10 +246,6 @@
             @endif
 
             <div class="d-flex order-lg-2 ml-auto" style="margin-top:0.7rem;">
-                <div class="display-name responsive-user-section">
-                    <!-- existing display name content -->
-                </div>
-
                 @if (Session('LoggedSchool'))
                     @php
                         $teacherId = Session::get('LoggedTeacher');
@@ -265,11 +262,204 @@
                         </div>
                     @endif
                 @endif
-
-                <div class="dropdown profile-dropdown">
-                    <!-- existing dropdown content -->
-                </div>
             </div>
+
+            <div class="d-flex order-lg-2 ml-auto align-items-center" style="margin-top:0.7rem; flex: 1;">
+                @if (Session('LoggedSchool'))
+                    @php
+                        $teacherId = Session::get('LoggedTeacher');
+                        $user = \App\Models\Teacher::where('id', $teacherId)->first();
+                        $activeYear = Helper::activeAcademicYear();
+                        $activeYearName = Helper::fetchActiveYearName($activeYear);
+                        $activeTerm = Helper::activeTerm();
+
+                        $hasActiveYear = !is_null($activeYear);
+                        $hasActiveTerm = !is_null($activeTerm);
+                        $missingBoth = !$hasActiveYear && !$hasActiveTerm;
+                        $missingYearOnly = !$hasActiveYear && $hasActiveTerm;
+                        $missingTermOnly = $hasActiveYear && !$hasActiveTerm;
+                        $hasBoth = $hasActiveYear && $hasActiveTerm;
+                    @endphp
+
+                    @if ($user && !$user->must_change_password)
+                        @if ($missingBoth)
+                            {{-- Both missing - Combined Alert --}}
+                            <div class="d-flex align-items-center justify-content-center mx-3" style="width: 100%;">
+                                <a class="text-warning font-weight-bold d-flex align-items-center academic-term-warning-link"
+                                    href="javascript:void(0);" onclick="showAcademicTermAlert()"
+                                    style="text-decoration: none;">
+                                    <i class="fas fa-exclamation-circle fa-2x mr-2 text-red"></i>
+                                    <span style="color:#FFF;">⚠️ No Active Year & No Active Term Set ⚠️</span>
+                                </a>
+                            </div>
+                        @elseif($missingYearOnly)
+                            {{-- Only Year missing --}}
+                            <div class="d-flex align-items-center justify-content-center mx-3" style="width: 100%;">
+                                <a class="text-warning font-weight-bold d-flex align-items-center academic-term-warning-link"
+                                    href="javascript:void(0);" onclick="showAcademicTermAlert('year')"
+                                    style="text-decoration: none;">
+                                    <i class="fas fa-calendar-times fa-2x mr-2"></i>
+                                    <span style="color:#FFF;">⚠️ No Active Year Set ⚠️</span>
+                                </a>
+                            </div>
+                        @elseif($missingTermOnly)
+                            {{-- Only Term missing --}}
+                            <div class="d-flex align-items-center justify-content-center mx-3" style="width: 100%;">
+                                <a class="text-warning font-weight-bold d-flex align-items-center academic-term-warning-link"
+                                    href="javascript:void(0);" onclick="showAcademicTermAlert('term')"
+                                    style="text-decoration: none;">
+                                    <i class="fas fa-clock fa-2x mr-2"></i>
+                                    <span style="color:#FFF;">⚠️ No Active Term Set ⚠️</span>
+                                </a>
+                            </div>
+                        @elseif($hasBoth)
+                            <div class="d-flex align-items-center justify-content-center mx-3" style="width: 100%;">
+                                <div class="active-info-container d-flex align-items-center">
+                                    <div class="active-year-badge mr-3">
+                                        <i class="fas fa-calendar-alt text-primary mr-1"></i>
+                                        <span class="font-weight-bold text-primary">Active Year:</span>
+                                        <span class="ml-1 text-dark">
+                                            @if ($hasActiveYear)
+                                                {{ Helper::schoolActiveYearName() }}
+                                            @else
+                                                {{ 'N/A' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="active-term-badge">
+                                        <i class="fas fa-clock text-primary mr-1"></i>
+                                        <span class="font-weight-bold text-primary">Active Term:</span>
+                                        <span class="ml-1 text-dark">
+                                            @if ($activeTerm)
+                                                {{ Helper::schoolActiveTermName() }}
+                                            @else
+                                                {{ 'N/A' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+                @endif
+            </div>
+
+            <style>
+                /* Responsive Active Info Display */
+@media (max-width: 768px) {
+    .active-info-container {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px;
+    }
+    
+    .active-year-badge, 
+    .active-term-badge {
+        margin-right: 0 !important;
+        font-size: 12px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    
+    .active-year-badge i, 
+    .active-term-badge i {
+        font-size: 12px;
+    }
+    
+    .active-year-badge span, 
+    .active-term-badge span {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 576px) {
+    .active-year-badge, 
+    .active-term-badge {
+        font-size: 10px;
+        white-space: normal;
+        word-break: keep-all;
+    }
+    
+    .active-year-badge .ml-1, 
+    .active-term-badge .ml-1 {
+        margin-left: 4px !important;
+    }
+}
+
+/* For very small devices */
+@media (max-width: 480px) {
+    .active-year-badge, 
+    .active-term-badge {
+        font-size: 9px;
+    }
+    
+    .active-year-badge i, 
+    .active-term-badge i {
+        font-size: 10px;
+        margin-right: 3px !important;
+    }
+}
+                @keyframes softBlink {
+                    0% {
+                        opacity: 1;
+                        background-color: #ffc107;
+                        color: #856404;
+                    }
+
+                    50% {
+                        opacity: 0.85;
+                        background-color: #ff1707;
+                        color: #856404;
+                    }
+
+                    100% {
+                        opacity: 1;
+                        background-color: #ffc107;
+                        color: #856404;
+                    }
+                }
+
+                @keyframes softGlow {
+                    0% {
+                        text-shadow: 0 0 2px #ffc107;
+                    }
+
+                    50% {
+                        text-shadow: 0 0 8px #ff9800, 0 0 12px #ff9800;
+                    }
+
+                    100% {
+                        text-shadow: 0 0 2px #ffc107;
+                    }
+                }
+
+                .academic-term-warning-link {
+                    animation: softBlink 2s infinite;
+                    padding: 6px 15px;
+                    border-radius: 50px;
+                    font-weight: bold;
+                    letter-spacing: 0.5px;
+                    border: 1px solid #ffc107;
+                    box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                    background-color: #ffc107;
+                }
+
+                .academic-term-warning-link:hover {
+                    transform: scale(1.02);
+                    animation: none;
+                    background-color: #ffca2c;
+                }
+
+                .academic-term-warning-link i {
+                    animation: softGlow 2s infinite;
+                }
+
+                .academic-term-warning-link span {
+                    animation: softGlow 2s infinite;
+                }
+            </style>
 
             <div class="d-flex order-lg-2 ml-auto" style="margin-top:0.7rem;">
                 <div class="display-name responsive-user-section">
@@ -303,29 +493,32 @@
                         </div>
 
                         @if (Session('LoggedSchool'))
-
                             @php
                                 $teacherId = Session::get('LoggedTeacher');
                                 $user = \App\Models\Teacher::where('id', $teacherId)->first();
                             @endphp
 
-                            @if ($user && $user->must_change_password)
-                                <a class="dropdown-item d-flex text-danger font-weight-bold" href="javascript:void(0);"
-                                    onclick="showPasswordModal()">
-                                    <i class="fas fa-exclamation-triangle fa-2x mr-3"></i>
-                                    <div class="mt-1">Update Your Password</div>
-                                </a>
-                            @else
-                                <a class="dropdown-item d-flex" href="{{ url('/add-academic-year') }}">
-                                    <i class="fas fa-clock fa-2x mr-3"></i>
-                                    <div class="mt-1">Active Year</div>
-                                </a>
+                            <a class="dropdown-item d-flex"
+                                href="{{ url('/term-dates/' . Session('LoggedSchool')) }}">
+                                <i class="fas fa-clock fa-2x mr-3"></i>
+                                <div class="mt-1">Active Year</div>
+                            </a>
 
-                                <a class="dropdown-item d-flex" href="{{ url('/update-teacher-profile', $teacherId) }}">
-                                    <i class="fa fa-user fa-2x mr-3"></i>
-                                    <div class="mt-1">User Profile</div>
-                                </a>
-                            @endif
+                            <a class="dropdown-item d-flex" href="{{ url('/update-teacher-profile', $teacherId) }}">
+                                <i class="fa fa-user fa-2x mr-3"></i>
+                                <div class="mt-1">User Profile</div>
+                            </a>
+                        @else
+                            <a class="dropdown-item d-flex" href="{{ url('/add-academic-year') }}">
+                                <i class="fas fa-clock fa-2x mr-3"></i>
+                                <div class="mt-1">Active Year</div>
+                            </a>
+
+                            <a class="dropdown-item d-flex"
+                                href="{{ url('/update-teacher-profile', Session('LoggedAdmin')) }}">
+                                <i class="fa fa-user fa-2x mr-3"></i>
+                                <div class="mt-1">User Profile</div>
+                            </a>
                         @endif
 
                         <a class="dropdown-item d-flex" href="#" id="logoutLink">
@@ -336,34 +529,14 @@
                 </div>
             </div>
 
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                document.getElementById('logoutLink').addEventListener('click', function (event) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        title: "Are you sure?",
-                        text: "Do you really want to sign out?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, Sign out",
-                        cancelButtonText: "Cancel",
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = '{{ route('student-logout') }}';
-                        }
-                    });
-                });
-            </script>
         </div>
     </div>
 </div>
 <!--/app header-->
 
 <!-- Password Update Modal - MOVED OUTSIDE HEADER -->
-<div class="modal fade" id="passwordUpdateModal" tabindex="-1" role="dialog" aria-labelledby="passwordUpdateModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="passwordUpdateModal" tabindex="-1" role="dialog"
+    aria-labelledby="passwordUpdateModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
@@ -371,7 +544,8 @@
                     <i class="fas fa-exclamation-triangle mr-2"></i>
                     Security Alert: Password Update Required
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" id="closeModalX">
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                    id="closeModalX">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -466,17 +640,84 @@
     </div>
 </div>
 
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                document.getElementById('logoutLink').addEventListener('click', function(event) {
+                    event.preventDefault();
+
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you really want to sign out?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, Sign out",
+                        cancelButtonText: "Cancel",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route('student-logout') }}';
+                        }
+                    });
+                });
+            </script>
+                        <script>
+                function showAcademicTermAlert(type = 'both') {
+                    let title = '';
+                    let text = '';
+                    let icon = 'warning';
+                    const schoolId = "{{ session('LoggedSchool') }}";
+
+                    if (type === 'both') {
+                        title = '⚠️ Configuration Required';
+                        text = 'No Academic Year and No Term have been set for this school. Please configure both to continue.';
+                    } else if (type === 'year') {
+                        title = '⚠️ Academic Year Missing';
+                        text = 'No Active Academic Year has been set. Please set an Academic Year first before setting Terms.';
+                    } else if (type === 'term') {
+                        title = '⚠️ Term Missing';
+                        text = 'No Active Term has been set. Please set the Term dates for the current Academic Year.';
+                    }
+
+                    Swal.fire({
+                        title: title,
+                        html: `
+                            <div class="text-left">
+                                <p class="mb-3">${text}</p>
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Press Configure button to setup active year and term.</strong>
+                                </div>
+                            </div>
+                        `,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: 'green',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fas fa-cog mr-2"></i>Configure Now',
+                        cancelButtonText: 'Later',
+                        backdrop: true,
+                        allowOutsideClick: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (type === 'both' || type === 'year' || type === 'term') {
+                                window.location.href = `/term-dates/${schoolId}`;
+                            }
+                        }
+                    });
+                }
+            </script>
+            
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Function to show modal
-        window.showPasswordModal = function () {
+        window.showPasswordModal = function() {
             $('#passwordUpdateModal').modal('show');
         };
 
         // Auto-show modal if password needs update and not already shown
-        @if(isset($user) && $user && $user->must_change_password)
+        @if (isset($user) && $user && $user->must_change_password)
             // Small delay to ensure DOM is fully loaded
-            setTimeout(function () {
+            setTimeout(function() {
                 $('#passwordUpdateModal').modal({
                     backdrop: 'static',
                     keyboard: false
@@ -486,7 +727,7 @@
         @endif
 
         // Toggle password visibility
-        $('.toggle-password').click(function () {
+        $('.toggle-password').click(function() {
             const target = $(this).data('target');
             const input = $('#' + target);
             const icon = $(this).find('i');
@@ -501,13 +742,13 @@
         });
 
         // Real-time password validation
-        $('#new_password').on('keyup', function () {
+        $('#new_password').on('keyup', function() {
             const password = $(this).val();
             validatePassword(password);
             checkPasswordMatch();
         });
 
-        $('#confirm_password').on('keyup', function () {
+        $('#confirm_password').on('keyup', function() {
             checkPasswordMatch();
         });
 
@@ -547,13 +788,16 @@
             const strengthText = $('#passwordStrength');
             if (strength === 4) {
                 strengthText.html('<i class="fas fa-shield-alt text-success"></i> Strong password!');
-                strengthText.removeClass('password-strength-weak password-strength-medium').addClass('password-strength-strong');
+                strengthText.removeClass('password-strength-weak password-strength-medium').addClass(
+                    'password-strength-strong');
             } else if (strength === 3) {
                 strengthText.html('<i class="fas fa-shield-alt text-warning"></i> Medium strength');
-                strengthText.removeClass('password-strength-weak password-strength-strong').addClass('password-strength-medium');
+                strengthText.removeClass('password-strength-weak password-strength-strong').addClass(
+                    'password-strength-medium');
             } else if (strength >= 2) {
                 strengthText.html('<i class="fas fa-shield-alt text-danger"></i> Weak password');
-                strengthText.removeClass('password-strength-medium password-strength-strong').addClass('password-strength-weak');
+                strengthText.removeClass('password-strength-medium password-strength-strong').addClass(
+                    'password-strength-weak');
             } else {
                 strengthText.html('');
             }
@@ -580,7 +824,7 @@
         }
 
         // Form submission
-        $('#passwordUpdateForm').on('submit', function (e) {
+        $('#passwordUpdateForm').on('submit', function(e) {
             e.preventDefault();
 
             const newPassword = $('#new_password').val();
@@ -629,14 +873,14 @@
 
                     // AJAX request
                     $.ajax({
-                        url: '{{ route("teacher.update-password") }}',
+                        url: '{{ route('teacher.update-password') }}',
                         method: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
                             password: newPassword,
-                            teacher_id: '{{ Session::get("LoggedTeacher") }}'
+                            teacher_id: '{{ Session::get('LoggedTeacher') }}'
                         },
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status) {
                                 Swal.fire({
                                     icon: 'success',
@@ -658,11 +902,14 @@
                                 });
 
                                 submitBtn.prop('disabled', false)
-                                    .html('<i class="fas fa-save mr-2"></i>Update Password');
+                                    .html(
+                                        '<i class="fas fa-save mr-2"></i>Update Password'
+                                    );
                             }
                         },
-                        error: function (xhr) {
-                            let errorMessage = 'Something went wrong. Please try again.';
+                        error: function(xhr) {
+                            let errorMessage =
+                                'Something went wrong. Please try again.';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMessage = xhr.responseJSON.message;
                             }
@@ -675,7 +922,9 @@
                             });
 
                             submitBtn.prop('disabled', false)
-                                .html('<i class="fas fa-save mr-2"></i>Update Password');
+                                .html(
+                                    '<i class="fas fa-save mr-2"></i>Update Password'
+                                );
                         }
                     });
 
@@ -685,13 +934,13 @@
 
         let allowClose = false;
 
-        $('#closeModalX, #closeModalBtn').on('click', function () {
+        $('#closeModalX, #closeModalBtn').on('click', function() {
             allowClose = true;
         });
 
         // Prevent modal close when clicking outside if password must be changed
-        $('#passwordUpdateModal').on('hide.bs.modal', function (e) {
-            @if(isset($user) && $user && $user->must_change_password)
+        $('#passwordUpdateModal').on('hide.bs.modal', function(e) {
+            @if (isset($user) && $user && $user->must_change_password)
                 if (!allowClose) {
                     e.preventDefault();
                     Swal.fire({
@@ -702,19 +951,19 @@
                     });
                 }
             @endif
-});
+        });
     });
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const searchInput = document.getElementById('schoolSearch');
         const schoolItems = document.querySelectorAll('.school-item');
         const dropdownBtn = document.getElementById('schoolDropdownButton');
 
         // Live filtering
         if (searchInput) {
-            searchInput.addEventListener('keyup', function () {
+            searchInput.addEventListener('keyup', function() {
                 const searchValue = this.value.toLowerCase();
                 schoolItems.forEach(item => {
                     const schoolName = item.textContent.toLowerCase();
@@ -725,7 +974,7 @@
 
         // School select and SweetAlert
         schoolItems.forEach(item => {
-            item.addEventListener('click', function (e) {
+            item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const schoolId = this.dataset.id;
                 const schoolName = this.dataset.name;
@@ -740,15 +989,15 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch("{{ route('school.select') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                school_id: schoolId
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    school_id: schoolId
+                                })
                             })
-                        })
                             .then(response => response.json())
                             .then(data => {
                                 if (data.status) {
@@ -766,7 +1015,8 @@
                                 }
                             })
                             .catch(() => {
-                                Swal.fire("Error", "Something went wrong!", "error");
+                                Swal.fire("Error", "Something went wrong!",
+                                    "error");
                             });
                     }
                 });
@@ -776,11 +1026,11 @@
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const clearSchoolBtn = document.querySelector('.clear-school');
 
         if (clearSchoolBtn) {
-            clearSchoolBtn.addEventListener('click', function (e) {
+            clearSchoolBtn.addEventListener('click', function(e) {
                 e.preventDefault();
 
                 Swal.fire({
@@ -793,12 +1043,12 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch("{{ route('school.clear') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                        })
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                            })
                             .then(response => response.json())
                             .then(data => {
                                 if (data.status) {
@@ -826,7 +1076,7 @@
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         // Function to set sidebar state
         function setSidebarState(isMinimized) {
             if (isMinimized) {
@@ -847,9 +1097,10 @@
         // Listen for sidebar toggle clicks
         const toggleButtons = document.querySelectorAll('.app-sidebar__toggle');
         toggleButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
+            button.addEventListener('click', function(e) {
                 setTimeout(() => {
-                    const isMinimized = document.body.classList.contains('sidenav-toggled');
+                    const isMinimized = document.body.classList.contains(
+                        'sidenav-toggled');
                     localStorage.setItem('sidebarMinimized', isMinimized);
                 }, 100);
             });

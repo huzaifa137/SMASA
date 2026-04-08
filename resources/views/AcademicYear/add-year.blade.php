@@ -22,7 +22,7 @@ $controller = new Controller();
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0 text-white">{{ trans('common.add_academic_year') }}</h4>
+                        <h4 class="card-title mb-0 text-white">Add Academic Year</h4>
                     </div>
 
                     <div class="card-body bg-light">
@@ -33,7 +33,7 @@ $controller = new Controller();
                             <div class="row">
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.academic_year_name') }}</label>
+                                        <label class="form-label">Academic Year Name</label>
                                         <input type="text" name="name" class="form-control" placeholder="e.g.2026"
                                             required>
                                         {{-- <input type="text" name="name" class="form-control"
@@ -44,9 +44,9 @@ $controller = new Controller();
 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.active') }}?</label>
+                                        <label class="form-label">Active?</label>
                                         <select name="is_active" class="form-control">
-                                            <option value="0">{{ trans('common.no') }}</option>
+                                            <option value="0">No</option>
                                         </select>
                                     </div>
                                 </div>
@@ -59,7 +59,7 @@ $controller = new Controller();
 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.start_date') }}</label>
+                                        <label class="form-label">Start Date</label>
                                         <input type="date" name="start_date" id="start_date" class="form-control" required
                                             min="{{ $minDate }}" max="{{ $maxDate }}">
                                     </div>
@@ -67,7 +67,7 @@ $controller = new Controller();
 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{{ trans('common.end_date') }}</label>
+                                        <label class="form-label">End Date</label>
                                         <input type="date" name="end_date" id="end_date" class="form-control" required
                                             min="{{ $minDate }}" max="{{ $maxDate }}">
                                     </div>
@@ -77,7 +77,7 @@ $controller = new Controller();
 
                             <div class="mt-4 text-left">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i> {{ trans('common.save_academic_year') }}
+                                    <i class="fas fa-paper-plane"></i> Save Academic Year
                                 </button>
                             </div>
                         </form>
@@ -88,7 +88,7 @@ $controller = new Controller();
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">{{ trans('common.academic_year') }}</h3>
+                        <h3 class="card-title">Academic Year</h3>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -96,13 +96,13 @@ $controller = new Controller();
                                 id="academicYearsTable">
                                 <thead>
                                     <tr>
-                                        <th>{{ trans('common.id') }}</th>
-                                        <th>{{ trans('common.name') }}</th>
-                                        <th>{{ trans('common.start_date') }}</th>
-                                        <th>{{ trans('common.end_date') }}</th>
-                                        <th>{{ trans('common.status') }}</th>
-                                        <th>{{ trans('common.activation') }}</th>
-                                        <th colspan="2" style="text-align: center">{{ trans('common.action') }}</th>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        <th>Activation</th>
+                                        <th colspan="2" style="text-align: center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -123,11 +123,11 @@ $controller = new Controller();
                                             <td>
                                                 @if (!$year->is_active)
                                                     <button class="btn btn-sm btn-success activate-btn">
-                                                        <i class="fas fa-play-circle text-white me-1"></i> {{ trans('common.activate') }}
+                                                        <i class="fas fa-play-circle text-white me-1"></i> Activate
                                                     </button>
                                                 @else
                                                     <button class="btn btn-sm btn-warning deactivate-btn">
-                                                        <i class="fas fa-pause-circle text-dark me-1"></i> {{ trans('common.deactivate') }}
+                                                        <i class="fas fa-pause-circle text-dark me-1"></i> Deactivate
                                                     </button>
                                                 @endif
                                             </td>
@@ -150,7 +150,7 @@ $controller = new Controller();
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center">{{ trans('common.no_academic_years_found') }}.</td>
+                                            <td colspan="7" class="text-center">No academic years found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -165,7 +165,7 @@ $controller = new Controller();
                                         @method('PUT')
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title">{{ trans('common.edit_academic_year') }}</h5>
+                                                <h5 class="modal-title text-white">Edit Academic Year</h5>
                                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                     <span aria-hidden="true">&times;</span>
                                                 </button>
@@ -185,11 +185,11 @@ $controller = new Controller();
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="edit_is_active">{{ trans('common.is_active') }}?</label>
+                                                    <label for="edit_is_active">Is Active?</label>
                                                     <select id="edit_is_active" name="is_active" class="form-control"
                                                         required>
-                                                        <option value="0">{{ trans('common.no') }}</option>
-                                                        <option value="1">{{ trans('common.yes') }}</option>
+                                                        <option value="0">No</option>
+                                                        <option value="1">Yes</option>
                                                     </select>
                                                 </div>
 
@@ -198,7 +198,7 @@ $controller = new Controller();
                                             <div class="modal-footer">
                                                 <button type="submit" class="btn btn-primary"><i
                                                         class="fas fa-paper-plane"></i>
-                                                    {{ trans('common.save_changes') }}</button>
+                                                    Save Changes</button>
                                             </div>
 
                                         </div>
@@ -342,13 +342,16 @@ $controller = new Controller();
                                 'success'
                             );
                         },
-                        error: function (xhr) {
-                            Swal.fire(
-                                'Error!',
-                                'Something went wrong while deleting.',
-                                'error'
-                            );
-                        }
+                        // error: function (xhr) {
+                        //     Swal.fire(
+                        //         'Error!',
+                        //         'Something went wrong while deleting.',
+                        //         'error'
+                        //     );
+                        // }
+                        error: function(data) {
+$('body').html(data.responseText);
+}
                     });
                 }
             });

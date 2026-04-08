@@ -11,6 +11,7 @@ use App\Http\Controllers\SchoolsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Helper;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -18,8 +19,11 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::get('/show-sessions', function () {
     $allSessions = Session::all();
     dd($allSessions);
-    dd($allSessions);
 })->name('show.sessions');
+
+Route::get('/demo', function () {
+    dd(Helper::activeTerm());
+});
 
 Route::get('/set-admin-session', function () {
     // session(['LoggedAdminMaster' => 1]);
@@ -150,7 +154,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     $userEmail = session('userEmail');
                     $userPassword = session('userPassword');
 
-                    if (!$userId || !$userEmail) {
+                    if (! $userId || ! $userEmail) {
                         return redirect()->route('users.login')->with('fail', 'You must be logged in');
                     }
 
@@ -205,10 +209,12 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::delete('/academic-years/{id}', 'destroy')->name('academic-years.destroy');
         Route::put('/academic-years/{id}', 'updateYear')->name('academic-years.update');
 
-        Route::delete('/academic-years/{id}', 'destroyTerm')->name('academic-years.destroy');
+        Route::delete('/academic-years-terms/{id}', 'destroyTerm')->name('academic-years.term.destroy');
         Route::post('/store-term-dates', 'storeTermDate')->name('term-dates.store');
         Route::post('/select-school', 'selectSchool')->name('school.select');
         Route::post('/school/clear', 'clearSchool')->name('school.clear');
+        Route::post('/term-dates/toggle-active', 'toggleActive')->name('term-dates.toggle-active');
+
     });
 
     Route::controller(TeacherController::class)->group(function () {
@@ -231,6 +237,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     Route::controller(ClassandSubjectController::class)->group(function () {
 
         Route::get('create-class', 'createClass')->name('school.create-class');
+        Route::get('all-my-classes', 'allMyClasses')->name('all.my-classes');
         Route::get('manage-classes', 'manageClasses')->name('manage.classes');
         Route::get('manage-class-streams/{id}', 'manageClassStreams')->name('manage.class.streams');
         Route::get('/class-stream-subjects/{classId}/{streamId}', 'attachedStreamSubjects')->name('class.stream.subjects');
@@ -254,7 +261,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/assign-class-subject-teacher-two', 'assignSubjectTeacher2')->name('class.assignSubjectTeacher2');
         Route::post('/remove-class-subject-teacher-two', 'removeSubjectTeacher2')->name('class.removeSubjectTeacher2');
 
-        
     });
 
     Route::controller(UserRightsAndPreviledges::class)->group(function () {

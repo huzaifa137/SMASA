@@ -552,4 +552,26 @@ class ClassandSubjectController extends Controller
             return redirect()->back()->with('error', 'Failed to update subjects. Please try again or contact support.');
         }
     }
+
+    public function allMyClasses()
+    {
+        Helper::requireSchool();
+        $classRecord = Classroom::where('school_id', Helper::requireSchool())->where('class_supervisor', Session('LoggedTeacher'))->orderBy('class_name', 'Asc')->get();
+
+        $Streams = DB::table('streams')->where('school_id', Helper::requireSchool())->where('class_teacher', Session('LoggedTeacher'))->orderBy('stream_id', 'Asc')->get();
+
+        $Teachers = Teacher::with('school')
+            ->where('school_id', Helper::requireSchool())
+            ->get();
+
+       $classSubjects = ClassSubject::where('subject_teacher_1', Session('LoggedTeacher'))
+                ->orwhere('subject_teacher_2', Session('LoggedTeacher'))
+                ->get();
+
+        $Teachers = Teacher::with('school')
+            ->where('school_id', Session('LoggedSchool'))
+            ->get();
+
+        return view('Class.my-Classes', compact('classRecord', 'Teachers', 'Streams','classSubjects'));
+    }
 }

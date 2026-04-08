@@ -256,14 +256,15 @@ use App\Http\Controllers\Helper;
 
                                 <div class="form-group">
                                     <label>Admission Year <span class="text-danger">*</span></label>
-                                    <select name="Admission_Year" id="year" class="form-control select2">
+                                    <input type="text" name="Admission_Year" class="form-control" id="year" value="{{Helper::schoolActiveYearName()}}" readonly>
+                                    {{-- <select name="" id="" class="form-control select2">
                                         <option value="">All Years</option>
                                         @foreach ($years as $year)
                                             <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
                                                 {{ $year }}
                                             </option>
                                         @endforeach
-                                    </select>
+                                    </select> --}}
                                 </div>
 
                                 <div class="form-group">
@@ -449,38 +450,36 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        $(document).ready(function () {
+<script>
+    $(document).ready(function () {
 
-            function updateStudentID() {
-                let schoolId = $('#School').val(); // read from hidden input
-                let category = $('select[name="Category"]').val();
-                let year = $('select[name="Admission_Year"]').val();
+        function updateStudentID() {
+            let schoolId = $('#School').val();
+            let category = $('select[name="Category"]').val();
+            let year = $('input[name="Admission_Year"]').val();
 
-                if (schoolId && category && year) {
-                    $.ajax({
-                        url: '{{ route('students.generate-id') }}',
-                        data: {
-                            school_id: schoolId,
-                            category: category,
-                            year: year
-                        },
-                        success: function (res) {
-                            $('#Student_ID').val(res.student_id);
-                        }
-                    });
-                } else {
-                    $('#Student_ID').val('');
-                }
+            if (schoolId && category && year) {
+                $.ajax({
+                    url: '{{ route('students.generate-id') }}',
+                    data: {
+                        school_id: schoolId,
+                        category: category,
+                        year: year
+                    },
+                    success: function (res) {
+                        $('#Student_ID').val(res.student_id);
+                    }
+                });
+            } else {
+                $('#Student_ID').val('');
             }
+        }
 
-            // Trigger Student ID update when category or year changes
-            $('select[name="Category"], select[name="Admission_Year"]').on('change', updateStudentID);
+        $('select[name="Category"], input[name="Admission_Year"]').on('change', updateStudentID);
 
-            // Optionally, trigger on page load if you want initial value
-            updateStudentID();
-        });
-    </script>
+        updateStudentID();
+    });
+</script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

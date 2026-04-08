@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AcademicYear;
 use App\Models\Student;
 use App\Models\StudentBasic;
+use App\Models\TermDate;
 use App\Models\User;
 use DB;
 use Session;
@@ -69,7 +70,6 @@ class Helper extends Controller
 
         return $schoolName;
     }
-
 
     public static function schoolNumber($house_id)
     {
@@ -414,6 +414,38 @@ class Helper extends Controller
             ->value('name');
 
         return $activeYear ?? 'No Active year Set';
+    }
+
+    public static function fetchActiveYearName($academic_year_id)
+    {
+        $activeYearName = AcademicYear::where('id', $academic_year_id)->value('name');
+
+        return $activeYearName;
+    }
+
+    public static function activeAcademicYear()
+    {
+        return TermDate::where('school_id', Session('LoggedSchool'))
+            ->where('is_active', 1)
+            ->value('academic_year_id');
+    }
+
+    public static function schoolActiveYearName()
+    {
+        return DB::table('academic_years')->where('id', self::activeAcademicYear())
+            ->value('name');
+    }
+
+    public static function activeTerm()
+    {
+        return TermDate::where('school_id', Session('LoggedSchool'))
+            ->where('is_active', 1)
+            ->value('term');
+    }
+
+    public static function schoolActiveTermName()
+    {
+        return self::recordMdname(self::activeTerm());
     }
 
     public static function activeUploadingIdaadYear()

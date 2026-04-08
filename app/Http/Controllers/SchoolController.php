@@ -101,13 +101,26 @@ class SchoolController extends Controller
         ]);
     }
 
-    public function termDates($school_Id)
+    public function termDates($school_Id, Request $request)
     {
         $school_id = $school_Id;
-        $academicYears = AcademicYear::orderBy('id', 'desc')->where('is_active', 1)->get();
-        $termDates = TermDate::where('school_id', $school_id)->orderBy('term', 'asc')->get();
 
-        return view('School.term-dates', compact('school_id', 'academicYears', 'termDates'));
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+
+        $activeYear = AcademicYear::where('is_active', 1)->first();
+        $selectedYearId = $request->year ?? ($activeYear->id ?? null);
+
+        $termDates = TermDate::where('school_id', $school_id)
+            ->where('academic_year_id', $selectedYearId)
+            ->orderBy('term', 'asc')
+            ->get();
+
+        return view('School.term-dates', compact(
+            'school_id',
+            'academicYears',
+            'termDates',
+            'selectedYearId'
+        ));
     }
 
     public function createNewSchool(Request $request)
@@ -367,19 +380,91 @@ class SchoolController extends Controller
         return view('AcademicYear.add-year', compact(['academicYears']));
     }
 
+    // public function storeYear(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'name' => 'required|string|max:255|unique:academic_years,name',
+    //         'start_date' => 'required|date',
+    //         'end_date' => 'required|date|after_or_equal:start_date',
+    //         'is_active' => 'required|boolean',
+    //     ]);
+
+    //     $academicYear = AcademicYear::create($validated);
+
+    //     return response()->json([
+    //         'message' => 'Academic Year created successfully.',
+    //         'data' => $academicYear,
+    //     ], 201);
+    // }
+
     public function storeYear(Request $request)
     {
+        $currentYear = date('Y');
+        $nextYear = $currentYear + 1;
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:academic_years,name',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^\d{4}$/', // Only 4-digit year
+                'unique:academic_years,name',
+                function ($attribute, $value, $fail) use ($currentYear, $nextYear) {
+                    if ($value < $currentYear) {
+                        $fail('Cannot create academic year for past years. Year must be current or future.');
+                    }
+                    if ($value > $nextYear) {
+                        $fail('Can only create academic year for '.$nextYear.' at maximum.');
+                    }
+                },
+            ],
+            'start_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) use ($request) {
+                    $year = $request->name;
+                    $startDate = date('Y-m-d', strtotime($value));
+                    $expectedStart = $year.'-01-01';
+                    $expectedEnd = $year.'-12-31';
+
+                    if ($startDate < $expectedStart || $startDate > $expectedEnd) {
+                        $fail("Start date must be within the year {$year} (Jan 1 - Dec 31).");
+                    }
+                },
+            ],
+            'end_date' => [
+                'required',
+                'date',
+                'after_or_equal:start_date',
+                function ($attribute, $value, $fail) use ($request) {
+                    $year = $request->name;
+                    $endDate = date('Y-m-d', strtotime($value));
+                    $expectedStart = $year.'-01-01';
+                    $expectedEnd = $year.'-12-31';
+
+                    if ($endDate < $expectedStart || $endDate > $expectedEnd) {
+                        $fail("End date must be within the year {$year} (Jan 1 - Dec 31).");
+                    }
+                },
+            ],
             'is_active' => 'required|boolean',
         ]);
+
+        // Auto-set dates based on the year if not provided or override
+        $year = $validated['name'];
+        $validated['start_date'] = $year.'-01-01';
+        $validated['end_date'] = $year.'-12-31';
+
+        // Handle active status logic - only one active year at a time
+        if ($validated['is_active'] == 1) {
+            // Deactivate all other academic years
+            AcademicYear::where('is_active', 1)->update(['is_active' => 0]);
+        }
 
         $academicYear = AcademicYear::create($validated);
 
         return response()->json([
-            'message' => 'Academic Year created successfully.',
+            'message' => 'Academic Year '.$year.' created successfully.',
             'data' => $academicYear,
         ], 201);
     }
@@ -403,6 +488,7 @@ class SchoolController extends Controller
 
     public function destroy($id)
     {
+        dd($id);
         $academicYear = AcademicYear::findOrFail($id);
 
         if ($academicYear->is_active) {
@@ -439,7 +525,6 @@ class SchoolController extends Controller
 
     public function storeTermDate(Request $request)
     {
-        dd($request->all());
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -512,6 +597,62 @@ class SchoolController extends Controller
                 'status' => false,
                 'message' => 'No school is currently selected.',
             ]);
+        }
+    }
+
+    public function toggleActive(Request $request)
+    {
+        try {
+            $request->validate([
+                'term_id' => 'required|exists:term_dates,id',
+                'is_active' => 'required|boolean',
+            ]);
+
+            $termDate = TermDate::findOrFail($request->term_id);
+            $schoolId = Session::get('LoggedSchool');
+
+            // Verify school ownership
+            if ($termDate->school_id != $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ], 403);
+            }
+
+            // If trying to activate this term
+            if ($request->is_active == 1) {
+                // Deactivate all other active terms for this school and academic year
+                TermDate::where('school_id', $schoolId)
+                    ->where('academic_year_id', $termDate->academic_year_id)
+                    ->where('is_active', 1)
+                    ->update(['is_active' => 0]);
+
+                // Activate this term
+                $termDate->is_active = 1;
+                $termDate->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Term activated successfully',
+                    'term_id' => $termDate->id,
+                ]);
+            }
+            // If trying to deactivate this term
+            else {
+                $termDate->is_active = 0;
+                $termDate->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Term deactivated successfully',
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: '.$e->getMessage(),
+            ], 500);
         }
     }
 }
