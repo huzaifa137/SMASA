@@ -14,6 +14,82 @@ use App\Http\Controllers\Helper;
                 </div>
             </div>
         </div>
+
+        <style>
+    /* Enhanced Table Styling */
+    .table {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #2C29CA 0%, #2C29CA 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 12px;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    /* Pagination Styling */
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+    }
+    
+    .pagination .page-link {
+        color: #667eea;
+        border-radius: 8px;
+        margin: 0 3px;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #2C29CA;
+        border-color: #2C29CA;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* Stream Group Animation */
+    .stream-group {
+        animation: fadeInUp 0.5s ease;
+        margin-bottom: 2rem;
+    }
+    
+    /* Badge Styling */
+    .badge {
+        padding: 6px 12px;
+        font-weight: 500;
+        border-radius: 20px;
+    }
+    
+    /* Button Group Styling */
+    .btn-group-sm .btn {
+        padding: 5px 12px;
+        border-radius: 6px;
+        margin: 0 2px;
+    }
+    
+    /* Loading Skeleton */
+    .skeleton-loader {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+</style>
+
         <style>
             /* Edit Modal Styles */
             .edit-section-title {
@@ -426,7 +502,9 @@ use App\Http\Controllers\Helper;
             }
         </style>
 
-<div class="row">
+        {{-- Code for View and Edit Code to be showing / old code with modals and so on !!! --}}
+
+{{-- <div class="row">
    <div class="col-lg-12">
       <!-- Results -->
       <div class="card mt-4" id="resultsCard">
@@ -1183,6 +1261,129 @@ use App\Http\Controllers\Helper;
          </div>
       </div>
    </div>
+</div> --}}
+
+
+
+<div class="row">
+   <div class="col-lg-12">
+      <!-- Results -->
+      <div class="card mt-4" id="resultsCard">
+         <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">All Students</h5>
+         </div>
+         <div class="card-body bg-white" id="searchResults">
+            @if ($groupedStudents->isEmpty())
+            <p>No students found.</p>
+            @else
+            @foreach ($groupedStudents as $senior => $streams)
+            <div class="senior-group">
+               <h4 class="text-primary">Class : <span
+                  class="text-dark fw-bold">{{ Helper::item_md_name($senior) }}</span></h4>
+               @foreach ($streams as $stream => $students)
+               <!-- Stream Table -->
+               <div class="stream-group mb-5">
+                  <!-- Stream Group Title -->
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                     <h5 class="text-secondary mb-0">
+                           <i class="bi bi-diagram-3 me-2"></i>Stream: {{ Helper::item_md_name($stream) }}
+                           <span class="badge bg-primary ms-2" id="totalCount-{{ $loop->parent->index }}-{{ $loop->index }}">
+                              {{ $students->count() }} students
+                           </span>
+                     </h5>
+                  </div>
+                  
+                  <!-- Stream Table -->
+                  <div class="table-responsive">
+                     <table class="table table-hover table-striped" id="table-{{ $loop->parent->index }}-{{ $loop->index }}">
+                           <thead class="bg-light">
+                              <tr>
+                                 <th width="5%">#</th>
+                                 <th width="10%">Photo</th>
+                                 <th width="15%">Firstname</th>
+                                 <th width="15%">Lastname</th>
+                                 <th width="10%">Gender</th>
+                                 <th width="30%" colspan="3">Action</th>
+                              </tr>
+                           </thead>
+                           <tbody id="tableBody-{{ $loop->parent->index }}-{{ $loop->index }}">
+                              @foreach ($students->take(10) as $key => $student)
+                              <tr id="student-row-{{ $student->id }}">
+                                 <td>{{ $key + 1 }}</td>
+                                 <td class="text-center">
+                                       @php
+                                          $imagePath = null;
+                                          if ($student->student_photo) {
+                                             $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                             foreach ($possibleExtensions as $ext) {
+                                                   $path = 'uploads/studentPhotos/' . $student->student_photo . '.' . $ext;
+                                                   if (file_exists(public_path($path))) {
+                                                      $imagePath = $path;
+                                                      break;
+                                                   }
+                                             }
+                                          }
+                                       @endphp
+                                       @if($imagePath)
+                                          <img src="{{ asset($imagePath) }}"
+                                             class="rounded-circle border"
+                                             style="width: 45px; height: 45px; object-fit: cover;">
+                                       @else
+                                          <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+                                             style="width: 45px; height: 45px;">
+                                             <i class="bi bi-person text-white" style="font-size: 20px;"></i>
+                                          </div>
+                                       @endif
+                                 </td>
+                                 <td class="fw-medium">{{ $student->firstname }}</td>
+                                 <td>{{ $student->lastname }}</td>
+                                 <td>
+                                       <span class="badge {{ $student->gender == 'Male' ? 'bg-info' : ($student->gender == 'Female' ? 'bg-success' : 'bg-secondary') }}">
+                                          {{ $student->gender }}
+                                       </span>
+                                 </td>
+                                 <td>
+                                       <div class="btn-group btn-group-sm" role="group">
+                                          <button type="button" class="btn btn-info view-student" data-id="{{ $student->id }}">
+                                             <i class="bi bi-eye"></i> View
+                                          </button>
+                                          <button type="button" class="btn btn-primary edit-student" data-id="{{ $student->id }}">
+                                             <i class="bi bi-pencil-square"></i> Edit
+                                          </button>
+                                          <button type="button" class="btn btn-danger delete-student" data-id="{{ $student->id }}">
+                                             <i class="bi bi-trash"></i> Delete
+                                          </button>
+                                       </div>
+                                 </td>
+                              </tr>
+                              @endforeach
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <!-- Pagination Controls -->
+                  @if($students->count() > 10)
+                  <div class="d-flex justify-content-between align-items-center mt-3" id="pagination-{{ $loop->parent->index }}-{{ $loop->index }}">
+                     <div class="text-muted small">
+                           Showing <span id="showingStart-{{ $loop->parent->index }}-{{ $loop->index }}">1</span> 
+                           to <span id="showingEnd-{{ $loop->parent->index }}-{{ $loop->index }}">10</span> 
+                           of <span id="totalItems-{{ $loop->parent->index }}-{{ $loop->index }}">{{ $students->count() }}</span> students
+                     </div>
+                     <nav>
+                           <ul class="pagination pagination-sm mb-0" id="paginationList-{{ $loop->parent->index }}-{{ $loop->index }}">
+                              <!-- Pagination will be generated by JavaScript -->
+                           </ul>
+                     </nav>
+                  </div>
+                  @endif
+               </div>
+               @endforeach
+            </div>
+            @endforeach
+            @endif
+         </div>
+      </div>
+   </div>
 </div>
 
     </div>
@@ -1773,6 +1974,316 @@ if (s.photo_url) {
             });
         });
     </script>
+
+    <script>
+// Pagination Manager Class
+class StreamPagination {
+    constructor(containerId, data, itemsPerPage = 10) {
+        this.containerId = containerId;
+        this.allData = data;
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+        this.totalPages = Math.ceil(data.length / itemsPerPage);
+        this.init();
+    }
+    
+    init() {
+        this.render();
+        this.renderPagination();
+    }
+    
+    render() {
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const end = start + this.itemsPerPage;
+        const pageData = this.allData.slice(start, end);
+        
+        // Update the table body
+        const tbody = document.querySelector(`#${this.containerId} tbody`);
+        if (tbody) {
+            tbody.innerHTML = this.generateTableRows(pageData, start);
+        }
+        
+        // Update showing info
+        const showingStart = document.querySelector(`#${this.containerId.replace('tableBody', 'showingStart')}`);
+        const showingEnd = document.querySelector(`#${this.containerId.replace('tableBody', 'showingEnd')}`);
+        const totalItems = document.querySelector(`#${this.containerId.replace('tableBody', 'totalItems')}`);
+        
+        if (showingStart) showingStart.textContent = start + 1;
+        if (showingEnd) showingEnd.textContent = Math.min(end, this.allData.length);
+        if (totalItems) totalItems.textContent = this.allData.length;
+    }
+    
+    generateTableRows(students, startIndex) {
+        return students.map((student, idx) => {
+            const rowNumber = startIndex + idx + 1;
+            const imageHtml = student.student_photo ? 
+                `<img src="${student.photo_url || '/default-avatar.png'}" class="rounded-circle border" style="width: 45px; height: 45px; object-fit: cover;">` :
+                `<div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                    <i class="bi bi-person text-white" style="font-size: 20px;"></i>
+                 </div>`;
+            
+            const genderBadge = student.gender == 'Male' ? 'bg-info' : (student.gender == 'Female' ? 'bg-success' : 'bg-secondary');
+            
+            return `
+                <tr id="student-row-${student.id}">
+                    <td>${rowNumber}</td>
+                    <td class="text-center">${imageHtml}</td>
+                    <td class="fw-medium">${this.escapeHtml(student.firstname)}</td>
+                    <td>${this.escapeHtml(student.lastname)}</td>
+                    <td><span class="badge ${genderBadge}">${student.gender}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-info view-student" data-id="${student.id}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <button type="button" class="btn btn-primary edit-student" data-id="${student.id}">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-danger delete-student" data-id="${student.id}">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    renderPagination() {
+        const paginationContainer = document.querySelector(`#${this.containerId.replace('tableBody', 'paginationList')}`);
+        if (!paginationContainer) return;
+        
+        let paginationHtml = '';
+        
+        // Previous button
+        paginationHtml += `
+            <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="prev" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        `;
+        
+        // Page numbers
+        const maxVisible = 5;
+        let startPage = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(this.totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        if (startPage > 1) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+            if (startPage > 2) paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `
+                <li class="page-item ${this.currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `;
+        }
+        
+        if (endPage < this.totalPages) {
+            if (endPage < this.totalPages - 1) paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${this.totalPages}">${this.totalPages}</a></li>`;
+        }
+        
+        // Next button
+        paginationHtml += `
+            <li class="page-item ${this.currentPage === this.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="next" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        `;
+        
+        paginationContainer.innerHTML = paginationHtml;
+        
+        // Add click handlers
+        paginationContainer.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                if (page === 'prev' && this.currentPage > 1) {
+                    this.goToPage(this.currentPage - 1);
+                } else if (page === 'next' && this.currentPage < this.totalPages) {
+                    this.goToPage(this.currentPage + 1);
+                } else if (page && !isNaN(page)) {
+                    this.goToPage(parseInt(page));
+                }
+            });
+        });
+    }
+    
+    goToPage(page) {
+        if (page < 1 || page > this.totalPages) return;
+        this.currentPage = page;
+        this.render();
+        this.renderPagination();
+        
+        // Smooth scroll to table
+        const tableContainer = document.querySelector(`#${this.containerId.replace('tableBody', '')}`);
+        if (tableContainer) {
+            tableContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+    
+    escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+}
+
+// Initialize pagination for all streams
+document.addEventListener('DOMContentLoaded', function() {
+    // Store all student data
+    const streamsData = {};
+    
+    @foreach ($groupedStudents as $seniorIndex => $streams)
+        @foreach ($streams as $streamIndex => $students)
+            const tableId = 'tableBody-{{ $seniorIndex }}-{{ $streamIndex }}';
+            const studentsData = @json($students->values());
+            streamsData[tableId] = studentsData;
+            
+            if (studentsData.length > 10) {
+                new StreamPagination(tableId, studentsData, 10);
+            }
+        @endforeach
+    @endforeach
+    
+    // Re-attach event handlers for dynamic buttons
+    function attachEventHandlers() {
+        // View student handlers
+        document.querySelectorAll('.view-student').forEach(btn => {
+            btn.removeEventListener('click', viewStudentHandler);
+            btn.addEventListener('click', viewStudentHandler);
+        });
+        
+        // Edit student handlers
+        document.querySelectorAll('.edit-student').forEach(btn => {
+            btn.removeEventListener('click', editStudentHandler);
+            btn.addEventListener('click', editStudentHandler);
+        });
+        
+        // Delete student handlers
+        document.querySelectorAll('.delete-student').forEach(btn => {
+            btn.removeEventListener('click', deleteStudentHandler);
+            btn.addEventListener('click', deleteStudentHandler);
+        });
+    }
+    
+    function viewStudentHandler(e) {
+        const studentId = this.dataset.id;
+        // Your existing view logic
+        showStudentDetails(studentId);
+    }
+    
+    function editStudentHandler(e) {
+        const studentId = this.dataset.id;
+        // Your existing edit logic
+        showEditModal(studentId);
+    }
+    
+    function deleteStudentHandler(e) {
+        const studentId = this.dataset.id;
+        // Your existing delete logic
+        confirmDeleteStudent(studentId);
+    }
+    
+    // Store original functions
+    window.showStudentDetails = function(studentId) {
+        // Move your existing view logic here
+        $('#studentDetailsModal').modal('show');
+        $('#modalLoadingSpinner').removeClass('d-none');
+        $('#studentDetailsContent').addClass('d-none');
+        
+        $.ajax({
+            url: `/students/view/${studentId}`,
+            type: 'GET',
+            success: function(response) {
+                updateModalWithStudentData(response.student);
+                $('#modalLoadingSpinner').addClass('d-none');
+                $('#studentDetailsContent').removeClass('d-none');
+            },
+            error: function(data) {
+                $('body').html(data.responseText);
+            }
+        });
+    };
+    
+    window.showEditModal = function(studentId) {
+        $('#editStudentModal').modal('show');
+        $('#editModalLoadingSpinner').removeClass('d-none');
+        $('#editStudentForm').addClass('d-none');
+        
+        $.ajax({
+            url: `/students/view/${studentId}`,
+            type: 'GET',
+            success: function(response) {
+                populateEditForm(response.student);
+                $('#editModalLoadingSpinner').addClass('d-none');
+                $('#editStudentForm').removeClass('d-none');
+            },
+            error: function() {
+                Swal.fire('Error', 'Could not load student data.', 'error');
+            }
+        });
+    };
+    
+    window.confirmDeleteStudent = function(studentId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will permanently delete the student!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#2C29CA',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/students/delete/${studentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Deleted!', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Error!', 'Something went wrong', 'error');
+                });
+            }
+        });
+    };
+    
+    // Initial attachment
+    attachEventHandlers();
+    
+    // Use MutationObserver to handle dynamically added elements
+    const observer = new MutationObserver(function(mutations) {
+        attachEventHandlers();
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
