@@ -20,7 +20,7 @@
             <div class="col-lg-12">
                 <div class="card shadow-lg border-0">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">{{ trans('common.filter_class_allocation') }}</h4>
+                        <h4 class="mb-0">Filter Class Allocation</h4>
                     </div>
 
                     <div class="card-body bg-light">
@@ -29,9 +29,9 @@
 
                                 <!-- Year Dropdown -->
                                 <div class="col-md-2 mb-3">
-                                    <label><strong>{{ trans('common.select_year') }}</strong></label>
+                                    <label><strong>Select Year</strong></label>
                                     <select name="year" class="form-control select2" required>
-                                        <option value="">-- {{ trans('common.select_year') }} --</option>
+                                        <option value="">-- Select Year --</option>
                                         @for ($year = 2024; $year <= 2026; $year++)
                                             <option value="{{ $year }}">{{ $year }}</option>
                                         @endfor
@@ -40,19 +40,19 @@
 
                                 <!-- Category Dropdown -->
                                 <div class="col-md-2 mb-3">
-                                    <label><strong>{{ trans('common.select_category') }}</strong></label>
+                                    <label><strong>Select Category</strong></label>
                                     <select name="category" class="form-control select2" required>
-                                        <option value="">-- {{ trans('common.select_category') }} --</option>
-                                        <option value="TH">{{ trans('common.thanawi') }}</option>
-                                        <option value="ID">{{ trans('common.select_idaad') }}</option>
+                                        <option value="">-- Select Category --</option>
+                                        <option value="TH">Thanawi</option>
+                                        <option value="ID">Idaad</option>
                                     </select>
                                 </div>
 
                                 <!-- School Dropdown (Wider) -->
                                 <div class="col-md-8 mb-3">
-                                    <label><strong>{{ trans('common.select_school') }}</strong></label>
+                                    <label><strong>Select School</strong></label>
                                     <select name="school_number" class="form-control select2" required>
-                                        <option value="">--{{ trans('common.select_school') }}--</option>
+                                        <option value="">-- Select School --</option>
                                         @foreach ($houses as $house)
                                             <option value="{{ $house->Number }}">
                                                 {{ $house->Number }}
@@ -64,10 +64,9 @@
 
                             </div>
 
-
                             <div class="text-center mt-3">
                                 <button type="submit" class="btn btn-primary px-5">
-                                    <i class="fa fa-database me-2"></i> {{ trans('common.fetch_record') }}
+                                    <i class="fa fa-database me-2"></i> Fetch Records
                                 </button>
                             </div>
 

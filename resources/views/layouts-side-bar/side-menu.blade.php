@@ -62,12 +62,6 @@
                 </a>
             </li>
 
-            {{-- <li class="slide">
-                <a class="side-menu__item" href="{{ url('/user-rights-and-previledges/setup') }}">
-                    <i class="fas fa-user-shield fa-2x mr-3"></i>
-                    Rights & Privileges
-                </a>
-            </li> --}}
         @elseif(Session('LoggedAdmin'))
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
@@ -121,9 +115,17 @@
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/enter-marks') }}">
                     <i class="fas fa-balance-scale-right fa-2x mr-3"></i>
-                    Grading Marks
+                    Report & Marks
                 </a>
             </li>
+
+            <li class="slide">
+                <a class="side-menu__item" href="{{ route('examination.create') }}">
+                    <i class="fas fa-file-alt fa-2x mr-3"></i></i>
+                    Examinations
+                </a>
+            </li>
+
         @endif
 
         <li class="slide">

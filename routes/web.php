@@ -11,6 +11,7 @@ use App\Http\Controllers\SchoolsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\Helper;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
@@ -446,7 +447,22 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         });
 
         Route::post('/school-passwords/export-all-pdf', 'exportAllPasswordsPDF')->name('school.passwords.export-all-pdf');
-
     });
 
+    Route::prefix('examinations')
+        ->name('examination.')
+        ->controller(ExaminationController::class)
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/{id}/status', 'updateStatus')->name('updateStatus');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+
+            Route::get('/{examId}/marks', 'marksEntry')->name('marks.entry');
+            Route::get('/{examId}/marks/{classSubjectId}/students', 'marksEntrySubject')->name('marks.subject');
+            Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
+        });
 }); // end localized routes group

@@ -58,6 +58,77 @@ class SchoolController extends Controller
         return view('School.create-school', compact('registrationCode'));
     }
 
+         private function generateSchoolCode()
+    {
+        $year = date('Y');
+
+        // Get all schools created this year and only with proper 'SCH-' codes
+        $lastSchool = School::whereYear('created_at', $year)
+            ->where('registration_code', 'like', 'SCH-'.$year.'-%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastSchool && $lastSchool->registration_code) {
+            // Extract numeric part at the end
+            preg_match('/(\d+)$/', $lastSchool->registration_code, $matches);
+            $lastNumber = isset($matches[1]) ? (int) $matches[1] : 0;
+
+            $newNumber = $lastNumber + 1;
+        } else {
+            // No valid records yet, start at 1
+            $newNumber = 1;
+        }
+
+        $formattedNumber = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        return "SCH-{$year}-{$formattedNumber}";
+    }
+
+    
+    public function createNewSchool(Request $request)
+    {
+        $validated = $request->validate([
+            'school_type' => 'required|string|max:255',
+            'email' => 'required|email',
+            'gender' => 'required|string|max:50',
+            'regional_level' => 'required|string|max:100',
+            'school_ownership' => 'required|string|max:100',
+            'boarding_status' => 'required|string|max:100',
+            'name' => 'required|string|max:255',
+            'school_product' => 'required',
+            'phone' => 'required|string|max:20',
+            'population' => 'required|string',
+            'school_name_arabic' => 'nullable|string|max:255',
+        ]);
+
+        // Generate school registration code
+        $registrationCode = $this->generateSchoolCode();
+
+        $validated['registration_code'] = $registrationCode;
+        $validated['added_by'] = Session('LoggedStudent');
+        $validated['date_added'] = now();
+
+        // Create new school
+        $school = School::create($validated);
+
+        // Create corresponding house
+        DB::table('houses')->insert([
+            'House' => $validated['name'],
+            'House_AR' => $validated['school_name_arabic'] ?? '',
+            'Number' => $registrationCode,
+            'Location' => 'Kampala',
+            'RegistrationDate' => now(),
+            'Head' => 0,
+            'ContactPerson' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School created successfully and house added.',
+            'registration_code' => $registrationCode,
+        ]);
+    }
+
     public function allSchools()
     {
         $schools = House::orderBy('id', 'Desc')->get();
@@ -122,77 +193,7 @@ class SchoolController extends Controller
             'selectedYearId'
         ));
     }
-
-    public function createNewSchool(Request $request)
-    {
-        $validated = $request->validate([
-            'school_type' => 'required|string|max:255',
-            'email' => 'required|email',
-            'gender' => 'required|string|max:50',
-            'regional_level' => 'required|string|max:100',
-            'school_ownership' => 'required|string|max:100',
-            'boarding_status' => 'required|string|max:100',
-            'name' => 'required|string|max:255',
-            'school_product' => 'required',
-            'phone' => 'required|string|max:20',
-            'population' => 'required|string',
-            'school_name_arabic' => 'nullable|string|max:255',
-        ]);
-
-        // Generate school registration code
-        $registrationCode = $this->generateSchoolCode();
-
-        $validated['registration_code'] = $registrationCode;
-        $validated['added_by'] = Session('LoggedStudent');
-        $validated['date_added'] = now();
-
-        // Create new school
-        $school = School::create($validated);
-
-        // Create corresponding house
-        DB::table('houses')->insert([
-            'House' => $validated['name'],
-            'House_AR' => $validated['school_name_arabic'] ?? '',
-            'Number' => $registrationCode,
-            'Location' => 'Kampala',
-            'RegistrationDate' => now(),
-            'Head' => 0,
-            'ContactPerson' => 0,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'School created successfully and house added.',
-            'registration_code' => $registrationCode,
-        ]);
-    }
-
-    private function generateSchoolCode()
-    {
-        $year = date('Y');
-
-        // Get all schools created this year and only with proper 'SCH-' codes
-        $lastSchool = School::whereYear('created_at', $year)
-            ->where('registration_code', 'like', 'SCH-'.$year.'-%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastSchool && $lastSchool->registration_code) {
-            // Extract numeric part at the end
-            preg_match('/(\d+)$/', $lastSchool->registration_code, $matches);
-            $lastNumber = isset($matches[1]) ? (int) $matches[1] : 0;
-
-            $newNumber = $lastNumber + 1;
-        } else {
-            // No valid records yet, start at 1
-            $newNumber = 1;
-        }
-
-        $formattedNumber = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-
-        return "SCH-{$year}-{$formattedNumber}";
-    }
-
+   
     public function editSchool($id)
     {
         $HouseID = House::where('ID', $id)->value('Number');
