@@ -1,320 +1,1460 @@
-<?php
-use App\Http\Controllers\Helper;
-?>
 @extends('layouts-side-bar.master')
 
 @section('css')
     <link href="{{ URL::asset('assets/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        .exam-hero {
-            background: linear-gradient(135deg, #2C29CA 0%, #5351e4 60%, #7c7aec 100%);
-            border-radius: 0 0 2rem 2rem;
-            padding: 2rem 2rem 3rem;
-            margin-bottom: -1.5rem;
+        :root {
+            --brand: #5351e4;
+            --brand-light: #2C29CA;
+            --brand-dark: #2C29CA;
+            --brand-muted: rgba(83, 81, 228, .12);
+            --accent: #5351e4;
+            --accent-muted: rgba(83, 81, 228, .12);
+            --purple: #6c3fc5;
+            --purple-muted: rgba(108, 63, 197, .12);
+            --danger: #ef4444;
+            --danger-muted: rgba(239, 68, 68, .12);
+            --info: #3b82f6;
+            --info-muted: rgba(59, 130, 246, .12);
+            --success: #10b981;
+            --success-muted: rgba(16, 185, 129, .12);
+            --warning: #f59e0b;
+            --warning-muted: rgba(245, 158, 11, .12);
+            --surface: #ffffff;
+            --surface-2: #f7f9f7;
+            --surface-3: #eef3ef;
+            --border: rgba(83, 81, 228, .14);
+            --text-primary: #0f1f14;
+            --text-secondary: #4b6356;
+            --text-muted: #8ca898;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .06);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, .09);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, .12);
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --font: 'Sora', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
         }
-        .stat-card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 2px 12px rgba(44,41,202,.08);
-            transition: transform .15s;
+
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .stat-card:hover { transform: translateY(-2px); }
-        .stat-icon {
-            width: 48px; height: 48px;
-            border-radius: .75rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
+
+        body {
+            background: #F8FAFC;
         }
-        .exam-table-card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(44,41,202,.07);
+
+        /* Modern Glassmorphism Header with Blue Gradient */
+        .glass-header {
+            background: linear-gradient(135deg, rgba(83, 81, 228, 0.98) 0%, rgba(44, 41, 202, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(83, 81, 228, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
             overflow: hidden;
         }
-        .table thead th {
-            background: #f5f4ff;
-            color: #2C29CA;
-            font-size: .78rem;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            border-bottom: 2px solid #ede9ff;
-            font-weight: 700;
-        }
-        .status-pill {
-            padding: .28rem .85rem;
-            border-radius: 99px;
-            font-size: .73rem;
-            font-weight: 700;
-            letter-spacing: .03em;
-            display: inline-block;
-        }
-        .status-draft            { background:#f0f0f0; color:#666; }
-        .status-active           { background:#d4f5e2; color:#1a7a4a; }
-        .status-marks_entry      { background:#fff3cd; color:#856404; }
-        .status-closed           { background:#fde8e8; color:#c0392b; }
-        .status-results_released { background:#cfe2ff; color:#0a4191; }
 
-        .action-btn {
-            border-radius: .45rem;
-            font-size: .78rem;
-            padding: .3rem .75rem;
+        .glass-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
         }
-        .progress-mini {
-            height: 6px; border-radius: 99px;
+
+        .glass-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(108, 63, 197, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* Animated Stats Cards */
+        .stat-card-new {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(83, 81, 228, 0.1);
+        }
+
+        .stat-card-new::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(83, 81, 228, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card-new:hover::before {
+            left: 100%;
+        }
+
+        .stat-card-new:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -12px rgba(83, 81, 228, 0.25);
+            border-color: var(--brand);
+        }
+
+        .stat-gradient-bg {
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            opacity: 0.1;
+            filter: blur(40px);
+        }
+
+        /* Kanban Board Layout */
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            min-height: 600px;
+        }
+
+        .kanban-column {
+            flex: 1;
+            min-width: 320px;
+            background: #F1F5F9;
+            border-radius: 24px;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .column-header {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 16px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--brand);
+        }
+
+        .column-title {
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .column-count {
+            background: linear-gradient(135deg, var(--brand), var(--brand-light));
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .exam-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid #E2E8F0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .exam-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 10px 25px -5px rgba(83, 81, 228, 0.2);
+            border-color: var(--brand);
+        }
+
+        .exam-code-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--brand-muted), #DBEAFE);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--brand);
+            font-family: monospace;
+        }
+
+        .deadline-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .timer-urgent {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .timer-normal {
+            background: #D1FAE5;
+            color: #059669;
+        }
+
+        .timer-expired {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        /* Floating Action Button - Blue */
+        .fab-create {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, var(--brand), var(--brand-light));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(83, 81, 228, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .fab-create:hover {
+            transform: scale(1.1);
+            box-shadow: 0 20px 35px -8px rgba(83, 81, 228, 0.7);
+        }
+
+        /* Modal Styles */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content-custom {
+            background: white;
+            border-radius: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Status Colors with Blue accents */
+        .status-draft {
+            border-left: 4px solid #94A3B8;
+        }
+
+        .status-active {
+            border-left: 4px solid var(--success);
+        }
+
+        .status-marks_entry {
+            border-left: 4px solid var(--warning);
+        }
+
+        .status-closed {
+            border-left: 4px solid var(--danger);
+        }
+
+        .status-results_released {
+            border-left: 4px solid var(--brand);
+        }
+
+        /* Blue Gradient Buttons */
+        .btn-primary-blue {
+            background: linear-gradient(135deg, var(--brand), var(--brand-light));
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-blue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(83, 81, 228, 0.3);
+            color: white;
+        }
+
+        /* Blue Progress Bar */
+        .progress-bar-blue {
+            background: linear-gradient(90deg, var(--brand), var(--brand-light));
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .kanban-board {
+                flex-direction: column;
+            }
+
+            .kanban-column {
+                min-width: 100%;
+            }
+        }
+
+        /* Scrollbar Styling - Blue */
+        .kanban-board::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .kanban-board::-webkit-scrollbar-track {
+            background: #E2E8F0;
+            border-radius: 99px;
+        }
+
+        .kanban-board::-webkit-scrollbar-thumb {
+            background: var(--brand);
+            border-radius: 99px;
+        }
+
+        /* Blue Card Headers */
+        .blue-card-header {
+            background: linear-gradient(135deg, var(--brand-muted), rgba(83, 81, 228, 0.05));
+            border-bottom: 2px solid var(--brand);
+        }
+
+        /* Stats Card Icons - Blue */
+        .stat-icon-blue {
+            background: linear-gradient(135deg, var(--brand-muted), rgba(83, 81, 228, 0.15));
+            color: var(--brand);
         }
     </style>
 @endsection
 
 @section('content')
-<div class="side-app">
+    <div class="side-app" style="padding: 1.5rem;">
 
-    {{-- Hero --}}
-    <div class="exam-hero mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="text-white fw-bold mb-1"><i class="fas fa-clipboard-list me-2"></i>Examinations</h3>
-                <p class="text-white mb-0 opacity-75" style="font-size:.9rem;">
-                    Manage all school examinations, marks entry and result releases.
-                </p>
-            </div>
-            <a href="{{ route('examination.create') }}" class="btn btn-light fw-semibold" style="border-radius:.6rem;">
-                <i class="fas fa-plus me-1"></i> New Examination
-            </a>
-        </div>
-    </div>
-
-    {{-- Stats Row --}}
-    @php
-        $total    = $examinations->count();
-        $active   = $examinations->where('status','active')->count();
-        $entry    = $examinations->where('status','marks_entry')->count();
-        $released = $examinations->where('status','results_released')->count();
-    @endphp
-    <div class="row g-3 mb-4">
-        @foreach([
-            ['Total', $total,    '#2C29CA', '#ede9ff', 'fa-clipboard-list'],
-            ['Active', $active,  '#1a7a4a', '#d4f5e2', 'fa-play-circle'],
-            ['Marks Entry', $entry, '#856404', '#fff3cd', 'fa-pen-alt'],
-            ['Released', $released,'#0a4191','#cfe2ff', 'fa-award'],
-        ] as [$label, $count, $color, $bg, $icon])
-        <div class="col-6 col-md-3">
-            <div class="card stat-card">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="stat-icon" style="background:{{ $bg }}; color:{{ $color }};">
-                        <i class="fas {{ $icon }}"></i>
+        <!-- Modern Glass Header with Blue Theme -->
+        <div class="glass-header">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="mb-2">
+                        <span class="badge"
+                            style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border-radius: 99px; backdrop-filter: blur(8px);">
+                            <i class="fas fa-chart-line me-2"></i> Dashboard Overview
+                        </span>
                     </div>
-                    <div>
-                        <div style="font-size:1.5rem; font-weight:800; color:#222; line-height:1;">{{ $count }}</div>
-                        <div class="text-muted" style="font-size:.78rem;">{{ $label }}</div>
+                    <h1 style="font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                        <i class="fas fa-layer-group me-2"></i> Examination Hub
+                    </h1>
+                    <p class="mb-0" style="font-size: 1.1rem; color: rgba(255,255,255,0.9);">
+                        Centralized command center for all academic assessments
+                    </p>
+                </div>
+                <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end">
+
+                        <button class="btn"
+                            style="background: #FFF; color: #2C29CA; border-radius: 16px; padding: 0.5rem 1.5rem; backdrop-filter: blur(8px);"
+                            style="border-radius: 16px; padding: 0.5rem 1.5rem;" onclick="openCreateModal()">
+                            <i class="fas fa-plus me-2"></i> New Exam
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-        @endforeach
-    </div>
 
-    {{-- Table --}}
-    <div class="card exam-table-card">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="examTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Exam Code</th>
-                            <th>Examination</th>
-                            <th>Type / Term</th>
-                            <th>Period</th>
-                            <th>Entry Deadline</th>
-                            <th>Status</th>
-                            <th style="width:180px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($examinations as $key => $exam)
-                        <tr>
-                            <td class="text-muted" style="font-size:.8rem;">{{ $key + 1 }}</td>
-                            <td>
-                                <span style="font-family:monospace; font-size:.8rem; color:#5351e4; font-weight:600;">
-                                    {{ $exam->exam_code }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="fw-semibold" style="font-size:.88rem;">{{ $exam->exam_name }}</div>
-                                <div class="text-muted" style="font-size:.76rem;">AY {{ $exam->academic_year }}</div>
-                            </td>
-                            <td>
-                                <div style="font-size:.83rem;">{{ $exam->exam_type }}</div>
-                                <div class="text-muted" style="font-size:.76rem;">{{ $exam->term }}</div>
-                            </td>
-                            <td style="font-size:.82rem;">
-                                {{ $exam->start_date->format('d M Y') }}<br>
-                                <span class="text-muted">to {{ $exam->end_date->format('d M Y') }}</span>
-                            </td>
-                            <td style="font-size:.82rem;">
-                                @php $daysLeft = now()->diffInDays($exam->marks_entry_deadline, false); @endphp
-                                {{ $exam->marks_entry_deadline->format('d M Y') }}<br>
-                                @if($daysLeft > 0)
-                                    <span class="text-success" style="font-size:.74rem;"><i class="fas fa-clock me-1"></i>{{ $daysLeft }}d left</span>
-                                @elseif($daysLeft == 0)
-                                    <span class="text-warning" style="font-size:.74rem;"><i class="fas fa-exclamation-circle me-1"></i>Due today</span>
-                                @else
-                                    <span class="text-danger" style="font-size:.74rem;"><i class="fas fa-lock me-1"></i>Passed</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="status-pill status-{{ $exam->status }}">
-                                    {{ $exam->statusLabel() }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    {{-- Status control --}}
-                                    @if($exam->status === 'draft')
-                                        <button class="btn btn-success action-btn btn-status"
-                                            data-id="{{ $exam->id }}" data-status="active"
-                                            title="Activate Examination">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                    @elseif($exam->status === 'active')
-                                        <button class="btn btn-warning action-btn btn-status"
-                                            data-id="{{ $exam->id }}" data-status="marks_entry"
-                                            title="Open Marks Entry">
-                                            <i class="fas fa-pen-alt"></i>
-                                        </button>
-                                    @elseif($exam->status === 'marks_entry')
-                                        <button class="btn btn-danger action-btn btn-status"
-                                            data-id="{{ $exam->id }}" data-status="closed"
-                                            title="Close Exam">
-                                            <i class="fas fa-lock"></i>
-                                        </button>
-                                    @elseif($exam->status === 'closed')
-                                        <button class="btn action-btn btn-status text-white"
-                                            style="background:#0a4191;"
-                                            data-id="{{ $exam->id }}" data-status="results_released"
-                                            title="Release Results">
-                                            <i class="fas fa-award"></i>
-                                        </button>
-                                    @endif
+        <!-- Enhanced Statistics with Blue Theme -->
+        @php
+            $total = $examinations->count();
+            $active = $examinations->where('status', 'active')->count();
+            $entry = $examinations->where('status', 'marks_entry')->count();
+            $released = $examinations->where('status', 'results_released')->count();
+            $draft = $examinations->where('status', 'draft')->count();
+        @endphp
 
-                                    {{-- Marks entry (teacher) --}}
-                                    @if(in_array($exam->status, ['active','marks_entry']))
-                                        <a href="{{ route('examination.marks.entry', $exam->id) }}"
-                                           class="btn btn-primary action-btn" title="Enter Marks">
-                                            <i class="fas fa-table"></i>
-                                        </a>
-                                    @endif
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="stat-card-new" onclick="filterByStatus('all')">
+                    <div class="stat-gradient-bg" style="background: var(--brand);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon-blue"
+                            style="width: 48px; height: 48px; border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-clipboard-list fs-4" style="color: var(--brand);"></i>
+                        </div>
+                        <span class="badge" style="background: var(--brand-muted); color: var(--brand);">Total</span>
+                    </div>
+                    <h2 class="fw-bold mb-1" style="font-size: 2.5rem; color: var(--brand);">{{ $total }}</h2>
+                    <p class="text-muted mb-0">Total Examinations</p>
+                    <div class="mt-3">
+                        <small class="text-primary">
+                            <i class="fas fa-notes-medical me-1"></i> Total Examinations
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stat-card-new" onclick="filterByStatus('active')">
+                    <div class="stat-gradient-bg" style="background: var(--success);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--success-muted); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-play-circle fs-4" style="color: var(--success);"></i>
+                        </div>
+                        <span class="badge bg-light">Live</span>
+                    </div>
+                    <h2 class="fw-bold mb-1" style="font-size: 2.5rem;">{{ $active }}</h2>
+                    <p class="text-muted mb-0">Ongoing Examinations</p>
+                    <div class="mt-3">
+                        <small class="text-success">
+                            <i class="fas fa-chart-line me-1"></i> In Progress
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stat-card-new" onclick="filterByStatus('marks_entry')">
+                    <div class="stat-gradient-bg" style="background: var(--warning);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--warning-muted); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-pen-alt fs-4" style="color: var(--warning);"></i>
+                        </div>
+                        <span class="badge bg-light">Entry</span>
+                    </div>
+                    <h2 class="fw-bold mb-1" style="font-size: 2.5rem;">{{ $entry }}</h2>
+                    <p class="text-muted mb-0">Marks Entry Phase</p>
+                    <div class="mt-3">
+                        <small class="text-warning">
+                            <i class="fas fa-hourglass-half me-1"></i> Pending Grading
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stat-card-new" onclick="filterByStatus('results_released')">
+                    <div class="stat-gradient-bg" style="background: var(--brand);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--brand-muted); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-trophy fs-4" style="color: var(--brand);"></i>
+                        </div>
+                        <span class="badge" style="background: var(--brand-muted); color: var(--brand);">Done</span>
+                    </div>
+                    <h2 class="fw-bold mb-1" style="font-size: 2.5rem; color: var(--brand);">{{ $released }}</h2>
+                    <p class="text-muted mb-0">Results Released</p>
+                    <div class="mt-3">
+                        <small style="color: var(--brand);">
+                            <i class="fas fa-check-circle me-1"></i> Completed
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                                    {{-- Delete (draft only) --}}
-                                    @if($exam->status === 'draft')
-                                        <button class="btn btn-outline-danger action-btn btn-delete"
-                                            data-id="{{ $exam->id }}" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="fas fa-clipboard fa-3x mb-3 d-block opacity-25"></i>
-                                No examinations found. <a href="{{ route('examination.create') }}">Create one now.</a>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        <!-- Kanban Board View -->
+        <div class="kanban-board" id="kanbanBoard">
+            <!-- Draft Column -->
+            <div class="kanban-column" data-status="draft">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-pen-fancy" style="color: #94A3B8;"></i>
+                        Draft
+                        <span class="column-count"
+                            id="draftCount">{{ $examinations->where('status', 'draft')->count() }}</span>
+                    </div>
+                    {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
+                </div>
+                <div class="column-cards" id="draftCards">
+                    @foreach($examinations->where('status', 'draft') as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Active Column -->
+            <div class="kanban-column" data-status="active">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-play-circle" style="color: var(--success);"></i>
+                        Active
+                        <span class="column-count"
+                            id="activeCount">{{ $examinations->where('status', 'active')->count() }}</span>
+                    </div>
+                    {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
+                </div>
+                <div class="column-cards" id="activeCards">
+                    @foreach($examinations->where('status', 'active') as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Marks Entry Column -->
+            <div class="kanban-column" data-status="marks_entry">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-edit" style="color: var(--warning);"></i>
+                        Marks Entry
+                        <span class="column-count"
+                            id="entryCount">{{ $examinations->where('status', 'marks_entry')->count() }}</span>
+                    </div>
+                    {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
+                </div>
+                <div class="column-cards" id="entryCards">
+                    @foreach($examinations->where('status', 'marks_entry') as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Closed Column -->
+            <div class="kanban-column" data-status="closed">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-lock" style="color: var(--danger);"></i>
+                        Closed
+                        <span class="column-count"
+                            id="closedCount">{{ $examinations->where('status', 'closed')->count() }}</span>
+                    </div>
+                    {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
+                </div>
+                <div class="column-cards" id="closedCards">
+                    @foreach($examinations->where('status', 'closed') as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Results Released Column -->
+            <div class="kanban-column" data-status="results_released">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-award" style="color: var(--brand);"></i>
+                        Results Released
+                        <span class="column-count"
+                            id="releasedCount">{{ $examinations->where('status', 'results_released')->count() }}</span>
+                    </div>
+                    {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
+                </div>
+                <div class="column-cards" id="releasedCards">
+                    @foreach($examinations->where('status', 'results_released') as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="fab-create" onclick="openCreateModal()">
+            <i class="fas fa-plus fs-4"></i>
+        </div>
+
+        <!-- Detail Modal -->
+        <div id="detailModal" class="detail-modal">
+            <div class="modal-content-custom">
+                <div id="modalContent"></div>
             </div>
         </div>
     </div>
+    </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
-</div>
+    <script>
+        let currentFilter = 'all';
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function () {
+        function openCreateModal() {
+            window.location.href = '{{ route("examination.create") }}';
+        }
 
-    $('#examTable').DataTable({ pageLength: 25, order: [[0, 'desc']] });
+        // function viewExamDetails(examId) {
+        //     Swal.fire({
+        //         title: 'Loading...',
+        //         text: 'Fetching examination details',
+        //         allowOutsideClick: false,
+        //         didOpen: () => {
+        //             Swal.showLoading();
+        //         }
+        //     });
 
-    // ── Update Status ──────────────────────────────────────────────────────
-    const statusLabels = {
-        active:           'Activate',
-        marks_entry:      'Open Marks Entry',
-        closed:           'Close Examination',
-        results_released: 'Release Results',
-    };
-    const statusWarnings = {
-        active:           'This will make the examination live for students.',
-        marks_entry:      'Teachers will now be able to enter marks.',
-        closed:           'Marks entry will be closed. This cannot easily be undone.',
-        results_released: 'Results will be visible to students and staff.',
-    };
+        //     $.ajax({
+        //         url: `/examinations/${examId}/details`,
+        //         type: 'GET',
+        //         success: function (response) {
+        //             // Determine status color
+        //             let statusColor = '';
+        //             let statusIcon = '';
+        //             switch(response.status) {
+        //                 case 'draft':
+        //                     statusColor = '#94A3B8';
+        //                     statusIcon = 'fa-pen-fancy';
+        //                     break;
+        //                 case 'active':
+        //                     statusColor = '#10B981';
+        //                     statusIcon = 'fa-play-circle';
+        //                     break;
+        //                 case 'marks_entry':
+        //                     statusColor = '#F59E0B';
+        //                     statusIcon = 'fa-edit';
+        //                     break;
+        //                 case 'closed':
+        //                     statusColor = '#EF4444';
+        //                     statusIcon = 'fa-lock';
+        //                     break;
+        //                 case 'results_released':
+        //                     statusColor = '#5351e4';
+        //                     statusIcon = 'fa-trophy';
+        //                     break;
+        //                 default:
+        //                     statusColor = '#5351e4';
+        //                     statusIcon = 'fa-clipboard';
+        //             }
 
-    $(document).on('click', '.btn-status', function () {
-        const id     = $(this).data('id');
-        const status = $(this).data('status');
+        //             Swal.fire({
+        //                 title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
+        //                 html: `
+        //                     <div style="text-align: left; margin-top: 10px;">
+        //                         <!-- Header Badge -->
+        //                         <div style="text-align: center; margin-bottom: 20px;">
+        //                             <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
+        //                                 <i class="fas ${statusIcon}"></i>
+        //                                 ${response.status_label}
+        //                             </span>
+        //                         </div>
 
-        Swal.fire({
-            title: statusLabels[status] + '?',
-            text:  statusWarnings[status],
-            icon:  'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#2C29CA',
-            confirmButtonText: 'Yes, proceed!',
-        }).then(result => {
-            if (!result.isConfirmed) return;
+        //                         <!-- Exam Code Card -->
+        //                         <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+        //                             <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
+        //                             <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
+        //                         </div>
+
+        //                         <!-- Details Grid -->
+        //                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+        //                                 <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+        //                                     <i class="fas fa-layer-group me-1"></i> Type
+        //                                 </div>
+        //                                 <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
+        //                             </div>
+        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+        //                                 <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+        //                                     <i class="fas fa-calendar-alt me-1"></i> Term
+        //                                 </div>
+        //                                 <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
+        //                             </div>
+        //                         </div>
+
+        //                         <!-- Period Section -->
+        //                         <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        //                             <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                 <i class="fas fa-calendar-week me-1"></i> Examination Period
+        //                             </div>
+        //                             <div style="display: flex; justify-content: space-between; align-items: center;">
+        //                                 <div>
+        //                                     <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
+        //                                     <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
+        //                                 </div>
+        //                                 <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
+        //                                 <div>
+        //                                     <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
+        //                                     <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
+        //                                 </div>
+        //                             </div>
+        //                         </div>
+
+        //                         <!-- Deadline Section -->
+        //                         <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        //                             <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                 <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
+        //                             </div>
+        //                             <div style="display: flex; justify-content: space-between; align-items: center;">
+        //                                 <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
+        //                                 ${response.days_until_deadline > 0 ? 
+        //                                     `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+        //                                         <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
+        //                                     </span>` : 
+        //                                     `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+        //                                         <i class="fas fa-ban me-1"></i>Expired
+        //                                     </span>`
+        //                                 }
+        //                             </div>
+        //                         </div>
+
+        //                         ${response.description ? `
+        //                         <div style="background: #F8FAFC; border-radius: 12px; padding: 14px;">
+        //                             <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                 <i class="fas fa-align-left me-1"></i> Description
+        //                             </div>
+        //                             <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
+        //                         </div>
+        //                         ` : ''}
+        //                     </div>
+        //                 `,
+        //                 icon: 'info',
+        //                 showCloseButton: true,
+        //                 showConfirmButton: true,
+        //                 confirmButtonColor: '#5351e4',
+        //                 confirmButtonText: '<i class="fas fa-times me-2"></i>Close',
+        //                 showCancelButton: true,
+        //                 cancelButtonText: '<i class="fas fa-table me-2"></i>Enter Marks',
+        //                 cancelButtonColor: '#10B981',
+        //                 width: '550px',
+        //                 padding: '1.5rem',
+        //                 backdrop: `
+        //                     rgba(0,0,0,0.6)
+        //                     url("/images/nyan-cat.gif")
+        //                     left top
+        //                     no-repeat
+        //                 `
+        //             }).then((result) => {
+        //                 if (!result.isConfirmed && (response.status === 'active' || response.status === 'marks_entry')) {
+        //                     window.location.href = `/examinations/${examId}/marks/entry`;
+        //                 }
+        //             });
+        //         },
+        //         error: function(xhr) {
+        //             Swal.fire({
+        //                 title: '<span style="color: #EF4444;">Error Loading Details</span>',
+        //                 html: `
+        //                     <div style="text-align: center; padding: 20px;">
+        //                         <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+        //                         <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
+        //                         <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
+        //                     </div>
+        //                 `,
+        //                 icon: 'error',
+        //                 confirmButtonColor: '#5351e4',
+        //                 confirmButtonText: 'OK',
+        //                 showCloseButton: true
+        //             });
+        //         }
+        //     });
+        // }
+
+        //         function viewExamDetails(examId) {
+        //             Swal.fire({
+        //                 title: 'Loading...',
+        //                 text: 'Fetching examination details',
+        //                 allowOutsideClick: false,
+        //                 didOpen: () => {
+        //                     Swal.showLoading();
+        //                 }
+        //             });
+
+        //             $.ajax({
+        //                 url: `/examinations/${examId}/details`,
+        //                 type: 'GET',
+        //                 success: function (response) {
+        //                     // Determine status color
+        //                     let statusColor = '';
+        //                     let statusIcon = '';
+        //                     switch (response.status) {
+        //                         case 'draft':
+        //                             statusColor = '#94A3B8';
+        //                             statusIcon = 'fa-pen-fancy';
+        //                             break;
+        //                         case 'active':
+        //                             statusColor = '#10B981';
+        //                             statusIcon = 'fa-play-circle';
+        //                             break;
+        //                         case 'marks_entry':
+        //                             statusColor = '#F59E0B';
+        //                             statusIcon = 'fa-edit';
+        //                             break;
+        //                         case 'closed':
+        //                             statusColor = '#EF4444';
+        //                             statusIcon = 'fa-lock';
+        //                             break;
+        //                         case 'results_released':
+        //                             statusColor = '#5351e4';
+        //                             statusIcon = 'fa-trophy';
+        //                             break;
+        //                         default:
+        //                             statusColor = '#5351e4';
+        //                             statusIcon = 'fa-clipboard';
+        //                     }
+
+        //                     // Generate action buttons HTML based on status
+        //                     let actionButtonsHTML = '';
+
+        //                     // Status control buttons
+        //                     if (response.status === 'draft') {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-confirm btn-status-action" data-status="active" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-play me-2"></i>Activate Examination
+        //                         </button>
+        //                         <button class="swal2-cancel btn-delete-action" data-status="delete" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-trash-alt me-2"></i>Delete Examination
+        //                         </button>
+        //                     `;
+        //                     } else if (response.status === 'active') {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-confirm btn-status-action" data-status="marks_entry" style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-pen-alt me-2"></i>Open Marks Entry
+        //                         </button>
+        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-table me-2"></i>Enter Marks
+        //                         </button>
+        //                     `;
+        //                     } else if (response.status === 'marks_entry') {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-confirm btn-status-action" data-status="closed" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-lock me-2"></i>Close Examination
+        //                         </button>
+        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-table me-2"></i>Enter Marks
+        //                         </button>
+        //                     `;
+        //                     } else if (response.status === 'closed') {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-confirm btn-status-action" data-status="results_released" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-award me-2"></i>Release Results
+        //                         </button>
+        //                     `;
+        //                     } else if (response.status === 'results_released') {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-cancel" disabled style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: not-allowed;">
+        //                             <i class="fas fa-check-circle me-2"></i>Completed
+        //                         </button>
+        //                     `;
+        //                     }
+
+        //                     // Add Marks Entry button for active and marks_entry status (if not already added)
+        //                     if ((response.status === 'active' || response.status === 'marks_entry') && !actionButtonsHTML.includes('Enter Marks')) {
+        //                         actionButtonsHTML += `
+        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+        //                             <i class="fas fa-table me-2"></i>Enter Marks
+        //                         </button>
+        //                     `;
+        //                     }
+
+        //                     Swal.fire({
+        //                         title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
+        //                         html: `
+        //                         <div style="text-align: left; margin-top: 10px;">
+        //                             <!-- Header Badge -->
+        //                             <div style="text-align: center; margin-bottom: 20px;">
+        //                                 <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
+        //                                     <i class="fas ${statusIcon}"></i>
+        //                                     ${response.status_label}
+        //                                 </span>
+        //                             </div>
+
+        //                             <!-- Exam Code Card -->
+        //                             <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+        //                                 <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
+        //                                 <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
+        //                             </div>
+
+        //                             <!-- Details Grid -->
+        //                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        //                                 <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+        //                                     <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+        //                                         <i class="fas fa-layer-group me-1"></i> Type
+        //                                     </div>
+        //                                     <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
+        //                                 </div>
+        //                                 <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+        //                                     <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+        //                                         <i class="fas fa-calendar-alt me-1"></i> Term
+        //                                     </div>
+        //                                     <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
+        //                                 </div>
+        //                             </div>
+
+        //                             <!-- Period Section -->
+        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        //                                 <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                     <i class="fas fa-calendar-week me-1"></i> Examination Period
+        //                                 </div>
+        //                                 <div style="display: flex; justify-content: space-between; align-items: center;">
+        //                                     <div>
+        //                                         <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
+        //                                         <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
+        //                                     </div>
+        //                                     <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
+        //                                     <div>
+        //                                         <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
+        //                                         <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
+        //                                     </div>
+        //                                 </div>
+        //                             </div>
+
+        //                             <!-- Deadline Section -->
+        //                             <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        //                                 <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                     <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
+        //                                 </div>
+        //                                 <div style="display: flex; justify-content: space-between; align-items: center;">
+        //                                     <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
+        //                                     ${response.days_until_deadline > 0 ?
+        //                                 `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+        //                                             <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
+        //                                         </span>` :
+        //                                 `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+        //                                             <i class="fas fa-ban me-1"></i>Expired
+        //                                         </span>`
+        //                             }
+        //                                 </div>
+        //                             </div>
+
+        //                             ${response.description ? `
+        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        //                                 <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+        //                                     <i class="fas fa-align-left me-1"></i> Description
+        //                                 </div>
+        //                                 <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
+        //                             </div>
+        //                             ` : ''}
+
+        //                             <!-- Action Buttons Section -->
+        //                             <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+        //                                 ${actionButtonsHTML}
+        //                             </div>
+        //                         </div>
+        //                     `,
+        //                         icon: 'info',
+        //                         showCloseButton: true,
+        //                         showConfirmButton: false,
+        //                         showCancelButton: false,
+        //                         width: '600px',
+        //                         padding: '1.5rem',
+        //                         backdrop: `
+        //                         rgba(0,0,0,0.6)
+        //                         url("/images/nyan-cat.gif")
+        //                         left top
+        //                         no-repeat
+        //                     `
+        //                     }).then(() => {
+        //                         // Attach event handlers after modal is rendered
+        //                         setTimeout(() => {
+        //                             // Handle status change buttons
+        //                             document.querySelectorAll('.btn-status-action').forEach(btn => {
+        //                                 btn.addEventListener('click', function (e) {
+        //                                     e.stopPropagation();
+        //                                     const newStatus = this.dataset.status;
+        //                                     updateExamStatus(examId, newStatus);
+        //                                     Swal.close();
+        //                                 });
+        //                             });
+
+        //                             // Handle delete button
+        //                             document.querySelectorAll('.btn-delete-action').forEach(btn => {
+        //                                 btn.addEventListener('click', function (e) {
+        //                                     e.stopPropagation();
+        //                                     deleteExam(examId);
+        //                                     Swal.close();
+        //                                 });
+        //                             });
+
+        //                             // Handle marks entry button
+        //                             document.querySelectorAll('.btn-marks-action').forEach(btn => {
+        //                                 btn.addEventListener('click', function (e) {
+        //                                     e.stopPropagation();
+        //                                     if (response.status === 'active' || response.status === 'marks_entry') {
+        //                                         window.location.href = `/examinations/${examId}/marks/entry`;
+        //                                     }
+        //                                 });
+        //                             });
+        //                         }, 100);
+        //                     });
+        //                 },
+        //                 error: function(data) {
+        // $('body').html(data.responseText);
+        // }
+
+        //                 // error: function (xhr) {
+        //                 //     Swal.fire({
+        //                 //         title: '<span style="color: #EF4444;">Error Loading Details</span>',
+        //                 //         html: `
+        //                 //         <div style="text-align: center; padding: 20px;">
+        //                 //             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+        //                 //             <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
+        //                 //             <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
+        //                 //         </div>
+        //                 //     `,
+        //                 //         icon: 'error',
+        //                 //         confirmButtonColor: '#5351e4',
+        //                 //         confirmButtonText: 'OK',
+        //                 //         showCloseButton: true
+        //                 //     });
+        //                 // }
+        //             });
+        //         }
+
+        function viewExamDetails(examId) {
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Fetching examination details',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             $.ajax({
-                url:  `/examinations/${id}/status`,
-                type: 'POST',
-                data: { _token: '{{ csrf_token() }}', status: status },
-                success: function (res) {
-                    if (res.success) {
-                        Swal.fire({ icon:'success', title:'Updated!', text: res.message, timer:1500, showConfirmButton:false });
-                        setTimeout(() => location.reload(), 1600);
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
+                url: `/examinations/${examId}/details`,
+                type: 'GET',
+                success: function (response) {
+                    // Determine status color
+                    let statusColor = '';
+                    let statusIcon = '';
+                    switch (response.status) {
+                        case 'draft':
+                            statusColor = '#94A3B8';
+                            statusIcon = 'fa-pen-fancy';
+                            break;
+                        case 'active':
+                            statusColor = '#10B981';
+                            statusIcon = 'fa-play-circle';
+                            break;
+                        case 'marks_entry':
+                            statusColor = '#F59E0B';
+                            statusIcon = 'fa-edit';
+                            break;
+                        case 'closed':
+                            statusColor = '#EF4444';
+                            statusIcon = 'fa-lock';
+                            break;
+                        case 'results_released':
+                            statusColor = '#5351e4';
+                            statusIcon = 'fa-trophy';
+                            break;
+                        default:
+                            statusColor = '#5351e4';
+                            statusIcon = 'fa-clipboard';
                     }
+
+                    // Generate action buttons HTML based on status
+                    let actionButtonsHTML = '';
+
+                    // Status control buttons
+                    if (response.status === 'draft') {
+                        actionButtonsHTML += `
+                        <button class="action-btn-status" data-status="active" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-play me-2"></i>Activate Examination
+                        </button>
+                        <button class="action-btn-delete" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-trash-alt me-2"></i>Delete Examination
+                        </button>
+                    `;
+                    } else if (response.status === 'active') {
+                        actionButtonsHTML += `
+                        <button class="action-btn-status" data-status="marks_entry" style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-pen-alt me-2"></i>Open Marks Entry
+                        </button>
+                        <button class="action-btn-marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-table me-2"></i>Enter Marks
+                        </button>
+                    `;
+                    } else if (response.status === 'marks_entry') {
+                        actionButtonsHTML += `
+                        <button class="action-btn-status" data-status="closed" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-lock me-2"></i>Close Examination
+                        </button>
+                        <button class="action-btn-marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-table me-2"></i>Enter Marks
+                        </button>
+                    `;
+                    } else if (response.status === 'closed') {
+                        actionButtonsHTML += `
+                        <button class="action-btn-status" data-status="results_released" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-award me-2"></i>Release Results
+                        </button>
+                    `;
+                    } else if (response.status === 'results_released') {
+                        actionButtonsHTML += `
+                        <button disabled style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: not-allowed;">
+                            <i class="fas fa-check-circle me-2"></i>Completed
+                        </button>
+                    `;
+                    }
+
+                    Swal.fire({
+                        title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
+                        html: `
+                        <div style="text-align: left; margin-top: 10px;">
+                            <!-- Header Badge -->
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
+                                    <i class="fas ${statusIcon}"></i>
+                                    ${response.status_label}
+                                </span>
+                            </div>
+
+                            <!-- Exam Code Card -->
+                            <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
+                                <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
+                            </div>
+
+                            <!-- Details Grid -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                                <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+                                    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+                                        <i class="fas fa-layer-group me-1"></i> Type
+                                    </div>
+                                    <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
+                                </div>
+                                <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+                                    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+                                        <i class="fas fa-calendar-alt me-1"></i> Term
+                                    </div>
+                                    <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
+                                </div>
+                            </div>
+
+                            <!-- Period Section -->
+                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                    <i class="fas fa-calendar-week me-1"></i> Examination Period
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
+                                        <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
+                                    <div>
+                                        <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
+                                        <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deadline Section -->
+                            <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                    <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
+                                    ${response.days_until_deadline > 0 ?
+                                `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+                                            <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
+                                        </span>` :
+                                `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
+                                            <i class="fas fa-ban me-1"></i>Expired
+                                        </span>`
+                            }
+                                </div>
+                            </div>
+
+                            ${response.description ? `
+                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                    <i class="fas fa-align-left me-1"></i> Description
+                                </div>
+                                <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
+                            </div>
+                            ` : ''}
+
+                            <!-- Action Buttons Section -->
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+                                ${actionButtonsHTML}
+                            </div>
+                        </div>
+                    `,
+                        icon: 'info',
+                        showCloseButton: true,
+                        showConfirmButton: false,
+                        showCancelButton: false,
+                        width: '600px',
+                        padding: '1.5rem',
+                        backdrop: 'rgba(0,0,0,0.6)',
+                        didOpen: () => {
+                            // Attach event handlers after modal is opened
+                            // Status change buttons
+                            document.querySelectorAll('.action-btn-status').forEach(btn => {
+                                btn.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const newStatus = this.dataset.status;
+                                    Swal.close();
+                                    updateExamStatus(examId, newStatus);
+                                });
+                            });
+
+                            // Delete button
+                            document.querySelectorAll('.action-btn-delete').forEach(btn => {
+                                btn.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    Swal.close();
+                                    deleteExam(examId);
+                                });
+                            });
+
+                            // Marks entry button
+                            document.querySelectorAll('.action-btn-marks').forEach(btn => {
+                                btn.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (response.status === 'active' || response.status === 'marks_entry') {
+                                        window.location.href = `/examinations/${examId}/marks/entry`;
+                                    }
+                                });
+                            });
+                        }
+                    });
                 },
-                error: function (xhr) { $('body').html(xhr.responseText); }
+                error: function (xhr) {
+                    Swal.fire({
+                        title: '<span style="color: #EF4444;">Error Loading Details</span>',
+                        html: `
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+                            <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
+                            <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
+                        </div>
+                    `,
+                        icon: 'error',
+                        confirmButtonColor: '#5351e4',
+                        confirmButtonText: 'OK',
+                        showCloseButton: true
+                    });
+                }
+            });
+        }
+
+        function updateExamStatus(examId, newStatus) {
+            const configs = {
+                active: { title: 'Activate', text: 'Make this examination live?', icon: 'question' },
+                marks_entry: { title: 'Open Marks Entry', text: 'Allow teachers to enter marks?', icon: 'info' },
+                closed: { title: 'Close', text: 'Close this examination permanently?', icon: 'warning' },
+                results_released: { title: 'Release Results', text: 'Release results to students?', icon: 'success' }
+            };
+
+            const config = configs[newStatus];
+
+            Swal.fire({
+                title: config.title,
+                text: config.text,
+                icon: config.icon,
+                showCancelButton: true,
+                confirmButtonColor: '#5351e4',
+                confirmButtonText: `Yes, ${config.title}`,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Processing...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.ajax({
+                    url: `/examinations/${examId}/status`,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        status: newStatus
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Updated!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    // error: function () {
+                    //     Swal.fire('Error', 'Failed to update status', 'error');
+                    // }
+                    error: function(data) {
+$('body').html(data.responseText);
+}
+
+                });
+            });
+        }
+
+        function deleteExam(examId) {
+            Swal.fire({
+                title: 'Delete Examination?',
+                text: 'This action cannot be undone!',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Deleting...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.ajax({
+                    url: `/examinations/${examId}`,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        _method: 'DELETE'
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Failed to delete examination', 'error');
+                    }
+                });
+            });
+        }
+
+        function filterByStatus(status) {
+            currentFilter = status;
+            const columns = document.querySelectorAll('.kanban-column');
+
+            columns.forEach(column => {
+                if (status === 'all' || column.dataset.status === status) {
+                    column.style.display = 'block';
+                } else {
+                    column.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize Sortable for drag-and-drop
+        document.addEventListener('DOMContentLoaded', function () {
+            const columns = document.querySelectorAll('.kanban-column');
+
+            columns.forEach(column => {
+                new Sortable(column.querySelector('.column-cards'), {
+                    group: 'shared',
+                    animation: 150,
+                    ghostClass: 'exam-card-ghost',
+                    onEnd: function (evt) {
+                        const examId = evt.item.dataset.id;
+                        const newStatus = evt.to.closest('.kanban-column').dataset.status;
+
+                        // Update status via AJAX
+                        $.ajax({
+                            url: `/examinations/${examId}/status`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                status: newStatus
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    // Update counts
+                                    updateColumnCounts();
+                                }
+                            }
+                        });
+                    }
+                });
             });
         });
-    });
 
-    // ── Delete ─────────────────────────────────────────────────────────────
-    $(document).on('click', '.btn-delete', function () {
-        const id = $(this).data('id');
-        Swal.fire({
-            title: 'Delete Examination?',
-            text:  'This action is irreversible. Only draft examinations can be deleted.',
-            icon:  'error',
-            showCancelButton: true,
-            confirmButtonColor: '#c0392b',
-            confirmButtonText: 'Yes, delete!',
-        }).then(result => {
-            if (!result.isConfirmed) return;
-
-            $.ajax({
-                url:  `/examinations/${id}`,
-                type: 'POST',
-                data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
-                success: function (res) {
-                    if (res.success) {
-                        Swal.fire({ icon:'success', title:'Deleted!', timer:1200, showConfirmButton:false });
-                        setTimeout(() => location.reload(), 1300);
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
-                },
-                error: function (xhr) { $('body').html(xhr.responseText); }
+        function updateColumnCounts() {
+            const columns = document.querySelectorAll('.kanban-column');
+            columns.forEach(column => {
+                const count = column.querySelectorAll('.exam-card').length;
+                const countSpan = column.querySelector('.column-count');
+                if (countSpan) countSpan.textContent = count;
             });
-        });
-    });
-});
-</script>
+        }
+
+        // Real-time clock update for deadlines
+        function updateDeadlines() {
+            document.querySelectorAll('.deadline-timer').forEach(timer => {
+                const deadline = new Date(timer.dataset.deadline);
+                const now = new Date();
+                const diff = deadline - now;
+                const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                if (days > 0) {
+                    timer.innerHTML = `<i class="fas fa-clock me-1"></i>${days} day${days !== 1 ? 's' : ''} left`;
+                    timer.className = 'deadline-timer timer-normal';
+                } else if (days === 0) {
+                    timer.innerHTML = `<i class="fas fa-hourglass-end me-1"></i>Due today`;
+                    timer.className = 'deadline-timer timer-urgent';
+                } else {
+                    timer.innerHTML = `<i class="fas fa-ban me-1"></i>Expired`;
+                    timer.className = 'deadline-timer timer-expired';
+                }
+            });
+        }
+
+        setInterval(updateDeadlines, 60000);
+        updateDeadlines();
+    </script>
+
+    <!-- Create the exam-card partial -->
 @endsection
+
 @section('js')
     <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>

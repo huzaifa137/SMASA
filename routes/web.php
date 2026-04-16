@@ -155,7 +155,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     $userEmail = session('userEmail');
                     $userPassword = session('userPassword');
 
-                    if (! $userId || ! $userEmail) {
+                    if (!$userId || !$userEmail) {
                         return redirect()->route('users.login')->with('fail', 'You must be logged in');
                     }
 
@@ -456,6 +456,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->group(function () {
 
             Route::get('/', 'index')->name('index');
+            Route::get('/demo', 'demo')->name('demo');
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
             Route::post('/{id}/status', 'updateStatus')->name('updateStatus');
@@ -464,5 +465,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/marks', 'marksEntry')->name('marks.entry');
             Route::get('/{examId}/marks/{classSubjectId}/students', 'marksEntrySubject')->name('marks.subject');
             Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
+            Route::get('/{exam}/details', 'getDetails')->name('examination.details');
         });
-}); // end localized routes group
+});

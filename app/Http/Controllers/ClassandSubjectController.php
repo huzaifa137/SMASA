@@ -572,6 +572,6 @@ class ClassandSubjectController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.my-Classes', compact('classRecord', 'Teachers', 'Streams','classSubjects'));
+        return view('Class.my-classes', compact('classRecord', 'Teachers', 'Streams','classSubjects'));
     }
 }

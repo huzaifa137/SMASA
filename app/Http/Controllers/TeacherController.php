@@ -93,7 +93,7 @@ class TeacherController extends Controller
 
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
 
-        return view('Users.update-user-info', compact('teacher', 'roles'));
+        return view('users.update-user-info', compact('teacher', 'roles'));
     }
 
     public function getTeacherData($id)
