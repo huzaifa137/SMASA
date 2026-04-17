@@ -200,9 +200,9 @@ use App\Http\Controllers\Helper;
                                             class="text-danger">*</span></label>
                                     <select name="exam_type" class="form-control form-select">
                                         <option value="">-- Select Type --</option>
-                                        <option value="Beginning-of-Term">Beginning-of-Term</option>
-                                        <option value="Mid-Term">Mid-Term</option>
-                                        <option value="End-of-Term">End-of-Term</option>
+                                        <option value="Beginning-of-Term">Beginning of Term</option>
+                                        <option value="Mid-Term">Mid Term</option>
+                                        <option value="End-of-Term">End of Term</option>
                                         <option value="Continuous Assessment">Continuous Assessment</option>
                                     </select>
                                 </div>
@@ -218,8 +218,10 @@ use App\Http\Controllers\Helper;
                                 <div class="col-md-4 mt-3">
                                     <label class="form-label fw-semibold">Academic Year <span
                                             class="text-danger">*</span></label>
-                                    <input type="number" name="academic_year" class="form-control" value="{{ date('Y') }}"
-                                        min="2000" max="2099" placeholder="{{ date('Y') }}">
+                                    <!-- <input type="number" name="academic_year" class="form-control" value="{{ date('Y') }}"
+                                        min="2000" max="2099" placeholder="{{ date('Y') }}"> -->
+                                        <input type="number" name="academic_year" class="form-control" value="{{ Helper::active_year() }}"
+                                        min="2000" max="2099" placeholder="{{ date('Y') }}" readonly>
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="form-label fw-semibold">Description / Notes</label>
@@ -365,9 +367,9 @@ use App\Http\Controllers\Helper;
 
                             <div class="text-muted" style="font-size:.83rem;">
                                 <i class="fas fa-shield-alt text-success me-1"></i>
-                                Examination will be saved as <strong>Draft</strong>. Activate it when ready.
+                                Examination will be saved as <strong>Draft</strong>. Activate it when ready. 
                             </div>
-
+                            &nbsp; &nbsp;
                             <button type="submit"
                                 class="btn text-white submit-btn d-inline-flex align-items-center w-100 w-md-auto justify-content-center mt-2 mt-md-0">
                                 <i class="fas fa-save me-2"></i> &nbsp;Create Examination
@@ -468,7 +470,7 @@ use App\Http\Controllers\Helper;
             }).then(result => {
                 if (!result.isConfirmed) return;
 
-                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Creating...');
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Creating...');
 
                 $.ajax({
                     url: '{{ route("examination.store") }}',

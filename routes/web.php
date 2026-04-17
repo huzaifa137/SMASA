@@ -468,4 +468,4 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
             Route::get('/{exam}/details', 'getDetails')->name('examination.details');
         });
-});
+    });

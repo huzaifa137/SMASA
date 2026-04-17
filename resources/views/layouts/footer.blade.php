@@ -4,9 +4,9 @@
 		<div class="row align-items-center">
 			<!-- Left Side -->
 			<div class="col-md-6 col-sm-12 text-center text-md-start mt-2 mt-md-0">
-				Designed and developed by
+				Designed and Developed by
 				<a href="{{ url('coming-soon') }}" target="_blank">
-					www.Techsate.com
+					www.TechSate.com
 				</a>
 			</div>
 

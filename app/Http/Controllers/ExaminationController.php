@@ -65,6 +65,7 @@ class ExaminationController extends Controller
         $examCode = $this->generateExamCode();
         $schoolId = Session('LoggedSchool');
 
+        // dd(Helper::active_year());
         // Fetch all class-stream assignments for this school
         $classStreams = DB::table('class_stream_assignments')
             ->where('school_id', $schoolId)
@@ -169,6 +170,7 @@ class ExaminationController extends Controller
      */
     public function marksEntry($examId)
     {
+        
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedStudent'); // assumes logged user id
 
@@ -272,6 +274,8 @@ class ExaminationController extends Controller
      */
     public function saveMarks(Request $request, $examId)
     {
+        dd($request->all());
+        
         $request->validate([
             'marks' => 'required|array',
             'marks.*.student_id' => 'required|integer',

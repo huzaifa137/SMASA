@@ -413,7 +413,7 @@ class Helper extends Controller
             ->orderBy('id', 'desc')
             ->value('name');
 
-        return $activeYear ?? 'No Active year Set';
+        return $activeYear ?? 'No Active Year Set';
     }
 
     public static function fetchActiveYearName($academic_year_id)

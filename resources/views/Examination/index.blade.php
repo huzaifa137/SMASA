@@ -508,7 +508,7 @@
                 <div class="column-header">
                     <div class="column-title">
                         <i class="fas fa-pen-fancy" style="color: #94A3B8;"></i>
-                        Draft
+                        Draft 
                         <span class="column-count"
                             id="draftCount">{{ $examinations->where('status', 'draft')->count() }}</span>
                     </div>
@@ -619,421 +619,6 @@
             window.location.href = '{{ route("examination.create") }}';
         }
 
-        // function viewExamDetails(examId) {
-        //     Swal.fire({
-        //         title: 'Loading...',
-        //         text: 'Fetching examination details',
-        //         allowOutsideClick: false,
-        //         didOpen: () => {
-        //             Swal.showLoading();
-        //         }
-        //     });
-
-        //     $.ajax({
-        //         url: `/examinations/${examId}/details`,
-        //         type: 'GET',
-        //         success: function (response) {
-        //             // Determine status color
-        //             let statusColor = '';
-        //             let statusIcon = '';
-        //             switch(response.status) {
-        //                 case 'draft':
-        //                     statusColor = '#94A3B8';
-        //                     statusIcon = 'fa-pen-fancy';
-        //                     break;
-        //                 case 'active':
-        //                     statusColor = '#10B981';
-        //                     statusIcon = 'fa-play-circle';
-        //                     break;
-        //                 case 'marks_entry':
-        //                     statusColor = '#F59E0B';
-        //                     statusIcon = 'fa-edit';
-        //                     break;
-        //                 case 'closed':
-        //                     statusColor = '#EF4444';
-        //                     statusIcon = 'fa-lock';
-        //                     break;
-        //                 case 'results_released':
-        //                     statusColor = '#5351e4';
-        //                     statusIcon = 'fa-trophy';
-        //                     break;
-        //                 default:
-        //                     statusColor = '#5351e4';
-        //                     statusIcon = 'fa-clipboard';
-        //             }
-
-        //             Swal.fire({
-        //                 title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
-        //                 html: `
-        //                     <div style="text-align: left; margin-top: 10px;">
-        //                         <!-- Header Badge -->
-        //                         <div style="text-align: center; margin-bottom: 20px;">
-        //                             <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
-        //                                 <i class="fas ${statusIcon}"></i>
-        //                                 ${response.status_label}
-        //                             </span>
-        //                         </div>
-
-        //                         <!-- Exam Code Card -->
-        //                         <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-        //                             <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
-        //                             <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
-        //                         </div>
-
-        //                         <!-- Details Grid -->
-        //                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-        //                                 <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-        //                                     <i class="fas fa-layer-group me-1"></i> Type
-        //                                 </div>
-        //                                 <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
-        //                             </div>
-        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-        //                                 <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-        //                                     <i class="fas fa-calendar-alt me-1"></i> Term
-        //                                 </div>
-        //                                 <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
-        //                             </div>
-        //                         </div>
-
-        //                         <!-- Period Section -->
-        //                         <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        //                             <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                 <i class="fas fa-calendar-week me-1"></i> Examination Period
-        //                             </div>
-        //                             <div style="display: flex; justify-content: space-between; align-items: center;">
-        //                                 <div>
-        //                                     <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
-        //                                     <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
-        //                                 </div>
-        //                                 <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
-        //                                 <div>
-        //                                     <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
-        //                                     <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
-        //                                 </div>
-        //                             </div>
-        //                         </div>
-
-        //                         <!-- Deadline Section -->
-        //                         <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        //                             <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                 <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
-        //                             </div>
-        //                             <div style="display: flex; justify-content: space-between; align-items: center;">
-        //                                 <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
-        //                                 ${response.days_until_deadline > 0 ? 
-        //                                     `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-        //                                         <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
-        //                                     </span>` : 
-        //                                     `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-        //                                         <i class="fas fa-ban me-1"></i>Expired
-        //                                     </span>`
-        //                                 }
-        //                             </div>
-        //                         </div>
-
-        //                         ${response.description ? `
-        //                         <div style="background: #F8FAFC; border-radius: 12px; padding: 14px;">
-        //                             <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                 <i class="fas fa-align-left me-1"></i> Description
-        //                             </div>
-        //                             <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
-        //                         </div>
-        //                         ` : ''}
-        //                     </div>
-        //                 `,
-        //                 icon: 'info',
-        //                 showCloseButton: true,
-        //                 showConfirmButton: true,
-        //                 confirmButtonColor: '#5351e4',
-        //                 confirmButtonText: '<i class="fas fa-times me-2"></i>Close',
-        //                 showCancelButton: true,
-        //                 cancelButtonText: '<i class="fas fa-table me-2"></i>Enter Marks',
-        //                 cancelButtonColor: '#10B981',
-        //                 width: '550px',
-        //                 padding: '1.5rem',
-        //                 backdrop: `
-        //                     rgba(0,0,0,0.6)
-        //                     url("/images/nyan-cat.gif")
-        //                     left top
-        //                     no-repeat
-        //                 `
-        //             }).then((result) => {
-        //                 if (!result.isConfirmed && (response.status === 'active' || response.status === 'marks_entry')) {
-        //                     window.location.href = `/examinations/${examId}/marks/entry`;
-        //                 }
-        //             });
-        //         },
-        //         error: function(xhr) {
-        //             Swal.fire({
-        //                 title: '<span style="color: #EF4444;">Error Loading Details</span>',
-        //                 html: `
-        //                     <div style="text-align: center; padding: 20px;">
-        //                         <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-        //                         <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
-        //                         <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
-        //                     </div>
-        //                 `,
-        //                 icon: 'error',
-        //                 confirmButtonColor: '#5351e4',
-        //                 confirmButtonText: 'OK',
-        //                 showCloseButton: true
-        //             });
-        //         }
-        //     });
-        // }
-
-        //         function viewExamDetails(examId) {
-        //             Swal.fire({
-        //                 title: 'Loading...',
-        //                 text: 'Fetching examination details',
-        //                 allowOutsideClick: false,
-        //                 didOpen: () => {
-        //                     Swal.showLoading();
-        //                 }
-        //             });
-
-        //             $.ajax({
-        //                 url: `/examinations/${examId}/details`,
-        //                 type: 'GET',
-        //                 success: function (response) {
-        //                     // Determine status color
-        //                     let statusColor = '';
-        //                     let statusIcon = '';
-        //                     switch (response.status) {
-        //                         case 'draft':
-        //                             statusColor = '#94A3B8';
-        //                             statusIcon = 'fa-pen-fancy';
-        //                             break;
-        //                         case 'active':
-        //                             statusColor = '#10B981';
-        //                             statusIcon = 'fa-play-circle';
-        //                             break;
-        //                         case 'marks_entry':
-        //                             statusColor = '#F59E0B';
-        //                             statusIcon = 'fa-edit';
-        //                             break;
-        //                         case 'closed':
-        //                             statusColor = '#EF4444';
-        //                             statusIcon = 'fa-lock';
-        //                             break;
-        //                         case 'results_released':
-        //                             statusColor = '#5351e4';
-        //                             statusIcon = 'fa-trophy';
-        //                             break;
-        //                         default:
-        //                             statusColor = '#5351e4';
-        //                             statusIcon = 'fa-clipboard';
-        //                     }
-
-        //                     // Generate action buttons HTML based on status
-        //                     let actionButtonsHTML = '';
-
-        //                     // Status control buttons
-        //                     if (response.status === 'draft') {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-confirm btn-status-action" data-status="active" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-play me-2"></i>Activate Examination
-        //                         </button>
-        //                         <button class="swal2-cancel btn-delete-action" data-status="delete" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-trash-alt me-2"></i>Delete Examination
-        //                         </button>
-        //                     `;
-        //                     } else if (response.status === 'active') {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-confirm btn-status-action" data-status="marks_entry" style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-pen-alt me-2"></i>Open Marks Entry
-        //                         </button>
-        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-table me-2"></i>Enter Marks
-        //                         </button>
-        //                     `;
-        //                     } else if (response.status === 'marks_entry') {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-confirm btn-status-action" data-status="closed" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-lock me-2"></i>Close Examination
-        //                         </button>
-        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-table me-2"></i>Enter Marks
-        //                         </button>
-        //                     `;
-        //                     } else if (response.status === 'closed') {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-confirm btn-status-action" data-status="results_released" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-award me-2"></i>Release Results
-        //                         </button>
-        //                     `;
-        //                     } else if (response.status === 'results_released') {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-cancel" disabled style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: not-allowed;">
-        //                             <i class="fas fa-check-circle me-2"></i>Completed
-        //                         </button>
-        //                     `;
-        //                     }
-
-        //                     // Add Marks Entry button for active and marks_entry status (if not already added)
-        //                     if ((response.status === 'active' || response.status === 'marks_entry') && !actionButtonsHTML.includes('Enter Marks')) {
-        //                         actionButtonsHTML += `
-        //                         <button class="swal2-cancel btn-marks-action" data-status="marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-        //                             <i class="fas fa-table me-2"></i>Enter Marks
-        //                         </button>
-        //                     `;
-        //                     }
-
-        //                     Swal.fire({
-        //                         title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
-        //                         html: `
-        //                         <div style="text-align: left; margin-top: 10px;">
-        //                             <!-- Header Badge -->
-        //                             <div style="text-align: center; margin-bottom: 20px;">
-        //                                 <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
-        //                                     <i class="fas ${statusIcon}"></i>
-        //                                     ${response.status_label}
-        //                                 </span>
-        //                             </div>
-
-        //                             <!-- Exam Code Card -->
-        //                             <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-        //                                 <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
-        //                                 <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
-        //                             </div>
-
-        //                             <!-- Details Grid -->
-        //                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-        //                                 <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-        //                                     <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-        //                                         <i class="fas fa-layer-group me-1"></i> Type
-        //                                     </div>
-        //                                     <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
-        //                                 </div>
-        //                                 <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-        //                                     <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-        //                                         <i class="fas fa-calendar-alt me-1"></i> Term
-        //                                     </div>
-        //                                     <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
-        //                                 </div>
-        //                             </div>
-
-        //                             <!-- Period Section -->
-        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        //                                 <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                     <i class="fas fa-calendar-week me-1"></i> Examination Period
-        //                                 </div>
-        //                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-        //                                     <div>
-        //                                         <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
-        //                                         <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
-        //                                     </div>
-        //                                     <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
-        //                                     <div>
-        //                                         <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
-        //                                         <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
-        //                                     </div>
-        //                                 </div>
-        //                             </div>
-
-        //                             <!-- Deadline Section -->
-        //                             <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        //                                 <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                     <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
-        //                                 </div>
-        //                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-        //                                     <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
-        //                                     ${response.days_until_deadline > 0 ?
-        //                                 `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-        //                                             <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
-        //                                         </span>` :
-        //                                 `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-        //                                             <i class="fas fa-ban me-1"></i>Expired
-        //                                         </span>`
-        //                             }
-        //                                 </div>
-        //                             </div>
-
-        //                             ${response.description ? `
-        //                             <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        //                                 <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-        //                                     <i class="fas fa-align-left me-1"></i> Description
-        //                                 </div>
-        //                                 <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
-        //                             </div>
-        //                             ` : ''}
-
-        //                             <!-- Action Buttons Section -->
-        //                             <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
-        //                                 ${actionButtonsHTML}
-        //                             </div>
-        //                         </div>
-        //                     `,
-        //                         icon: 'info',
-        //                         showCloseButton: true,
-        //                         showConfirmButton: false,
-        //                         showCancelButton: false,
-        //                         width: '600px',
-        //                         padding: '1.5rem',
-        //                         backdrop: `
-        //                         rgba(0,0,0,0.6)
-        //                         url("/images/nyan-cat.gif")
-        //                         left top
-        //                         no-repeat
-        //                     `
-        //                     }).then(() => {
-        //                         // Attach event handlers after modal is rendered
-        //                         setTimeout(() => {
-        //                             // Handle status change buttons
-        //                             document.querySelectorAll('.btn-status-action').forEach(btn => {
-        //                                 btn.addEventListener('click', function (e) {
-        //                                     e.stopPropagation();
-        //                                     const newStatus = this.dataset.status;
-        //                                     updateExamStatus(examId, newStatus);
-        //                                     Swal.close();
-        //                                 });
-        //                             });
-
-        //                             // Handle delete button
-        //                             document.querySelectorAll('.btn-delete-action').forEach(btn => {
-        //                                 btn.addEventListener('click', function (e) {
-        //                                     e.stopPropagation();
-        //                                     deleteExam(examId);
-        //                                     Swal.close();
-        //                                 });
-        //                             });
-
-        //                             // Handle marks entry button
-        //                             document.querySelectorAll('.btn-marks-action').forEach(btn => {
-        //                                 btn.addEventListener('click', function (e) {
-        //                                     e.stopPropagation();
-        //                                     if (response.status === 'active' || response.status === 'marks_entry') {
-        //                                         window.location.href = `/examinations/${examId}/marks/entry`;
-        //                                     }
-        //                                 });
-        //                             });
-        //                         }, 100);
-        //                     });
-        //                 },
-        //                 error: function(data) {
-        // $('body').html(data.responseText);
-        // }
-
-        //                 // error: function (xhr) {
-        //                 //     Swal.fire({
-        //                 //         title: '<span style="color: #EF4444;">Error Loading Details</span>',
-        //                 //         html: `
-        //                 //         <div style="text-align: center; padding: 20px;">
-        //                 //             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-        //                 //             <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
-        //                 //             <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
-        //                 //         </div>
-        //                 //     `,
-        //                 //         icon: 'error',
-        //                 //         confirmButtonColor: '#5351e4',
-        //                 //         confirmButtonText: 'OK',
-        //                 //         showCloseButton: true
-        //                 //     });
-        //                 // }
-        //             });
-        //         }
-
         function viewExamDetails(examId) {
             Swal.fire({
                 title: 'Loading...',
@@ -1083,130 +668,130 @@
                     // Status control buttons
                     if (response.status === 'draft') {
                         actionButtonsHTML += `
-                        <button class="action-btn-status" data-status="active" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-play me-2"></i>Activate Examination
-                        </button>
-                        <button class="action-btn-delete" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-trash-alt me-2"></i>Delete Examination
-                        </button>
-                    `;
+                                <button class="action-btn-status" data-status="active" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-play me-2"></i> Activate Examination
+                                </button>
+                                <button class="action-btn-delete" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete Examination
+                                </button>
+                            `;
                     } else if (response.status === 'active') {
                         actionButtonsHTML += `
-                        <button class="action-btn-status" data-status="marks_entry" style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-pen-alt me-2"></i>Open Marks Entry
-                        </button>
-                        <button class="action-btn-marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-table me-2"></i>Enter Marks
-                        </button>
-                    `;
+                                <button class="action-btn-status" data-status="marks_entry" style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-edit me-2"></i> Open Marks Entry
+                                </button>
+            <button class="action-btn-close" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                <i class="fas fa-times me-2"></i> Close
+            </button>
+                            `;
                     } else if (response.status === 'marks_entry') {
                         actionButtonsHTML += `
-                        <button class="action-btn-status" data-status="closed" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-lock me-2"></i>Close Examination
-                        </button>
-                        <button class="action-btn-marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-table me-2"></i>Enter Marks
-                        </button>
-                    `;
+                                <button class="action-btn-status" data-status="closed" style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-lock me-2"></i> Close Examination
+                                </button>
+                                <button class="action-btn-marks" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-table me-2"></i> Enter Marks
+                                </button>
+                            `;
                     } else if (response.status === 'closed') {
                         actionButtonsHTML += `
-                        <button class="action-btn-status" data-status="results_released" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
-                            <i class="fas fa-award me-2"></i>Release Results
-                        </button>
-                    `;
+                                <button class="action-btn-status" data-status="results_released" style="background: #5351e4; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fas fa-award me-2"></i>Release Results
+                                </button>
+                            `;
                     } else if (response.status === 'results_released') {
                         actionButtonsHTML += `
-                        <button disabled style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: not-allowed;">
-                            <i class="fas fa-check-circle me-2"></i>Completed
-                        </button>
-                    `;
+                                <button disabled style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; margin: 5px; cursor: not-allowed;">
+                                    <i class="fas fa-check-circle me-2"></i>Completed
+                                </button>
+                            `;
                     }
 
                     Swal.fire({
                         title: '<span style="font-size: 1.8rem; font-weight: 800;">' + response.exam_name + '</span>',
                         html: `
-                        <div style="text-align: left; margin-top: 10px;">
-                            <!-- Header Badge -->
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
-                                    <i class="fas ${statusIcon}"></i>
-                                    ${response.status_label}
-                                </span>
-                            </div>
-
-                            <!-- Exam Code Card -->
-                            <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-                                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
-                                <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
-                            </div>
-
-                            <!-- Details Grid -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                                <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-                                    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-                                        <i class="fas fa-layer-group me-1"></i> Type
+                                <div style="text-align: left; margin-top: 10px;">
+                                    <!-- Header Badge -->
+                                    <div style="text-align: center; margin-bottom: 20px;">
+                                        <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
+                                            <i class="fas ${statusIcon}"></i>
+                                            ${response.status_label}
+                                        </span>
                                     </div>
-                                    <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
-                                </div>
-                                <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
-                                    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
-                                        <i class="fas fa-calendar-alt me-1"></i> Term
-                                    </div>
-                                    <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
-                                </div>
-                            </div>
 
-                            <!-- Period Section -->
-                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                                <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-                                    <i class="fas fa-calendar-week me-1"></i> Examination Period
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
-                                        <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
+                                    <!-- Exam Code Card -->
+                                    <div style="background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                                        <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Exam Code</div>
+                                        <div style="color: white; font-size: 1.5rem; font-weight: 700; font-family: monospace;">${response.exam_code}</div>
                                     </div>
-                                    <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
-                                    <div>
-                                        <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
-                                        <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Deadline Section -->
-                            <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                                <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-                                    <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
-                                    ${response.days_until_deadline > 0 ?
+                                    <!-- Details Grid -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                                        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+                                            <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+                                                <i class="fas fa-layer-group me-1"></i> Type
+                                            </div>
+                                            <div style="font-weight: 600; color: #1E293B;">${response.exam_type}</div>
+                                        </div>
+                                        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px;">
+                                            <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">
+                                                <i class="fas fa-calendar-alt me-1"></i> Term
+                                            </div>
+                                            <div style="font-weight: 600; color: #1E293B;">${response.term}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Period Section -->
+                                    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                        <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                            <i class="fas fa-calendar-week me-1"></i> Examination Period
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div>
+                                                <div style="font-weight: 600; color: #1E293B;">${response.start_date}</div>
+                                            </div>
+                                            <i class="fas fa-arrow-right" style="color: #94A3B8;"></i>
+                                            <div>
+                                                <div style="font-size: 0.7rem; color: #94A3B8;">End Date</div>
+                                                <div style="font-weight: 600; color: #1E293B;">${response.end_date}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Deadline Section -->
+                                    <div style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#F8FAFC'}; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                        <div style="color: ${response.days_until_deadline <= 3 ? '#D97706' : '#5351e4'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                            <i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="font-weight: 600; color: #1E293B;">${response.marks_entry_deadline}</div>
+                                            ${response.days_until_deadline > 0 ?
                                 `<span style="background: ${response.days_until_deadline <= 3 ? '#FEF3C7' : '#D1FAE5'}; color: ${response.days_until_deadline <= 3 ? '#D97706' : '#059669'}; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-                                            <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
-                                        </span>` :
+                                                    <i class="fas fa-clock me-1"></i>${response.days_until_deadline} days left
+                                                </span>` :
                                 `<span style="background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600;">
-                                            <i class="fas fa-ban me-1"></i>Expired
-                                        </span>`
+                                                    <i class="fas fa-ban me-1"></i>Expired
+                                                </span>`
                             }
-                                </div>
-                            </div>
+                                        </div>
+                                    </div>
 
-                            ${response.description ? `
-                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                                <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
-                                    <i class="fas fa-align-left me-1"></i> Description
-                                </div>
-                                <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
-                            </div>
-                            ` : ''}
+                                    ${response.description ? `
+                                    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                                        <div style="color: #5351e4; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">
+                                            <i class="fas fa-align-left me-1"></i> Description
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${response.description}</div>
+                                    </div>
+                                    ` : ''}
 
-                            <!-- Action Buttons Section -->
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
-                                ${actionButtonsHTML}
-                            </div>
-                        </div>
-                    `,
+                                    <!-- Action Buttons Section -->
+                                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+                                        ${actionButtonsHTML}
+                                    </div>
+                                </div>
+                            `,
                         icon: 'info',
                         showCloseButton: true,
                         showConfirmButton: false,
@@ -1243,8 +828,17 @@
                                     e.preventDefault();
                                     e.stopPropagation();
                                     if (response.status === 'active' || response.status === 'marks_entry') {
-                                        window.location.href = `/examinations/${examId}/marks/entry`;
+                                        window.location.href = `/examinations/${examId}/marks`;
                                     }
+                                });
+                            });
+
+                            // Close button
+                            document.querySelectorAll('.action-btn-close').forEach(btn => {
+                                btn.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    Swal.close();
                                 });
                             });
                         }
@@ -1254,12 +848,12 @@
                     Swal.fire({
                         title: '<span style="color: #EF4444;">Error Loading Details</span>',
                         html: `
-                        <div style="text-align: center; padding: 20px;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-                            <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
-                            <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
-                        </div>
-                    `,
+                                <div style="text-align: center; padding: 20px;">
+                                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+                                    <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
+                                    <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
+                                </div>
+                            `,
                         icon: 'error',
                         confirmButtonColor: '#5351e4',
                         confirmButtonText: 'OK',
@@ -1319,9 +913,9 @@
                     // error: function () {
                     //     Swal.fire('Error', 'Failed to update status', 'error');
                     // }
-                    error: function(data) {
-$('body').html(data.responseText);
-}
+                    error: function (data) {
+                        $('body').html(data.responseText);
+                    }
 
                 });
             });

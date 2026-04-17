@@ -121,7 +121,7 @@ $controller = new Controller();
                             <div id="idaad-subjects">
                                 <div class="subject-section-card">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="section-title mb-0">O-Level Subjects (IDAAD)</h5>
+                                        <h5 class="section-title mb-0">O - LEVEL SUBJECTS (IDAAD)</h5>
                                         <div class="subject-control-buttons">
                                             <button type="button" class="btn btn-sm btn-check-all" onclick="checkAllIdaadSubjects()">
                                                 <i class="fas fa-check-double"></i> Check All
@@ -221,7 +221,7 @@ $controller = new Controller();
                             <div id="thanawi-subjects">
                                 <div class="subject-section-card">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="section-title mb-0">A-Level Subjects (THANAWI)</h5>
+                                        <h5 class="section-title mb-0">A - LEVEL SUBJECTS (THANAWI)</h5>
                                         <div class="subject-control-buttons">
                                             <button type="button" class="btn btn-sm btn-check-all" onclick="checkAllThanawiSubjects()">
                                                 <i class="fas fa-check-double"></i> Check All
