@@ -7,6 +7,7 @@ use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
 use App\Models\Student;
 use App\Models\Stream;
+use App\Models\Classes;
 use App\Models\Teacher;
 use DB;
 use Illuminate\Http\Request;
@@ -20,27 +21,129 @@ class ClassandSubjectController extends Controller
             config('constants.options.A_LEVEL')
         );
 
-        $TECHNICAL_SUBJECTS = Helper::MasterRecords(config('constants.options.TECHNICAL_SUBJECTS'));
-        $OPTIONALS = Helper::MasterRecords(config('constants.options.OPTIONALS'));
-        $VOCATIONALS = Helper::MasterRecords(config('constants.options.VOCATIONALS'));
-        $MATHEMATICS = Helper::MasterRecords(config('constants.options.MATHEMATICS'));
-        $LANGUAGES = Helper::MasterRecords(config('constants.options.LANGUAGES'));
-        $SCIENCES = Helper::MasterRecords(config('constants.options.SCIENCES'));
-        $HUMANITIES = Helper::MasterRecords(config('constants.options.HUMANITIES'));
-        $CLASS_STREAMS = Helper::MasterRecords(config('constants.options.CLASS_STREAMS'));
+        // Create a mapping of class ID to type
+        $classTypeMap = [];
+
+        // Get O-Level class IDs
+        $oLevelClasses = Helper::MasterRecords(config('constants.options.O_LEVEL'));
+        $oLevelIds = $oLevelClasses->pluck('md_id')->toArray();
+
+        // Get A-Level class IDs  
+        $aLevelClasses = Helper::MasterRecords(config('constants.options.A_LEVEL'));
+        $aLevelIds = $aLevelClasses->pluck('md_id')->toArray();
+
+        // Map each class to its type
+        foreach ($SecondaryClasses as $class) {
+            if (in_array($class->md_id, $oLevelIds)) {
+                $classTypeMap[$class->md_id] = 'O-Level';
+            } elseif (in_array($class->md_id, $aLevelIds)) {
+                $classTypeMap[$class->md_id] = 'A-Level';
+            } else {
+                $classTypeMap[$class->md_id] = 'Unknown';
+            }
+        }
+
+        $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
+        $IDAAD_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.IDAAD_FAITH_AND_CIVILIZATION'));
+        $IDAAD_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.IDAAD_JURISPRUDENCE_AND_ITS_SOURCES'));
+        $IDAAD_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.IDAAD_PROPHETIC_TRADITIONS'));
+        $IDAAD_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.IDAAD_QURAN_ITS_SCIENCES'));
+
+        $THANAWI_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.THANAWI_ARABIC_LANGUAGE'));
+        $THANAWI_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.THANAWI_FAITH_AND_CIVILIZATION'));
+        $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
+        $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
+        $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
 
         return view('Class.create-class', compact(
             'SecondaryClasses',
-            'TECHNICAL_SUBJECTS',
-            'OPTIONALS',
-            'VOCATIONALS',
-            'MATHEMATICS',
-            'LANGUAGES',
-            'SCIENCES',
-            'HUMANITIES',
-            'CLASS_STREAMS'
+            'classTypeMap', // Pass the mapping to view
+            'IDAAD_ARABIC_LANGUAGE',
+            'IDAAD_FAITH_AND_CIVILIZATION',
+            'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES',
+            'IDAAD_PROPHETIC_TRADITIONS',
+            'IDAAD_QURAN_ITS_SCIENCES',
+            'THANAWI_ARABIC_LANGUAGE',
+            'THANAWI_FAITH_AND_CIVILIZATION',
+            'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
+            'THANAWI_PROPHETIC_TRADITIONS',
+            'THANAWI_QURAN_ITS_SCIENCES'
         ));
     }
+
+    // public function storeClass(Request $request)
+    // {
+
+    //     $request->validate([
+    //         'class_id' => 'required',
+    //         'class_stream' => 'required',
+    //     ]);
+
+    //     $classRecord = Classroom::where('class_name', $request->class_id)->where('school_id', Session('LoggedSchool'))->first();
+    //     $StreamRecord = Stream::where('class_id', $request->class_id)->where('stream_id', $request->class_stream)->where('school_id', Session('LoggedSchool'))->first();
+
+    //     if ($classRecord === null) {
+
+    //         $class = new Classroom;
+
+    //         $class->school_id = Session('LoggedSchool');
+    //         $class->class_name = $request->class_id;
+    //         $class->added_by = Session('LoggedAdmin');
+    //         $class->date_added = now();
+    //         $class->save();
+    //     }
+
+    //     if ($StreamRecord === null) {
+
+    //         $stream = new Stream;
+
+    //         $stream->school_id = Session('LoggedSchool');
+    //         $stream->class_id = $request->class_id;
+    //         $stream->stream_id = $request->class_stream;
+    //         $stream->added_by = Session('LoggedAdmin');
+    //         $stream->date_added = now();
+    //         $stream->save();
+
+    //         $classStreamAssignment = ClassStreamAssignment::create([
+    //             'class_id' => $request->input('class_id'),
+    //             'stream_id' => $request->input('class_stream'),
+    //             'school_id' => Session('LoggedSchool'),
+    //             'added_by' => Session('LoggedAdmin'),
+    //             'date_added' => now(),
+    //         ]);
+
+    //         $assignmentId = $request->class_stream;
+
+    //         $subjectCategories = [
+    //             'technical_subjects' => 'technical',
+    //             'optionals' => 'optional',
+    //             'vocationals' => 'vocational',
+    //             'mathematics' => 'mathematics',
+    //             'languages' => 'language',
+    //             'sciences' => 'science',
+    //             'humanities' => 'humanities',
+    //         ];
+
+    //         foreach ($subjectCategories as $requestKey => $subjectType) {
+    //             if ($request->has($requestKey) && is_array($request->input($requestKey))) {
+    //                 foreach ($request->input($requestKey) as $subjectId) {
+    //                     ClassSubject::create([
+    //                         'class_id' => $request->input('class_id'),
+    //                         'stream_id' => $request->input('class_stream'),
+    //                         'subject_id' => $subjectId,
+    //                         'subject_type' => $subjectType,
+    //                         'school_id' => session('LoggedSchool'),
+    //                     ]);
+    //                 }
+    //             }
+    //         }
+    //     } else {
+    //         return response()->json(['fail' => true, 'message' => 'Stream was already created.']);
+    //     }
+
+    //     return response()->json(['success' => true, 'message' => 'Class created successfully.']);
+    // }
+
 
     public function storeClass(Request $request)
     {
@@ -48,15 +151,21 @@ class ClassandSubjectController extends Controller
         $request->validate([
             'class_id' => 'required',
             'class_stream' => 'required',
+            'subjects' => 'required|array|min:1',
+            'subjects.*' => 'required'
         ]);
 
-        $classRecord = Classroom::where('class_name', $request->class_id)->where('school_id', Session('LoggedSchool'))->first();
-        $StreamRecord = Stream::where('class_id', $request->class_id)->where('stream_id', $request->class_stream)->where('school_id', Session('LoggedSchool'))->first();
+        $classRecord = Classroom::where('class_name', $request->class_id)
+            ->where('school_id', Session('LoggedSchool'))
+            ->first();
+
+        $StreamRecord = Stream::where('class_id', $request->class_id)
+            ->where('stream_id', $request->class_stream)
+            ->where('school_id', Session('LoggedSchool'))
+            ->first();
 
         if ($classRecord === null) {
-
             $class = new Classroom;
-
             $class->school_id = Session('LoggedSchool');
             $class->class_name = $request->class_id;
             $class->added_by = Session('LoggedAdmin');
@@ -65,9 +174,7 @@ class ClassandSubjectController extends Controller
         }
 
         if ($StreamRecord === null) {
-
             $stream = new Stream;
-
             $stream->school_id = Session('LoggedSchool');
             $stream->class_id = $request->class_id;
             $stream->stream_id = $request->class_stream;
@@ -76,85 +183,67 @@ class ClassandSubjectController extends Controller
             $stream->save();
 
             $classStreamAssignment = ClassStreamAssignment::create([
-                'class_id' => $request->input('class_id'),
-                'stream_id' => $request->input('class_stream'),
+                'class_id' => $request->class_id,
+                'stream_id' => $request->class_stream,
                 'school_id' => Session('LoggedSchool'),
                 'added_by' => Session('LoggedAdmin'),
                 'date_added' => now(),
             ]);
 
-            $assignmentId = $request->class_stream;
-
-            $subjectCategories = [
-                'technical_subjects' => 'technical',
-                'optionals' => 'optional',
-                'vocationals' => 'vocational',
-                'mathematics' => 'mathematics',
-                'languages' => 'language',
-                'sciences' => 'science',
-                'humanities' => 'humanities',
-            ];
-
-            foreach ($subjectCategories as $requestKey => $subjectType) {
-                if ($request->has($requestKey) && is_array($request->input($requestKey))) {
-                    foreach ($request->input($requestKey) as $subjectId) {
-                        ClassSubject::create([
-                            'class_id' => $request->input('class_id'),
-                            'stream_id' => $request->input('class_stream'),
-                            'subject_id' => $subjectId,
-                            'subject_type' => $subjectType,
-                            'school_id' => session('LoggedSchool'),
-                        ]);
-                    }
-                }
+            // Save the selected subjects
+            // You can store them all as a specific type or categorize them
+            foreach ($request->subjects as $subjectId) {
+                ClassSubject::create([
+                    'class_id' => $request->class_id,
+                    'stream_id' => $request->class_stream,
+                    'subject_id' => $subjectId,
+                    'subject_type' => $request->class_type == 'O-Level' ? 'idaad' : 'thanawi', // or whatever type you want
+                    'school_id' => session('LoggedSchool'),
+                ]);
             }
+
+            return response()->json(['success' => true, 'message' => 'Class created successfully.']);
+
         } else {
-            return response()->json(['fail' => true, 'message' => 'Stream was already created.']);
+            return response()->json(['fail' => true, 'message' => 'Stream already exists for this class.']);
         }
-
-        return response()->json(['success' => true, 'message' => 'Class created successfully.']);
     }
-
-    public function updateClassSubjects(Request $request, $id)
-    {
-        $assignment = ClassStreamAssignment::findOrFail($id);
-
-        // STEP 1: DELETE OLD SUBJECTS (important for sync)
-        ClassSubject::where('class_id', $assignment->class_id)
-            ->where('stream_id', $assignment->stream_id)
-            ->where('school_id', session('LoggedSchool'))
-            ->delete();
-
-        // STEP 2: RE-INSERT NEW ONES
-        $subjectCategories = [
-            'technical_subjects' => 'technical',
-            'optionals' => 'optional',
-            'vocationals' => 'vocational',
-            'mathematics' => 'mathematics',
-            'languages' => 'language',
-            'sciences' => 'science',
-            'humanities' => 'humanities',
-        ];
-
-        foreach ($subjectCategories as $requestKey => $subjectType) {
-            if ($request->has($requestKey)) {
-                foreach ($request->$requestKey as $subjectId) {
-                    ClassSubject::create([
-                        'class_id' => $assignment->class_id,
-                        'stream_id' => $assignment->stream_id,
-                        'subject_id' => $subjectId,
-                        'subject_type' => $subjectType,
-                        'school_id' => session('LoggedSchool'),
-                    ]);
-                }
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Subjects updated successfully.'
+   public function updateClassSubjects(Request $request, $id)
+{
+    $assignment = ClassStreamAssignment::findOrFail($id);
+    
+    // Validate request
+    $request->validate([
+        'subjects' => 'required|array|min:1',
+        'subjects.*' => 'required'
+    ]);
+    
+    // Delete old subjects
+    ClassSubject::where('class_id', $assignment->class_id)
+        ->where('stream_id', $assignment->stream_id)
+        ->where('school_id', session('LoggedSchool'))
+        ->delete();
+    
+    // Determine subject type based on class level
+    $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
+    $classType = in_array($assignment->class_id, $oLevelIds) ? 'idaad' : 'thanawi';
+    
+    // Insert new subjects
+    foreach ($request->subjects as $subjectId) {
+        ClassSubject::create([
+            'class_id' => $assignment->class_id,
+            'stream_id' => $assignment->stream_id,
+            'subject_id' => $subjectId,
+            'subject_type' => $classType,
+            'school_id' => session('LoggedSchool'),
         ]);
     }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Subjects updated successfully.'
+    ]);
+}
 
     public function manageClasses()
     {
@@ -172,6 +261,7 @@ class ClassandSubjectController extends Controller
     {
         $class = Classroom::findOrFail($id);
         $class_id = $class->class_name;
+
         $streams = Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->get();
 
         foreach ($streams as $stream) {
@@ -186,6 +276,7 @@ class ClassandSubjectController extends Controller
 
         Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->delete();
         ClassStreamAssignment::where('school_id', Helper::requireSchool())->where('class_id', $class_id)->delete();
+        Classes::where('school_id', Helper::requireSchool())->where('class_id', $class_id)->delete();
         $class->delete();
 
         return response()->json(['message' => 'Class, its streams, students, and subjects have been deleted successfully.']);
@@ -429,40 +520,52 @@ class ClassandSubjectController extends Controller
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
+        // Get assigned subjects
         $assignedSubjects = [];
         foreach ($assignment->classSubjects as $classSubject) {
-
-            $assignedSubjects[$classSubject->subject_type][] = $classSubject->subject_id;
+            $assignedSubjects[] = $classSubject->subject_id;
         }
+
+        // Get class type (O-Level or A-Level)
+        $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
+        $classType = in_array($classId, $oLevelIds) ? 'O-Level' : 'A-Level';
 
         $SecondaryClasses = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
             config('constants.options.A_LEVEL')
         );
 
-        $TECHNICAL_SUBJECTS = Helper::MasterRecords(config('constants.options.TECHNICAL_SUBJECTS'));
-        $OPTIONALS = Helper::MasterRecords(config('constants.options.OPTIONALS'));
-        $VOCATIONALS = Helper::MasterRecords(config('constants.options.VOCATIONALS'));
-        $MATHEMATICS = Helper::MasterRecords(config('constants.options.MATHEMATICS'));
-        $LANGUAGES = Helper::MasterRecords(config('constants.options.LANGUAGES'));
-        $SCIENCES = Helper::MasterRecords(config('constants.options.SCIENCES'));
-        $HUMANITIES = Helper::MasterRecords(config('constants.options.HUMANITIES'));
+        // IDAAD Subjects (O-Level)
+        $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
+        $IDAAD_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.IDAAD_FAITH_AND_CIVILIZATION'));
+        $IDAAD_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.IDAAD_JURISPRUDENCE_AND_ITS_SOURCES'));
+        $IDAAD_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.IDAAD_PROPHETIC_TRADITIONS'));
+        $IDAAD_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.IDAAD_QURAN_ITS_SCIENCES'));
 
-        // dd($TECHNICAL_SUBJECTS);
+        // THANAWI Subjects (A-Level)
+        $THANAWI_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.THANAWI_ARABIC_LANGUAGE'));
+        $THANAWI_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.THANAWI_FAITH_AND_CIVILIZATION'));
+        $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
+        $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
+        $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
+
         return view('Class.edit-class', compact(
             'assignment',
             'assignedSubjects',
             'SecondaryClasses',
-            'TECHNICAL_SUBJECTS',
-            'OPTIONALS',
-            'VOCATIONALS',
-            'MATHEMATICS',
-            'LANGUAGES',
-            'SCIENCES',
-            'HUMANITIES'
+            'classType',
+            'IDAAD_ARABIC_LANGUAGE',
+            'IDAAD_FAITH_AND_CIVILIZATION',
+            'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES',
+            'IDAAD_PROPHETIC_TRADITIONS',
+            'IDAAD_QURAN_ITS_SCIENCES',
+            'THANAWI_ARABIC_LANGUAGE',
+            'THANAWI_FAITH_AND_CIVILIZATION',
+            'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
+            'THANAWI_PROPHETIC_TRADITIONS',
+            'THANAWI_QURAN_ITS_SCIENCES'
         ));
     }
-
     public function getStreams($senior)
     {
         Helper::requireSchool();
@@ -564,14 +667,14 @@ class ClassandSubjectController extends Controller
             ->where('school_id', Helper::requireSchool())
             ->get();
 
-       $classSubjects = ClassSubject::where('subject_teacher_1', Session('LoggedTeacher'))
-                ->orwhere('subject_teacher_2', Session('LoggedTeacher'))
-                ->get();
+        $classSubjects = ClassSubject::where('subject_teacher_1', Session('LoggedTeacher'))
+            ->orwhere('subject_teacher_2', Session('LoggedTeacher'))
+            ->get();
 
         $Teachers = Teacher::with('school')
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.my-classes', compact('classRecord', 'Teachers', 'Streams','classSubjects'));
+        return view('Class.my-classes', compact('classRecord', 'Teachers', 'Streams', 'classSubjects'));
     }
 }

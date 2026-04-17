@@ -77,10 +77,10 @@ $controller = new Controller();
                                             </a>
 
                                             <button class="btn btn-sm btn-danger btn-delete-class"
-        data-class-id="{{ $class->id }}"
-        data-class-name="{{ Helper::recordMdname($class->class_name) }}">
-        <i class="fas fa-trash-alt me-2"></i> Delete
-    </button>
+                                                data-class-id="{{ $class->id }}"
+                                                data-class-name="{{ Helper::recordMdname($class->class_name) }}">
+                                                <i class="fas fa-trash-alt me-2"></i> Delete
+                                            </button>
 
                                         </td>
                                     </tr>
@@ -229,16 +229,16 @@ $(document).ready(function () {
                             location.reload(); // reload page
                         });
                     },
-                    error: function (xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Delete Failed',
-                            text: xhr.responseJSON?.message || 'Something went wrong!'
-                        });
-                    }
-//                     error: function(data) {
-// $('body').html(data.responseText);
-// }
+                    // error: function (xhr) {
+                    //     Swal.fire({
+                    //         icon: 'error',
+                    //         title: 'Delete Failed',
+                    //         text: xhr.responseJSON?.message || 'Something went wrong!'
+                    //     });
+                    // }
+                    error: function(data) {
+$('body').html(data.responseText);
+}
                 });
             }
         });

@@ -14,13 +14,19 @@ return [
         // SUBJECTS
 
         'TECHNICAL_SUBJECTS' => 8,
-        'OPTIONALS' => 9,
-        'VOCATIONALS' => 10,
-        'MATHEMATICS' => 11,
-        'LANGUAGES' => 12,
-        'SCIENCES' => 13,
-        'HUMANITIES' => 14,
-        'CLASS_STREAMS' => 15,
+
+        'IDAAD_ARABIC_LANGUAGE' => 23,
+        'IDAAD_FAITH_AND_CIVILIZATION' => 24,
+        'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES' => 25,
+        'IDAAD_PROPHETIC_TRADITIONS' => 26,
+        'IDAAD_QURAN_ITS_SCIENCES' => 27,
+
+
+        'THANAWI_ARABIC_LANGUAGE' => 28,
+        'THANAWI_FAITH_AND_CIVILIZATION' => 29,
+        'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES' => 30,
+        'THANAWI_PROPHETIC_TRADITIONS' => 31,
+        'THANAWI_QURAN_ITS_SCIENCES' => 32,
 
         // CLASSES
 

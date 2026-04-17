@@ -240,6 +240,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('create-class', 'createClass')->name('school.create-class');
         Route::get('all-my-classes', 'allMyClasses')->name('all.my-classes');
         Route::get('manage-classes', 'manageClasses')->name('manage.classes');
+        Route::get('/subjects-by-class/{classId}', 'getSubjectsByClass');
         Route::get('manage-class-streams/{id}', 'manageClassStreams')->name('manage.class.streams');
         Route::get('/class-stream-subjects/{classId}/{streamId}', 'attachedStreamSubjects')->name('class.stream.subjects');
         Route::get('edit-class-subjects/{classId}/{streamId}', 'editClassSubjects')->name('school.edit-class-subject');
