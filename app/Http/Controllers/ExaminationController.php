@@ -170,9 +170,9 @@ class ExaminationController extends Controller
      */
     public function marksEntry($examId)
     {
-        
+
         $schoolId = Session('LoggedSchool');
-        $teacherId = Session('LoggedStudent'); // assumes logged user id
+        $teacherId = Session('LoggedTeacher'); // assumes logged user id
 
         $exam = Examination::where('id', $examId)
             ->where('school_id', $schoolId)
@@ -203,7 +203,24 @@ class ExaminationController extends Controller
             return in_array($s->class_id . '_' . $s->stream_id, $validPairs);
         });
 
-        return view('Examination.marks-entry', compact('exam', 'assignedSubjects'));
+        $markCounts = \App\Models\ExaminationMark::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->selectRaw('subject_id, class_id, stream_id, COUNT(*) as entered_count')
+            ->groupBy('subject_id', 'class_id', 'stream_id')
+            ->get()
+            ->keyBy(fn($r) => $r->subject_id . '_' . $r->class_id . '_' . $r->stream_id);
+
+        // Student counts per class-stream
+        $studentCounts = \Illuminate\Support\Facades\DB::table('students')
+            ->where('school_id', $schoolId)
+            ->whereIn('senior', $examClasses->pluck('class_id'))
+            ->selectRaw('senior as class_id, stream, COUNT(*) as total')
+            ->groupBy('senior', 'stream')
+            ->get()
+            ->keyBy(fn($r) => $r->class_id . '_' . $r->stream);
+
+        return view('Examination.marks-entry', compact('exam', 'assignedSubjects', 'markCounts', 'studentCounts'));
     }
 
     /**
@@ -212,7 +229,7 @@ class ExaminationController extends Controller
     public function marksEntrySubject($examId, $classSubjectId)
     {
         $schoolId = Session('LoggedSchool');
-        $teacherId = Session('LoggedStudent');
+        $teacherId = Session('LoggedTeacher');
 
         $exam = Examination::where('id', $examId)
             ->where('school_id', $schoolId)
@@ -274,8 +291,7 @@ class ExaminationController extends Controller
      */
     public function saveMarks(Request $request, $examId)
     {
-        dd($request->all());
-        
+
         $request->validate([
             'marks' => 'required|array',
             'marks.*.student_id' => 'required|integer',
@@ -283,11 +299,11 @@ class ExaminationController extends Controller
             'marks.*.comment' => 'nullable|string|max:255',
             'subject_id' => 'required|integer',
             'class_id' => 'required|integer',
-            'stream_id' => 'nullable|integer',
+            'stream_id' => 'nullable|string|max:10',
         ]);
 
         $schoolId = Session('LoggedSchool');
-        $teacherId = Session('LoggedStudent');
+        $teacherId = Session('LoggedTeacher');
 
         $exam = Examination::where('id', $examId)
             ->where('school_id', $schoolId)
@@ -391,5 +407,297 @@ class ExaminationController extends Controller
             'description' => $exam->description,
             'academic_year' => $exam->academic_year,
         ]);
+    }
+
+public function passslipIndex($examId)
+{
+    $schoolId = Session('LoggedSchool');
+
+    $exam = Examination::where('id', $examId)
+        ->where('school_id', $schoolId)
+        ->firstOrFail();
+
+    // Only allow for closed / results_released
+    if (!in_array($exam->status, ['closed', 'results_released'])) {
+        return redirect()->route('examination.index')
+            ->with('error', 'Pass slips are only available after the examination is closed.');
+    }
+
+    // All class-stream combos in this exam
+    $examClasses = DB::table('examination_classes')
+        ->where('examination_id', $examId)
+        ->where('school_id', $schoolId)
+        ->get();
+
+    // Get all students for these classes
+    $allStudents = collect();
+    foreach ($examClasses as $ec) {
+        $students = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $ec->class_id)
+            ->where('stream', $ec->stream_id)
+            ->orderBy('lastname')
+            ->get()
+            ->map(function ($s) use ($ec) {
+                $s->class_id = $ec->class_id;
+                $s->stream_id = $ec->stream_id;
+                return $s;
+            });
+        $allStudents = $allStudents->merge($students);
+    }
+    $allStudents = $allStudents->sortBy('lastname');
+
+    return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
+}
+
+    /**
+     * Single student passslip (printable view).
+     */
+    public function passslipStudent($examId, $studentId)
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $student = DB::table('students')
+            ->where('id', $studentId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam);
+
+        return view('Examination.passslips.slip', array_merge(
+            compact('exam', 'student'),
+            $passslipData,
+            ['mode' => 'single']
+        ));
+    }
+
+    /**
+     * All passslips for one class-stream (printable, paginated by student).
+     */
+    public function passslipClass(Request $request, $examId)
+    {
+        $request->validate([
+            'class_id' => 'required|integer',
+            'stream_id' => 'nullable|string',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+        $classId = $request->class_id;
+        $streamId = $request->stream_id;
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $students = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classId)
+            ->where('stream', $streamId)
+            ->orderBy('lastname')
+            ->get();
+
+        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam) {
+            return array_merge(
+                ['student' => $student],
+                $this->buildPassslipData($examId, $student->id, $schoolId, $exam)
+            );
+        });
+
+        return view('Examination.passslips.slip', compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
+    }
+
+    /**
+     * All passslips for every class in this exam (admin print-all).
+     */
+    public function passslipAll($examId)
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $examClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->get();
+
+        $allSlips = [];
+        foreach ($examClasses as $ec) {
+            $students = DB::table('students')
+                ->where('school_id', $schoolId)
+                ->where('senior', $ec->class_id)
+                ->where('stream', $ec->stream_id)
+                ->orderBy('lastname')
+                ->get();
+
+            foreach ($students as $student) {
+                $allSlips[] = array_merge(
+                    ['student' => $student],
+                    $this->buildPassslipData($examId, $student->id, $schoolId, $exam)
+                );
+            }
+        }
+
+        return view('Examination.passslips.slip', compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
+    }
+
+    // ─── Private helper ─────────────────────────────────────────────────────────
+
+    /**
+     * Build all data needed for a single student's passslip.
+     */
+    private function buildPassslipData($examId, $studentId, $schoolId, $exam): array
+    {
+        // This student's marks
+        $marks = ExaminationMark::where('examination_id', $examId)
+            ->where('student_id', $studentId)
+            ->where('school_id', $schoolId)
+            ->get();
+
+        if ($marks->isEmpty()) {
+            return [
+                'subjectMarks' => collect(),
+                'totalObtained' => 0,
+                'totalMax' => 0,
+                'percentage' => 0,
+                'overallGrade' => '—',
+                'overallRemark' => '—',
+                'classRank' => '—',
+                'classTotal' => 0,
+                'previousMarks' => collect(),
+                'growthData' => [],
+            ];
+        }
+
+        // Get first mark to determine class/stream
+        $firstMark = $marks->first();
+        $classId = $firstMark->class_id;
+        $streamId = $firstMark->stream_id;
+
+        // ── Enrich with subject names ──────────────────────────────────────────
+        $subjectMarks = $marks->map(function ($m) {
+            return (object) [
+                'subject_id' => $m->subject_id,
+                'subject_name' => Helper::recordMdname($m->subject_id),
+                'marks_obtained' => $m->marks_obtained,
+                'total_marks' => $m->total_marks,
+                'grade' => $m->grade,
+                'grade_remark' => $m->grade_remark,
+                'grade_points' => $m->grade_points,
+                'percentage' => $m->total_marks > 0
+                    ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
+                    : 0,
+            ];
+        })->sortBy('subject_name');
+
+        // ── Aggregate ──────────────────────────────────────────────────────────
+        $totalObtained = $marks->whereNotNull('marks_obtained')->sum('marks_obtained');
+        $totalMax = $marks->whereNotNull('marks_obtained')->sum('total_marks');
+        $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
+
+        // ── Overall grade (by percentage) ─────────────────────────────────────
+        $gradingScale = DB::table('grading_scales')
+            ->where(function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId)->orWhereNull('school_id');
+            })
+            ->orderByDesc('school_id')
+            ->orderBy('min_mark', 'desc')
+            ->get();
+
+        $overallGradeRow = $gradingScale->first(function ($g) use ($percentage) {
+            return $percentage >= $g->min_mark && $percentage <= $g->max_mark;
+        });
+        $overallGrade = $overallGradeRow?->grade ?? '—';
+        $overallRemark = $overallGradeRow?->remark ?? '—';
+
+        // ── Class rank ────────────────────────────────────────────────────────
+        // Aggregate every student's total in same class-stream
+        $classTotals = ExaminationMark::where('examination_id', $examId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
+            ->groupBy('student_id')
+            ->orderByDesc('grand_total')
+            ->get();
+
+        $classTotal = $classTotals->count();
+        $rank = $classTotals->search(fn($r) => $r->student_id == $studentId);
+        $classRank = $rank !== false ? ($rank + 1) : '—';
+
+        // ── Growth data (previous exams, same class) ──────────────────────────
+        // Look back at up to 3 previous exams in the same academic year / earlier
+        $previousExams = Examination::where('school_id', $schoolId)
+            ->where('id', '!=', $examId)
+            ->where('status', 'results_released')
+            ->where(function ($q) use ($exam) {
+                $q->where('academic_year', '<', $exam->academic_year)
+                    ->orWhere(function ($q2) use ($exam) {
+                        $q2->where('academic_year', $exam->academic_year)
+                            ->where('term', '<', $exam->term);
+                    });
+            })
+            ->orderByDesc('academic_year')
+            ->orderByDesc('term')
+            ->take(3)
+            ->get();
+
+        $growthData = [];
+        foreach ($previousExams as $prevExam) {
+            $prevMarks = ExaminationMark::where('examination_id', $prevExam->id)
+                ->where('student_id', $studentId)
+                ->where('school_id', $schoolId)
+                ->whereNotNull('marks_obtained')
+                ->get();
+
+            if ($prevMarks->isEmpty())
+                continue;
+
+            $prevObtained = $prevMarks->sum('marks_obtained');
+            $prevMax = $prevMarks->sum('total_marks');
+            $prevPct = $prevMax > 0 ? round(($prevObtained / $prevMax) * 100, 1) : 0;
+
+            $growthData[] = [
+                'label' => $prevExam->term . ' ' . $prevExam->academic_year,
+                'percentage' => $prevPct,
+                'exam_name' => $prevExam->exam_name,
+            ];
+        }
+
+        // Append current exam at the end
+        $growthData[] = [
+            'label' => $exam->term . ' ' . $exam->academic_year,
+            'percentage' => $percentage,
+            'exam_name' => $exam->exam_name,
+        ];
+
+        // Per-subject growth (last exam vs current)
+        $previousSubjectMarks = collect();
+        if (!empty($previousExams) && isset($previousExams[0])) {
+            $previousSubjectMarks = ExaminationMark::where('examination_id', $previousExams[0]->id)
+                ->where('student_id', $studentId)
+                ->where('school_id', $schoolId)
+                ->get()
+                ->keyBy('subject_id');
+        }
+
+        return [
+            'subjectMarks' => $subjectMarks,
+            'totalObtained' => $totalObtained,
+            'totalMax' => $totalMax,
+            'percentage' => $percentage,
+            'overallGrade' => $overallGrade,
+            'overallRemark' => $overallRemark,
+            'classRank' => $classRank,
+            'classTotal' => $classTotal,
+            'growthData' => $growthData,
+            'previousSubjectMarks' => $previousSubjectMarks,
+        ];
     }
 }

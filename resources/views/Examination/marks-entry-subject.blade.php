@@ -215,35 +215,36 @@ use App\Http\Controllers\Helper;
             border-radius: 99px;
             transition: width .3s;
         }
+
         .badge-entered {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    padding: .4rem .9rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    font-size: .72rem;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-}
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: .4rem .9rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: .72rem;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
 
-.badge-verified {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    padding: .4rem .9rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    font-size: .72rem;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-}
+        .badge-verified {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: .4rem .9rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: .72rem;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
 
-.badge-pending {
-    background: linear-gradient(135deg, #6b7280, #4b5563);
-    color: white;
-    padding: .4rem .9rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    font-size: .72rem;
-    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
-}
+        .badge-pending {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            padding: .4rem .9rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: .72rem;
+            box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
+        }
     </style>
 @endsection
 
@@ -264,11 +265,11 @@ use App\Http\Controllers\Helper;
 
                         <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn fw-semibold mt-2 mt-md-0"
                             style="border-radius: 1rem; padding: 0.7rem 1.5rem;
-                                              background: rgba(255,255,255,0.2);
-                                              backdrop-filter: blur(10px);
-                                              border: 1px solid rgba(255,255,255,0.3);
-                                              color: white;
-                                              transition: all 0.2s ease;"
+                                        background: rgba(255,255,255,0.2);
+                                        backdrop-filter: blur(10px);
+                                        border: 1px solid rgba(255,255,255,0.3);
+                                        color: white;
+                                        transition: all 0.2s ease;"
                             onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
                             onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)'">
                             <i class="fas fa-arrow-left me-2"></i> Back to Exams
@@ -347,7 +348,6 @@ use App\Http\Controllers\Helper;
                             <tr>
                                 <th style="width:40px;">#</th>
                                 <th>Student</th>
-                                <th>Adm No.</th>
                                 <th>Marks <small class="fw-normal text-muted">(/{{ $exam->total_marks }})</small></th>
                                 <th>Grade</th>
                                 <th>Remark</th>
@@ -376,28 +376,28 @@ use App\Http\Controllers\Helper;
                                             </div>
                                         </div>
                                     </td>
-                                    <td style="font-family:monospace; font-size:.82rem; color:#5351e4;">
-                                        {{ $student->admission_number ?? '—' }}
-                                    </td>
+
                                     <td>
                                         <input type="number" class="form-control marks-input" name="marks[{{ $student->id }}]"
                                             data-student="{{ $student->id }}" data-max="{{ $exam->total_marks }}"
                                             value="{{ $mark?->marks_obtained ?? '' }}" min="0" max="{{ $exam->total_marks }}"
                                             step="0.5" placeholder="—">
                                     </td>
+                                    @php
+                                        $g = $mark?->grade ?? '';
+                                        $gradeClass = '';
+                                        if (str_starts_with($g, 'D'))
+                                            $gradeClass = 'grade-D';
+                                        elseif (str_starts_with($g, 'C'))
+                                            $gradeClass = 'grade-C';
+                                        elseif (str_starts_with($g, 'P'))
+                                            $gradeClass = 'grade-P';
+                                        elseif (str_starts_with($g, 'F'))
+                                            $gradeClass = 'grade-F';
+                                    @endphp
+
                                     <td>
-                                        <span class="grade-badge grade-cell
-                                                         @php
-                                                            $g = $mark?->grade ?? '';
-                                                            if (str_starts_with($g, 'D'))
-                                                                echo 'grade-D';
-                                                            elseif (str_starts_with($g, 'C'))
-                                                                echo 'grade-C';
-                                                            elseif (str_starts_with($g, 'P'))
-                                                                echo 'grade-P';
-                                                            elseif (str_starts_with($g, 'F'))
-                                                                echo 'grade-F';
-                                                        @endphp" id="grade_{{ $student->id }}">
+                                        <span class="grade-badge grade-cell {{ $gradeClass }}" id="grade_{{ $student->id }}">
                                             {{ $mark?->grade ?? '—' }}
                                         </span>
                                     </td>
@@ -411,23 +411,23 @@ use App\Http\Controllers\Helper;
                                         <input type="text" class="form-control comment-input" name="comment[{{ $student->id }}]"
                                             value="{{ $mark?->teacher_comment ?? '' }}" placeholder="Optional comment">
                                     </td>
-                                   <td>
-    <span class="badge status-cell
-        @if($mark?->status === 'entered') badge-entered
-        @elseif($mark?->status === 'verified') badge-verified
-        @else badge-pending @endif"
-        id="status_{{ $student->id }}">
-        <i class="fas 
-            @if($mark?->status === 'entered') fa-check-circle
-            @elseif($mark?->status === 'verified') fa-shield-alt
-            @else fa-clock @endif me-1"></i>
-        {{ $mark ? ucfirst($mark->status) : 'Pending' }}
-    </span>
-</td>
+                                    <td>
+                                        <span class="badge status-cell
+                                                                            @if($mark?->status === 'entered') badge-entered
+                                                                            @elseif($mark?->status === 'verified') badge-verified
+                                                                            @else badge-pending @endif"
+                                            id="status_{{ $student->id }}">
+                                            <i class="fas 
+                                                                                @if($mark?->status === 'entered') fa-check-circle
+                                                                                @elseif($mark?->status === 'verified') fa-shield-alt
+                                                                                @else fa-clock @endif me-1"></i>
+                                            {{ $mark ? ucfirst($mark->status) : 'Pending' }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py           uted">
+                                    <td colspan="8" class="text-center py-4 text-muted">
                                         <i class="fas fa-users fa-2x mb-2 d-block opacity-25"></i>
                                         No students found in this class-stream.
                                     </td>
@@ -479,6 +479,10 @@ use App\Http\Controllers\Helper;
                 </div>
             </div>
         </div>
+    </div>
+    </div>
+    </div>
+    </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -591,7 +595,7 @@ use App\Http\Controllers\Helper;
                         marks: marksData,
                         subject_id: {{ $classSubject->subject_id }},
                         class_id:   {{ $classSubject->class_id }},
-                        stream_id:  {{ $classSubject->stream_id ?? 'null' }},
+                        stream_id: @json($classSubject->stream_id),
                     }),
                     success: function (res) {
                         if (res.success) {
@@ -616,6 +620,9 @@ use App\Http\Controllers\Helper;
                         }
                     },
                     error: function (xhr) { $('body').html(xhr.responseText); },
+                    // error: function (data) {
+                    //     $('body').html(data.responseText);
+                    // },
                     complete: function () {
                         $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Save All Marks');
                     }

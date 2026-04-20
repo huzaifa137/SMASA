@@ -150,7 +150,7 @@ class StudentController extends Controller
         $otp_4 = $request->input('otp_4');
         $otp_5 = $request->input('otp_5');
 
-        $new_otp = $otp_1.$otp_2.$otp_3.$otp_4.$otp_5;
+        $new_otp = $otp_1 . $otp_2 . $otp_3 . $otp_4 . $otp_5;
         $user_id = $request->input('hidden_otp');
 
         $temp_otp_stored = DB::table('users')->where('id', $user_id)->value('temp_otp');
@@ -289,14 +289,12 @@ class StudentController extends Controller
 
         $defaultSchoolNumber = $schools->first() ? $schools->first()->Number : 'IT-001';
         $currentYear = date('Y');
-        $newStudentId = $defaultSchoolNumber.'-ID-001-'.$currentYear;
+        $newStudentId = $defaultSchoolNumber . '-ID-001-' . $currentYear;
 
-        $classRecord = Helper::MasterRecordMerge(
-            config('constants.options.O_LEVEL'),
-            config('constants.options.A_LEVEL')
-        );
+        $aLevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
+        $oLevel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
 
-        return view('student.add-new-student', compact('schools', 'years', 'newStudentId', 'classRecord'));
+        return view('student.add-new-student', compact('schools', 'years', 'newStudentId', 'aLevel','oLevel'));
     }
 
     public function generateStudentID(Request $request)
@@ -305,19 +303,19 @@ class StudentController extends Controller
         $category = $request->category;
         $year = $request->year;
 
-        if (! $schoolId || ! $category || ! $year) {
+        if (!$schoolId || !$category || !$year) {
             return response()->json(['student_id' => ''], 200);
         }
 
         $school = DB::table('houses')->where('ID', $schoolId)->first();
-        if (! $school) {
+        if (!$school) {
             return response()->json(['student_id' => ''], 200);
         }
 
         $schoolNumber = $school->Number;
 
         $lastNumber = DB::table('students_basic')
-            ->where('Student_ID', 'LIKE', $schoolNumber.'-'.$category.'-%-'.$year)
+            ->where('Student_ID', 'LIKE', $schoolNumber . '-' . $category . '-%-' . $year)
             ->selectRaw("
             MAX(
                 CAST(
@@ -333,7 +331,7 @@ class StudentController extends Controller
 
         $newNumber = str_pad(($lastNumber ?? 0) + 1, 3, '0', STR_PAD_LEFT);
 
-        $newStudentID = $schoolNumber.'-'.$category.'-'.$newNumber.'-'.$year;
+        $newStudentID = $schoolNumber . '-' . $category . '-' . $newNumber . '-' . $year;
 
         return response()->json(['student_id' => $newStudentID]);
     }
@@ -397,7 +395,7 @@ class StudentController extends Controller
                     'registration_number' => $validated['Student_ID'],
                     'firstname' => $validated['firstname'],
                     'lastname' => $validated['lastname'],
-                    'senior' => $validated['Category'],
+                    'senior' => $request->input('senior'),
                     'stream' => $request->input('stream', null), // optional
                     'admission_number' => $request->input('Admission_Number', null),
                     'gender' => $validated['gender'],
@@ -466,29 +464,29 @@ class StudentController extends Controller
         return view('student.all-students', compact('groupedStudents'));
     }
 
-public function viewStudent($id)
-{
-    $student = Student::findOrFail($id);
+    public function viewStudent($id)
+    {
+        $student = Student::findOrFail($id);
 
-    $student->photo_url = null;
+        $student->photo_url = null;
 
-    if ($student->student_photo) {
-        $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if ($student->student_photo) {
+            $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 
-        foreach ($possibleExtensions as $ext) {
-            $path = 'uploads/studentPhotos/' . $student->student_photo . '.' . $ext;
+            foreach ($possibleExtensions as $ext) {
+                $path = 'uploads/studentPhotos/' . $student->student_photo . '.' . $ext;
 
-            if (file_exists(public_path($path))) {
-                $student->photo_url = asset($path);
-                break;
+                if (file_exists(public_path($path))) {
+                    $student->photo_url = asset($path);
+                    break;
+                }
             }
         }
-    }
 
-    return response()->json([
-        'student' => $student,
-    ]);
-}
+        return response()->json([
+            'student' => $student,
+        ]);
+    }
 
     public function updateStudent(Request $request, $id)
     {
@@ -525,7 +523,7 @@ public function viewStudent($id)
 
             $destinationPath = public_path('uploads/studentPhotos');
 
-            if (! file_exists($destinationPath)) {
+            if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
 
@@ -533,7 +531,7 @@ public function viewStudent($id)
 
             $extension = $file->getClientOriginalExtension();
 
-            $filename = $studentId.'.'.$extension;
+            $filename = $studentId . '.' . $extension;
 
             $file->move($destinationPath, $filename);
 
@@ -570,39 +568,39 @@ public function viewStudent($id)
     }
 
     public function destroyStudent(Student $student)
-{
-    try {
-        if ($student->student_photo) {
-            $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    {
+        try {
+            if ($student->student_photo) {
+                $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 
-            foreach ($possibleExtensions as $ext) {
-                $path = public_path(
-                    'uploads/studentPhotos/' .
-                    $student->student_photo .
-                    '.' .
-                    $ext
-                );
+                foreach ($possibleExtensions as $ext) {
+                    $path = public_path(
+                        'uploads/studentPhotos/' .
+                        $student->student_photo .
+                        '.' .
+                        $ext
+                    );
 
-                if (file_exists($path)) {
-                    unlink($path);
-                    break; // stop after deleting the first found image
+                    if (file_exists($path)) {
+                        unlink($path);
+                        break; // stop after deleting the first found image
+                    }
                 }
             }
+
+            $student->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student deleted successfully!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete student.',
+            ], 500);
         }
-
-        $student->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Student deleted successfully!',
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to delete student.',
-        ], 500);
     }
-}
 
     public function exportStudents($schoolId, $type)
     {
@@ -631,7 +629,7 @@ public function viewStudent($id)
         $cleanSchoolName = str_replace(' ', '_', $school->name);
         $cleanYear = str_replace(' ', '_', $activeYear);
 
-        $fileName = $type.'_exams_'.$cleanYear.'_'.$cleanSchoolName.'.xlsx';
+        $fileName = $type . '_exams_' . $cleanYear . '_' . $cleanSchoolName . '.xlsx';
 
         return Excel::download(
             new StudentsExamExport($students, $subjects, $activeYear),
@@ -695,8 +693,8 @@ public function viewStudent($id)
                 $students = Student::where('admission_number', $request->admission_number)->get();
                 break;
             case 'name':
-                $students = Student::where('firstname', 'like', '%'.$request->firstname.'%')
-                    ->where('lastname', 'like', '%'.$request->lastname.'%')
+                $students = Student::where('firstname', 'like', '%' . $request->firstname . '%')
+                    ->where('lastname', 'like', '%' . $request->lastname . '%')
                     ->where('senior', $request->senior)
                     ->get();
                 break;
@@ -742,7 +740,7 @@ public function viewStudent($id)
             'stream' => 'required|max:255',
             'gender' => 'required|in:Male,Female,Other',
             'school_id' => 'required|integer|exists:schools,id',
-            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,'.$student->id,
+            'admission_number' => 'nullable|string|max:255|unique:students,admission_number,' . $student->id,
 
         ]);
 

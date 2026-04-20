@@ -450,6 +450,28 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/school-passwords/export-all-pdf', 'exportAllPasswordsPDF')->name('school.passwords.export-all-pdf');
     });
 
+
+
+
+    
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3.  ADD a "Generate Pass Slips" button to the examination index card actions
+//     In: resources/views/examination/partials/exam-card.blade.php
+//     OR: wherever your exam card renders (in index_blade.php)
+//     Add this button alongside other action buttons for closed/results_released exams:
+// ═══════════════════════════════════════════════════════════════════════════════
+ 
+/*
+@if(in_array($exam->status, ['closed', 'results_released']))
+    <a href="{{ route('examination.passslips.index', $exam->id) }}"
+       class="btn btn-sm fw-semibold"
+       style="background: linear-gradient(135deg, #2C29CA, #5351e4);
+              color: #fff; border-radius: .6rem; font-size: .75rem;">
+        <i class="fas fa-id-card me-1"></i> Pass Slips
+    </a>
+@endif
+*/
+ 
     Route::prefix('examinations')
         ->name('examination.')
         ->controller(ExaminationController::class)
@@ -467,5 +489,18 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/marks/{classSubjectId}/students', 'marksEntrySubject')->name('marks.subject');
             Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
             Route::get('/{exam}/details', 'getDetails')->name('examination.details');
+
+            // ✅ PASS SLIPS (cleaned)
+            Route::get('/{id}/passslips', 'passslipIndex')->name('passslips.index');
+
+            Route::get('/{id}/passslips/student/{studentId}', 'passslipStudent')
+                ->name('passslips.student');
+
+            Route::get('/{id}/passslips/class', 'passslipClass')
+                ->name('passslips.class');
+
+            Route::get('/{id}/passslips/all', 'passslipAll')
+                ->name('passslips.all');
         });
-    });
+});
+

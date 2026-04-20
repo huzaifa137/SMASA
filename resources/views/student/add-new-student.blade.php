@@ -256,13 +256,14 @@ use App\Http\Controllers\Helper;
 
                                 <div class="form-group">
                                     <label>Admission Year <span class="text-danger">*</span></label>
-                                    <input type="text" name="Admission_Year" class="form-control" id="year" value="{{Helper::schoolActiveYearName()}}" readonly>
+                                    <input type="text" name="Admission_Year" class="form-control" id="year"
+                                        value="{{Helper::schoolActiveYearName()}}" readonly>
                                     {{-- <select name="" id="" class="form-control select2">
                                         <option value="">All Years</option>
                                         @foreach ($years as $year)
-                                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
-                                                {{ $year }}
-                                            </option>
+                                        <option value="{{ $year }}" {{ request('year')==$year ? 'selected' : '' }}>
+                                            {{ $year }}
+                                        </option>
                                         @endforeach
                                     </select> --}}
                                 </div>
@@ -285,11 +286,8 @@ use App\Http\Controllers\Helper;
 
                                 <div class="form-group">
                                     <label>Class (Senior) <span class="text-danger">*</span></label>
-                                    <select name="senior" class="form-control select2">
+                                    <select name="senior" id="senior" class="form-control select2" disabled>
                                         <option value="">-- Select Senior --</option>
-                                        @foreach ($classRecord as $record)
-                                            <option value="{{ $record->md_id }}">{{ $record->md_name }}</option>
-                                        @endforeach
                                     </select>
                                 </div>
 
@@ -450,36 +448,102 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-    $(document).ready(function () {
+    <script>
+        const oLevel = @json($oLevel);
+        const aLevel = @json($aLevel);
 
-        function updateStudentID() {
-            let schoolId = $('#School').val();
-            let category = $('select[name="Category"]').val();
-            let year = $('input[name="Admission_Year"]').val();
+        function populateSeniorOptions(data) {
+            const $senior = $('#senior');
+            $senior.empty().append('<option value="">-- Select Senior --</option>');
 
-            if (schoolId && category && year) {
-                $.ajax({
-                    url: '{{ route('students.generate-id') }}',
-                    data: {
-                        school_id: schoolId,
-                        category: category,
-                        year: year
-                    },
-                    success: function (res) {
-                        $('#Student_ID').val(res.student_id);
-                    }
-                });
-            } else {
-                $('#Student_ID').val('');
-            }
+            data.forEach(item => {
+                $senior.append(
+                    `<option value="${item.md_id}">${item.md_name}</option>`
+                );
+            });
+
+            $senior.trigger('change'); // refresh select2
         }
 
-        $('select[name="Category"], input[name="Admission_Year"]').on('change', updateStudentID);
+        // Listen to Category change
+        $(document).ready(function () {
 
-        updateStudentID();
-    });
-</script>
+            const oLevel = @json($oLevel);
+            const aLevel = @json($aLevel);
+
+            function populateSeniorOptions(data) {
+                const $senior = $('#senior');
+
+                $senior.empty().append('<option value="">-- Select Senior --</option>');
+
+                console.log('DATA:', data); // 👈 debug
+
+                data.forEach(item => {
+                    $senior.append(
+                        `<option value="${item.md_id}">${item.md_name}</option>`
+                    );
+                });
+
+                // 🔥 IMPORTANT for Select2
+                $senior.trigger('change.select2');
+            }
+
+            $(document).on('change', 'select[name="Category"]', function () {
+                const val = $(this).val();
+                const $senior = $('#senior');
+
+                console.log('Category selected:', val); // 👈 debug
+
+                if (val === 'ID') {
+                    $senior.prop('disabled', false);
+                    populateSeniorOptions(oLevel);
+
+                } else if (val === 'TH') {
+                    $senior.prop('disabled', false);
+                    populateSeniorOptions(aLevel);
+
+                } else {
+                    $senior.prop('disabled', true);
+                    $senior.empty().append('<option value="">-- Select Senior --</option>');
+                }
+
+                $senior.trigger('change.select2');
+            });
+
+        });
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            function updateStudentID() {
+                let schoolId = $('#School').val();
+                let category = $('select[name="Category"]').val();
+                let year = $('input[name="Admission_Year"]').val();
+
+                if (schoolId && category && year) {
+                    $.ajax({
+                        url: '{{ route('students.generate-id') }}',
+                        data: {
+                            school_id: schoolId,
+                            category: category,
+                            year: year
+                        },
+                        success: function (res) {
+                            $('#Student_ID').val(res.student_id);
+                        }
+                    });
+                } else {
+                    $('#Student_ID').val('');
+                }
+            }
+
+            $('select[name="Category"], input[name="Admission_Year"]').on('change', updateStudentID);
+
+            updateStudentID();
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -569,19 +633,19 @@ use App\Http\Controllers\Helper;
                         Swal.fire({
                             title: 'Saving Student',
                             html: `
-                        <div class="custom-loader-container">
-                            <div class="loader-spinner"></div>
-                            <div class="loader-text">Processing student data...</div>
-                            <div class="loader-progress">
-                                <div class="progress-bar"></div>
-                            </div>
-                            <div class="loader-steps">
-                                <span class="step active">Validating</span>
-                                <span class="step">Saving</span>
-                                <span class="step">Complete</span>
-                            </div>
-                        </div>
-                    `,
+                                        <div class="custom-loader-container">
+                                            <div class="loader-spinner"></div>
+                                            <div class="loader-text">Processing student data...</div>
+                                            <div class="loader-progress">
+                                                <div class="progress-bar"></div>
+                                            </div>
+                                            <div class="loader-steps">
+                                                <span class="step active">Validating</span>
+                                                <span class="step">Saving</span>
+                                                <span class="step">Complete</span>
+                                            </div>
+                                        </div>
+                                    `,
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             showConfirmButton: false,
@@ -590,59 +654,59 @@ use App\Http\Controllers\Helper;
                                 // Add custom styles
                                 const style = document.createElement('style');
                                 style.textContent = `
-                            .custom-loader-container {
-                                text-align: center;
-                                padding: 10px 0;
-                            }
-                            .loader-spinner {
-                                width: 50px;
-                                height: 50px;
-                                border: 4px solid #e9ecef;
-                                border-top-color: #5351e4;
-                                border-radius: 50%;
-                                animation: spin 0.8s linear infinite;
-                                margin: 0 auto 20px;
-                            }
-                            @keyframes spin {
-                                to { transform: rotate(360deg); }
-                            }
-                            .loader-text {
-                                color: #495057;
-                                font-size: 14px;
-                                margin-bottom: 15px;
-                            }
-                            .loader-progress {
-                                background: #e9ecef;
-                                border-radius: 10px;
-                                height: 6px;
-                                overflow: hidden;
-                                margin-bottom: 20px;
-                            }
-                            .progress-bar {
-                                width: 0%;
-                                height: 100%;
-                                background: #5351e4;
-                                border-radius: 10px;
-                                transition: width 0.3s ease;
-                            }
-                            .loader-steps {
-                                display: flex;
-                                justify-content: space-between;
-                                margin-top: 15px;
-                            }
-                            .loader-steps .step {
-                                font-size: 12px;
-                                color: #adb5bd;
-                                transition: color 0.3s ease;
-                            }
-                            .loader-steps .step.active {
-                                color: #5351e4;
-                                font-weight: 500;
-                            }
-                            .loader-steps .step.completed {
-                                color: #28a745;
-                            }
-                        `;
+                                            .custom-loader-container {
+                                                text-align: center;
+                                                padding: 10px 0;
+                                            }
+                                            .loader-spinner {
+                                                width: 50px;
+                                                height: 50px;
+                                                border: 4px solid #e9ecef;
+                                                border-top-color: #5351e4;
+                                                border-radius: 50%;
+                                                animation: spin 0.8s linear infinite;
+                                                margin: 0 auto 20px;
+                                            }
+                                            @keyframes spin {
+                                                to { transform: rotate(360deg); }
+                                            }
+                                            .loader-text {
+                                                color: #495057;
+                                                font-size: 14px;
+                                                margin-bottom: 15px;
+                                            }
+                                            .loader-progress {
+                                                background: #e9ecef;
+                                                border-radius: 10px;
+                                                height: 6px;
+                                                overflow: hidden;
+                                                margin-bottom: 20px;
+                                            }
+                                            .progress-bar {
+                                                width: 0%;
+                                                height: 100%;
+                                                background: #5351e4;
+                                                border-radius: 10px;
+                                                transition: width 0.3s ease;
+                                            }
+                                            .loader-steps {
+                                                display: flex;
+                                                justify-content: space-between;
+                                                margin-top: 15px;
+                                            }
+                                            .loader-steps .step {
+                                                font-size: 12px;
+                                                color: #adb5bd;
+                                                transition: color 0.3s ease;
+                                            }
+                                            .loader-steps .step.active {
+                                                color: #5351e4;
+                                                font-weight: 500;
+                                            }
+                                            .loader-steps .step.completed {
+                                                color: #28a745;
+                                            }
+                                        `;
                                 document.head.appendChild(style);
 
                                 // Animate progress
@@ -866,9 +930,9 @@ use App\Http\Controllers\Helper;
                         // error: function () {
                         //     $streamSelect.html('<option value="">Error loading streams</option>');
                         // }
-                        error: function(data) {
-$('body').html(data.responseText);
-}
+                        error: function (data) {
+                            $('body').html(data.responseText);
+                        }
                     });
                 } else {
                     $streamSelect.html('<option value="">-- Select Stream --</option>');
