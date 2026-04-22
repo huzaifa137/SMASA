@@ -17,10 +17,10 @@ use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
-Route::get('/show-sessions', function () {
-    $allSessions = Session::all();
-    dd($allSessions);
-})->name('show.sessions');
+// Route::get('/show-sessions', function () {
+//     $allSessions = Session::all();
+//     dd($allSessions);
+// })->name('show.sessions');
 
 Route::get('/demo', function () {
     dd(Helper::activeTerm());
@@ -488,7 +488,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/marks', 'marksEntry')->name('marks.entry');
             Route::get('/{examId}/marks/{classSubjectId}/students', 'marksEntrySubject')->name('marks.subject');
             Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
-            Route::get('/{exam}/details', 'getDetails')->name('examination.details');
 
             // ✅ PASS SLIPS (cleaned)
             Route::get('/{id}/passslips', 'passslipIndex')->name('passslips.index');

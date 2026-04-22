@@ -1,8 +1,3 @@
-<?php
-use App\Http\Controllers\Helper;
-use App\Http\Controllers\Controller;
-$controller = new Controller();
-?>
 @extends('layouts-side-bar.master')
 @section('css')
     <!---jvectormap css-->
@@ -23,7 +18,7 @@ $controller = new Controller();
             .form-check-label {
                 line-height: 1.5;
             }
-            
+
             /* Button group styling */
             .subject-control-buttons {
                 margin-bottom: 15px;
@@ -32,7 +27,7 @@ $controller = new Controller();
                 border-radius: 8px;
                 display: inline-block;
             }
-            
+
             .btn-check-all, .btn-uncheck-all {
                 padding: 5px 15px;
                 margin-right: 10px;
@@ -40,31 +35,31 @@ $controller = new Controller();
                 font-size: 13px;
                 transition: all 0.3s ease;
             }
-            
+
             .btn-check-all {
                 background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
                 border: none;
                 color: white;
             }
-            
+
             .btn-check-all:hover {
                 background: linear-gradient(135deg, #218838 0%, #1ba87e 100%);
                 transform: translateY(-1px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
-            
+
             .btn-uncheck-all {
                 background: linear-gradient(135deg, #dc3545 0%, #f86c6b 100%);
                 border: none;
                 color: white;
             }
-            
+
             .btn-uncheck-all:hover {
                 background: linear-gradient(135deg, #c82333 0%, #e05a59 100%);
                 transform: translateY(-1px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
-            
+
             .subject-section-card {
                 background: white;
                 border-radius: 10px;
@@ -72,7 +67,7 @@ $controller = new Controller();
                 margin-bottom: 20px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
-            
+
             .section-title {
                 font-size: 18px;
                 font-weight: 600;
@@ -82,7 +77,7 @@ $controller = new Controller();
                 color: #495057;
             }
         </style>
-        
+
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
@@ -91,18 +86,32 @@ $controller = new Controller();
                         <form id="editSubjectAssignmentForm">
                             @csrf
                             @method('PUT')
-                            
+
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
                                         <label class="form-label">Senior</label>
                                         <select class="form-control select2" id="class_id" name="class_id" disabled>
                                             <option value="">-- Select --</option>
-                                            @foreach ($SecondaryClasses as $class)
-                                                <option value="{{ $class->md_id }}" {{ $assignment->class_id == $class->md_id ? 'selected' : '' }}>
-                                                    {{ $class->md_name }}
-                                                </option>
-                                            @endforeach
+                                            @if($classType === 'O-Level' || $classType === 'A-Level')
+                                                @foreach ($SecondaryClasses as $class)
+                                                    <option value="{{ $class->md_id }}" {{ $assignment->class_id == $class->md_id ? 'selected' : '' }}>
+                                                        {{ $class->md_name }}
+                                                    </option>
+                                                @endforeach
+                                            @elseif($classType === 'Primary Theology')
+                                                @foreach ($PrimaryClasses as $class)
+                                                    <option value="{{ $class->md_id }}" {{ $assignment->class_id == $class->md_id ? 'selected' : '' }}>
+                                                        {{ $class->md_name }}
+                                                    </option>
+                                                @endforeach
+                                            @elseif($classType === 'Primary Secular')
+                                                @foreach ($PrimarySecularClasses as $class)
+                                                    <option value="{{ $class->md_id }}" {{ $assignment->class_id == $class->md_id ? 'selected' : '' }}>
+                                                        {{ $class->md_name }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
                                         </select>
                                         <input type="hidden" name="class_id" value="{{ $assignment->class_id }}">
                                     </div>
@@ -131,14 +140,14 @@ $controller = new Controller();
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row">
                                         <div class="col-lg-4 col-md-12">
                                             <label class="form-label"><strong>Arabic Subjects</strong></label>
                                             @foreach ($IDAAD_ARABIC_LANGUAGE as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input idaad-subject" type="checkbox"
-                                                        id="idaad-arabic-{{ $loop->index }}" 
+                                                        id="idaad-arabic-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -153,7 +162,7 @@ $controller = new Controller();
                                             @foreach ($IDAAD_FAITH_AND_CIVILIZATION as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input idaad-subject" type="checkbox"
-                                                        id="idaad-faith-{{ $loop->index }}" 
+                                                        id="idaad-faith-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -168,7 +177,7 @@ $controller = new Controller();
                                             @foreach ($IDAAD_JURISPRUDENCE_AND_ITS_SOURCES as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input idaad-subject" type="checkbox"
-                                                        id="idaad-jurisprudence-{{ $loop->index }}" 
+                                                        id="idaad-jurisprudence-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -187,7 +196,7 @@ $controller = new Controller();
                                             @foreach ($IDAAD_QURAN_ITS_SCIENCES as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input idaad-subject" type="checkbox"
-                                                        id="idaad-quran-{{ $loop->index }}" 
+                                                        id="idaad-quran-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -202,7 +211,7 @@ $controller = new Controller();
                                             @foreach ($IDAAD_PROPHETIC_TRADITIONS as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input idaad-subject" type="checkbox"
-                                                        id="idaad-prophetic-{{ $loop->index }}" 
+                                                        id="idaad-prophetic-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -231,14 +240,14 @@ $controller = new Controller();
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row">
                                         <div class="col-lg-4 col-md-12">
                                             <label class="form-label"><strong>Arabic Subjects</strong></label>
                                             @foreach ($THANAWI_ARABIC_LANGUAGE as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input thanawi-subject" type="checkbox"
-                                                        id="thanawi-arabic-{{ $loop->index }}" 
+                                                        id="thanawi-arabic-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -253,7 +262,7 @@ $controller = new Controller();
                                             @foreach ($THANAWI_FAITH_AND_CIVILIZATION as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input thanawi-subject" type="checkbox"
-                                                        id="thanawi-faith-{{ $loop->index }}" 
+                                                        id="thanawi-faith-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -268,7 +277,7 @@ $controller = new Controller();
                                             @foreach ($THANAWI_JURISPRUDENCE_AND_ITS_SOURCES as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input thanawi-subject" type="checkbox"
-                                                        id="thanawi-jurisprudence-{{ $loop->index }}" 
+                                                        id="thanawi-jurisprudence-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -287,7 +296,7 @@ $controller = new Controller();
                                             @foreach ($THANAWI_QURAN_ITS_SCIENCES as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input thanawi-subject" type="checkbox"
-                                                        id="thanawi-quran-{{ $loop->index }}" 
+                                                        id="thanawi-quran-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
@@ -302,12 +311,178 @@ $controller = new Controller();
                                             @foreach ($THANAWI_PROPHETIC_TRADITIONS as $subject)
                                                 <div class="form-check">
                                                     <input class="form-check-input thanawi-subject" type="checkbox"
-                                                        id="thanawi-prophetic-{{ $loop->index }}" 
+                                                        id="thanawi-prophetic-{{ $loop->index }}"
                                                         name="subjects[]"
                                                         value="{{ $subject->md_id }}"
                                                         {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
                                                     <label class="form-check-label"
                                                         for="thanawi-prophetic-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- PRIMARY THEOLOGY Subjects -->
+                            @if($classType == 'Primary Theology')
+                            <div id="primary-theology-subjects">
+                                <div class="subject-section-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="section-title mb-0">PRIMARY THEOLOGY SUBJECTS</h5>
+                                        <div class="subject-control-buttons">
+                                            <button type="button" class="btn btn-sm btn-check-all" onclick="checkAllPrimaryTheologySubjects()">
+                                                <i class="fas fa-check-double"></i> Check All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-uncheck-all" onclick="uncheckAllPrimaryTheologySubjects()">
+                                                <i class="fas fa-times-circle"></i> Uncheck All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        @foreach ($primaryTheology ?? [] as $subject)
+                                            <div class="col-lg-4 col-md-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-theology-subject" type="checkbox"
+                                                        id="primary-theology-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-theology-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- PRIMARY SECULAR Subjects -->
+                            @if($classType == 'Primary Secular')
+                            <div id="primary-secular-subjects">
+                                <div class="subject-section-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="section-title mb-0">PRIMARY SECULAR SUBJECTS</h5>
+                                        <div class="subject-control-buttons">
+                                            <button type="button" class="btn btn-sm btn-check-all" onclick="checkAllPrimarySecularSubjects()">
+                                                <i class="fas fa-check-double"></i> Check All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-uncheck-all" onclick="uncheckAllPrimarySecularSubjects()">
+                                                <i class="fas fa-times-circle"></i> Uncheck All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <!-- Nursery Baby Class -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Nursery Baby Class</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.NURSERY_BABY_CLASS')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-baby-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-baby-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <!-- Nursery Middle Class -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Nursery Middle Class</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.NURSERY_MIDDLE_CLASS')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-middle-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-middle-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <!-- Nursery Top Class -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Nursery Top Class</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.NURSERY_TOP_CLASS')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-top-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-top-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <!-- Lower Primary P1 -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Lower Primary P1</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.LOWER_PRIMARY_P1')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-p1-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-p1-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <!-- Lower Primary P2 -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Lower Primary P2</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.LOWER_PRIMARY_P2')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-p2-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-p2-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <!-- Lower Primary P3 -->
+                                        <div class="col-lg-4 col-md-12">
+                                            <label class="form-label"><strong>Lower Primary P3</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.LOWER_PRIMARY_P3')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-p3-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-p3-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <!-- Upper Primary P4-P7 -->
+                                        <div class="col-lg-12 col-md-12">
+                                            <label class="form-label"><strong>Upper Primary P4-P7</strong></label>
+                                            @foreach ($primarySecularSubjects[config('constants.options.UPPER_PRIMARY_P4_P7')] ?? [] as $subject)
+                                                <div class="form-check">
+                                                    <input class="form-check-input primary-secular-subject" type="checkbox"
+                                                        id="primary-secular-p4p7-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="primary-secular-p4p7-{{ $loop->index }}">{{ $subject->md_name }}</label>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -335,184 +510,160 @@ $controller = new Controller();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-    // Functions for IDAAD subjects (O-Level)
-    function checkAllIdaadSubjects() {
-        $('.idaad-subject').prop('checked', true);
-        showToast('All O-Level subjects have been selected', 'success');
-    }
+        // Functions for IDAAD subjects (O-Level)
+        function checkAllIdaadSubjects() {
+            $('.idaad-subject').prop('checked', true);
+            showToast('All O-Level subjects have been selected', 'success');
+        }
+        function uncheckAllIdaadSubjects() {
+            $('.idaad-subject').prop('checked', false);
+            showToast('All O-Level subjects have been deselected', 'info');
+        }
 
-    function uncheckAllIdaadSubjects() {
-        $('.idaad-subject').prop('checked', false);
-        showToast('All O-Level subjects have been deselected', 'info');
-    }
+        // Functions for THANAWI subjects (A-Level)
+        function checkAllThanawiSubjects() {
+            $('.thanawi-subject').prop('checked', true);
+            showToast('All A-Level subjects have been selected', 'success');
+        }
+        function uncheckAllThanawiSubjects() {
+            $('.thanawi-subject').prop('checked', false);
+            showToast('All A-Level subjects have been deselected', 'info');
+        }
 
-    // Functions for THANAWI subjects (A-Level)
-    function checkAllThanawiSubjects() {
-        $('.thanawi-subject').prop('checked', true);
-        showToast('All A-Level subjects have been selected', 'success');
-    }
+        // Functions for PRIMARY THEOLOGY subjects
+        function checkAllPrimaryTheologySubjects() {
+            $('.primary-theology-subject').prop('checked', true);
+            showToast('All Primary Theology subjects have been selected', 'success');
+        }
+        function uncheckAllPrimaryTheologySubjects() {
+            $('.primary-theology-subject').prop('checked', false);
+            showToast('All Primary Theology subjects have been deselected', 'info');
+        }
 
-    function uncheckAllThanawiSubjects() {
-        $('.thanawi-subject').prop('checked', false);
-        showToast('All A-Level subjects have been deselected', 'info');
-    }
+        // Functions for PRIMARY SECULAR subjects
+        function checkAllPrimarySecularSubjects() {
+            $('.primary-secular-subject').prop('checked', true);
+            showToast('All Primary Secular subjects have been selected', 'success');
+        }
+        function uncheckAllPrimarySecularSubjects() {
+            $('.primary-secular-subject').prop('checked', false);
+            showToast('All Primary Secular subjects have been deselected', 'info');
+        }
 
-    // Toast notification function
-    function showToast(message, type = 'success') {
-        Swal.fire({
-            icon: type,
-            title: message,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            }
-        });
-    }
-
-    $(document).ready(function () {
-        $('#editSubjectAssignmentForm').on('submit', function(e) {
-            e.preventDefault();
-
-            let $form = $(this);
-            let $submitBtn = $form.find('button[type="submit"]');
-            
-            // Collect selected subjects
-            let selectedSubjects = [];
-            $('input[name="subjects[]"]:checked').each(function() {
-                selectedSubjects.push($(this).val());
-            });
-
-            // Validate subject selection
-            if (selectedSubjects.length === 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'No Subjects Selected',
-                    text: 'Please select at least one subject before updating.'
-                });
-                return;
-            }
-
-            // Confirm update
+        // Toast notification function
+        function showToast(message, type = 'success') {
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You are about to update class subjects.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, update it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Disable submit button
-                    $submitBtn.prop('disabled', true);
-                    const originalBtnHtml = $submitBtn.html();
-                    $submitBtn.html('Updating... <i class="fas fa-spinner fa-spin"></i>');
-
-                    // Prepare data
-                    let dataToSend = {
-                        class_id: $('input[name="class_id"]').val(),
-                        stream_id: $('input[name="stream_id"]').val(),
-                        subjects: selectedSubjects,
-                        _token: '{{ csrf_token() }}',
-                        _method: 'PUT'
-                    };
-
-                    // Send AJAX request
-                    $.ajax({
-                        url: '{{ route("assign.subjects.update", $assignment->id) }}',
-                        method: 'POST',
-                        data: JSON.stringify(dataToSend),
-                        contentType: 'application/json',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            if (response.fail) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: response.message
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Updated!',
-                                    text: response.message || 'Subjects updated successfully.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    window.location.href = '{{ route("manage.class.streams", ["id" => $assignment->class_id]) }}';
-                                });
-                            }
-                        },
-                        error: function(xhr) {
-                            let errorMessage = 'Something went wrong.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            }
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Update Failed',
-                                text: errorMessage
-                            });
-                        },
-                        complete: function() {
-                            $submitBtn.prop('disabled', false).html(originalBtnHtml);
-                        }
-                    });
+                icon: type,
+                title: message,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
+        }
+
+        $(document).ready(function () {
+            $('#editSubjectAssignmentForm').on('submit', function (e) {
+                e.preventDefault();
+
+                let $form = $(this);
+                let $submitBtn = $form.find('button[type="submit"]');
+
+                // Collect selected subjects
+                let selectedSubjects = [];
+                $('input[name="subjects[]"]:checked').each(function () {
+                    selectedSubjects.push($(this).val());
+                });
+
+                // Validate subject selection
+                if (selectedSubjects.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Subjects Selected',
+                        text: 'Please select at least one subject before updating.'
+                    });
+                    return;
+                }
+
+                // Confirm update
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You are about to update class subjects.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Disable submit button
+                        $submitBtn.prop('disabled', true);
+                        const originalBtnHtml = $submitBtn.html();
+                        $submitBtn.html('Updating... <i class="fas fa-spinner fa-spin"></i>');
+
+                        // Prepare data
+                        let dataToSend = {
+                            class_id: $('input[name="class_id"]').val(),
+                            stream_id: $('input[name="stream_id"]').val(),
+                            subjects: selectedSubjects,
+                            _token: '{{ csrf_token() }}',
+                            _method: 'PUT'
+                        };
+
+                        // Send AJAX request
+                        $.ajax({
+                            url: '{{ route("assign.subjects.update", $assignment->id) }}',
+                            method: 'POST',
+                            data: JSON.stringify(dataToSend),
+                            contentType: 'application/json',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function (response) {
+                                if (response.fail) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Updated!',
+                                        text: response.message || 'Subjects updated successfully.',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        window.location.href = '{{ route("manage.class.streams", ["id" => $assignment->class_id]) }}';
+                                    });
+                                }
+                            },
+                            error: function (xhr) {
+                                let errorMessage = 'Something went wrong.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Update Failed',
+                                    text: errorMessage
+                                });
+                            },
+                            complete: function () {
+                                $submitBtn.prop('disabled', false).html(originalBtnHtml);
+                            }
+                        });
+                    }
+                });
+            });
         });
-    });
     </script>
 @endsection
 
 @section('js')
-    <!-- c3.js Charts js-->
-    <script src="{{ URL::asset('assets/plugins/charts-c3/d3.v5.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/charts-c3/c3-chart.js') }}"></script>
-    <script src="{{ URL::asset('assets/js/charts.js') }}"></script>
-
-    <!-- ECharts js -->
-    <script src="{{ URL::asset('assets/plugins/echarts/echarts.js') }}"></script>
-    <!-- Peitychart js-->
-    <script src="{{ URL::asset('assets/plugins/peitychart/jquery.peity.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/peitychart/peitychart.init.js') }}"></script>
-    <!-- Apexchart js-->
-    <script src="{{ URL::asset('assets/js/apexcharts.js') }}"></script>
-    <!--Moment js-->
-    <script src="{{ URL::asset('assets/plugins/moment/moment.js') }}"></script>
-    <!-- Daterangepicker js-->
-    <script src="{{ URL::asset('assets/plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
-    <script src="{{ URL::asset('assets/js/daterange.js') }}"></script>
-    <!---jvectormap js-->
-    <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.world.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.sampledata.js') }}"></script>
-    <!-- Index js-->
-    <script src="{{ URL::asset('assets/js/index1.js') }}"></script>
-    <!-- Data tables js-->
-    <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.buttons.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/buttons.bootstrap4.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/jszip.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/pdfmake.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/vfs_fonts.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/buttons.html5.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/buttons.print.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/js/buttons.colVis.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/datatable/responsive.bootstrap4.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/js/datatables.js') }}"></script>
-    <!--Counters -->
-    <script src="{{ URL::asset('assets/plugins/counters/counterup.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/counters/waypoints.min.js') }}"></script>
-    <!--Chart js -->
-    <script src="{{ URL::asset('assets/plugins/chart/chart.bundle.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/chart/utils.js') }}"></script>
+    <!-- Existing scripts -->
 @endsection

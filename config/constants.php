@@ -28,12 +28,24 @@ return [
         'THANAWI_PROPHETIC_TRADITIONS' => 31,
         'THANAWI_QURAN_ITS_SCIENCES' => 32,
 
+        // SUBJECTS PRIMARY SECULAR
+
+        'NURSERY_BABY_CLASS' => 35,
+        'NURSERY_MIDDLE_CLASS' => 36,
+        'NURSERY_TOP_CLASS' => 37,
+        'LOWER_PRIMARY_P1' => 38,
+        'LOWER_PRIMARY_P2' => 39,
+        'LOWER_PRIMARY_P3' => 40,
+        'UPPER_PRIMARY_P4_P7' => 41,
         // CLASSES
 
         'O_LEVEL' => 16,
         'A_LEVEL' => 17,
         'PRIMARY_LEVEL' => 18,
         'URPF' => 19,
+        'PRIMARY_THEOLOGY' => 33,
+        'PRIMARY_THEOLOGY_CLASSES' => 34,
+        'PRIMARY_SECULAR_CLASSES' => 42,
 
         // SYSTEM SECTIONS
 

@@ -38,7 +38,7 @@ class Helper extends Controller
             exit;
         }
 
-        $school_product = DB::table('schools')->where('id',Session('LoggedSchool'))->value('school_product');
+        $school_product = DB::table('schools')->where('id', Session('LoggedSchool'))->value('school_product');
 
         return $school_product;
     }
@@ -326,6 +326,15 @@ class Helper extends Controller
     {
         $items = [$item1, $item2];
 
+        $records = DB::table('master_datas')
+            ->whereIn('md_master_code_id', $items)
+            ->get();
+
+        return $records;
+    }
+
+    public static function MasterRecordMultiple(...$items)
+    {
         $records = DB::table('master_datas')
             ->whereIn('md_master_code_id', $items)
             ->get();

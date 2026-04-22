@@ -26,18 +26,18 @@ class MasterDataController extends Controller
 
         return $links = [
             [
-                "link_name"    => "Master Data " . $pending2,
+                "link_name" => "Master Data " . $pending2,
                 "link_address" => "master-data/master-code-list",
-                "link_icon"    => "fa-server",
-                "link_page"    => self::$page,
-                "link_right"   => "V",
+                "link_icon" => "fa-server",
+                "link_page" => self::$page,
+                "link_right" => "V",
             ],
             [
-                "link_name"    => "Master Code" . $pending,
+                "link_name" => "Master Code" . $pending,
                 "link_address" => "master-data/master-code-to-data",
-                "link_icon"    => "fa-map-pin",
-                "link_page"    => self::$page,
-                "link_right"   => "V",
+                "link_icon" => "fa-map-pin",
+                "link_page" => self::$page,
+                "link_right" => "V",
             ],
         ];
     }
@@ -69,10 +69,10 @@ class MasterDataController extends Controller
         DB::table('master_datas')->insert(
             [
                 'md_master_code_id' => 30075,
-                'md_code'           => "PREQUALIFICATION_CRITERIA",
-                'md_name'           => $request->supplier_document,
-                'md_misc1'          => $request->category_of_procurement,
-                'md_misc2'          => $request->mandatory,
+                'md_code' => "PREQUALIFICATION_CRITERIA",
+                'md_name' => $request->supplier_document,
+                'md_misc1' => $request->category_of_procurement,
+                'md_misc2' => $request->mandatory,
             ]
         );
 
@@ -107,11 +107,11 @@ class MasterDataController extends Controller
 
         $string = "";
 
-        $string .= (! count($Documents)) ? " No Documents required for the selected category" : "";
+        $string .= (!count($Documents)) ? " No Documents required for the selected category" : "";
         $counter = 1;
         foreach ($Documents as $document) {
             $mandatory = ($document->md_misc2) ? " (Mandatory)" : "";
-            $required  = ($document->md_misc2) ? 'required="required"' : '';
+            $required = ($document->md_misc2) ? 'required="required"' : '';
             $string .= '<div class="col-md-6">';
             $string .= '<label for="" class="boldTitle padMarg"
                     class="padMarg">' . $document->md_name . '<span style="color:red; font-weight:bold; ">' . $mandatory . '</span>:</label>';
@@ -131,7 +131,7 @@ class MasterDataController extends Controller
         id="Total_Documents" />';
 
         return response()->json([
-            "status"  => true,
+            "status" => true,
             "message" => $string,
         ]);
     }
@@ -144,7 +144,7 @@ class MasterDataController extends Controller
             ->get();
 
         $controls = self::$controls;
-        $pages    = self::$pages;
+        $pages = self::$pages;
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
@@ -154,7 +154,7 @@ class MasterDataController extends Controller
     public function master_code()
     {
         $all_data = DB::table('master_codes')->orderBy('mc_name', 'ASC')->get();
-        $data     = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
+        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
         return view('master-logic.master-code', $data, compact(['all_data']));
     }
@@ -205,33 +205,33 @@ class MasterDataController extends Controller
         if (is_numeric($md_master_code_id)) {
 
             $master_code_name = DB::table('master_codes')->where('id', $md_master_code_id)->pluck('mc_name');
-            $master_code_id   = DB::table('master_codes')->where('id', $md_master_code_id)->pluck('mc_id');
+            $master_code_id = DB::table('master_codes')->where('id', $md_master_code_id)->pluck('mc_id');
 
             if (isset($master_code_name[0])) {
 
                 $master_code_name = $master_code_name[0];
-                $master_code_id   = $master_code_id[0];
+                $master_code_id = $master_code_id[0];
 
                 return view('master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
             } else {
                 $master_code_name = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_name');
-                $master_code_id   = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
+                $master_code_id = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
 
                 $master_code_name = $master_code_name[0];
-                $master_code_id   = $master_code_id[0];
+                $master_code_id = $master_code_id[0];
 
                 return view('master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
 
             }
         } else {
             $master_code_name = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_name');
-            $master_code_id   = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
+            $master_code_id = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
 
             $master_code_name = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_name');
-            $master_code_id   = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
+            $master_code_id = DB::table('master_codes')->where('mc_id', $md_master_code_id)->pluck('mc_id');
 
             $master_code_name = $master_code_name[0];
-            $master_code_id   = $master_code_id[0];
+            $master_code_id = $master_code_id[0];
 
             return view('master-logic.master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
 
@@ -240,7 +240,7 @@ class MasterDataController extends Controller
 
     public function addRecord(Request $request)
     {
-        $data     = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
+        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
         $selected = DB::select('select id, mc_name from master_codes');
 
         return view('master-logic.add-record', $data, compact(['selected']));
@@ -305,7 +305,7 @@ class MasterDataController extends Controller
         if ($request->ajax()) {
             return DataTables::of($mc_code)
                 ->addColumn('action', function ($item) {
-                    $links   = [];
+                    $links = [];
                     $links[] = '<a class="dropdown-item" href="' . url('master-data/edit-record/' . $item->md_id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
                     $links[] = '<a onclick="return confirm(\'Are sure you want to delete ' . $item->md_name . '?\'); " class="dropdown-item" href="' . url('delete-record/' . $item->md_id) . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
 
@@ -349,40 +349,40 @@ class MasterDataController extends Controller
         try {
             $request->validate([
                 'master_code_id' => 'required|integer|exists:master_codes,id',
-                'md_code'        => 'required|string|max:255',
-                'md_name'        => 'required|string|max:255',
+                'md_code' => 'required|string|max:255',
+                'md_name' => 'required|string|max:255',
                 'md_description' => 'nullable|string',
             ]);
 
-            $date    = time();
+            $date = time();
             $session = Helper::user_id();
 
             $masterDataId = DB::table('master_datas')->insertGetId([
                 'md_master_code_id' => $request->master_code_id,
-                'md_code'           => $request->md_code,
-                'md_name'           => $request->md_name,
-                'md_description'    => $request->md_description,
-                'md_date_added'     => $date,
-                'md_added_by'       => $session,
+                'md_code' => $request->md_code,
+                'md_name' => $request->md_name,
+                'md_description' => $request->md_description,
+                'md_date_added' => $date,
+                'md_added_by' => $session,
             ]);
 
             $dynamicFormElementsJson = $request->input('dynamic_form_elements');
 
-            $dynamicFormElements = json_decode($dynamicFormElementsJson, true); 
+            $dynamicFormElements = json_decode($dynamicFormElementsJson, true);
 
-            if (is_array($dynamicFormElements) && ! empty($dynamicFormElements)) {
+            if (is_array($dynamicFormElements) && !empty($dynamicFormElements)) {
                 foreach ($dynamicFormElements as $fieldName => $fieldData) {
-                    $value   = null;
-                    $type    = null;
-                    $options = null; 
+                    $value = null;
+                    $type = null;
+                    $options = null;
 
                     if (is_array($fieldData)) {
                         $value = $fieldData['value'] ?? null;
                         if (isset($fieldData['options'])) {
                             $type = 'select';
-                                                              
-                            $options = $fieldData['options']; 
-                                                              
+
+                            $options = $fieldData['options'];
+
                         }
                     } else {
                         $value = $fieldData;
@@ -406,18 +406,18 @@ class MasterDataController extends Controller
                     if ($type) {
                         DynamicFormValue::create([
                             'master_data_id' => $masterDataId,
-                            'field_name'     => $fieldName,
-                            'field_value'    => $value,
-                            'field_type'     => $type,
-                            'field_options'  => $options, 
+                            'field_name' => $fieldName,
+                            'field_value' => $value,
+                            'field_type' => $type,
+                            'field_options' => $options,
                         ]);
                     }
                 }
             }
 
             return response()->json([
-                'success'      => true,
-                'message'      => 'Record and dynamic data saved successfully!',
+                'success' => true,
+                'message' => 'Record and dynamic data saved successfully!',
                 'redirect_url' => url('master-data/master-code-list/' . $request->master_code_id),
             ]);
 
@@ -425,7 +425,7 @@ class MasterDataController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation Error',
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Error saving record with dynamic elements: ' . $e->getMessage(), ['exception' => $e]);
@@ -441,7 +441,7 @@ class MasterDataController extends Controller
     {
 
         $masterRecord = DB::table('master_datas')->where('md_id', $md_id)->first();
-        $masterCode   = DB::table('master_datas')->where('md_id', $md_id)->value('md_master_code_id');
+        $masterCode = DB::table('master_datas')->where('md_id', $md_id)->value('md_master_code_id');
 
         $list_id = $this->rgf('master_codes', $masterCode, "id", "mc_code");
 
@@ -480,7 +480,7 @@ class MasterDataController extends Controller
 
         $list_id = $this->rgf('master_datas', $record_id, "md_id", "md_master_code_id");
 
-        $date    = time();
+        $date = time();
         $session = Helper::user_id();
 
         DB::table('master_datas')
@@ -496,7 +496,7 @@ class MasterDataController extends Controller
 
     public function sendMasterCode(Request $request)
     {
-        $date    = time();
+        $date = time();
         $session = Helper::user_id();
 
         $values = ['mc_id' => $request->mc_code, 'mc_code' => $request->mc_code, 'mc_name' => $request->mc_name, 'mc_description' => $request->mc_description, 'mc_date_added' => $date, 'mc_added_by' => $session];
@@ -521,7 +521,7 @@ class MasterDataController extends Controller
 
         $mc_id = $request->mc_id;
 
-        $date    = time();
+        $date = time();
         $session = $request->user_id;
 
         $master_code = $request->md_master_code_id;
@@ -545,10 +545,10 @@ class MasterDataController extends Controller
         DB::table('master_datas')->insert(
             [
                 'md_master_code_id' => 30075,
-                'md_code'           => "REQ_DOC",
-                'md_name'           => $request->supplier_document,
-                'md_misc1'          => $request->category_of_procurement,
-                'md_misc2'          => $request->mandatory,
+                'md_code' => "REQ_DOC",
+                'md_name' => $request->supplier_document,
+                'md_misc1' => $request->category_of_procurement,
+                'md_misc2' => $request->mandatory,
             ]
         );
 
@@ -569,16 +569,16 @@ class MasterDataController extends Controller
     public function updateSupplierDocument(Request $request)
     {
 
-        $md_md     = $request->md_id;
-        $doc       = $request->supplier_document;
-        $doc       = $request->supplier_document;
-        $category  = $request->category_of_procurement;
+        $md_md = $request->md_id;
+        $doc = $request->supplier_document;
+        $doc = $request->supplier_document;
+        $category = $request->category_of_procurement;
         $mandatory = $request->mandatory;
 
         DB::table('master_datas')
             ->where('md_id', $md_md)
             ->update([
-                'md_name'  => $doc,
+                'md_name' => $doc,
                 'md_misc2' => $mandatory,
                 'md_misc1' => $category,
             ]);
@@ -602,9 +602,9 @@ class MasterDataController extends Controller
         DB::table('master_datas')->insert(
             [
                 'md_master_code_id' => 0001,
-                'md_code'           => "TRA_DOC",
-                'md_name'           => $request->supplier_document,
-                'md_misc2'          => $request->mandatory,
+                'md_code' => "TRA_DOC",
+                'md_name' => $request->supplier_document,
+                'md_misc2' => $request->mandatory,
             ]
         );
 

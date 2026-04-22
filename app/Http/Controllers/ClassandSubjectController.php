@@ -16,26 +16,36 @@ class ClassandSubjectController extends Controller
 {
     public function createClass()
     {
+        $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
+        $SecondaryClasses = collect();
+        $PrimaryClasses = collect();
+        $classTypeMap = [];
 
-        if (Helper::recordMdname(Helper::schoolProducts()) === 'Idaad And Thanawi') {
+        // Fetch Primary Theology Subjects
+        $primaryTheology = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY'));
 
+        // Fetch Primary Secular Subjects
+        $primarySecularSubjects = [
+            config('constants.options.NURSERY_BABY_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_BABY_CLASS')),
+            config('constants.options.NURSERY_MIDDLE_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_MIDDLE_CLASS')),
+            config('constants.options.NURSERY_TOP_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_TOP_CLASS')),
+            config('constants.options.LOWER_PRIMARY_P1') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P1')),
+            config('constants.options.LOWER_PRIMARY_P2') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P2')),
+            config('constants.options.LOWER_PRIMARY_P3') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P3')),
+            config('constants.options.UPPER_PRIMARY_P4_P7') => Helper::MasterRecords(config('constants.options.UPPER_PRIMARY_P4_P7')),
+        ];
+
+        if ($schoolProduct === 'Idaad And Thanawi') {
             $SecondaryClasses = Helper::MasterRecordMerge(
                 config('constants.options.O_LEVEL'),
                 config('constants.options.A_LEVEL')
             );
 
-            // Create a mapping of class ID to type
-            $classTypeMap = [];
-
-            // Get O-Level class IDs
             $oLevelClasses = Helper::MasterRecords(config('constants.options.O_LEVEL'));
             $oLevelIds = $oLevelClasses->pluck('md_id')->toArray();
-
-            // Get A-Level class IDs  
             $aLevelClasses = Helper::MasterRecords(config('constants.options.A_LEVEL'));
             $aLevelIds = $aLevelClasses->pluck('md_id')->toArray();
 
-            // Map each class to its type
             foreach ($SecondaryClasses as $class) {
                 if (in_array($class->md_id, $oLevelIds)) {
                     $classTypeMap[$class->md_id] = 'O-Level';
@@ -60,7 +70,7 @@ class ClassandSubjectController extends Controller
 
             return view('Class.create-class', compact(
                 'SecondaryClasses',
-                'classTypeMap', // Pass the mapping to view
+                'classTypeMap',
                 'IDAAD_ARABIC_LANGUAGE',
                 'IDAAD_FAITH_AND_CIVILIZATION',
                 'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES',
@@ -70,22 +80,42 @@ class ClassandSubjectController extends Controller
                 'THANAWI_FAITH_AND_CIVILIZATION',
                 'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
                 'THANAWI_PROPHETIC_TRADITIONS',
-                'THANAWI_QURAN_ITS_SCIENCES'
+                'THANAWI_QURAN_ITS_SCIENCES',
             ));
+        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
+            $PrimaryTheologyClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+            $PrimarySecularClasses = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
 
-        } elseif (Helper::recordMdname(Helper::schoolProducts()) === 'Primary Theology') {
+            // Merge Primary Theology and Primary Secular Classes
+            $PrimaryClasses = $PrimaryTheologyClasses->merge($PrimarySecularClasses);
 
+            foreach ($PrimaryClasses as $class) {
+                $theologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
+                $secularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+
+                if (in_array($class->md_id, $theologyIds)) {
+                    $classTypeMap[$class->md_id] = 'Primary Theology';
+                } elseif (in_array($class->md_id, $secularIds)) {
+                    $classTypeMap[$class->md_id] = 'Primary Secular';
+                }
+            }
+
+            return view('Class.create-class', compact(
+                'PrimaryClasses',
+                'classTypeMap',
+                'primaryTheology',
+                'primarySecularSubjects'
+            ));
         }
     }
-
     public function storeClass(Request $request)
     {
-
         $request->validate([
             'class_id' => 'required',
             'class_stream' => 'required',
             'subjects' => 'required|array|min:1',
-            'subjects.*' => 'required'
+            'subjects.*' => 'required',
+            'class_type' => 'required|in:O-Level,A-Level,Primary Theology,Primary Secular'
         ]);
 
         $classRecord = Classroom::where('class_name', $request->class_id)
@@ -123,15 +153,25 @@ class ClassandSubjectController extends Controller
                 'date_added' => now(),
             ]);
 
-            // Save the selected subjects
-            // You can store them all as a specific type or categorize them
+            // Save the selected subjects with the correct subject_type
             foreach ($request->subjects as $subjectId) {
+                $subjectType = '';
+                if ($request->class_type === 'O-Level') {
+                    $subjectType = 'idaad';
+                } elseif ($request->class_type === 'A-Level') {
+                    $subjectType = 'thanawi';
+                } elseif ($request->class_type === 'Primary Theology') {
+                    $subjectType = 'primary_theology';
+                } elseif ($request->class_type === 'Primary Secular') {
+                    $subjectType = 'primary_secular';
+                }
+
                 ClassSubject::create([
                     'class_id' => $request->class_id,
                     'stream_id' => $request->class_stream,
                     'subject_id' => $subjectId,
-                    'subject_type' => $request->class_type == 'O-Level' ? 'idaad' : 'thanawi', // or whatever type you want
-                    'school_id' => session('LoggedSchool'),
+                    'subject_type' => $subjectType,
+                    'school_id' => Session('LoggedSchool'),
                 ]);
             }
 
@@ -159,7 +199,18 @@ class ClassandSubjectController extends Controller
 
         // Determine subject type based on class level
         $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
-        $classType = in_array($assignment->class_id, $oLevelIds) ? 'idaad' : 'thanawi';
+        $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
+        $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+
+        if (in_array($assignment->class_id, $oLevelIds)) {
+            $subjectType = 'idaad';
+        } elseif (in_array($assignment->class_id, $primaryTheologyIds)) {
+            $subjectType = 'primary_theology';
+        } elseif (in_array($assignment->class_id, $primarySecularIds)) {
+            $subjectType = 'primary_secular';
+        } else {
+            $subjectType = 'thanawi';
+        }
 
         // Insert new subjects
         foreach ($request->subjects as $subjectId) {
@@ -167,7 +218,7 @@ class ClassandSubjectController extends Controller
                 'class_id' => $assignment->class_id,
                 'stream_id' => $assignment->stream_id,
                 'subject_id' => $subjectId,
-                'subject_type' => $classType,
+                'subject_type' => $subjectType,
                 'school_id' => session('LoggedSchool'),
             ]);
         }
@@ -460,14 +511,28 @@ class ClassandSubjectController extends Controller
             $assignedSubjects[] = $classSubject->subject_id;
         }
 
-        // Get class type (O-Level or A-Level)
+        // Get class type (O-Level, A-Level, Primary Theology, or Primary Secular)
         $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
-        $classType = in_array($classId, $oLevelIds) ? 'O-Level' : 'A-Level';
+        $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
+        $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+
+        if (in_array($classId, $oLevelIds)) {
+            $classType = 'O-Level';
+        } elseif (in_array($classId, $primaryTheologyIds)) {
+            $classType = 'Primary Theology';
+        } elseif (in_array($classId, $primarySecularIds)) {
+            $classType = 'Primary Secular';
+        } else {
+            $classType = 'A-Level';
+        }
 
         $SecondaryClasses = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
             config('constants.options.A_LEVEL')
         );
+
+        $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+        $PrimarySecularClasses = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
 
         // IDAAD Subjects (O-Level)
         $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
@@ -483,10 +548,26 @@ class ClassandSubjectController extends Controller
         $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
         $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
 
+        // PRIMARY THEOLOGY Subjects
+        $primaryTheology = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY'));
+
+        // PRIMARY SECULAR Subjects
+        $primarySecularSubjects = [
+            config('constants.options.NURSERY_BABY_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_BABY_CLASS')),
+            config('constants.options.NURSERY_MIDDLE_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_MIDDLE_CLASS')),
+            config('constants.options.NURSERY_TOP_CLASS') => Helper::MasterRecords(config('constants.options.NURSERY_TOP_CLASS')),
+            config('constants.options.LOWER_PRIMARY_P1') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P1')),
+            config('constants.options.LOWER_PRIMARY_P2') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P2')),
+            config('constants.options.LOWER_PRIMARY_P3') => Helper::MasterRecords(config('constants.options.LOWER_PRIMARY_P3')),
+            config('constants.options.UPPER_PRIMARY_P4_P7') => Helper::MasterRecords(config('constants.options.UPPER_PRIMARY_P4_P7')),
+        ];
+
         return view('Class.edit-class', compact(
             'assignment',
             'assignedSubjects',
             'SecondaryClasses',
+            'PrimaryClasses',
+            'PrimarySecularClasses',
             'classType',
             'IDAAD_ARABIC_LANGUAGE',
             'IDAAD_FAITH_AND_CIVILIZATION',
@@ -497,7 +578,9 @@ class ClassandSubjectController extends Controller
             'THANAWI_FAITH_AND_CIVILIZATION',
             'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
             'THANAWI_PROPHETIC_TRADITIONS',
-            'THANAWI_QURAN_ITS_SCIENCES'
+            'THANAWI_QURAN_ITS_SCIENCES',
+            'primaryTheology',
+            'primarySecularSubjects'
         ));
     }
     public function getStreams($senior)
