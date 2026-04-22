@@ -23,12 +23,24 @@ class Helper extends Controller
 
     public static function requireSchool()
     {
-        if (! Session::has('LoggedSchool')) {
+        if (!Session::has('LoggedSchool')) {
             redirect()->route('school.dashboard')->send();
             exit;
         }
 
         return Session::get('LoggedSchool');
+    }
+
+    public static function schoolProducts()
+    {
+        if (!Session::has('LoggedSchool')) {
+            redirect()->route('school.dashboard')->send();
+            exit;
+        }
+
+        $school_product = DB::table('schools')->where('id',Session('LoggedSchool'))->value('school_product');
+
+        return $school_product;
     }
 
     public static function schoolIDFromHouseID($house_id)
@@ -91,7 +103,7 @@ class Helper extends Controller
 
     public static function activeIndividualLoggedIn()
     {
-        if (! Session('LoggedSchool')) {
+        if (!Session('LoggedSchool')) {
             $passwordStatus = User::where('id', Session::get('LoggedStudent'))->first();
 
             return $passwordStatus;
@@ -153,7 +165,7 @@ class Helper extends Controller
         $user = (int) $user;
         $admin = DB::table('users')->where('id', '=', $user)->where('user_role', '!=', 1)->first();
 
-        return $user = @$admin->firstname.' '.@$admin->lastname;
+        return $user = @$admin->firstname . ' ' . @$admin->lastname;
     }
 
     public static function language_name($user = '')
@@ -161,7 +173,7 @@ class Helper extends Controller
         $user = (int) $user;
         $admin = DB::table('users')->where('id', '=', $user)->where('user_role', '!=', 1)->first();
 
-        return $user = @$admin->firstname.' '.@$admin->lastname;
+        return $user = @$admin->firstname . ' ' . @$admin->lastname;
     }
 
     public static function active_user()
@@ -169,7 +181,7 @@ class Helper extends Controller
 
         $admin = DB::table('users')->where('id', '=', Session('LoggedAdmin'))->first();
 
-        return $user = @$admin->firstname.' '.@$admin->lastname;
+        return $user = @$admin->firstname . ' ' . @$admin->lastname;
     }
 
     public static function item_md_name($md_id)
@@ -211,7 +223,7 @@ class Helper extends Controller
     public static function DropMasterData($code_id = '', $selected = '', $id = '', $part = 2, $disabled = 0)
     {
 
-        if (! $code_id) {
+        if (!$code_id) {
             $select = DB::table('master_datas')->get();
         } else {
             $select = DB::table('master_datas')->where('md_master_code_id', $code_id)->orderBy('md_name', 'asc')->get();
@@ -220,20 +232,20 @@ class Helper extends Controller
         $disabled = ($disabled) ? 'disabled' : '';
 
         $string = '';
-        $string .= '<select name="'.$id.'" id="'.$id.'" class="form-control select2" '.$disabled.'>';
+        $string .= '<select name="' . $id . '" id="' . $id . '" class="form-control select2" ' . $disabled . '>';
         $string .= '<option value=""> -- Select -- </option>';
         foreach ($select as $row) {
             if ($part == 1) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.'</option>';
+                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . '</option>';
                 } else {
-                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.'</option>';
+                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . '</option>';
                 }
             } elseif ($part == 2) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
+                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
                 } else {
-                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
+                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
                 }
             }
         }
@@ -246,7 +258,7 @@ class Helper extends Controller
     public static function DropMasterDataAsc($code_id = '', $selected = '', $id = '', $part = 2, $disabled = 0)
     {
 
-        if (! $code_id) {
+        if (!$code_id) {
             $select = DB::table('master_datas')->get();
         } else {
             $select = DB::table('master_datas')->where('md_master_code_id', $code_id)->orderBy('md_id', 'asc')->get();
@@ -255,20 +267,20 @@ class Helper extends Controller
         $disabled = ($disabled) ? 'disabled' : '';
 
         $string = '';
-        $string .= '<select name="'.$id.'" id="'.$id.'" class="form-control" '.$disabled.'>';
+        $string .= '<select name="' . $id . '" id="' . $id . '" class="form-control" ' . $disabled . '>';
         $string .= '<option value=""> -- Select -- </option>';
         foreach ($select as $row) {
             if ($part == 1) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.'</option>';
+                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . '</option>';
                 } else {
-                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.'</option>';
+                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . '</option>';
                 }
             } elseif ($part == 2) {
                 if ($row->md_id == $selected) {
-                    $string .= '<option selected value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
+                    $string .= '<option selected value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
                 } else {
-                    $string .= '<option value="'.$row->md_id.'">'.$row->md_name.' ('.$row->md_code.')</option>';
+                    $string .= '<option value="' . $row->md_id . '">' . $row->md_name . ' (' . $row->md_code . ')</option>';
                 }
             }
         }

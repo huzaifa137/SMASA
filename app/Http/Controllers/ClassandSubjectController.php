@@ -16,59 +16,66 @@ class ClassandSubjectController extends Controller
 {
     public function createClass()
     {
-        $SecondaryClasses = Helper::MasterRecordMerge(
-            config('constants.options.O_LEVEL'),
-            config('constants.options.A_LEVEL')
-        );
 
-        // Create a mapping of class ID to type
-        $classTypeMap = [];
+        if (Helper::recordMdname(Helper::schoolProducts()) === 'Idaad And Thanawi') {
 
-        // Get O-Level class IDs
-        $oLevelClasses = Helper::MasterRecords(config('constants.options.O_LEVEL'));
-        $oLevelIds = $oLevelClasses->pluck('md_id')->toArray();
+            $SecondaryClasses = Helper::MasterRecordMerge(
+                config('constants.options.O_LEVEL'),
+                config('constants.options.A_LEVEL')
+            );
 
-        // Get A-Level class IDs  
-        $aLevelClasses = Helper::MasterRecords(config('constants.options.A_LEVEL'));
-        $aLevelIds = $aLevelClasses->pluck('md_id')->toArray();
+            // Create a mapping of class ID to type
+            $classTypeMap = [];
 
-        // Map each class to its type
-        foreach ($SecondaryClasses as $class) {
-            if (in_array($class->md_id, $oLevelIds)) {
-                $classTypeMap[$class->md_id] = 'O-Level';
-            } elseif (in_array($class->md_id, $aLevelIds)) {
-                $classTypeMap[$class->md_id] = 'A-Level';
-            } else {
-                $classTypeMap[$class->md_id] = 'Unknown';
+            // Get O-Level class IDs
+            $oLevelClasses = Helper::MasterRecords(config('constants.options.O_LEVEL'));
+            $oLevelIds = $oLevelClasses->pluck('md_id')->toArray();
+
+            // Get A-Level class IDs  
+            $aLevelClasses = Helper::MasterRecords(config('constants.options.A_LEVEL'));
+            $aLevelIds = $aLevelClasses->pluck('md_id')->toArray();
+
+            // Map each class to its type
+            foreach ($SecondaryClasses as $class) {
+                if (in_array($class->md_id, $oLevelIds)) {
+                    $classTypeMap[$class->md_id] = 'O-Level';
+                } elseif (in_array($class->md_id, $aLevelIds)) {
+                    $classTypeMap[$class->md_id] = 'A-Level';
+                } else {
+                    $classTypeMap[$class->md_id] = 'Unknown';
+                }
             }
+
+            $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
+            $IDAAD_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.IDAAD_FAITH_AND_CIVILIZATION'));
+            $IDAAD_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.IDAAD_JURISPRUDENCE_AND_ITS_SOURCES'));
+            $IDAAD_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.IDAAD_PROPHETIC_TRADITIONS'));
+            $IDAAD_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.IDAAD_QURAN_ITS_SCIENCES'));
+
+            $THANAWI_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.THANAWI_ARABIC_LANGUAGE'));
+            $THANAWI_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.THANAWI_FAITH_AND_CIVILIZATION'));
+            $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
+            $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
+            $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
+
+            return view('Class.create-class', compact(
+                'SecondaryClasses',
+                'classTypeMap', // Pass the mapping to view
+                'IDAAD_ARABIC_LANGUAGE',
+                'IDAAD_FAITH_AND_CIVILIZATION',
+                'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES',
+                'IDAAD_PROPHETIC_TRADITIONS',
+                'IDAAD_QURAN_ITS_SCIENCES',
+                'THANAWI_ARABIC_LANGUAGE',
+                'THANAWI_FAITH_AND_CIVILIZATION',
+                'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
+                'THANAWI_PROPHETIC_TRADITIONS',
+                'THANAWI_QURAN_ITS_SCIENCES'
+            ));
+
+        } elseif (Helper::recordMdname(Helper::schoolProducts()) === 'Primary Theology') {
+
         }
-
-        $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
-        $IDAAD_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.IDAAD_FAITH_AND_CIVILIZATION'));
-        $IDAAD_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.IDAAD_JURISPRUDENCE_AND_ITS_SOURCES'));
-        $IDAAD_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.IDAAD_PROPHETIC_TRADITIONS'));
-        $IDAAD_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.IDAAD_QURAN_ITS_SCIENCES'));
-
-        $THANAWI_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.THANAWI_ARABIC_LANGUAGE'));
-        $THANAWI_FAITH_AND_CIVILIZATION = Helper::MasterRecords(config('constants.options.THANAWI_FAITH_AND_CIVILIZATION'));
-        $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
-        $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
-        $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
-
-        return view('Class.create-class', compact(
-            'SecondaryClasses',
-            'classTypeMap', // Pass the mapping to view
-            'IDAAD_ARABIC_LANGUAGE',
-            'IDAAD_FAITH_AND_CIVILIZATION',
-            'IDAAD_JURISPRUDENCE_AND_ITS_SOURCES',
-            'IDAAD_PROPHETIC_TRADITIONS',
-            'IDAAD_QURAN_ITS_SCIENCES',
-            'THANAWI_ARABIC_LANGUAGE',
-            'THANAWI_FAITH_AND_CIVILIZATION',
-            'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
-            'THANAWI_PROPHETIC_TRADITIONS',
-            'THANAWI_QURAN_ITS_SCIENCES'
-        ));
     }
 
     public function storeClass(Request $request)

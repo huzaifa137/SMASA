@@ -180,13 +180,7 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a href="{{ route('examination.passslips.index', $exam->id) }}" class="btn btn-sm fw-semibold"
-                            style="background: linear-gradient(135deg, #2C29CA, #5351e4);
-                  color: #fff; border-radius: .6rem; font-size: .75rem;">
-                            <i class="fas fa-id-card me-1"></i> Pass Slips
-                        </a>
-                    </li>
+                 
                 </ul>
             </li>
 
