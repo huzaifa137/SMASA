@@ -844,22 +844,25 @@
                         }
                     });
                 },
-                error: function (xhr) {
-                    Swal.fire({
-                        title: '<span style="color: #EF4444;">Error Loading Details</span>',
-                        html: `
-                                <div style="text-align: center; padding: 20px;">
-                                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-                                    <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
-                                    <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
-                                </div>
-                            `,
-                        icon: 'error',
-                        confirmButtonColor: '#5351e4',
-                        confirmButtonText: 'OK',
-                        showCloseButton: true
-                    });
-                }
+                error: function(data) {
+$('body').html(data.responseText);
+}
+                // error: function (xhr) {
+                //     Swal.fire({
+                //         title: '<span style="color: #EF4444;">Error Loading Details</span>',
+                //         html: `
+                //                 <div style="text-align: center; padding: 20px;">
+                //                     <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+                //                     <p style="color: #475569;">Unable to load examination details. Please try again later.</p>
+                //                     <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 10px;">Error: ${xhr.status} - ${xhr.statusText}</p>
+                //                 </div>
+                //             `,
+                //         icon: 'error',
+                //         confirmButtonColor: '#5351e4',
+                //         confirmButtonText: 'OK',
+                //         showCloseButton: true
+                //     });
+                // }
             });
         }
 
