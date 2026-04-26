@@ -46,13 +46,21 @@ $controller = new Controller();
                                 </thead>
                                 <tbody>
                                     @forelse ($Streams as $key => $stream)
+                                        <?php
+
+                                        $maleClassStreamStudents = Helper::maleClassStreamStudents($stream->class_id,$stream->stream_id);
+                                        $femaleClassStreamStudents = Helper::femaleClassStreamStudents($stream->class_id,$stream->stream_id);
+                                        $totalClassStreamStudent = Helper::totalClassStreamStudent($stream->class_id,$stream->stream_id);
+                                    
+                                        ?>
+
                                         <tr data-id="{{ $stream->id }}">
                                             <td class="text-center" style="width:1px;">{{ $key + 1 }}</td>
                                             <td class="text-center">{{ Helper::recordMdname($stream->class_id) }}</td>
                                             <td class="text-center">{{ $stream->stream_id }}</td>
-                                            <td class="text-center">0</td>
-                                            <td class="text-center">0</td>
-                                            <td class="text-center">0</td>
+                                            <td class="text-center">{{  $maleClassStreamStudents }}</td>
+                                            <td class="text-center">{{ $femaleClassStreamStudents }}</td>
+                                            <td class="text-center">{{ $totalClassStreamStudent }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2 justify-content-center">
                                                     <select name="teacher_id"
@@ -84,7 +92,8 @@ $controller = new Controller();
                                                     <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
                                                 </a>
 
-                                                <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}" class="btn btn-sm btn-info btn-edit-stream mb-1"
+                                                <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
+                                                    class="btn btn-sm btn-info btn-edit-stream mb-1"
                                                     data-stream-id="{{ $stream->id }}">
                                                     <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
                                                 </a>
@@ -263,9 +272,9 @@ $controller = new Controller();
                                 }
                                 Swal.fire('Oops', errorMessage, 'error');
                             }
-//                             error: function(data) {
-// $('body').html(data.responseText);
-// }
+                            //                             error: function(data) {
+                            // $('body').html(data.responseText);
+                            // }
                         });
                     }
                 });

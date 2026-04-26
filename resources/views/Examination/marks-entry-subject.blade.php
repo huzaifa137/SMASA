@@ -297,7 +297,9 @@ use App\Http\Controllers\Helper;
                             <span class="exam-meta-pill">
                                 <i class="fas fa-chalkboard-teacher me-1"></i>
                                 <span>{{ Helper::recordMdname($classSubject->class_id) }}
-                                    @if($classSubject->stream_id) — {{ $classSubject->stream_id }} @endif
+                                    @if ($classSubject->stream_id)
+                                        — {{ $classSubject->stream_id }}
+                                    @endif
                                 </span>
                             </span>
                         </div>
@@ -331,7 +333,8 @@ use App\Http\Controllers\Helper;
                             <div class="progress-bar-fill" style="width:{{ $progress }}%; background: #fff;"></div>
                         </div> &nbsp; &nbsp;
                         <span style="font-size:.8rem; color:#fff; white-space: nowrap;">
-                            <i class="fas fa-check-circle me-1"></i> {{ $entered }}/{{ $total }} entered ({{ $progress }}%)
+                            <i class="fas fa-check-circle me-1"></i> {{ $entered }}/{{ $total }} entered
+                            ({{ $progress }}%)
                         </span>
                     </div>
                 </div>
@@ -348,7 +351,7 @@ use App\Http\Controllers\Helper;
                             <tr>
                                 <th style="width:40px;">#</th>
                                 <th>Student</th>
-                                <th>Marks <small class="fw-normal text-muted">(/{{ $exam->total_marks }})</small></th>
+                                <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
                                 <th>Grade</th>
                                 <th>Remark</th>
                                 <th>Comment</th>
@@ -359,7 +362,9 @@ use App\Http\Controllers\Helper;
                             @forelse ($students as $key => $student)
                                 @php
                                     $mark = $existingMarks[$student->id] ?? null;
-                                    $initials = strtoupper(substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1));
+                                    $initials = strtoupper(
+                                        substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1),
+                                    );
                                 @endphp
                                 <tr data-student-id="{{ $student->id }}">
                                     <td class="text-muted" style="font-size:.8rem;">{{ $key + 1 }}</td>
@@ -378,26 +383,28 @@ use App\Http\Controllers\Helper;
                                     </td>
 
                                     <td>
-                                        <input type="number" class="form-control marks-input" name="marks[{{ $student->id }}]"
-                                            data-student="{{ $student->id }}" data-max="{{ $exam->total_marks }}"
-                                            value="{{ $mark?->marks_obtained ?? '' }}" min="0" max="{{ $exam->total_marks }}"
-                                            step="0.5" placeholder="—">
+                                        <input type="number" class="form-control marks-input"
+                                            name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
+                                            data-max="{{ $exam->total_marks }}" value="{{ $mark?->marks_obtained ?? '' }}"
+                                            min="0" max="{{ $exam->total_marks }}" step="0.5" placeholder="—">
                                     </td>
                                     @php
                                         $g = $mark?->grade ?? '';
                                         $gradeClass = '';
-                                        if (str_starts_with($g, 'D'))
+                                        if (str_starts_with($g, 'D')) {
                                             $gradeClass = 'grade-D';
-                                        elseif (str_starts_with($g, 'C'))
+                                        } elseif (str_starts_with($g, 'C')) {
                                             $gradeClass = 'grade-C';
-                                        elseif (str_starts_with($g, 'P'))
+                                        } elseif (str_starts_with($g, 'P')) {
                                             $gradeClass = 'grade-P';
-                                        elseif (str_starts_with($g, 'F'))
+                                        } elseif (str_starts_with($g, 'F')) {
                                             $gradeClass = 'grade-F';
+                                        }
                                     @endphp
 
                                     <td>
-                                        <span class="grade-badge grade-cell {{ $gradeClass }}" id="grade_{{ $student->id }}">
+                                        <span class="grade-badge grade-cell {{ $gradeClass }}"
+                                            id="grade_{{ $student->id }}">
                                             {{ $mark?->grade ?? '—' }}
                                         </span>
                                     </td>
@@ -408,17 +415,20 @@ use App\Http\Controllers\Helper;
                                         </span>
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control comment-input" name="comment[{{ $student->id }}]"
+                                        <input type="text" class="form-control comment-input"
+                                            name="comment[{{ $student->id }}]"
                                             value="{{ $mark?->teacher_comment ?? '' }}" placeholder="Optional comment">
                                     </td>
                                     <td>
-                                        <span class="badge status-cell
-                                                                            @if($mark?->status === 'entered') badge-entered
+                                        <span
+                                            class="badge status-cell
+                                                                            @if ($mark?->status === 'entered') badge-entered
                                                                             @elseif($mark?->status === 'verified') badge-verified
                                                                             @else badge-pending @endif"
                                             id="status_{{ $student->id }}">
-                                            <i class="fas 
-                                                                                @if($mark?->status === 'entered') fa-check-circle
+                                            <i
+                                                class="fas 
+                                                                                @if ($mark?->status === 'entered') fa-check-circle
                                                                                 @elseif($mark?->status === 'verified') fa-shield-alt
                                                                                 @else fa-clock @endif me-1"></i>
                                             {{ $mark ? ucfirst($mark->status) : 'Pending' }}
@@ -440,7 +450,7 @@ use App\Http\Controllers\Helper;
         </div>
 
         {{-- Floating Save Button --}}
-        @if(in_array($exam->status, ['active', 'marks_entry']))
+        @if (in_array($exam->status, ['active', 'marks_entry']))
             <button type="button" id="saveMarksBtn" class="save-fab">
                 <i class="fas fa-save me-2"></i> Save All Marks
             </button>
@@ -467,7 +477,7 @@ use App\Http\Controllers\Helper;
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($gradingScale as $gs)
+                            @foreach ($gradingScale as $gs)
                                 <tr>
                                     <td><strong>{{ $gs->grade }}</strong></td>
                                     <td style="font-size:.8rem;">{{ $gs->min_mark }}–{{ $gs->max_mark }}</td>
@@ -513,7 +523,7 @@ use App\Http\Controllers\Helper;
         }
 
         // Live grade preview on marks input
-        $(document).on('input', '.marks-input', function () {
+        $(document).on('input', '.marks-input', function() {
             const val = $(this).val();
             const max = parseFloat($(this).data('max'));
             const sid = $(this).data('student');
@@ -545,29 +555,43 @@ use App\Http\Controllers\Helper;
         });
 
         // Save marks
-        $('#saveMarksBtn').on('click', function () {
-
+        // Save marks
+        $('#saveMarksBtn').on('click', function() {
             // Validate all inputs first
             let hasError = false;
-            $('.marks-input').each(function () {
+            $('.marks-input').each(function() {
                 const val = $(this).val();
                 const max = parseFloat($(this).data('max'));
-                if (val !== '' && (isNaN(parseFloat(val)) || parseFloat(val) < 0 || parseFloat(val) > max)) {
+
+                // Only validate if the field has a value
+                if (val !== '' && (isNaN(parseFloat(val)) || parseFloat(val) < 0 || parseFloat(val) >
+                    max)) {
                     $(this).addClass('invalid');
                     hasError = true;
+                } else {
+                    $(this).removeClass('invalid');
                 }
             });
 
             if (hasError) {
-                Swal.fire({ icon: 'error', title: 'Invalid marks', text: 'Some marks are out of range. Please correct them before saving.' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid marks',
+                    text: 'Some marks are out of range. Please correct them before saving.'
+                });
                 return;
             }
 
-            const enteredCount = $('.marks-input').filter(function () { return $(this).val() !== ''; }).length;
+            const enteredCount = $('.marks-input').filter(function() {
+                return $(this).val() !== '';
+            }).length;
+
+            const totalCount = $('.marks-input').length;
 
             Swal.fire({
                 title: 'Save Marks?',
-                html: `You are saving marks for <strong>${enteredCount}</strong> student(s).`,
+                html: `You are saving marks for <strong>${enteredCount}</strong> of <strong>${totalCount}</strong> student(s).<br>
+               Empty fields will remain pending.`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#2C29CA',
@@ -576,55 +600,83 @@ use App\Http\Controllers\Helper;
                 if (!result.isConfirmed) return;
 
                 const marksData = [];
-                $('tr[data-student-id]').each(function () {
+                $('tr[data-student-id]').each(function() {
                     const sid = $(this).data('student-id');
                     const markVal = $(this).find('.marks-input').val();
                     const comment = $(this).find('.comment-input').val();
-                    marksData.push({ student_id: sid, marks: markVal, comment: comment });
+
+                    // Only include the marks value if it's not empty
+                    marksData.push({
+                        student_id: sid,
+                        marks: markVal !== '' ? markVal : null,
+                        comment: comment
+                    });
                 });
 
                 const $btn = $('#saveMarksBtn');
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
 
                 $.ajax({
-                    url: '{{ route("examination.marks.save", $exam->id) }}',
+                    url: '{{ route('examination.marks.save', $exam->id) }}',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
                         _token: '{{ csrf_token() }}',
                         marks: marksData,
                         subject_id: {{ $classSubject->subject_id }},
-                        class_id:   {{ $classSubject->class_id }},
+                        class_id: {{ $classSubject->class_id }},
                         stream_id: @json($classSubject->stream_id),
                     }),
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) {
                             // Update status badges live
-                            $('tr[data-student-id]').each(function () {
+                            $('tr[data-student-id]').each(function() {
                                 const sid = $(this).data('student-id');
                                 const val = $(this).find('.marks-input').val();
-                                const $s = $(`#status_${sid}`);
+                                const $status = $(`#status_${sid}`);
+
                                 if (val !== '') {
-                                    $s.text('Entered').removeClass('bg-secondary').addClass('bg-success');
+                                    $status.removeClass('badge-pending')
+                                        .addClass('badge-entered')
+                                        .html(
+                                            '<i class="fas fa-check-circle me-1"></i> Entered'
+                                            );
+                                } else {
+                                    $status.removeClass('badge-entered')
+                                        .addClass('badge-pending')
+                                        .html(
+                                            '<i class="fas fa-clock me-1"></i> Pending'
+                                            );
                                 }
                             });
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Marks Saved!',
                                 text: res.message,
-                                timer: 1800,
-                                showConfirmButton: false,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#2C29CA',
+                                allowOutsideClick: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
                             });
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
                     },
-                    error: function (xhr) { $('body').html(xhr.responseText); },
-                    // error: function (data) {
-                    //     $('body').html(data.responseText);
-                    // },
-                    complete: function () {
-                        $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Save All Marks');
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message ||
+                                'An error occurred while saving marks'
+                        });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(
+                            '<i class="fas fa-save me-2"></i> Save All Marks');
                     }
                 });
             });

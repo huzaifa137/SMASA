@@ -279,6 +279,8 @@ class StudentController extends Controller
     public function addNewStudent()
     {
         Helper::requireSchool();
+        $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
+        $schoolId = Helper::requireSchool();
 
         $years = StudentBasic::selectRaw('DISTINCT SUBSTRING_INDEX(Student_ID, "-", -1) as year')
             ->whereRaw('Student_ID REGEXP ".*-[0-9]{4}$"')
@@ -286,15 +288,67 @@ class StudentController extends Controller
             ->pluck('year');
 
         $schools = House::select('ID', 'House', 'Number')->get();
-
         $defaultSchoolNumber = $schools->first() ? $schools->first()->Number : 'IT-001';
         $currentYear = date('Y');
         $newStudentId = $defaultSchoolNumber . '-ID-001-' . $currentYear;
 
-        $aLevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
-        $oLevel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
+        $aLevel = collect();
+        $oLevel = collect();
+        $primaryTheologyClasses = collect();
+        $primarySecularClasses = collect();
 
-        return view('student.add-new-student', compact('schools', 'years', 'newStudentId', 'aLevel','oLevel'));
+        if ($schoolProduct === 'Idaad And Thanawi') {
+            $aLevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
+            $oLevel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
+        } elseif ($schoolProduct === 'Primary Theology') {
+            $primaryTheologyClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+        } elseif ($schoolProduct === 'Primary Secular') {
+            $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
+            $primaryTheologyClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+            $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+        }
+
+        $classNameMap = [];
+        if ($schoolProduct === 'Idaad And Thanawi') {
+            foreach ($oLevel as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+            foreach ($aLevel as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+        } elseif ($schoolProduct === 'Primary Theology') {
+            foreach ($primaryTheologyClasses as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+        } elseif ($schoolProduct === 'Primary Secular') {
+            foreach ($primarySecularClasses as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
+            foreach ($primaryTheologyClasses as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+            foreach ($primarySecularClasses as $class) {
+                $classNameMap[$class->md_id] = $class->md_name;
+            }
+        }
+
+        // Fetch classes belonging to the logged-in school
+        $schoolClasses = Classroom::where('school_id', $schoolId)->get();
+
+        return view('student.add-new-student', compact(
+            'schoolProduct',
+            'schools',
+            'years',
+            'newStudentId',
+            'aLevel',
+            'oLevel',
+            'primaryTheologyClasses',
+            'primarySecularClasses',
+            'schoolClasses',
+            'classNameMap',
+        ));
     }
 
     public function generateStudentID(Request $request)
@@ -321,7 +375,7 @@ class StudentController extends Controller
                 CAST(
                     SUBSTRING_INDEX(
                         SUBSTRING_INDEX(Student_ID, '-', 4),
-                        '-', 
+                        '-',
                         -1
                     ) AS UNSIGNED
                 )
@@ -441,25 +495,36 @@ class StudentController extends Controller
 
     public function allStudents()
     {
-        Helper::requireSchool();
+        $schoolId = Helper::requireSchool();
 
-        $students = Student::where('school_id', Helper::requireSchool())
+        // Get unique seniors
+        $seniors = Student::where('school_id', $schoolId)
+            ->select('senior')
+            ->distinct()
             ->orderBy('senior')
-            ->orderBy('stream')
-            ->select(
-                'id',
-                'firstname',
-                'lastname',
-                'gender',
-                'student_photo',
-                'senior',
-                'stream',
-            )
-            ->get();
+            ->pluck('senior');
 
-        $groupedStudents = $students->groupBy('senior')->map(function ($seniorGroup) {
-            return $seniorGroup->groupBy('stream');
-        });
+        $groupedStudents = [];
+
+        foreach ($seniors as $senior) {
+
+            // Get streams under this senior
+            $streams = Student::where('school_id', $schoolId)
+                ->where('senior', $senior)
+                ->select('stream')
+                ->distinct()
+                ->orderBy('stream')
+                ->pluck('stream');
+
+            foreach ($streams as $stream) {
+
+                $groupedStudents[$senior][$stream] = Student::where('school_id', $schoolId)
+                    ->where('senior', $senior)
+                    ->where('stream', $stream)
+                    ->orderByDesc('id')
+                    ->paginate(10, ['*'], "page_{$senior}_{$stream}");
+            }
+        }
 
         return view('student.all-students', compact('groupedStudents'));
     }
@@ -488,10 +553,9 @@ class StudentController extends Controller
         ]);
     }
 
-    public function updateStudent(Request $request, $id)
+    public function updateStudent(Request $request)
     {
-
-        $student = Student::findOrFail($id);
+        $student = Student::findOrFail($request->student_id);
 
         $validated = $request->validate([
             'firstname' => 'required|string|max:100',
@@ -500,21 +564,6 @@ class StudentController extends Controller
             'date_of_birth' => 'nullable|date',
             'student_photo' => 'nullable|image|mimes:jpg,png,gif',
         ]);
-
-        // if ($request->hasFile('student_photo')) {
-        //     // Delete old photo if exists
-        //     if ($student->student_photo && file_exists(public_path($student->student_photo))) {
-        //         unlink(public_path($student->student_photo));
-        //     }
-        //     $file = $request->file('student_photo');
-        //     $destinationPath = public_path('uploads/studentPhotos');
-        //     if (! file_exists($destinationPath)) {
-        //         mkdir($destinationPath, 0755, true);
-        //     }
-        //     $filename = time().'_'.$file->getClientOriginalName();
-        //     $file->move($destinationPath, $filename);
-        //     $validated['student_photo'] = 'uploads/studentPhotos/'.$filename;
-        // }
 
         $photoPath = null;
 
@@ -527,15 +576,14 @@ class StudentController extends Controller
                 mkdir($destinationPath, 0755, true);
             }
 
-            $studentId = $validated['Student_ID'];
+            // ✅ FIX: use actual student ID
+            $studentId = $student->id;
 
             $extension = $file->getClientOriginalExtension();
-
             $filename = $studentId . '.' . $extension;
 
             $file->move($destinationPath, $filename);
 
-            // Save ONLY student ID in DB
             $photoPath = $studentId;
         }
 
@@ -547,8 +595,6 @@ class StudentController extends Controller
             'admission_number' => $request->admission_number,
             'admission_year' => $request->admission_year,
             'date_of_admission' => $request->date_of_admission,
-            'senior' => $request->senior,
-            'stream' => $request->stream,
             'ple_score' => $request->ple_score,
             'uce_score' => $request->uce_score,
             'previous_school' => $request->previous_school,
@@ -562,9 +608,13 @@ class StudentController extends Controller
             'guardian_email' => $request->guardian_email,
             'medical_history' => $request->medical_history,
             'comments' => $request->comments,
+            'student_photo' => $photoPath ?? $student->student_photo, // 👈 keep old if not updated
         ]));
 
-        return response()->json(['message' => 'Student updated successfully!']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Student updated successfully!'
+        ]);
     }
 
     public function destroyStudent(Student $student)

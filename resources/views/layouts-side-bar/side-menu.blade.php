@@ -14,6 +14,10 @@
     </div>
 </div>
 
+<?php
+use App\Http\Controllers\Helper;
+?>
+
 <aside class="app-sidebar app-sidebar3">
     <ul class="side-menu" style="margin-top:100px !important;">
 
@@ -61,7 +65,6 @@
                     Grading Marks
                 </a>
             </li>
-
         @elseif(Session('LoggedAdmin'))
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
@@ -112,61 +115,25 @@
                 </a>
             </li>
 
-            <!-- Report & Marks Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-balance-scale-right fa-2x mr-3"></i>
-                    <span>Report & Marks</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li>
-                        <a href="{{ url('/enter-marks') }}">
-                            <i class="fas fa-pen-alt mr-2"></i>
-                            Enter Marks
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url('/view-marks') }}">
-                            <i class="fas fa-eye mr-2"></i>
-                            View Marks
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url('/generate-report') }}">
-                            <i class="fas fa-file-alt mr-2"></i>
-                            Generate Report
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url('/marks-analysis') }}">
-                            <i class="fas fa-chart-line mr-2"></i>
-                            Marks Analysis
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url('/download-reports') }}">
-                            <i class="fas fa-download mr-2"></i>
-                            Download Reports
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
             <!-- Examinations Dropdown (Updated) -->
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-layer-group fa-2x mr-3"></i>
                     <span>Examinations</span>
+                    @php
+                        $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
+
+                        // ensure it's always a number
+                        $pendingMarksCount = is_array($pendingMarksCountRaw)
+                            ? count($pendingMarksCountRaw)
+                            : (int) $pendingMarksCountRaw;
+                    @endphp
+                    @if ($pendingMarksCount > 0)
+                        <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
+                    @endif
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('examination.create') }}">
-                            <i class="fas fa-plus-circle mr-2"></i>
-                            Create Examination
-                        </a>
-                    </li>
                     <li>
                         <a href="{{ route('examination.index') }}">
                             <i class="fas fa-list mr-2"></i>
@@ -174,17 +141,72 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('examination.demo') }}">
-                            <i class="fas fa-flask mr-2"></i>
-                            Demo Exams
+                        <a href="{{ route('examination.create') }}">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Create Examination
                         </a>
                     </li>
-
-                 
+                    @if ($pendingMarksCount > 0)
+                        <li>
+                            <a href="{{ route('examination.marks-entry-portal') }}">
+                                <i class="fas fa-pen-to-square mr-2"></i>
+                                Marks Entry
+                                @if ($pendingMarksCount > 0)
+                                    <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    @endif
                 </ul>
             </li>
 
             <style>
+                /* Badge styling for sidebar menu */
+                .side-menu__item .badge,
+                .sub-menu .badge {
+                    position: relative;
+                    top: -2px;
+                    font-size: 10px;
+                    padding: 3px 6px;
+                    border-radius: 10px;
+                    min-width: 18px;
+                    height: 18px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 0 0 2px white;
+                }
+
+                /* For the main menu item badge */
+                .side-menu__item .badge {
+                    margin-left: 5px;
+                }
+
+                /* For the submenu item badge */
+                .sub-menu .badge.float-right {
+                    margin-left: auto;
+                    margin-right: 10px;
+                }
+
+                /* Animation for attention */
+                @keyframes pulse {
+                    0% {
+                        transform: scale(1);
+                    }
+
+                    50% {
+                        transform: scale(1.2);
+                    }
+
+                    100% {
+                        transform: scale(1);
+                    }
+                }
+
+                .badge-danger {
+                    animation: pulse 2s infinite;
+                }
+
                 /* Sidebar Styles */
                 .side-menu {
                     list-style: none;
@@ -347,9 +369,9 @@
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
             <script>
-                $(document).ready(function () {
+                $(document).ready(function() {
                     // Handle submenu toggles
-                    $('[data-toggle="submenu"]').on('click', function (e) {
+                    $('[data-toggle="submenu"]').on('click', function(e) {
                         e.preventDefault();
 
                         // Get the parent slide
@@ -371,7 +393,7 @@
                     // });
 
                     // Logout functionality
-                    $('#logoutMenu').on('click', function (event) {
+                    $('#logoutMenu').on('click', function(event) {
                         event.preventDefault();
 
                         Swal.fire({
@@ -423,14 +445,14 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        $('#helpSupportToggle').on('click', function (e) {
+    $(document).ready(function() {
+        $('#helpSupportToggle').on('click', function(e) {
             e.preventDefault();
             $(this).parent('.slide').toggleClass('active');
         });
     });
 
-    document.getElementById('logoutMenu').addEventListener('click', function (event) {
+    document.getElementById('logoutMenu').addEventListener('click', function(event) {
         event.preventDefault();
 
         Swal.fire({

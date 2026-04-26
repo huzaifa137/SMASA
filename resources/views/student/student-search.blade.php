@@ -40,7 +40,7 @@ use App\Http\Controllers\Helper;
                             </div>
 
                             <div class="mt-3">
-                                <button type="submit" class="btn btn-success d-none" id="searchBtn">
+                                <button type="submit" class="btn btn-primary d-none" id="searchBtn">
                                     <i class="fas fa-search"></i> Search
                                 </button>
                             </div>

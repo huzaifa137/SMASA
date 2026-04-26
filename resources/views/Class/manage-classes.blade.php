@@ -38,53 +38,60 @@ $controller = new Controller();
                                         <th colspan="2" style="text-align: center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody> @forelse ($classRecord as $key => $class)
+                                <tbody>
+                                    @forelse ($classRecord as $key => $class)
+                                        <?php
+                                        $maleClassStudents = Helper::maleClassStudents($class->class_name);
+                                        $femaleClassStudents = Helper::femaleClassStudents($class->class_name);                                    
+                                        $totalClassStudent = Helper::totalClassStudent($class->class_name);
+                                        
+                                        ?>
+                                        <tr data-id="{{ $class->id }}">
+                                            <td style="width:1px;">{{ $key + 1 }}</td>
+                                            <td>{{ Helper::recordMdname($class->class_name) }}</td>
+                                            <td style="text-align: center;">{{ $maleClassStudents }}</td>
+                                            <td style="text-align: center;">{{ $femaleClassStudents }}</td>
+                                            <td style="text-align: center;">{{ $totalClassStudent }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <select name="teacher_id"
+                                                        class="form-select form-select-sm assign-supervisor form-control"
+                                                        data-class-id="{{ $class->id }}"
+                                                        data-current-supervisor="{{ $class->class_supervisor }}"
+                                                        {{ $class->class_supervisor ? 'disabled' : '' }}>
+                                                        <option value="">Select Supervisor</option>
+                                                        @foreach ($Teachers as $teacher)
+                                                            <option value="{{ $teacher->id }}"
+                                                                {{ $class->class_supervisor == $teacher->id ? 'selected' : '' }}>
+                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
-                                    <tr data-id="{{ $class->id }}">
-                                        <td style="width:1px;">{{ $key + 1 }}</td>
-                                        <td>{{ Helper::recordMdname($class->class_name) }}</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <select name="teacher_id"
-                                                    class="form-select form-select-sm assign-supervisor form-control"
+                                                    @if ($class->class_supervisor)
+                                                        &nbsp;
+                                                        <button class="btn btn-md btn-danger btn-remove-supervisor"
+                                                            data-class-id="{{ $class->id }}" title="Remove Supervisor">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <a href="{{ route('manage.class.streams', ['id' => $class->class_name]) }}"
+                                                    class="btn btn-sm btn-info">
+                                                    <i class="fas fa-link me-2"></i> Manage Streams
+                                                </a>
+
+                                                <button class="btn btn-sm btn-danger btn-delete-class"
                                                     data-class-id="{{ $class->id }}"
-                                                    data-current-supervisor="{{ $class->class_supervisor }}"
-                                                    {{ $class->class_supervisor ? 'disabled' : '' }}>
-                                                    <option value="">Select Supervisor</option>
-                                                    @foreach ($Teachers as $teacher)
-                                                        <option value="{{ $teacher->id }}"
-                                                            {{ $class->class_supervisor == $teacher->id ? 'selected' : '' }}>
-                                                            {{ $teacher->surname }} {{ $teacher->firstname }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                    data-class-name="{{ Helper::recordMdname($class->class_name) }}">
+                                                    <i class="fas fa-trash-alt me-2"></i> Delete
+                                                </button>
 
-                                                @if ($class->class_supervisor)
-                                                &nbsp;
-                                                    <button class="btn btn-md btn-danger btn-remove-supervisor"
-                                                        data-class-id="{{ $class->id }}" title="Remove Supervisor">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <a href="{{ route('manage.class.streams', ['id' => $class->class_name ]) }}" class="btn btn-sm btn-info">
-                                                <i class="fas fa-link me-2"></i> Manage Streams
-                                            </a>
-
-                                            <button class="btn btn-sm btn-danger btn-delete-class"
-                                                data-class-id="{{ $class->id }}"
-                                                data-class-name="{{ Helper::recordMdname($class->class_name) }}">
-                                                <i class="fas fa-trash-alt me-2"></i> Delete
-                                            </button>
-
-                                        </td>
-                                    </tr>
-                                @empty
+                                            </td>
+                                        </tr>
+                                    @empty
                                         <tr>
                                             <td colspan="8" class="text-center">No classes found.</td>
                                         </tr>
@@ -106,16 +113,16 @@ $controller = new Controller();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            
-            $('.assign-supervisor').on('change', function () {
+        $(document).ready(function() {
+
+            $('.assign-supervisor').on('change', function() {
                 let classId = $(this).data('class-id');
                 let teacherId = $(this).val();
                 let selectElement = $(this);
 
                 let current = selectElement.data('current-supervisor');
                 if (teacherId == current) {
-                    return; 
+                    return;
                 }
 
                 if (teacherId !== '') {
@@ -127,7 +134,7 @@ $controller = new Controller();
                             class_id: classId,
                             teacher_id: teacherId
                         },
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status === 'success') {
                                 Swal.fire({
                                     icon: 'success',
@@ -143,7 +150,7 @@ $controller = new Controller();
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
-                        error: function () {
+                        error: function() {
                             Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
                         }
                     });
@@ -151,7 +158,7 @@ $controller = new Controller();
             });
 
             // Remove Supervisor
-            $('.btn-remove-supervisor').on('click', function () {
+            $('.btn-remove-supervisor').on('click', function() {
                 let classId = $(this).data('class-id');
                 Swal.fire({
                     title: 'Are you sure?',
@@ -170,7 +177,7 @@ $controller = new Controller();
                                 _token: "{{ csrf_token() }}",
                                 class_id: classId
                             },
-                            success: function (response) {
+                            success: function(response) {
                                 if (response.status === 'success') {
                                     Swal.fire({
                                         icon: 'success',
@@ -184,7 +191,7 @@ $controller = new Controller();
                                     Swal.fire('Error', response.message, 'error');
                                 }
                             },
-                            error: function () {
+                            error: function() {
                                 Swal.fire('Oops', 'Something went wrong.', 'error');
                             }
                         });
@@ -195,57 +202,58 @@ $controller = new Controller();
     </script>
 
     <script>
-$(document).ready(function () {
+        $(document).ready(function() {
 
-    // Delete class
-    $('.btn-delete-class').on('click', function () {
-        let classId = $(this).data('class-id');
-        let className = $(this).data('class-name');
+            // Delete class
+            $('.btn-delete-class').on('click', function() {
+                let classId = $(this).data('class-id');
+                let className = $(this).data('class-name');
 
-        Swal.fire({
-            title: `Delete ${className}?`,
-            text: "All streams, subjects, and students in this class will be deleted permanently!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
+                Swal.fire({
+                    title: `Delete ${className}?`,
+                    text: "All streams, subjects, and students in this class will be deleted permanently!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
 
-                $.ajax({
-                    url: `/classes/${classId}`,
-                    type: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    success: function (response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: response.message || 'Class and related data deleted successfully.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload(); // reload page
+                        $.ajax({
+                            url: `/classes/${classId}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message ||
+                                        'Class and related data deleted successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload(); // reload page
+                                });
+                            },
+                            // error: function (xhr) {
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Delete Failed',
+                            //         text: xhr.responseJSON?.message || 'Something went wrong!'
+                            //     });
+                            // }
+                            error: function(data) {
+                                $('body').html(data.responseText);
+                            }
                         });
-                    },
-                    // error: function (xhr) {
-                    //     Swal.fire({
-                    //         icon: 'error',
-                    //         title: 'Delete Failed',
-                    //         text: xhr.responseJSON?.message || 'Something went wrong!'
-                    //     });
-                    // }
-                    error: function(data) {
-$('body').html(data.responseText);
-}
+                    }
                 });
-            }
-        });
-    });
+            });
 
-});
-</script>
+        });
+    </script>
 @endsection
 @section('js')
     <!-- c3.js Charts js-->

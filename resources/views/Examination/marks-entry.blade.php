@@ -271,22 +271,22 @@ use App\Http\Controllers\Helper;
 
                         </div>
 
-@php
-    $key = $subject->subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
-    $studentKey = $subject->class_id . '_' . $subject->stream_id;
-    $enteredCount = $markCounts[$key]->entered_count ?? 0;
-    $totalStudents = $studentCounts[$studentKey]->total ?? 0;
-    $pct = $totalStudents > 0 ? round(($enteredCount / $totalStudents) * 100) : 0;
-@endphp
+                        @php
+                            $key = $subject->subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
+                            $studentKey = $subject->class_id . '_' . $subject->stream_id;
+                            $enteredCount = $markCounts[$key]->entered_count ?? 0;
+                            $totalStudents = $studentCounts[$studentKey]->total ?? 0;
+                            $pct = $totalStudents > 0 ? round(($enteredCount / $totalStudents) * 100) : 0;
+                        @endphp
 
-<div class="d-flex justify-content-between mb-1" style="font-size:.8rem; color:#666;">
-    <span>Marks entered</span>
-    <span class="fw-semibold text-primary">{{ $enteredCount }}/{{ $totalStudents }}</span>
-</div>
+                        <div class="d-flex justify-content-between mb-1" style="font-size:.8rem; color:#666;">
+                            <span>Marks entered</span>
+                            <span class="fw-semibold text-primary">{{ $enteredCount }}/{{ $totalStudents }}</span>
+                        </div>
 
-<div class="progress-track">
-    <div class="progress-fill" style="width:{{ $pct }}%"></div>
-</div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width:{{ $pct }}%"></div>
+                        </div>
 
                         <div class="mt-3 d-flex justify-content-between align-items-center">
 

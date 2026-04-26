@@ -67,7 +67,7 @@ class ClassandSubjectController extends Controller
             $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
             $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
             $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
-
+            dd($IDAAD_ARABIC_LANGUAGE);
             return view('Class.create-class', compact(
                 'SecondaryClasses',
                 'classTypeMap',
@@ -81,6 +81,30 @@ class ClassandSubjectController extends Controller
                 'THANAWI_JURISPRUDENCE_AND_ITS_SOURCES',
                 'THANAWI_PROPHETIC_TRADITIONS',
                 'THANAWI_QURAN_ITS_SCIENCES',
+            ));
+        } elseif ($schoolProduct === 'Primary Theology') {
+            $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+
+            foreach ($PrimaryClasses as $class) {
+                $classTypeMap[$class->md_id] = 'Primary Theology';
+            }
+
+            return view('Class.create-class', compact(
+                'PrimaryClasses',
+                'classTypeMap',
+                'primaryTheology'
+            ));
+        } elseif ($schoolProduct === 'Primary Secular') {
+            $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+
+            foreach ($PrimaryClasses as $class) {
+                $classTypeMap[$class->md_id] = 'Primary Secular';
+            }
+
+            return view('Class.create-class', compact(
+                'PrimaryClasses',
+                'classTypeMap',
+                'primarySecularSubjects'
             ));
         } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
             $PrimaryTheologyClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));

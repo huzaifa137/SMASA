@@ -47,17 +47,6 @@ class ExaminationController extends Controller
         return view('Examination.index', compact('examinations'));
     }
 
-    public function demo()
-    {
-        $schoolId = Session('LoggedSchool');
-        $examinations = Examination::where('school_id', $schoolId)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->each(fn($e) => $e->syncStatus());
-
-        return view('Examination.demo', compact('examinations'));
-    }
-
     // ─── Create form ──────────────────────────────────────────────────────────
 
     public function create()
@@ -65,8 +54,6 @@ class ExaminationController extends Controller
         $examCode = $this->generateExamCode();
         $schoolId = Session('LoggedSchool');
 
-        // dd(Helper::active_year());
-        // Fetch all class-stream assignments for this school
         $classStreams = DB::table('class_stream_assignments')
             ->where('school_id', $schoolId)
             ->get();
@@ -162,12 +149,6 @@ class ExaminationController extends Controller
         return response()->json(['success' => true, 'message' => 'Examination status updated.']);
     }
 
-    // ─── Marks entry: list subjects for teacher ───────────────────────────────
-
-    /**
-     * Show the subjects a teacher is responsible for in a given examination.
-     * The teacher sees only subjects they are assigned to (subject_teacher_1 or 2).
-     */
     public function marksEntry($examId)
     {
 
@@ -291,11 +272,10 @@ class ExaminationController extends Controller
      */
     public function saveMarks(Request $request, $examId)
     {
-
         $request->validate([
             'marks' => 'required|array',
             'marks.*.student_id' => 'required|integer',
-            'marks.*.marks' => 'nullable|numeric|min:0',
+            'marks.*.marks' => 'nullable|string', // Changed from numeric to string to allow empty values
             'marks.*.comment' => 'nullable|string|max:255',
             'subject_id' => 'required|integer',
             'class_id' => 'required|integer',
@@ -327,7 +307,8 @@ class ExaminationController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->marks as $entry) {
-                $marksObtained = $entry['marks'] !== '' ? (float) $entry['marks'] : null;
+                // Only process if marks value is provided (not empty string)
+                $marksObtained = $entry['marks'] !== '' && $entry['marks'] !== null ? (float) $entry['marks'] : null;
                 $grade = null;
                 $remark = null;
                 $points = null;
@@ -382,12 +363,57 @@ class ExaminationController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->firstOrFail();
 
-        if ($exam->status !== 'draft') {
-            return response()->json(['success' => false, 'message' => 'Only draft examinations can be deleted.'], 403);
+        // Optional: Restrict deletion based on status ie ['draft','closed']
+        if (!in_array($exam->status, ['draft'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only draft or closed examinations can be deleted. Active or ongoing exams cannot be deleted.'
+            ], 403);
         }
 
-        $exam->delete();
-        return response()->json(['success' => true, 'message' => 'Examination deleted.']);
+        DB::beginTransaction();
+        try {
+
+
+            $marksCount = ExaminationMark::where('examination_id', $id)->count();
+            $classesCount = ExaminationClass::where('examination_id', $id)->count();
+            $deletedMarks = ExaminationMark::where('examination_id', $id)->delete();
+            $deletedClasses = ExaminationClass::where('examination_id', $id)->delete();
+            $exam->delete();
+
+            DB::commit();
+
+            $message = "Examination '{$exam->exam_name}' has been permanently deleted.";
+            if ($marksCount > 0) {
+                $message .= " Removed {$marksCount} student mark record(s).";
+            }
+            if ($classesCount > 0) {
+                $message .= " Removed {$classesCount} class assignment(s).";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'deleted_records' => [
+                    'marks' => $deletedMarks,
+                    'classes' => $deletedClasses,
+                    'exam' => 1
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to delete examination: ' . $e->getMessage(), [
+                'exam_id' => $id,
+                'exam_code' => $exam->exam_code ?? 'unknown',
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete examination: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getDetails($id)
@@ -409,46 +435,46 @@ class ExaminationController extends Controller
         ]);
     }
 
-public function passslipIndex($examId)
-{
-    $schoolId = Session('LoggedSchool');
+    public function passslipIndex($examId)
+    {
+        $schoolId = Session('LoggedSchool');
 
-    $exam = Examination::where('id', $examId)
-        ->where('school_id', $schoolId)
-        ->firstOrFail();
-
-    // Only allow for closed / results_released
-    if (!in_array($exam->status, ['closed', 'results_released'])) {
-        return redirect()->route('examination.index')
-            ->with('error', 'Pass slips are only available after the examination is closed.');
-    }
-
-    // All class-stream combos in this exam
-    $examClasses = DB::table('examination_classes')
-        ->where('examination_id', $examId)
-        ->where('school_id', $schoolId)
-        ->get();
-
-    // Get all students for these classes
-    $allStudents = collect();
-    foreach ($examClasses as $ec) {
-        $students = DB::table('students')
+        $exam = Examination::where('id', $examId)
             ->where('school_id', $schoolId)
-            ->where('senior', $ec->class_id)
-            ->where('stream', $ec->stream_id)
-            ->orderBy('lastname')
-            ->get()
-            ->map(function ($s) use ($ec) {
-                $s->class_id = $ec->class_id;
-                $s->stream_id = $ec->stream_id;
-                return $s;
-            });
-        $allStudents = $allStudents->merge($students);
-    }
-    $allStudents = $allStudents->sortBy('lastname');
+            ->firstOrFail();
 
-    return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
-}
+        // Only allow for closed / results_released
+        if (!in_array($exam->status, ['closed', 'results_released'])) {
+            return redirect()->route('examination.index')
+                ->with('error', 'Pass slips are only available after the examination is closed.');
+        }
+
+        // All class-stream combos in this exam
+        $examClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->get();
+
+        // Get all students for these classes
+        $allStudents = collect();
+        foreach ($examClasses as $ec) {
+            $students = DB::table('students')
+                ->where('school_id', $schoolId)
+                ->where('senior', $ec->class_id)
+                ->where('stream', $ec->stream_id)
+                ->orderBy('lastname')
+                ->get()
+                ->map(function ($s) use ($ec) {
+                    $s->class_id = $ec->class_id;
+                    $s->stream_id = $ec->stream_id;
+                    return $s;
+                });
+            $allStudents = $allStudents->merge($students);
+        }
+        $allStudents = $allStudents->sortBy('lastname');
+
+        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
+    }
 
     /**
      * Single student passslip (printable view).
@@ -700,4 +726,408 @@ public function passslipIndex($examId)
             'previousSubjectMarks' => $previousSubjectMarks,
         ];
     }
+
+
+    public function dashboard(Request $request)
+    {
+        // dd(count(Helper::getHelperMarksEntryProgress()));
+        $schoolId = Session('LoggedSchool');
+        // Get all examinations for the school
+        $examinations = Examination::where('school_id', $schoolId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Statistics
+        $stats = [
+            'total' => $examinations->count(),
+            'active' => $examinations->where('status', 'active')->count(),
+            'draft' => $examinations->where('status', 'draft')->count(),
+            'marks_entry' => $examinations->where('status', 'marks_entry')->count(),
+            'closed' => $examinations->where('status', 'closed')->count(),
+            'results_released' => $examinations->where('status', 'results_released')->count(),
+        ];
+
+        // Calculate completion rate
+        $completionRate = $stats['total'] > 0
+            ? round(($stats['results_released'] / $stats['total']) * 100)
+            : 0;
+
+        // Upcoming examinations
+        $upcomingExams = $examinations->filter(function ($exam) {
+            return in_array($exam->status, ['draft', 'active']) &&
+                Carbon::parse($exam->start_date)->isFuture();
+        })->take(5);
+
+        // Recent activities
+        $recentActivities = $examinations->sortByDesc('updated_at')->take(10);
+
+        // Timeline data (sorted by start date)
+        $timelineExams = $examinations->sortBy('start_date')->take(10);
+
+        $pendingMarksProgress = $this->getMarksEntryProgress();
+
+        // Calendar data
+        $calendarExams = $examinations->map(function ($exam) {
+            return [
+                'id' => $exam->id,
+                'name' => $exam->exam_name,
+                'start_date' => Carbon::parse($exam->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($exam->end_date)->format('Y-m-d'),
+                'status' => $exam->status,
+                'exam_code' => $exam->exam_code,
+            ];
+        });
+
+        return view('Examination.dashboard', compact(
+            'examinations',
+            'stats',
+            'completionRate',
+            'upcomingExams',
+            'recentActivities',
+            'timelineExams',
+            'calendarExams',
+            'pendingMarksProgress' // Add this
+        ));
+    }
+
+    public function getMarksEntryProgress()
+    {
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        // Get all examinations with marks_entry status
+        $examsWithMarksEntry = Examination::where('school_id', $schoolId)
+            ->where('status', 'marks_entry')
+            ->orderBy('marks_entry_deadline', 'asc')
+            ->get();
+
+        $examProgress = [];
+
+        foreach ($examsWithMarksEntry as $exam) {
+            // Get all class-subject combinations for this exam where teacher is assigned
+            $examClasses = ExaminationClass::where('examination_id', $exam->id)
+                ->where('school_id', $schoolId)
+                ->get();
+
+            // Get subjects assigned to this teacher for these classes
+            $teacherSubjects = DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->where(function ($q) use ($teacherId) {
+                    $q->where('subject_teacher_1', $teacherId)
+                        ->orWhere('subject_teacher_2', $teacherId);
+                })
+                ->whereIn('class_id', $examClasses->pluck('class_id'))
+                ->get();
+
+            $totalSubjects = $teacherSubjects->count();
+            $submittedSubjects = 0;
+            $subjectProgress = [];
+            $hasPendingMarks = false;
+
+            foreach ($teacherSubjects as $subject) {
+                // Count students in this class-stream
+                $studentCount = DB::table('students')
+                    ->where('school_id', $schoolId)
+                    ->where('senior', $subject->class_id)
+                    ->where('stream', $subject->stream_id)
+                    ->count();
+
+                // Count marks entered for this subject
+                $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
+                    ->where('subject_id', $subject->subject_id)
+                    ->where('class_id', $subject->class_id)
+                    ->where('stream_id', $subject->stream_id)
+                    ->where('school_id', $schoolId)
+                    ->whereNotNull('marks_obtained')
+                    ->count();
+
+                $progressPercent = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
+
+                if ($progressPercent == 100) {
+                    $submittedSubjects++;
+                } else {
+                    $hasPendingMarks = true;
+                }
+
+                $subjectProgress[] = (object) [
+                    'subject_id' => $subject->subject_id,
+                    'subject_name' => Helper::recordMdname($subject->subject_id),
+                    'class_name' => Helper::recordMdname($subject->class_id),
+                    'stream' => $subject->stream_id,
+                    'total_students' => $studentCount,
+                    'entered_marks' => $enteredMarks,
+                    'progress' => $progressPercent,
+                    'class_subject_id' => $subject->id
+                ];
+            }
+
+            // Calculate overall progress for the exam
+            $overallProgress = $totalSubjects > 0 ? round(($submittedSubjects / $totalSubjects) * 100) : 0;
+
+            // Calculate deadline status
+            $deadline = \Carbon\Carbon::parse($exam->marks_entry_deadline);
+            $daysLeft = now()->diffInDays($deadline, false);
+            $isDeadlinePassed = $daysLeft < 0;
+
+            // Only include exams that:
+            // 1. Haven't reached deadline yet, OR
+            // 2. Have reached deadline but still have pending marks
+            if (!$isDeadlinePassed || ($isDeadlinePassed && $hasPendingMarks)) {
+                $urgency = $daysLeft <= 2 ? 'urgent' : ($daysLeft <= 5 ? 'warning' : 'normal');
+
+                $examProgress[] = (object) [
+                    'exam' => $exam,
+                    'total_subjects' => $totalSubjects,
+                    'submitted_subjects' => $submittedSubjects,
+                    'overall_progress' => $overallProgress,
+                    'subject_progress' => $subjectProgress,
+                    'days_left' => max(0, $daysLeft),
+                    'is_deadline_passed' => $isDeadlinePassed,
+                    'urgency' => $urgency,
+                    'deadline' => $deadline,
+                    'has_pending_marks' => $hasPendingMarks
+                ];
+            }
+        }
+
+        return $examProgress;
+    }
+
+    public function marksEntryPortal(Request $request)
+    {
+        $schoolId = Session('LoggedSchool');
+        // Get all examinations for the school
+        $examinations = Examination::where('school_id', $schoolId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Statistics
+        $stats = [
+            'total' => $examinations->count(),
+            'active' => $examinations->where('status', 'active')->count(),
+            'draft' => $examinations->where('status', 'draft')->count(),
+            'marks_entry' => $examinations->where('status', 'marks_entry')->count(),
+            'closed' => $examinations->where('status', 'closed')->count(),
+            'results_released' => $examinations->where('status', 'results_released')->count(),
+        ];
+
+        // Calculate completion rate
+        $completionRate = $stats['total'] > 0
+            ? round(($stats['results_released'] / $stats['total']) * 100)
+            : 0;
+
+        // Upcoming examinations
+        $upcomingExams = $examinations->filter(function ($exam) {
+            return in_array($exam->status, ['draft', 'active']) &&
+                Carbon::parse($exam->start_date)->isFuture();
+        })->take(5);
+
+        // Recent activities
+        $recentActivities = $examinations->sortByDesc('updated_at')->take(10);
+
+        // Timeline data (sorted by start date)
+        $timelineExams = $examinations->sortBy('start_date')->take(10);
+
+        $pendingMarksProgress = $this->getMarksEntryProgress();
+
+        // Calendar data
+        $calendarExams = $examinations->map(function ($exam) {
+            return [
+                'id' => $exam->id,
+                'name' => $exam->exam_name,
+                'start_date' => Carbon::parse($exam->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($exam->end_date)->format('Y-m-d'),
+                'status' => $exam->status,
+                'exam_code' => $exam->exam_code,
+            ];
+        });
+
+        return view('Examination.marks-entry-portal', compact(
+            'examinations',
+            'stats',
+            'completionRate',
+            'upcomingExams',
+            'recentActivities',
+            'timelineExams',
+            'calendarExams',
+            'pendingMarksProgress' // Add this
+        ));
+    }
+    public function examinationDetails($id)
+    {
+        $examination = Examination::findOrFail($id);
+
+        $daysUntilDeadline = Carbon::now()->diffInDays(Carbon::parse($examination->marks_entry_deadline), false);
+
+        $statusLabels = [
+            'draft' => 'Draft',
+            'active' => 'Active',
+            'marks_entry' => 'Marks Entry',
+            'closed' => 'Closed',
+            'results_released' => 'Results Released'
+        ];
+
+        return response()->json([
+            'id' => $examination->id,
+            'exam_code' => $examination->exam_code,
+            'exam_name' => $examination->exam_name,
+            'exam_type' => $examination->exam_type,
+            'term' => $examination->term,
+            'academic_year' => $examination->academic_year,
+            'start_date' => Carbon::parse($examination->start_date)->format('M d, Y'),
+            'end_date' => Carbon::parse($examination->end_date)->format('M d, Y'),
+            'marks_entry_deadline' => Carbon::parse($examination->marks_entry_deadline)->format('M d, Y'),
+            'description' => $examination->description,
+            'total_marks' => $examination->total_marks,
+            'pass_mark' => $examination->pass_mark,
+            'status' => $examination->status,
+            'status_label' => $statusLabels[$examination->status],
+            'days_until_deadline' => $daysUntilDeadline,
+            'created_at' => Carbon::parse($examination->created_at)->format('M d, Y H:i'),
+        ]);
+    }
+
+    public function updateExaminationStatus(Request $request, $id)
+    {
+        $examination = Examination::findOrFail($id);
+        $newStatus = $request->status;
+
+        // Validate status transition
+        $validTransitions = [
+            'draft' => ['active'],
+            'active' => ['marks_entry', 'closed'],
+            'marks_entry' => ['closed'],
+            'closed' => ['results_released'],
+            'results_released' => []
+        ];
+
+        if (!in_array($newStatus, $validTransitions[$examination->status])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid status transition'
+            ], 400);
+        }
+
+        $examination->status = $newStatus;
+
+        if ($newStatus === 'results_released') {
+            $examination->published_at = now();
+        }
+
+        $examination->save();
+
+        $messages = [
+            'active' => 'Examination has been activated successfully',
+            'marks_entry' => 'Marks entry phase has been opened',
+            'closed' => 'Examination has been closed',
+            'results_released' => 'Results have been released successfully'
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => $messages[$newStatus] ?? 'Status updated successfully'
+        ]);
+    }
+
+    public function destroyExamination($id)
+    {
+        $examination = Examination::findOrFail($id);
+
+        // Only allow deletion of draft examinations
+        if ($examination->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only draft examinations can be deleted'
+            ], 403);
+        }
+
+        $examination->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Examination deleted successfully'
+        ]);
+    }
+
+    public function editDetails($id)
+    {
+        $examination = Examination::findOrFail($id);
+
+        return response()->json([
+            'id' => $examination->id,
+            'exam_name' => $examination->exam_name,
+            'exam_code' => $examination->exam_code,
+            'start_date' => Carbon::parse($examination->start_date)->format('Y-m-d'),
+            'end_date' => Carbon::parse($examination->end_date)->format('Y-m-d'),
+            'marks_entry_deadline' => Carbon::parse($examination->marks_entry_deadline)->format('Y-m-d'),
+            'total_marks' => $examination->total_marks,
+            'pass_mark' => $examination->pass_mark,
+            'description' => $examination->description,
+            'status' => $examination->status,
+            'status_label' => ucfirst(str_replace('_', ' ', $examination->status)),
+        ]);
+    }
+
+    public function updateDetails(Request $request, $id)
+    {
+        $examination = Examination::findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'marks_entry_deadline' => 'nullable|date|after_or_equal:end_date',
+
+            'total_marks' => 'nullable|integer|min:1',
+            'pass_mark' => 'nullable|integer|min:1',
+
+            'description' => 'nullable|string',
+
+            // ✅ NEW: status validation (VERY IMPORTANT)
+            'status' => 'required|in:draft,active,marks_entry,closed,results_released',
+        ]);
+
+        /**
+         * 🔥 BUSINESS RULE CHECKS (recommended)
+         */
+
+        // Pass mark cannot exceed total marks
+        if (
+            isset($validated['total_marks'], $validated['pass_mark']) &&
+            $validated['pass_mark'] > $validated['total_marks']
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pass mark cannot be greater than total marks.'
+            ], 422);
+        }
+
+        // Optional rule: results cannot be released if marks entry not completed
+        if ($validated['status'] === 'results_released') {
+            if ($examination->status === 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot release results for a draft examination.'
+                ], 422);
+            }
+        }
+
+        /**
+         * ✅ UPDATE
+         */
+        $examination->update($validated);
+
+        /**
+         * Optional: timestamp for results
+         */
+        if ($validated['status'] === 'results_released' && !$examination->published_at) {
+            $examination->published_at = now();
+            $examination->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Examination details updated successfully!'
+        ]);
+    }
+
 }

@@ -6,12 +6,75 @@ use App\Models\AcademicYear;
 use App\Models\Student;
 use App\Models\StudentBasic;
 use App\Models\TermDate;
+use App\Models\Examination;
+use App\Models\ExaminationClass;
+use App\Models\ExaminationMark;
 use App\Models\User;
 use DB;
 use Session;
 
 class Helper extends Controller
 {
+
+    public static function maleClassStudents($classId)
+    {
+        $maleClassStudents = DB::table('students')
+            ->where('senior', $classId)
+            ->where('gender', 'Male')
+            ->count();
+
+        return $maleClassStudents;
+    }
+
+    public static function femaleClassStudents($classId)
+    {
+        $femaleClassStudents = DB::table('students')
+            ->where('senior', $classId)
+            ->where('gender', 'Female')
+            ->count();
+
+        return $femaleClassStudents;
+    }
+
+    public static function totalClassStudent($classId)
+    {
+
+        $totalClassStudent = self::femaleClassStudents($classId) + self::maleClassStudents($classId);
+
+        return $totalClassStudent;
+    }
+
+
+    public static function maleClassStreamStudents($classId, $stream_id)
+    {
+        $maleClassStudents = DB::table('students')
+            ->where('senior', $classId)
+            ->where('gender', 'Male')
+            ->where('stream', $stream_id)
+            ->count();
+
+        return $maleClassStudents;
+    }
+
+    public static function femaleClassStreamStudents($classId, $stream_id)
+    {
+        $femaleClassStudents = DB::table('students')
+            ->where('senior', $classId)
+            ->where('gender', 'Female')
+            ->where('stream', $stream_id)
+            ->count();
+
+        return $femaleClassStudents;
+    }
+
+    public static function totalClassStreamStudent($classId, $stream_id)
+    {
+
+        $totalClassStreamStudents = self::maleClassStreamStudents($classId,$stream_id) + self::femaleClassStreamStudents($classId,$stream_id);
+
+        return $totalClassStreamStudents;
+    }
+
     public static function schoolName($school_id)
     {
         $schoolName = DB::table('houses')
@@ -533,5 +596,108 @@ class Helper extends Controller
             ->value('school_status');
 
         return $schoolStatus;
+    }
+
+    public static function getHelperMarksEntryProgress()
+    {
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        // Get all examinations with marks_entry status
+        $examsWithMarksEntry = Examination::where('school_id', $schoolId)
+            ->where('status', 'marks_entry')
+            ->orderBy('marks_entry_deadline', 'asc')
+            ->get();
+
+        $examProgress = [];
+
+        foreach ($examsWithMarksEntry as $exam) {
+            // Get all class-subject combinations for this exam where teacher is assigned
+            $examClasses = ExaminationClass::where('examination_id', $exam->id)
+                ->where('school_id', $schoolId)
+                ->get();
+
+            // Get subjects assigned to this teacher for these classes
+            $teacherSubjects = DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->where(function ($q) use ($teacherId) {
+                    $q->where('subject_teacher_1', $teacherId)
+                        ->orWhere('subject_teacher_2', $teacherId);
+                })
+                ->whereIn('class_id', $examClasses->pluck('class_id'))
+                ->get();
+
+            $totalSubjects = $teacherSubjects->count();
+            $submittedSubjects = 0;
+            $subjectProgress = [];
+            $hasPendingMarks = false;
+
+            foreach ($teacherSubjects as $subject) {
+                // Count students in this class-stream
+                $studentCount = DB::table('students')
+                    ->where('school_id', $schoolId)
+                    ->where('senior', $subject->class_id)
+                    ->where('stream', $subject->stream_id)
+                    ->count();
+
+                // Count marks entered for this subject
+                $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
+                    ->where('subject_id', $subject->subject_id)
+                    ->where('class_id', $subject->class_id)
+                    ->where('stream_id', $subject->stream_id)
+                    ->where('school_id', $schoolId)
+                    ->whereNotNull('marks_obtained')
+                    ->count();
+
+                $progressPercent = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
+
+                if ($progressPercent == 100) {
+                    $submittedSubjects++;
+                } else {
+                    $hasPendingMarks = true;
+                }
+
+                $subjectProgress[] = (object) [
+                    'subject_id' => $subject->subject_id,
+                    'subject_name' => Helper::recordMdname($subject->subject_id),
+                    'class_name' => Helper::recordMdname($subject->class_id),
+                    'stream' => $subject->stream_id,
+                    'total_students' => $studentCount,
+                    'entered_marks' => $enteredMarks,
+                    'progress' => $progressPercent,
+                    'class_subject_id' => $subject->id
+                ];
+            }
+
+            // Calculate overall progress for the exam
+            $overallProgress = $totalSubjects > 0 ? round(($submittedSubjects / $totalSubjects) * 100) : 0;
+
+            // Calculate deadline status
+            $deadline = \Carbon\Carbon::parse($exam->marks_entry_deadline);
+            $daysLeft = now()->diffInDays($deadline, false);
+            $isDeadlinePassed = $daysLeft < 0;
+
+            // Only include exams that:
+            // 1. Haven't reached deadline yet, OR
+            // 2. Have reached deadline but still have pending marks
+            if (!$isDeadlinePassed || ($isDeadlinePassed && $hasPendingMarks)) {
+                $urgency = $daysLeft <= 2 ? 'urgent' : ($daysLeft <= 5 ? 'warning' : 'normal');
+
+                $examProgress[] = (object) [
+                    'exam' => $exam,
+                    'total_subjects' => $totalSubjects,
+                    'submitted_subjects' => $submittedSubjects,
+                    'overall_progress' => $overallProgress,
+                    'subject_progress' => $subjectProgress,
+                    'days_left' => max(0, $daysLeft),
+                    'is_deadline_passed' => $isDeadlinePassed,
+                    'urgency' => $urgency,
+                    'deadline' => $deadline,
+                    'has_pending_marks' => $hasPendingMarks
+                ];
+            }
+        }
+
+        return $examProgress;
     }
 }
