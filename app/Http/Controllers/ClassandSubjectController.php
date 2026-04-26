@@ -67,7 +67,7 @@ class ClassandSubjectController extends Controller
             $THANAWI_JURISPRUDENCE_AND_ITS_SOURCES = Helper::MasterRecords(config('constants.options.THANAWI_JURISPRUDENCE_AND_ITS_SOURCES'));
             $THANAWI_PROPHETIC_TRADITIONS = Helper::MasterRecords(config('constants.options.THANAWI_PROPHETIC_TRADITIONS'));
             $THANAWI_QURAN_ITS_SCIENCES = Helper::MasterRecords(config('constants.options.THANAWI_QURAN_ITS_SCIENCES'));
-            dd($IDAAD_ARABIC_LANGUAGE);
+
             return view('Class.create-class', compact(
                 'SecondaryClasses',
                 'classTypeMap',
