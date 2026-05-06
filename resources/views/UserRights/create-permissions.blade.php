@@ -22,7 +22,7 @@ use App\Http\Controllers\Helper;
                                         <label class="form-label">User Access Configuration</label>
                                         <?php
     echo Helper::DropMasterData(config('constants.options.URPF'), '', 'permission_feature', 1);
-                                                                                                ?>
+                                                                                                    ?>
                                     </div>
                                 </div>
 

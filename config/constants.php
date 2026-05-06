@@ -42,7 +42,7 @@ return [
         'O_LEVEL' => 16,
         'A_LEVEL' => 17,
         'PRIMARY_LEVEL' => 18,
-        'URPF' => 19,
+        'URPF' => 43,
         'PRIMARY_THEOLOGY' => 33,
         'PRIMARY_THEOLOGY_CLASSES' => 34,
         'PRIMARY_SECULAR_CLASSES' => 42,
