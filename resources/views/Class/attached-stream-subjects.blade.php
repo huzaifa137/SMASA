@@ -66,12 +66,14 @@ $controller = new Controller();
                                                     @endforeach
                                                 </select>
 
-                                                @if ($class->subject_teacher_1)
-                                                &nbsp;
-                                                    <button class="btn btn-md btn-danger btn-remove-subject-teacher-1"
-                                                        data-class-id="{{ $class->id }}" title="Remove Subject Teacher 1">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    @if ($class->subject_teacher_1)
+                                                    &nbsp;
+                                                        <button class="btn btn-md btn-danger btn-remove-subject-teacher-1"
+                                                            data-class-id="{{ $class->id }}" title="Remove Subject Teacher 1">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>
@@ -91,20 +93,17 @@ $controller = new Controller();
                                                     @endforeach
                                                 </select>
 
-                                                @if ($class->subject_teacher_2)
-                                                &nbsp;
-                                                    <button class="btn btn-md btn-danger btn-remove-subject-teacher-2"
-                                                        data-class-id="{{ $class->id }}" title="Remove Subject Teacher 1">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    @if ($class->subject_teacher_2)
+                                                    &nbsp;
+                                                        <button class="btn btn-md btn-danger btn-remove-subject-teacher-2"
+                                                            data-class-id="{{ $class->id }}" title="Remove Subject Teacher 1">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>
-                                        <!-- <td style="text-align: center;">
-                                            <a href="#" class="btn btn-sm btn-info">
-                                                <i class="fas fa-users me-2"></i> Students Per Optional Subject
-                                            </a>
-                                        </td> -->
                                     </tr>
                                 @empty
                                         <tr>
@@ -164,12 +163,23 @@ $controller = new Controller();
                             Swal.fire('Error', response.message, 'error');
                         }
                     },
-                    // error: function () {
-                    //     Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                   error: function(xhr) {
+    if (xhr.status === 422) {
+        let errors = xhr.responseJSON.errors;
+        let message = Object.values(errors).flat().join("\n");
+
+        Swal.fire('Validation Error', message, 'error');
+    } 
+    else if (xhr.status === 403) {
+        Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+    } 
+    else {
+        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+    }
+}
+                    // error: function(data) {
+                    // $('body').html(data.responseText);
                     // }
-                    error: function(data) {
-                    $('body').html(data.responseText);
-                    }
                 });
             }
         });
@@ -256,9 +266,20 @@ $controller = new Controller();
                             Swal.fire('Error', response.message, 'error');
                         }
                     },
-                    // error: function () {
-                    //     Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
-                    // }
+                   error: function(xhr) {
+    if (xhr.status === 422) {
+        let errors = xhr.responseJSON.errors;
+        let message = Object.values(errors).flat().join("\n");
+
+        Swal.fire('Validation Error', message, 'error');
+    } 
+    else if (xhr.status === 403) {
+        Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+    } 
+    else {
+        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+    }
+}
                     error: function(data) {
                     $('body').html(data.responseText);
                     }
@@ -300,12 +321,26 @@ $controller = new Controller();
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
+                         error: function(xhr) {
+    if (xhr.status === 422) {
+        let errors = xhr.responseJSON.errors;
+        let message = Object.values(errors).flat().join("\n");
+
+        Swal.fire('Validation Error', message, 'error');
+    } 
+    else if (xhr.status === 403) {
+        Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+    } 
+    else {
+        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+    }
+}
                         // error: function () {
                         //     Swal.fire('Oops', 'Something went wrong.', 'error');
                         // }
-                        error: function(data) {
-                    $('body').html(data.responseText);
-                    }
+                    //     error: function(data) {
+                    // $('body').html(data.responseText);
+                    // }
                     });
                 }
             });

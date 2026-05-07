@@ -943,3 +943,7 @@ INSERT INTO `master_datas` (`md_id`, `md_master_code_id`, `md_code`, `md_name`, 
 (216, 32, 'QS-014', 'Sources of Exegesis', 'أصول التفسير', '1772949571', '1', NULL, NULL, NULL, NULL, NULL, NULL),
 (217, 32, 'QS-015', 'Quran Recitation & Its Rules', 'التلاوة والتجويد', '1772949611', '1', NULL, NULL, NULL, NULL, NULL, NULL),
 (218, 32, 'QS-016', 'Quran Memorization & Exegesis', 'الحفظ والتفسير', '1772949658', '1', NULL, NULL, NULL, NULL, NULL, NULL);
+
+
+
+

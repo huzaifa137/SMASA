@@ -58,13 +58,13 @@ class SchoolController extends Controller
         return view('School.create-school', compact('registrationCode'));
     }
 
-         private function generateSchoolCode()
+    private function generateSchoolCode()
     {
         $year = date('Y');
 
         // Get all schools created this year and only with proper 'SCH-' codes
         $lastSchool = School::whereYear('created_at', $year)
-            ->where('registration_code', 'like', 'SCH-'.$year.'-%')
+            ->where('registration_code', 'like', 'SCH-' . $year . '-%')
             ->orderBy('id', 'desc')
             ->first();
 
@@ -84,7 +84,7 @@ class SchoolController extends Controller
         return "SCH-{$year}-{$formattedNumber}";
     }
 
-    
+
     public function createNewSchool(Request $request)
     {
         $validated = $request->validate([
@@ -174,8 +174,15 @@ class SchoolController extends Controller
 
     public function termDates($school_Id, Request $request)
     {
-        $school_id = $school_Id;
 
+        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
+
+        $school_id = $school_Id;
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
         $activeYear = AcademicYear::where('is_active', 1)->first();
@@ -193,7 +200,7 @@ class SchoolController extends Controller
             'selectedYearId'
         ));
     }
-   
+
     public function editSchool($id)
     {
         $HouseID = House::where('ID', $id)->value('Number');
@@ -415,7 +422,7 @@ class SchoolController extends Controller
                         $fail('Cannot create academic year for past years. Year must be current or future.');
                     }
                     if ($value > $nextYear) {
-                        $fail('Can only create academic year for '.$nextYear.' at maximum.');
+                        $fail('Can only create academic year for ' . $nextYear . ' at maximum.');
                     }
                 },
             ],
@@ -425,8 +432,8 @@ class SchoolController extends Controller
                 function ($attribute, $value, $fail) use ($request) {
                     $year = $request->name;
                     $startDate = date('Y-m-d', strtotime($value));
-                    $expectedStart = $year.'-01-01';
-                    $expectedEnd = $year.'-12-31';
+                    $expectedStart = $year . '-01-01';
+                    $expectedEnd = $year . '-12-31';
 
                     if ($startDate < $expectedStart || $startDate > $expectedEnd) {
                         $fail("Start date must be within the year {$year} (Jan 1 - Dec 31).");
@@ -440,8 +447,8 @@ class SchoolController extends Controller
                 function ($attribute, $value, $fail) use ($request) {
                     $year = $request->name;
                     $endDate = date('Y-m-d', strtotime($value));
-                    $expectedStart = $year.'-01-01';
-                    $expectedEnd = $year.'-12-31';
+                    $expectedStart = $year . '-01-01';
+                    $expectedEnd = $year . '-12-31';
 
                     if ($endDate < $expectedStart || $endDate > $expectedEnd) {
                         $fail("End date must be within the year {$year} (Jan 1 - Dec 31).");
@@ -453,8 +460,8 @@ class SchoolController extends Controller
 
         // Auto-set dates based on the year if not provided or override
         $year = $validated['name'];
-        $validated['start_date'] = $year.'-01-01';
-        $validated['end_date'] = $year.'-12-31';
+        $validated['start_date'] = $year . '-01-01';
+        $validated['end_date'] = $year . '-12-31';
 
         // Handle active status logic - only one active year at a time
         if ($validated['is_active'] == 1) {
@@ -465,7 +472,7 @@ class SchoolController extends Controller
         $academicYear = AcademicYear::create($validated);
 
         return response()->json([
-            'message' => 'Academic Year '.$year.' created successfully.',
+            'message' => 'Academic Year ' . $year . ' created successfully.',
             'data' => $academicYear,
         ], 201);
     }
@@ -489,7 +496,6 @@ class SchoolController extends Controller
 
     public function destroy($id)
     {
-        dd($id);
         $academicYear = AcademicYear::findOrFail($id);
 
         if ($academicYear->is_active) {
@@ -506,7 +512,7 @@ class SchoolController extends Controller
         $academicYear = AcademicYear::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:academic_years,name,'.$id,
+            'name' => 'required|string|max:255|unique:academic_years,name,' . $id,
             'is_active' => 'required|boolean',
         ]);
 
@@ -569,7 +575,7 @@ class SchoolController extends Controller
         $schoolId = $request->input('school_id');
         $school = School::find($schoolId);
         // dd($school);
-        if (! $school) {
+        if (!$school) {
             return response()->json([
                 'status' => false,
                 'message' => 'School not found.',
@@ -652,7 +658,7 @@ class SchoolController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred: '.$e->getMessage(),
+                'message' => 'An error occurred: ' . $e->getMessage(),
             ], 500);
         }
     }

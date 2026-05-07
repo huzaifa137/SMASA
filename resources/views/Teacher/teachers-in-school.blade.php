@@ -1,5 +1,5 @@
 <?php
-use App\Helpers\PermissionHelper;
+use App\Http\Controllers\Helper;
 use App\Http\Controllers\Controller;
 $controller = new Controller();
 ?>
@@ -11,21 +11,220 @@ $controller = new Controller();
     <link href="{{ URL::asset('assets/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
     <!--Daterangepicker css-->
     <link href="{{ URL::asset('assets/plugins/bootstrap-daterangepicker/daterangepicker.css') }}" rel="stylesheet" />
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .role-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .role-badge-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .role-badge-teacher {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .role-select {
+            min-width: 150px;
+            font-size: 13px;
+        }
+
+        .update-role-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .role-update-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .role-select-admin+.select2-container .select2-selection {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: #fff !important;
+            border: none !important;
+        }
+
+        .role-select-admin+.select2-container .select2-selection__rendered {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .role-select-teacher+.select2-container .select2-selection {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+            color: #fff !important;
+            border: none !important;
+        }
+
+        .role-select-teacher+.select2-container .select2-selection__rendered {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .role-select-default+.select2-container .select2-selection {
+            background: #f8f9fa !important;
+        }
+
+        .select2-container.role-select-admin .select2-selection--single {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: none !important;
+            color: #FFF !important;
+        }
+
+        .select2-container.role-select-teacher .select2-selection--single {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+            border: none !important;
+            color: #FFF !important;
+        }
+
+        .role-select+.select2-container .select2-selection {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .role-select-admin+.select2-container .select2-selection {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .role-select-admin+.select2-container .select2-selection__rendered {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .role-select-admin+.select2-container .select2-selection__arrow b {
+            border-top-color: #fff !important;
+        }
+
+        .role-select-teacher+.select2-container .select2-selection {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+        }
+
+        .role-select-teacher+.select2-container .select2-selection__rendered {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .role-select-teacher+.select2-container .select2-selection__arrow b {
+            border-top-color: #fff !important;
+        }
+
+        .role-select-default+.select2-container .select2-selection {
+            background: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+        }
+
+        .role-select-default+.select2-container .select2-selection__rendered {
+            color: #495057 !important;
+        }
+
+        .role-select-admin+.select2-container .select2-selection:hover,
+        .role-select-teacher+.select2-container .select2-selection:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .role-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .role-badge-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .role-badge-teacher {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(240, 147, 251, 0.3);
+        }
+
+        .role-badge-parent {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white !important;
+        }
+
+        .role-badge-student {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white !important;
+        }
+
+        .update-role-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .update-role-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .role-select+.select2-container {
+                min-width: 120px;
+            }
+
+            .role-badge {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+        }
+
+        /* FORCE WHITE TEXT ON SELECT2 */
+        .select2-container--default .select2-selection--single {
+            background: #5351e4 !important;
+            border: none !important;
+            height: 38px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #FFF !important;
+            line-height: 38px !important;
+            font-weight: 600;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-top-color: #FFF !important;
+        }
+    </style>
 @endsection
 
 @section('content')
     <!-- Student Dashboard -->
     <div class="side-app">
-
-        <!-- HTML -->
         <div class="row">
-
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title text-primary">Teachers</h3>
-                        <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary"
-                            style=";color:#FFF;">
+                        <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style=";color:#FFF;">
                             <span
                                 class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
                                 style="width: 20px; height: 20px; color:#5351e4;">
@@ -40,16 +239,19 @@ $controller = new Controller();
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th class="text-center">profile</th>
+                                        <th class="text-center">Profile</th>
                                         <th>Surname</th>
                                         <th>Firstname</th>
                                         <th>Phone Number</th>
+                                        <th>Role</th>
+                                        @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
                                         <th class="text-center">Action</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($teachers as $key => $teacher)
-                                        <tr data-id="{{ $teacher->id }}">
+                                        <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
                                             <td style="width:1px;">{{ $key + 1 }}</td>
                                             <td class="text-center">
                                                 <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
@@ -60,39 +262,72 @@ $controller = new Controller();
                                             <td>{{ $teacher->surname }}</td>
                                             <td>{{ $teacher->firstname }}</td>
                                             <td>{{ $teacher->phonenumber }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <select class="form-select form-control role-select text-white"
+                                                        data-teacher-id="{{ $teacher->id }}"
+                                                        style="width:220px; background:#5351e4; color:#FFF;">
+
+                                                        <option value="" style="color:#000;">Select Role</option>
+
+                                                        @foreach($schoolRoles as $role)
+                                                            <option value="{{ $role->id }}" {{ $teacher->teacher_role == $role->id ? 'selected' : '' }}>
+                                                                {{ $role->name }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+
+                                                    <button class="btn btn-sm btn-primary update-role-btn ms-2"
+                                                        data-teacher-id="{{ $teacher->id }}">
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+
+                                                    <div class="role-update-spinner" id="spinner-{{ $teacher->id }}"
+                                                        style="display:none;">
+                                                        <div class="spinner-border spinner-border-sm text-primary"
+                                                            role="status">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-info btn-view-teacher" title="View"
+                                                <!-- <button class="btn btn-sm btn-info btn-view-teacher" title="View"
                                                     data-id="{{ $teacher->id }}">
                                                     <i class="fas fa-eye"></i>
-                                                </button>
+                                                </button> -->
 
-                                                <button class="btn btn-sm btn-warning btn-edit-teacher" title="Edit"
-                                                    data-id="{{ $teacher->id }}">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
+                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    <button class="btn btn-sm btn-warning btn-edit-teacher" title="Edit"
+                                                        data-id="{{ $teacher->id }}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
 
-                                                <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
-                                                    data-id="{{ $teacher->id }}">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
+                                                    <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
+                                                        data-id="{{ $teacher->id }}">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                @endif
                                             </td>
                                         </tr>
-                                   @empty
-    <tr>
-        <td colspan="6" class="text-center py-5">
-            <div class="text-center">
-                <div class="mb-3">
-                    <i class="fas fa-users-slash fa-4x text-muted"></i>
-                </div>
-                <h5 class="text-muted">No Teachers Found</h5>
-                <p class="text-muted mb-3">Start by adding your first teacher to the school</p>
-                <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary rounded-pill">
-                    <i class="fas fa-plus me-1"></i> Add Teacher
-                </a>
-            </div>
-        </td>
-    </tr>
-@endforelse
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5">
+                                                <div class="text-center">
+                                                    <div class="mb-3">
+                                                        <i class="fas fa-users-slash fa-4x text-muted"></i>
+                                                    </div>
+                                                    <h5 class="text-muted">No Teachers Found</h5>
+                                                    <p class="text-muted mb-3">Start by adding your first teacher to the school
+                                                    </p>
+                                                    <a href="{{ route('school.add-teachers') }}"
+                                                        class="btn btn-sm btn-primary rounded-pill">
+                                                        <i class="fas fa-plus me-1"></i> Add Teacher
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
 
@@ -102,22 +337,17 @@ $controller = new Controller();
                                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
                                     style="max-width: 95%; width: 1400px;" role="document">
                                     <div class="modal-content border-0 rounded-4">
-
-                                        <!-- Modal Header -->
                                         <div class="modal-header bg-gradient-primary text-white border-0 rounded-top-4"
                                             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                             <h5 class="modal-title fw-bold" id="teacherProfileModalLabel">
                                                 <i class="fas fa-chalkboard-teacher mr-2"></i>
                                                 Teacher Profile
                                             </h5>
-                                            <!-- Bootstrap 4 close button -->
                                             <button type="button" class="close text-white" data-dismiss="modal"
                                                 aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
-
-                                        <!-- Modal Body -->
                                         <div class="modal-body p-0">
                                             <div id="modalContent">
                                                 <div class="text-center py-5">
@@ -128,473 +358,479 @@ $controller = new Controller();
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <!-- Modal Footer with Close Button -->
                                         <div class="modal-footer border-0">
                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                                 <i class="fa fa-times me-2"></i> Close
                                             </button>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
     </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </div>
 
 
     <script>
-        $(document).on('click', '.btn-edit-teacher', function() {
+
+        // APPLY ROLE COLORS
+        // APPLY ROLE COLORS
+        function applyRoleColor(select) {
+            const value = select.val();
+            const container = select.next('.select2-container');
+
+            // Remove existing classes
+            container.removeClass('role-select-admin role-select-teacher role-select-default');
+
+            // School Administrators - Role ID 3
+            if (value == '3') {
+                container.addClass('role-select-admin');
+            }
+            // School Teachers - Role ID 4
+            else if (value == '4') {
+                container.addClass('role-select-teacher');
+            }
+            // Default for other roles
+            else {
+                container.addClass('role-select-default');
+            }
+        }
+
+
+        // SORT TABLE
+        function sortTeachersTable() {
+
+            const tbody = $('#teachersTable tbody');
+
+            const rows = tbody.find('tr').get();
+
+            rows.sort(function (a, b) {
+
+                const roleA = $(a).find('.role-select').val();
+
+                const roleB = $(b).find('.role-select').val();
+
+                // Push School Teachers (role 4) to bottom
+                if (roleA == '4' && roleB != '4') {
+
+                    return 1;
+
+                }
+
+                if (roleA != '4' && roleB == '4') {
+
+                    return -1;
+
+                }
+
+                return 0;
+
+            });
+
+            $.each(rows, function (index, row) {
+
+                tbody.append(row);
+
+            });
+
+        }
+
+
+        $(document).ready(function () {
+
+            setTimeout(function () {
+
+                $('.role-select').each(function () {
+
+                    const select = $(this);
+
+                    // Destroy duplicate select2
+                    if (select.hasClass('select2-hidden-accessible')) {
+
+                        select.select2('destroy');
+
+                    }
+
+                    // Initialize select2
+                    select.select2({
+
+                        width: '100%',
+
+                        dropdownAutoWidth: true,
+
+                        placeholder: 'Select Role',
+
+                        allowClear: false,
+
+                        minimumResultsForSearch: Infinity
+
+                    });
+
+                    // Apply role color
+                    applyRoleColor(select);
+
+                });
+
+                // SORT TABLE AFTER LOADING
+                sortTeachersTable();
+
+            }, 500);
+
+        });
+
+
+        // CHANGE ROLE COLOR LIVE
+        $(document).on('change', '.role-select', function () {
+
+            applyRoleColor($(this));
+
+        });
+
+
+        // UPDATE ROLE
+        $(document).on('click', '.update-role-btn', function () {
+
+            const teacherId = $(this).data('teacher-id');
+
+            const selectEl = $(`.role-select[data-teacher-id="${teacherId}"]`);
+
+            const roleId = selectEl.val();
+
+            const spinner = $(`#spinner-${teacherId}`);
+
+            const btn = $(this);
+
+            if (!roleId) {
+
+                Swal.fire({
+
+                    title: 'Error!',
+
+                    text: 'Please select a role first.',
+
+                    icon: 'error',
+
+                    timer: 2000,
+
+                    showConfirmButton: false
+
+                });
+
+                return;
+
+            }
+
+            btn.prop('disabled', true);
+
+            spinner.show();
+
+            $.ajax({
+
+                url: '/teacher/update-role/' + teacherId,
+
+                type: 'POST',
+
+                data: {
+
+                    role_id: roleId,
+
+                    _token: '{{ csrf_token() }}'
+
+                },
+
+                success: function (response) {
+
+                    Swal.fire({
+
+                        title: 'Success!',
+
+                        text: response.message || 'Teacher role updated successfully!',
+
+                        icon: 'success',
+
+                        timer: 1500,
+
+                        showConfirmButton: false
+
+                    });
+
+                    // Re-sort table
+                    sortTeachersTable();
+
+                    // Refresh page
+                    setTimeout(function () {
+
+                        location.reload();
+
+                    }, 1500);
+
+                },
+
+                error: function (xhr) {
+
+                    Swal.fire({
+
+                        title: 'Error!',
+
+                        text: xhr.responseJSON?.message || 'Error updating teacher role.',
+
+                        icon: 'error'
+
+                    });
+
+                },
+
+                complete: function () {
+
+                    btn.prop('disabled', false);
+
+                    spinner.hide();
+
+                }
+
+            });
+
+        });
+
+
+        // VIEW TEACHER PROFILE
+        $(document).on('click', '.btn-view-teacher', function () {
+
+            const teacherId = $(this).data('id');
+
+            $('#modalContent').html(`
+                                        <div class="d-flex justify-content-center py-5">
+                                            <div class="spinner-border text-primary"
+                                                role="status"
+                                                style="width: 3rem; height: 3rem;">
+                                            </div>
+                                        </div>
+                                    `);
+
+            $('#teacherProfileModal').modal('show');
+
+            $.ajax({
+
+                url: '/teacher/profile/' + teacherId + '/data',
+
+                type: 'GET',
+
+                success: function (response) {
+
+                    displayTeacherProfile(response);
+
+                },
+
+                error: function () {
+
+                    $('#modalContent').html(`
+                                                <div class="text-center py-5">
+                                                    <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+
+                                                    <p class="text-danger">
+                                                        Error loading teacher information.
+                                                    </p>
+                                                </div>
+                                            `);
+
+                }
+
+            });
+
+        });
+
+
+        // EDIT TEACHER
+        $(document).on('click', '.btn-edit-teacher', function () {
+
             const teacherId = $(this).data('id');
 
             Swal.fire({
+
                 title: 'Edit Teacher Profile?',
+
                 text: "Are you sure you want to edit this teacher's profile?",
+
                 icon: 'warning',
+
                 showCancelButton: true,
+
                 confirmButtonColor: '#3085d6',
+
                 cancelButtonColor: '#d33',
+
                 confirmButtonText: 'Yes, proceed'
+
             }).then((result) => {
+
                 if (result.isConfirmed) {
-                    window.location.href = `/update-teacher-profile/${teacherId}`
+
+                    window.location.href = `/update-teacher-profile/${teacherId}`;
+
                 }
+
             });
+
         });
-    </script>
 
-    <script>
-        $(document).ready(function() {
-            // View Teacher Profile - Opens modal
-            $(document).on('click', '.btn-view-teacher', function() {
-                const teacherId = $(this).data('id');
 
-                // Show loading state in modal
-                $('#modalContent').html(`
-                        <div class="d-flex justify-content-center py-5">
-                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                
-                            </div>
-                        </div>
-                    `);
+        // DELETE TEACHER
+        $(document).on('click', '.btn-delete-teacher', function () {
 
-                // Show modal
-                $('#teacherProfileModal').modal('show');
+            const teacherId = $(this).data('id');
 
-                // Fetch teacher data via AJAX
-                $.ajax({
-                    url: '/teacher/profile/' + teacherId + '/data', // Create this route
-                    type: 'GET',
-                    success: function(response) {
-                        displayTeacherProfile(response);
-                    },
-                    error: function(xhr) {
-                        $('#modalContent').html(`
-                    <div class="text-center py-5">
-                        <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-                        <p class="text-danger">Error loading teacher information. Please try again.</p>
-                        <button class="btn btn-primary mt-3" onclick="location.reload()">Refresh</button>
-                    </div>
-                `);
-                    }
-                });
+            const row = $(this).closest('tr');
+
+            Swal.fire({
+
+                title: 'Are you sure?',
+
+                text: "You won't be able to revert this!",
+
+                icon: 'warning',
+
+                showCancelButton: true,
+
+                confirmButtonColor: '#d33',
+
+                cancelButtonColor: '#3085d6',
+
+                confirmButtonText: 'Yes, delete it!'
+
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    $.ajax({
+
+                        url: '/teachers/' + teacherId,
+
+                        type: 'DELETE',
+
+                        headers: {
+
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+
+                        },
+
+                        success: function () {
+
+                            Swal.fire(
+                                'Deleted!',
+                                'Teacher has been deleted.',
+                                'success'
+                            ).then(() => {
+
+                                row.remove();
+
+                            });
+
+                        },
+
+                        error: function (xhr) {
+
+                            Swal.fire(
+                                'Error!',
+                                xhr.responseJSON?.message || 'Error deleting teacher.',
+                                'error'
+                            );
+
+                        }
+
+                    });
+
+                }
+
             });
 
-            // Edit Teacher - Opens edit modal
-            $(document).on('click', '.btn-edit-teacher', function() {
-                const teacherId = $(this).data('id');
+        });
 
-                // Show loading state in edit modal
-                $('#editModalContent').html(`
-            <div class="text-center py-5">
-                <div class="spinner-border text-warning" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Loading edit form...</p>
-            </div>
-        `);
 
-                // Show modal
-                $('#editTeacherModal').modal('show');
+        // DISPLAY PROFILE
+        function displayTeacherProfile(teacher) {
 
-                // Fetch teacher data for editing
-                $.ajax({
-                    url: '/teacher/edit/' + teacherId + '/data', // Create this route
-                    type: 'GET',
-                    success: function(response) {
-                        displayEditForm(response);
-                    },
-                    error: function(xhr) {
-                        $('#editModalContent').html(`
-                    <div class="text-center py-5">
-                        <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-                        <p class="text-danger">Error loading edit form. Please try again.</p>
-                        <button class="btn btn-primary mt-3" onclick="location.reload()">Refresh</button>
-                    </div>
-                `);
-                    }
-                });
-            });
+            const profileHtml = `
+                                        <div class="container-fluid p-4">
 
-            // Delete Teacher with confirmation
-            $(document).on('click', '.btn-delete-teacher', function() {
-                const teacherId = $(this).data('id');
-                const row = $(this).closest('tr');
+                                            <div class="row">
 
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/teachers/' + teacherId,
-                            type: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            success: function(response) {
-                                Swal.fire(
-                                    'Deleted!',
-                                    'Teacher has been deleted.',
-                                    'success'
-                                ).then(() => {
-                                    row.remove();
-                                });
-                            },
-                            // error: function(data) {
-                            //     $('body').html(data.responseText);
-                            // }
-                            error: function(xhr) {
-                                Swal.fire(
-                                    'Error!',
-                                    xhr.responseJSON?.message ||
-                                    'Error deleting teacher.',
-                                    'error'
-                                );
-                            }
-                        });
-                    }
-                });
-            });
+                                                <div class="col-lg-4 mb-4">
 
-            // Function to display teacher profile (read-only)
-            function displayTeacherProfile(teacher) {
-                const profileHtml = `
-            <div class="container-fluid p-4">
-                <div class="row">
-                    <!-- Profile Image Card - Same as original -->
-                    <div class="col-lg-4 mb-4">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                            <div class="card-body text-center p-4">
-                                <div class="position-relative d-inline-block mb-3">
-                                    <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                        class="rounded-circle shadow"
-                                        style="width: 180px; height: 180px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 0 0 3px #e9ecef;"
-                                        alt="Teacher Profile">
-                                </div>
+                                                    <div class="card border-0 shadow-sm rounded-4 h-100">
 
-                                <h4 class="fw-bold mb-1">${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}</h4>
-                                <p class="text-primary mb-3">
-                                    <i class="fas fa-id-badge me-1"></i>
-                                    ${escapeHtml(teacher.registration_number) || 'Registration Pending'}
-                                </p>
+                                                        <div class="card-body text-center p-4">
 
-                                <div class="row g-2 mt-3">
-                                    <div class="col-6">
-                                        <div class="p-2 bg-light rounded-3">
-                                            <small class="text-muted d-block">Employee #</small>
-                                            <strong>${escapeHtml(teacher.employee_number) || 'N/A'}</strong>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="p-2 bg-light rounded-3">
-                                            <small class="text-muted d-block">Group/Title</small>
-                                            <strong>${escapeHtml(teacher.group_teacher) || 'Teacher'}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                                            <div class="position-relative d-inline-block mb-3">
 
-                    <!-- Personal Information Card - Same as original -->
-                    <div class="col-lg-8 mb-4">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                            <div class="card-header bg-white border-0 pt-4 px-4">
-                                <h5 class="fw-bold mb-0">
-                                    <i class="fas fa-user-circle text-primary me-2"></i>
-                                    Personal Information
-                                </h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Surname</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.surname)}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">First Name</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.firstname)}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Other Name</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.othername) || 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Initials</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.initials) || 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Gender</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${teacher.gender ? teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1) : 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Phone Number</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.phonenumber)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                                                <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
+                                                                    class="rounded-circle shadow"
+                                                                    style="width: 180px; height: 180px; object-fit: cover;"
+                                                                    alt="Teacher Profile">
 
-                    <!-- Professional Information Card - Same as original -->
-                    <div class="col-lg-12 mb-4">
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-header bg-white border-0 pt-4 px-4">
-                                <h5 class="fw-bold mb-0">
-                                    <i class="fas fa-briefcase text-primary me-2"></i>
-                                    Professional & Contact Information
-                                </h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Registration Number</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.registration_number) || 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-semibold text-muted">National ID</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.national_id) || 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Employee Number</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.employee_number) || 'N/A'}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold text-muted">Postal Address</label>
-                                        <p class="form-control-static bg-light p-2 rounded-3">${escapeHtml(teacher.address) || 'N/A'}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+                                                            </div>
 
-                $('#modalContent').html(profileHtml);
-            }
+                                                            <h4 class="fw-bold mb-1">
 
-            // Helper function to escape HTML to prevent XSS
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
-            }
+                                                                ${escapeHtml(teacher.firstname)}
+                                                                ${escapeHtml(teacher.surname)}
 
-            // Function to display edit form
-            function displayEditForm(teacher) {
-                const editHtml = `
-            <form id="editTeacherForm" enctype="multipart/form-data">
-                @csrf
-                @method('POST')
-                <input type="hidden" name="teacher_id" value="${teacher.id}">
-                <input type="hidden" name="school_id" value="${teacher.school_id}">
-                
-                <div class="container-fluid p-4">
-                    <div class="row">
-                        <!-- Profile Image Card -->
-                        <div class="col-lg-4 mb-4">
-                            <div class="card border-0 shadow-sm rounded-4 h-100">
-                                <div class="card-body text-center p-4">
-                                    <div class="position-relative d-inline-block mb-3">
-                                        <img id="editLogoPreview"
-                                            src="${teacher.teacher_profile ? '/${teacher.teacher_profile}' : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                            class="rounded-circle shadow"
-                                            style="width: 180px; height: 180px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 0 0 3px #e9ecef;"
-                                            alt="Teacher Profile">
-                                        <label for="edit_profile_image_upload"
-                                            class="position-absolute bottom-0 end-0 mb-2 me-2">
-                                            <div class="bg-primary rounded-circle p-2 shadow-sm"
-                                                style="cursor: pointer; transition: all 0.2s;">
-                                                <i class="fas fa-camera text-white fa-sm"></i>
+                                                            </h4>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
                                             </div>
-                                            <input type="file" name="teacher_profile" id="edit_profile_image_upload"
-                                                class="d-none" accept="image/*">
-                                        </label>
-                                    </div>
-                                    
-                                    <h4 class="fw-bold mb-1">${teacher.firstname} ${teacher.surname}</h4>
-                                    <p class="text-primary mb-3">
-                                        <i class="fas fa-id-badge me-1"></i>
-                                        ${teacher.registration_number || 'Registration Pending'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Personal Information Card -->
-                        <div class="col-lg-8 mb-4">
-                            <div class="card border-0 shadow-sm rounded-4 h-100">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h5 class="fw-bold mb-0">
-                                        <i class="fas fa-user-circle text-primary me-2"></i>
-                                        Personal Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Surname *</label>
-                                            <input type="text" name="surname" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.surname}">
+
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">First Name *</label>
-                                            <input type="text" name="firstname" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.firstname}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Other Name</label>
-                                            <input type="text" name="othername" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.othername || ''}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Initials</label>
-                                            <input type="text" name="initials" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.initials || ''}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Gender *</label>
-                                            <select name="gender" class="form-select border-0 bg-light rounded-3 py-2">
-                                                <option value="male" ${teacher.gender === 'male' ? 'selected' : ''}>Male</option>
-                                                <option value="female" ${teacher.gender === 'female' ? 'selected' : ''}>Female</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Phone Number *</label>
-                                            <input type="text" name="phonenumber" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.phonenumber}">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Professional Information Card -->
-                        <div class="col-lg-12 mb-4">
-                            <div class="card border-0 shadow-sm rounded-4">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h5 class="fw-bold mb-0">
-                                        <i class="fas fa-briefcase text-primary me-2"></i>
-                                        Professional & Contact Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Registration Number</label>
-                                            <input type="text" name="registration_number" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.registration_number || ''}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label fw-semibold text-muted">National ID</label>
-                                            <input type="text" name="national_id" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.national_id || ''}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Employee Number</label>
-                                            <input type="text" name="employee_number" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.employee_number || ''}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Postal Address</label>
-                                            <input type="text" name="address" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.address || ''}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold text-muted">Group/Title</label>
-                                            <input type="text" name="group_teacher" class="form-control border-0 bg-light rounded-3 py-2"
-                                                value="${teacher.group_teacher || ''}">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-white border-0 pb-4 px-4">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 shadow-sm">
-                                            <i class="fas fa-save me-2"></i> Save Changes
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        `;
-            }
-        });
+                                    `;
+
+            $('#modalContent').html(profileHtml);
+
+        }
+
+
+        // ESCAPE HTML
+        function escapeHtml(str) {
+
+            if (!str) return '';
+
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+
+        }
+
     </script>
 @endsection
+
 @section('js')
-    <!-- c3.js Charts js-->
+    <!-- Your existing JS includes -->
     <script src="{{ URL::asset('assets/plugins/charts-c3/d3.v5.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/charts-c3/c3-chart.js') }}"></script>
     <script src="{{ URL::asset('assets/js/charts.js') }}"></script>
-
-    <!-- ECharts js -->
     <script src="{{ URL::asset('assets/plugins/echarts/echarts.js') }}"></script>
-    <!-- Peitychart js-->
     <script src="{{ URL::asset('assets/plugins/peitychart/jquery.peity.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/peitychart/peitychart.init.js') }}"></script>
-    <!-- Apexchart js-->
     <script src="{{ URL::asset('assets/js/apexcharts.js') }}"></script>
-    <!--Moment js-->
     <script src="{{ URL::asset('assets/plugins/moment/moment.js') }}"></script>
-    <!-- Daterangepicker js-->
     <script src="{{ URL::asset('assets/plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
     <script src="{{ URL::asset('assets/js/daterange.js') }}"></script>
-    <!---jvectormap js-->
     <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.world.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/jvectormap/jquery.vmap.sampledata.js') }}"></script>
-    <!-- Index js-->
     <script src="{{ URL::asset('assets/js/index1.js') }}"></script>
-    <!-- Data tables js-->
     <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.buttons.min.js') }}"></script>
@@ -608,10 +844,8 @@ $controller = new Controller();
     <script src="{{ URL::asset('assets/plugins/datatable/dataTables.responsive.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/datatable/responsive.bootstrap4.min.js') }}"></script>
     <script src="{{ URL::asset('assets/js/datatables.js') }}"></script>
-    <!--Counters -->
     <script src="{{ URL::asset('assets/plugins/counters/counterup.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/counters/waypoints.min.js') }}"></script>
-    <!--Chart js -->
     <script src="{{ URL::asset('assets/plugins/chart/chart.bundle.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/chart/utils.js') }}"></script>
 @endsection

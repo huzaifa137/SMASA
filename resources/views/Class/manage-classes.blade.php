@@ -67,13 +67,14 @@ $controller = new Controller();
                                                             </option>
                                                         @endforeach
                                                     </select>
-
-                                                    @if ($class->class_supervisor)
-                                                        &nbsp;
-                                                        <button class="btn btn-md btn-danger btn-remove-supervisor"
-                                                            data-class-id="{{ $class->id }}" title="Remove Supervisor">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
+                                                    @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                        @if ($class->class_supervisor)
+                                                            &nbsp;
+                                                            <button class="btn btn-md btn-danger btn-remove-supervisor"
+                                                                data-class-id="{{ $class->id }}" title="Remove Supervisor">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </td>
@@ -83,12 +84,13 @@ $controller = new Controller();
                                                     <i class="fas fa-link me-2"></i> Manage Streams
                                                 </a>
 
-                                                <button class="btn btn-sm btn-danger btn-delete-class"
-                                                    data-class-id="{{ $class->id }}"
-                                                    data-class-name="{{ Helper::recordMdname($class->class_name) }}">
-                                                    <i class="fas fa-trash-alt me-2"></i> Delete
-                                                </button>
-
+                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    <button class="btn btn-sm btn-danger btn-delete-class"
+                                                        data-class-id="{{ $class->id }}"
+                                                        data-class-name="{{ Helper::recordMdname($class->class_name) }}">
+                                                        <i class="fas fa-trash-alt me-2"></i> Delete
+                                                    </button>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -150,9 +152,20 @@ $controller = new Controller();
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
-                        error: function() {
-                            Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
-                        }
+                        error: function(xhr) {
+    if (xhr.status === 422) {
+        let errors = xhr.responseJSON.errors;
+        let message = Object.values(errors).flat().join("\n");
+
+        Swal.fire('Validation Error', message, 'error');
+    } 
+    else if (xhr.status === 403) {
+        Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+    } 
+    else {
+        Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+    }
+}
                     });
                 }
             });

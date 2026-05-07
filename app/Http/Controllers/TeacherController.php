@@ -26,6 +26,13 @@ class TeacherController extends Controller
     public function storeTeacher(Request $request)
     {
 
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Add new Teacher'
+            ], 422);
+        }
+
         $validated = $request->validate([
             'school_id' => 'required|exists:schools,id',
             'surname' => 'required|string|max:255',
@@ -148,13 +155,91 @@ class TeacherController extends Controller
     {
         Helper::requireSchool();
 
-        $teachers = Teacher::where('school_id', Helper::requireSchool())
+        $school_id = Helper::requireSchool();
+
+        $teachers = Teacher::where('school_id', $school_id)
             ->orderBy('surname')
             ->get();
 
-        $school_id = Helper::requireSchool();
+        // Fetch roles with scope 'school'
+        $schoolRoles = Role::where('scope', 'school')
+            ->orderBy('name')
+            ->get();
 
-        return view('Teacher.teachers-in-school', compact('teachers', 'school_id'));
+        return view('Teacher.teachers-in-school', compact('teachers', 'school_id', 'schoolRoles'));
+    }
+
+
+    public function updateTeacherRole(Request $request, $id)
+    {
+        try {
+            $teacher = Teacher::findOrFail($id);
+
+            // Verify school authorization
+
+            Helper::requireSchool();
+
+            // Optional permission check
+            if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized Access. Contact School Admin to assign Role.'
+                ], 403);
+            }
+
+            if ($teacher->school_id != Helper::requireSchool()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+
+            $request->validate([
+                'role_id' => 'required|exists:roles,id'
+            ]);
+
+            $teacher->teacher_role = $request->role_id;
+            $teacher->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Teacher role updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating teacher role: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTeacherProfileData($id)
+    {
+        $teacher = Teacher::with('role')->findOrFail($id);
+
+        // Add role name to the response
+        $teacher->role_name = $teacher->role ? $teacher->role->name : 'Not Assigned';
+
+        return response()->json($teacher);
+    }
+
+    public function assignTeacherRole(Request $request)
+    {
+        $request->validate([
+            'teacher_id' => 'required|exists:teachers,id',
+            'role_id' => 'required|exists:roles,id',
+            'alias' => 'nullable|string|max:100',
+        ]);
+
+        $teacher = Teacher::findOrFail($request->teacher_id);
+
+        // Ensure teacher belongs to this school
+        if ($teacher->school_id !== Helper::requireSchool()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $teacher->teacher_role = $request->role_id;
+        $teacher->group_teacher = $request->alias; // re-uses group_teacher column for alias
+        $teacher->save();
+
+        return response()->json(['message' => 'Role assigned successfully', 'teacher' => $teacher]);
     }
 
     public function individualSchoolTeachers($schoolId)

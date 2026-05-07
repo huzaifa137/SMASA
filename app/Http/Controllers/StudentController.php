@@ -393,6 +393,13 @@ class StudentController extends Controller
     public function storeStudent(Request $request)
     {
 
+        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admnistrators to Add Students'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'School' => 'required|integer|exists:houses,ID',
             'Category' => 'required|string|max:10',

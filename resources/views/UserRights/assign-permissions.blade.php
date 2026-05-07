@@ -155,7 +155,6 @@ use App\Http\Controllers\Helper;
                                                                             {{ ucfirst($action) }}
                                                                         </th>
                                                                     @endforeach
-                                                                    <th class="text-center">Actions</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -191,13 +190,6 @@ use App\Http\Controllers\Helper;
                                                                                     data-role="{{ $roleId }}" data-action="{{ $action }}" {{ $isChecked ? 'checked' : '' }}>
                                                                             </td>
                                                                         @endforeach
-
-                                                                        <td class="text-center">
-                                                                            <button type="button"
-                                                                                class="btn btn-sm btn-primary btn-save-permission">
-                                                                                <i class="fas fa-save"></i>
-                                                                            </button>
-                                                                        </td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>

@@ -369,12 +369,12 @@ use App\Http\Controllers\Helper;
                                             <!-- Header -->
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <h5 class="text-info mb-0">
-                                                    Stream:  <span class="text-primary fw-bold">{{ $stream }}</span>
+                                                    Stream: <span class="text-primary fw-bold">{{ $stream }}</span>
                                                 </h5>
                                             </div>
 
                                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                               <h5 class="text-secondary mb-0">
+                                                <h5 class="text-secondary mb-0">
                                                     Students :
                                                     <span class="badge bg-primary text-white ms-2">
                                                         {{ $students->total() }} students
@@ -425,8 +425,7 @@ use App\Http\Controllers\Helper;
                                                                     @endphp
 
                                                                     @if ($imagePath)
-                                                                        <img src="{{ asset($imagePath) }}"
-                                                                            class="rounded-circle border"
+                                                                        <img src="{{ asset($imagePath) }}" class="rounded-circle border"
                                                                             style="width:45px;height:45px;object-fit:cover;">
                                                                     @else
                                                                         <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center"
@@ -451,23 +450,24 @@ use App\Http\Controllers\Helper;
                                                                 <!-- Actions -->
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm">
-                                                                        <button type="button"
-                                                                            class="btn btn-info view-student-btn"
+                                                                        <button type="button" class="btn btn-info view-student-btn"
                                                                             data-id="{{ $student->id }}">
                                                                             <i class="bi bi-eye"></i>
                                                                         </button>
 
-                                                                        <button type="button"
-                                                                            class="btn btn-primary edit-student-btn"
-                                                                            data-id="{{ $student->id }}">
-                                                                            <i class="bi bi-pencil-square"></i>
-                                                                        </button>
+                                                                        @if(Helper::isAssignedClassTeacher($senior, $stream))
 
-                                                                        <button type="button"
-                                                                            class="btn btn-danger delete-student-btn"
-                                                                            data-id="{{ $student->id }}">
-                                                                            <i class="bi bi-trash"></i>
-                                                                        </button>
+                                                                            <button type="button" class="btn btn-primary edit-student-btn"
+                                                                                data-id="{{ $student->id }}">
+                                                                                <i class="bi bi-pencil-square"></i>
+                                                                            </button>
+
+                                                                            <button type="button" class="btn btn-danger delete-student-btn"
+                                                                                data-id="{{ $student->id }}">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        @endif
+
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -546,8 +546,7 @@ use App\Http\Controllers\Helper;
                                                     id="modalStudentCategory"></span>
                                                 <span class="badge text-white bg-success me-2"
                                                     id="modalStudentGender"></span>
-                                                <span class="badge text-white bg-secondary"
-                                                    id="modalStudentStream"></span>
+                                                <span class="badge text-white bg-secondary" id="modalStudentStream"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -596,8 +595,8 @@ use App\Http\Controllers\Helper;
                                         </h5>
                                         <div class="row g-3">
                                             <div class="col-md-6 mb-2">
-                                                <div class="info-item"><label
-                                                        class="text-muted small fw-bold">Registration Number</label>
+                                                <div class="info-item"><label class="text-muted small fw-bold">Registration
+                                                        Number</label>
                                                     <p class="mb-0 fw-medium" id="modalRegNumber"></p>
                                                 </div>
                                             </div>
@@ -790,8 +789,8 @@ use App\Http\Controllers\Helper;
                                             Birth</label><input type="date" class="form-control" id="editDateOfBirth">
                                     </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Place of
-                                            Birth</label><input type="text" class="form-control"
-                                            id="editPlaceOfBirth"></div>
+                                            Birth</label><input type="text" class="form-control" id="editPlaceOfBirth">
+                                    </div>
                                     <div class="col-md-6"><label
                                             class="form-label fw-bold text-muted small">Nationality</label><input
                                             type="text" class="form-control" id="editNationality"></div>
@@ -808,11 +807,11 @@ use App\Http\Controllers\Helper;
                                             Number</label><input type="text" class="form-control" id="editRegNumber">
                                     </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Admission
-                                            Number</label><input type="text" class="form-control"
-                                            id="editAdmissionNumber"></div>
+                                            Number</label><input type="text" class="form-control" id="editAdmissionNumber">
+                                    </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Admission
-                                            Year</label><input type="number" class="form-control"
-                                            id="editAdmissionYear"></div>
+                                            Year</label><input type="number" class="form-control" id="editAdmissionYear">
+                                    </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Date of
                                             Admission</label><input type="date" class="form-control"
                                             id="editDateOfAdmission"></div>
@@ -820,8 +819,8 @@ use App\Http\Controllers\Helper;
                                             class="form-label fw-bold text-muted small">Senior/Class</label><input
                                             type="text" class="form-control" id="editSenior" readonly></div>
                                     <div class="col-md-4"><label
-                                            class="form-label fw-bold text-muted small">Stream</label><input
-                                            type="text" class="form-control" id="editStream" readonly></div>
+                                            class="form-label fw-bold text-muted small">Stream</label><input type="text"
+                                            class="form-control" id="editStream" readonly></div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">PLE
                                             Score</label><input type="text" class="form-control" id="editPleScore">
                                     </div>
@@ -829,11 +828,11 @@ use App\Http\Controllers\Helper;
                                             Score</label><input type="text" class="form-control" id="editUceScore">
                                     </div>
                                     <div class="col-md-6"><label class="form-label fw-bold text-muted small">Previous
-                                            School</label><input type="text" class="form-control"
-                                            id="editPreviousSchool"></div>
+                                            School</label><input type="text" class="form-control" id="editPreviousSchool">
+                                    </div>
                                     <div class="col-md-6"><label class="form-label fw-bold text-muted small">Primary
-                                            School</label><input type="text" class="form-control"
-                                            id="editPrimarySchool"></div>
+                                            School</label><input type="text" class="form-control" id="editPrimarySchool">
+                                    </div>
                                 </div>
                             </div>
                             <div class="edit-section mb-4">
@@ -841,14 +840,14 @@ use App\Http\Controllers\Helper;
                                         class="bi bi-telephone me-2 text-danger"></i> Contact Information</h5>
                                 <div class="row g-3">
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Primary
-                                            Contact</label><input type="text" class="form-control"
-                                            id="editPrimaryContact"></div>
+                                            Contact</label><input type="text" class="form-control" id="editPrimaryContact">
+                                    </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Other
-                                            Contact</label><input type="text" class="form-control"
-                                            id="editOtherContact"></div>
+                                            Contact</label><input type="text" class="form-control" id="editOtherContact">
+                                    </div>
                                     <div class="col-md-4"><label class="form-label fw-bold text-muted small">Home
-                                            Address</label><input type="text" class="form-control"
-                                            id="editHomeAddress"></div>
+                                            Address</label><input type="text" class="form-control" id="editHomeAddress">
+                                    </div>
                                 </div>
                             </div>
                             <div class="edit-section mb-4">
@@ -856,17 +855,17 @@ use App\Http\Controllers\Helper;
                                         class="bi bi-people me-2 text-danger"></i> Guardian Information</h5>
                                 <div class="row g-3">
                                     <div class="col-md-6"><label class="form-label fw-bold text-muted small">Guardian
-                                            Names</label><input type="text" class="form-control"
-                                            id="editGuardianNames"></div>
+                                            Names</label><input type="text" class="form-control" id="editGuardianNames">
+                                    </div>
                                     <div class="col-md-6"><label
-                                            class="form-label fw-bold text-muted small">Relation</label><input
-                                            type="text" class="form-control" id="editRelation"></div>
+                                            class="form-label fw-bold text-muted small">Relation</label><input type="text"
+                                            class="form-control" id="editRelation"></div>
                                     <div class="col-md-6"><label class="form-label fw-bold text-muted small">Guardian
-                                            Phone</label><input type="text" class="form-control"
-                                            id="editGuardianPhone"></div>
+                                            Phone</label><input type="text" class="form-control" id="editGuardianPhone">
+                                    </div>
                                     <div class="col-md-6"><label class="form-label fw-bold text-muted small">Guardian
-                                            Email</label><input type="email" class="form-control"
-                                            id="editGuardianEmail"></div>
+                                            Email</label><input type="email" class="form-control" id="editGuardianEmail">
+                                    </div>
                                 </div>
                             </div>
                             <div class="edit-section">
@@ -895,9 +894,8 @@ use App\Http\Controllers\Helper;
                                                     <span class="upload-text">Click to upload photo</span>
                                                     <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
                                                 </div>
-                                                <input type="file" class="form-control file-input"
-                                                    id="editStudentPhoto" name="studentPhoto"
-                                                    accept="image/jpg,image/png,image/gif">
+                                                <input type="file" class="form-control file-input" id="editStudentPhoto"
+                                                    name="studentPhoto" accept="image/jpg,image/png,image/gif">
                                                 <div class="file-upload-error" id="editStudentPhotoError"></div>
                                             </div>
                                         </div>
@@ -916,10 +914,10 @@ use App\Http\Controllers\Helper;
                 </div>
             </div>
         </div>
-                            </div>
-                </div>
-            </div>
-        </div>
+    </div>
+    </div>
+    </div>
+    </div>
 
     </div>
 
@@ -929,9 +927,9 @@ use App\Http\Controllers\Helper;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // ==================== VIEW STUDENT ====================
-            $(document).on('click', '.view-student-btn', function() {
+            $(document).on('click', '.view-student-btn', function () {
                 const studentId = $(this).data('id');
 
                 $('#studentDetailsModal').modal('show');
@@ -942,13 +940,13 @@ use App\Http\Controllers\Helper;
                     url: `{{ url('/students/view') }}/${studentId}`,
                     type: 'GET',
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         const student = response.student || response;
                         updateStudentDetailsModal(student);
                         $('#modalLoadingSpinner').addClass('d-none');
                         $('#studentDetailsContent').removeClass('d-none');
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         $('#modalLoadingSpinner').addClass('d-none');
                         let errorMsg = 'Failed to load student data';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -964,7 +962,7 @@ use App\Http\Controllers\Helper;
             });
 
             // ==================== EDIT STUDENT ====================
-            $(document).on('click', '.edit-student-btn', function() {
+            $(document).on('click', '.edit-student-btn', function () {
                 const studentId = $(this).data('id');
 
                 $('#editStudentModal').modal('show');
@@ -975,13 +973,13 @@ use App\Http\Controllers\Helper;
                     url: `{{ url('/students/Information/') }}/${studentId}`,
                     type: 'GET',
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         const student = response.student || response;
                         populateEditForm(student);
                         $('#editModalLoadingSpinner').addClass('d-none');
                         $('#editStudentForm').removeClass('d-none');
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         $('#editModalLoadingSpinner').addClass('d-none');
                         let errorMsg = 'Could not load student data';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -998,7 +996,7 @@ use App\Http\Controllers\Helper;
             });
 
             // ==================== DELETE STUDENT ====================
-            $(document).on('click', '.delete-student-btn', function() {
+            $(document).on('click', '.delete-student-btn', function () {
                 const studentId = $(this).data('id');
                 const row = $(this).closest('tr');
 
@@ -1018,7 +1016,7 @@ use App\Http\Controllers\Helper;
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.success) {
                                     Swal.fire('Deleted!', response.message, 'success')
                                         .then(() => {
@@ -1028,7 +1026,7 @@ use App\Http\Controllers\Helper;
                                     Swal.fire('Error!', response.message, 'error');
                                 }
                             },
-                            error: function() {
+                            error: function () {
                                 Swal.fire('Error!', 'Something went wrong', 'error');
                             }
                         });
@@ -1037,7 +1035,7 @@ use App\Http\Controllers\Helper;
             });
 
             // ==================== SAVE EDIT ====================
-            $('#saveStudentEdit').on('click', function() {
+            $('#saveStudentEdit').on('click', function () {
                 const firstname = $('#editFirstname').val().trim();
                 const lastname = $('#editLastname').val().trim();
                 const gender = $('#editGender').val();
@@ -1114,9 +1112,9 @@ use App\Http\Controllers\Helper;
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 $('#saveStudentEdit').html(
-                                        '<i class="bi bi-save me-1"></i> Save Changes')
+                                    '<i class="bi bi-save me-1"></i> Save Changes')
                                     .prop('disabled', false);
                                 $('#editStudentModal').modal('hide');
                                 Swal.fire({
@@ -1131,9 +1129,9 @@ use App\Http\Controllers\Helper;
                                     location.reload();
                                 });
                             },
-                            error: function(xhr) {
+                            error: function (xhr) {
                                 $('#saveStudentEdit').html(
-                                        '<i class="bi bi-save me-1"></i> Save Changes')
+                                    '<i class="bi bi-save me-1"></i> Save Changes')
                                     .prop('disabled', false);
                                 let errorMsg = 'Failed to update student';
                                 if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -1238,10 +1236,10 @@ use App\Http\Controllers\Helper;
 
             if (student.photo_url) {
                 $('#currentPhotoPreview').html(`
-                    <p class="text-muted small mb-1">Current photo:</p>
-                    <img src="${student.photo_url}" class="rounded-circle border" style="width:60px;height:60px;object-fit:cover;">
-                    <p class="text-muted small mt-1">Upload a new file to replace it.</p>
-                `);
+                        <p class="text-muted small mb-1">Current photo:</p>
+                        <img src="${student.photo_url}" class="rounded-circle border" style="width:60px;height:60px;object-fit:cover;">
+                        <p class="text-muted small mt-1">Upload a new file to replace it.</p>
+                    `);
             } else {
                 $('#currentPhotoPreview').html('<p class="text-muted small">No photo uploaded yet.</p>');
             }
@@ -1251,13 +1249,13 @@ use App\Http\Controllers\Helper;
             const preview = document.getElementById('editStudentPhotoPreview');
             if (preview) {
                 preview.innerHTML = `
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                    <span class="upload-text">Click to upload photo</span>
-                    <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
-                `;
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <span class="upload-text">Click to upload photo</span>
+                        <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
+                    `;
                 preview.classList.remove('success');
             }
         }
@@ -1295,7 +1293,7 @@ use App\Http\Controllers\Helper;
                     });
                     this.preview.addEventListener('click', (e) => {
                         if (e.target.classList.contains('remove-image-btn') || e.target.closest(
-                                '.remove-image-btn')) return;
+                            '.remove-image-btn')) return;
                         this.input.click();
                     });
                 }
@@ -1343,13 +1341,13 @@ use App\Http\Controllers\Helper;
             removePreview() {
                 if (!this.preview) return;
                 this.preview.innerHTML = `
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                    <span class="upload-text">Click to upload photo</span>
-                    <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
-                `;
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <span class="upload-text">Click to upload photo</span>
+                        <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
+                    `;
                 this.input.value = '';
                 this.preview.classList.remove('success');
             }
@@ -1373,7 +1371,7 @@ use App\Http\Controllers\Helper;
         }
 
         // Initialize file upload handler
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             new FileUploadHandler('editStudentPhoto', 'editStudentPhotoPreview', 'editStudentPhotoError', {
                 maxSize: 5 * 1024 * 1024,
                 acceptedTypes: ['image/jpg', 'image/jpeg', 'image/png', 'image/gif']

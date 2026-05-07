@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\Teacher;
 use App\Models\User;
 use DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -78,7 +79,7 @@ class UserRightsAndPreviledges extends Controller
 
         foreach ($actions as $action) {
             $permissions[] = [
-                'feature' => $action.'_'.$request->permission_feature,
+                'feature' => $action . '_' . $request->permission_feature,
                 'name' => $request->permission_feature,
                 'scope' => $request->scope,
                 'created_at' => now(),
@@ -112,7 +113,7 @@ class UserRightsAndPreviledges extends Controller
             $roleInfo = Role::find($roleId);
             $permissionName = ucfirst(Helper::item_md_name($featureName));
 
-            if (! $RolePermissionCheck) {
+            if (!$RolePermissionCheck) {
                 return response()->json([
                     'success' => false,
                     'message' => "Role ({$roleInfo->name}) is not assigned ({$permissionName}) permission access.",
@@ -189,7 +190,7 @@ class UserRightsAndPreviledges extends Controller
             ->where('permission_scope', $permissionScope)
             ->first();
 
-        if (! $checkExistance) {
+        if (!$checkExistance) {
             DB::table('permission_role')->insert([
                 'permission_id' => $permissionId,
                 'role_id' => $roleId,
@@ -220,7 +221,7 @@ class UserRightsAndPreviledges extends Controller
         $role = Role::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
             'scope' => 'required',
         ]);
 
@@ -341,8 +342,8 @@ class UserRightsAndPreviledges extends Controller
 
     public function addUsers()
     {
-        $users = User::whereIn('user_role', [0, 1])->get();
-        $roles = Role::all();
+        $users = User::whereIn('user_role', ['admin'])->get();
+        $roles = Role::where('scope', 'system')->get();
 
         return view('users.all-users', compact(['users', 'roles']));
     }
@@ -350,46 +351,26 @@ class UserRightsAndPreviledges extends Controller
     public function storeNewUser(Request $request)
     {
 
-        $validated = $request->validate([
+        $request->validate([
+
             'username' => 'required|string|max:255',
-            'firstname' => 'required|string|max:255',
-            'othername' => 'nullable|string|max:255',
-            'phonenumber' => 'required|string|max:20',
-            'gender' => 'nullable|in:male,female',
-            'email' => 'required',
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'attached_company_role' => 'required|exists:roles,id',
         ]);
 
-        $teacher = User::create($validated);
 
-        // Assign selected roles (if any)
-        if ($request->has('roles')) {
-            $teacher->roles()->attach($request->roles);
-        }
-        // ADMNISTRATOR ROLE STATUS ===> 0
-        // --------------------------------------
+        $user = User::create([
 
-        $token = Str::random(60);
-        $resetUrl = url('password/set-password', $token);
+            'username' => $request->username,
+            'name' => $request->fullname,
+            'email' => $request->email,
+            'user_role' => 'admin',
+            'attached_company_role' => $request->attached_company_role,
+            'password' => Hash::make('123456789'),
+            'must_change_password' => 1,
 
-        $post = new password_reset_table;
-
-        $post->email = $teacher->email;
-        $post->token = $resetUrl;
-        $post->created_at = now();
-
-        $post->save();
-
-        $data = [
-            'email' => $teacher->email,
-            'username' => $teacher->username,
-            'resetUrl' => $resetUrl,
-            'title' => 'Idaad & Thanawi Exam System SET PASSWORD',
-        ];
-
-        Mail::send('emails.set_password', $data, function ($message) use ($data) {
-            $message->to($data['email'], $data['email'])->subject($data['title']);
-        });
-
+        ]);
         return response()->json(['message' => 'User added successfully']);
     }
 
@@ -446,13 +427,13 @@ class UserRightsAndPreviledges extends Controller
 
             $file = $request->file('teacher_profile');
             $destinationPath = public_path('uploads/teacherProfiles');
-            if (! file_exists($destinationPath)) {
+            if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
-            $filename = time().'_'.$file->getClientOriginalName();
+            $filename = time() . '_' . $file->getClientOriginalName();
             $file->move($destinationPath, $filename);
 
-            $data['teacher_profile'] = 'uploads/teacherProfiles/'.$filename;
+            $data['teacher_profile'] = 'uploads/teacherProfiles/' . $filename;
         }
 
         // Update teacher record
@@ -479,7 +460,7 @@ class UserRightsAndPreviledges extends Controller
     {
         $user = User::find($id);
 
-        if (! $user) {
+        if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
@@ -493,7 +474,7 @@ class UserRightsAndPreviledges extends Controller
         ]);
 
         $user = User::findOrFail($id);
-        $user->account_status = $request->status;
+        $user->is_active = $request->status;
         $user->save();
 
         return response()->json(['message' => 'Status updated successfully.']);
@@ -523,7 +504,7 @@ class UserRightsAndPreviledges extends Controller
 
         $currentRoles = $user->roles()->pluck('roles.id')->toArray();
 
-        if (! in_array($request->role_id, $currentRoles)) {
+        if (!in_array($request->role_id, $currentRoles)) {
             $currentRoles[] = $request->role_id;
             $user->roles()->sync($currentRoles);
         }
@@ -541,7 +522,7 @@ class UserRightsAndPreviledges extends Controller
         $user = User::findOrFail($request->user_id);
 
         $currentRoles = $user->roles()->pluck('roles.id')->toArray();
-        $updatedRoles = array_filter($currentRoles, fn ($id) => $id != $request->role_id);
+        $updatedRoles = array_filter($currentRoles, fn($id) => $id != $request->role_id);
 
         $user->roles()->sync($updatedRoles);
 

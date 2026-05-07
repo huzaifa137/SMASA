@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->id();
 
             $table->string('name');
-            $table->string('username')->unique(); // registration number / staff ID / admin ID
+            $table->string('username')->unique();
             $table->string('email')->nullable()->unique();
 
             $table->string('password');
@@ -25,12 +25,12 @@ class CreateUsersTable extends Migration
             $table->enum('user_role', ['student', 'teacher', 'admin']);
 
             $table->unsignedBigInteger('profile_id')
-                ->comment('ID from students / teachers / administrators table');
+                ->comment('ID from students / teachers / administrators table')->nullable();
 
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
-            $table->index(['user_role', 'profile_id']);
+            // $table->index(['user_role', 'profile_id']);
         });
     }
 

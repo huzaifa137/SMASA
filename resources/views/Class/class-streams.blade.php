@@ -77,12 +77,14 @@ $controller = new Controller();
                                                         @endforeach
                                                     </select>
 
-                                                    @if ($stream->class_teacher)
-                                                        &nbsp;
-                                                        <button class="btn btn-md btn-danger btn-remove-supervisor"
-                                                            data-class-id="{{ $stream->id }}" title="Remove Supervisor">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
+                                                    @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                        @if ($stream->class_teacher)
+                                                            &nbsp;
+                                                            <button class="btn btn-md btn-danger btn-remove-supervisor"
+                                                                data-class-id="{{ $stream->id }}" title="Remove Supervisor">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </td>
@@ -98,10 +100,12 @@ $controller = new Controller();
                                                     <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
                                                 </a>
 
-                                                <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
-                                                    data-stream-id="{{ $stream->id }}">
-                                                    <i class="fas fa-trash-alt me-2"></i> Delete Stream
-                                                </a>
+                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
+                                                        data-stream-id="{{ $stream->id }}">
+                                                        <i class="fas fa-trash-alt me-2"></i> Delete Stream
+                                                    </a>
+                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -163,8 +167,19 @@ $controller = new Controller();
                                 Swal.fire('Error', response.message, 'error');
                             }
                         },
-                        error: function() {
-                            Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                        error: function(xhr) {
+                            if (xhr.status === 422) {
+                                let errors = xhr.responseJSON.errors;
+                                let message = Object.values(errors).flat().join("\n");
+
+                                Swal.fire('Validation Error', message, 'error');
+                            } 
+                            else if (xhr.status === 403) {
+                                Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+                            } 
+                            else {
+                                Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                            }
                         }
                         // error: function(data) {
                         // $('body').html(data.responseText);
@@ -221,9 +236,7 @@ $controller = new Controller();
     </script>
 
     <script>
-        // Ensure jQuery is loaded before this script
         $(document).ready(function() {
-            // ... (your existing .btn-remove-supervisor script) ...
 
             $('.btn-delete-stream').on('click', function(e) {
                 e.preventDefault(); // Prevent the default link behavior

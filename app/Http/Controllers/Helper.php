@@ -11,10 +11,198 @@ use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
 use App\Models\User;
 use DB;
+use App\Models\Teacher;
 use Session;
+use App\Models\Stream;
+
 
 class Helper extends Controller
 {
+
+    // TechSateAdmins access ability (URPF)
+
+    public static function isAdminAllowed()
+    {
+        // Helper::isAdminAllowed()
+        // if (!Helper::isAdminAllowed())
+
+        $adminId = session('LoggedAdmin');
+
+        $admin = null;
+
+        if ($adminId) {
+            $admin = User::find($adminId);
+        }
+
+        return (
+            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
+        );
+    }
+
+    public static function isLoggedAdmin()
+    {
+        // Helper::isLoggedAdmin()
+        // if (!Helper::isLoggedAdmin())
+
+        return session()->has('LoggedAdmin');
+    }
+
+    // TechSateAdmins and School Admins Teacher access ability (URPF)
+    public static function isTechSateAdminOrSchoolAdminsAlone()
+    {
+        // Helper::isTechSateAdminOrSchoolAdminsAlone()
+        // if (!Helper::isTechSateAdminOrSchoolAdminsAlone())
+
+        $teacherId = session('LoggedTeacher');
+        $adminId = session('LoggedAdmin');
+
+        $teacher = null;
+        $admin = null;
+
+        if ($teacherId) {
+            $teacher = Teacher::find($teacherId);
+        }
+
+        if ($adminId) {
+            $admin = User::find($adminId);
+        }
+
+        return (
+            data_get($teacher, 'teacher_role') == self::getcschoolAdministratorsId() ||
+            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
+        );
+    }
+
+    // TechSateAdmins and School Admins and Sales Representatives Teacher access ability (URPF)
+    public static function isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
+    {
+        // Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
+        // if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives())
+        //  abort(
+        //         403,
+        //         'Unauthorized Access. Contact TechSate Software Company Limited.'
+        //     );
+
+        $teacherId = session('LoggedTeacher');
+        $adminId = session('LoggedAdmin');
+
+        $teacher = null;
+        $admin = null;
+
+        if ($teacherId) {
+            $teacher = Teacher::find($teacherId);
+        }
+
+        if ($adminId) {
+            $admin = User::find($adminId);
+        }
+
+        return (
+            data_get($teacher, 'teacher_role') == self::getcschoolAdministratorsId() || data_get($admin, 'attached_company_role') == self::getcompanySalesRepresentativesId() ||
+            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
+        );
+    }
+
+    // Assigned Teacher access ability (URPF)
+    public static function isAssignedClassTeacher($classId, $streamId)
+    {
+        // Helper::isTechSateAdminOrSchoolAdminsAlone($senior, $stream)
+        // if (!Helper::isTechSateAdminOrSchoolAdminsAlone())
+        return (
+            self::isAdminAllowed() ||
+            self::canClassTeacherAssignedManageStudents($classId, $streamId)
+        );
+    }
+
+    public static function canClassTeacherAssignedManageStudents($classId, $streamId)
+    {
+        $teacherId = session('LoggedTeacher');
+
+        if (!$teacherId) {
+            return false;
+        }
+
+        $stream = Stream::where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->first();
+
+        if (!$stream) {
+            return false;
+        }
+
+        return $stream->class_teacher == $teacherId;
+    }
+
+    public static function authorizeAdminsOnly()
+    {
+        if (!self::isAdminAllowed()) {
+
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
+    }
+
+    public static function authorizeTechSateAdminOrSchoolAdmins()
+    {
+        if (!self::isTechSateAdminOrSchoolAdminsAlone()) {
+
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
+    }
+
+    public static function authorizeAssignedClassTeacher($classId, $streamId)
+    {
+        if (!self::isAssignedClassTeacher($classId, $streamId)) {
+
+            abort(
+                403,
+                'You are not allowed to manage this class stream. Contact TechSate Software Company Limited.'
+            );
+        }
+    }
+
+
+    public static function getcompanyAdministratorsId()
+    {
+        return DB::table('roles')
+            ->where('name', 'Administrators')
+            ->where('scope', 'system')
+            ->value('id');
+    }
+
+    public static function getcompanySalesRepresentativesId()
+    {
+        return DB::table('roles')
+            ->where('name', 'Sales Representative')
+            ->where('scope', 'system')
+            ->value('id');
+    }
+
+    public static function getcschoolAdministratorsId()
+    {
+        return DB::table('roles')
+            ->where('name', 'School Administrators')
+            ->where('scope', 'school')
+            ->value('id');
+    }
+
+    public static function getnormalSchoolTeachers()
+    {
+        return DB::table('roles')
+            ->where('name', 'School Teachers')
+            ->where('scope', 'school')
+            ->value('id');
+    }
+
+    public static function loggedTeacherId()
+    {
+        return session('LoggedTeacher');
+    }
 
     public static function maleClassStudents($classId)
     {
@@ -70,7 +258,7 @@ class Helper extends Controller
     public static function totalClassStreamStudent($classId, $stream_id)
     {
 
-        $totalClassStreamStudents = self::maleClassStreamStudents($classId,$stream_id) + self::femaleClassStreamStudents($classId,$stream_id);
+        $totalClassStreamStudents = self::maleClassStreamStudents($classId, $stream_id) + self::femaleClassStreamStudents($classId, $stream_id);
 
         return $totalClassStreamStudents;
     }
@@ -530,6 +718,12 @@ class Helper extends Controller
     public static function schoolActiveTermName()
     {
         return self::recordMdname(self::activeTerm());
+    }
+
+    public static function systemActiveYear()
+    {
+        return AcademicYear::where('is_active', 1)
+            ->value('name');
     }
 
     public static function activeUploadingIdaadYear()

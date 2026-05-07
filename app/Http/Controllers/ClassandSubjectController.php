@@ -255,6 +255,13 @@ class ClassandSubjectController extends Controller
 
     public function manageClasses()
     {
+
+        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
         Helper::requireSchool();
         $classRecord = Classroom::where('school_id', Helper::requireSchool())->orderBy('class_name', 'Asc')->get();
 
@@ -267,6 +274,13 @@ class ClassandSubjectController extends Controller
 
     public function destroyClass($id)
     {
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
+
         $class = Classroom::findOrFail($id);
         $class_id = $class->class_name;
 
@@ -292,6 +306,12 @@ class ClassandSubjectController extends Controller
 
     public function deleteStream(Stream $stream)
     {
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            abort(
+                403,
+                'Unauthorized Access. Contact TechSate Software Company Limited.'
+            );
+        }
 
         $class_id = $stream->class_id;
         $stream_id = $stream->stream_id;
@@ -311,6 +331,14 @@ class ClassandSubjectController extends Controller
 
     public function assignSupervisor(Request $request)
     {
+
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Class Supervisor'
+            ], 403);
+        }
+
         $request->validate([
             'class_id' => 'required|exists:classrooms,id',
             'teacher_id' => 'required|exists:teachers,id',
@@ -352,6 +380,13 @@ class ClassandSubjectController extends Controller
     public function assignSubjectTeacher1(Request $request)
     {
 
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
+            ], 403);
+        }
+
         $request->validate([
             'subject_id' => 'required|exists:class_subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
@@ -375,6 +410,13 @@ class ClassandSubjectController extends Controller
     public function removeSubjectTeacher1(Request $request)
     {
 
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
+            ], 403);
+        }
+
         $request->validate([
             'subject_id' => 'required|exists:class_subjects,id',
         ]);
@@ -393,6 +435,13 @@ class ClassandSubjectController extends Controller
 
     public function assignSubjectTeacher2(Request $request)
     {
+
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
+            ], 403);
+        }
 
         $request->validate([
             'subject_id' => 'required|exists:class_subjects,id',
@@ -416,6 +465,13 @@ class ClassandSubjectController extends Controller
 
     public function removeSubjectTeacher2(Request $request)
     {
+
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
+            ], 403);
+        }
 
         $request->validate([
             'subject_id' => 'required|exists:class_subjects,id',
@@ -447,6 +503,14 @@ class ClassandSubjectController extends Controller
 
     public function assignClassTeacher(Request $request)
     {
+
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
+            ], 403);
+        }
+
         $request->validate([
             'class_id' => 'required|exists:streams,id',
             'teacher_id' => 'required|exists:teachers,id',
@@ -700,22 +764,45 @@ class ClassandSubjectController extends Controller
     public function allMyClasses()
     {
         Helper::requireSchool();
-        $classRecord = Classroom::where('school_id', Helper::requireSchool())->where('class_supervisor', Session('LoggedTeacher'))->orderBy('class_name', 'Asc')->get();
 
-        $Streams = DB::table('streams')->where('school_id', Helper::requireSchool())->where('class_teacher', Session('LoggedTeacher'))->orderBy('stream_id', 'Asc')->get();
+        $teacherId = session('LoggedTeacher');
 
-        $Teachers = Teacher::with('school')
-            ->where('school_id', Helper::requireSchool())
-            ->get();
+        // Default empty collections
+        $classRecord = collect();
+        $Streams = collect();
+        $classSubjects = collect();
 
-        $classSubjects = ClassSubject::where('subject_teacher_1', Session('LoggedTeacher'))
-            ->orwhere('subject_teacher_2', Session('LoggedTeacher'))
-            ->get();
+        // Only query if teacher session exists
+        if ($teacherId) {
+
+            $classRecord = Classroom::where('school_id', Helper::requireSchool())
+                ->where('class_supervisor', $teacherId)
+                ->orderBy('class_name', 'Asc')
+                ->get();
+
+            $Streams = DB::table('streams')
+                ->where('school_id', Helper::requireSchool())
+                ->where('class_teacher', $teacherId)
+                ->orderBy('stream_id', 'Asc')
+                ->get();
+
+            $classSubjects = ClassSubject::where('subject_teacher_1', $teacherId)
+                ->orWhere('subject_teacher_2', $teacherId)
+                ->get();
+        }
 
         $Teachers = Teacher::with('school')
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.my-classes', compact('classRecord', 'Teachers', 'Streams', 'classSubjects'));
+        return view(
+            'Class.my-classes',
+            compact(
+                'classRecord',
+                'Teachers',
+                'Streams',
+                'classSubjects'
+            )
+        );
     }
 }

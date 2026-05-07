@@ -21,8 +21,8 @@ use App\Http\Controllers\Helper;
                                     <div class="form-group">
                                         <label class="form-label">User Access Configuration</label>
                                         <?php
-    echo Helper::DropMasterData(config('constants.options.URPF'), '', 'permission_feature', 1);
-                                                                                                    ?>
+                                            echo Helper::DropMasterData(config('constants.options.URPF'), '', 'permission_feature', 1);
+                                       ?>
                                     </div>
                                 </div>
 
@@ -59,10 +59,6 @@ use App\Http\Controllers\Helper;
                                         <th>#</th>
                                         <th class="text-center">Feature Permission Name</th>
                                         <th class="text-center">Scope</th>
-                                        <th class="text-center">Add</th>
-                                        <th class="text-center">View</th>
-                                        <th class="text-center">Edit</th>
-                                        <th class="text-center">Delete</th>
                                         <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
@@ -76,18 +72,6 @@ use App\Http\Controllers\Helper;
                                             <td>{{ $key + 1 }}</td>
                                             <td>{{  Helper::item_md_name($permission->name) }}</td>
                                             <td class="text-center">{{ $permission->scope }}</td>
-                                            <td class="text-center">
-                                                <input type="checkbox" disabled {{ $featureSet->contains('add_' . Helper::item_md_name($permission->name)) ? 'checked' : '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" disabled {{ $featureSet->contains('view_' . Helper::item_md_name($permission->name)) ? 'checked' : '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" disabled {{ $featureSet->contains('edit_' . Helper::item_md_name($permission->name)) ? 'checked' : '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" disabled {{ $featureSet->contains('delete_' . Helper::item_md_name($permission->name)) ? 'checked' : '' }}>
-                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-danger btn-delete"
                                                     data-name="{{ $permission->name }}" data-scope="{{ $permission->scope }}"

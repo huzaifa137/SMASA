@@ -32,6 +32,149 @@ use App\Http\Controllers\Helper;
             }
         </style>
 
+        <style>
+            .role-card {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                overflow: hidden;
+                margin-bottom: 20px;
+                transition: all 0.2s ease-in-out;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+
+            .role-card:hover {
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .role-card-header {
+                background-color: #f8f9fa;
+                padding: 15px 20px;
+                border-bottom: 1px solid #e9ecef;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .role-title {
+                font-size: 1.25rem;
+                color: #2d9eef;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+
+            .role-user-count {
+                font-size: 0.9rem;
+                color: #6c757d;
+                background-color: #e9ecef;
+                padding: 3px 8px;
+                border-radius: 15px;
+                margin-left: 10px;
+                font-weight: bold;
+            }
+
+            .role-search-add-group {
+                display: flex;
+                gap: 10px;
+                flex-grow: 1;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
+
+            .role-search-add-group .form-control-sm {
+                max-width: 200px;
+                flex-grow: 0;
+                flex-shrink: 1;
+            }
+
+            @media (max-width: 768px) {
+
+                .role-card-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .role-search-add-group {
+                    width: 100%;
+                    margin-top: 15px;
+                    justify-content: center;
+                }
+
+                .role-search-add-group .form-control-sm {
+                    max-width: 100%;
+                }
+
+                .role-user-count {
+                    margin-left: 0;
+                    margin-top: 5px;
+                }
+            }
+
+            .user-chip-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px 0;
+                border-top: 1px solid #eee;
+                margin-top: 15px;
+            }
+
+            .user-chip {
+                display: inline-flex;
+                align-items: center;
+                background-color: #2d9eef;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 0.875rem;
+                font-weight: 500;
+                white-space: nowrap;
+                transition: background-color 0.2s ease;
+            }
+
+            .user-chip:hover {
+                background-color: #248ad6;
+            }
+
+            .btn-remove-user {
+                background-color: transparent;
+                border: none;
+                color: white;
+                margin-left: 8px;
+                font-size: 0.8rem;
+                padding: 0 5px;
+                cursor: pointer;
+                transition: color 0.2s ease;
+            }
+
+            .btn-remove-user:hover {
+                color: #ffdddd;
+            }
+
+            .card-body.no-users-message {
+                text-align: center;
+                color: #6c757d;
+                font-style: italic;
+                padding: 20px;
+            }
+
+            .role-search-add-group {
+                position: relative;
+            }
+
+            .user-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                z-index: 1050;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+        </style>
+
+
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">
@@ -52,50 +195,59 @@ use App\Http\Controllers\Helper;
                                             placeholder="Enter username">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label" for="firstname">Firstname</label>
-                                        <input type="text" id="firstname" name="firstname" class="form-control"
-                                            placeholder="Enter firstname">
+                                        <label class="form-label" for="fullname">Full Name</label>
+                                        <input type="text" id="fullname" name="fullname" class="form-control"
+                                            placeholder="Enter full name">
                                     </div>
 
-                                    <div class="form-group">
-                                        <label class="form-label" for="phonenumber">Phone Number</label>
-                                        <input type="tel" id="phonenumber" name="phonenumber" class="form-control"
-                                            placeholder="Enter phone number">
-                                    </div>
                                 </div>
 
                                 <div class="col-lg-6 col-md-12">
-                                    <div class="form-group">
-                                        <label class="form-label" for="gender">Gender</label>
-                                        <select id="gender" name="gender" class="form-control">
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
-                                    </div>
+
                                     <div class="form-group">
                                         <label class="form-label" for="Email">Email</label>
                                         <input type="text" id="email" name="email" class="form-control"
                                             placeholder="Enter user email">
                                     </div>
-                                </div>
 
-                                <div class="col-lg-12 col-md-12">
-                                    <div class="form-group mt-3">
-                                        <label class="form-label">Attach Roles to users</label>
-                                        <div class="row">
-                                            @foreach ($roles as $role)
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="roles[]"
-                                                            value="{{ $role->id }}" id="role_{{ $role->id }}">
-                                                        <label class="form-check-label" for="role_{{ $role->id }}">
-                                                            <i class="fas fa-crown me-1 text-warning"></i> {{ $role->name }}
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                                    <div class="form-group mt-5">
+
+        <label class="form-label">
+            Attach Company Role
+        </label>
+
+        <div class="row">
+
+            @foreach ($roles as $role)
+
+                <div class="col-md-4">
+
+                    <div class="form-check">
+
+                        <input class="form-check-input"
+                            type="radio"
+                            name="attached_company_role"
+                            value="{{ $role->id }}"
+                            id="role_{{ $role->id }}">
+
+                        <label class="form-check-label"
+                            for="role_{{ $role->id }}">
+
+                            <i class="fas fa-user-shield text-primary me-1"></i>
+
+                            {{ $role->name }}
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            @endforeach
+
+        </div>
+
+    </div>
                                 </div>
 
                             </div>
@@ -123,9 +275,8 @@ use App\Http\Controllers\Helper;
                                 <tr>
                                     <th>#</th>
                                     <th class="text-center">Username</th>
-                                    <th>Firstname</th>
-                                    <th>Gender</th>
-                                    <th>Phone Number</th>
+                                    <th>Fullname</th>
+                                    <th>Company Role</th>
                                     <th>Status</th>
                                     <th class="text-center">Action</th>
                                 </tr>
@@ -134,7 +285,7 @@ use App\Http\Controllers\Helper;
 
                                 @php
                                     $statusConfig = [
-                                        10 => ['label' => 'Active', 'class' => 'text-success', 'icon' => 'fas fa-check-circle'],
+                                        1 => ['label' => 'Active', 'class' => 'text-success', 'icon' => 'fas fa-check-circle'],
                                         0 => ['label' => 'Banned', 'class' => 'text-danger', 'icon' => 'fas fa-ban'],
                                         8 => ['label' => 'Locked', 'class' => 'text-warning', 'icon' => 'fas fa-lock'],
                                         9 => ['label' => 'Suspended', 'class' => 'text-secondary', 'icon' => 'fas fa-user-slash'],
@@ -145,13 +296,28 @@ use App\Http\Controllers\Helper;
                                     <tr>
                                         <td style="width:1px;">{{ $key + 1 }}</td>
                                         <td class="fw-bold">{{ @$user->username }}</td>
-                                        <td class="fw-bold">{{ @$user->firstname }}</td>
-                                        <td class="fw-bold">{{ @$user->gender }}</td>
-                                        <td class="fw-bold">{{ @$user->phonenumber }}</td>
+                                        <td class="fw-bold">{{ @$user->name }}</td>
 
                                         <td>
+                                            @if($user->attached_company_role == 1)
+                                                <span class="badge bg-info">Administrators</span>
+
+                                            @elseif($user->attached_company_role == 2)
+                                                <span class="badge bg-info">Sales Representative</span>
+
+                                            @elseif($user->attached_company_role == 3)
+                                                <span class="badge bg-info">School Administrators</span>
+
+                                            @elseif($user->attached_company_role == 4)
+                                                <span class="badge bg-info">School Teachers</span>
+
+                                            @else
+                                                <span class="badge bg-secondary">No Role</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             @php
-                                                $status = $statusConfig[$user->account_status] ?? ['label' => 'Unknown', 'class' => 'text-muted', 'icon' => 'fas fa-question-circle'];
+                                                $status = $statusConfig[$user->is_active] ?? ['label' => 'Unknown', 'class' => 'text-muted', 'icon' => 'fas fa-question-circle'];
                                             @endphp
                                             <span class="{{ $status['class'] }}">
                                                 <i class="{{ $status['icon'] }}"></i> {{ $status['label'] }}
@@ -196,211 +362,6 @@ use App\Http\Controllers\Helper;
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0" style="margin-top: 3em;">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">All Roles & Permissions</h5>
-                </div>
-
-                <div class="card-body p-3">
-
-                    <style>
-                        .role-card {
-                            border: 1px solid #e0e0e0;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            margin-bottom: 20px;
-                            transition: all 0.2s ease-in-out;
-                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-                        }
-
-                        .role-card:hover {
-                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                            transform: translateY(-2px);
-                        }
-
-                        .role-card-header {
-                            background-color: #f8f9fa;
-                            padding: 15px 20px;
-                            border-bottom: 1px solid #e9ecef;
-                            display: flex;
-                            align-items: center;
-                            justify-content: space-between;
-                            flex-wrap: wrap;
-                        }
-
-                        .role-title {
-                            font-size: 1.25rem;
-                            color: #2d9eef;
-                            font-weight: 600;
-                            margin-bottom: 5px;
-                        }
-
-                        .role-user-count {
-                            font-size: 0.9rem;
-                            color: #6c757d;
-                            background-color: #e9ecef;
-                            padding: 3px 8px;
-                            border-radius: 15px;
-                            margin-left: 10px;
-                            font-weight: bold;
-                        }
-
-                        .role-search-add-group {
-                            display: flex;
-                            gap: 10px;
-                            flex-grow: 1;
-                            justify-content: flex-end;
-                            flex-wrap: wrap;
-                        }
-
-                        .role-search-add-group .form-control-sm {
-                            max-width: 200px;
-                            flex-grow: 0;
-                            flex-shrink: 1;
-                        }
-
-                        @media (max-width: 768px) {
-
-                            .role-card-header {
-                                flex-direction: column;
-                                align-items: flex-start;
-                            }
-
-                            .role-search-add-group {
-                                width: 100%;
-                                margin-top: 15px;
-                                justify-content: center;
-                            }
-
-                            .role-search-add-group .form-control-sm {
-                                max-width: 100%;
-                            }
-
-                            .role-user-count {
-                                margin-left: 0;
-                                margin-top: 5px;
-                            }
-                        }
-
-                        .user-chip-container {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 8px;
-                            padding: 10px 0;
-                            border-top: 1px solid #eee;
-                            margin-top: 15px;
-                        }
-
-                        .user-chip {
-                            display: inline-flex;
-                            align-items: center;
-                            background-color: #2d9eef;
-                            color: white;
-                            padding: 6px 12px;
-                            border-radius: 20px;
-                            font-size: 0.875rem;
-                            font-weight: 500;
-                            white-space: nowrap;
-                            transition: background-color 0.2s ease;
-                        }
-
-                        .user-chip:hover {
-                            background-color: #248ad6;
-                        }
-
-                        .btn-remove-user {
-                            background-color: transparent;
-                            border: none;
-                            color: white;
-                            margin-left: 8px;
-                            font-size: 0.8rem;
-                            padding: 0 5px;
-                            cursor: pointer;
-                            transition: color 0.2s ease;
-                        }
-
-                        .btn-remove-user:hover {
-                            color: #ffdddd;
-                        }
-
-                        .card-body.no-users-message {
-                            text-align: center;
-                            color: #6c757d;
-                            font-style: italic;
-                            padding: 20px;
-                        }
-
-                        .role-search-add-group {
-                            position: relative;
-                        }
-
-                        .user-dropdown {
-                            position: absolute;
-                            top: 100%;
-                            left: 0;
-                            z-index: 1050;
-                            background-color: #fff;
-                            border: 1px solid #ccc;
-                            border-radius: 4px;
-                        }
-                    </style>
-
-                    @foreach ($roles as $role)
-                        <div class="card role-card">
-                            <div class="role-card-header">
-                                <div>
-                                    <strong class="role-title">{{ $role->name }}</strong>
-                                    <span class="role-user-count">{{ $role->users->count() }} Users</span>
-                                </div>
-
-                                <div class="role-search-add-group position-relative">
-                                    <input type="search" class="form-control form-control-sm add-user-input"
-                                        placeholder="Add Users in role..." data-role-id="{{ $role->id }}" autocomplete="off" />
-
-                                    <div class="dropdown-menu w-100 p-2 user-dropdown"
-                                        style="max-height: 200px; overflow-y: auto; display: none;"
-                                        data-role-id="{{ $role->id }}">
-                                        <input type="text" class="form-control mb-2 user-search-input"
-                                            placeholder="Search users in role..." style="border: 1.5px solid blue;">
-
-                                        <div class="user-list">
-                                            @foreach ($users as $user)
-                                                <a href="#" class="dropdown-item user-item" data-user-id="{{ $user->id }}"
-                                                    data-user-name="{{ $user->firstname }} ({{ $user->email }})">
-                                                    {{ $user->firstname }} ({{ $user->email }})
-                                                </a>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="collapse show" id="role-{{ $role->id }}">
-                                <div class="card-body">
-                                    @if ($role->users->count() > 0)
-                                        <div class="user-chip-container">
-                                            @foreach ($role->users as $user)
-                                                <div class="user-chip" data-role-id="{{ $role->id }}" data-user-id="{{ $user->id }}">
-                                                    {{ $user->firstname }} ({{ $user->email }})
-                                                    <button class="btn-remove-user" title="Remove User">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <div class="card-body no-users-message">
-                                            No users assigned to this role yet.
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-            </div>
-
             <div class="modal fade" id="userInfoModal" tabindex="-1" role="dialog" aria-labelledby="userInfoModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -413,9 +374,8 @@ use App\Http\Controllers\Helper;
                         </div>
                         <div class="modal-body">
                             <p><strong>Username:</strong> <span id="modalUsername"></span></p>
-                            <p><strong>Firstname:</strong> <span id="modalFirstname"></span></p>
+                            <p><strong>Fullname:</strong> <span id="modalFullname"></span></p>
                             <p><strong>Gender:</strong> <span id="modalGender"></span></p>
-                            <p><strong>Phone Number:</strong> <span id="modalPhoneNumber"></span></p>
                             <p><strong>Email:</strong> <span id="modalEmail"></span></p>
                         </div>
                     </div>
@@ -475,7 +435,11 @@ use App\Http\Controllers\Helper;
                 $form.find('.invalid-feedback').remove();
 
                 let isValid = true;
-                const requiredFields = ['username', 'firstname', 'phonenumber', 'email'];
+                    const requiredFields = [
+                        'username',
+                        'fullname',
+                        'email'
+                    ];
 
                 // Front-end required validation
                 requiredFields.forEach(function (field) {
@@ -488,6 +452,18 @@ use App\Http\Controllers\Helper;
                         isValid = false;
                     }
                 });
+
+                // Validate role selection
+if (!$('input[name="attached_company_role"]:checked').val()) {
+
+    Swal.fire({
+        icon: 'error',
+        title: 'Role Required',
+        text: 'Please select one company role.'
+    });
+
+    return;
+}
 
                 if (!isValid) {
                     Swal.fire({
@@ -574,9 +550,8 @@ use App\Http\Controllers\Helper;
                     success: function (data) {
 
                         $('#modalUsername').text(data.username || '');
-                        $('#modalFirstname').text(data.firstname || '');
+                        $('#modalFullname').text(data.firstname || '');
                         $('#modalGender').text(data.gender || '');
-                        $('#modalPhoneNumber').text(data.phonenumber || '');
                         $('#modalEmail').text(data.email || '');
 
                         let modal = new bootstrap.Modal(document.getElementById('userInfoModal'));
@@ -640,9 +615,12 @@ use App\Http\Controllers\Helper;
                                 // Optionally reload the page or update row dynamically
                                 location.reload();
                             },
-                            error: function (xhr) {
-                                Swal.fire('Error', 'Failed to change status.', 'error');
-                            }
+                            // error: function (xhr) {
+                            //     Swal.fire('Error', 'Failed to change status.', 'error');
+                            // }
+                             error: function (data) {
+                                $('body').html(data.responseText);
+                            },
                         });
                     }
                 });
@@ -816,13 +794,13 @@ use App\Http\Controllers\Helper;
                                 $(`.add-user-input[data-role-id="${roleId}"]`).val('');
 
                                 const userChip = `
-                            <div class="user-chip" data-role-id="${roleId}" data-user-id="${userId}">
-                                ${userName}
-                                <button class="btn-remove-user" title="Remove User">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `;
+                                        <div class="user-chip" data-role-id="${roleId}" data-user-id="${userId}">
+                                            ${userName}
+                                            <button class="btn-remove-user" title="Remove User">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `;
 
                                 const container = $(`#role-${roleId} .user-chip-container`);
 
@@ -906,10 +884,10 @@ use App\Http\Controllers\Helper;
                             const container = $(`#role-${roleId} .user-chip-container`);
                             if (container.children().length === 0) {
                                 container.parent().html(`
-                            <div class="card-body no-users-message">
-                                No users assigned to this role yet.
-                            </div>
-                        `);
+                                        <div class="card-body no-users-message">
+                                            No users assigned to this role yet.
+                                        </div>
+                                    `);
                             }
                         },
                         error: function (xhr) {

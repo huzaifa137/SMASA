@@ -42,6 +42,7 @@ class User extends Authenticatable
         'profile_id',
         'country',
         'is_active',
+        'attached_company_role',
     ];
 
     /**

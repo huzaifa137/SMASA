@@ -22,42 +22,42 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 //     dd($allSessions);
 // })->name('show.sessions');
 
-Route::get('/demo', function () {
-    dd(Helper::activeTerm());
-});
+// Route::get('/demo', function () {
+//     dd(Helper::activeTerm());
+// });
 
-Route::get('/set-admin-session', function () {
-    // session(['LoggedAdminMaster' => 1]);
-    session(['LoggedAdmin' => 1]);
+// Route::get('/set-admin-session', function () {
+//     // session(['LoggedAdminMaster' => 1]);
+//     session(['LoggedAdmin' => 1]);
 
-    return redirect('/');
-});
+//     return redirect('/');
+// });
 
-Route::get('/set-student-session', function () {
-    session(['LoggedStudent' => 1]);
+// Route::get('/set-student-session', function () {
+//     session(['LoggedStudent' => 1]);
 
-    return redirect('/');
-});
+//     return redirect('/');
+// });
 
-Route::get('/set-school', function () {
-    session(['LoggedSchool' => 2]);
+// Route::get('/set-school', function () {
+//     session(['LoggedSchool' => 2]);
 
-    return redirect('/');
-});
+//     return redirect('/');
+// });
+
+// Route::get('/coming-soon', function () {
+//     return view('coming-soon');
+// })->name('coming.soon');
+
+// Route::group(['middleware' => ['AdminAuth']], function () {
+//     Route::get('/', 'dashboardMasterDataDashboard')->name('dashboard.masterdata');
+// });
 
 Route::get('/logout', function () {
     session()->flush();
 
     return redirect('/');
 })->name('logout');
-
-Route::get('/coming-soon', function () {
-    return view('coming-soon');
-})->name('coming.soon');
-
-// Route::group(['middleware' => ['AdminAuth']], function () {
-//     Route::get('/', 'dashboardMasterDataDashboard')->name('dashboard.masterdata');
-// });
 
 Route::get('/language/{language}', [LanguageController::class, 'switchLanguage'])->name('language.switch');
 Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localized']], function () {
@@ -222,6 +222,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('add-teachers', 'addTeachers')->name('school.add-teachers');
         Route::get('/teachers', 'allTeachers')->name('teachers.all');
         Route::get('/school-teachers', 'schoolTeachers')->name('school.teachers');
+        Route::post('/teacher/update-role/{id}', 'updateTeacherRole')->name('teacher.update.role');
         Route::get('/individual-school-teachers/{id}', 'individualSchoolTeachers')->name('individual.school.teachers');
         Route::get('/teacher-profile/{id}', 'teacherProfile')->name('teacher.profile');
         Route::get('/update-teacher-profile/{id}', 'updateteacherProfile')->name('update.teacher.profile');
