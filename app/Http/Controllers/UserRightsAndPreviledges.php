@@ -352,11 +352,11 @@ class UserRightsAndPreviledges extends Controller
     {
 
         $request->validate([
-
             'username' => 'required|string|max:255',
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'attached_company_role' => 'required|exists:roles,id',
+            'password' => 'required|string|min:4|confirmed',
         ]);
 
 
@@ -367,7 +367,7 @@ class UserRightsAndPreviledges extends Controller
             'email' => $request->email,
             'user_role' => 'admin',
             'attached_company_role' => $request->attached_company_role,
-            'password' => Hash::make('123456789'),
+            'password' => Hash::make($request->password),
             'must_change_password' => 1,
 
         ]);

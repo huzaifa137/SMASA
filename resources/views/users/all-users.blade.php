@@ -188,66 +188,101 @@ use App\Http\Controllers\Helper;
                     <div class="card-body bg-light">
                         <form id="createSchoolTeacher">
                             <div class="row">
+
+                                <!-- LEFT COLUMN -->
                                 <div class="col-lg-6 col-md-12">
+
                                     <div class="form-group">
-                                        <label class="form-label" for="username">username</label>
+                                        <label class="form-label" for="username">Username</label>
                                         <input type="text" id="username" name="username" class="form-control"
                                             placeholder="Enter username">
                                     </div>
+
                                     <div class="form-group">
                                         <label class="form-label" for="fullname">Full Name</label>
                                         <input type="text" id="fullname" name="fullname" class="form-control"
                                             placeholder="Enter full name">
                                     </div>
 
+                                    <!-- PASSWORD -->
+                                    <div class="form-group">
+                                        <label class="form-label" for="password">Password</label>
+
+                                        <div class="input-group">
+                                            <input type="password" id="password" name="password" class="form-control"
+                                                placeholder="Enter password">
+
+                                            <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                data-target="#password">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                 </div>
 
+                                <!-- RIGHT COLUMN -->
                                 <div class="col-lg-6 col-md-12">
 
                                     <div class="form-group">
-                                        <label class="form-label" for="Email">Email</label>
+                                        <label class="form-label" for="email">Email</label>
                                         <input type="text" id="email" name="email" class="form-control"
                                             placeholder="Enter user email">
                                     </div>
 
-                                    <div class="form-group mt-5">
+                                    <!-- CONFIRM PASSWORD -->
+                                    <div class="form-group">
+                                        <label class="form-label" for="password_confirmation">
+                                            Confirm Password
+                                        </label>
 
-        <label class="form-label">
-            Attach Company Role
-        </label>
+                                        <div class="input-group">
+                                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                                class="form-control" placeholder="Confirm password">
 
-        <div class="row">
+                                            <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                data-target="#password_confirmation">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
 
-            @foreach ($roles as $role)
+                                    <div class="form-group mt-4">
 
-                <div class="col-md-4">
+                                        <label class="form-label">
+                                            Attach Company Role
+                                        </label>
 
-                    <div class="form-check">
+                                        <div class="row">
 
-                        <input class="form-check-input"
-                            type="radio"
-                            name="attached_company_role"
-                            value="{{ $role->id }}"
-                            id="role_{{ $role->id }}">
+                                            @foreach ($roles as $role)
 
-                        <label class="form-check-label"
-                            for="role_{{ $role->id }}">
+                                                <div class="col-md-4">
 
-                            <i class="fas fa-user-shield text-primary me-1"></i>
+                                                    <div class="form-check">
 
-                            {{ $role->name }}
+                                                        <input class="form-check-input" type="radio"
+                                                            name="attached_company_role" value="{{ $role->id }}"
+                                                            id="role_{{ $role->id }}">
 
-                        </label>
+                                                        <label class="form-check-label" for="role_{{ $role->id }}">
 
-                    </div>
+                                                            <i class="fas fa-user-shield text-primary me-1"></i>
 
-                </div>
+                                                            {{ $role->name }}
 
-            @endforeach
+                                                        </label>
 
-        </div>
+                                                    </div>
 
-    </div>
+                                                </div>
+
+                                            @endforeach
+
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
                             </div>
@@ -259,7 +294,6 @@ use App\Http\Controllers\Helper;
                             </div>
                         </form>
                     </div>
-
                 </div>
             </div>
 
@@ -276,6 +310,7 @@ use App\Http\Controllers\Helper;
                                     <th>#</th>
                                     <th class="text-center">Username</th>
                                     <th>Fullname</th>
+                                    <th>Email</th>
                                     <th>Company Role</th>
                                     <th>Status</th>
                                     <th class="text-center">Action</th>
@@ -297,19 +332,19 @@ use App\Http\Controllers\Helper;
                                         <td style="width:1px;">{{ $key + 1 }}</td>
                                         <td class="fw-bold">{{ @$user->username }}</td>
                                         <td class="fw-bold">{{ @$user->name }}</td>
-
+                                        <td class="fw-bold">{{ @$user->email }}</td>
                                         <td>
                                             @if($user->attached_company_role == 1)
-                                                <span class="badge bg-info">Administrators</span>
+                                                <span class="badge bg-info text-white">Administrators</span>
 
                                             @elseif($user->attached_company_role == 2)
-                                                <span class="badge bg-info">Sales Representative</span>
+                                                <span class="badge bg-info text-white">Sales Representative</span>
 
                                             @elseif($user->attached_company_role == 3)
-                                                <span class="badge bg-info">School Administrators</span>
+                                                <span class="badge bg-info text-white">School Administrators</span>
 
                                             @elseif($user->attached_company_role == 4)
-                                                <span class="badge bg-info">School Teachers</span>
+                                                <span class="badge bg-info text-white">School Teachers</span>
 
                                             @else
                                                 <span class="badge bg-secondary">No Role</span>
@@ -423,7 +458,34 @@ use App\Http\Controllers\Helper;
 
     <script>
         $(document).ready(function () {
+
+            /*
+            |--------------------------------------------------------------------------
+            | SHOW / HIDE PASSWORD
+            |--------------------------------------------------------------------------
+            */
+            $('.toggle-password').on('click', function () {
+
+                const target = $(this).data('target');
+                const input = $(target);
+                const icon = $(this).find('i');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE USER FORM SUBMIT
+            |--------------------------------------------------------------------------
+            */
             $('#createSchoolTeacher').on('submit', function (e) {
+
                 e.preventDefault();
 
                 const $form = $(this);
@@ -435,46 +497,131 @@ use App\Http\Controllers\Helper;
                 $form.find('.invalid-feedback').remove();
 
                 let isValid = true;
-                    const requiredFields = [
-                        'username',
-                        'fullname',
-                        'email'
-                    ];
 
-                // Front-end required validation
+                const requiredFields = [
+                    'username',
+                    'fullname',
+                    'email',
+                    'password',
+                    'password_confirmation'
+                ];
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUIRED FIELD VALIDATION
+                |--------------------------------------------------------------------------
+                */
                 requiredFields.forEach(function (field) {
+
                     let input = $form.find(`[name="${field}"]`);
+
                     if (!input.val().trim()) {
+
                         input.addClass('is-invalid');
-                        if (input.next('.invalid-feedback').length === 0) {
-                            input.after('<div class="invalid-feedback">This field is required.</div>');
+
+                        if (input.parent().find('.invalid-feedback').length === 0) {
+
+                            input.parent().append(
+                                '<div class="invalid-feedback d-block">This field is required.</div>'
+                            );
                         }
+
                         isValid = false;
                     }
                 });
 
-                // Validate role selection
-if (!$('input[name="attached_company_role"]:checked').val()) {
+                /*
+                |--------------------------------------------------------------------------
+                | EMAIL VALIDATION
+                |--------------------------------------------------------------------------
+                */
+                const email = $('#email').val().trim();
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    Swal.fire({
-        icon: 'error',
-        title: 'Role Required',
-        text: 'Please select one company role.'
-    });
+                if (email && !emailPattern.test(email)) {
 
-    return;
-}
+                    $('#email').addClass('is-invalid');
 
-                if (!isValid) {
+                    $('#email').parent().append(
+                        '<div class="invalid-feedback d-block">Enter a valid email address.</div>'
+                    );
+
+                    isValid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | PASSWORD LENGTH VALIDATION
+                |--------------------------------------------------------------------------
+                */
+                const password = $('#password').val();
+
+                if (password.length < 6) {
+
+                    $('#password').addClass('is-invalid');
+
+                    $('#password').parent().append(
+                        '<div class="invalid-feedback d-block">Password must be at least 4 characters.</div>'
+                    );
+
+                    isValid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | CONFIRM PASSWORD VALIDATION
+                |--------------------------------------------------------------------------
+                */
+                const confirmPassword = $('#password_confirmation').val();
+
+                if (password !== confirmPassword) {
+
+                    $('#password_confirmation').addClass('is-invalid');
+
+                    $('#password_confirmation').parent().append(
+                        '<div class="invalid-feedback d-block">Passwords do not match.</div>'
+                    );
+
+                    isValid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | ROLE VALIDATION
+                |--------------------------------------------------------------------------
+                */
+                if (!$('input[name="attached_company_role"]:checked').val()) {
+
                     Swal.fire({
                         icon: 'error',
-                        title: 'Incomplete Form',
-                        text: 'Please fill in all required fields before submitting.'
+                        title: 'Role Required',
+                        text: 'Please select one company role.'
                     });
+
                     return;
                 }
 
-                // Confirmation modal
+                /*
+                |--------------------------------------------------------------------------
+                | STOP IF INVALID
+                |--------------------------------------------------------------------------
+                */
+                if (!isValid) {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Incomplete Form',
+                        text: 'Please fill in all required fields correctly before submitting.'
+                    });
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | CONFIRMATION MODAL
+                |--------------------------------------------------------------------------
+                */
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You are about to add new user.",
@@ -483,43 +630,70 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                     confirmButtonText: 'Yes, submit it!',
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
+
                     if (result.isConfirmed) {
+
                         // Disable button and show loading spinner
-                        $submitBtn.prop('disabled', true).html('Saving...<i class="fas fa-spinner fa-spin"></i>');
+                        $submitBtn.prop('disabled', true)
+                            .html('Saving... <i class="fas fa-spinner fa-spin"></i>');
 
                         $.ajax({
+
                             url: '{{ route('users.store.new.user') }}',
+
                             method: 'POST',
+
                             data: $form.serialize(),
+
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
+
                             success: function (response) {
+
                                 Swal.fire(
                                     'Submitted!',
                                     response.message,
                                     'success'
                                 ).then(() => {
+
                                     location.reload();
                                 });
                             },
+
                             error: function (xhr) {
+
                                 if (xhr.status === 422) {
+
                                     const errors = xhr.responseJSON.errors;
+
                                     for (let field in errors) {
+
                                         let input = $form.find(`[name="${field}"]`);
+
                                         input.addClass('is-invalid');
-                                        if (input.next('.invalid-feedback').length === 0) {
-                                            input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
+
+                                        if (input.parent().find('.invalid-feedback').length === 0) {
+
+                                            input.parent().append(
+                                                `<div class="invalid-feedback d-block">${errors[field][0]}</div>`
+                                            );
                                         }
                                     }
+
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Validation Error',
                                         text: 'Please fix the errors and try again.'
                                     });
+
                                 } else {
-                                    const errorMessage = xhr.responseJSON?.message || xhr.statusText || 'An unexpected error occurred';
+
+                                    const errorMessage =
+                                        xhr.responseJSON?.message ||
+                                        xhr.statusText ||
+                                        'An unexpected error occurred';
+
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Server Error',
@@ -527,12 +701,11 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                                     });
                                 }
                             },
-                            // error: function (data) {
-                            //     $('body').html(data.responseText);
-                            // },
+
                             complete: function () {
 
-                                $submitBtn.prop('disabled', false).html(originalBtnHtml);
+                                $submitBtn.prop('disabled', false)
+                                    .html(originalBtnHtml);
                             }
                         });
                     }
@@ -540,13 +713,23 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
             });
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | VIEW USER DETAILS
+        |--------------------------------------------------------------------------
+        */
         $(document).ready(function () {
+
             $('.btn-view-user').on('click', function () {
+
                 let userId = $(this).data('user-id');
 
                 $.ajax({
+
                     url: `/users/${userId}/details`,
+
                     type: 'GET',
+
                     success: function (data) {
 
                         $('#modalUsername').text(data.username || '');
@@ -554,30 +737,45 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                         $('#modalGender').text(data.gender || '');
                         $('#modalEmail').text(data.email || '');
 
-                        let modal = new bootstrap.Modal(document.getElementById('userInfoModal'));
+                        let modal = new bootstrap.Modal(
+                            document.getElementById('userInfoModal')
+                        );
+
                         modal.show();
                     },
+
                     error: function (xhr) {
+
                         $('body').html(xhr.responseText);
                     }
                 });
             });
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | CHANGE USER STATUS
+        |--------------------------------------------------------------------------
+        */
         $(document).ready(function () {
+
             // Open modal with user's current status
             $('.btn-change-status').on('click', function () {
+
                 const userId = $(this).data('id');
                 const currentStatus = $(this).data('status');
 
                 $('#statusUserId').val(userId);
                 $('#newStatus').val(currentStatus);
+
                 $('#changeStatusModal').modal('show');
             });
 
             // Submit form with SweetAlert confirmation
             $('#changeStatusForm').on('submit', function (e) {
+
                 e.preventDefault();
+
                 const userId = $('#statusUserId').val();
                 const newStatus = $('#newStatus').val();
 
@@ -592,16 +790,23 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                     cancelButtonColor: '#d33',
                     confirmButtonText: 'Yes, change it!'
                 }).then((result) => {
+
                     if (result.isConfirmed) {
+
                         // Send AJAX request to update status
                         $.ajax({
+
                             url: `/users/${userId}/change-status`,
+
                             type: 'POST',
+
                             data: {
                                 _token: '{{ csrf_token() }}',
                                 status: newStatus
                             },
+
                             success: function (response) {
+
                                 $('#changeStatusModal').modal('hide');
 
                                 Swal.fire({
@@ -612,21 +817,38 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                                     showConfirmButton: false
                                 });
 
-                                // Optionally reload the page or update row dynamically
+                                // Reload page
                                 location.reload();
                             },
-                            // error: function (xhr) {
-                            //     Swal.fire('Error', 'Failed to change status.', 'error');
-                            // }
-                             error: function (data) {
+
+                            error: function (data) {
+
                                 $('body').html(data.responseText);
-                            },
+                            }
                         });
                     }
                 });
             });
         });
 
+        $(document).on('click', '.toggle-password', function () {
+
+            const target = $(this).data('target');
+            const input = document.querySelector(target);
+            const icon = this.querySelector('i');
+
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
     </script>
 
 @endsection
@@ -794,13 +1016,13 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                                 $(`.add-user-input[data-role-id="${roleId}"]`).val('');
 
                                 const userChip = `
-                                        <div class="user-chip" data-role-id="${roleId}" data-user-id="${userId}">
-                                            ${userName}
-                                            <button class="btn-remove-user" title="Remove User">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    `;
+                                                    <div class="user-chip" data-role-id="${roleId}" data-user-id="${userId}">
+                                                        ${userName}
+                                                        <button class="btn-remove-user" title="Remove User">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                `;
 
                                 const container = $(`#role-${roleId} .user-chip-container`);
 
@@ -884,10 +1106,10 @@ if (!$('input[name="attached_company_role"]:checked').val()) {
                             const container = $(`#role-${roleId} .user-chip-container`);
                             if (container.children().length === 0) {
                                 container.parent().html(`
-                                        <div class="card-body no-users-message">
-                                            No users assigned to this role yet.
-                                        </div>
-                                    `);
+                                                    <div class="card-body no-users-message">
+                                                        No users assigned to this role yet.
+                                                    </div>
+                                                `);
                             }
                         },
                         error: function (xhr) {
