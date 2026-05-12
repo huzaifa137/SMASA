@@ -1494,10 +1494,10 @@ use App\Http\Controllers\Helper;
                                     $urgencyClass = $progress->urgency;
                                     $urgencyIcon =
                                         $progress->urgency == 'urgent'
-                                            ? 'fa-exclamation-triangle'
-                                            : ($progress->urgency == 'primary'
-                                                ? 'fa-hourglass-half'
-                                                : 'fa-clock');
+                                        ? 'fa-exclamation-triangle'
+                                        : ($progress->urgency == 'primary'
+                                            ? 'fa-hourglass-half'
+                                            : 'fa-clock');
                                 @endphp
                                 <div class="pending-exam-card" data-exam-id="{{ $exam->id }}">
                                     <div class="pending-exam-header">
@@ -1521,16 +1521,16 @@ use App\Http\Controllers\Helper;
                                                 // urgency (override backend if needed)
                                                 $urgencyClass =
                                                     $daysLeft <= 0
-                                                        ? 'urgent'
-                                                        : ($daysLeft <= 2
-                                                            ? 'text-primary'
-                                                            : 'normal');
+                                                    ? 'urgent'
+                                                    : ($daysLeft <= 2
+                                                        ? 'text-primary'
+                                                        : 'normal');
                                                 $urgencyIcon =
                                                     $daysLeft <= 0
-                                                        ? 'fa-exclamation-triangle'
-                                                        : ($daysLeft <= 2
-                                                            ? 'fa-clock'
-                                                            : 'fa-clock');
+                                                    ? 'fa-exclamation-triangle'
+                                                    : ($daysLeft <= 2
+                                                        ? 'fa-clock'
+                                                        : 'fa-clock');
                                             @endphp
 
                                             <div class="pending-deadline {{ $urgencyClass }}">
@@ -1550,153 +1550,153 @@ use App\Http\Controllers\Helper;
                                             </div>
                                         </div>
                                     </div>
-                                <div class="pending-progress-section">
-                                    @forelse ($pendingMarksProgress as $progress)
-                                        <div class="exam-progress-container mb-4">
-                                            <div class="overall-progress">
-                                                <div class="progress-label d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <i class="fas fa-chalkboard-teacher me-1"></i>
-                                                        <strong>{{ $progress->exam->exam_name }}</strong>
+                                    <div class="pending-progress-section">
+                                        @forelse ($pendingMarksProgress as $progress)
+                                            <div class="exam-progress-container mb-4">
+                                                <div class="overall-progress">
+                                                    <div class="progress-label d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-chalkboard-teacher me-1"></i>
+                                                            <strong>{{ $progress->exam->exam_name }}</strong>
 
+                                                            @php
+                                                                $daysLeft = (int) ceil($progress->days_left);
+                                                            @endphp
+
+                                                            <span class="ms-2 badge text-white
+                                                                                            @if ($progress->is_deadline_passed) bg-secondary
+                                                                                            @elseif($progress->urgency == 'urgent') bg-danger
+                                                                                            @elseif($progress->urgency == 'warning') bg-warning
+                                                                                            @else bg-info @endif">
+
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Deadline passed
+                                                                @else
+                                                                    @if($daysLeft <= 0)
+                                                                        Due today
+                                                                    @else
+                                                                        {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
+                                                                    @endif
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                        <span>{{ $progress->submitted_subjects }}/{{ $progress->total_subjects }}
+                                                            subjects</span>
+                                                    </div>
+                                                    <div class="progress-bar-bg">
+                                                        <div class="progress-bar-fill-orange"
+                                                            style="width: {{ $progress->overall_progress }}%"></div>
+                                                    </div>
+                                                </div>
+
+                                                @if (count($progress->subject_progress) > 0)
+                                                    <div class="subject-list mt-3">
+                                                        <!-- Subjects to complete (only show if not all completed or deadline not passed) -->
+                                                        @if ($progress->overall_progress < 100 || !$progress->is_deadline_passed)
+                                                            <div class="subject-list-title">
+                                                                <i class="fas fa-book-open me-1"></i>
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Subjects with pending marks
+                                                                @else
+                                                                    Subjects to complete
+                                                                @endif
+                                                            </div>
+
+                                                            @foreach ($progress->subject_progress as $subject)
+                                                                @if ($subject->progress < 100)
+                                                                    @php
+                                                                        $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
+                                                                    @endphp
+                                                                    <div class="subject-item pending-subject" @if (!$progress->is_deadline_passed)
+                                                                        onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
+                                                                    style="cursor: {{ $cursorStyle }};" @else
+                                                                        style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
+                                                                        <div class="subject-name">
+                                                                            {{ $subject->subject_name }}
+                                                                        </div>
+                                                                        <div class="subject-meta">
+                                                                            <span>
+                                                                                <i class="fas fa-users me-1"></i>
+                                                                                {{ $subject->class_name }} @if ($subject->stream) •
+                                                                                {{ $subject->stream }} @endif
+                                                                            </span>
+                                                                            <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
+                                                                                <div class="subject-progress-bar flex-grow-1">
+                                                                                    <div class="subject-progress-fill"
+                                                                                        style="width: {{ $subject->progress }}%"></div>
+                                                                                </div>
+                                                                                <span class="subject-stats">
+                                                                                    {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            @endforeach
+                                                        @endif
+
+                                                        <!-- Completed subjects (always show if deadline not passed) -->
                                                         @php
-                                                            $daysLeft = (int) ceil($progress->days_left);
+                                                            $completedSubjects = array_filter($progress->subject_progress, function ($subject) {
+                                                                return $subject->progress == 100;
+                                                            });
                                                         @endphp
 
-                                                        <span class="ms-2 badge text-white
-                                                            @if ($progress->is_deadline_passed) bg-secondary
-                                                            @elseif($progress->urgency == 'urgent') bg-danger
-                                                            @elseif($progress->urgency == 'warning') bg-warning
-                                                            @else bg-info @endif">
-
-                                                            @if ($progress->is_deadline_passed)
-                                                                Deadline passed
-                                                            @else
-                                                                @if($daysLeft <= 0)
-                                                                    Due today
+                                                        @if (count($completedSubjects) > 0 && (!$progress->is_deadline_passed || $progress->has_pending_marks))
+                                                            <div class="subject-list-title mt-3" style="color: #28a745;">
+                                                                <i class="fas fa-check-circle me-1"></i>
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Completed subjects
                                                                 @else
-                                                                    {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
+                                                                    Completed subjects (click to review)
                                                                 @endif
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <span>{{ $progress->submitted_subjects }}/{{ $progress->total_subjects }} subjects</span>
-                                                </div>
-                                                <div class="progress-bar-bg">
-                                                    <div class="progress-bar-fill-orange" style="width: {{ $progress->overall_progress }}%"></div>
-                                                </div>
-                                            </div>
+                                                            </div>
 
-                                            @if (count($progress->subject_progress) > 0)
-                                                <div class="subject-list mt-3">
-                                                    <!-- Subjects to complete (only show if not all completed or deadline not passed) -->
-                                                    @if ($progress->overall_progress < 100 || !$progress->is_deadline_passed)
-                                                        <div class="subject-list-title">
-                                                            <i class="fas fa-book-open me-1"></i>
-                                                            @if ($progress->is_deadline_passed)
-                                                                Subjects with pending marks
-                                                            @else
-                                                                Subjects to complete
-                                                            @endif
-                                                        </div>
-
-                                                        @foreach ($progress->subject_progress as $subject)
-                                                            @if ($subject->progress < 100)
+                                                            @foreach ($completedSubjects as $subject)
                                                                 @php
                                                                     $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
                                                                 @endphp
-                                                                <div class="subject-item pending-subject"
-                                                                    @if (!$progress->is_deadline_passed)
-                                                                        onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                        style="cursor: {{ $cursorStyle }};"
-                                                                    @else
-                                                                        style="cursor: {{ $cursorStyle }}; opacity: 0.8;"
-                                                                    @endif>
+                                                                <div class="subject-item completed-subject" @if (!$progress->is_deadline_passed)
+                                                                    onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
+                                                                style="cursor: {{ $cursorStyle }};" @else
+                                                                    style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
                                                                     <div class="subject-name">
                                                                         {{ $subject->subject_name }}
                                                                     </div>
                                                                     <div class="subject-meta">
                                                                         <span>
                                                                             <i class="fas fa-users me-1"></i>
-                                                                            {{ $subject->class_name }} @if ($subject->stream) • {{ $subject->stream }} @endif
+                                                                            {{ $subject->class_name }} @if ($subject->stream) •
+                                                                            {{ $subject->stream }} @endif
                                                                         </span>
                                                                         <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
                                                                             <div class="subject-progress-bar flex-grow-1">
-                                                                                <div class="subject-progress-fill" style="width: {{ $subject->progress }}%"></div>
+                                                                                <div class="subject-progress-fill"
+                                                                                    style="width: 100%; background-color: #28a745;"></div>
                                                                             </div>
-                                                                            <span class="subject-stats">
+                                                                            <span class="subject-stats" style="color: #28a745;">
                                                                                 {{ $subject->entered_marks }}/{{ $subject->total_students }}
                                                                             </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            @endif
-                                                        @endforeach
-                                                    @endif
-
-                                                    <!-- Completed subjects (always show if deadline not passed) -->
-                                                    @php
-                                                        $completedSubjects = array_filter($progress->subject_progress, function($subject) {
-                                                            return $subject->progress == 100;
-                                                        });
-                                                    @endphp
-
-                                                    @if (count($completedSubjects) > 0 && (!$progress->is_deadline_passed || $progress->has_pending_marks))
-                                                        <div class="subject-list-title mt-3" style="color: #28a745;">
-                                                            <i class="fas fa-check-circle me-1"></i>
-                                                            @if ($progress->is_deadline_passed)
-                                                                Completed subjects
-                                                            @else
-                                                                Completed subjects (click to review)
-                                                            @endif
-                                                        </div>
-
-                                                        @foreach ($completedSubjects as $subject)
-                                                            @php
-                                                                $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
-                                                            @endphp
-                                                            <div class="subject-item completed-subject"
-                                                                @if (!$progress->is_deadline_passed)
-                                                                    onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                    style="cursor: {{ $cursorStyle }};"
-                                                                @else
-                                                                    style="cursor: {{ $cursorStyle }}; opacity: 0.8;"
-                                                                @endif>
-                                                                <div class="subject-name">
-                                                                    {{ $subject->subject_name }}
-                                                                </div>
-                                                                <div class="subject-meta">
-                                                                    <span>
-                                                                        <i class="fas fa-users me-1"></i>
-                                                                        {{ $subject->class_name }} @if ($subject->stream) • {{ $subject->stream }} @endif
-                                                                    </span>
-                                                                    <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                        <div class="subject-progress-bar flex-grow-1">
-                                                                            <div class="subject-progress-fill" style="width: 100%; background-color: #28a745;"></div>
-                                                                        </div>
-                                                                        <span class="subject-stats" style="color: #28a745;">
-                                                                            {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <div class="alert alert-info mt-3" role="alert">
-                                                    <i class="fas fa-info-circle me-2"></i>
-                                                    No subjects assigned for this examination.
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @empty
-                                        <div class="alert alert-success" role="alert">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            All examinations have been completed or have no pending marks entry.
-                                        </div>
-                                    @endforelse
-                                </div>
+                                                            @endforeach
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div class="alert alert-info mt-3" role="alert">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        No subjects assigned for this examination.
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <div class="alert alert-success" role="alert">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                All examinations have been completed or have no pending marks entry.
+                                            </div>
+                                        @endforelse
+                                    </div>
 
                                     <style>
                                         /* Add these styles to your existing CSS */
@@ -1776,8 +1776,7 @@ use App\Http\Controllers\Helper;
                                     </style>
 
                                     <div class="pending-footer">
-                                        <a href="{{ route('examination.marks.entry', $exam->id) }}"
-                                            class="btn-continue-marks">
+                                        <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
                                             <i class="fas fa-pen-alt"></i>
                                             Continue Entering Marks
                                         </a>
@@ -1815,8 +1814,7 @@ use App\Http\Controllers\Helper;
                                 <button class="btn-outline-purple ml-2" onclick="filterTimeline('marks_entry', this)">
                                     Marks Entry ({{ $stats['marks_entry'] }})
                                 </button>
-                                <button class="btn-outline-purple ml-2"
-                                    onclick="filterTimeline('results_released', this)">
+                                <button class="btn-outline-purple ml-2" onclick="filterTimeline('results_released', this)">
                                     Results ({{ $stats['results_released'] }})
                                 </button>
                             </div>
@@ -1846,8 +1844,7 @@ use App\Http\Controllers\Helper;
                                         \Carbon\Carbon::parse($exam->end_date)->isFuture();
                                 @endphp
                                 <div class="timeline-item" style="border-left-color: {{ $statusColors[$exam->status] }};"
-                                    data-status="{{ $exam->status }}"
-                                    data-upcoming="{{ $isUpcoming ? 'true' : 'false' }}"
+                                    data-status="{{ $exam->status }}" data-upcoming="{{ $isUpcoming ? 'true' : 'false' }}"
                                     data-ongoing="{{ $isOngoing ? 'true' : 'false' }}"
                                     onclick="showExamDetails({{ $exam->id }})">
                                     <div class="row align-items-center">
@@ -1881,8 +1878,7 @@ use App\Http\Controllers\Helper;
                                                 @endphp
 
                                                 <div class="mt-1">
-                                                    <small
-                                                        class="text-{{ $daysLeft <= 3 ? 'danger' : 'warning' }} fw-bold">
+                                                    <small class="text-{{ $daysLeft <= 3 ? 'danger' : 'warning' }} fw-bold">
                                                         <i class="fas fa-clock"></i>
 
                                                         @if ($daysLeft > 0)
@@ -1938,8 +1934,7 @@ use App\Http\Controllers\Helper;
                             <div class="search-box">
                                 <i class="fas fa-search search-box-icon"></i>
                                 <input type="text" class="search-input-enhanced"
-                                    placeholder="Search by name, code, or term..." id="tableSearch"
-                                    onkeyup="searchTable()">
+                                    placeholder="Search by name, code, or term..." id="tableSearch" onkeyup="searchTable()">
                             </div>
                         </div>
 
@@ -2018,7 +2013,7 @@ use App\Http\Controllers\Helper;
                                                     </span>
                                                     <span
                                                         class="period-duration 
-                                                        {{ $duration == 1 ? 'text-danger fw-bold' : ($duration <= 2 ? 'text-warning fw-bold' : 'text-info') }}">
+                                                                        {{ $duration == 1 ? 'text-danger fw-bold' : ($duration <= 2 ? 'text-warning fw-bold' : 'text-info') }}">
 
                                                         @if ($duration > 0)
                                                             {{ $duration }} {{ Str::plural('day', $duration) }} left
@@ -2043,8 +2038,7 @@ use App\Http\Controllers\Helper;
                                             <td>
                                                 <div class="action-buttons">
                                                     <button class="btn-action btn-action-view"
-                                                        onclick="showExamDetails({{ $exam->id }})"
-                                                        title="View Details">
+                                                        onclick="showExamDetails({{ $exam->id }})" title="View Details">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                     <button class="btn-action btn-action-edit"
@@ -2110,9 +2104,320 @@ use App\Http\Controllers\Helper;
                     </div>
                 </div>
 
+                {{-- Released Examinations Section (Section 6) --}}
+                <div class="card form-card mt-3">
+                    <div class="card-body p-0">
+                        <div class="section-header mb-2" style="margin: 0; padding: 1.5rem 1.5rem 0 1.5rem;">
+                            <span class="step-badge">6</span>
+                            <i class="fas fa-trophy me-2"></i>Released Examinations
+                            <span class="badge bg-success ms-2" style="background: #10B981 !important;">
+                                {{ $stats['results_released'] }} Released
+                            </span>
+                        </div>
+
+                        @if($releasedExams->count() > 0)
+                            <div class="released-exams-grid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1rem; padding: 1.25rem;">
+                                @foreach($releasedExams as $exam)
+                                    @php
+                                        $publishDate = $exam->published_at ? \Carbon\Carbon::parse($exam->published_at) : $exam->updated_at;
+                                    @endphp
+                                    <div class="released-exam-card" onclick="showExamDetails({{ $exam->id }})"
+                                        style="cursor: pointer;">
+                                        <div class="released-exam-header">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <span class="released-badge">
+                                                        <i class="fas fa-check-circle"></i> Results Released
+                                                    </span>
+                                                    <h6 class="released-exam-title mt-2 mb-1">
+                                                        {{ Str::limit($exam->exam_name, 35) }}
+                                                    </h6>
+                                                    <span class="released-exam-code">
+                                                        <i class="fas fa-code me-1"></i> {{ $exam->exam_code }}
+                                                    </span>
+                                                </div>
+                                                <div class="released-date-badge">
+                                                    <i class="far fa-calendar-alt"></i>
+                                                    {{ $publishDate->format('d M, Y') }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="released-exam-body">
+                                            <div class="released-info-grid">
+                                                <div class="released-info-item">
+                                                    <i class="fas fa-calendar-week"></i>
+                                                    <div>
+                                                        <small>Period</small>
+                                                        <strong>{{ \Carbon\Carbon::parse($exam->start_date)->format('d M') }} -
+                                                            {{ \Carbon\Carbon::parse($exam->end_date)->format('d M, Y') }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="released-info-item">
+                                                    <i class="fas fa-layer-group"></i>
+                                                    <div>
+                                                        <small>Type</small>
+                                                        <strong>{{ $exam->exam_type }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="released-info-item">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                    <div>
+                                                        <small>Term</small>
+                                                        <strong>{{ $exam->term }} • {{ $exam->academic_year }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="released-info-item">
+                                                    <i class="fas fa-chart-line"></i>
+                                                    <div>
+                                                        <small>Performance</small>
+                                                        <strong>{{ $exam->pass_rate ?? 'N/A' }}% Pass Rate</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="released-exam-footer">
+                                            <div class="d-flex gap-2 w-100">
+                                                <button class="btn-view-results"
+                                                    onclick="event.stopPropagation(); viewExamResults({{ $exam->id }})">
+                                                    <i class="fas fa-chart-bar me-1"></i> View Results
+                                                </button>
+                                                <button class="btn-download-report"
+                                                    onclick="event.stopPropagation(); downloadResultsReport({{ $exam->id }})">
+                                                    <i class="fas fa-download me-1"></i> Report
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-state-released" style="text-align: center; padding: 3rem 2rem;">
+                                <div class="empty-icon"
+                                    style="width: 70px; height: 70px; margin: 0 auto 1rem; background: linear-gradient(135deg, #ede9ff 0%, #f6f4ff 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-trophy" style="font-size: 1.8rem; color: #2C29CA; opacity: 0.5;"></i>
+                                </div>
+                                <h6 style="color: #1a1a2e; font-weight: 600; margin-bottom: 0.5rem;">No Released Examinations
+                                </h6>
+                                <p style="color: #94a3b8; font-size: 0.85rem;">Examinations with results released will appear
+                                    here</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <style>
+                    /* ── Released Examinations Section Styles ───────────────────────────────── */
+                    .released-exams-grid {
+                        max-height: 600px;
+                        overflow-y: auto;
+                        padding-right: 0.25rem;
+                    }
+
+                    .released-exams-grid::-webkit-scrollbar {
+                        width: 6px;
+                    }
+
+                    .released-exams-grid::-webkit-scrollbar-track {
+                        background: #f1f1f1;
+                        border-radius: 10px;
+                    }
+
+                    .released-exams-grid::-webkit-scrollbar-thumb {
+                        background: linear-gradient(135deg, #2C29CA, #5351e4);
+                        border-radius: 10px;
+                    }
+
+                    .released-exam-card {
+                        background: #ffffff;
+                        border-radius: 1rem;
+                        overflow: hidden;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        border: 1px solid #e8e9ff;
+                        box-shadow: 0 2px 8px rgba(44, 41, 202, 0.05);
+                    }
+
+                    .released-exam-card:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 8px 24px rgba(44, 41, 202, 0.12);
+                        border-color: #5351e4;
+                    }
+
+                    .released-exam-header {
+                        padding: 1rem 1.25rem;
+                        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+                        border-bottom: 2px solid #ede9ff;
+                    }
+
+                    .released-badge {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                        background: linear-gradient(135deg, #2C29CA, #5351e4);
+                        color: white;
+                        padding: 0.25rem 0.75rem;
+                        border-radius: 99px;
+                        font-size: 0.65rem;
+                        font-weight: 600;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .released-badge i {
+                        font-size: 0.6rem;
+                    }
+
+                    .released-exam-title {
+                        font-weight: 700;
+                        font-size: 0.95rem;
+                        color: #1a1a2e;
+                        margin: 0;
+                        line-height: 1.3;
+                    }
+
+                    .released-exam-code {
+                        font-size: 0.7rem;
+                        color: #6c757d;
+                        font-family: 'Courier New', monospace;
+                        background: #f8f7ff;
+                        padding: 0.2rem 0.6rem;
+                        border-radius: 0.5rem;
+                        display: inline-block;
+                    }
+
+                    .released-date-badge {
+                        background: #f0f4ff;
+                        padding: 0.3rem 0.7rem;
+                        border-radius: 0.5rem;
+                        font-size: 0.7rem;
+                        font-weight: 600;
+                        color: #2C29CA;
+                        white-space: nowrap;
+                    }
+
+                    .released-date-badge i {
+                        margin-right: 0.25rem;
+                    }
+
+                    .released-exam-body {
+                        padding: 1rem 1.25rem;
+                    }
+
+                    .released-info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 0.75rem;
+                    }
+
+                    .released-info-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.6rem;
+                    }
+
+                    .released-info-item i {
+                        width: 30px;
+                        height: 30px;
+                        background: #f8f7ff;
+                        border-radius: 0.5rem;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.8rem;
+                        color: #5351e4;
+                    }
+
+                    .released-info-item div {
+                        display: flex;
+                        flex-direction: column;
+                    }
+
+                    .released-info-item small {
+                        font-size: 0.6rem;
+                        color: #94a3b8;
+                        text-transform: uppercase;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .released-info-item strong {
+                        font-size: 0.8rem;
+                        font-weight: 600;
+                        color: #1a1a2e;
+                    }
+
+                    .released-exam-footer {
+                        padding: 0.75rem 1.25rem;
+                        background: #fafbff;
+                        border-top: 1px solid #ede9ff;
+                    }
+
+                    .btn-view-results,
+                    .btn-download-report {
+                        flex: 1;
+                        padding: 0.5rem 0.75rem;
+                        border-radius: 0.5rem;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                        cursor: pointer;
+                        text-align: center;
+                        border: none;
+                    }
+
+                    .btn-view-results {
+                        background: linear-gradient(135deg, #2C29CA, #5351e4);
+                        color: white;
+                    }
+
+                    .btn-view-results:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(44, 41, 202, 0.3);
+                    }
+
+                    .btn-download-report {
+                        background: white;
+                        color: #2C29CA;
+                        border: 2px solid #ede9ff;
+                    }
+
+                    .btn-download-report:hover {
+                        background: #ede9ff;
+                        border-color: #5351e4;
+                        transform: translateY(-1px);
+                    }
+
+                    .empty-state-released {
+                        text-align: center;
+                        padding: 3rem 2rem;
+                    }
+
+                    @media (max-width: 768px) {
+                        .released-exams-grid {
+                            grid-template-columns: 1fr;
+                            padding: 0.75rem;
+                        }
+
+                        .released-info-grid {
+                            grid-template-columns: 1fr;
+                            gap: 0.5rem;
+                        }
+
+                        .released-info-item i {
+                            width: 28px;
+                            height: 28px;
+                            font-size: 0.7rem;
+                        }
+
+                        .released-info-item strong {
+                            font-size: 0.75rem;
+                        }
+                    }
+                </style>
+
                 <script>
                     // ── Enhanced Responsive Table Functions ──────────────────────────────────
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         const scrollWrapper = document.getElementById('tableScrollWrapper');
                         const scrollIndicator = document.getElementById('scrollIndicator');
 
@@ -2131,12 +2436,12 @@ use App\Http\Controllers\Helper;
                             window.addEventListener('resize', checkScrollNeeded);
 
                             // Optional: Hide indicator when user starts scrolling
-                            scrollWrapper.addEventListener('scroll', function() {
+                            scrollWrapper.addEventListener('scroll', function () {
                                 if (scrollIndicator.classList.contains('visible')) {
                                     // Fade out after 2 seconds of no scroll
                                     clearTimeout(scrollIndicator.timeout);
                                     scrollIndicator.style.opacity = '0.5';
-                                    scrollIndicator.timeout = setTimeout(function() {
+                                    scrollIndicator.timeout = setTimeout(function () {
                                         if (scrollWrapper.scrollWidth > scrollWrapper.clientWidth) {
                                             scrollIndicator.style.opacity = '1';
                                         }
@@ -2177,16 +2482,16 @@ use App\Http\Controllers\Helper;
                                 const noResultRow = document.createElement('tr');
                                 noResultRow.className = 'no-result-row';
                                 noResultRow.innerHTML = `
-                                                                        <td colspan="6">
-                                                                            <div class="empty-state-enhanced" style="padding: 2rem;">
-                                                                                <div class="empty-icon" style="width: 60px; height: 60px;">
-                                                                                    <i class="fas fa-search"></i>
-                                                                                </div>
-                                                                                <h4>No matching examinations</h4>
-                                                                                <p>Try a different search term</p>
-                                                                            </div>
-                                                                        </td>
-                                                                    `;
+                                                                                <td colspan="6">
+                                                                                    <div class="empty-state-enhanced" style="padding: 2rem;">
+                                                                                        <div class="empty-icon" style="width: 60px; height: 60px;">
+                                                                                            <i class="fas fa-search"></i>
+                                                                                        </div>
+                                                                                        <h4>No matching examinations</h4>
+                                                                                        <p>Try a different search term</p>
+                                                                                    </div>
+                                                                                </td>
+                                                                            `;
                                 document.querySelector('#examTable tbody').appendChild(noResultRow);
                             }
                         } else if (existingNoResult) {
@@ -2195,14 +2500,14 @@ use App\Http\Controllers\Helper;
                     }
 
                     // Initialize pending marks section enhancements
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         // Add hover animation for subject items
                         const subjectItems = document.querySelectorAll('.subject-item');
                         subjectItems.forEach(item => {
-                            item.addEventListener('mouseenter', function() {
+                            item.addEventListener('mouseenter', function () {
                                 this.style.transform = 'translateX(5px)';
                             });
-                            item.addEventListener('mouseleave', function() {
+                            item.addEventListener('mouseleave', function () {
                                 this.style.transform = 'translateX(0)';
                             });
                         });
@@ -2251,15 +2556,13 @@ use App\Http\Controllers\Helper;
                             <div class="progress-circle">
                                 <svg width="130" height="130" viewBox="0 0 130 130">
                                     <defs>
-                                        <linearGradient id="progressGradient" x1="0%" y1="0%"
-                                            x2="100%" y2="100%">
+                                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                             <stop offset="0%" style="stop-color:#2C29CA;stop-opacity:1" />
                                             <stop offset="100%" style="stop-color:#7c7aec;stop-opacity:1" />
                                         </linearGradient>
                                     </defs>
                                     <circle class="progress-bg" cx="65" cy="65" r="58"></circle>
-                                    <circle class="progress-fill" cx="65" cy="65" r="58"
-                                        stroke-dasharray="364.425"
+                                    <circle class="progress-fill" cx="65" cy="65" r="58" stroke-dasharray="364.425"
                                         stroke-dashoffset="{{ 364.425 * (1 - $completionRate / 100) }}"></circle>
                                 </svg>
                                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
@@ -2464,12 +2767,12 @@ use App\Http\Controllers\Helper;
                     today.getDate() === day;
 
                 html += `
-                                                                                            <div class="cal-date ${hasExam ? 'has-exam' : ''} ${isToday ? 'today' : ''}"
-                                                                                                 ${hasExam ? `onclick="showDateExams('${dateStr}')"` : ''}
-                                                                                                 title="${hasExam ? 'Click to view exams' : ''}">
-                                                                                                ${day}
-                                                                                            </div>
-                                                                                        `;
+                                                                                                    <div class="cal-date ${hasExam ? 'has-exam' : ''} ${isToday ? 'today' : ''}"
+                                                                                                         ${hasExam ? `onclick="showDateExams('${dateStr}')"` : ''}
+                                                                                                         title="${hasExam ? 'Click to view exams' : ''}">
+                                                                                                        ${day}
+                                                                                                    </div>
+                                                                                                `;
             }
 
             html += '</div>';
@@ -2501,20 +2804,20 @@ use App\Http\Controllers\Helper;
                     'results_released': '#2C29CA'
                 };
                 html += `
-                            <div class="timeline-item mb-2" style="border-left-color: ${statusColors[exam.status]}; cursor:pointer;" 
-                                    onclick="Swal.close(); showExamDetails(${exam.id})">
-                                <strong>${exam.exam_code}</strong>
-                                <br><small>${exam.name}</small>
-                            </div>
-                        `;
+                                    <div class="timeline-item mb-2" style="border-left-color: ${statusColors[exam.status]}; cursor:pointer;" 
+                                            onclick="Swal.close(); showExamDetails(${exam.id})">
+                                        <strong>${exam.exam_code}</strong>
+                                        <br><small>${exam.name}</small>
+                                    </div>
+                                `;
             });
             html += '</div>';
 
             Swal.fire({
                 title: `<span style="font-size: 1.3rem; font-weight: 700; color: #1a1a2e;">
-                                                                                            <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
-                                                                                            ${new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                                                                        </span>`,
+                                                                                                    <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
+                                                                                                    ${new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                                                                </span>`,
                 html: html,
                 showConfirmButton: false,
                 showCloseButton: true,
@@ -2567,10 +2870,10 @@ use App\Http\Controllers\Helper;
             Swal.fire({
                 title: 'Loading Examination Details...',
                 html: `
-                    <div style="text-align: center; padding: 1.5rem;">
-                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                    </div>
-                `,
+                            <div style="text-align: center; padding: 1.5rem;">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                            </div>
+                        `,
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 showCloseButton: false,
@@ -2616,125 +2919,125 @@ use App\Http\Controllers\Helper;
                     let actionButtonsHTML = '';
                     if (exam.status === 'draft') {
                         actionButtonsHTML = `
-                                                                                                    <button onclick="Swal.close(); updateExamStatus(${examId}, 'active')" 
-                                                                                                        style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-play me-2"></i> Activate
-                                                                                                    </button>
-                                                                                                    <button onclick="Swal.close(); deleteExam(${examId})" 
-                                                                                                        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-trash-alt me-2"></i> Delete
-                                                                                                    </button>
-                                                                                                `;
+                                                                                                            <button onclick="Swal.close(); updateExamStatus(${examId}, 'active')" 
+                                                                                                                style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-play me-2"></i> Activate
+                                                                                                            </button>
+                                                                                                            <button onclick="Swal.close(); deleteExam(${examId})" 
+                                                                                                                style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-trash-alt me-2"></i> Delete
+                                                                                                            </button>
+                                                                                                        `;
                     } else if (exam.status === 'active') {
                         actionButtonsHTML = `
-                                                                                                    <button onclick="Swal.close(); updateExamStatus(${examId}, 'marks_entry')" 
-                                                                                                        style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-edit me-2"></i> Open Marks Entry
-                                                                                                    </button>
-                                                                                                    <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')" 
-                                                                                                        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-lock me-2"></i> Close Exam
-                                                                                                    </button>
-                                                                                                `;
+                                                                                                            <button onclick="Swal.close(); updateExamStatus(${examId}, 'marks_entry')" 
+                                                                                                                style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-edit me-2"></i> Open Marks Entry
+                                                                                                            </button>
+                                                                                                            <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')" 
+                                                                                                                style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-lock me-2"></i> Close Exam
+                                                                                                            </button>
+                                                                                                        `;
                     } else if (exam.status === 'marks_entry') {
                         actionButtonsHTML = `
-                                                                                                    <button onclick="window.location.href='/examinations/${examId}/marks'" 
-                                                                                                        style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-pen me-2"></i> Enter Marks
-                                                                                                    </button>
-                                                                                                    <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')" 
-                                                                                                        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-lock me-2"></i> Close Exam
-                                                                                                    </button>
-                                                                                                `;
+                                                                                                            <button onclick="window.location.href='/examinations/${examId}/marks'" 
+                                                                                                                style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-pen me-2"></i> Enter Marks
+                                                                                                            </button>
+                                                                                                            <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')" 
+                                                                                                                style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-lock me-2"></i> Close Exam
+                                                                                                            </button>
+                                                                                                        `;
                     } else if (exam.status === 'closed') {
                         actionButtonsHTML = `
-                                                                                                    <button onclick="Swal.close(); updateExamStatus(${examId}, 'results_released')" 
-                                                                                                        style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-                                                                                                        <i class="fas fa-trophy me-2"></i> Release Results
-                                                                                                    </button>
-                                                                                                `;
+                                                                                                            <button onclick="Swal.close(); updateExamStatus(${examId}, 'results_released')" 
+                                                                                                                style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                                                                                                                <i class="fas fa-trophy me-2"></i> Release Results
+                                                                                                            </button>
+                                                                                                        `;
                     } else if (exam.status === 'results_released') {
                         actionButtonsHTML = `
-                                                                                                    <button disabled 
-                                                                                                        style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: not-allowed; margin: 5px;">
-                                                                                                        <i class="fas fa-check-circle me-2"></i> Completed
-                                                                                                    </button>
-                                                                                                `;
+                                                                                                            <button disabled 
+                                                                                                                style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: not-allowed; margin: 5px;">
+                                                                                                                <i class="fas fa-check-circle me-2"></i> Completed
+                                                                                                            </button>
+                                                                                                        `;
                     }
 
                     let deadlineBadge = '';
                     if (exam.days_until_deadline > 0) {
                         const isUrgent = exam.days_until_deadline <= 3;
                         deadlineBadge = `
-                                                                                                    <span style="background: ${isUrgent ? '#FEF3C7' : '#D1FAE5'}; color: ${isUrgent ? '#D97706' : '#059669'}; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-                                                                                                        <i class="fas fa-clock"></i> ${exam.days_until_deadline} day${exam.days_until_deadline !== 1 ? 's' : ''} left
-                                                                                                    </span>
-                                                                                                `;
+                                                                                                            <span style="background: ${isUrgent ? '#FEF3C7' : '#D1FAE5'}; color: ${isUrgent ? '#D97706' : '#059669'}; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                                                                                                <i class="fas fa-clock"></i> ${exam.days_until_deadline} day${exam.days_until_deadline !== 1 ? 's' : ''} left
+                                                                                                            </span>
+                                                                                                        `;
                     } else {
                         deadlineBadge = `
-                                                                                                    <span style="background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-                                                                                                        <i class="fas fa-ban"></i> Expired
-                                                                                                    </span>
-                                                                                                `;
+                                                                                                            <span style="background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                                                                                                <i class="fas fa-ban"></i> Expired
+                                                                                                            </span>
+                                                                                                        `;
                     }
 
                     Swal.fire({
                         title: exam.exam_name,
                         html: `
-                                                                                                    <div style="text-align: left; margin-top: 10px;">
-                                                                                                        <div style="text-align: center; margin-bottom: 20px;">
-                                                                                                            <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${statusColor}30;">
-                                                                                                                <i class="fas ${statusIcon}"></i>
-                                                                                                                ${statusLabel}
-                                                                                                            </span>
-                                                                                                        </div>
+                                                                                                            <div style="text-align: left; margin-top: 10px;">
+                                                                                                                <div style="text-align: center; margin-bottom: 20px;">
+                                                                                                                    <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${statusColor}30;">
+                                                                                                                        <i class="fas ${statusIcon}"></i>
+                                                                                                                        ${statusLabel}
+                                                                                                                    </span>
+                                                                                                                </div>
 
-                                                                                                        <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-                                                                                                            <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
-                                                                                                            <div style="color: white; font-size: 1.3rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
-                                                                                                        </div>
+                                                                                                                <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                                                                                                                    <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
+                                                                                                                    <div style="color: white; font-size: 1.3rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
+                                                                                                                </div>
 
-                                                                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                                                                                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
-                                                                                                                <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-layer-group me-1"></i> Type</div>
-                                                                                                                <div style="font-weight: 600; color: #1E293B;">${exam.exam_type}</div>
+                                                                                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                                                                                                                    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
+                                                                                                                        <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-layer-group me-1"></i> Type</div>
+                                                                                                                        <div style="font-weight: 600; color: #1E293B;">${exam.exam_type}</div>
+                                                                                                                    </div>
+                                                                                                                    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
+                                                                                                                        <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-calendar-alt me-1"></i> Term</div>
+                                                                                                                        <div style="font-weight: 600; color: #1E293B;">${exam.term}</div>
+                                                                                                                    </div>
+                                                                                                                </div>
+
+                                                                                                                <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
+                                                                                                                    <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-calendar-week me-1"></i> Examination Period</div>
+                                                                                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                        <div><div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div><div style="font-weight: 600; color: #1E293B;">${exam.start_date}</div></div>
+                                                                                                                        <i class="fas fa-arrow-right" style="color: #2C29CA;"></i>
+                                                                                                                        <div><div style="font-size: 0.7rem; color: #94A3B8;">End Date</div><div style="font-weight: 600; color: #1E293B;">${exam.end_date}</div></div>
+                                                                                                                    </div>
+                                                                                                                </div>
+
+                                                                                                                <div style="background: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FFFBEB' : '#F8FAFC'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FDE68A' : '#E2E8F0'};">
+                                                                                                                    <div style="color: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#D97706' : '#2C29CA'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline</div>
+                                                                                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                        <div style="font-weight: 600; color: #1E293B;">${exam.marks_entry_deadline}</div>
+                                                                                                                        ${deadlineBadge}
+                                                                                                                    </div>
+                                                                                                                </div>
+
+                                                                                                                ${exam.description ? `
+                                                                                                                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
+                                                                                                                                                <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-align-left me-1"></i> Description</div>
+                                                                                                                                                <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${exam.description}</div>
+                                                                                                                                            </div>
+                                                                                                                                        ` : ''}
+
+                                                                                                                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+                                                                                                                    ${actionButtonsHTML}
+                                                                                                                </div>
                                                                                                             </div>
-                                                                                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
-                                                                                                                <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-calendar-alt me-1"></i> Term</div>
-                                                                                                                <div style="font-weight: 600; color: #1E293B;">${exam.term}</div>
-                                                                                                            </div>
-                                                                                                        </div>
-
-                                                                                                        <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
-                                                                                                            <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-calendar-week me-1"></i> Examination Period</div>
-                                                                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                <div><div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div><div style="font-weight: 600; color: #1E293B;">${exam.start_date}</div></div>
-                                                                                                                <i class="fas fa-arrow-right" style="color: #2C29CA;"></i>
-                                                                                                                <div><div style="font-size: 0.7rem; color: #94A3B8;">End Date</div><div style="font-weight: 600; color: #1E293B;">${exam.end_date}</div></div>
-                                                                                                            </div>
-                                                                                                        </div>
-
-                                                                                                        <div style="background: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FFFBEB' : '#F8FAFC'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FDE68A' : '#E2E8F0'};">
-                                                                                                            <div style="color: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#D97706' : '#2C29CA'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline</div>
-                                                                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                <div style="font-weight: 600; color: #1E293B;">${exam.marks_entry_deadline}</div>
-                                                                                                                ${deadlineBadge}
-                                                                                                            </div>
-                                                                                                        </div>
-
-                                                                                                        ${exam.description ? `
-                                                                                                                                    <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
-                                                                                                                                        <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-align-left me-1"></i> Description</div>
-                                                                                                                                        <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${exam.description}</div>
-                                                                                                                                    </div>
-                                                                                                                                ` : ''}
-
-                                                                                                        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
-                                                                                                            ${actionButtonsHTML}
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                `,
+                                                                                                        `,
                         showConfirmButton: false,
                         showCloseButton: true,
                         width: '600px',
@@ -2820,7 +3123,7 @@ use App\Http\Controllers\Helper;
                         _token: '{{ csrf_token() }}',
                         status: newStatus
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
@@ -2838,7 +3141,7 @@ use App\Http\Controllers\Helper;
                             });
                         }
                     },
-                    error: function() {
+                    error: function () {
                         Swal.fire({
                             icon: 'error',
                             title: 'Operation Failed',
@@ -2855,11 +3158,11 @@ use App\Http\Controllers\Helper;
             Swal.fire({
                 title: 'Delete Examination?',
                 html: `
-                                        <div style="text-align: center; margin: 1rem 0;">
-                                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-                                            <p style="color: #475569; font-size: 0.95rem;">This action <strong style="color: #EF4444;">cannot be undone</strong>. All associated data will be permanently removed.</p>
+                                                <div style="text-align: center; margin: 1rem 0;">
+                                                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+                                                    <p style="color: #475569; font-size: 0.95rem;">This action <strong style="color: #EF4444;">cannot be undone</strong>. All associated data will be permanently removed.</p>
 
-                                    `,
+                                            `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#EF4444',
@@ -2885,7 +3188,7 @@ use App\Http\Controllers\Helper;
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
@@ -2903,7 +3206,7 @@ use App\Http\Controllers\Helper;
                             });
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         let errorMsg = 'Failed to delete examination. Please try again.';
 
                         if (xhr.responseJSON) {
@@ -2929,43 +3232,43 @@ use App\Http\Controllers\Helper;
         }
 
         // ── Initialize ──────────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             renderCalendar();
 
             // Minimal SweetAlert2 styling that won't interfere with functionality
             const swalStyles = document.createElement('style');
             swalStyles.textContent = `
-                                                                                        .swal2-popup {
-                                                                                            font-family: 'Plus Jakarta Sans', sans-serif;
-                                                                                            border-radius: 20px;
-                                                                                        }
-                                                                                        .swal2-title {
-                                                                                            font-family: 'Plus Jakarta Sans', sans-serif;
-                                                                                            font-weight: 700;
-                                                                                            color: #1a1a2e;
-                                                                                        }
-                                                                                        .swal2-html-container {
-                                                                                            font-family: 'Plus Jakarta Sans', sans-serif;
-                                                                                        }
-                                                                                        .swal2-confirm {
-                                                                                            border-radius: 10px !important;
-                                                                                            padding: 10px 24px !important;
-                                                                                            font-weight: 600 !important;
-                                                                                            font-size: 0.9rem !important;
-                                                                                        }
-                                                                                        .swal2-cancel {
-                                                                                            border-radius: 10px !important;
-                                                                                            padding: 10px 24px !important;
-                                                                                            font-weight: 600 !important;
-                                                                                            font-size: 0.9rem !important;
-                                                                                        }
-                                                                                        .swal2-close {
-                                                                                            outline: none !important;
-                                                                                        }
-                                                                                        .swal2-close:focus {
-                                                                                            box-shadow: none !important;
-                                                                                        }
-                                                                                    `;
+                                                                                                .swal2-popup {
+                                                                                                    font-family: 'Plus Jakarta Sans', sans-serif;
+                                                                                                    border-radius: 20px;
+                                                                                                }
+                                                                                                .swal2-title {
+                                                                                                    font-family: 'Plus Jakarta Sans', sans-serif;
+                                                                                                    font-weight: 700;
+                                                                                                    color: #1a1a2e;
+                                                                                                }
+                                                                                                .swal2-html-container {
+                                                                                                    font-family: 'Plus Jakarta Sans', sans-serif;
+                                                                                                }
+                                                                                                .swal2-confirm {
+                                                                                                    border-radius: 10px !important;
+                                                                                                    padding: 10px 24px !important;
+                                                                                                    font-weight: 600 !important;
+                                                                                                    font-size: 0.9rem !important;
+                                                                                                }
+                                                                                                .swal2-cancel {
+                                                                                                    border-radius: 10px !important;
+                                                                                                    padding: 10px 24px !important;
+                                                                                                    font-weight: 600 !important;
+                                                                                                    font-size: 0.9rem !important;
+                                                                                                }
+                                                                                                .swal2-close {
+                                                                                                    outline: none !important;
+                                                                                                }
+                                                                                                .swal2-close:focus {
+                                                                                                    box-shadow: none !important;
+                                                                                                }
+                                                                                            `;
             document.head.appendChild(swalStyles);
         });
 
@@ -2976,11 +3279,11 @@ use App\Http\Controllers\Helper;
             Swal.fire({
                 title: 'Loading Examination Data...',
                 html: `
-                                                                        <div style="text-align: center; padding: 2rem;">
-                                                                            <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
-                                                                            <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
-                                                                        </div>
-                                                                    `,
+                                                                                <div style="text-align: center; padding: 2rem;">
+                                                                                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+                                                                                    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
+                                                                                </div>
+                                                                            `,
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 showCloseButton: false,
@@ -2991,279 +3294,279 @@ use App\Http\Controllers\Helper;
                 .then(response => response.json())
                 .then(exam => {
                     const statusOptions = [{
-                            value: 'draft',
-                            label: 'Draft',
-                            color: '#6c757d',
-                            icon: 'fa-pencil-alt'
-                        },
-                        {
-                            value: 'active',
-                            label: 'Active',
-                            color: '#10B981',
-                            icon: 'fa-play-circle'
-                        },
-                        {
-                            value: 'marks_entry',
-                            label: 'Marks Entry',
-                            color: '#F59E0B',
-                            icon: 'fa-edit'
-                        },
-                        {
-                            value: 'closed',
-                            label: 'Closed',
-                            color: '#EF4444',
-                            icon: 'fa-lock'
-                        },
-                        {
-                            value: 'results_released',
-                            label: 'Results Released',
-                            color: '#2C29CA',
-                            icon: 'fa-trophy'
-                        }
+                        value: 'draft',
+                        label: 'Draft',
+                        color: '#6c757d',
+                        icon: 'fa-pencil-alt'
+                    },
+                    {
+                        value: 'active',
+                        label: 'Active',
+                        color: '#10B981',
+                        icon: 'fa-play-circle'
+                    },
+                    {
+                        value: 'marks_entry',
+                        label: 'Marks Entry',
+                        color: '#F59E0B',
+                        icon: 'fa-edit'
+                    },
+                    {
+                        value: 'closed',
+                        label: 'Closed',
+                        color: '#EF4444',
+                        icon: 'fa-lock'
+                    },
+                    {
+                        value: 'results_released',
+                        label: 'Results Released',
+                        color: '#2C29CA',
+                        icon: 'fa-trophy'
+                    }
                     ];
 
                     const currentStatus = statusOptions.find(s => s.value === exam.status);
                     const statusOptionsHTML = statusOptions.map(s => `
-                                                                            <option value="${s.value}" ${exam.status === s.value ? 'selected' : ''}>
-                                                                                ${s.label}
-                                                                            </option>
-                                                                        `).join('');
+                                                                                    <option value="${s.value}" ${exam.status === s.value ? 'selected' : ''}>
+                                                                                        ${s.label}
+                                                                                    </option>
+                                                                                `).join('');
 
                     Swal.fire({
                         title: '',
                         html: `
-                                                                                <style>
-                                                                                    .edit-modal-header {
-                                                                                        background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%);
-                                                                                        margin: -2rem -2rem 0 -2rem;
-                                                                                        padding: 2rem 2rem 1.5rem 2rem;
-                                                                                        border-radius: 20px 20px 0 0;
-                                                                                        text-align: center;
-                                                                                        position: relative;
-                                                                                        overflow: hidden;
-                                                                                    }
-                                                                                    .edit-modal-header::before {
-                                                                                        content: '';
-                                                                                        position: absolute;
-                                                                                        top: -50%;
-                                                                                        right: -20%;
-                                                                                        width: 200px;
-                                                                                        height: 200px;
-                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-                                                                                        border-radius: 50%;
-                                                                                    }
-                                                                                    .edit-modal-header .exam-code-badge {
-                                                                                        display: inline-block;
-                                                                                        background: rgba(255,255,255,0.2);
-                                                                                        color: white;
-                                                                                        padding: 4px 12px;
-                                                                                        border-radius: 99px;
-                                                                                        font-size: 0.7rem;
-                                                                                        font-weight: 600;
-                                                                                        font-family: 'Courier New', monospace;
-                                                                                        margin-bottom: 8px;
-                                                                                        backdrop-filter: blur(10px);
-                                                                                    }
-                                                                                    .edit-modal-header .exam-title {
-                                                                                        color: white;
-                                                                                        font-size: 1.1rem;
-                                                                                        font-weight: 700;
-                                                                                        margin-bottom: 4px;
-                                                                                    }
-                                                                                    .edit-modal-header .edit-label {
-                                                                                        color: rgba(255,255,255,0.7);
-                                                                                        font-size: 0.7rem;
-                                                                                        text-transform: uppercase;
-                                                                                        letter-spacing: 1px;
-                                                                                    }
-                                                                                    .edit-section {
-                                                                                        background: #ffffff;
-                                                                                        border: 1px solid #ede9ff;
-                                                                                        border-radius: 12px;
-                                                                                        padding: 16px;
-                                                                                        margin-bottom: 12px;
-                                                                                        transition: all 0.2s ease;
-                                                                                    }
-                                                                                    .edit-section:hover {
-                                                                                        border-color: #d4d0ff;
-                                                                                        box-shadow: 0 4px 12px rgba(44, 41, 202, 0.06);
-                                                                                    }
-                                                                                    .edit-section-title {
-                                                                                        display: flex;
-                                                                                        align-items: center;
-                                                                                        gap: 8px;
-                                                                                        font-weight: 700;
-                                                                                        font-size: 0.78rem;
-                                                                                        color: #2C29CA;
-                                                                                        text-transform: uppercase;
-                                                                                        letter-spacing: 0.5px;
-                                                                                        margin-bottom: 14px;
-                                                                                        padding-bottom: 10px;
-                                                                                        border-bottom: 2px solid #ede9ff;
-                                                                                    }
-                                                                                    .edit-section-title i {
-                                                                                        width: 26px;
-                                                                                        height: 26px;
-                                                                                        border-radius: 8px;
-                                                                                        background: #ede9ff;
-                                                                                        display: inline-flex;
-                                                                                        align-items: center;
-                                                                                        justify-content: center;
-                                                                                        font-size: 0.7rem;
-                                                                                    }
-                                                                                    .edit-form-grid {
-                                                                                        display: grid;
-                                                                                        grid-template-columns: 1fr 1fr;
-                                                                                        gap: 12px;
-                                                                                    }
-                                                                                    .edit-form-group {
-                                                                                        display: flex;
-                                                                                        flex-direction: column;
-                                                                                    }
-                                                                                    .edit-form-group.full-width {
-                                                                                        grid-column: 1 / -1;
-                                                                                    }
-                                                                                    .edit-label {
-                                                                                        font-size: 0.72rem;
-                                                                                        font-weight: 600;
-                                                                                        color: #4a5568;
-                                                                                        margin-bottom: 5px;
-                                                                                        display: flex;
-                                                                                        align-items: center;
-                                                                                        gap: 4px;
-                                                                                    }
-                                                                                    .edit-label .required {
-                                                                                        color: #EF4444;
-                                                                                    }
-                                                                                    .edit-input {
-                                                                                        width: 100%;
-                                                                                        padding: 10px 12px;
-                                                                                        border: 1.5px solid #e2e8f0;
-                                                                                        border-radius: 10px;
-                                                                                        font-size: 0.82rem;
-                                                                                        font-family: 'Plus Jakarta Sans', sans-serif;
-                                                                                        color: #1a1a2e;
-                                                                                        background: #fafbff;
-                                                                                        transition: all 0.2s ease;
-                                                                                        outline: none;
-                                                                                    }
-                                                                                    .edit-input:focus {
-                                                                                        border-color: #5351e4;
-                                                                                        box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.08);
-                                                                                        background: #ffffff;
-                                                                                    }
-                                                                                    .edit-input:hover {
-                                                                                        border-color: #c4c0ff;
-                                                                                    }
-                                                                                    select.edit-input {
-                                                                                        cursor: pointer;
-                                                                                        appearance: none;
-                                                                                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236c757d'/%3E%3C/svg%3E");
-                                                                                        background-repeat: no-repeat;
-                                                                                        background-position: right 12px center;
-                                                                                        padding-right: 32px;
-                                                                                    }
-                                                                                    textarea.edit-input {
-                                                                                        resize: vertical;
-                                                                                        min-height: 80px;
-                                                                                    }
-                                                                                    .status-indicator {
-                                                                                        display: inline-flex;
-                                                                                        align-items: center;
-                                                                                        gap: 6px;
-                                                                                        padding: 4px 10px;
-                                                                                        border-radius: 99px;
-                                                                                        font-size: 0.7rem;
-                                                                                        font-weight: 600;
-                                                                                        margin-top: 6px;
-                                                                                    }
-                                                                                </style>
+                                                                                        <style>
+                                                                                            .edit-modal-header {
+                                                                                                background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%);
+                                                                                                margin: -2rem -2rem 0 -2rem;
+                                                                                                padding: 2rem 2rem 1.5rem 2rem;
+                                                                                                border-radius: 20px 20px 0 0;
+                                                                                                text-align: center;
+                                                                                                position: relative;
+                                                                                                overflow: hidden;
+                                                                                            }
+                                                                                            .edit-modal-header::before {
+                                                                                                content: '';
+                                                                                                position: absolute;
+                                                                                                top: -50%;
+                                                                                                right: -20%;
+                                                                                                width: 200px;
+                                                                                                height: 200px;
+                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                                                                                                border-radius: 50%;
+                                                                                            }
+                                                                                            .edit-modal-header .exam-code-badge {
+                                                                                                display: inline-block;
+                                                                                                background: rgba(255,255,255,0.2);
+                                                                                                color: white;
+                                                                                                padding: 4px 12px;
+                                                                                                border-radius: 99px;
+                                                                                                font-size: 0.7rem;
+                                                                                                font-weight: 600;
+                                                                                                font-family: 'Courier New', monospace;
+                                                                                                margin-bottom: 8px;
+                                                                                                backdrop-filter: blur(10px);
+                                                                                            }
+                                                                                            .edit-modal-header .exam-title {
+                                                                                                color: white;
+                                                                                                font-size: 1.1rem;
+                                                                                                font-weight: 700;
+                                                                                                margin-bottom: 4px;
+                                                                                            }
+                                                                                            .edit-modal-header .edit-label {
+                                                                                                color: rgba(255,255,255,0.7);
+                                                                                                font-size: 0.7rem;
+                                                                                                text-transform: uppercase;
+                                                                                                letter-spacing: 1px;
+                                                                                            }
+                                                                                            .edit-section {
+                                                                                                background: #ffffff;
+                                                                                                border: 1px solid #ede9ff;
+                                                                                                border-radius: 12px;
+                                                                                                padding: 16px;
+                                                                                                margin-bottom: 12px;
+                                                                                                transition: all 0.2s ease;
+                                                                                            }
+                                                                                            .edit-section:hover {
+                                                                                                border-color: #d4d0ff;
+                                                                                                box-shadow: 0 4px 12px rgba(44, 41, 202, 0.06);
+                                                                                            }
+                                                                                            .edit-section-title {
+                                                                                                display: flex;
+                                                                                                align-items: center;
+                                                                                                gap: 8px;
+                                                                                                font-weight: 700;
+                                                                                                font-size: 0.78rem;
+                                                                                                color: #2C29CA;
+                                                                                                text-transform: uppercase;
+                                                                                                letter-spacing: 0.5px;
+                                                                                                margin-bottom: 14px;
+                                                                                                padding-bottom: 10px;
+                                                                                                border-bottom: 2px solid #ede9ff;
+                                                                                            }
+                                                                                            .edit-section-title i {
+                                                                                                width: 26px;
+                                                                                                height: 26px;
+                                                                                                border-radius: 8px;
+                                                                                                background: #ede9ff;
+                                                                                                display: inline-flex;
+                                                                                                align-items: center;
+                                                                                                justify-content: center;
+                                                                                                font-size: 0.7rem;
+                                                                                            }
+                                                                                            .edit-form-grid {
+                                                                                                display: grid;
+                                                                                                grid-template-columns: 1fr 1fr;
+                                                                                                gap: 12px;
+                                                                                            }
+                                                                                            .edit-form-group {
+                                                                                                display: flex;
+                                                                                                flex-direction: column;
+                                                                                            }
+                                                                                            .edit-form-group.full-width {
+                                                                                                grid-column: 1 / -1;
+                                                                                            }
+                                                                                            .edit-label {
+                                                                                                font-size: 0.72rem;
+                                                                                                font-weight: 600;
+                                                                                                color: #4a5568;
+                                                                                                margin-bottom: 5px;
+                                                                                                display: flex;
+                                                                                                align-items: center;
+                                                                                                gap: 4px;
+                                                                                            }
+                                                                                            .edit-label .required {
+                                                                                                color: #EF4444;
+                                                                                            }
+                                                                                            .edit-input {
+                                                                                                width: 100%;
+                                                                                                padding: 10px 12px;
+                                                                                                border: 1.5px solid #e2e8f0;
+                                                                                                border-radius: 10px;
+                                                                                                font-size: 0.82rem;
+                                                                                                font-family: 'Plus Jakarta Sans', sans-serif;
+                                                                                                color: #1a1a2e;
+                                                                                                background: #fafbff;
+                                                                                                transition: all 0.2s ease;
+                                                                                                outline: none;
+                                                                                            }
+                                                                                            .edit-input:focus {
+                                                                                                border-color: #5351e4;
+                                                                                                box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.08);
+                                                                                                background: #ffffff;
+                                                                                            }
+                                                                                            .edit-input:hover {
+                                                                                                border-color: #c4c0ff;
+                                                                                            }
+                                                                                            select.edit-input {
+                                                                                                cursor: pointer;
+                                                                                                appearance: none;
+                                                                                                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236c757d'/%3E%3C/svg%3E");
+                                                                                                background-repeat: no-repeat;
+                                                                                                background-position: right 12px center;
+                                                                                                padding-right: 32px;
+                                                                                            }
+                                                                                            textarea.edit-input {
+                                                                                                resize: vertical;
+                                                                                                min-height: 80px;
+                                                                                            }
+                                                                                            .status-indicator {
+                                                                                                display: inline-flex;
+                                                                                                align-items: center;
+                                                                                                gap: 6px;
+                                                                                                padding: 4px 10px;
+                                                                                                border-radius: 99px;
+                                                                                                font-size: 0.7rem;
+                                                                                                font-weight: 600;
+                                                                                                margin-top: 6px;
+                                                                                            }
+                                                                                        </style>
 
-                                                                                <div style="margin-top: 1rem;">
-                                                                                    <!-- Header -->
-                                                                                    <div class="edit-modal-header">
-                                                                                        <div class="edit-label">
-                                                                                            <i class="fas fa-pen me-1"></i> Editing Examination
+                                                                                        <div style="margin-top: 1rem;">
+                                                                                            <!-- Header -->
+                                                                                            <div class="edit-modal-header">
+                                                                                                <div class="edit-label">
+                                                                                                    <i class="fas fa-pen me-1"></i> Editing Examination
+                                                                                                </div>
+                                                                                                <div class="exam-code-badge">${exam.exam_code}</div>
+                                                                                                <div class="exam-title">${exam.exam_name}</div>
+                                                                                            </div>
+
+                                                                                            <form id="editExamForm" style="margin-top: 20px;">
+                                                                                                <input type="hidden" name="exam_id" value="${exam.id}">
+
+                                                                                                <!-- Dates Section -->
+                                                                                                <div class="edit-section">
+                                                                                                    <div class="edit-section-title">
+                                                                                                        <i class="fas fa-calendar-alt"></i> Dates & Timeline
+                                                                                                    </div>
+                                                                                                    <div class="edit-form-grid">
+                                                                                                        <div class="edit-form-group">
+                                                                                                            <label class="edit-label">
+                                                                                                                <span class="required">*</span> Start Date
+                                                                                                            </label>
+                                                                                                            <input type="date" name="start_date" value="${exam.start_date}" class="edit-input">
+                                                                                                        </div>
+                                                                                                        <div class="edit-form-group">
+                                                                                                            <label class="edit-label">
+                                                                                                                <span class="required">*</span> End Date
+                                                                                                            </label>
+                                                                                                            <input type="date" name="end_date" value="${exam.end_date}" class="edit-input">
+                                                                                                        </div>
+                                                                                                        <div class="edit-form-group full-width">
+                                                                                                            <label class="edit-label">
+                                                                                                                Marks Entry Deadline
+                                                                                                            </label>
+                                                                                                            <input type="date" name="marks_entry_deadline" value="${exam.marks_entry_deadline}" class="edit-input">
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+
+                                                                                                <!-- Marks Section -->
+                                                                                                <div class="edit-section">
+                                                                                                    <div class="edit-section-title">
+                                                                                                        <i class="fas fa-percent"></i> Marks & Grading
+                                                                                                    </div>
+                                                                                                    <div class="edit-form-grid">
+                                                                                                        <div class="edit-form-group">
+                                                                                                            <label class="edit-label">Total Marks</label>
+                                                                                                            <input type="number" name="total_marks" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
+                                                                                                        </div>
+                                                                                                        <div class="edit-form-group">
+                                                                                                            <label class="edit-label">Pass Mark</label>
+                                                                                                            <input type="number" name="pass_mark" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+
+                                                                                                <!-- Status Section -->
+                                                                                                <div class="edit-section">
+                                                                                                    <div class="edit-section-title">
+                                                                                                        <i class="fas fa-toggle-on"></i> Examination Status
+                                                                                                    </div>
+                                                                                                    <div class="edit-form-group">
+                                                                                                        <select name="status" class="edit-input">
+                                                                                                            ${statusOptionsHTML}
+                                                                                                        </select>
+                                                                                                        <div class="status-indicator mt-2" style="background: ${currentStatus.color}15; color: ${currentStatus.color};">
+                                                                                                            <i class="fas ${currentStatus.icon}"></i>
+                                                                                                            Current: ${currentStatus.label}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+
+                                                                                                <!-- Description Section -->
+                                                                                                <div class="edit-section">
+                                                                                                    <div class="edit-section-title">
+                                                                                                        <i class="fas fa-align-left"></i> Description & Notes
+                                                                                                    </div>
+                                                                                                    <div class="edit-form-group">
+                                                                                                        <textarea name="description" rows="3" class="edit-input" placeholder="Add any additional notes or description about this examination...">${exam.description || ''}</textarea>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </form>
                                                                                         </div>
-                                                                                        <div class="exam-code-badge">${exam.exam_code}</div>
-                                                                                        <div class="exam-title">${exam.exam_name}</div>
-                                                                                    </div>
-
-                                                                                    <form id="editExamForm" style="margin-top: 20px;">
-                                                                                        <input type="hidden" name="exam_id" value="${exam.id}">
-
-                                                                                        <!-- Dates Section -->
-                                                                                        <div class="edit-section">
-                                                                                            <div class="edit-section-title">
-                                                                                                <i class="fas fa-calendar-alt"></i> Dates & Timeline
-                                                                                            </div>
-                                                                                            <div class="edit-form-grid">
-                                                                                                <div class="edit-form-group">
-                                                                                                    <label class="edit-label">
-                                                                                                        <span class="required">*</span> Start Date
-                                                                                                    </label>
-                                                                                                    <input type="date" name="start_date" value="${exam.start_date}" class="edit-input">
-                                                                                                </div>
-                                                                                                <div class="edit-form-group">
-                                                                                                    <label class="edit-label">
-                                                                                                        <span class="required">*</span> End Date
-                                                                                                    </label>
-                                                                                                    <input type="date" name="end_date" value="${exam.end_date}" class="edit-input">
-                                                                                                </div>
-                                                                                                <div class="edit-form-group full-width">
-                                                                                                    <label class="edit-label">
-                                                                                                        Marks Entry Deadline
-                                                                                                    </label>
-                                                                                                    <input type="date" name="marks_entry_deadline" value="${exam.marks_entry_deadline}" class="edit-input">
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        <!-- Marks Section -->
-                                                                                        <div class="edit-section">
-                                                                                            <div class="edit-section-title">
-                                                                                                <i class="fas fa-percent"></i> Marks & Grading
-                                                                                            </div>
-                                                                                            <div class="edit-form-grid">
-                                                                                                <div class="edit-form-group">
-                                                                                                    <label class="edit-label">Total Marks</label>
-                                                                                                    <input type="number" name="total_marks" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
-                                                                                                </div>
-                                                                                                <div class="edit-form-group">
-                                                                                                    <label class="edit-label">Pass Mark</label>
-                                                                                                    <input type="number" name="pass_mark" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        <!-- Status Section -->
-                                                                                        <div class="edit-section">
-                                                                                            <div class="edit-section-title">
-                                                                                                <i class="fas fa-toggle-on"></i> Examination Status
-                                                                                            </div>
-                                                                                            <div class="edit-form-group">
-                                                                                                <select name="status" class="edit-input">
-                                                                                                    ${statusOptionsHTML}
-                                                                                                </select>
-                                                                                                <div class="status-indicator mt-2" style="background: ${currentStatus.color}15; color: ${currentStatus.color};">
-                                                                                                    <i class="fas ${currentStatus.icon}"></i>
-                                                                                                    Current: ${currentStatus.label}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        <!-- Description Section -->
-                                                                                        <div class="edit-section">
-                                                                                            <div class="edit-section-title">
-                                                                                                <i class="fas fa-align-left"></i> Description & Notes
-                                                                                            </div>
-                                                                                            <div class="edit-form-group">
-                                                                                                <textarea name="description" rows="3" class="edit-input" placeholder="Add any additional notes or description about this examination...">${exam.description || ''}</textarea>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </form>
-                                                                                </div>
-                                                                            `,
+                                                                                    `,
                         showCancelButton: true,
                         showConfirmButton: true,
                         confirmButtonText: '<i class="fas fa-save me-2"></i> Save Changes',
@@ -3284,45 +3587,45 @@ use App\Http\Controllers\Helper;
                             // Add custom button styles
                             const style = document.createElement('style');
                             style.textContent = `
-                                                                                    .swal-edit-popup {
-                                                                                        border-radius: 20px !important;
-                                                                                        overflow: hidden;
-                                                                                    }
-                                                                                    .swal-edit-html {
-                                                                                        margin: 0 !important;
-                                                                                        padding: 0 2rem 1.5rem 2rem !important;
-                                                                                    }
-                                                                                    .swal-edit-actions {
-                                                                                        padding: 1rem 2rem 1.5rem 2rem !important;
-                                                                                        border-top: 1px solid #ede9ff;
-                                                                                        margin: 0 !important;
-                                                                                    }
-                                                                                    .swal-edit-confirm {
-                                                                                        border-radius: 10px !important;
-                                                                                        padding: 12px 28px !important;
-                                                                                        font-weight: 600 !important;
-                                                                                        font-size: 0.85rem !important;
-                                                                                        background: linear-gradient(135deg, #2C29CA, #5351e4) !important;
-                                                                                        transition: all 0.3s ease !important;
-                                                                                    }
-                                                                                    .swal-edit-confirm:hover {
-                                                                                        transform: translateY(-2px) !important;
-                                                                                        box-shadow: 0 8px 20px rgba(44, 41, 202, 0.3) !important;
-                                                                                    }
-                                                                                    .swal-edit-cancel {
-                                                                                        border-radius: 10px !important;
-                                                                                        padding: 12px 28px !important;
-                                                                                        font-weight: 600 !important;
-                                                                                        font-size: 0.85rem !important;
-                                                                                        transition: all 0.3s ease !important;
-                                                                                    }
-                                                                                    .swal-edit-cancel:hover {
-                                                                                        background: #f1f3f5 !important;
-                                                                                    }
-                                                                                    .swal2-close:focus {
-                                                                                        box-shadow: none !important;
-                                                                                    }
-                                                                                `;
+                                                                                            .swal-edit-popup {
+                                                                                                border-radius: 20px !important;
+                                                                                                overflow: hidden;
+                                                                                            }
+                                                                                            .swal-edit-html {
+                                                                                                margin: 0 !important;
+                                                                                                padding: 0 2rem 1.5rem 2rem !important;
+                                                                                            }
+                                                                                            .swal-edit-actions {
+                                                                                                padding: 1rem 2rem 1.5rem 2rem !important;
+                                                                                                border-top: 1px solid #ede9ff;
+                                                                                                margin: 0 !important;
+                                                                                            }
+                                                                                            .swal-edit-confirm {
+                                                                                                border-radius: 10px !important;
+                                                                                                padding: 12px 28px !important;
+                                                                                                font-weight: 600 !important;
+                                                                                                font-size: 0.85rem !important;
+                                                                                                background: linear-gradient(135deg, #2C29CA, #5351e4) !important;
+                                                                                                transition: all 0.3s ease !important;
+                                                                                            }
+                                                                                            .swal-edit-confirm:hover {
+                                                                                                transform: translateY(-2px) !important;
+                                                                                                box-shadow: 0 8px 20px rgba(44, 41, 202, 0.3) !important;
+                                                                                            }
+                                                                                            .swal-edit-cancel {
+                                                                                                border-radius: 10px !important;
+                                                                                                padding: 12px 28px !important;
+                                                                                                font-weight: 600 !important;
+                                                                                                font-size: 0.85rem !important;
+                                                                                                transition: all 0.3s ease !important;
+                                                                                            }
+                                                                                            .swal-edit-cancel:hover {
+                                                                                                background: #f1f3f5 !important;
+                                                                                            }
+                                                                                            .swal2-close:focus {
+                                                                                                box-shadow: none !important;
+                                                                                            }
+                                                                                        `;
                             document.head.appendChild(style);
                         },
                         preConfirm: () => {
@@ -3374,11 +3677,11 @@ use App\Http\Controllers\Helper;
                         Swal.fire({
                             title: 'Updating Examination...',
                             html: `
-                                                                                    <div style="text-align: center; padding: 2rem;">
-                                                                                        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
-                                                                                        <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Saving your changes...</p>
-                                                                                    </div>
-                                                                                `,
+                                                                                            <div style="text-align: center; padding: 2rem;">
+                                                                                                <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+                                                                                                <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Saving your changes...</p>
+                                                                                            </div>
+                                                                                        `,
                             allowOutsideClick: false,
                             showConfirmButton: false,
                             showCloseButton: false,
@@ -3392,17 +3695,17 @@ use App\Http\Controllers\Helper;
                                 _token: '{{ csrf_token() }}',
                                 ...result.value
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.success) {
                                     Swal.fire({
                                         icon: 'success',
                                         title: '<span style="font-size: 1.2rem; font-weight: 700;">Updated Successfully!</span>',
                                         html: `
-                                                                                                <div style="text-align: center;">
-                                                                                                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981; margin-bottom: 10px;"></i>
-                                                                                                    <p style="color: #6c757d;">${response.message}</p>
-                                                                                                </div>
-                                                                                            `,
+                                                                                                        <div style="text-align: center;">
+                                                                                                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981; margin-bottom: 10px;"></i>
+                                                                                                            <p style="color: #6c757d;">${response.message}</p>
+                                                                                                        </div>
+                                                                                                    `,
                                         timer: 2000,
                                         showConfirmButton: false,
                                     }).then(() => location.reload());
@@ -3415,7 +3718,7 @@ use App\Http\Controllers\Helper;
                                     });
                                 }
                             },
-                            error: function(xhr) {
+                            error: function (xhr) {
                                 let errorMsg = 'Failed to update examination. Please try again.';
                                 if (xhr.responseJSON && xhr.responseJSON.errors) {
                                     const errors = xhr.responseJSON.errors;
@@ -3441,6 +3744,142 @@ use App\Http\Controllers\Helper;
                         confirmButtonColor: '#2C29CA',
                     });
                 });
+        }
+
+        // Add these functions to your existing script section
+        // Replace the existing viewExamResults function with this:
+        function viewExamResults(examId) {
+            Swal.fire({
+                title: 'Loading Examination Results...',
+                html: `
+                <div style="text-align: center; padding: 2rem;">
+                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+                    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
+                </div>
+            `,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                showCloseButton: false,
+                showCancelButton: false,
+            });
+
+            // Use the existing details route
+            fetch(`/examinations/${examId}/details`)
+                .then(response => response.json())
+                .then(exam => {
+                    // Now fetch results summary statistics for this exam
+                    fetch(`/examinations/${examId}/results-summary`)
+                        .then(response => response.json())
+                        .catch(() => ({ success: false }))
+                        .then(summary => {
+                            const hasResultsData = summary.success === true;
+
+                            Swal.fire({
+                                title: '<span style="font-size: 1.2rem; font-weight: 700;">' + exam.exam_name + '</span>',
+                                html: `
+                                <div style="text-align: left;">
+                                    <!-- Header Stats -->
+                                    <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                                        <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
+                                        <div style="color: white; font-size: 1.1rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
+                                        <div style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-top: 8px;">
+                                            <i class="fas fa-calendar-alt me-1"></i> ${exam.start_date} - ${exam.end_date}
+                                        </div>
+                                    </div>
+
+                                    ${hasResultsData ? `
+                                        <!-- Results Statistics -->
+                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+                                                <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Total Students</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: #2C29CA;">${summary.total_students || 0}</div>
+                                            </div>
+                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+                                                <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Pass Rate</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: #10B981;">${summary.pass_rate || 0}%</div>
+                                            </div>
+                                            <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+                                                <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Average Score</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">${summary.average_score || 0}%</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Published Date -->
+                                        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
+                                                <span style="font-size: 0.75rem; color: #64748B;">Results Released</span>
+                                            </div>
+                                            <div style="font-weight: 600; font-size: 0.8rem; color: #1E293B;">${exam.published_at || exam.end_date}</div>
+                                        </div>
+                                    ` : `
+                                        <div style="text-align: center; padding: 20px;">
+                                            <i class="fas fa-chart-line" style="font-size: 3rem; color: #94A3B8; margin-bottom: 10px; display: block;"></i>
+                                            <p style="color: #64748B; font-size: 0.85rem;">Detailed results statistics are being compiled.</p>
+                                        </div>
+                                    `}
+
+                                    <!-- Action Buttons -->
+                                    <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+                                        <button onclick="Swal.close(); viewPassSlips(${examId})" 
+                                            style="flex: 1; background: linear-gradient(135deg, #2C29CA, #5351e4); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                            <i class="fas fa-print me-2"></i> View Pass Slips
+                                        </button>
+                                        <button onclick="Swal.close(); downloadResultsReport(${examId})" 
+                                            style="flex: 1; background: white; color: #2C29CA; border: 2px solid #2C29CA; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                            <i class="fas fa-download me-2"></i> Download Report
+                                        </button>
+                                    </div>
+                                </div>
+                            `,
+                                showConfirmButton: false,
+                                showCloseButton: true,
+                                width: '550px',
+                                padding: '1.5rem',
+                                customClass: {
+                                    popup: 'swal-results-popup'
+                                }
+                            });
+                        });
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error Loading Details',
+                        text: 'Unable to load examination results. Please try again later.',
+                        confirmButtonColor: '#2C29CA',
+                    });
+                });
+        }
+
+        // Function to view pass slips (redirects to existing passslip routes)
+        function viewPassSlips(examId) {
+            // Redirect to the class selection page for pass slips
+            window.location.href = `/examinations/${examId}/passslips`;
+        }
+
+        // Download results report function
+        function downloadResultsReport(examId) {
+            Swal.fire({
+                title: 'Generating Report',
+                html: '<div class="spinner-border text-primary" role="status"></div>',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+            });
+
+            // Using existing pass slip all route for bulk download
+            window.location.href = `/examinations/${examId}/passslips/all`;
+
+            setTimeout(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Report Ready',
+                    text: 'Pass slips are being generated',
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
+            }, 1500);
         }
     </script>
 @endsection

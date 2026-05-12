@@ -863,23 +863,23 @@ use App\Http\Controllers\Helper;
                                     });
                                 }, 500);
                             },
-                            // error: function (data) {
-                            //     $('body').html(data.responseText);
-                            // }
-                            error: function(xhr) {
-                            if (xhr.status === 422) {
-                                let errors = xhr.responseJSON.errors;
-                                let message = Object.values(errors).flat().join("\n");
-
-                                Swal.fire('Validation Error', message, 'error');
-                            } 
-                            else if (xhr.status === 403) {
-                                Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
-                            } 
-                            else {
-                                Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                            error: function (data) {
+                                $('body').html(data.responseText);
                             }
-                        }
+                        //     error: function(xhr) {
+                        //     if (xhr.status === 422) {
+                        //         let errors = xhr.responseJSON.errors;
+                        //         let message = Object.values(errors).flat().join("\n");
+
+                        //         Swal.fire('Validation Error', message, 'error');
+                        //     } 
+                        //     else if (xhr.status === 403) {
+                        //         Swal.fire('Unauthorized', xhr.responseJSON.message, 'error');
+                        //     } 
+                        //     else {
+                        //         Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
+                        //     }
+                        // }
                         });
                     }
                 });

@@ -487,5 +487,4 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{examination}/update-details', 'updateDetails')->name('update-details');
 
         });
-
 });

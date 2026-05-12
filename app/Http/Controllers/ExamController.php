@@ -344,4 +344,57 @@ class ExamController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="ReportCard.pdf"');
     }
+
+    /**
+     * Get quizzes for a specific lesson (for teacher view)
+     */
+    /**
+     * Get quizzes for a specific lesson (for teacher view)
+     */
+    public function getLessonQuizzes($lessonId)
+    {
+        try {
+            $teacherId = Session('LoggedTeacher');
+
+            \Log::info('Fetching quizzes for lesson: ' . $lessonId);
+            \Log::info('Teacher ID: ' . $teacherId);
+
+            // Get quizzes for this lesson
+            $quizzes = Exam::where('lesson_id', $lessonId)
+                ->where('teacher_id', $teacherId)
+                ->where('exam_type', 'quiz')
+                ->with(['questions'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            \Log::info('Found quizzes count: ' . $quizzes->count());
+
+            $formattedQuizzes = [];
+            foreach ($quizzes as $quiz) {
+                $formattedQuizzes[] = [
+                    'id' => $quiz->id,
+                    'title' => $quiz->title,
+                    'total_marks' => $quiz->total_marks,
+                    'pass_mark' => $quiz->pass_mark,
+                    'duration_minutes' => $quiz->duration_minutes,
+                    'status' => $quiz->status,
+                    'questions_count' => $quiz->questions->count(),
+                    'max_attempts' => $quiz->max_attempts ?? 3,
+                    'results' => []
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'quizzes' => $formattedQuizzes
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error loading quizzes: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load quizzes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

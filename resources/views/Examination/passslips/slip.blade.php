@@ -329,7 +329,7 @@ body { font-family:'Lato',sans-serif; background:#e0dff5; color:var(--text); fon
             'classRank'            => $classRank,
             'classTotal'           => $classTotal,
             'growthData'           => $growthData,
-            'previousSubjectMarks' => $previousSubjectMarks,
+            'previousSubjectMarks' => $previousSubjectMarks ?? [],
         ]];
     } else {
 $renderSlips = $slips;
@@ -367,7 +367,7 @@ $renderSlips = $slips;
     $rank         = $slip['classRank'];
     $classTotal   = $slip['classTotal'];
     $growth       = $slip['growthData'];
-    $prevSubj     = collect($slip['previousSubjectMarks']);
+$prevSubj = collect($slip['previousSubjectMarks'] ?? []);
 
     $passed   = $pct >= $exam->pass_mark;
     $initials = strtoupper(substr($s->lastname,0,1).substr($s->firstname,0,1));

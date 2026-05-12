@@ -194,6 +194,12 @@ use App\Http\Controllers\Helper;
                             </a>
                         </li>
                     @endif
+                        <li>
+                            <a href="{{ route('examination.marks-entry-portal') }}">
+                                <i class="fas fa-pen-to-square mr-2"></i>
+                                Released Exams
+                            </a>
+                        </li>
                 </ul>
             </li>
 

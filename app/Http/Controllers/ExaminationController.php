@@ -747,6 +747,13 @@ class ExaminationController extends Controller
             'results_released' => $examinations->where('status', 'results_released')->count(),
         ];
 
+        // Get released examinations (with optional pass rate calculation)
+        $releasedExams = $examinations->where('status', 'results_released')->map(function ($exam) {
+            // Calculate pass rate if needed
+            // $exam->pass_rate = $this->calculatePassRate($exam->id);
+            return $exam;
+        });
+
         // Calculate completion rate
         $completionRate = $stats['total'] > 0
             ? round(($stats['results_released'] / $stats['total']) * 100)
@@ -786,7 +793,8 @@ class ExaminationController extends Controller
             'recentActivities',
             'timelineExams',
             'calendarExams',
-            'pendingMarksProgress' // Add this
+            'pendingMarksProgress',
+            'releasedExams' // Add this
         ));
     }
 
@@ -1130,4 +1138,84 @@ class ExaminationController extends Controller
         ]);
     }
 
+    // Add this method to your ExaminationController
+    public function getResultsSummary($examId)
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        // Get all marks for this exam
+        $marks = ExaminationMark::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->get();
+
+        if ($marks->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No marks data available'
+            ]);
+        }
+
+        // Get unique students
+        $students = $marks->groupBy('student_id');
+        $totalStudents = $students->count();
+
+        // Calculate per-student totals
+        $studentTotals = [];
+        foreach ($students as $studentId => $studentMarks) {
+            $totalObtained = $studentMarks->sum('marks_obtained');
+            $totalMax = $studentMarks->sum('total_marks');
+            $percentage = $totalMax > 0 ? ($totalObtained / $totalMax) * 100 : 0;
+            $studentTotals[] = [
+                'student_id' => $studentId,
+                'percentage' => $percentage,
+                'passed' => $percentage >= $exam->pass_mark
+            ];
+        }
+
+        // Calculate pass rate
+        $passedCount = collect($studentTotals)->where('passed', true)->count();
+        $passRate = $totalStudents > 0 ? round(($passedCount / $totalStudents) * 100) : 0;
+
+        // Calculate average score
+        $avgPercentage = collect($studentTotals)->avg('percentage');
+        $averageScore = round($avgPercentage ?: 0);
+
+        // Get subject-wise breakdown
+        $subjectBreakdown = [];
+        $subjects = $marks->groupBy('subject_id');
+        foreach ($subjects as $subjectId => $subjectMarks) {
+            $subjectName = Helper::recordMdname($subjectId);
+            $avgSubjectScore = round($subjectMarks->avg('marks_obtained'));
+            $maxScore = $subjectMarks->max('marks_obtained');
+            $minScore = $subjectMarks->min('marks_obtained');
+
+            $subjectBreakdown[] = [
+                'subject_id' => $subjectId,
+                'subject_name' => $subjectName,
+                'average' => $avgSubjectScore,
+                'max' => $maxScore,
+                'min' => $minScore,
+                'total_marks' => $subjectMarks->first()->total_marks ?? 100
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'exam_id' => $examId,
+            'exam_name' => $exam->exam_name,
+            'exam_code' => $exam->exam_code,
+            'total_students' => $totalStudents,
+            'pass_rate' => $passRate,
+            'average_score' => $averageScore,
+            'pass_mark' => $exam->pass_mark,
+            'total_marks' => $exam->total_marks,
+            'subject_breakdown' => $subjectBreakdown,
+            'published_at' => $exam->published_at ? Carbon::parse($exam->published_at)->format('M d, Y') : Carbon::parse($exam->updated_at)->format('M d, Y')
+        ]);
+    }
 }

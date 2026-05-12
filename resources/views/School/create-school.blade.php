@@ -106,7 +106,8 @@ $controller = new Controller();
                                     <div class="form-group">
                                         <label class="form-label">Population</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_POPULATION'), '', 'population', 1);
+                                        echo Helper::DropMasterDataAsc(config('constants.options.SCHOOL_POPULATION'), '', 'population', 1);
+                                        // dd(Helper::DropMasterDataAsc(config('constants.options.SCHOOL_POPULATION'), '', 'population', 1));
                                         ?>
                                     </div>
                                     <div class="form-group">

@@ -400,18 +400,33 @@ class StudentController extends Controller
             ], 403);
         }
 
+        // $validated = $request->validate([
+        //     'School' => 'required|integer|exists:houses,ID',
+        //     'Category' => 'required|string|max:10',
+        //     'Admission_Year' => 'required|integer',
+        //     'Student_ID' => 'required|string|max:25|unique:students,registration_number',
+        //     'firstname' => 'required|string|max:100',
+        //     'lastname' => 'required|string|max:100',
+        //     'gender' => 'required|string|in:Male,Female,Other',
+        //     'date_of_birth' => 'nullable|date',
+        //     'primary_contact' => 'nullable|string|max:20',
+        //     'other_contact' => 'nullable|string|max:20',
+        //     'student_photo' => 'nullable|image|mimes:jpg,png,gif',
+        // ]);
+
+
         $validated = $request->validate([
-            'School' => 'required|integer|exists:houses,ID',
-            'Category' => 'required|string|max:10',
-            'Admission_Year' => 'required|integer',
-            'Student_ID' => 'required|string|max:25|unique:students,registration_number',
-            'firstname' => 'required|string|max:100',
-            'lastname' => 'required|string|max:100',
-            'gender' => 'required|string|in:Male,Female,Other',
-            'date_of_birth' => 'nullable|date',
-            'primary_contact' => 'nullable|string|max:20',
-            'other_contact' => 'nullable|string|max:20',
-            'student_photo' => 'nullable|image|mimes:jpg,png,gif',
+            'School' => 'nullable',
+            'Category' => 'nullable',
+            'Admission_Year' => 'nullable',
+            'Student_ID' => 'nullable',
+            'firstname' => 'nullable',
+            'lastname' => 'nullable',
+            'gender' => 'nullable',
+            'date_of_birth' => 'nullable',
+            'primary_contact' => 'nullable',
+            'other_contact' => 'nullable',
+            'student_photo' => 'nullable',
         ]);
 
         DB::beginTransaction();

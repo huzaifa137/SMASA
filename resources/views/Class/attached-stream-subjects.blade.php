@@ -280,9 +280,9 @@ $controller = new Controller();
         Swal.fire('Oops', 'Something went wrong. Try again.', 'error');
     }
 }
-                    error: function(data) {
-                    $('body').html(data.responseText);
-                    }
+                    // error: function(data) {
+                    // $('body').html(data.responseText);
+                    // }
                 });
             }
         });
