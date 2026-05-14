@@ -419,8 +419,8 @@ use App\Http\Controllers\Helper;
                                             <i class="fas fa-camera"></i>
                                             <span>No image selected</span>
                                         </div>
-                                        <input type="file" name="student_photo" class="file-upload-input"
-                                            id="studentPhoto" accept="image/*">
+                                        <input type="file" name="student_photo" class="file-upload-input" id="studentPhoto"
+                                            accept="image/*">
                                         <label for="studentPhoto" class="file-upload-btn">
                                             <i class="fas fa-upload"></i> Choose Photo
                                         </label>
@@ -448,69 +448,69 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-@section('js')
+    @section('js')
 
 
-    <script>
-        $(document).ready(function() {
-            const schoolProduct = '{{ $schoolProduct }}';
-            const schoolId = '{{ Helper::requireSchool() }}';
-            const oLevel = @json($oLevel ?? []);
-            const aLevel = @json($aLevel ?? []);
-            const primaryTheologyClasses = @json($primaryTheologyClasses ?? []);
-            const primarySecularClasses = @json($primarySecularClasses ?? []);
-            const schoolClasses = @json($schoolClasses ?? []);
+        <script>
+            $(document).ready(function () {
+                const schoolProduct = '{{ $schoolProduct }}';
+                const schoolId = '{{ Helper::requireSchool() }}';
+                const oLevel = @json($oLevel ?? []);
+                const aLevel = @json($aLevel ?? []);
+                const primaryTheologyClasses = @json($primaryTheologyClasses ?? []);
+                const primarySecularClasses = @json($primarySecularClasses ?? []);
+                const schoolClasses = @json($schoolClasses ?? []);
 
-            // Filter classes by school and category
-            function filterClassesBySchoolAndCategory(allClasses, category) {
-                return schoolClasses.filter(schoolClass => {
-                    return allClasses.some(allClass => allClass.md_id == schoolClass.class_name && allClass
-                        .md_name == schoolClass.class_name);
-                });
-            }
+                // Filter classes by school and category
+                function filterClassesBySchoolAndCategory(allClasses, category) {
+                    return schoolClasses.filter(schoolClass => {
+                        return allClasses.some(allClass => allClass.md_id == schoolClass.class_name && allClass
+                            .md_name == schoolClass.class_name);
+                    });
+                }
 
-            function populateSeniorOptions(data) {
-                const $senior = $('#senior');
-                $senior.empty().append('<option value="">-- Select Senior --</option>');
+                function populateSeniorOptions(data) {
+                    const $senior = $('#senior');
+                    $senior.empty().append('<option value="">-- Select Senior --</option>');
 
-                data.forEach(item => {
-                    // Use Helper::recordMdname to get the meaningful name
-                    let displayName = item.class_name;
-                    if (item.md_name) {
-                        displayName = item.md_name;
-                    } else {
-                        // If md_name is not available, try to get it from the helper function
-                        // This is a workaround since we can't directly call PHP functions in JS
-                        // We'll use a mapping from the available data
-                        const nameMap = {
-                            @foreach ($oLevel as $class)
-                                '{{ $class->md_id }}': '{{ $class->md_name }}',
-                            @endforeach
+                    data.forEach(item => {
+                        // Use Helper::recordMdname to get the meaningful name
+                        let displayName = item.class_name;
+                        if (item.md_name) {
+                            displayName = item.md_name;
+                        } else {
+                            // If md_name is not available, try to get it from the helper function
+                            // This is a workaround since we can't directly call PHP functions in JS
+                            // We'll use a mapping from the available data
+                            const nameMap = {
+                                @foreach ($oLevel as $class)
+                                    '{{ $class->md_id }}': '{{ $class->md_name }}',
+                                @endforeach
                             @foreach ($aLevel as $class)
                                 '{{ $class->md_id }}': '{{ $class->md_name }}',
                             @endforeach
-                            @foreach ($primaryTheologyClasses as $class)
-                                '{{ $class->md_id }}': '{{ $class->md_name }}',
-                            @endforeach
-                            @foreach ($primarySecularClasses as $class)
-                                '{{ $class->md_id }}': '{{ $class->md_name }}',
-                            @endforeach
-                        };
+                                @foreach ($primaryTheologyClasses as $class)
+                                    '{{ $class->md_id }}': '{{ $class->md_name }}',
+                                @endforeach
+                                @foreach ($primarySecularClasses as $class)
+                                    '{{ $class->md_id }}': '{{ $class->md_name }}',
+                                @endforeach
+                                };
 
                         displayName = nameMap[item.class_name] || Helper.recordMdname(item.class_name) ||
                             item.class_name;
                     }
 
-                    $senior.append(
+                            $senior.append(
                         `<option value="${item.class_name}">${displayName}</option>`
                     );
                 });
 
-                $senior.trigger('change.select2');
-            }
+            $senior.trigger('change.select2');
+                    }
 
             // Listen to Category change
-            $(document).on('change', 'select[name="Category"]', function() {
+            $(document).on('change', 'select[name="Category"]', function () {
                 const val = $(this).val();
                 const $senior = $('#senior');
 
@@ -573,428 +573,435 @@ use App\Http\Controllers\Helper;
                 $('select[name="Category"]').append(
                     '<option value="BPT-BPS">Both Primary Theology and Secular - BPT-BPS</option>');
             }
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-
-            function updateStudentID() {
-                let schoolId = $('#School').val();
-                let category = $('select[name="Category"]').val();
-                let year = $('input[name="Admission_Year"]').val();
-
-                if (schoolId && category && year) {
-                    $.ajax({
-                        url: '{{ route('students.generate-id') }}',
-                        data: {
-                            school_id: schoolId,
-                            category: category,
-                            year: year
-                        },
-                        success: function(res) {
-                            $('#Student_ID').val(res.student_id);
-                        }
-                    });
-                } else {
-                    $('#Student_ID').val('');
-                }
-            }
-
-            $('select[name="Category"], input[name="Admission_Year"]').on('change', updateStudentID);
-
-            updateStudentID();
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('dateOfBirth');
-            if (dateInput) {
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const maxDate = `${yyyy}-${mm}-${dd}`;
-
-                dateInput.setAttribute('max', maxDate);
-
-                dateInput.addEventListener('change', function() {
-                    if (this.value > maxDate) {
-                        this.value = '';
-                        alert('Date of birth cannot be in the future');
-                    }
                 });
-            }
-        });
-    </script>
+        </script>
 
-    <script>
-        $(document).ready(function() {
-            $('#createStudentForm').on('submit', function(e) {
-                e.preventDefault();
+        <script>
+            $(document).ready(function () {
 
-                let $form = $(this);
-                let $submitBtn = $form.find('button[type="submit"]');
-                let isValid = true;
+                function updateStudentID() {
+                    let schoolId = $('#School').val();
+                    let category = $('select[name="Category"]').val();
+                    let year = $('input[name="Admission_Year"]').val();
 
-                // Clear previous validation
-                $form.find('.is-invalid').removeClass('is-invalid');
-                $form.find('.invalid-feedback').remove();
-
-                // Required fields and their labels for error messages
-                let requiredFields = {
-                    'School': 'School',
-                    'Category': 'Category',
-                    'Admission_Year': 'Admission Year',
-                    'Student_ID': 'Student ID',
-                    'firstname': 'First Name',
-                    'lastname': 'Last Name',
-                    'senior': 'Senior',
-                    'stream': 'Stream',
-                    'gender': 'Gender'
-                };
-
-                // Validate required fields
-                $.each(requiredFields, function(fieldName, label) {
-                    let input = $form.find(`[name="${fieldName}"]`);
-                    if (!input.val() || input.val().trim() === '') {
-                        input.addClass('is-invalid');
-
-                        // Place error inside the form-group container
-                        input.closest('.form-group').append(
-                            `<div class="invalid-feedback d-block">${label} is required.</div>`
-                        );
-
-                        isValid = false;
-                    }
-                });
-
-                if (!isValid) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Incomplete Form',
-                        text: 'Please fill in all required fields before submitting.'
-                    });
-                    return;
-                }
-
-                // Confirm before submission
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You are about to submit the student data.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, submit it!',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#5351e4',
-                    cancelButtonColor: '#6c757d'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Show custom loader with progress
-                        Swal.fire({
-                            title: 'Saving Student',
-                            html: `
-                                    <div class="custom-loader-container">
-                                        <div class="loader-spinner"></div>
-                                        <div class="loader-text">Processing student data...</div>
-                                        <div class="loader-progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <div class="loader-steps">
-                                            <span class="step active">Validating</span>
-                                            <span class="step">Saving</span>
-                                            <span class="step">Complete</span>
-                                        </div>
-                                    </div>
-                                `,
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            showConfirmButton: false,
-                            width: '400px',
-                            didOpen: () => {
-                                // Add custom styles
-                                const style = document.createElement('style');
-                                style.textContent = `
-                                        .custom-loader-container {
-                                            text-align: center;
-                                            padding: 10px 0;
-                                        }
-                                        .loader-spinner {
-                                            width: 50px;
-                                            height: 50px;
-                                            border: 4px solid #e9ecef;
-                                            border-top-color: #5351e4;
-                                            border-radius: 50%;
-                                            animation: spin 0.8s linear infinite;
-                                            margin: 0 auto 20px;
-                                        }
-                                        @keyframes spin {
-                                            to { transform: rotate(360deg); }
-                                        }
-                                        .loader-text {
-                                            color: #495057;
-                                            font-size: 14px;
-                                            margin-bottom: 15px;
-                                        }
-                                        .loader-progress {
-                                            background: #e9ecef;
-                                            border-radius: 10px;
-                                            height: 6px;
-                                            overflow: hidden;
-                                            margin-bottom: 20px;
-                                        }
-                                        .progress-bar {
-                                            width: 0%;
-                                            height: 100%;
-                                            background: #5351e4;
-                                            border-radius: 10px;
-                                            transition: width 0.3s ease;
-                                        }
-                                        .loader-steps {
-                                            display: flex;
-                                            justify-content: space-between;
-                                            margin-top: 15px;
-                                        }
-                                        .loader-steps .step {
-                                            font-size: 12px;
-                                            color: #adb5bd;
-                                            transition: color 0.3s ease;
-                                        }
-                                        .loader-steps .step.active {
-                                            color: #5351e4;
-                                            font-weight: 500;
-                                        }
-                                        .loader-steps .step.completed {
-                                            color: #28a745;
-                                        }
-                                    `;
-                                document.head.appendChild(style);
-
-                                // Animate progress
-                                let progress = 0;
-                                const progressBar = Swal.getHtmlContainer()
-                                    .querySelector('.progress-bar');
-                                const steps = Swal.getHtmlContainer().querySelectorAll(
-                                    '.step');
-
-                                const updateProgress = (percent, stepIndex) => {
-                                    progressBar.style.width = percent + '%';
-                                    steps.forEach((step, idx) => {
-                                        if (idx < stepIndex) {
-                                            step.classList.add('completed');
-                                            step.classList.remove('active');
-                                        } else if (idx === stepIndex) {
-                                            step.classList.add('active');
-                                            step.classList.remove(
-                                                'completed');
-                                        }
-                                    });
-                                };
-
-                                updateProgress(30, 0);
+                    if (schoolId && category && year) {
+                        $.ajax({
+                            url: '{{ route("students.generate-id") }}',
+                            method: 'GET',
+                            data: {
+                                school_id: schoolId,
+                                category: category,
+                                year: year
+                            },
+                            success: function (res) {
+                                console.log('AJAX Success:', res); // Debug
+                                $('#Student_ID').val(res.student_id || '');
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('AJAX Error:', error); // Debug
+                                console.error('XHR Response:', xhr.responseText); // Debug
+                                $('#Student_ID').val('Error: ' + error);
                             }
                         });
+                    } else {
+                        $('#Student_ID').val('');
+                    }
+                }
 
-                        // Make the AJAX request
-                        $.ajax({
-                            url: $form.attr('action'),
-                            type: 'POST',
-                            data: new FormData($form[0]),
-                            processData: false,
-                            contentType: false,
-                            headers: {
-                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
-                            },
-                            xhr: function() {
-                                const xhr = new window.XMLHttpRequest();
-                                xhr.upload.addEventListener('progress', function(e) {
-                                    if (e.lengthComputable) {
-                                        const percent = (e.loaded / e.total) *
-                                            100;
-                                        // Update progress for file upload
-                                        const progressBar = Swal
-                                            .getHtmlContainer().querySelector(
-                                                '.progress-bar');
-                                        const steps = Swal.getHtmlContainer()
-                                            .querySelectorAll('.step');
-                                        if (progressBar) {
-                                            progressBar.style.width = Math.min(
-                                                percent, 50) + '%';
-                                        }
-                                        if (percent > 30 && steps[1]) {
-                                            steps[1].classList.add('active');
-                                        }
-                                    }
-                                });
-                                return xhr;
-                            },
-                            success: function(response) {
-                                // Update to 100% and mark complete
-                                const progressBar = Swal.getHtmlContainer()
-                                    .querySelector('.progress-bar');
-                                const steps = Swal.getHtmlContainer().querySelectorAll(
-                                    '.step');
-                                const loaderText = Swal.getHtmlContainer()
-                                    .querySelector('.loader-text');
+                $('select[name="Category"], input[name="Admission_Year"]').on('change', updateStudentID);
 
-                                progressBar.style.width = '100%';
-                                steps.forEach(step => {
-                                    step.classList.remove('active');
-                                    step.classList.add('completed');
-                                });
-                                loaderText.textContent = 'Student saved successfully!';
+                updateStudentID();
+            });
+        </script>
 
-                                setTimeout(() => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: 'Student data has been submitted successfully.',
-                                        confirmButtonColor: '#5351e4',
-                                        confirmButtonText: 'OK',
-                                        showConfirmButton: true
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            if (response.redirect) {
-                                                window.location.href =
-                                                    response.redirect;
-                                            } else {
-                                                location
-                                                    .reload(); // fallback refresh
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const dateInput = document.getElementById('dateOfBirth');
+                if (dateInput) {
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    const maxDate = `${yyyy}-${mm}-${dd}`;
+
+                    dateInput.setAttribute('max', maxDate);
+
+                    dateInput.addEventListener('change', function () {
+                        if (this.value > maxDate) {
+                            this.value = '';
+                            alert('Date of birth cannot be in the future');
+                        }
+                    });
+                }
+            });
+        </script>
+
+        <script>
+            $(document).ready(function () {
+                $('#createStudentForm').on('submit', function (e) {
+                    e.preventDefault();
+
+                    let $form = $(this);
+                    let $submitBtn = $form.find('button[type="submit"]');
+                    let isValid = true;
+
+                    // Clear previous validation
+                    $form.find('.is-invalid').removeClass('is-invalid');
+                    $form.find('.invalid-feedback').remove();
+
+                    // Required fields and their labels for error messages
+                    let requiredFields = {
+                        'School': 'School',
+                        'Category': 'Category',
+                        'Admission_Year': 'Admission Year',
+                        'Student_ID': 'Student ID',
+                        'firstname': 'First Name',
+                        'lastname': 'Last Name',
+                        'senior': 'Senior',
+                        'stream': 'Stream',
+                        'gender': 'Gender'
+                    };
+
+                    // Validate required fields
+                    $.each(requiredFields, function (fieldName, label) {
+                        let input = $form.find(`[name="${fieldName}"]`);
+                        if (!input.val() || input.val().trim() === '') {
+                            input.addClass('is-invalid');
+
+                            // Place error inside the form-group container
+                            input.closest('.form-group').append(
+                                `<div class="invalid-feedback d-block">${label} is required.</div>`
+                            );
+
+                            isValid = false;
+                        }
+                    });
+
+                    if (!isValid) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Incomplete Form',
+                            text: 'Please fill in all required fields before submitting.'
+                        });
+                        return;
+                    }
+
+                    // Confirm before submission
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to submit the student data.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, submit it!',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#5351e4',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show custom loader with progress
+                            Swal.fire({
+                                title: 'Saving Student',
+                                html: `
+                                            <div class="custom-loader-container">
+                                                <div class="loader-spinner"></div>
+                                                <div class="loader-text">Processing student data...</div>
+                                                <div class="loader-progress">
+                                                    <div class="progress-bar"></div>
+                                                </div>
+                                                <div class="loader-steps">
+                                                    <span class="step active">Validating</span>
+                                                    <span class="step">Saving</span>
+                                                    <span class="step">Complete</span>
+                                                </div>
+                                            </div>
+                                        `,
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                width: '400px',
+                                didOpen: () => {
+                                    // Add custom styles
+                                    const style = document.createElement('style');
+                                    style.textContent = `
+                                                .custom-loader-container {
+                                                    text-align: center;
+                                                    padding: 10px 0;
+                                                }
+                                                .loader-spinner {
+                                                    width: 50px;
+                                                    height: 50px;
+                                                    border: 4px solid #e9ecef;
+                                                    border-top-color: #5351e4;
+                                                    border-radius: 50%;
+                                                    animation: spin 0.8s linear infinite;
+                                                    margin: 0 auto 20px;
+                                                }
+                                                @keyframes spin {
+                                                    to { transform: rotate(360deg); }
+                                                }
+                                                .loader-text {
+                                                    color: #495057;
+                                                    font-size: 14px;
+                                                    margin-bottom: 15px;
+                                                }
+                                                .loader-progress {
+                                                    background: #e9ecef;
+                                                    border-radius: 10px;
+                                                    height: 6px;
+                                                    overflow: hidden;
+                                                    margin-bottom: 20px;
+                                                }
+                                                .progress-bar {
+                                                    width: 0%;
+                                                    height: 100%;
+                                                    background: #5351e4;
+                                                    border-radius: 10px;
+                                                    transition: width 0.3s ease;
+                                                }
+                                                .loader-steps {
+                                                    display: flex;
+                                                    justify-content: space-between;
+                                                    margin-top: 15px;
+                                                }
+                                                .loader-steps .step {
+                                                    font-size: 12px;
+                                                    color: #adb5bd;
+                                                    transition: color 0.3s ease;
+                                                }
+                                                .loader-steps .step.active {
+                                                    color: #5351e4;
+                                                    font-weight: 500;
+                                                }
+                                                .loader-steps .step.completed {
+                                                    color: #28a745;
+                                                }
+                                            `;
+                                    document.head.appendChild(style);
+
+                                    // Animate progress
+                                    let progress = 0;
+                                    const progressBar = Swal.getHtmlContainer()
+                                        .querySelector('.progress-bar');
+                                    const steps = Swal.getHtmlContainer().querySelectorAll(
+                                        '.step');
+
+                                    const updateProgress = (percent, stepIndex) => {
+                                        progressBar.style.width = percent + '%';
+                                        steps.forEach((step, idx) => {
+                                            if (idx < stepIndex) {
+                                                step.classList.add('completed');
+                                                step.classList.remove('active');
+                                            } else if (idx === stepIndex) {
+                                                step.classList.add('active');
+                                                step.classList.remove(
+                                                    'completed');
+                                            }
+                                        });
+                                    };
+
+                                    updateProgress(30, 0);
+                                }
+                            });
+
+                            // Make the AJAX request
+                            $.ajax({
+                                url: $form.attr('action'),
+                                type: 'POST',
+                                data: new FormData($form[0]),
+                                processData: false,
+                                contentType: false,
+                                headers: {
+                                    'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                                },
+                                xhr: function () {
+                                    const xhr = new window.XMLHttpRequest();
+                                    xhr.upload.addEventListener('progress', function (e) {
+                                        if (e.lengthComputable) {
+                                            const percent = (e.loaded / e.total) *
+                                                100;
+                                            // Update progress for file upload
+                                            const progressBar = Swal
+                                                .getHtmlContainer().querySelector(
+                                                    '.progress-bar');
+                                            const steps = Swal.getHtmlContainer()
+                                                .querySelectorAll('.step');
+                                            if (progressBar) {
+                                                progressBar.style.width = Math.min(
+                                                    percent, 50) + '%';
+                                            }
+                                            if (percent > 30 && steps[1]) {
+                                                steps[1].classList.add('active');
                                             }
                                         }
                                     });
-                                }, 500);
+                                    return xhr;
+                                },
+                                success: function (response) {
+                                    // Update to 100% and mark complete
+                                    const progressBar = Swal.getHtmlContainer()
+                                        .querySelector('.progress-bar');
+                                    const steps = Swal.getHtmlContainer().querySelectorAll(
+                                        '.step');
+                                    const loaderText = Swal.getHtmlContainer()
+                                        .querySelector('.loader-text');
+
+                                    progressBar.style.width = '100%';
+                                    steps.forEach(step => {
+                                        step.classList.remove('active');
+                                        step.classList.add('completed');
+                                    });
+                                    loaderText.textContent = 'Student saved successfully!';
+
+                                    setTimeout(() => {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success!',
+                                            text: 'Student data has been submitted successfully.',
+                                            confirmButtonColor: '#5351e4',
+                                            confirmButtonText: 'OK',
+                                            showConfirmButton: true
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                if (response.redirect) {
+                                                    window.location.href =
+                                                        response.redirect;
+                                                } else {
+                                                    location
+                                                        .reload(); // fallback refresh
+                                                }
+                                            }
+                                        });
+                                    }, 500);
+                                },
+                                error: function (data) {
+                                    $('body').html(data.responseText);
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            document.getElementById('studentPhoto').addEventListener('change', function (e) {
+                const preview = document.getElementById('photoPreview');
+                const file = e.target.files[0];
+
+                if (file) {
+                    // Check file size (2MB limit)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size must be less than 2MB');
+                        this.value = '';
+                        return;
+                    }
+
+                    // Check file type
+                    if (!file.type.match('image.*')) {
+                        alert('Please select an image file');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        // Remove existing image if any
+                        const existingImg = preview.querySelector('img');
+                        if (existingImg) {
+                            existingImg.remove();
+                        }
+
+                        // Remove remove button if exists
+                        const existingBtn = preview.querySelector('.remove-image-btn');
+                        if (existingBtn) {
+                            existingBtn.remove();
+                        }
+
+                        // Create image element
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = 'auto';
+                        img.style.height = 'auto';
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '100%';
+                        img.style.objectFit = 'contain';
+
+                        // Create remove button
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'remove-image-btn';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.onclick = function (e) {
+                            e.stopPropagation();
+                            document.getElementById('studentPhoto').value = '';
+                            preview.classList.remove('has-image');
+                            img.remove();
+                            removeBtn.remove();
+
+                            // Restore original content
+                            const icon = document.createElement('i');
+                            icon.className = 'fas fa-camera';
+                            const text = document.createElement('span');
+                            text.textContent = 'No image selected';
+                            preview.appendChild(icon);
+                            preview.appendChild(text);
+                        };
+
+                        preview.appendChild(img);
+                        preview.appendChild(removeBtn);
+                        preview.classList.add('has-image');
+
+                        // Hide original content
+                        const icon = preview.querySelector('i:not(.remove-image-btn i)');
+                        const text = preview.querySelector('span');
+                        if (icon) icon.style.display = 'none';
+                        if (text) text.style.display = 'none';
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+        </script>
+
+        <script>
+            $(document).ready(function () {
+                $('select[name="senior"]').on('change', function () {
+                    let seniorCode = $(this).val();
+                    let $streamSelect = $('#stream');
+
+                    $streamSelect.html('<option value="">Loading streams...</option>');
+
+                    if (seniorCode) {
+                        $.ajax({
+                            url: '/get-streams/' + seniorCode,
+                            type: 'GET',
+                            success: function (response) {
+                                $streamSelect.empty();
+                                $streamSelect.append(
+                                    '<option value="">-- Select Stream --</option>');
+                                if (response.streams && response.streams.length > 0) {
+                                    response.streams.forEach(function (stream) {
+                                        $streamSelect.append('<option value="' + stream
+                                            .stream_id + '">' + stream.stream_id +
+                                            '</option>');
+                                    });
+                                } else {
+                                    $streamSelect.append(
+                                        '<option value="">No streams found</option>');
+                                }
                             },
-                            error: function(data) {
+                            error: function (data) {
                                 $('body').html(data.responseText);
                             }
                         });
+                    } else {
+                        $streamSelect.html('<option value="">-- Select Stream --</option>');
                     }
                 });
             });
-        });
-    </script>
-
-    <script>
-        document.getElementById('studentPhoto').addEventListener('change', function(e) {
-            const preview = document.getElementById('photoPreview');
-            const file = e.target.files[0];
-
-            if (file) {
-                // Check file size (2MB limit)
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('File size must be less than 2MB');
-                    this.value = '';
-                    return;
-                }
-
-                // Check file type
-                if (!file.type.match('image.*')) {
-                    alert('Please select an image file');
-                    this.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    // Remove existing image if any
-                    const existingImg = preview.querySelector('img');
-                    if (existingImg) {
-                        existingImg.remove();
-                    }
-
-                    // Remove remove button if exists
-                    const existingBtn = preview.querySelector('.remove-image-btn');
-                    if (existingBtn) {
-                        existingBtn.remove();
-                    }
-
-                    // Create image element
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.width = 'auto';
-                    img.style.height = 'auto';
-                    img.style.maxWidth = '100%';
-                    img.style.maxHeight = '100%';
-                    img.style.objectFit = 'contain';
-
-                    // Create remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'remove-image-btn';
-                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    removeBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        document.getElementById('studentPhoto').value = '';
-                        preview.classList.remove('has-image');
-                        img.remove();
-                        removeBtn.remove();
-
-                        // Restore original content
-                        const icon = document.createElement('i');
-                        icon.className = 'fas fa-camera';
-                        const text = document.createElement('span');
-                        text.textContent = 'No image selected';
-                        preview.appendChild(icon);
-                        preview.appendChild(text);
-                    };
-
-                    preview.appendChild(img);
-                    preview.appendChild(removeBtn);
-                    preview.classList.add('has-image');
-
-                    // Hide original content
-                    const icon = preview.querySelector('i:not(.remove-image-btn i)');
-                    const text = preview.querySelector('span');
-                    if (icon) icon.style.display = 'none';
-                    if (text) text.style.display = 'none';
-                };
-
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-            $('select[name="senior"]').on('change', function() {
-                let seniorCode = $(this).val();
-                let $streamSelect = $('#stream');
-
-                $streamSelect.html('<option value="">Loading streams...</option>');
-
-                if (seniorCode) {
-                    $.ajax({
-                        url: '/get-streams/' + seniorCode,
-                        type: 'GET',
-                        success: function(response) {
-                            $streamSelect.empty();
-                            $streamSelect.append(
-                                '<option value="">-- Select Stream --</option>');
-                            if (response.streams && response.streams.length > 0) {
-                                response.streams.forEach(function(stream) {
-                                    $streamSelect.append('<option value="' + stream
-                                        .stream_id + '">' + stream.stream_id +
-                                        '</option>');
-                                });
-                            } else {
-                                $streamSelect.append(
-                                    '<option value="">No streams found</option>');
-                            }
-                        },
-                        error: function(data) {
-                            $('body').html(data.responseText);
-                        }
-                    });
-                } else {
-                    $streamSelect.html('<option value="">-- Select Stream --</option>');
-                }
-            });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 

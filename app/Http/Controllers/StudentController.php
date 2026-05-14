@@ -16,6 +16,7 @@ use App\Models\StudentBasic;
 use App\Models\Subject;
 use App\Models\User;
 use App\Services\GradingService;
+use Illuminate\Support\Facades\Log;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -310,6 +311,7 @@ class StudentController extends Controller
         }
 
         $classNameMap = [];
+
         if ($schoolProduct === 'Idaad And Thanawi') {
             foreach ($oLevel as $class) {
                 $classNameMap[$class->md_id] = $class->md_name;
@@ -336,7 +338,6 @@ class StudentController extends Controller
 
         // Fetch classes belonging to the logged-in school
         $schoolClasses = Classroom::where('school_id', $schoolId)->get();
-        // dd($schoolClasses);
 
         return view('student.add-new-student', compact(
             'schoolProduct',
@@ -354,6 +355,23 @@ class StudentController extends Controller
 
     public function generateStudentID(Request $request)
     {
+
+
+        $schoolNumber = DB::table('schools')
+            ->where('id', $request->school_id)
+            ->value('registration_code');
+
+        $schoolID = DB::table('houses')
+            ->where('Number', $schoolNumber)
+            ->value('ID');
+
+        // Log::info('generateStudentID method called', [
+        //     'school_id' => $request->school_id,
+        //     'category' => $request->category,
+        //     'year' => $request->year,
+        //     'school_registration_code' => $school_registration_code,
+        // ]);
+
         $schoolId = $request->school_id;
         $category = $request->category;
         $year = $request->year;
@@ -362,7 +380,8 @@ class StudentController extends Controller
             return response()->json(['student_id' => ''], 200);
         }
 
-        $school = DB::table('houses')->where('ID', $schoolId)->first();
+        $school = DB::table('houses')->where('ID', $schoolID)->first();
+
         if (!$school) {
             return response()->json(['student_id' => ''], 200);
         }
@@ -387,6 +406,18 @@ class StudentController extends Controller
         $newNumber = str_pad(($lastNumber ?? 0) + 1, 3, '0', STR_PAD_LEFT);
 
         $newStudentID = $schoolNumber . '-' . $category . '-' . $newNumber . '-' . $year;
+
+        // Log the generated student ID
+        Log::info('New Student ID generated', [
+            'student_id' => $newStudentID,
+            'school_id' => $schoolId,
+            'school_number' => $schoolNumber,
+            'category' => $category,
+            'year' => $year,
+            'new_number' => $newNumber,
+            'generated_by' => auth()->id(), // if you want to track which user generated it
+            'ip' => $request->ip() // optional: log the IP address
+        ]);
 
         return response()->json(['student_id' => $newStudentID]);
     }
