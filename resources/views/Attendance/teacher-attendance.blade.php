@@ -27,11 +27,7 @@
         --border-light: #e2e8f0;
         --bg-surface: #f8fafc;
     }
-
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
+    
     body {
         background: #f1f5f9;
     }

@@ -31,10 +31,6 @@ use App\Http\Controllers\Helper;
         --bg-surface: #f8fafc;
     }
 
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
     body {
         background: #f1f5f9;
     }

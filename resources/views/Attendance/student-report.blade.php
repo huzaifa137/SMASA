@@ -30,10 +30,6 @@ use App\Http\Controllers\Helper;
         --bg-surface: #f8fafc;
     }
 
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
     body {
         background: #f1f5f9;
     }
@@ -609,7 +605,7 @@ use App\Http\Controllers\Helper;
                                     <span style="font-weight: 600;">{{ $row->full_name }}</span>
                                 </div>
                             </td>
-                            <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">{{ $row->admission }}</td>
+                            <td style="font-size: 0.75rem; color: var(--text-muted);">{{ $row->admission }}</td>
                             <td>{{ $row->total_days }}</td>
                             <td><span class="badge-status badge-present"><i class="fas fa-check-circle"></i> {{ $row->present }}</span></td>
                             <td><span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> {{ $row->absent }}</span></td>

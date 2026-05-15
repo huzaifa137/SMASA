@@ -482,7 +482,7 @@ use App\Http\Controllers\Helper;
                     <a href="{{ route('timetable.create') }}" class="btn-primary-premium">
                         <i class="fas fa-plus-circle"></i> New Timetable
                     </a> &nbsp; &nbsp;
-                    <a href="{{ url('timetable.periods') }}" class="btn-outline-premium">
+                    <a href="{{ route('timetable.periods.index') }}" class="btn-outline-premium">
                         <i class="fas fa-clock"></i> Periods
                     </a>  &nbsp; &nbsp;
                     <a href="{{ route('timetable.teacher') }}" class="btn-outline-premium">
@@ -667,7 +667,7 @@ use App\Http\Controllers\Helper;
                         <i class="fas fa-hourglass-half" style="color: var(--info);"></i>
                         Period Definitions
                     </div>
-                    <a href="{{ url('timetable.periods') }}" class="btn" style="background: var(--brand-muted); color: var(--brand); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600;">
+                    <a href="{{ route('timetable.periods.index') }}" class="btn" style="background: var(--brand-muted); color: var(--brand); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600;">
                         <i class="fas fa-cog me-1"></i> Manage
                     </a>
                 </div>
@@ -689,7 +689,7 @@ use App\Http\Controllers\Helper;
                     @if($periods->isEmpty())
                     <div class="empty-state">
                         <i class="fas fa-clock"></i>
-                        <p>No periods defined. <a href="{{ url('timetable.periods') }}" style="color: var(--brand);">Add periods</a> first.</p>
+                        <p>No periods defined. <a href="{{ route('timetable.periods.index') }}" style="color: var(--brand);">Add periods</a> first.</p>
                     </div>
                     @endif
                 </div>

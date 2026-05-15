@@ -26,10 +26,6 @@
         --bg-surface: #f8fafc;
     }
 
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
     body {
         background: #f1f5f9;
     }
@@ -311,7 +307,6 @@
     .student-adm {
         font-size: 0.7rem;
         color: var(--text-muted);
-        font-family: monospace;
         display: flex;
         align-items: center;
         gap: 0.5rem;
