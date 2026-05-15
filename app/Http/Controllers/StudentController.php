@@ -310,28 +310,16 @@ class StudentController extends Controller
             $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
         }
 
-        $classNameMap = [];
+        // Load ALL possible class types for the nameMap (regardless of school_product)
+        $allOLvel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
+        $allALevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
+        $allPrimaryTheology = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+        $allPrimarySecular = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
 
-        if ($schoolProduct === 'Idaad And Thanawi') {
-            foreach ($oLevel as $class) {
-                $classNameMap[$class->md_id] = $class->md_name;
-            }
-            foreach ($aLevel as $class) {
-                $classNameMap[$class->md_id] = $class->md_name;
-            }
-        } elseif ($schoolProduct === 'Primary Theology') {
-            foreach ($primaryTheologyClasses as $class) {
-                $classNameMap[$class->md_id] = $class->md_name;
-            }
-        } elseif ($schoolProduct === 'Primary Secular') {
-            foreach ($primarySecularClasses as $class) {
-                $classNameMap[$class->md_id] = $class->md_name;
-            }
-        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
-            foreach ($primaryTheologyClasses as $class) {
-                $classNameMap[$class->md_id] = $class->md_name;
-            }
-            foreach ($primarySecularClasses as $class) {
+        // Build a UNIVERSAL nameMap (md_id => md_name)
+        $classNameMap = [];
+        foreach ([$allOLvel, $allALevel, $allPrimaryTheology, $allPrimarySecular] as $classes) {
+            foreach ($classes as $class) {
                 $classNameMap[$class->md_id] = $class->md_name;
             }
         }

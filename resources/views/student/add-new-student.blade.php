@@ -460,111 +460,90 @@ use App\Http\Controllers\Helper;
                 const primarySecularClasses = @json($primarySecularClasses ?? []);
                 const schoolClasses = @json($schoolClasses ?? []);
 
-                // Predefine the name map for all possible classes
-                const nameMap = {
-                    @foreach ($oLevel as $class)
-                        '{{ $class->md_id }}': '{{ $class->md_name }}',
-                    @endforeach
-                @foreach ($aLevel as $class)
-                    '{{ $class->md_id }}': '{{ $class->md_name }}',
-                @endforeach
-                    @foreach ($primaryTheologyClasses as $class)
-                        '{{ $class->md_id }}': '{{ $class->md_name }}',
-                    @endforeach
-                    @foreach ($primarySecularClasses as $class)
-                        '{{ $class->md_id }}': '{{ $class->md_name }}',
-                    @endforeach
-            };
+                // Use the UNIVERSAL classNameMap from PHP (includes ALL classes)
+                const nameMap = @json($classNameMap);
 
-            // Filter classes by school and category
-            function filterClassesBySchoolAndCategory(allClasses, category) {
-                if (!allClasses || allClasses.length === 0) {
-                    return schoolClasses;
+                function filterClassesBySchoolAndCategory(allClasses) {
+                    if (!allClasses || allClasses.length === 0) {
+                        // Fallback: Return all school classes if master data is empty
+                        return schoolClasses;
+                    }
+                    const mdIdSet = new Set(allClasses.map(c => String(c.md_id)));
+                    const filtered = schoolClasses.filter(sc => mdIdSet.has(String(sc.class_name)));
+
+                    // Fallback: If no matches, return all school classes
+                    return filtered.length > 0 ? filtered : schoolClasses;
                 }
-                return schoolClasses.filter(schoolClass => {
-                    return allClasses.some(allClass => allClass.md_id == schoolClass.class_name);
-                });
-            }
 
-            function populateSeniorOptions(data) {
-                const $senior = $('#senior');
-                $senior.empty().append('<option value="">-- Select Senior --</option>');
+                function populateSeniorOptions(data) {
+                    const $senior = $('#senior');
+                    $senior.empty().append('<option value="">-- Select Class --</option>');
 
-                data.forEach(item => {
-                    let displayName = nameMap[item.class_name] || item.class_name;
-                    $senior.append(
-                        `<option value="${item.class_name}">${displayName}</option>`
-                    );
-                });
-
-                $senior.trigger('change.select2');
-            }
-
-            // Listen to Category change
-            $(document).on('change', 'select[name="Category"]', function () {
-                const val = $(this).val();
-                const $senior = $('#senior');
-
-                $senior.empty().append('<option value="">-- Select Senior --</option>');
-
-                if (schoolProduct === 'Idaad And Thanawi') {
-                    if (val === 'ID') {
-                        $senior.prop('disabled', false);
-                        const filteredOLevel = filterClassesBySchoolAndCategory(oLevel, 'O-Level');
-                        populateSeniorOptions(filteredOLevel);
-                    } else if (val === 'TH') {
-                        $senior.prop('disabled', false);
-                        const filteredALevel = filterClassesBySchoolAndCategory(aLevel, 'A-Level');
-                        populateSeniorOptions(filteredALevel);
+                    if (!data || data.length === 0) {
+                        $senior.append('<option value="" disabled>No classes found for this school</option>');
                     } else {
-                        $senior.prop('disabled', true);
+                        data.forEach(function (item) {
+                            // Use nameMap to get md_name, fall back to class_name if missing
+                            const displayName = nameMap[String(item.class_name)] || item.class_name;
+                            $senior.append(
+                                '<option value="' + item.class_name + '">' + displayName + '</option>'
+                            );
+                        });
                     }
-                } else if (schoolProduct === 'Primary Theology') {
-                    if (val === 'PRT') {
-                        $senior.prop('disabled', false);
-                        const filteredTheology = filterClassesBySchoolAndCategory(primaryTheologyClasses, 'Primary Theology');
-                        populateSeniorOptions(filteredTheology);
-                    } else {
-                        $senior.prop('disabled', true);
-                    }
-                } else if (schoolProduct === 'Primary Secular') {
-                    if (val === 'PRS') {
-                        $senior.prop('disabled', false);
-                        const filteredSecular = filterClassesBySchoolAndCategory(primarySecularClasses, 'Primary Secular');
-                        populateSeniorOptions(filteredSecular);
-                    } else {
-                        $senior.prop('disabled', true);
-                    }
-                } else if (schoolProduct === 'Both Primary Theology and Secular') {
-                    if (val === 'BPT-BPS') {
-                        $senior.prop('disabled', false);
-                        const combinedClasses = primaryTheologyClasses.concat(primarySecularClasses);
-                        const filteredCombined = filterClassesBySchoolAndCategory(combinedClasses, 'Both Primary Theology and Secular');
-                        populateSeniorOptions(filteredCombined);
-                    } else {
-                        $senior.prop('disabled', true);
+
+                    if (typeof $senior.select2 === 'function') {
+                        $senior.trigger('change.select2');
                     }
                 }
 
-                $senior.trigger('change.select2');
+                // Category dropdown change handler
+                $(document).on('change', 'select[name="Category"]', function () {
+                    const val = $(this).val();
+                    const $senior = $('#senior');
+
+                    if (!val) {
+                        $senior.empty().append('<option value="">-- Select Class --</option>');
+                        $senior.prop('disabled', true);
+                        if (typeof $senior.select2 === 'function') $senior.trigger('change.select2');
+                        return;
+                    }
+
+                    $senior.prop('disabled', false);
+
+                    if (schoolProduct === 'Idaad And Thanawi') {
+                        if (val === 'ID') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(oLevel));
+                        } else if (val === 'TH') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(aLevel));
+                        }
+
+                    } else if (schoolProduct === 'Primary Theology') {
+                        if (val === 'PRT') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(primaryTheologyClasses));
+                        }
+
+                    } else if (schoolProduct === 'Primary Secular') {
+                        if (val === 'PRS') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(primarySecularClasses));
+                        }
+
+                    } else if (schoolProduct === 'Both Primary Theology and Secular') {
+                        if (val === 'BPT-BPS') {
+                            const combined = primaryTheologyClasses.concat(primarySecularClasses);
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(combined));
+                        }
+                    }
+                });
+
+                // Trigger on page load if a category is already pre-selected
+                const initialCategory = $('select[name="Category"]').val();
+                if (initialCategory) {
+                    $('select[name="Category"]').trigger('change');
+                }
+
+                // NOTE: Do NOT append extra options here — the PHP blade already
+                // renders the correct <option> tags for each school product.
             });
-
-            // Initialize the senior dropdown based on the initial Category value
-            const initialCategory = $('select[name="Category"]').val();
-            if (initialCategory) {
-                $('select[name="Category"]').trigger('change');
-            }
-
-            // Initialize the senior dropdown based on the school product
-            if (schoolProduct === 'Primary Theology') {
-                $('select[name="Category"]').append('<option value="PRT">Primary Theology - PRT</option>');
-            } else if (schoolProduct === 'Primary Secular') {
-                $('select[name="Category"]').append('<option value="PRS">Primary Secular - PRS</option>');
-            } else if (schoolProduct === 'Both Primary Theology and Secular') {
-                $('select[name="Category"]').append(
-                    '<option value="BPT-BPS">Both Primary Theology and Secular - BPT-BPS</option>');
-            }
-        });
         </script>
         <script>
             $(document).ready(function () {
@@ -692,19 +671,19 @@ use App\Http\Controllers\Helper;
                             Swal.fire({
                                 title: 'Saving Student',
                                 html: `
-                                                    <div class="custom-loader-container">
-                                                        <div class="loader-spinner"></div>
-                                                        <div class="loader-text">Processing student data...</div>
-                                                        <div class="loader-progress">
-                                                            <div class="progress-bar"></div>
-                                                        </div>
-                                                        <div class="loader-steps">
-                                                            <span class="step active">Validating</span>
-                                                            <span class="step">Saving</span>
-                                                            <span class="step">Complete</span>
-                                                        </div>
-                                                    </div>
-                                                `,
+                                                                            <div class="custom-loader-container">
+                                                                                <div class="loader-spinner"></div>
+                                                                                <div class="loader-text">Processing student data...</div>
+                                                                                <div class="loader-progress">
+                                                                                    <div class="progress-bar"></div>
+                                                                                </div>
+                                                                                <div class="loader-steps">
+                                                                                    <span class="step active">Validating</span>
+                                                                                    <span class="step">Saving</span>
+                                                                                    <span class="step">Complete</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        `,
                                 allowOutsideClick: false,
                                 allowEscapeKey: false,
                                 showConfirmButton: false,
@@ -713,59 +692,59 @@ use App\Http\Controllers\Helper;
                                     // Add custom styles
                                     const style = document.createElement('style');
                                     style.textContent = `
-                                                        .custom-loader-container {
-                                                            text-align: center;
-                                                            padding: 10px 0;
-                                                        }
-                                                        .loader-spinner {
-                                                            width: 50px;
-                                                            height: 50px;
-                                                            border: 4px solid #e9ecef;
-                                                            border-top-color: #5351e4;
-                                                            border-radius: 50%;
-                                                            animation: spin 0.8s linear infinite;
-                                                            margin: 0 auto 20px;
-                                                        }
-                                                        @keyframes spin {
-                                                            to { transform: rotate(360deg); }
-                                                        }
-                                                        .loader-text {
-                                                            color: #495057;
-                                                            font-size: 14px;
-                                                            margin-bottom: 15px;
-                                                        }
-                                                        .loader-progress {
-                                                            background: #e9ecef;
-                                                            border-radius: 10px;
-                                                            height: 6px;
-                                                            overflow: hidden;
-                                                            margin-bottom: 20px;
-                                                        }
-                                                        .progress-bar {
-                                                            width: 0%;
-                                                            height: 100%;
-                                                            background: #5351e4;
-                                                            border-radius: 10px;
-                                                            transition: width 0.3s ease;
-                                                        }
-                                                        .loader-steps {
-                                                            display: flex;
-                                                            justify-content: space-between;
-                                                            margin-top: 15px;
-                                                        }
-                                                        .loader-steps .step {
-                                                            font-size: 12px;
-                                                            color: #adb5bd;
-                                                            transition: color 0.3s ease;
-                                                        }
-                                                        .loader-steps .step.active {
-                                                            color: #5351e4;
-                                                            font-weight: 500;
-                                                        }
-                                                        .loader-steps .step.completed {
-                                                            color: #28a745;
-                                                        }
-                                                    `;
+                                                                                .custom-loader-container {
+                                                                                    text-align: center;
+                                                                                    padding: 10px 0;
+                                                                                }
+                                                                                .loader-spinner {
+                                                                                    width: 50px;
+                                                                                    height: 50px;
+                                                                                    border: 4px solid #e9ecef;
+                                                                                    border-top-color: #5351e4;
+                                                                                    border-radius: 50%;
+                                                                                    animation: spin 0.8s linear infinite;
+                                                                                    margin: 0 auto 20px;
+                                                                                }
+                                                                                @keyframes spin {
+                                                                                    to { transform: rotate(360deg); }
+                                                                                }
+                                                                                .loader-text {
+                                                                                    color: #495057;
+                                                                                    font-size: 14px;
+                                                                                    margin-bottom: 15px;
+                                                                                }
+                                                                                .loader-progress {
+                                                                                    background: #e9ecef;
+                                                                                    border-radius: 10px;
+                                                                                    height: 6px;
+                                                                                    overflow: hidden;
+                                                                                    margin-bottom: 20px;
+                                                                                }
+                                                                                .progress-bar {
+                                                                                    width: 0%;
+                                                                                    height: 100%;
+                                                                                    background: #5351e4;
+                                                                                    border-radius: 10px;
+                                                                                    transition: width 0.3s ease;
+                                                                                }
+                                                                                .loader-steps {
+                                                                                    display: flex;
+                                                                                    justify-content: space-between;
+                                                                                    margin-top: 15px;
+                                                                                }
+                                                                                .loader-steps .step {
+                                                                                    font-size: 12px;
+                                                                                    color: #adb5bd;
+                                                                                    transition: color 0.3s ease;
+                                                                                }
+                                                                                .loader-steps .step.active {
+                                                                                    color: #5351e4;
+                                                                                    font-weight: 500;
+                                                                                }
+                                                                                .loader-steps .step.completed {
+                                                                                    color: #28a745;
+                                                                                }
+                                                                            `;
                                     document.head.appendChild(style);
 
                                     // Animate progress
