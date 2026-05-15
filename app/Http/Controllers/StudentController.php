@@ -338,6 +338,7 @@ class StudentController extends Controller
 
         // Fetch classes belonging to the logged-in school
         $schoolClasses = Classroom::where('school_id', $schoolId)->get();
+        // dd($schoolClasses);
 
         return view('student.add-new-student', compact(
             'schoolProduct',

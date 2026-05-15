@@ -1,6 +1,5 @@
 <?php
-// Removed: use App\Http\Controllers\Controller; $controller = new Controller(); (unnecessary instantiation)
-use App\Http\Controllers\Helper; // Keep if Helper::recordMdname is still used or for other helpers
+use App\Http\Controllers\Helper;
 ?>
 @extends('layouts-side-bar.master')
 

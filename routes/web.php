@@ -12,46 +12,11 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExaminationController;
-use App\Http\Controllers\Helper;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-
-// Route::get('/show-sessions', function () {
-//     $allSessions = Session::all();
-//     dd($allSessions);
-// })->name('show.sessions');
-
-// Route::get('/demo', function () {
-//     dd(Helper::activeTerm());
-// });
-
-// Route::get('/set-admin-session', function () {
-//     // session(['LoggedAdminMaster' => 1]);
-//     session(['LoggedAdmin' => 1]);
-
-//     return redirect('/');
-// });
-
-// Route::get('/set-student-session', function () {
-//     session(['LoggedStudent' => 1]);
-
-//     return redirect('/');
-// });
-
-// Route::get('/set-school', function () {
-//     session(['LoggedSchool' => 2]);
-
-//     return redirect('/');
-// });
-
-// Route::get('/coming-soon', function () {
-//     return view('coming-soon');
-// })->name('coming.soon');
-
-// Route::group(['middleware' => ['AdminAuth']], function () {
-//     Route::get('/', 'dashboardMasterDataDashboard')->name('dashboard.masterdata');
-// });
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\TimetableController;
 
 Route::get('/logout', function () {
     session()->flush();
@@ -488,3 +453,69 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         });
 });
+
+
+// ─── TIMETABLE ────────────────────────────────────────────────────────
+Route::prefix('timetable')
+    ->name('timetable.')
+    ->controller(TimetableController::class)
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/', 'dashboard')->name('dashboard');
+
+        // Periods Management
+        Route::prefix('periods')->name('periods.')->group(function () {
+            Route::get('/', 'periods')->name('index');
+            Route::post('/', 'storePeriod')->name('store');
+            Route::put('/{id}', 'updatePeriod')->name('update');
+            Route::delete('/{id}', 'destroyPeriod')->name('destroy');
+        });
+
+        // Timetable CRUD
+        Route::prefix('manage')->group(function () {
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::get('/{id}/view', 'view')->name('view');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::post('/{id}/duplicate', 'duplicate')->name('duplicate');
+            Route::patch('/{id}/status', 'updateStatus')->name('status');
+        });
+
+        // Slot Management (AJAX)
+        Route::prefix('slot')->name('slot.')->group(function () {
+            Route::post('/save', 'saveSlot')->name('save');
+            Route::delete('/clear', 'clearSlot')->name('clear');
+            Route::get('/get', 'getSlot')->name('get');
+        });
+
+        // Teacher Personal Timetable
+        Route::get('/my-schedule', 'teacherTimetable')->name('teacher');
+    });
+
+// ─── ATTENDANCE ──────────────────────────────────────────────────────
+Route::prefix('attendance')
+    ->name('attendance.')
+    ->controller(AttendanceController::class)
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/', 'dashboard')->name('dashboard');
+
+        // Student Attendance
+        Route::get('/students', 'studentAttendancePortal')->name('students');
+        Route::get('/students/{classId}/{streamId}/take', 'takeStudentAttendance')->name('take');
+        Route::post('/students/save', 'saveStudentAttendance')->name('students.save');
+        Route::get('/students/report', 'studentAttendanceReport')->name('students.report');
+
+        // Teacher Attendance
+        Route::get('/teachers', 'teacherAttendancePage')->name('teachers');
+        Route::post('/teachers/save', 'saveTeacherAttendance')->name('teachers.save');
+        Route::post('/teachers/save-bulk', 'saveTeacherAttendanceBulk')->name('teachers.save.bulk');
+        Route::get('/teachers/report', 'teacherAttendanceReport')->name('teachers.report');
+
+        // AJAX helpers
+        Route::get('/ajax/streams/{classId}', 'getStreamsByClass')->name('ajax.streams');
+        Route::get('/ajax/class-summary', 'classAttendanceSummary')->name('ajax.summary');
+    });
