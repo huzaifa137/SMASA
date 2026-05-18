@@ -40,13 +40,53 @@
                     box-sizing: border-box;
                 }
 
-                /* Hide for screen width below 990px and height below 703px */
-                @media (max-width: 989px),
-                (max-height: 702px) {
-                    .admin-school-dropdown {
-                        display: none !important;
-                    }
-                }
+      /* Responsive school dropdown */
+.admin-school-dropdown {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 700px;
+    padding: 0 10px;
+}
+
+.admin-school-dropdown .dropdown {
+    width: 100%;
+}
+
+.admin-school-dropdown .dropdown button {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-school-dropdown .dropdown-menu {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+@media (max-width: 989px), (max-height: 702px) {
+    .admin-school-dropdown {
+        max-width: 80%;        /* ← was 100%, now proportional on medium screens */
+        margin: 6px 0 !important;
+        padding: 0 6px;
+    }
+
+    .admin-school-dropdown .dropdown button {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-school-dropdown .dropdown button {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+}
+                    
             </style>
 
             <style>
@@ -216,7 +256,7 @@
             @endphp
 
             @if (session('LoggedAdmin'))
-                <div class="admin-school-dropdown mt-3 ml-3 col-12 col-md-6">
+                <div class="admin-school-dropdown mt-3">
                     <div class="dropdown">
                         <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
                             id="schoolDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
