@@ -2110,7 +2110,7 @@ use App\Http\Controllers\Helper;
                         <div class="section-header mb-2" style="margin: 0; padding: 1.5rem 1.5rem 0 1.5rem;">
                             <span class="step-badge">6</span>
                             <i class="fas fa-trophy me-2"></i>Released Examinations
-                            <span class="badge bg-success ms-2" style="background: #10B981 !important;">
+                            <span class="badge bg-primary text-white ms-2" style="background: #3532d0 !important;">
                                 {{ $stats['results_released'] }} Released
                             </span>
                         </div>

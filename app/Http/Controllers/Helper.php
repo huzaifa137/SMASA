@@ -891,7 +891,66 @@ class Helper extends Controller
                 ];
             }
         }
-
         return $examProgress;
+    }
+
+    public static function schoolProduct(int $schoolId): ?string
+    {
+        return DB::table('schools')
+            ->where('id', $schoolId)
+            ->value('school_product');
+    }
+
+    /**
+     * Resolve which slip template(s) to use for this school.
+     *
+     * Returns one of:
+     *   'arabic'  – full Arabic RTL  (Idaad And Thanawi  |  Primary Theology)
+     *   'english' – standard English (Primary Secular)
+     *   'both'    – school has both theology & secular classes
+     *
+     * For the 'both' case the controller must also check the class's
+     * subject_type ('primary_theology' | 'primary_secular') to decide
+     * which template applies to each individual class/student.
+     */
+    public static function schoolSlipType(int $schoolId): string
+    {
+        $product = (string) self::schoolProduct($schoolId);
+
+        return match ($product) {
+            '1', 'Idaad And Thanawi' => 'arabic',   // md_id 1
+            '219', 'Primary Theology' => 'arabic',   // md_id 219
+            '231', 'Primary Secular' => 'english',  // md_id 231
+            '289', 'Both Primary Theology and Secular' => 'both',  // md_id 289
+            default => 'english',
+        };
+    }
+
+    /**
+     * For a specific class_id + school, return whether its subjects
+     * are theology-based (Arabic) or secular (English).
+     * Reads class_subjects.subject_type for the given class.
+     *
+     * Returns 'arabic' | 'english'
+     */
+    public static function classSlipType(int $classId, int $schoolId): string
+    {
+        $type = DB::table('class_subjects')
+            ->where('class_id', $classId)
+            ->where('school_id', $schoolId)
+            ->value('subject_type');
+
+        // 'primary_theology' → Arabic,  'primary_secular' → English
+        return ($type === 'primary_theology') ? 'arabic' : 'english';
+    }
+
+    /**
+     * Return the Arabic school name stored in schools.school_name_arabic.
+     */
+    public static function schoolNameArabic(int $schoolId): string
+    {
+        return DB::table('schools')
+            ->where('id', $schoolId)
+            ->value('school_name_arabic') ?? '';
     }
 }

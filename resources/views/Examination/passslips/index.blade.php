@@ -778,8 +778,9 @@ use App\Http\Controllers\Helper;
                         <span class="status-pill status-{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
                         <a href="{{ route('examination.index') }}" class="btn fw-semibold"
                             style="border-radius:1rem; padding:.7rem 1.5rem;
-                                                                          background:rgba(255,255,255,.2); backdrop-filter:blur(10px);
-                                                                          border:1px solid rgba(255,255,255,.3); color:white;" onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                                                                              background:rgba(255,255,255,.2); backdrop-filter:blur(10px);
+                                                                              border:1px solid rgba(255,255,255,.3); color:white;"
+                            onmouseover="this.style.background='rgba(255,255,255,.3)'"
                             onmouseout="this.style.background='rgba(255,255,255,.2)'">
                             <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                         </a>
@@ -944,7 +945,7 @@ use App\Http\Controllers\Helper;
                                                         <span class="badge"
                                                             style="background: var(--brand-pale); color: var(--brand); font-size: 0.7rem; padding: 0.25rem 0.8rem; border-radius: 20px;">
                                                             <i class="fas fa-user-graduate me-1"></i>
-                                                           <span style="ml-1">&nbsp; &nbsp;{{ $studentCount }}</span> 
+                                                            <span style="ml-1">&nbsp; &nbsp;{{ $studentCount }}</span>
                                                         </span>
                                                     </div>
 
@@ -953,7 +954,7 @@ use App\Http\Controllers\Helper;
                                                         <span class="text-primary d-inline-flex align-items-center gap-1"
                                                             style="font-size: 0.7rem; font-weight: 500; opacity: 0.8;">
                                                             <i class="fas fa-print"></i>
-                                                           &nbsp; &nbsp; Print class
+                                                            &nbsp; &nbsp; Print class
                                                             <i class="fas fa-arrow-right mt-1 ml-1" style="font-size: 0.65rem;"></i>
                                                         </span>
                                                     </div>
@@ -1130,8 +1131,10 @@ use App\Http\Controllers\Helper;
                     </div>
                 </div>
             </div>
-
         </div>
+    </div>
+    </div>
+    </div>
     </div>
 
     {{-- Hidden forms for class print (POST) --}}
