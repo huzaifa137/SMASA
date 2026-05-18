@@ -153,6 +153,116 @@
     .color-row { display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.3rem; }
     .color-swatch { width:24px;height:24px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.15s; }
     .color-swatch:hover,.color-swatch.selected { border-color:#1e293b; transform:scale(1.15); }
+
+    /* Fix for modal dropdowns getting cut off */
+.modal-overlay {
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.slot-modal {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.slot-modal-body {
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Fix for select dropdowns z-index and overflow */
+.form-control-sm {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure selects appear above modal content when expanded */
+select.form-control-sm {
+    cursor: pointer;
+}
+
+/* For browsers that render native select dropdowns */
+select.form-control-sm option {
+    padding: 0.5rem;
+    background: white;
+    color: var(--text-primary);
+}
+
+/* Fix for select dropdown positioning in modal */
+.slot-modal select.form-control-sm {
+    width: 100%;
+}
+
+/* Improve select focus state */
+select.form-control-sm:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.12);
+}
+
+/* Ensure dropdown lists aren't cut off by modal boundaries */
+.slot-modal select.form-control-sm[size],
+.slot-modal select.form-control-sm[multiple] {
+    max-height: 200px;
+}
+
+/* For select dropdowns that open upward/downward properly */
+.slot-modal select.form-control-sm {
+    transform: translateZ(0);
+}
+
+/* Additional fix for webkit browsers (Chrome, Edge, Safari) */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    select.form-control-sm {
+        -webkit-appearance: menulist;
+        appearance: menulist;
+    }
+}
+
+/* Ensure modal has enough z-index and overflow visible for dropdowns */
+.slot-modal {
+    position: relative;
+    z-index: 1001;
+    overflow: visible;
+}
+
+.slot-modal-body {
+    overflow: visible;
+}
+
+/* Fix for select dropdown height */
+select.form-control-sm {
+    min-height: 42px;
+    line-height: 1.5;
+}
+
+/* Improve select arrow styling */
+select.form-control-sm {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235351e4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 14px;
+    padding-right: 2rem;
+}
+
+/* Custom scrollbar for modal body */
+.slot-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.slot-modal-body::-webkit-scrollbar-track {
+    background: var(--border);
+    border-radius: 99px;
+}
+
+.slot-modal-body::-webkit-scrollbar-thumb {
+    background: var(--brand);
+    border-radius: 99px;
+}
 </style>
 @endsection
 
@@ -160,37 +270,51 @@
 <div class="glass-header" style="position:relative;z-index:1;">
     <div class="row align-items-center" style="position:relative;z-index:1;">
         <div class="col-lg-7">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <a href="{{ route('timetable.dashboard') }}" class="btn-glass" style="padding:0.35rem 0.9rem;font-size:0.78rem;">
-                    <i class="fas fa-arrow-left"></i> Dashboard
-                </a>
-                <span style="color:rgba(255,255,255,0.5);font-size:0.8rem;">
-                    {{ $timetable->status === 'draft' ? '● DRAFT' : '✓ ACTIVE' }}
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-calendar-alt me-1"></i> Timetable Management
+                    @if($timetable->status === 'draft')
+                    <span style="background: rgba(245,158,11,0.3); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; margin-left: 0.3rem;">
+                        <i class="fas fa-pen-ruler"></i> DRAFT
+                    </span>
+                    @else
+                    <span style="background: rgba(16,185,129,0.3); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; margin-left: 0.3rem;">
+                        <i class="fas fa-check-circle"></i> ACTIVE
+                    </span>
+                    @endif
                 </span>
             </div>
-            <h1 style="font-size:1.7rem;font-weight:800;color:white;margin-bottom:0.25rem;">
-                <i class="fas fa-table me-2"></i> {{ $timetable->name }}
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-table me-3"></i> {{ $timetable->name }}
             </h1>
-            <p style="color:rgba(255,255,255,0.82);margin:0;font-size:0.88rem;">
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
                 {{ $className }} — {{ $streamName }}
                 @if($timetable->term) · {{ $timetable->term }} @endif
             </p>
         </div>
         <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-            <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
-                <a href="{{ route('timetable.view', $timetable->id) }}" class="btn-glass" target="_blank">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ route('timetable.dashboard') }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <a href="{{ route('timetable.view', $timetable->id) }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-eye"></i> Preview
                 </a>
                 @if($timetable->status === 'draft')
-                <button class="btn-glass btn-glass-success" onclick="setStatus('active')">
+                <button onclick="setStatus('active')" class="btn"
+                        style="background: rgba(16,185,129,0.8); border: 1px solid rgba(16,185,129,0.4); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-check"></i> Activate
                 </button>
                 @else
-                <button class="btn-glass btn-glass-warning" onclick="setStatus('draft')">
+                <button onclick="setStatus('draft')" class="btn"
+                        style="background: rgba(245,158,11,0.8); border: 1px solid rgba(245,158,11,0.4); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-pencil-alt"></i> Back to Draft
                 </button>
                 @endif
-                <button class="btn-glass" onclick="duplicateTT()">
+                <button onclick="duplicateTT()" class="btn"
+                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-copy"></i> Duplicate
                 </button>
             </div>
@@ -412,7 +536,7 @@
 <div class="toast-notif" id="toast"></div>
 @endsection
 
-@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const csrfToken   = '{{ csrf_token() }}';
 const timetableId = {{ $timetable->id }};
@@ -571,23 +695,74 @@ async function saveSlot() {
 }
 
 async function clearSlot() {
-    if (!confirm('Clear this slot?')) return;
-    const res = await fetch(slotClrUrl, {
-        method: 'DELETE',
-        headers: { 'Content-Type':'application/json','X-CSRF-TOKEN':csrfToken },
-        body: JSON.stringify({ timetable_id: timetableId, day_of_week: curDay, period_id: curPeriod })
+    const result = await Swal.fire({
+        title: 'Clear this slot?',
+        text: 'This action will remove the assigned slot.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, clear it',
+        cancelButtonText: 'Cancel'
     });
-    const data = await res.json();
-    if (data.success) {
-        const key = `${curDay}_${curPeriod}`;
-        delete serverSlots[key];
-        const cell = document.querySelector(`.tt-slot[data-day="${curDay}"][data-period="${curPeriod}"]`);
-        if (cell) {
-            cell.innerHTML = '<div class="slot-empty"><i class="fas fa-plus" style="font-size:0.7rem;margin-right:4px;"></i> Assign</div>';
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await fetch(slotClrUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                timetable_id: timetableId,
+                day_of_week: curDay,
+                period_id: curPeriod
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const key = `${curDay}_${curPeriod}`;
+            delete serverSlots[key];
+
+            const cell = document.querySelector(
+                `.tt-slot[data-day="${curDay}"][data-period="${curPeriod}"]`
+            );
+
+            if (cell) {
+                cell.innerHTML = `
+                    <div class="slot-empty">
+                        <i class="fas fa-plus" style="font-size:0.7rem;margin-right:4px;"></i>
+                        Assign
+                    </div>
+                `;
+            }
+
+            updateStatusBar();
+            closeSlotModal();
+
+            showToast('Slot cleared.', 'success');
+
+            // Optional SweetAlert success popup
+            // await Swal.fire({
+            //     title: 'Cleared!',
+            //     text: 'The slot has been cleared successfully.',
+            //     icon: 'success',
+            //     timer: 1500,
+            //     showConfirmButton: false
+            // });
         }
-        updateStatusBar();
-        closeSlotModal();
-        showToast('Slot cleared.', 'success');
+    } catch (error) {
+        console.error(error);
+
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to clear the slot.',
+            icon: 'error'
+        });
     }
 }
 
@@ -617,11 +792,62 @@ async function setStatus(status) {
 }
 
 async function duplicateTT() {
-    if (!confirm('Duplicate this timetable?')) return;
-    const res = await fetch(dupUrl, { method:'POST', headers:{'X-CSRF-TOKEN':csrfToken} });
-    const data = await res.json();
-    if (data.success) { showToast('Duplicated!','success'); setTimeout(()=>window.location.href=data.redirect,700); }
-    else { showToast(data.message||'Error.','error'); }
+    const result = await Swal.fire({
+        title: 'Duplicate timetable?',
+        text: 'A copy of this timetable will be created.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, duplicate it',
+        cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await fetch(dupUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Duplicated!', 'success');
+
+            // Optional SweetAlert success popup
+            // await Swal.fire({
+            //     title: 'Success!',
+            //     text: 'Timetable duplicated successfully.',
+            //     icon: 'success',
+            //     timer: 1500,
+            //     showConfirmButton: false
+            // });
+
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 700);
+
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: data.message || 'An error occurred.',
+                icon: 'error'
+            });
+        }
+
+    } catch (error) {
+        console.error(error);
+
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to duplicate timetable.',
+            icon: 'error'
+        });
+    }
 }
 
 function selectSubject(subjectId, csId, subjectName, color, teacher1) {
@@ -654,4 +880,3 @@ function showToast(msg, type='success') {
     clearTimeout(window._tt); window._tt = setTimeout(()=>t.classList.remove('show'), 3000);
 }
 </script>
-@endpush

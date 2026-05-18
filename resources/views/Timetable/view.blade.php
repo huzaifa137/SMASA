@@ -117,23 +117,39 @@
 <div class="glass-header">
     <div class="row align-items-center" style="position:relative;z-index:1;">
         <div class="col-lg-8">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <a href="{{ route('timetable.dashboard') }}" class="btn-glass" style="padding:0.35rem 0.9rem;font-size:0.78rem;">
-                    <i class="fas fa-arrow-left"></i> Dashboard
-                </a>
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> Timetable Details
+                    @if($timetable->status === 'draft')
+                    <span style="background: rgba(245,158,11,0.3); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; margin-left: 0.5rem;">
+                        <i class="fas fa-pen-ruler"></i> DRAFT
+                    </span>
+                    @else
+                    <span style="background: rgba(16,185,129,0.3); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; margin-left: 0.5rem;">
+                        <i class="fas fa-check-circle"></i> ACTIVE
+                    </span>
+                    @endif
+                </span>
             </div>
-            <h1 style="font-size:1.7rem;font-weight:800;color:white;margin-bottom:0.25rem;">
-                <i class="fas fa-table me-2"></i> {{ $timetable->name }}
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-table me-3"></i> {{ $timetable->name }}
             </h1>
-            <p style="color:rgba(255,255,255,0.82);margin:0;font-size:0.88rem;">
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
                 {{ $className }} — {{ $streamName }}
                 @if($timetable->term) · {{ $timetable->term }} @endif
             </p>
         </div>
         <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <a href="{{ route('timetable.edit', $timetable->id) }}" class="btn-glass">
-                <i class="fas fa-pen"></i> Edit
-            </a>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ route('timetable.dashboard') }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <a href="{{ route('timetable.edit', $timetable->id) }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-pen"></i> Edit Timetable
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -218,6 +234,9 @@
             </div>
             @endforeach
         </div>
+    </div>
+</div>
+</div>
     </div>
 </div>
 @endsection

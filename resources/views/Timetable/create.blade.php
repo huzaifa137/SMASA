@@ -266,24 +266,31 @@
 @endsection
 
 @section('page-header')
-    <div class="glass-header">
-        <div class="d-flex align-items-center justify-content-between flex-wrap" style="position:relative;z-index:1;">
-            <div>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <a href="{{ route('timetable.dashboard') }}" class="btn-glass"
-                        style="padding:0.35rem 0.9rem;font-size:0.78rem;">
-                        <i class="fas fa-arrow-left"></i> Timetable
-                    </a>
-                </div>
-                <h1 style="font-size:1.9rem;font-weight:800;color:white;margin-bottom:0.3rem;">
-                    <i class="fas fa-calendar-plus me-2"></i> Create Timetable
-                </h1>
-                <p style="color:rgba(255,255,255,0.82);margin:0;font-size:0.92rem;">
-                    Set up a new timetable for a class stream
-                </p>
+<div class="glass-header">
+    <div class="row align-items-center" style="position:relative;z-index:1;">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> Timetable Setup
+                </span>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-calendar-plus me-3"></i> Create Timetable
+            </h1>
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                Set up a new timetable for a class stream
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ route('timetable.dashboard') }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-arrow-left"></i> Back to Timetable
+                </a>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @section('content')
@@ -340,7 +347,8 @@
                             <select id="yearSelect" class="form-control-modern">
                                 <option value="">— None / Not Specified —</option>
                                 @foreach($academicYears as $ay)
-                                    <option value="{{ $ay->id }}" {{ $ay->is_active ? 'selected' : '' }}>{{ $ay->name }}</option>
+                                    <option value="{{ $ay->id }}" {{ $ay->is_active ? 'selected' : '' }}>{{ $ay->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -380,73 +388,72 @@
     <div class="toast-notif" id="toast"></div>
 @endsection
 
-@push('scripts')
-    <script>
-        const csrfToken = '{{ csrf_token() }}';
 
-        async function loadStreams(classId) {
-            const container = document.getElementById('streamContainer');
-            const select = document.getElementById('streamSelect');
-            const noMsg = document.getElementById('noStreamsMsg');
+<script>
+    const csrfToken = '{{ csrf_token() }}';
 
-            if (!classId) { container.classList.remove('visible'); return; }
+    async function loadStreams(classId) {
+        const container = document.getElementById('streamContainer');
+        const select = document.getElementById('streamSelect');
+        const noMsg = document.getElementById('noStreamsMsg');
 
-            select.innerHTML = '<option value="">Loading...</option>';
-            container.classList.add('visible');
-            noMsg.style.display = 'none';
+        if (!classId) { container.classList.remove('visible'); return; }
 
-            try {
-                const res = await fetch(`{{ url('attendance/ajax/streams') }}/${classId}`);
-                const data = await res.json();
-                if (!data.length) {
-                    select.innerHTML = '<option value="">No streams available</option>';
-                    noMsg.style.display = 'block';
-                } else {
-                    select.innerHTML = '<option value="">— Select a Stream —</option>' +
-                        data.map(s => `<option value="${s.stream_id}">${s.stream_name || s.stream_id}</option>`).join('');
-                }
-            } catch (e) {
-                select.innerHTML = '<option value="">Error loading streams</option>';
+        select.innerHTML = '<option value="">Loading...</option>';
+        container.classList.add('visible');
+        noMsg.style.display = 'none';
+
+        try {
+            const res = await fetch(`{{ url('attendance/ajax/streams') }}/${classId}`);
+            const data = await res.json();
+            if (!data.length) {
+                select.innerHTML = '<option value="">No streams available</option>';
+                noMsg.style.display = 'block';
+            } else {
+                select.innerHTML = '<option value="">— Select a Stream —</option>' +
+                    data.map(s => `<option value="${s.stream_id}">${s.stream_name || s.stream_id}</option>`).join('');
             }
+        } catch (e) {
+            select.innerHTML = '<option value="">Error loading streams</option>';
         }
+    }
 
-        async function createTimetable() {
-            const classId = document.getElementById('classSelect').value;
-            const streamId = document.getElementById('streamSelect').value;
-            const yearId = document.getElementById('yearSelect').value;
-            const term = document.getElementById('termSelect').value;
-            const name = document.getElementById('ttName').value.trim();
+    async function createTimetable() {
+        const classId = document.getElementById('classSelect').value;
+        const streamId = document.getElementById('streamSelect').value;
+        const yearId = document.getElementById('yearSelect').value;
+        const term = document.getElementById('termSelect').value;
+        const name = document.getElementById('ttName').value.trim();
 
-            if (!classId) { showToast('Please select a class.', 'error'); return; }
-            if (!streamId) { showToast('Please select a stream.', 'error'); return; }
+        if (!classId) { showToast('Please select a class.', 'error'); return; }
+        if (!streamId) { showToast('Please select a stream.', 'error'); return; }
 
-            const btn = document.querySelector('.btn-create');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        const btn = document.querySelector('.btn-create');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
-            try {
-                const res = await fetch('{{ route('timetable.store') }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ class_id: classId, stream_id: streamId, academic_year_id: yearId || null, term: term || null, name: name || null })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Timetable created! Opening editor...', 'success');
-                    setTimeout(() => window.location.href = data.redirect, 700);
-                } else {
-                    showToast(data.message || 'Failed to create timetable.', 'error');
-                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Create & Open Editor';
-                }
-            } catch (e) {
-                showToast('Connection error.', 'error');
+        try {
+            const res = await fetch('{{ route('timetable.store') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ class_id: classId, stream_id: streamId, academic_year_id: yearId || null, term: term || null, name: name || null })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Timetable created! Opening editor...', 'success');
+                setTimeout(() => window.location.href = data.redirect, 700);
+            } else {
+                showToast(data.message || 'Failed to create timetable.', 'error');
                 btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Create & Open Editor';
             }
+        } catch (e) {
+            showToast('Connection error.', 'error');
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Create & Open Editor';
         }
+    }
 
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.className = `toast-notif show ${type}`;
-            clearTimeout(window._tt); window._tt = setTimeout(() => t.classList.remove('show'), 3000);
-        }
-    </script>
-@endpush
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = `toast-notif show ${type}`;
+        clearTimeout(window._tt); window._tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+</script>

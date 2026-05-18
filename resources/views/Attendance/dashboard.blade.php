@@ -805,54 +805,136 @@ use App\Http\Controllers\Helper;
     </div>
 
     {{-- Recent Teacher Arrivals --}}
-    @if($recentTeacherAttendance->isNotEmpty())
-    <div class="card form-card mt-3">
-        <div class="card-body p-0">
-            <div class="p-4 pb-3 border-bottom">
-                <div class="section-header mb-0">
-                    <i class="fas fa-clock"></i>
-                    Recent Teacher Arrivals Today
-                    <a href="{{ route('attendance.teachers') }}" class="btn btn-sm ms-auto" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
-                        View All <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+@if($recentTeacherAttendance->isNotEmpty())
+<div class="card form-card mt-3">
+    <div class="card-body p-0">
+        <div class="p-4 pb-3 border-bottom">
+            <div class="section-header" style="justify-content: space-between; margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <i class="fas fa-clock" style="color: var(--brand); font-size: 1rem;"></i>
+                    <span style="font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: #2C29CA;">Recent Teacher Arrivals Today</span>
                 </div>
+                <a href="{{ route('attendance.teachers') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
             </div>
-            <table class="arr-table">
-                <thead>
-                    <tr>
-                        <th>Teacher</th>
-                        <th>Arrival Time</th>
-                        <th>Status</th>
-                        <th>Departure</th>
-                    </tr>
-                </thead>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="arr-table" style="width: 100%; border-collapse: collapse;">
+               <thead>
+    <tr>
+        <th>Teacher</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Departure</th>
+    </tr>
+</thead>
                 <tbody>
                     @foreach($recentTeacherAttendance as $ta)
-                    <tr>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div class="teacher-avatar">
-                                    {{ strtoupper(substr($ta->teacher->firstname ?? '?', 0, 1)) }}{{ strtoupper(substr($ta->teacher->surname ?? '', 0, 1)) }}
+                    @php
+                        $statusClass = match($ta->status) {
+                            'present' => 'sb-success',
+                            'absent' => 'sb-danger',
+                            'late' => 'sb-warning',
+                            'on_leave' => 'sb-info',
+                            'half_day' => 'sb-purple',
+                            default => 'sb-secondary'
+                        };
+                        $statusIcon = match($ta->status) {
+                            'present' => 'fa-check-circle',
+                            'absent' => 'fa-times-circle',
+                            'late' => 'fa-clock',
+                            'on_leave' => 'fa-umbrella-beach',
+                            'half_day' => 'fa-sun',
+                            default => 'fa-circle'
+                        };
+                        $initials = strtoupper(substr($ta->teacher->firstname ?? '?', 0, 1)) . strtoupper(substr($ta->teacher->surname ?? '', 0, 1));
+                    @endphp
+                    <tr style="transition: all 0.2s ease; border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 0.9rem 1rem; vertical-align: middle;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="teacher-avatar" style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--brand), var(--brand-light)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                    {{ $initials }}
                                 </div>
                                 <div>
-                                    <div style="font-weight:600; font-size:13px;">{{ ($ta->teacher->firstname ?? '') . ' ' . ($ta->teacher->surname ?? '') }}</div>
+                                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">{{ ($ta->teacher->firstname ?? '') . ' ' . ($ta->teacher->surname ?? '') }}</div>
+                                    @if($ta->teacher->employee_id)
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                        <i class="fas fa-id-badge me-1"></i> {{ $ta->teacher->employee_id }}
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight:600;">{{ $ta->arrival_time ? \Carbon\Carbon::parse($ta->arrival_time)->format('H:i') : '—' }}</td>
-                        <td>
-                            <span class="sbadge {{ $ta->status === 'present' ? 'sb-success' : ($ta->status === 'absent' ? 'sb-danger' : ($ta->status === 'late' ? 'sb-warning' : 'sb-info')) }}">
+                        <td style="padding: 0.9rem 1rem; vertical-align: middle;">
+                            @if($ta->arrival_time)
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-hourglass-start" style="color: var(--success); font-size: 0.75rem;"></i>
+                                    <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">{{ \Carbon\Carbon::parse($ta->arrival_time)->format('h:i A') }}</span>
+                                </div>
+                                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                    {{ \Carbon\Carbon::parse($ta->arrival_time)->diffForHumans() }}
+                                </div>
+                            @else
+                                <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+                            @endif
+                        </td>
+                        <td style="padding: 0.9rem 1rem; vertical-align: middle;">
+                            <span class="sbadge {{ $statusClass }}" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                                <i class="fas {{ $statusIcon }}" style="font-size: 0.7rem;"></i>
                                 {{ \App\Models\TeacherAttendance::statusLabel($ta->status) }}
                             </span>
                         </td>
-                        <td style="color: var(--text-muted); font-size:12px;">{{ $ta->departure_time ? \Carbon\Carbon::parse($ta->departure_time)->format('H:i') : '—' }}</td>
+                        <td style="padding: 0.9rem 1rem; vertical-align: middle;">
+                            @if($ta->departure_time)
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-hourglass-end" style="color: var(--warning); font-size: 0.75rem;"></i>
+                                    <span style="font-size: 0.85rem; color: var(--text-primary);">{{ \Carbon\Carbon::parse($ta->departure_time)->format('h:i A') }}</span>
+                                </div>
+                            @else
+                                <span style="color: var(--text-muted); font-size: 0.8rem;">
+                                    <i class="fas fa-minus-circle me-1"></i> Not yet
+                                </span>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
     </div>
-    @endif
+</div>
+
+<style>
+    .sb-purple {
+        background: var(--purple-muted);
+        color: var(--purple);
+    }
+    .sb-secondary {
+        background: rgba(157, 148, 184, 0.1);
+        color: #64748b;
+    }
+    .sbadge {
+        transition: all 0.2s ease;
+    }
+    .sbadge:hover {
+        transform: translateY(-1px);
+    }
+    .arr-table tbody tr:hover {
+        background: var(--bg-surface);
+    }
+    thead th {
+    background: #4542da;
+    color: #fff;
+    padding: 1rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-weight: 700;
+    text-align: left;
+}
+</style>
+@endif
 </div>
 </div>
 </div>

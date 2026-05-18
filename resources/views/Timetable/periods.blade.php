@@ -417,29 +417,65 @@
 @endsection
 
 @section('page-header')
-    <div class="glass-header">
-        <div class="d-flex align-items-center justify-content-between flex-wrap" style="position:relative;z-index:1;">
-            <div>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <a href="{{ route('timetable.dashboard') }}" class="btn-glass"
-                        style="padding:0.35rem 0.9rem;font-size:0.78rem;">
-                        <i class="fas fa-arrow-left"></i> Timetable
-                    </a>
-                </div>
-                <h1 style="font-size:1.9rem;font-weight:800;color:white;margin-bottom:0.3rem;">
-                    <i class="fas fa-clock me-2"></i> Period Management
-                </h1>
-                <p style="color:rgba(255,255,255,0.82);margin:0;font-size:0.92rem;">
-                    Define your school's daily periods, breaks, and assembly slots
-                </p>
-            </div>
-            <div class="mt-3 mt-lg-0">
-                <button class="btn-glass" onclick="openModal()">
-                    <i class="fas fa-plus"></i> Add Period
-                </button>
-            </div>
+<div class="glass-header mt-5">
+    <div class="row align-items-center" style="position:relative;z-index:1;">
+        <div class="col-lg-8">
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-clock me-3"></i> Period Management
+            </h1>
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                Define your school's daily periods, breaks, and assembly slots
+            </p>
         </div>
+<div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+
+        <button class="btn-glass" onclick="openModal()"
+                style="
+                    background: rgba(255,255,255,0.2);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    color: white;
+                    border-radius: 8px;
+                    padding: 0.6rem 1.5rem;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    transition: all 0.3s ease;
+                    white-space: nowrap;
+                ">
+            <i class="fas fa-plus"></i>
+            Add Period
+        </button>
+
+        <a href="{{ route('timetable.dashboard') }}" class="btn"
+           style="
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                color: white;
+                border-radius: 8px;
+                padding: 0.6rem 1.5rem;
+                font-size: 1rem;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.3s ease;
+                white-space: nowrap;
+           ">
+            <i class="fas fa-arrow-left"></i>
+            Back to Timetable
+        </a>
+
     </div>
+
+</div>
+    </div>
+</div>
 @endsection
 
 @section('content')
@@ -612,7 +648,8 @@
 
 @endsection
 
-@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         const csrfToken = '{{ csrf_token() }}';
         const storeUrl = '{{ route('timetable.periods.store') }}';
@@ -684,21 +721,58 @@
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Period';
         }
 
-        async function deletePeriod(id, name) {
-            if (!confirm(`Delete "${name}"?\nThis cannot be undone.`)) return;
-            try {
-                const res = await fetch(deleteUrl(id), {
-                    method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' }
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Period deleted.', 'success');
-                    setTimeout(() => location.reload(), 600);
-                } else {
-                    showToast(data.message || 'Cannot delete.', 'error');
-                }
-            } catch (e) { showToast('Connection error.', 'error'); }
+async function deletePeriod(id, name) {
+
+    const result = await Swal.fire({
+        title: 'Delete Period?',
+        text: `Delete "${name}"?\nThis cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await fetch(deleteUrl(id), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Period deleted successfully.',
+                timer: 1200,
+                showConfirmButton: false
+            });
+
+            setTimeout(() => location.reload(), 600);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: data.message || 'Cannot delete.'
+            });
         }
+
+    } catch (e) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Connection Error',
+            text: 'Please try again.'
+        });
+    }
+}
 
         function showToast(msg, type = 'success') {
             const t = document.getElementById('toast');
@@ -715,4 +789,3 @@
         // ESC to close
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
     </script>
-@endpush

@@ -111,22 +111,29 @@
 <div class="glass-header">
     <div class="row align-items-center" style="position:relative;z-index:1;">
         <div class="col-lg-8">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <a href="{{ route('timetable.dashboard') }}" class="btn-glass" style="padding:0.35rem 0.9rem;font-size:0.78rem;">
-                    <i class="fas fa-arrow-left"></i> Dashboard
-                </a>
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> My Schedule
+                </span>
             </div>
-            <h1 style="font-size:1.9rem;font-weight:800;color:white;margin-bottom:0.3rem;">
-                <i class="fas fa-calendar-week me-2"></i> My Schedule
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-calendar-week me-3"></i> My Schedule
             </h1>
-            <p style="color:rgba(255,255,255,0.82);margin:0;font-size:0.92rem;">
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
                 Your personal teaching timetable for active sessions
             </p>
         </div>
         <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <button class="btn-glass" onclick="window.print()">
-                <i class="fas fa-print"></i> Print
-            </button>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ route('timetable.dashboard') }}" class="btn"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <button onclick="window.print()" class="btn"
+                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -259,5 +266,9 @@
         </div>
         @endforeach
     </div>
+</div>
+ </div>
+</div>
+ </div>
 </div>
 @endsection

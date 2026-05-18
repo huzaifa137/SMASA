@@ -461,37 +461,40 @@ use App\Http\Controllers\Helper;
 @section('content')
 <div class="side-app" style="padding: 1.5rem;">
 
-    {{-- Modern Glass Header --}}
-    <div class="glass-header">
-        <div class="row align-items-center">
-            <div class="col-lg-7">
-                <div class="mb-2">
-                    <span class="badge" style="background: #FFF; backdrop-filter: blur(4px); padding: 0.4rem 1rem; border-radius: 99px;">
-                        <i class="fas fa-calendar-alt me-2"></i> Academic Scheduling
-                    </span>
-                </div>
-                <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                    <i class="fas fa-calendar-week me-3"></i> Timetable Manager
-                </h1>
-                <p style="font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                    Create, manage, and publish class timetables for your school
-                </p>
+{{-- Modern Glass Header --}}
+<div class="glass-header">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> Academic Scheduling
+                </span>
             </div>
-            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                <div class="d-flex gap-2 justify-content-lg-end">
-                    <a href="{{ route('timetable.create') }}" class="btn-primary-premium">
-                        <i class="fas fa-plus-circle"></i> New Timetable
-                    </a> &nbsp; &nbsp;
-                    <a href="{{ route('timetable.periods.index') }}" class="btn-outline-premium">
-                        <i class="fas fa-clock"></i> Periods
-                    </a>  &nbsp; &nbsp;
-                    <a href="{{ route('timetable.teacher') }}" class="btn-outline-premium">
-                        <i class="fas fa-chalkboard-user"></i> My Schedule
-                    </a>
-                </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-calendar-week me-3"></i> Timetable Manager
+            </h1>
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                Create, manage, and publish class timetables for your school
+            </p>
+        </div>
+        <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+            <div class="d-flex gap-3 justify-content-lg-end" style="gap: 1rem;">
+                <a href="{{ route('timetable.create') }}" class="btn-primary-premium"
+                   style="background: white; color: var(--brand); border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-plus-circle"></i> New Timetable
+                </a>
+                <a href="{{ route('timetable.periods.index') }}" class="btn-outline-premium"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-clock"></i> Periods
+                </a>
+                <a href="{{ route('timetable.teacher') }}" class="btn-outline-premium"
+                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-chalkboard-user"></i> My Schedule
+                </a>
             </div>
         </div>
     </div>
+</div>
 
     {{-- Stats Row --}}
     <div class="stats-row">
@@ -703,7 +706,7 @@ use App\Http\Controllers\Helper;
 </div>
 @endsection
 
-@push('scripts')
+
 <script>
 async function quickActivate(id) {
     Swal.fire({
@@ -796,4 +799,3 @@ async function confirmDelete(id) {
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@endpush
