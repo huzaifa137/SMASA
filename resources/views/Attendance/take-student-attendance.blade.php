@@ -822,38 +822,40 @@
 <div class="side-app" style="padding: 1.5rem;">
 
     {{-- Modern Glass Header --}}
-    <div class="glass-header">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <div class="mb-3">
-                    <span class="subject-badge" style="color: #FFF;>
-                        <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
-                    </span>
-                    @if($subjectId)
-                    <span class="subject-badge ms-2" style="color: #FFF;>
-                        <i class="fas fa-book-open me-2"></i> Subject Attendance
-                    </span>
-                    @endif
-                </div>
-                <h1 style="font-size: 2rem; font-weight: 800; color: #FFF; margin-bottom: 0.5rem;">
-                    <i class="fas fa-user-graduate me-3"></i> {{ $className }} · {{ $streamName }}
-                </h1>
-                <p style="font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                    Record attendance for today's session
-                </p>
+<div class="glass-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <span class="subject-badge" style="color: #FFF; font-size: 1.1rem; padding: 0.5rem 1rem; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
+                </span>
+                @if($subjectId)
+                <span class="subject-badge ms-3" style="color: #FFF; font-size: 1.1rem; padding: 0.5rem 1rem; display: inline-block;">
+                    <i class="fas fa-book-open me-2"></i> Subject Attendance
+                </span>
+                @endif
             </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="header-buttons">
-                    <input type="date" id="dateChanger" value="{{ $date }}"
-                           onchange="window.location.href='{{ route('attendance.take', [$classId, $streamId]) }}?date='+this.value+'&class_subject_id={{ $subjectId }}'"
-                           class="date-picker-glass">
-                    <a href="{{ route('attendance.students') }}" class="btn-glass">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </a>
-                </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: #FFF; margin-bottom: 0.5rem;">
+                <i class="fas fa-user-graduate me-3"></i> {{ $className }} · {{ $streamName }}
+            </h1>
+            <p style="font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                Record attendance for today's session
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="header-buttons" style="display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
+                <input type="date" id="dateChanger" value="{{ $date }}"
+                       onchange="window.location.href='{{ route('attendance.take', [$classId, $streamId]) }}?date='+this.value+'&class_subject_id={{ $subjectId }}'"
+                       class="date-picker-glass"
+                       style="padding: 0.6rem 1rem; font-size: 1rem; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: #FFF; cursor: pointer;">
+                <a href="{{ route('attendance.students') }}" class="btn-glass"
+                   style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
             </div>
         </div>
     </div>
+</div>
 
     {{-- Stats Row --}}
     <div class="stats-row">
@@ -889,7 +891,7 @@
         @if($subjects->isNotEmpty())
         <select id="subjectFilter" class="filter-select" 
                 onchange="window.location.href='{{ route('attendance.take', [$classId, $streamId]) }}?date={{ $date }}&class_subject_id='+this.value">
-            <option value="">📚 All / Morning Attendance</option>
+            <!-- <option value="">📚 All / Morning Attendance</option> -->
             @foreach($subjects as $subj)
             <option value="{{ $subj->id }}" {{ $subjectId == $subj->id ? 'selected' : '' }}>{{ $subj->subject_name }}</option>
             @endforeach
@@ -922,13 +924,13 @@
         @foreach($students as $student)
         @php
             $att = $existing->get($student->id);
-            $status = $att ? $att->status : 'present';
+            $status = $att ? $att->status : null;
             $arrival = $att ? ($att->arrival_time ?? '') : '';
             $remarks = $att ? ($att->remarks ?? '') : '';
             $initials = strtoupper(substr($student->firstname ?? '?', 0, 1)) . strtoupper(substr($student->lastname ?? '', 0, 1));
             $studentHistory = $history->get($student->id, collect());
         @endphp
-        <div class="student-card status-{{ $status }}" 
+        <div class="student-card {{ $status ? 'status-'.$status : '' }}"
              data-student-id="{{ $student->id }}"
              data-name="{{ strtolower($student->firstname . ' ' . $student->lastname) }}" 
              data-adm="{{ strtolower($student->admission_number ?? '') }}">
@@ -989,7 +991,10 @@
                             <i class="fas fa-shield-alt"></i> Excused
                         </button>
                     </div>
-                    <input type="hidden" class="status-input" data-id="{{ $student->id }}" value="{{ $status }}">
+                    <input type="hidden" class="status-input" 
+       data-id="{{ $student->id }}"
+       data-original="{{ $att ? $att->status : '' }}"
+       value="{{ $status ?? '' }}">
                 </div>
 
                 {{-- Time Inputs (shown for late status) --}}
@@ -1013,16 +1018,26 @@
                     <input type="text" class="remarks-input" data-id="{{ $student->id }}"
                            value="{{ $remarks }}" placeholder="Add a note...">
                 </div>
+
+            <div class="save-actions-stats mt-4">
+                <button class="btn-save-modern" onclick="saveAttendance(this, {{ $student->id }})">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Save Attendance</span>
+                </button>
+            </div>
+
             </div>
         </div>
-
-            <div class="save-actions-stats">
-             <button class="btn-save-modern" id="saveBtn" onclick="saveAttendance()">
-        <i class="fas fa-cloud-upload-alt"></i>
-        <span>Save Attendance</span>
-    </button>
-    </div>
         @endforeach
+
+{{-- Replace your current save-actions-stats div with this --}}
+<div class="save-actions-stats mt-4" id="saveAllContainer">
+    <button class="btn-save-modern" id="saveAllBtn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #10b981, #059669);">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <span>Save All Attendance Records</span>
+        <span id="pendingCount" class="pending-badge" style="background: rgba(255,255,255,0.2); margin-left: 0.5rem;">0 pending</span>
+    </button>
+</div>
     </div>
     @endif
     
@@ -1034,56 +1049,183 @@
 <div class="toast-notification" id="toastEl"></div>
 @endsection
 
-@push('scripts')
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 // Attendance data store
-const attendanceMap = {};
+let attendanceMap = {};
+let originalAttendanceMap = {};
 
-// Initialize from existing data
-document.querySelectorAll('.status-input').forEach(inp => {
-    const id = inp.dataset.id;
-    attendanceMap[id] = {
-        status: inp.value,
-        arrival: '',
-        remarks: ''
-    };
-});
-
-document.querySelectorAll('.arrival-input').forEach(inp => {
-    const id = inp.dataset.id;
-    if (attendanceMap[id]) attendanceMap[id].arrival = inp.value;
-    inp.addEventListener('change', () => {
-        if (attendanceMap[id]) attendanceMap[id].arrival = inp.value;
+// FIRST: Store original state BEFORE any changes
+function storeOriginalState() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const statusInput = card.querySelector('.status-input');
+        if (!statusInput) return;
+        
+        const id = statusInput.dataset.id;
+        const arrivalInput = card.querySelector('.arrival-input');
+        const remarksInput = card.querySelector('.remarks-input');
+        
+        // Store original values from database
+        originalAttendanceMap[id] = {
+            status: statusInput.value,
+            arrival: arrivalInput ? arrivalInput.value : '',
+            remarks: remarksInput ? remarksInput.value : ''
+        };
+        
+        // Initialize current map with SAME values as original
+        attendanceMap[id] = {
+            status: statusInput.value,
+            arrival: arrivalInput ? arrivalInput.value : '',
+            remarks: remarksInput ? remarksInput.value : ''
+        };
     });
-});
+    
+    console.log('Original state stored:', originalAttendanceMap);
+}
 
-document.querySelectorAll('.remarks-input').forEach(inp => {
-    const id = inp.dataset.id;
-    if (attendanceMap[id]) attendanceMap[id].remarks = inp.value;
-    inp.addEventListener('input', () => {
-        if (attendanceMap[id]) attendanceMap[id].remarks = inp.value;
+// Check for unsaved changes and update pending count
+function checkForChanges() {
+    let changedCount = 0;
+    
+    for (let id in attendanceMap) {
+        const original = originalAttendanceMap[id];
+        const current = attendanceMap[id];
+        
+        if (!original) continue;
+        
+        // Debug logging to see what's happening
+        const statusChanged = original.status !== current.status;
+        const arrivalChanged = original.arrival !== (current.arrival || '');
+        const remarksChanged = original.remarks !== (current.remarks || '');
+        
+        if (statusChanged || arrivalChanged || remarksChanged) {
+            changedCount++;
+            console.log(`Student ${id} changed:`, {
+                original: original.status,
+                current: current.status,
+                statusChanged,
+                arrivalChanged,
+                remarksChanged
+            });
+            
+            // Add visual indicator to the card
+            const card = document.querySelector(`.student-card[data-student-id="${id}"]`);
+            if (card && !card.classList.contains('has-changes')) {
+                card.classList.add('has-changes');
+            }
+        } else {
+            // Remove change indicator
+            const card = document.querySelector(`.student-card[data-student-id="${id}"]`);
+            if (card && card.classList.contains('has-changes')) {
+                card.classList.remove('has-changes');
+            }
+        }
+    }
+    
+    // Update pending count badge
+    const pendingCountSpan = document.getElementById('pendingCount');
+    if (pendingCountSpan) {
+        if (changedCount > 0) {
+            pendingCountSpan.textContent = `${changedCount} pending`;
+            pendingCountSpan.style.background = 'rgba(245, 158, 11, 0.3)';
+            pendingCountSpan.style.color = '#f59e0b';
+        } else {
+            pendingCountSpan.textContent = 'All saved';
+            pendingCountSpan.style.background = 'rgba(16, 185, 129, 0.2)';
+            pendingCountSpan.style.color = '#f1eeee';
+        }
+    }
+    
+    return changedCount;
+}
+
+// Set up event listeners for inputs
+function setupEventListeners() {
+    // Arrival time changes
+    document.querySelectorAll('.arrival-input').forEach(inp => {
+        const id = inp.dataset.id;
+        inp.removeEventListener('change', handleArrivalChange);
+        inp.addEventListener('change', handleArrivalChange);
     });
-});
+    
+    // Remarks changes
+    document.querySelectorAll('.remarks-input').forEach(inp => {
+        const id = inp.dataset.id;
+        inp.removeEventListener('input', handleRemarksChange);
+        inp.addEventListener('input', handleRemarksChange);
+    });
+}
 
-updateCounts();
+function handleArrivalChange(e) {
+    const inp = e.target;
+    const id = inp.dataset.id;
+    if (attendanceMap[id]) {
+        attendanceMap[id].arrival = inp.value;
+        checkForChanges();
+    }
+}
 
+function handleRemarksChange(e) {
+    const inp = e.target;
+    const id = inp.dataset.id;
+    if (attendanceMap[id]) {
+        attendanceMap[id].remarks = inp.value;
+        checkForChanges();
+    }
+}
+
+// IMPROVED setStatus function
 function setStatus(btn, studentId, status) {
     const card = btn.closest('.student-card');
+    const statusMap = {
+        present: { class: 'status-present', pill: 'P', color: '#10b981' },
+        absent: { class: 'status-absent', pill: 'A', color: '#ef4444' },
+        late: { class: 'status-late', pill: 'L', color: '#f59e0b' },
+        excused: { class: 'status-excused', pill: 'E', color: '#3b82f6' }
+    };
+    
+    const statusInfo = statusMap[status];
+    if (!statusInfo) return;
     
     // Remove all status classes
     card.classList.remove('status-present', 'status-absent', 'status-late', 'status-excused');
-    card.classList.add('status-' + status);
+    card.classList.add(statusInfo.class);
     
     // Update active state on pills
-    card.querySelectorAll('.status-pill').forEach(pill => pill.classList.remove('active'));
+    card.querySelectorAll('.status-pill').forEach(pill => {
+        pill.classList.remove('active');
+        pill.style.opacity = '0.7';
+        pill.style.transform = 'scale(0.98)';
+    });
+    
+    // Activate clicked pill
     btn.classList.add('active');
+    btn.style.opacity = '1';
+    btn.style.transform = 'scale(1.02)';
+    btn.style.boxShadow = `0 4px 12px ${statusInfo.color}40`;
+    
+    // Add pulsing effect
+    btn.style.animation = 'pillPop 0.3s ease-out';
+    setTimeout(() => {
+        btn.style.animation = '';
+    }, 300);
     
     // Update hidden input
-    card.querySelector('.status-input').value = status;
+    const statusInput = card.querySelector('.status-input');
+    if (statusInput) {
+        statusInput.value = status;
+    }
     
-    // Update map
-    if (!attendanceMap[studentId]) attendanceMap[studentId] = {};
+    // CRITICAL FIX: Update the attendanceMap with the new status
+    if (!attendanceMap[studentId]) {
+        attendanceMap[studentId] = {};
+    }
     attendanceMap[studentId].status = status;
+    
+    console.log(`Status changed for student ${studentId}: ${status}`);
+    console.log('Current attendanceMap:', attendanceMap);
     
     // Show/hide time section for late status
     const timeSection = document.getElementById('time-section-' + studentId);
@@ -1096,24 +1238,143 @@ function setStatus(btn, studentId, status) {
         const arrivalInput = card.querySelector('.arrival-input');
         if (arrivalInput && !arrivalInput.value) {
             const now = new Date();
-            arrivalInput.value = now.toTimeString().slice(0, 5);
-            if (attendanceMap[studentId]) attendanceMap[studentId].arrival = arrivalInput.value;
+            const defaultTime = now.toTimeString().slice(0, 5);
+            arrivalInput.value = defaultTime;
+            if (attendanceMap[studentId]) {
+                attendanceMap[studentId].arrival = defaultTime;
+            }
         }
     }
     
     updateCounts();
+    checkForChanges(); // This should now detect the change
 }
 
-function markAll(status) {
-    const targetStatus = status === 'reset' ? 'present' : status;
-    const statusMap = { present: 'P', absent: 'A', late: 'L', excused: 'E' };
-    const pillClass = `.status-pill-${statusMap[targetStatus]}`;
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pillPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1.02); }
+    }
     
+    .status-pill {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .status-pill.active {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-weight: 800;
+    }
+    
+    .student-card.has-changes {
+        position: relative;
+        animation: subtleGlow 1.5s ease-in-out infinite;
+        border: 2px solid #f59e0b !important;
+    }
+    
+    @keyframes subtleGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+    }
+    
+    .student-card.has-changes::before {
+        content: '⚠️';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2rem;
+        z-index: 10;
+        background: white;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+`;
+document.head.appendChild(style);
+
+function markAll(status) {
+    if (status === 'reset') {
+        // Restore each student to their original DB state
+        document.querySelectorAll('.student-card').forEach(card => {
+            if (card.style.display === 'none') return;
+            const statusInput = card.querySelector('.status-input');
+            if (!statusInput) return;
+
+            const id = statusInput.dataset.id;
+            const originalStatus = originalAttendanceMap[id]?.status ?? ''; // '' = never saved
+
+            // Remove all status classes from card
+            card.classList.remove('status-present', 'status-absent', 'status-late', 'status-excused');
+            if (originalStatus) {
+                card.classList.add('status-' + originalStatus);
+            }
+
+            // Deactivate all pills first
+            card.querySelectorAll('.status-pill').forEach(pill => {
+                pill.classList.remove('active');
+                pill.style.opacity = '';
+                pill.style.transform = '';
+                pill.style.boxShadow = '';
+            });
+
+            // Reactivate the correct pill if there was a saved status
+            if (originalStatus) {
+                const pillMap = { present: 'P', absent: 'A', late: 'L', excused: 'E' };
+                const pillClass = '.status-pill-' + pillMap[originalStatus];
+                const pill = card.querySelector(pillClass);
+                if (pill) {
+                    pill.classList.add('active');
+                }
+            }
+
+            // Restore hidden input value
+            statusInput.value = originalStatus;
+
+            // Restore arrival and remarks inputs
+            const arrivalInput = card.querySelector('.arrival-input');
+            const remarksInput = card.querySelector('.remarks-input');
+            const origArrival = originalAttendanceMap[id]?.arrival ?? '';
+            const origRemarks = originalAttendanceMap[id]?.remarks ?? '';
+            if (arrivalInput) arrivalInput.value = origArrival;
+            if (remarksInput) remarksInput.value = origRemarks;
+
+            // Show/hide time section
+            const timeSection = document.getElementById('time-section-' + id);
+            if (timeSection) {
+                timeSection.style.display = originalStatus === 'late' ? 'block' : 'none';
+            }
+
+            // Restore attendanceMap to match original
+            attendanceMap[id] = {
+                status: originalStatus,
+                arrival: origArrival,
+                remarks: origRemarks
+            };
+        });
+
+        updateCounts();
+        checkForChanges();
+        showToast('Reset to original saved state', 'info');
+        return;
+    }
+
+    // Existing logic for 'present' / 'absent' bulk mark
+    const statusMap = { present: 'P', absent: 'A', late: 'L', excused: 'E' };
+    const pillClass = `.status-pill-${statusMap[status]}`;
+
     document.querySelectorAll('.student-card').forEach(card => {
         if (card.style.display === 'none') return;
-        const id = parseInt(card.querySelector('.status-input').dataset.id);
+        const statusInput = card.querySelector('.status-input');
+        if (!statusInput) return;
+        const id = parseInt(statusInput.dataset.id);
         const btn = card.querySelector(pillClass);
-        if (btn) setStatus(btn, id, targetStatus);
+        if (btn) setStatus(btn, id, status);
     });
 }
 
@@ -1122,49 +1383,180 @@ function updateCounts() {
     Object.values(attendanceMap).forEach(v => {
         if (counts.hasOwnProperty(v.status)) counts[v.status]++;
     });
-    
-    document.getElementById('cnt-P').textContent = counts.present;
-    document.getElementById('cnt-A').textContent = counts.absent;
-    document.getElementById('cnt-L').textContent = counts.late;
-    document.getElementById('cnt-E').textContent = counts.excused;
-    
-    // Update stat cards
-    document.getElementById('stat-present').textContent = counts.present;
-    document.getElementById('stat-absent').textContent = counts.absent;
-    document.getElementById('stat-late').textContent = counts.late;
-    document.getElementById('stat-excused').textContent = counts.excused;
+
+    const statPresent = document.getElementById('stat-present');
+    const statAbsent = document.getElementById('stat-absent');
+    const statLate = document.getElementById('stat-late');
+    const statExcused = document.getElementById('stat-excused');
+
+    if (statPresent) statPresent.textContent = counts.present;
+    if (statAbsent) statAbsent.textContent = counts.absent;
+    if (statLate) statLate.textContent = counts.late;
+    if (statExcused) statExcused.textContent = counts.excused;
 }
 
 // Search functionality
-document.getElementById('searchInput').addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    document.querySelectorAll('.student-card').forEach(card => {
-        const name = card.dataset.name || '';
-        const adm = card.dataset.adm || '';
-        card.style.display = (name.includes(query) || adm.includes(query)) ? '' : 'none';
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.student-card').forEach(card => {
+            const name = card.dataset.name || '';
+            const adm = card.dataset.adm || '';
+            const shouldShow = name.includes(query) || adm.includes(query);
+            card.style.display = shouldShow ? '' : 'none';
+        });
     });
-});
+}
 
-async function saveAttendance() {
-    const btn = document.getElementById('saveBtn');
-    const statusMsg = document.getElementById('save-status-msg');
+// SAVE ALL FUNCTION
+async function saveAllAttendance() {
+    const saveBtn = document.getElementById('saveAllBtn');
+    if (!saveBtn) return;
     
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving attendance...';
-
-    const attendance = [];
-    document.querySelectorAll('.student-card').forEach(card => {
-        const id = parseInt(card.querySelector('.status-input').dataset.id);
-        if (attendanceMap[id]) {
-            attendance.push({
-                student_id: id,
-                status: attendanceMap[id].status || 'present',
-                arrival_time: attendanceMap[id].arrival || null,
-                remarks: attendanceMap[id].remarks || null,
+    const originalHTML = saveBtn.innerHTML;
+    
+    // Find all changed students
+    const changedStudents = [];
+    
+    for (let id in attendanceMap) {
+        const original = originalAttendanceMap[id];
+        const current = attendanceMap[id];
+        
+        if (!original) continue;
+        
+        const isChanged = original.status !== current.status ||
+                         original.arrival !== (current.arrival || '') ||
+                         original.remarks !== (current.remarks || '');
+        
+        if (isChanged) {
+            changedStudents.push({
+                student_id: parseInt(id),
+                status: current.status || 'present',
+                arrival_time: current.arrival || null,
+                remarks: current.remarks || null
             });
         }
-    });
+    }
+    
+    console.log('Changed students found:', changedStudents.length);
+    console.log('AttendanceMap:', attendanceMap);
+    console.log('OriginalMap:', originalAttendanceMap);
+    
+    if (changedStudents.length === 0) {
+        showToast('No changes to save', 'info');
+        return;
+    }
+    
+const result = await Swal.fire({
+    title: 'Save Changes?',
+    text: `You have ${changedStudents.length} student(s) with unsaved changes.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, Save All',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+});
+
+if (!result.isConfirmed) return;
+
+// continue saving here
+    
+    // Disable button
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving ' + changedStudents.length + ' records...';
+    
+    try {
+        const response = await fetch('{{ route('attendance.students.save') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                class_id: '{{ $classId }}',
+                stream_id: '{{ $streamId }}',
+                attendance_date: '{{ $date }}',
+                class_subject_id: '{{ $subjectId }}' || null,
+                session: 'morning',
+                period_label: null,
+                attendance: changedStudents
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(`✓ Successfully saved ${changedStudents.length} attendance record(s)!`, 'success');
+            saveBtn.innerHTML = '<i class="fas fa-check-circle"></i> All Saved!';
+            
+            // Update original map with current values
+            changedStudents.forEach(student => {
+                const id = student.student_id;
+                originalAttendanceMap[id] = {
+                    status: student.status,
+                    arrival: student.arrival_time || '',
+                    remarks: student.remarks || ''
+                };
+                
+                // Remove change indicator from cards
+                const card = document.querySelector(`.student-card[data-student-id="${id}"]`);
+                if (card) {
+                    card.classList.remove('has-changes');
+                }
+            });
+            
+            // Update pending count
+            const pendingCountSpan = document.getElementById('pendingCount');
+            if (pendingCountSpan) {
+                pendingCountSpan.textContent = 'All saved';
+                pendingCountSpan.style.background = 'rgba(16, 185, 129, 0.2)';
+                pendingCountSpan.style.color = '#10b981';
+            }
+            
+            setTimeout(() => {
+                saveBtn.innerHTML = originalHTML;
+            }, 2000);
+        } else {
+            throw new Error(data.message || 'Failed to save');
+        }
+        
+    } catch(error) {
+        console.error('Save error:', error);
+        showToast('✗ Error saving attendance: ' + error.message, 'error');
+        saveBtn.innerHTML = originalHTML;
+    } finally {
+        saveBtn.disabled = false;
+    }
+}
+
+// Individual save function
+async function saveAttendance(btn, studentId) {
+    const id = String(studentId);
+    const entry = attendanceMap[id];
+
+    if (!entry) {
+        showToast('No attendance data found for this student.', 'error');
+        return;
+    }
+
+    // Check if actually changed
+    const original = originalAttendanceMap[id];
+    const isChanged = original && (original.status !== entry.status ||
+                                   original.arrival !== (entry.arrival || '') ||
+                                   original.remarks !== (entry.remarks || ''));
+    
+    console.log(`Save check for student ${id}:`, { isChanged, original: original?.status, current: entry.status });
+    
+    if (!isChanged) {
+        showToast('No changes to save for this student', 'info');
+        return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
     try {
         const response = await fetch('{{ route('attendance.students.save') }}', {
@@ -1177,39 +1569,60 @@ async function saveAttendance() {
                 class_id: '{{ $classId }}',
                 stream_id: '{{ $streamId }}',
                 attendance_date: '{{ $date }}',
-                class_subject_id: '{{ $subjectId }}',
+                class_subject_id: '{{ $subjectId }}' || null,
                 session: 'morning',
                 period_label: null,
-                attendance: attendance
+                attendance: [{
+                    student_id: parseInt(id),
+                    status: entry.status || 'present',
+                    arrival_time: entry.arrival || null,
+                    remarks: entry.remarks || null,
+                }]
             })
         });
-        
+
         const data = await response.json();
 
         if (data.success) {
-            showToast('✓ ' + data.message, 'success');
-            statusMsg.innerHTML = '<i class="fas fa-check-circle"></i> Saved successfully!';
+            showToast('✓ Saved!', 'success');
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Saved!';
+            
+            // Update original map
+            originalAttendanceMap[id] = {
+                status: entry.status,
+                arrival: entry.arrival || '',
+                remarks: entry.remarks || ''
+            };
+            
+            // Remove change indicator from card
+            const card = document.querySelector(`.student-card[data-student-id="${id}"]`);
+            if (card) {
+                card.classList.remove('has-changes');
+            }
+            
+            checkForChanges();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
         } else {
             showToast('✗ ' + (data.message || 'Failed to save'), 'error');
-            statusMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Save failed';
+            btn.innerHTML = originalText;
         }
+
     } catch(e) {
+        console.error('Save error:', e);
         showToast('✗ Network error. Please try again.', 'error');
-        statusMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Connection error';
+        btn.innerHTML = originalText;
     }
 
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save Attendance';
-    
-    setTimeout(() => {
-        if (statusMsg.innerHTML !== 'Ready to save') {
-            statusMsg.innerHTML = '<i class="fas fa-info-circle"></i> Ready to save';
-        }
-    }, 3000);
 }
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toastEl');
+    if (!toast) return;
+    
     toast.textContent = message;
     toast.className = `toast-notification show ${type}`;
     
@@ -1218,5 +1631,35 @@ function showToast(message, type = 'success') {
         toast.classList.remove('show');
     }, 3000);
 }
+
+// Initialize everything when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...');
+    storeOriginalState();
+    setupEventListeners();
+    updateCounts();
+    checkForChanges();
+    
+    // Add event listener for Save All button
+    const saveAllBtn = document.getElementById('saveAllBtn');
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', saveAllAttendance);
+    }
+    
+    // Warn before leaving
+    window.addEventListener('beforeunload', (e) => {
+        const pendingSpan = document.getElementById('pendingCount');
+        if (pendingSpan && pendingSpan.textContent !== 'All saved' && pendingSpan.textContent !== '0 pending') {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved attendance changes. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    });
+});
+
+// Make functions globally available
+window.setStatus = setStatus;
+window.markAll = markAll;
+window.saveAttendance = saveAttendance;
+window.saveAllAttendance = saveAllAttendance;
 </script>
-@endpush

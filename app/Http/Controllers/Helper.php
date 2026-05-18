@@ -207,6 +207,7 @@ class Helper extends Controller
     public static function maleClassStudents($classId)
     {
         $maleClassStudents = DB::table('students')
+            ->where('school_id', Session('LoggedSchool'))
             ->where('senior', $classId)
             ->where('gender', 'Male')
             ->count();
@@ -217,6 +218,7 @@ class Helper extends Controller
     public static function femaleClassStudents($classId)
     {
         $femaleClassStudents = DB::table('students')
+            ->where('school_id', Session('LoggedSchool'))
             ->where('senior', $classId)
             ->where('gender', 'Female')
             ->count();

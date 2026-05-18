@@ -459,6 +459,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 Route::prefix('timetable')
     ->name('timetable.')
     ->controller(TimetableController::class)
+    ->middleware(['SchoolAuth'])
     ->group(function () {
 
         // Dashboard
@@ -498,6 +499,7 @@ Route::prefix('timetable')
 Route::prefix('attendance')
     ->name('attendance.')
     ->controller(AttendanceController::class)
+    ->middleware(['SchoolAuth'])
     ->group(function () {
 
         // Dashboard

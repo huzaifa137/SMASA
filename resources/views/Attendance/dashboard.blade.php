@@ -413,16 +413,49 @@ use App\Http\Controllers\Helper;
                     Real-time attendance tracking for students and staff
                 </p>
             </div>
-            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                <div class="d-flex gap-2 justify-content-lg-end">
-                    <a href="{{ route('attendance.students') }}" class="btn" style="background: #FFF; color: #2C29CA; border-radius: 16px; padding: 0.5rem 1.5rem; font-weight: 600;">
-                        <i class="fas fa-user-graduate me-2"></i> Student Attendance
-                    </a> &nbsp; &nbsp; &nbsp;
-                    <a href="{{ route('attendance.teachers') }}" class="btn" style="background: rgba(255,255,255,0.2); color: white; border-radius: 16px; padding: 0.5rem 1.5rem; font-weight: 600;">
-                        <i class="fas fa-chalkboard-user me-2"></i> Teacher Check-In
-                    </a>
-                </div>
-            </div>
+
+
+<div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+    
+    <div class="d-flex flex-wrap justify-content-lg-end" style="gap: 0.9rem;">
+
+        <a href="{{ route('attendance.students') }}"
+           class="btn"
+           style="
+                background: #FFF;
+                color: #2C29CA;
+                border-radius: 16px;
+                padding: 0.5rem 1.5rem;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                white-space: nowrap;
+           ">
+            <i class="fas fa-user-graduate"></i>
+            Students Attendance
+        </a>
+
+        <a href="{{ route('attendance.teachers') }}"
+           class="btn"
+           style="
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border-radius: 16px;
+                padding: 0.5rem 1.5rem;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                white-space: nowrap;
+           ">
+            <i class="fas fa-chalkboard-user"></i>
+            Teacher Attendance
+        </a>
+
+    </div>
+
+</div>
         </div>
     </div>
 
@@ -517,108 +550,144 @@ use App\Http\Controllers\Helper;
     {{-- Content Grid Row 1 --}}
     <div class="content-grid">
 
-        {{-- Weekly Student Trend --}}
-        <div class="card form-card">
-            <div class="card-body p-4">
-                <div class="section-header">
-                    <i class="fas fa-chart-line"></i>
-                    7-Day Student Trend
-                    <a href="{{ route('attendance.students.report') }}" class="btn btn-sm ms-auto" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
-                        Full Report <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
-                @php
-                    $maxTotal = $weeklyStudentTrend->max('total') ?: 1;
-                @endphp
-                <div class="chart-bars">
-                    @foreach($weeklyStudentTrend as $day)
-                    @php
-                        $pct = round(($day->present / ($day->total ?: 1)) * 100);
-                        $barH = round(($day->total / $maxTotal) * 90);
-                        $date = \Carbon\Carbon::parse($day->attendance_date);
-                    @endphp
-                    <div class="chart-bar-wrap">
-                        <div style="display:flex;flex-direction:column;justify-content:flex-end;height:90px;width:100%">
-                            <div class="chart-bar"
-                                 style="height:{{ $barH }}px;background:linear-gradient(180deg,var(--brand),var(--brand-light))"
-                                 data-tip="{{ $pct }}% present · {{ $date->format('D') }}">
-                            </div>
-                        </div>
-                        <div class="chart-label">{{ $date->format('D') }}</div>
-                        <div class="chart-label fw-bold" style="color:var(--brand)">{{ $pct }}%</div>
-                    </div>
-                    @endforeach
-                </div>
-                @if($weeklyStudentTrend->isEmpty())
-                <div class="text-center text-muted py-4" style="font-size:13px">
-                    <i class="fas fa-chart-simple fa-2x mb-2 d-block opacity-50"></i>
-                    No data for the past 7 days
-                </div>
-                @endif
+{{-- Weekly Student Trend --}}
+<div class="card form-card">
+    <div class="card-body p-4">
+        <div class="section-header" style="justify-content: space-between;">
+            <div>
+                <i class="fas fa-chart-line"></i>
+                7-Day Student Trend
             </div>
+            <a href="{{ route('attendance.students.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
+                Full Report <i class="fas fa-arrow-right ms-1"></i>
+            </a>
         </div>
+        @php
+            $maxTotal = $weeklyStudentTrend->max('total') ?: 1;
+        @endphp
+        <div class="chart-bars" style="height: 140px; align-items: flex-end; padding-top: 0;">
+            @foreach($weeklyStudentTrend as $day)
+            @php
+                $pct = round(($day->present / ($day->total ?: 1)) * 100);
+                $barH = round(($day->total / $maxTotal) * 80);
+                $date = \Carbon\Carbon::parse($day->attendance_date);
+            @endphp
+            <div class="chart-bar-wrap" style="height: 140px; justify-content: flex-end;">
+                <div style="display:flex;flex-direction:column;justify-content:flex-end;height:100px;width:100%">
+                    <div class="chart-bar"
+                         style="height:{{ $barH }}px;max-height:100px;background:linear-gradient(180deg,var(--brand),var(--brand-light))"
+                         data-tip="{{ $pct }}% present · {{ $date->format('D') }}">
+                    </div>
+                </div>
+                <div class="chart-label">{{ $date->format('D') }}</div>
+                <div class="chart-label fw-bold" style="color:var(--brand)">{{ $pct }}%</div>
+            </div>
+            @endforeach
+        </div>
+        @if($weeklyStudentTrend->isEmpty())
+        <div class="text-center text-muted py-4" style="font-size:13px">
+            <i class="fas fa-chart-simple fa-2x mb-2 d-block opacity-50"></i>
+            No data for the past 7 days
+        </div>
+        @endif
+    </div>
+</div>
 
-        {{-- Teacher Status Donut --}}
-        <div class="card form-card">
-            <div class="card-body p-4">
-                <div class="section-header">
-                    <i class="fas fa-chalkboard"></i>
-                    Teacher Status Today
-                    <a href="{{ route('attendance.teachers.report') }}" class="btn btn-sm ms-auto" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
-                        Report <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
+{{-- Teacher Status Donut --}}
+<div class="card form-card">
+    <div class="card-body p-4">
+        <div class="section-header" style="justify-content: space-between;">
+            <div>
+                <i class="fas fa-chalkboard"></i>
+                Teacher Status Today
+            </div>
+            <a href="{{ route('attendance.teachers.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
+                Report <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+        @php
+            $tp = $teacherStats->present ?? 0;
+            $ta = $teacherStats->absent ?? 0;
+            $tl = $teacherStats->late ?? 0;
+            $tol = $teacherStats->on_leave ?? 0;
+            $tnm = max(0, $totalTeachers - ($tp + $ta + $tl + $tol));
+        @endphp
+        <div class="donut-wrap" style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <svg width="140" height="140" viewBox="0 0 120 120" style="flex-shrink: 0;">
                 @php
-                    $tp = $teacherStats->present ?? 0;
-                    $ta = $teacherStats->absent ?? 0;
-                    $tl = $teacherStats->late ?? 0;
-                    $tol = $teacherStats->on_leave ?? 0;
-                    $tnm = max(0, $totalTeachers - ($tp + $ta + $tl + $tol));
+                    $total = $totalTeachers ?: 1;
+                    $vals = [
+                        ['v'=>$tp,  'c'=>'#10b981', 'label'=>'Present'],
+                        ['v'=>$ta,  'c'=>'#ef4444', 'label'=>'Absent'],
+                        ['v'=>$tl,  'c'=>'#f59e0b', 'label'=>'Late'],
+                        ['v'=>$tol, 'c'=>'#8b5cf6', 'label'=>'On Leave'],
+                        ['v'=>$tnm, 'c'=>'#cbd5e1', 'label'=>'Not Marked'],
+                    ];
+                    $r = 45; $cx = 60; $cy = 60;
+                    $offset = 0;
                 @endphp
-                <div class="donut-wrap">
-                    <svg width="120" height="120" viewBox="0 0 120 120">
-                        @php
-                            $total = $totalTeachers ?: 1;
-                            $vals = [
-                                ['v'=>$tp,  'c'=>'#10b981', 'label'=>'Present'],
-                                ['v'=>$ta,  'c'=>'#ef4444', 'label'=>'Absent'],
-                                ['v'=>$tl,  'c'=>'#f59e0b', 'label'=>'Late'],
-                                ['v'=>$tol, 'c'=>'#8b5cf6', 'label'=>'On Leave'],
-                                ['v'=>$tnm, 'c'=>'#cbd5e1', 'label'=>'Not Marked'],
-                            ];
-                            $r = 45; $cx = 60; $cy = 60;
-                            $offset = 0;
-                        @endphp
-                        @foreach($vals as $v)
-                        @if($v['v'] > 0)
-                        @php
-                            $pct2 = $v['v'] / $total;
-                            $dash = $pct2 * 2 * pi() * $r;
-                            $gap  = (1 - $pct2) * 2 * pi() * $r;
-                            $rotate = $offset * 360 - 90;
-                            $offset += $pct2;
-                        @endphp
-                        <circle cx="{{ $cx }}" cy="{{ $cy }}" r="{{ $r }}"
-                            fill="none" stroke="{{ $v['c'] }}" stroke-width="14"
-                            stroke-dasharray="{{ number_format($dash,2) }} {{ number_format($gap,2) }}"
-                            stroke-dashoffset="0"
-                            transform="rotate({{ $rotate }} {{ $cx }} {{ $cy }})"/>
-                        @endif
-                        @endforeach
-                        <circle cx="60" cy="60" r="30" fill="white"/>
-                        <text x="60" y="56" text-anchor="middle" font-size="18" font-weight="800" fill="#1e293b">{{ $totalTeachers }}</text>
-                        <text x="60" y="70" text-anchor="middle" font-size="9" fill="#64748b">STAFF</text>
-                    </svg>
-                    <div class="donut-legend">
-                        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Present <strong class="ms-auto">{{ $tp }}</strong></div>
-                        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Absent <strong class="ms-auto">{{ $ta }}</strong></div>
-                        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Late <strong class="ms-auto">{{ $tl }}</strong></div>
-                        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>On Leave <strong class="ms-auto">{{ $tol }}</strong></div>
-                        <div class="legend-item"><div class="legend-dot" style="background:#cbd5e1"></div>Not Marked <strong class="ms-auto">{{ $tnm }}</strong></div>
+                @foreach($vals as $v)
+                @if($v['v'] > 0)
+                @php
+                    $pct2 = $v['v'] / $total;
+                    $dash = $pct2 * 2 * pi() * $r;
+                    $gap  = (1 - $pct2) * 2 * pi() * $r;
+                    $rotate = $offset * 360 - 90;
+                    $offset += $pct2;
+                @endphp
+                <circle cx="{{ $cx }}" cy="{{ $cy }}" r="{{ $r }}"
+                    fill="none" stroke="{{ $v['c'] }}" stroke-width="14"
+                    stroke-dasharray="{{ number_format($dash,2) }} {{ number_format($gap,2) }}"
+                    stroke-dashoffset="0"
+                    transform="rotate({{ $rotate }} {{ $cx }} {{ $cy }})"/>
+                @endif
+                @endforeach
+                <circle cx="60" cy="60" r="30" fill="white"/>
+                <text x="60" y="56" text-anchor="middle" font-size="18" font-weight="800" fill="#1e293b">{{ $totalTeachers }}</text>
+                <text x="60" y="70" text-anchor="middle" font-size="9" fill="#64748b">STAFF</text>
+            </svg>
+            <div class="donut-legend" style="flex: 1; min-width: 140px;">
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="legend-dot" style="background:#10b981; width: 10px; height: 10px; border-radius: 50%;"></div>
+                        <span>Present</span>
                     </div>
+                    <strong style="color: #10b981;">{{ $tp }}</strong>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="legend-dot" style="background:#ef4444; width: 10px; height: 10px; border-radius: 50%;"></div>
+                        <span>Absent</span>
+                    </div>
+                    <strong style="color: #ef4444;">{{ $ta }}</strong>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="legend-dot" style="background:#f59e0b; width: 10px; height: 10px; border-radius: 50%;"></div>
+                        <span>Late</span>
+                    </div>
+                    <strong style="color: #f59e0b;">{{ $tl }}</strong>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="legend-dot" style="background:#8b5cf6; width: 10px; height: 10px; border-radius: 50%;"></div>
+                        <span>On Leave</span>
+                    </div>
+                    <strong style="color: #8b5cf6;">{{ $tol }}</strong>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 0; font-size: 13px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="legend-dot" style="background:#cbd5e1; width: 10px; height: 10px; border-radius: 50%;"></div>
+                        <span>Not Marked</span>
+                    </div>
+                    <strong style="color: #94a3b8;">{{ $tnm }}</strong>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+
     </div>
 
     {{-- Content Grid Row 2 --}}
@@ -678,6 +747,17 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>
 
+                                <a href="{{ route('attendance.students.report') }}" class="quick-card">
+                    <div class="qc-icon" style="background: var(--success-muted); color: var(--success);">
+                        <i class="fas fa-chart-simple"></i>
+                    </div>
+                    <div>
+                        <div class="qc-title">Student Reports</div>
+                        <div class="qc-sub">Generate detailed attendance analytics</div>
+                    </div>
+                    <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                </a>
+
                 <a href="{{ route('attendance.teachers') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--purple-muted); color: var(--purple);">
                         <i class="fas fa-chalkboard-user"></i>
@@ -685,17 +765,6 @@ use App\Http\Controllers\Helper;
                     <div>
                         <div class="qc-title">Teacher Check-In</div>
                         <div class="qc-sub">Record staff arrival & departure times</div>
-                    </div>
-                    <i class="fas fa-chevron-right ms-auto text-muted"></i>
-                </a>
-
-                <a href="{{ route('attendance.students.report') }}" class="quick-card">
-                    <div class="qc-icon" style="background: var(--success-muted); color: var(--success);">
-                        <i class="fas fa-chart-simple"></i>
-                    </div>
-                    <div>
-                        <div class="qc-title">Student Reports</div>
-                        <div class="qc-sub">Generate detailed attendance analytics</div>
                     </div>
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>

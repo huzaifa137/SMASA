@@ -176,7 +176,7 @@ use App\Http\Controllers\Helper;
         right: 1rem;
         top: 1rem;
         font-size: 2rem;
-        opacity: 0.1;
+        /* opacity: 0.1; */
     }
 
     .stat-value-premium {
@@ -418,6 +418,43 @@ use App\Http\Controllers\Helper;
         background: var(--brand);
         border-radius: 99px;
     }
+
+    /* Search Input */
+    .search-input-sm {
+        padding: 0.5rem 1rem 0.5rem 2rem;
+        border: 1px solid var(--border-light);
+        border-radius: 40px;
+        font-size: 0.8rem;
+        width: 220px;
+        background: white;
+    }
+
+    .search-input-sm:focus {
+        outline: none;
+        border-color: var(--brand);
+    }
+
+    /* FORCE TABLE HEADER COLORS */
+    .premium-table thead th {
+        background: #5c5aee !important;
+        color: #FFF !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+        border-bottom: 1px solid var(--border-light) !important;
+    }
+
+    /* Optional: improve visibility more */
+    .premium-table thead {
+        background: #5c5aee !important;
+    }
+
+    /* Fix DataTables/Bootstrap overrides */
+    table.premium-table th,
+    table.premium-table thead th {
+        color: #FFF !important;
+        background: #5c5aee !important;
+    }
+
 </style>
 @endsection
 
@@ -428,29 +465,29 @@ use App\Http\Controllers\Helper;
     <div class="glass-header">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <div class="mb-2">
-                    <span class="date-range-badge text-white">
+                <div class="mb-4">
+                    <span class="date-range-badge text-white" style="font-size: 1rem; padding: 0.5rem 1rem; display: inline-block;">
                         <i class="fas fa-chalkboard-user me-2"></i> Teacher Attendance Analytics
                     </span>
-                    <span class="date-range-badge ms-2 text-white">
+                    <span class="date-range-badge ms-2 text-white" style="font-size: 1rem; padding: 0.5rem 1rem; display: inline-block;">
                         <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::parse($from)->format('M d') }} – {{ \Carbon\Carbon::parse($to)->format('M d, Y') }}
                     </span>
                 </div>
                 <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
                     <i class="fas fa-chart-line me-3"></i> Teacher Attendance Report
                 </h1>
-                <p style="font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                <p style="font-size: 1.5rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
                     Comprehensive attendance tracking and analytics for faculty members
                 </p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="d-flex gap-2 justify-content-lg-end">
+                <div class="d-flex gap-3 justify-content-lg-end" style="gap: 1rem;">
                     @if($teacherSummary->isNotEmpty())
-                    <button onclick="window.print()" class="btn" style="background: rgba(255,255,255,0.15); color: white; border-radius: 14px; padding: 0.5rem 1.2rem;">
+                    <button disabled onclick="window.print()" class="btn" style="background: rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; border: none; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-print me-2"></i> Print
                     </button>
                     @endif
-                    <a href="{{ route('attendance.teachers') }}" class="btn" style="background: white; color: var(--brand); border-radius: 14px; padding: 0.5rem 1.2rem; font-weight: 600;">
+                    <a href="{{ route('attendance.teachers') }}" class="btn" style="background: white; color: var(--brand); border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                         <i class="fas fa-arrow-left me-2"></i> Take Attendance
                     </a>
                 </div>
@@ -524,32 +561,32 @@ use App\Http\Controllers\Helper;
 
     <div class="summary-grid">
         <div class="stat-card-premium">
-            <i class="fas fa-chalkboard-user stat-icon"></i>
+            <i class="fas fa-chalkboard-user stat-icon" style="color: var(--brand);"></i>
             <div class="stat-value-premium" style="color: var(--text-primary);">{{ $teacherSummary->count() }}</div>
             <div class="stat-label-premium">Faculty Members</div>
         </div>
         <div class="stat-card-premium">
-            <i class="fas fa-check-circle stat-icon"></i>
+            <i class="fas fa-check-circle stat-icon" style="color: var(--success);"></i>
             <div class="stat-value-premium" style="color: var(--success);">{{ $totPresent }}</div>
             <div class="stat-label-premium">Present Records</div>
         </div>
         <div class="stat-card-premium">
-            <i class="fas fa-times-circle stat-icon"></i>
+            <i class="fas fa-times-circle stat-icon" style="color: var(--danger);"></i>
             <div class="stat-value-premium" style="color: var(--danger);">{{ $totAbsent }}</div>
             <div class="stat-label-premium">Absent Records</div>
         </div>
         <div class="stat-card-premium">
-            <i class="fas fa-clock stat-icon"></i>
+            <i class="fas fa-clock stat-icon" style="color: var(--warning);"></i>
             <div class="stat-value-premium" style="color: var(--warning);">{{ $totLate }}</div>
             <div class="stat-label-premium">Late Arrivals</div>
         </div>
         <div class="stat-card-premium">
-            <i class="fas fa-umbrella-beach stat-icon"></i>
+            <i class="fas fa-umbrella-beach stat-icon" style="color: var(--info);"></i>
             <div class="stat-value-premium" style="color: var(--info);">{{ $totLeave }}</div>
             <div class="stat-label-premium">Leave Records</div>
         </div>
         <div class="stat-card-premium">
-            <i class="fas fa-chart-line stat-icon"></i>
+            <i class="fas fa-chart-line stat-icon" style="color: var(--purple);"></i>
             <div class="stat-value-premium" style="color: var(--purple);">{{ round($avgRate, 1) }}%</div>
             <div class="stat-label-premium">Average Rate</div>
         </div>
@@ -564,7 +601,7 @@ use App\Http\Controllers\Helper;
             </div>
             <div style="position: relative;">
                 <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted);"></i>
-                <input type="text" id="teacherSearch" class="form-control-modern" placeholder="Search teacher..." style="padding-left: 2rem; width: 220px;" onkeyup="filterTeacherTable()">
+                <input type="text" id="teacherSearch" class="search-input-sm" placeholder="Search teacher..." style="padding-left: 2rem;" onkeyup="filterTeacherTable()">
             </div>
         </div>
         <div class="table-responsive-custom" style="overflow-x: auto;">
@@ -727,12 +764,20 @@ use App\Http\Controllers\Helper;
     @endif
 
     @else
-    {{-- Empty State --}}
+    {{-- No Data / Empty State --}}
+    @if(request()->has('teacher_id') || request()->has('from'))
+    <div class="empty-state-premium">
+        <i class="fas fa-search"></i>
+        <h5>No Data Found</h5>
+        <p>No attendance records match the selected filters. Try adjusting your search criteria.</p>
+    </div>
+    @else
     <div class="empty-state-premium">
         <i class="fas fa-chart-line"></i>
         <h5>Generate Your Report</h5>
         <p>Select filters and click <strong>Generate</strong> to view teacher attendance report.</p>
     </div>
+    @endif
     @endif
 
 </div>

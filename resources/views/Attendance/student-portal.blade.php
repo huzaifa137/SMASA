@@ -449,34 +449,36 @@
 @section('content')
 <div class="side-app" style="padding: 1.5rem;">
 
-    {{-- Modern Hero Section --}}
-    <div class="hero-section">
-        <div class="row align-items-center">
-            <div class="col-lg-7">
-                <div class="mb-2">
-                    <span class="badge" style="background: #FFF; backdrop-filter: blur(4px); padding: 0.4rem 1rem; border-radius: 99px; font-size: 0.75rem;">
-                        <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::today()->format('l, F j, Y') }}
-                    </span>
-                </div>
-                <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                    <i class="fas fa-user-graduate me-3"></i> Student Attendance
-                </h1>
-                <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                    Select a class to mark attendance or review today's records
-                </p>
+{{-- Modern Hero Section --}}
+<div class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <div class="mb-4">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::today()->format('l, F j, Y') }}
+                </span>
             </div>
-            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                <div class="header-buttons">
-                    <a href="{{ route('attendance.dashboard') }}" class="btn-glass">
-                        <i class="fas fa-chart-line"></i> Dashboard
-                    </a>
-                    <a href="{{ route('attendance.students.report') }}" class="btn-glass btn-glass-white">
-                        <i class="fas fa-chart-bar"></i> Reports
-                    </a>
-                </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-user-graduate me-3"></i> Student Attendance
+            </h1>
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                Select a class to mark attendance or review today's records
+            </p>
+        </div>
+        <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+            <div class="header-buttons" style="display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
+                <a href="{{ route('attendance.dashboard') }}" class="btn-glass"
+                   style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{{ route('attendance.students.report') }}" class="btn-glass btn-glass-white"
+                   style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.9); color: #333; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </a>
             </div>
         </div>
     </div>
+</div>
 
     @if($classrooms->isEmpty())
     <div class="empty-state-modern">
@@ -545,6 +547,7 @@
                     </div>
 
                     <div class="action-group">
+                       
                         @if($stream->taken)
                             <a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?date={{ $today }}" 
                                class="btn-edit-modern">

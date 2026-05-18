@@ -179,7 +179,7 @@ use App\Http\Controllers\Helper;
         right: 1rem;
         top: 1rem;
         font-size: 2rem;
-        opacity: 0.1;
+        /* opacity: 0.1; */
     }
 
     .stat-value-premium {
@@ -419,49 +419,71 @@ use App\Http\Controllers\Helper;
         background: var(--brand);
         border-radius: 99px;
     }
+
+    /* FORCE TABLE HEADER COLORS */
+.premium-table thead th {
+    background: #5c5aee !important;
+    color: #FFF !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid var(--border-light) !important;
+}
+
+/* Optional: improve visibility more */
+.premium-table thead {
+    background: #5c5aee !important;
+}
+
+/* Fix DataTables/Bootstrap overrides */
+table.premium-table th,
+table.premium-table thead th {
+    color: #FFF !important;
+    background: #5c5aee !important;
+}
+
 </style>
 @endsection
 
 @section('content')
 <div class="side-app" style="padding: 1.5rem;">
 
-    {{-- Modern Glass Header --}}
-    <div class="glass-header">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <div class="mb-2">
-                    <span class="date-range-badge text-white">
-                        <i class="fas fa-chart-line me-2"></i> Attendance Analytics
-                    </span>
-                    @if($className)
-                    <span class="date-range-badge ms-2">
-                        <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::parse($from)->format('M d') }} – {{ \Carbon\Carbon::parse($to)->format('M d, Y') }}
-                    </span>
-                    @endif
-                </div>
-                <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                    <i class="fas fa-chart-bar me-3"></i> Student Attendance Report
-                </h1>
+{{-- Modern Glass Header --}}
+<div class="glass-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <span class="date-range-badge text-white" style="font-size: 1rem; padding: 0.5rem 1rem; display: inline-block;">
+                    <i class="fas fa-chart-line me-2"></i> Attendance Analytics
+                </span>
                 @if($className)
-                <p style="font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                    <i class="fas fa-school me-2"></i> {{ $className }} {{ $streamName }}
-                </p>
+                <span class="date-range-badge ms-3 text-white" style="font-size: 1rem; padding: 0.5rem 1rem; display: inline-block;">
+                    <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::parse($from)->format('M d') }} – {{ \Carbon\Carbon::parse($to)->format('M d, Y') }}
+                </span>
                 @endif
             </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="d-flex gap-2 justify-content-lg-end">
-                    @if($studentSummary->isNotEmpty())
-                    <button onclick="window.print()" class="btn" style="background: rgba(255,255,255,0.15); color: white; border-radius: 14px; padding: 0.5rem 1.2rem;">
-                        <i class="fas fa-print me-2"></i> Print
-                    </button>
-                    @endif
-                    <a href="{{ route('attendance.students') }}" class="btn" style="background: white; color: var(--brand); border-radius: 14px; padding: 0.5rem 1.2rem; font-weight: 600;">
-                        <i class="fas fa-arrow-left me-2"></i> Take Attendance
-                    </a>
-                </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
+                <i class="fas fa-chart-bar me-3"></i> Student Attendance Report
+            </h1>
+            @if($className)
+            <p style="font-size: 1.5rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
+                <i class="fas fa-school me-2"></i> {{ $className }} - {{ request('stream_id') }}
+            </p>
+            @endif
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="d-flex gap-3 justify-content-lg-end" style="gap: 1rem;">
+                @if($studentSummary->isNotEmpty())
+                <button disabled onclick="window.print()" class="btn" style="background: rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; border: none; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-print me-2"></i> Print
+                </button>
+                @endif
+                <a href="{{ route('attendance.students') }}" class="btn" style="background: white; color: var(--brand); border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                    <i class="fas fa-arrow-left me-2"></i> Take Attendance
+                </a>
             </div>
         </div>
     </div>
+</div>
 
     {{-- Filter Panel --}}
     <div class="filter-card">
@@ -487,7 +509,7 @@ use App\Http\Controllers\Helper;
                         <option value="">All Streams</option>
                         @foreach($streams as $s)
                             <option value="{{ $s->stream_id }}" {{ $streamId == $s->stream_id ? 'selected' : '' }}>
-                                {{ Helper::recordMdname($s->stream_id) }}
+                                {{ $s->stream_id }}
                             </option>
                         @endforeach
                     </select>
@@ -531,38 +553,63 @@ use App\Http\Controllers\Helper;
         $atRisk = $studentSummary->where('attendance_rate', '<', 75)->count();
     @endphp
 
-    <div class="summary-grid">
-        <div class="stat-card-premium">
-            <i class="fas fa-users stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--text-primary);">{{ $studentSummary->count() }}</div>
-            <div class="stat-label-premium">Total Students</div>
+<div class="summary-grid">
+
+    <!-- Total Students -->
+    <div class="stat-card-premium">
+        <i class="fas fa-users stat-icon" style="color: var(--brand);"></i>
+        <div class="stat-value-premium" style="color: var(--text-primary);">
+            {{ $studentSummary->count() }}
         </div>
-        <div class="stat-card-premium">
-            <i class="fas fa-check-circle stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--success);">{{ $totPresent }}</div>
-            <div class="stat-label-premium">Present Records</div>
-        </div>
-        <div class="stat-card-premium">
-            <i class="fas fa-times-circle stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--danger);">{{ $totAbsent }}</div>
-            <div class="stat-label-premium">Absent Records</div>
-        </div>
-        <div class="stat-card-premium">
-            <i class="fas fa-clock stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--warning);">{{ $totLate }}</div>
-            <div class="stat-label-premium">Late Records</div>
-        </div>
-        <div class="stat-card-premium">
-            <i class="fas fa-chart-line stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--info);">{{ round($avgRate, 1) }}%</div>
-            <div class="stat-label-premium">Avg Attendance Rate</div>
-        </div>
-        <div class="stat-card-premium">
-            <i class="fas fa-exclamation-triangle stat-icon"></i>
-            <div class="stat-value-premium" style="color: var(--danger);">{{ $atRisk }}</div>
-            <div class="stat-label-premium">At-Risk (&lt;75%)</div>
-        </div>
+        <div class="stat-label-premium">Total Students</div>
     </div>
+
+    <!-- Present -->
+    <div class="stat-card-premium">
+        <i class="fas fa-check-circle stat-icon" style="color: var(--success);"></i>
+        <div class="stat-value-premium" style="color: var(--success);">
+            {{ $totPresent }}
+        </div>
+        <div class="stat-label-premium">Present Records</div>
+    </div>
+
+    <!-- Absent -->
+    <div class="stat-card-premium">
+        <i class="fas fa-times-circle stat-icon" style="color: var(--danger);"></i>
+        <div class="stat-value-premium" style="color: var(--danger);">
+            {{ $totAbsent }}
+        </div>
+        <div class="stat-label-premium">Absent Records</div>
+    </div>
+
+    <!-- Late -->
+    <div class="stat-card-premium">
+        <i class="fas fa-clock stat-icon" style="color: var(--warning);"></i>
+        <div class="stat-value-premium" style="color: var(--warning);">
+            {{ $totLate }}
+        </div>
+        <div class="stat-label-premium">Late Records</div>
+    </div>
+
+    <!-- Attendance Rate -->
+    <div class="stat-card-premium">
+        <i class="fas fa-chart-line stat-icon" style="color: var(--info);"></i>
+        <div class="stat-value-premium" style="color: var(--info);">
+            {{ round($avgRate, 1) }}%
+        </div>
+        <div class="stat-label-premium">Avg Attendance Rate</div>
+    </div>
+
+    <!-- At Risk -->
+    <div class="stat-card-premium">
+        <i class="fas fa-exclamation-triangle stat-icon" style="color: var(--purple);"></i>
+        <div class="stat-value-premium" style="color: var(--danger);">
+            {{ $atRisk }}
+        </div>
+        <div class="stat-label-premium">At-Risk (&lt;75%)</div>
+    </div>
+
+</div>
 
     {{-- Per-Student Summary Table --}}
     <div class="data-card">
@@ -582,7 +629,7 @@ use App\Http\Controllers\Helper;
                     <tr>
                         <th width="45">#</th>
                         <th>Student</th>
-                        <th>Admission</th>
+                        <!-- <th>Admission</th> -->
                         <th>Total Days</th>
                         <th>Present</th>
                         <th>Absent</th>
@@ -605,7 +652,7 @@ use App\Http\Controllers\Helper;
                                     <span style="font-weight: 600;">{{ $row->full_name }}</span>
                                 </div>
                             </td>
-                            <td style="font-size: 0.75rem; color: var(--text-muted);">{{ $row->admission }}</td>
+                            <!-- <td style="font-size: 0.75rem; color: var(--text-muted);">{{ $row->admission }}</td> -->
                             <td>{{ $row->total_days }}</td>
                             <td><span class="badge-status badge-present"><i class="fas fa-check-circle"></i> {{ $row->present }}</span></td>
                             <td><span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> {{ $row->absent }}</span></td>
@@ -644,7 +691,7 @@ use App\Http\Controllers\Helper;
                         <th>Student</th>
                         <th>Status</th>
                         <th>Arrival Time</th>
-                        <th>Session</th>
+                        <!-- <th>Session</th> -->
                         <th>Remarks</th>
                     </tr>
                 </thead>
@@ -695,11 +742,11 @@ use App\Http\Controllers\Helper;
                                     <span style="color: var(--text-muted);">—</span>
                                 @endif
                             </td>
-                            <td>
+                            <!-- <td>
                                 <span style="font-size: 0.7rem; padding: 0.2rem 0.6rem; background: var(--bg-surface); border-radius: 99px;">
                                     {{ ucfirst($r->session) }}
                                 </span>
-                            </td>
+                            </td> -->
                             <td style="font-size: 0.8rem; color: var(--text-muted);">
                                 {{ $r->remarks ?: '—' }}
                             </td>
@@ -734,7 +781,7 @@ use App\Http\Controllers\Helper;
     </div>
 @endsection
 
-@push('scripts')
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     function filterStuTable() {
@@ -770,4 +817,3 @@ use App\Http\Controllers\Helper;
         });
     });
 </script>
-@endpush

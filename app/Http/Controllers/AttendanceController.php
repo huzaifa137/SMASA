@@ -133,18 +133,21 @@ class AttendanceController extends Controller
 
     public function studentAttendancePortal()
     {
+
         $schoolId  = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
         $today     = Carbon::today()->toDateString();
 
         $isAdmin = Helper::isTechSateAdminOrSchoolAdminsAlone();
 
+        
         if ($isAdmin) {
             // Admin sees all classes in school
             $classrooms = Classroom::where('school_id', $schoolId)
                 ->orderBy('class_name')
                 ->get();
         } else {
+           
             // Teacher sees only their assigned classes/subjects
             $assignedClassIds = ClassSubject::where('school_id', $schoolId)
                 ->where(function ($q) use ($teacherId) {
@@ -154,6 +157,8 @@ class AttendanceController extends Controller
                 ->pluck('class_id')
                 ->unique()
                 ->toArray();
+
+                // dd($assignedClassIds);
 
             $supervisedClassIds = Classroom::where('school_id', $schoolId)
                 ->where('class_supervisor', $teacherId)
