@@ -59,6 +59,106 @@ use App\Http\Controllers\Helper;
                 </a>
             </li>
 
+            <!-- Attendance Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-user-check fa-2x mr-3"></i>
+                    <span>Attendance</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+
+                <ul class="sub-menu">
+
+                    <li>
+                        <a href="{{ route('attendance.dashboard') }}">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Attendance Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.students') }}">
+                            <i class="fas fa-user-graduate mr-2"></i>
+                            Student Check-In
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.students.report') }}">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            Student Report
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.teachers') }}">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                            Teacher Check-In
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.teachers.report') }}">
+                            <i class="fas fa-file-signature mr-2"></i>
+                            Teachers Report
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+            <!-- Timetable Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+
+                    <!-- Main Timetable Icon -->
+                    <i class="fas fa-calendar-alt fa-2x mr-3"></i>
+
+                    <span>Timetable</span>
+
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+
+                <ul class="sub-menu">
+
+                    <li>
+                        <a href="{{ route('timetable.dashboard') }}">
+                            <i class="fas fa-tachometer-alt mr-2"></i>
+                            Timetable Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('timetable.periods.index') }}">
+                            <i class="fas fa-clock mr-2"></i>
+                            Periods
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('timetable.create') }}">
+                            <i class="fas fa-calendar-plus mr-2"></i>
+                            Create Timetable
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.teachers') }}">
+                            <i class="fas fa-chalkboard mr-2"></i>
+                            Teacher Timetable
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('attendance.teachers.report') }}">
+                            <i class="fas fa-print mr-2"></i>
+                            Print Timetables
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+
+            <!-- Examinations Dropdown (Updated) -->
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-layer-group fa-2x mr-3"></i>
@@ -100,6 +200,12 @@ use App\Http\Controllers\Helper;
                             </a>
                         </li>
                     @endif
+                    <!-- <li>
+                                <a href="{{ route('examination.marks-entry-portal') }}">
+                                    <i class="fas fa-pen-to-square mr-2"></i>
+                                    Released Exams
+                                </a>
+                            </li> -->
                 </ul>
             </li>
         @elseif(Session('LoggedAdmin'))
@@ -294,73 +400,72 @@ use App\Http\Controllers\Helper;
                         </li>
                     @endif
                     <!-- <li>
-                        <a href="{{ route('examination.marks-entry-portal') }}">
-                            <i class="fas fa-pen-to-square mr-2"></i>
-                            Released Exams
-                        </a>
-                    </li> -->
+                                <a href="{{ route('examination.marks-entry-portal') }}">
+                                    <i class="fas fa-pen-to-square mr-2"></i>
+                                    Released Exams
+                                </a>
+                            </li> -->
                 </ul>
             </li>
-
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-            <script>
-                $(document).ready(function () {
-                    // Handle submenu toggles
-                    $('[data-toggle="submenu"]').on('click', function (e) {
-                        e.preventDefault();
-
-                        // Get the parent slide
-                        var $slide = $(this).closest('.slide');
-
-                        // Close other open submenus (optional - comment out if you want multiple open)
-                        $('.slide').not($slide).removeClass('active');
-
-                        // Toggle current
-                        $slide.toggleClass('active');
-                    });
-
-                    // Keep submenu open if a child link is active
-                    // var currentUrl = window.location.href;
-                    // $('.sub-menu a').each(function () {
-                    //     if (currentUrl.indexOf($(this).attr('href')) !== -1) {
-                    //         $(this).closest('.slide').addClass('active');
-                    //     }
-                    // });
-
-                    // Logout functionality
-                    $('#logoutMenu').on('click', function (event) {
-                        event.preventDefault();
-
-                        Swal.fire({
-                            title: "Are you sure?",
-                            text: "Do you really want to Logout?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "Yes, Logout",
-                            cancelButtonText: "Cancel",
-                            confirmButtonColor: "#3085d6",
-                            cancelButtonColor: "#d33",
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '{{ route('student-logout') }}';
-                            }
-                        });
-                    });
-                });
-            </script>
         @endif
-
         <li class="slide">
             <a class="side-menu__item" href="#" id="logoutMenu">
                 <i class="fa fa-sign-out fa-2x mr-3"></i>
                 Logout
             </a>
         </li>
-
     </ul>
 </aside>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Handle submenu toggles
+        $('[data-toggle="submenu"]').on('click', function (e) {
+            e.preventDefault();
+
+            // Get the parent slide
+            var $slide = $(this).closest('.slide');
+
+            // Close other open submenus (optional - comment out if you want multiple open)
+            $('.slide').not($slide).removeClass('active');
+
+            // Toggle current
+            $slide.toggleClass('active');
+        });
+
+        // Keep submenu open if a child link is active
+        // var currentUrl = window.location.href;
+        // $('.sub-menu a').each(function () {
+        //     if (currentUrl.indexOf($(this).attr('href')) !== -1) {
+        //         $(this).closest('.slide').addClass('active');
+        //     }
+        // });
+
+        // Logout functionality
+        $('#logoutMenu').on('click', function (event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to Logout?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Logout",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route('student-logout') }}';
+                }
+            });
+        });
+    });
+</script>
 
 <style>
     .sub-menu {
