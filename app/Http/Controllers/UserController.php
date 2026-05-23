@@ -18,7 +18,7 @@ class UserController extends Controller
 {
     public function createNewPassword($id)
     {
-        $generated_id = url('password/reset/'.$id);
+        $generated_id = url('password/reset/' . $id);
         $resetEntry = DB::table('password_reset_tables')->where('token', $generated_id)->first();
 
         if ($resetEntry) {
@@ -38,7 +38,7 @@ class UserController extends Controller
 
     public function createFirstPassword($id)
     {
-        $generated_id = url('password/set-password/'.$id);
+        $generated_id = url('password/set-password/' . $id);
         $resetEntry = DB::table('password_reset_tables')->where('token', $generated_id)->first();
         $useremail = $resetEntry->email;
 
@@ -97,7 +97,7 @@ class UserController extends Controller
                 $message->to($data['email'], $data['email'])->subject($data['title']);
             });
 
-            return back()->with('success', 'Link has been sent to your email : '.' '.$email);
+            return back()->with('success', 'Link has been sent to your email : ' . ' ' . $email);
         }
     }
 
@@ -287,7 +287,7 @@ class UserController extends Controller
                 : $query->where('username', $loginValue);
         })->first();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'errors' => [
                     'username' => ['Account not found. Please check your credentials.'],
@@ -305,7 +305,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        if (! $user->is_active) {
+        if (!$user->is_active) {
             return response()->json([
                 'errors' => [
                     'username' => ['This account is currently disabled.'],
@@ -313,7 +313,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        if (! Hash::check($request->password, $user->password)) {
+        if (!Hash::check($request->password, $user->password)) {
             return response()->json([
                 'errors' => [
                     'password' => ['Invalid credentials. Please check your login details.'],
@@ -333,7 +333,7 @@ class UserController extends Controller
         $redirectUrl = match ($user->user_role) {
             'student' => '/student/dashboard',
             'admin' => '/admin/dashboard',
-            // default   => '/student/dashboard',
+        // default   => '/student/dashboard',
         };
 
         return response()->json([
@@ -348,9 +348,9 @@ class UserController extends Controller
 
         $school_id = Helper::schoolIDFromHouseID(Helper::schoolNumber($request->school_id));
 
-        $school = School::where('id', $school_id)->first(); 
+        $school = School::where('id', $school_id)->first();
 
-        if (! $school) {
+        if (!$school) {
             return response()->json([
                 'errors' => [
                     'username' => ['School not found. Please check your center number.'],
@@ -362,7 +362,7 @@ class UserController extends Controller
             ->where('school_id', $school_id)
             ->first();
 
-        if (! $schoolTeacher) {
+        if (!$schoolTeacher) {
             return response()->json([
                 'errors' => [
                     'username' => ['No Teacher found belonging in this school yet. Please contact administrator.'],
@@ -370,7 +370,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        if (! Hash::check($request->password, $schoolTeacher->password)) {
+        if (!Hash::check($request->password, $schoolTeacher->password)) {
             return response()->json([
                 'errors' => [
                     'password' => ['Invalid password or phonenumber. Please check your credentials.'],
@@ -483,7 +483,7 @@ class UserController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'New OTP code has been sent to your email'.' '.$user_mail,
+            'message' => 'New OTP code has been sent to your email' . ' ' . $user_mail,
         ]);
     }
 
@@ -503,6 +503,11 @@ class UserController extends Controller
             ->get();
 
         return view('users.user-register', compact(['user_supervisors']));
+    }
+
+    public function privacyPolicy()
+    {
+        return view('privacy-policy');
     }
 
     public function homePage()
@@ -559,16 +564,16 @@ class UserController extends Controller
                 })
                 ->addColumn('action', function ($user) {
                     $links = [];
-                    $links[] = '<a class="dropdown-item" href="'.route('users.account-information', $user->id).'"><i class="fa fa-fw fa-eye"></i> View</a>';
-                    $links[] = '<a class="dropdown-item" href="'.route('users.edit-specific-user', $user->id).'"><i class="fa fa-fw fa-edit"></i> Edit</a>';
-                    $links[] = '<a class="dropdown-item delete-user" href="'.route('users.delete-user', $user->id).'" data-name="'.$user->firstname.' '.$user->lastname.'"><i class="fa fa-fw fa-times"></i> Delete</a>';
+                    $links[] = '<a class="dropdown-item" href="' . route('users.account-information', $user->id) . '"><i class="fa fa-fw fa-eye"></i> View</a>';
+                    $links[] = '<a class="dropdown-item" href="' . route('users.edit-specific-user', $user->id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
+                    $links[] = '<a class="dropdown-item delete-user" href="' . route('users.delete-user', $user->id) . '" data-name="' . $user->firstname . ' ' . $user->lastname . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
 
                     return '<div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton'.$user->id.'" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton' . $user->id . '" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton'.$user->id.'">
-                                    '.implode('', $links).'
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $user->id . '">
+                                    ' . implode('', $links) . '
                                 </ul>
                             </div>';
                 })
@@ -865,7 +870,7 @@ class UserController extends Controller
         if ($user) {
             $user->delete();
 
-            return redirect()->back()->with('success', 'user '.$user->username.' has been deleted successfully');
+            return redirect()->back()->with('success', 'user ' . $user->username . ' has been deleted successfully');
         }
 
         return redirect()->back()->with('fail', 'User not found.');
@@ -883,7 +888,7 @@ class UserController extends Controller
         foreach ($houses as $house) {
             School::create([
                 'school_type' => 24,
-                'email' => 'school_'.$house->ID.'@example.com', // default empty
+                'email' => 'school_' . $house->ID . '@example.com', // default empty
                 'gender' => 4,
                 'regional_level' => 10,
                 'school_ownership' => 7,

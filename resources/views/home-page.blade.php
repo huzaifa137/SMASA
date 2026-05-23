@@ -1744,6 +1744,7 @@
       <li><a href="#attendance">Attendance</a></li>
       <li><a href="#timetable">Timetable</a></li>
       <li><a href="#pricing">Pricing</a></li>
+      <li><a href="{{ url('/users/privacy-policy') }}">Privacy Policy</a></li>
 
       <li><a href="#contact">Contact</a></li>
     </ul>

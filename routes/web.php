@@ -31,7 +31,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::group(['middleware' => ['AdminAuth']], function () {
             Route::get('/', 'homePage')->name('home.page');
             Route::get('/copy-houses-to-schools', 'copyHousesToSchools');
-
         });
 
         Route::group(['prefix' => '/users'], function () {
@@ -49,6 +48,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/users-information', 'userInformation')->name('users.user-information');
                 Route::get('user-account-information/{id}', [UserController::class, 'userAccountInformation'])->name('users.account-information');
                 Route::get('/home-page', 'homePage')->name('home.page');
+                Route::get('/privacy-policy', 'privacyPolicy')->name('privacy-policy');
                 Route::get('/public-portal', 'publicPortal')->name('public.portal');
                 Route::get('/register', 'register')->name('users.register');
                 Route::get('/edit-user-information', 'editUserInformation');
