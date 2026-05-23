@@ -9,7 +9,7 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="{{ asset('img/favicon.ico') }}" rel="icon">
+    <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -321,8 +321,7 @@
                                                 <input type="text" class="form-control" id="captchaInput"
                                                     placeholder="Enter code" required maxlength="6">
                                             </div>
-                                            <button type="button" class="btn btn-outline-primary"
-                                                id="refreshCaptcha">
+                                            <button type="button" class="btn btn-outline-primary" id="refreshCaptcha">
                                                 <i class="fa fa-redo"></i>
                                             </button>
                                         </div>
@@ -488,8 +487,7 @@
                                             When are results released?
                                         </button>
                                     </h6>
-                                    <div id="faq1" class="accordion-collapse collapse"
-                                        data-bs-parent="#faqAccordion">
+                                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                         <div class="accordion-body bg-light rounded-bottom">
                                             Idaad results: March, Thanawi results: May each year.
                                         </div>
@@ -502,8 +500,7 @@
                                             Forgot registration number?
                                         </button>
                                     </h6>
-                                    <div id="faq2" class="accordion-collapse collapse"
-                                        data-bs-parent="#faqAccordion">
+                                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                         <div class="accordion-body bg-light rounded-bottom">
                                             Contact your school administration or the examination board.
                                         </div>
@@ -516,8 +513,7 @@
                                             Are these results final?
                                         </button>
                                     </h6>
-                                    <div id="faq3" class="accordion-collapse collapse"
-                                        data-bs-parent="#faqAccordion">
+                                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                         <div class="accordion-body bg-light rounded-bottom">
                                             They are provisional until officially confirmed by the board.
                                         </div>
@@ -580,14 +576,10 @@
                         <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+256 700 123456</p>
                         <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@iteb.org.ug</p>
                         <div class="d-flex pt-2">
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-twitter"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-youtube"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-linkedin-in"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
@@ -601,28 +593,28 @@
                         <h3 class="text-white mb-4">Photo Gallery</h3>
                         <div class="row g-2 pt-2">
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-1.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-1.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-2.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-2.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-3.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-3.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-4.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-4.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-5.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-5.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-6.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-6.jpg') }}"
+                                    alt="">
                             </div>
                         </div>
                     </div>
@@ -694,7 +686,7 @@
 
         let currentCaptcha = generateCaptcha();
 
-        document.getElementById('refreshCaptcha').addEventListener('click', function() {
+        document.getElementById('refreshCaptcha').addEventListener('click', function () {
             currentCaptcha = generateCaptcha();
             document.getElementById('captchaInput').value = '';
         });
@@ -709,47 +701,47 @@
             indexNo: "UGN234567",
             examType: "Thanawi Examination",
             subjects: [{
-                    name: "Mathematics",
-                    code: "MAT401",
-                    marks: 85,
-                    grade: "A",
-                    remarks: "Excellent"
-                },
-                {
-                    name: "Physics",
-                    code: "PHY402",
-                    marks: 78,
-                    grade: "B+",
-                    remarks: "Very Good"
-                },
-                {
-                    name: "Chemistry",
-                    code: "CHE403",
-                    marks: 82,
-                    grade: "A-",
-                    remarks: "Excellent"
-                },
-                {
-                    name: "Biology",
-                    code: "BIO404",
-                    marks: 76,
-                    grade: "B",
-                    remarks: "Good"
-                },
-                {
-                    name: "Computer Studies",
-                    code: "COM405",
-                    marks: 90,
-                    grade: "A+",
-                    remarks: "Outstanding"
-                },
-                {
-                    name: "General Paper",
-                    code: "GP406",
-                    marks: 65,
-                    grade: "C+",
-                    remarks: "Satisfactory"
-                }
+                name: "Mathematics",
+                code: "MAT401",
+                marks: 85,
+                grade: "A",
+                remarks: "Excellent"
+            },
+            {
+                name: "Physics",
+                code: "PHY402",
+                marks: 78,
+                grade: "B+",
+                remarks: "Very Good"
+            },
+            {
+                name: "Chemistry",
+                code: "CHE403",
+                marks: 82,
+                grade: "A-",
+                remarks: "Excellent"
+            },
+            {
+                name: "Biology",
+                code: "BIO404",
+                marks: 76,
+                grade: "B",
+                remarks: "Good"
+            },
+            {
+                name: "Computer Studies",
+                code: "COM405",
+                marks: 90,
+                grade: "A+",
+                remarks: "Outstanding"
+            },
+            {
+                name: "General Paper",
+                code: "GP406",
+                marks: 65,
+                grade: "C+",
+                remarks: "Satisfactory"
+            }
             ],
             totalPoints: 18,
             division: "I",
@@ -794,7 +786,7 @@
         }
 
         // Form submission handler
-        document.getElementById('resultsForm').addEventListener('submit', function(e) {
+        document.getElementById('resultsForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             // Validate CAPTCHA
@@ -828,7 +820,7 @@
         });
 
         // Print functionality
-        document.getElementById('printResults').addEventListener('click', function() {
+        document.getElementById('printResults').addEventListener('click', function () {
             const printContent = document.querySelector('#resultsSection .portal-card').innerHTML;
             const originalContent = document.body.innerHTML;
 
@@ -860,12 +852,12 @@
         });
 
         // Download PDF (simulated)
-        document.getElementById('downloadResults').addEventListener('click', function() {
+        document.getElementById('downloadResults').addEventListener('click', function () {
             alert('PDF download would be integrated with a library. For now, you can print to PDF.');
         });
 
         // New Search
-        document.getElementById('newSearch').addEventListener('click', function() {
+        document.getElementById('newSearch').addEventListener('click', function () {
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('resultsForm').reset();
             currentCaptcha = generateCaptcha();
@@ -877,7 +869,7 @@
 
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
+            anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const targetId = this.getAttribute('href');
                 if (targetId === '#') return;

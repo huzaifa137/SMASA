@@ -9,7 +9,7 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="{{ asset('img/favicon.ico') }}" rel="icon">
+    <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -175,8 +175,7 @@
                 <div class="row g-4">
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                         <div class="team-item position-relative">
-                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-1.jpg') }}"
-                                alt="">
+                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-1.jpg') }}" alt="">
                             <div class="team-text">
                                 <h3>Prof Dr Ziyad Swaleh Lubanga</h3>
                                 <p>Executive Secretary</p>
@@ -193,8 +192,7 @@
                     </div>
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                         <div class="team-item position-relative">
-                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-2.jpg') }}"
-                                alt="">
+                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-2.jpg') }}" alt="">
                             <div class="team-text">
                                 <h3>Sheikh Hatimu Wamala</h3>
                                 <p>Board Chairperson</p>
@@ -211,8 +209,7 @@
                     </div>
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
                         <div class="team-item position-relative">
-                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-3.jpg') }}"
-                                alt="">
+                            <img class="img-fluid rounded-circle w-75" src="{{ asset('asset/img/team-3.jpg') }}" alt="">
                             <div class="team-text">
                                 <h3>Dr Shaban Mubaje</h3>
                                 <p>Mufti</p>
@@ -243,14 +240,10 @@
                         <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+256 700 123456</p>
                         <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@iteb.org.ug</p>
                         <div class="d-flex pt-2">
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-twitter"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-youtube"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-linkedin-in"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
@@ -265,28 +258,28 @@
                         <h3 class="text-white mb-4">Photo Gallery</h3>
                         <div class="row g-2 pt-2">
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-1.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-1.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-2.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-2.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-3.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-3.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-4.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-4.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-5.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-5.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-6.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-6.jpg') }}"
+                                    alt="">
                             </div>
                         </div>
                     </div>

@@ -1,16 +1,17 @@
 <div class="app-sidebar app-sidebar2">
-    <div class="app-sidebar__logo">
+    <div class="app-sidebar__logo text-center">
+
         @if (Session('LoggedAdmin'))
             <a class="header-brand" href="{{ url('/admin/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo"
-                    style="width: 100%; height: auto; max-width: 170px;">
+                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo" class="sidebar-logo">
             </a>
+
         @elseif(Session('LoggedSchool'))
             <a class="header-brand" href="{{ url('/school/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo"
-                    style="width: 100%; height: auto; max-width: 170px;">
+                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo" class="sidebar-logo">
             </a>
         @endif
+
     </div>
 </div>
 
@@ -201,11 +202,11 @@ use App\Http\Controllers\Helper;
                         </li>
                     @endif
                     <!-- <li>
-                                <a href="{{ route('examination.marks-entry-portal') }}">
-                                    <i class="fas fa-pen-to-square mr-2"></i>
-                                    Released Exams
-                                </a>
-                            </li> -->
+                                            <a href="{{ route('examination.marks-entry-portal') }}">
+                                                <i class="fas fa-pen-to-square mr-2"></i>
+                                                Released Exams
+                                            </a>
+                                        </li> -->
                 </ul>
             </li>
         @elseif(Session('LoggedAdmin'))
@@ -400,11 +401,11 @@ use App\Http\Controllers\Helper;
                         </li>
                     @endif
                     <!-- <li>
-                                <a href="{{ route('examination.marks-entry-portal') }}">
-                                    <i class="fas fa-pen-to-square mr-2"></i>
-                                    Released Exams
-                                </a>
-                            </li> -->
+                                            <a href="{{ route('examination.marks-entry-portal') }}">
+                                                <i class="fas fa-pen-to-square mr-2"></i>
+                                                Released Exams
+                                            </a>
+                                        </li> -->
                 </ul>
             </li>
         @endif
@@ -468,6 +469,7 @@ use App\Http\Controllers\Helper;
 </script>
 
 <style>
+    /* Badge styling for sidebar menu */
     .sub-menu {
         display: none;
         padding-left: 40px;
@@ -480,10 +482,7 @@ use App\Http\Controllers\Helper;
     .has-sub>a {
         cursor: pointer;
     }
-</style>
 
-<style>
-    /* Badge styling for sidebar menu */
     .side-menu__item .badge,
     .sub-menu .badge {
         position: relative;
@@ -684,6 +683,38 @@ use App\Http\Controllers\Helper;
         .side-menu__item {
             padding: 10px 15px;
         }
+    }
+
+    /* Sidebar Logo */
+    .app-sidebar__logo {
+        padding: 20px 0 30px 0;
+        /* space below logo */
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        width: 140px;
+        /* smaller size */
+        height: 140px;
+        object-fit: cover;
+        /* keeps image clean */
+        border-radius: 50%;
+        /* makes it round */
+        border: 4px solid #667eea;
+        padding: 5px;
+        background: white;
+
+        /* professional shadow */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        transition: all 0.3s ease;
+    }
+
+    /* Hover effect */
+    .sidebar-logo:hover {
+        transform: scale(1.05);
     }
 </style>
 

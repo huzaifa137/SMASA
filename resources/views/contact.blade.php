@@ -9,7 +9,7 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="{{ asset('asset/img/favicon.ico') }}" rel="icon">
+    <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -146,7 +146,9 @@
                                         </div>
                                         <div class="col-12">
                                             <div class="form-floating">
-                                                <textarea class="form-control border-0" placeholder="Leave a message here" id="message" style="height: 100px"></textarea>
+                                                <textarea class="form-control border-0"
+                                                    placeholder="Leave a message here" id="message"
+                                                    style="height: 100px"></textarea>
                                                 <label for="message">Message</label>
                                             </div>
                                         </div>
@@ -183,14 +185,10 @@
                         <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+256 700 123456</p>
                         <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@iteb.org.ug</p>
                         <div class="d-flex pt-2">
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-twitter"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-youtube"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i
-                                    class="fab fa-linkedin-in"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
@@ -205,28 +203,28 @@
                         <h3 class="text-white mb-4">Photo Gallery</h3>
                         <div class="row g-2 pt-2">
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-1.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-1.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-2.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-2.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-3.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-3.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-4.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-4.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-5.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-5.jpg') }}"
+                                    alt="">
                             </div>
                             <div class="col-4">
-                                <img class="img-fluid rounded bg-light p-1"
-                                    src="{{ asset('asset/img/classes-6.jpg') }}" alt="">
+                                <img class="img-fluid rounded bg-light p-1" src="{{ asset('asset/img/classes-6.jpg') }}"
+                                    alt="">
                             </div>
                         </div>
                     </div>
