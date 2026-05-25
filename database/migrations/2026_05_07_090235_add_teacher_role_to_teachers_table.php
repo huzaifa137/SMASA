@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('teachers', function (Blueprint $table) {
-            $table->integer('teacher_role')->nullable()->after('group_teacher');
+            $table->integer('teacher_role')->default(4)->after('group_teacher');
         });
     }
 
