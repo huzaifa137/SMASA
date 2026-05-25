@@ -18,18 +18,19 @@ $controller = new Controller();
         <div class="row justify-content-center">
             <div class="col-md-12">
                 {{-- Header Section --}}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-    <div class="text-center text-md-start mb-3 mb-md-0">
-        <h2 class="fw-bold mb-1">
-            <i class="fas fa-user-graduate text-primary me-2"></i>
-            Teacher Profile
-        </h2>
-        <p class="text-muted d-none d-md-block">View and edit teacher information</p>
-    </div>
-    <a href="{{ route('school.teachers') }}" class="btn btn-outline-primary rounded-pill px-4 mx-auto mx-md-0">
-        <i class="fas fa-arrow-left me-2"></i> Back to All Teachers
-    </a>
-</div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+                    <div class="text-center text-md-start mb-3 mb-md-0">
+                        <h2 class="fw-bold mb-1">
+                            <i class="fas fa-user-graduate text-primary me-2"></i>
+                            Teacher Profile
+                        </h2>
+                        <p class="text-muted d-none d-md-block">View and edit teacher information</p>
+                    </div>
+                    <a href="{{ route('school.teachers') }}"
+                        class="btn btn-outline-primary rounded-pill px-4 mx-auto mx-md-0">
+                        <i class="fas fa-arrow-left me-2"></i> Back to All Teachers
+                    </a>
+                </div>
 
                 <form id="createSchoolTeacher">
                     @csrf
@@ -168,12 +169,18 @@ $controller = new Controller();
                                                 value="{{ $teacher->employee_number }}">
                                         </div>
                                         <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold text-muted">Email Address</label>
+                                            <input type="text" name="email"
+                                                class="form-control border-0 bg-light rounded-3 py-2"
+                                                value="{{ $teacher->email }}">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
                                             <label class="form-label fw-semibold text-muted">Postal Address</label>
                                             <input type="text" name="address"
                                                 class="form-control border-0 bg-light rounded-3 py-2"
                                                 value="{{ $teacher->address }}">
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-3 mb-3">
                                             <label class="form-label fw-semibold text-muted">Group/Title</label>
                                             <input type="text" name="group_teacher"
                                                 class="form-control border-0 bg-light rounded-3 py-2"
@@ -181,6 +188,53 @@ $controller = new Controller();
                                         </div>
                                     </div>
                                 </div>
+
+                                {{-- Password Update Card --}}
+                                <div class="col-lg-12 mb-4">
+                                    <div class="card border-0 shadow-sm rounded-4">
+                                        <div class="card-header bg-white border-0 pt-4 px-4">
+                                            <h5 class="fw-bold mb-0">
+                                                <i class="fas fa-key text-primary me-2"></i>
+                                                Update Password
+                                            </h5>
+                                        </div>
+                                        <div class="card-body p-4">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-muted">New Password</label>
+                                                    <div class="input-group">
+                                                        <input type="password" name="password" id="password"
+                                                            class="form-control border-0 bg-light rounded-3 py-2"
+                                                            placeholder="Enter new password">
+                                                        <button type="button"
+                                                            class="btn btn-outline-primary toggle-password"
+                                                            data-target="password">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                    <small class="text-muted">Leave blank to keep current password</small>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-muted">Confirm New
+                                                        Password</label>
+                                                    <div class="input-group">
+                                                        <input type="password" name="password_confirmation"
+                                                            id="password_confirmation"
+                                                            class="form-control border-0 bg-light rounded-3 py-2"
+                                                            placeholder="Confirm new password">
+                                                        <button type="button"
+                                                            class="btn btn-outline-primary toggle-password"
+                                                            data-target="password_confirmation">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <div class="card-footer bg-white border-0 pb-4 px-4">
                                     <div class="d-flex justify-content-end">
                                         <button type="submit" form="createSchoolTeacher"
@@ -230,8 +284,8 @@ $controller = new Controller();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $('#createSchoolTeacher').on('submit', function(e) {
+        $(document).ready(function () {
+            $('#createSchoolTeacher').on('submit', function (e) {
                 e.preventDefault();
 
                 let isValid = true;
@@ -251,7 +305,7 @@ $controller = new Controller();
                 ];
 
                 // Validate required fields
-                requiredFields.forEach(function(field) {
+                requiredFields.forEach(function (field) {
                     let input = $form.find(`[name="${field}"]`);
                     if (!input.val() || !input.val().trim()) {
                         input.addClass('is-invalid');
@@ -269,6 +323,27 @@ $controller = new Controller();
                         icon: 'error',
                         title: 'Incomplete Form',
                         text: 'Please fill in all required fields before submitting.'
+                    });
+                    return;
+                }
+
+                const password = $form.find('[name="password"]').val();
+                const passwordConfirmation = $form.find('[name="password_confirmation"]').val();
+
+                if (password && password !== passwordConfirmation) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Password Mismatch',
+                        text: 'Password and confirmation password do not match.'
+                    });
+                    return;
+                }
+
+                if (password && password.length < 4) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Weak Password',
+                        text: 'Password must be at least 4 characters long.'
                     });
                     return;
                 }
@@ -299,22 +374,50 @@ $controller = new Controller();
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 Swal.fire(
                                     'Submitted!',
                                     response.message,
                                     'success'
                                 ).then(() => {
                                     location
-                                .reload(); // Reload page after success
+                                        .reload(); // Reload page after success
                                 });
                             },
-                            error: function(data) {
-                                $('body').html(data.responseText);
+                            // error: function (data) {
+                            //     $('body').html(data.responseText);
+                            // },
+                            error: function (xhr) {
+
+                                let errorMessage = 'Something went wrong.';
+
+                                // Validation errors
+                                if (xhr.status === 422) {
+
+                                    let errors = xhr.responseJSON.errors;
+                                    errorMessage = '';
+
+                                    $.each(errors, function (key, value) {
+                                        errorMessage += value[0] + '<br>';
+                                    });
+
+                                }
+                                // General server message
+                                else if (xhr.responseJSON && xhr.responseJSON.message) {
+
+                                    errorMessage = xhr.responseJSON.message;
+
+                                }
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Validation Error',
+                                    html: errorMessage,
+                                });
                             },
-                            complete: function() {
+                            complete: function () {
                                 $submitBtn.prop('disabled', false).html(
-                                originalBtnHtml);
+                                    originalBtnHtml);
                             }
                         });
                     }
@@ -324,12 +427,12 @@ $controller = new Controller();
     </script>
 
     <script>
-        $(document).ready(function() {
-            $('#profile_image_upload').on('change', function(e) {
+        $(document).ready(function () {
+            $('#profile_image_upload').on('change', function (e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         $('#logoPreview').attr('src', e.target.result);
                     };
                     reader.readAsDataURL(file);

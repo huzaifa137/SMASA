@@ -264,18 +264,16 @@ class SchoolController extends Controller
 
     public function schoolIndividualProfile($id)
     {
-
-        $HouseID = House::where('ID', $id)->value('Number');
-
-        $schoolID = School::where('registration_code', $HouseID)->value('id');
-        $school = School::where('id', $schoolID)->first();
-        $profile = SchoolProfile::where('school_id', $schoolID)->first();
+        
+        $school = School::where('id', Session('LoggedSchool'))->first();
+        $profile = SchoolProfile::where('school_id', Session('LoggedSchool'))->first();
 
         return view('School.school-profile', compact('school', 'profile'));
     }
 
     public function schoolProfile()
     {
+
         if (Session::has('LoggedSchool') && Session::get('LoggedSchool') !== null) {
 
             $school = School::findOrFail(Session('LoggedSchool'));

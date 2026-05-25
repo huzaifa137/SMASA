@@ -410,17 +410,17 @@ class UserRightsAndPreviledges extends Controller
             'address' => 'nullable|string|max:255',
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer|between:1,5',
-            'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // accept image
+            'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'school_id' => 'required|exists:schools,id',
             'staff_number' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
+            'password' => 'nullable|string|min:4|confirmed', // Add password validation
         ]);
 
         $teacher = Teacher::findOrFail($request->teacher_id);
 
         // Handle profile image upload
         if ($request->hasFile('teacher_profile')) {
-
             if ($teacher->teacher_profile && file_exists(public_path($teacher->teacher_profile))) {
                 unlink(public_path($teacher->teacher_profile));
             }
@@ -434,6 +434,13 @@ class UserRightsAndPreviledges extends Controller
             $file->move($destinationPath, $filename);
 
             $data['teacher_profile'] = 'uploads/teacherProfiles/' . $filename;
+        }
+
+        // Handle password update if provided
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+            // Optionally set must_change_password flag
+            // $data['must_change_password'] = 1; // Uncomment if you want to force password change on next login
         }
 
         // Update teacher record

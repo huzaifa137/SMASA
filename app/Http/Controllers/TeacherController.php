@@ -25,7 +25,6 @@ class TeacherController extends Controller
 
     public function storeTeacher(Request $request)
     {
-
         if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
             return response()->json([
                 'status' => 'error',
@@ -39,39 +38,61 @@ class TeacherController extends Controller
             'firstname' => 'required|string|max:255',
             'othername' => 'nullable|string|max:255',
             'initials' => 'nullable|string|max:255',
-            'phonenumber' => 'required|string|max:20|unique:teachers',
+            'phonenumber' => 'required|string|max:20',
             'registration_number' => 'nullable|string|max:50',
             'gender' => 'nullable|in:male,female',
             'national_id' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer',
-            'email' => 'required|unique:teachers',
+            'email' => 'required|email',
         ]);
 
-        $userExistsInSchool = DB::table('teachers')
+        // Check if teacher exists with same email AND same school_id
+        $existingTeacherInSameSchool = DB::table('teachers')
             ->where('email', $request->email)
             ->where('school_id', $request->school_id)
             ->first();
 
-        if ($userExistsInSchool) {
+        if ($existingTeacherInSameSchool) {
             return response()->json([
-                'message' => 'This teacher is already registered under this school.',
+                'status' => 'error',
+                'message' => 'This teacher with email ' . $request->email . ' is already registered in this school.',
             ], 422);
         }
 
-        $userExists = DB::table('schools')->where('email', $request->email)->first();
+        // Check if teacher exists with same phone number AND same school_id
+        $existingTeacherWithPhoneInSameSchool = DB::table('teachers')
+            ->where('phonenumber', $request->phonenumber)
+            ->where('school_id', $request->school_id)
+            ->first();
 
-        if ($userExists) {
+        if ($existingTeacherWithPhoneInSameSchool) {
             return response()->json([
-                'exists' => true,
-                'message' => 'A user with this email already exists in another school.',
-            ]);
+                'status' => 'error',
+                'message' => 'A teacher with phone number ' . $request->phonenumber . ' is already registered in this school.',
+            ], 422);
         }
 
+        // Optional: Check if email exists in other schools (just for information, not blocking)
+        $existingInOtherSchools = DB::table('teachers')
+            ->where('email', $request->email)
+            ->where('school_id', '!=', $request->school_id)
+            ->first();
+
+        // Create the teacher
         $teacher = Teacher::create($validated);
 
-        return response()->json(['message' => 'Teacher added successfully']);
+        $message = 'Teacher added successfully';
+        if ($existingInOtherSchools) {
+            $message = 'Teacher added successfully. Note: This teacher is already registered in another school with the same email.';
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $message,
+            'teacher' => $teacher
+        ]);
     }
 
     public function allTeachers()
@@ -99,7 +120,7 @@ class TeacherController extends Controller
         $roles = Role::all();
 
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
-
+        
         return view('users.update-user-info', compact('teacher', 'roles'));
     }
 

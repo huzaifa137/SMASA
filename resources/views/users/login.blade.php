@@ -562,9 +562,9 @@
                         <option value="" disabled selected>Choose your school</option>
 
                         @foreach($schools as $school)
-                        <option value="{{ $school->ID }}">
-                            {{ $school->House }}
-                        </option>
+                            <option value="{{ $school->ID }}">
+                                {{ $school->House }}
+                            </option>
                         @endforeach
 
                     </select>
@@ -605,7 +605,8 @@
                     <input type="checkbox" name="remember" id="remember" value="1">
                     <span>Remember me</span>
                 </label>
-                <a href="javascript:void();" class="forgot-password" style="text-decoration: none;">Forgot password
+                <a href="{{route('forgot-password')}}" class="forgot-password" style="text-decoration: none;">Forgot
+                    password
                     ?</a>
             </div>
 
@@ -844,64 +845,64 @@
                     });
             });
 
-                    //             form.addEventListener('submit', function (e) {
-                    //     e.preventDefault();
+            //             form.addEventListener('submit', function (e) {
+            //     e.preventDefault();
 
-                    //     document.querySelectorAll('.error-text').forEach(el => el.textContent = '');
+            //     document.querySelectorAll('.error-text').forEach(el => el.textContent = '');
 
-                    //     if (activeRole === 'school' && schoolSelect && !schoolSelect.value) {
-                    //         const errorEl = document.getElementById('school_id-error');
-                    //         if (errorEl) errorEl.textContent = 'Please select a school';
-                    //         return;
-                    //     }
+            //     if (activeRole === 'school' && schoolSelect && !schoolSelect.value) {
+            //         const errorEl = document.getElementById('school_id-error');
+            //         if (errorEl) errorEl.textContent = 'Please select a school';
+            //         return;
+            //     }
 
-                    //     loginBtn.disabled = true;
-                    //     loginBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Signing in...`;
+            //     loginBtn.disabled = true;
+            //     loginBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Signing in...`;
 
-                    //     const formData = new FormData(form);
+            //     const formData = new FormData(form);
 
-                    //     fetch(form.action, {
-                    //         method: 'POST',
-                    //         headers: {
-                    //             'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    //             'Accept': 'application/json'
-                    //         },
-                    //         body: formData
-                    //     })
-                    //     .then(async response => {
-                    //         if (!response.ok) {
-                    //             // throw the full Response object so we can get HTML in catch
-                    //             throw response;
-                    //         }
-                    //         return response.json(); // normal JSON success
-                    //     })
-                    //     .then(data => {
-                    //         if (data.status && data.redirect) {
-                    //             window.location.href = data.redirect;
-                    //         } else {
-                    //             throw { message: 'Redirect missing' };
-                    //         }
-                    //     })
-                    //     .catch(async err => {
-                    //         // Re-enable button
-                    //         loginBtn.disabled = false;
-                    //         loginBtn.innerHTML = originalBtnHtml;
+            //     fetch(form.action, {
+            //         method: 'POST',
+            //         headers: {
+            //             'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            //             'Accept': 'application/json'
+            //         },
+            //         body: formData
+            //     })
+            //     .then(async response => {
+            //         if (!response.ok) {
+            //             // throw the full Response object so we can get HTML in catch
+            //             throw response;
+            //         }
+            //         return response.json(); // normal JSON success
+            //     })
+            //     .then(data => {
+            //         if (data.status && data.redirect) {
+            //             window.location.href = data.redirect;
+            //         } else {
+            //             throw { message: 'Redirect missing' };
+            //         }
+            //     })
+            //     .catch(async err => {
+            //         // Re-enable button
+            //         loginBtn.disabled = false;
+            //         loginBtn.innerHTML = originalBtnHtml;
 
-                    //         // If err is a Response, it means server returned HTML
-                    //         if (err.text) {
-                    //             const text = await err.text();
-                    //             document.body.innerHTML = text; // dump Laravel dd() output
-                    //         } else if (err.errors) {
-                    //             // normal validation errors
-                    //             Object.keys(err.errors).forEach(key => {
-                    //                 const errorEl = document.getElementById(`${key}-error`);
-                    //                 if (errorEl) errorEl.textContent = err.errors[key][0];
-                    //             });
-                    //         } else if (err.message) {
-                    //             alert(err.message);
-                    //         }
-                    //     });
-                    // });
+            //         // If err is a Response, it means server returned HTML
+            //         if (err.text) {
+            //             const text = await err.text();
+            //             document.body.innerHTML = text; // dump Laravel dd() output
+            //         } else if (err.errors) {
+            //             // normal validation errors
+            //             Object.keys(err.errors).forEach(key => {
+            //                 const errorEl = document.getElementById(`${key}-error`);
+            //                 if (errorEl) errorEl.textContent = err.errors[key][0];
+            //             });
+            //         } else if (err.message) {
+            //             alert(err.message);
+            //         }
+            //     });
+            // });
         });
     </script>
 </body>

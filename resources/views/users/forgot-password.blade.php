@@ -600,7 +600,7 @@
             <div class="form-container">
                 <div class="form-header">
                     <h1>Reset Password</h1>
-                    <p>Enter your registered email to receive  a <br>password reset link</p>
+                    <p>Enter your registered email to receive a <br>password reset link</p>
                 </div>
 
                 <div class="form-card">
