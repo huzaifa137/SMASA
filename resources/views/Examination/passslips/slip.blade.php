@@ -12,7 +12,94 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+
+    @php
+        /*
+        |─────────────────────────────────────────────────────────────
+        | CUSTOMISATION — read query-string params sent from index.blade
+        | Every param defaults to ON (1) so the slip is fully featured
+        | when visited without params (e.g. direct URL).
+        |─────────────────────────────────────────────────────────────
+        */
+        $accent = request('accent', '#f0a500');
+        // Sanitise: must be a valid 6-digit hex colour, else fall back.
+        if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $accent)) {
+            $accent = '#f0a500';
+        }
+
+        // Helper: treat '1' / 'true' / missing (default true) as ON
+        $on = fn(string $key, bool $default = true): bool =>
+            request()->has($key)
+            ? in_array(request($key), ['1', 'true', 1, true], true)
+            : $default;
+
+        $cfg = [
+            'border' => $on('show_border'),
+            'watermark' => $on('show_watermark'),
+            'logo' => $on('show_logo'),
+            'arabic' => $on('show_arabic'),
+            'motto' => $on('show_motto'),
+            'contact' => $on('show_contact'),
+            'photo' => $on('show_photo'),
+            'minichart' => $on('show_minichart'),
+            'qr' => $on('show_qr'),
+            'rank' => $on('show_rank'),
+            'dev' => $on('show_dev'),
+            'grade_pill' => $on('show_grade_pill'),
+            'teacher_col' => $on('show_teacher_col'),
+            'totals_row' => $on('show_totals_row'),
+            'perf_chart' => $on('show_perf_chart'),
+            'remarks' => $on('show_remarks'),
+            'signatures' => $on('show_signatures'),
+            'footer_timestamp' => $on('show_footer_timestamp'),
+            'confidential' => $on('show_confidential'),
+        ];
+
+        // Derive a slightly darker shade of accent for outlines / borders
+        // We do this purely in PHP by parsing the hex and darkening by ~15 %.
+        $hexToDark = function (string $hex): string {
+            $hex = ltrim($hex, '#');
+            [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+            $r = max(0, (int) ($r * 0.82));
+            $g = max(0, (int) ($g * 0.82));
+            $b = max(0, (int) ($b * 0.82));
+            return sprintf('#%02x%02x%02x', $r, $g, $b);
+        };
+        $accentDark = $hexToDark($accent);
+
+        // Transparent version (rgba) for subtle fills — generated as CSS string
+        $accentAlpha = function (string $hex, float $a): string {
+            $hex = ltrim($hex, '#');
+            [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+            return "rgba({$r},{$g},{$b},{$a})";
+        };
+        $accentA08 = $accentAlpha($accent, 0.08);
+        $accentA22 = $accentAlpha($accent, 0.22);
+        $accentA35 = $accentAlpha($accent, 0.35);
+    @endphp
+
     <style>
+        /* ════════════════════════════════════════════════════════════════
+   DESIGN TOKENS  (driven by customisation)
+════════════════════════════════════════════════════════════════ */
+        :root {
+            --accent:
+                {{ $accent }}
+            ;
+            --accent-dark:
+                {{ $accentDark }}
+            ;
+            --accent-a08:
+                {{ $accentA08 }}
+            ;
+            --accent-a22:
+                {{ $accentA22 }}
+            ;
+            --accent-a35:
+                {{ $accentA35 }}
+            ;
+        }
+
         /* ════════════════════════════════════════════════════════════════
    RESET & BASE
 ════════════════════════════════════════════════════════════════ */
@@ -34,7 +121,7 @@
    SCREEN TOOLBAR
 ════════════════════════════════════════════════════════════════ */
         .toolbar {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 60%, #c0392b 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 60%, var(--accent-dark) 100%);
             padding: .75rem 2rem;
             display: flex;
             align-items: center;
@@ -76,12 +163,12 @@
         }
 
         .tbtn-print {
-            background: #f0a500;
+            background: var(--accent);
             color: #fff;
         }
 
         .tbtn-print:hover {
-            background: #d4900a;
+            background: var(--accent-dark);
             transform: translateY(-1px);
         }
 
@@ -113,11 +200,6 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 6px 28px rgba(0, 0, 0, .12);
-
-            /* Professional border system */
-            border: 3px solid #f0a500;
-            outline: 1px solid #c8820a;
-            outline-offset: -6px;
         }
 
         .slip:last-child {
@@ -125,44 +207,51 @@
             margin-bottom: 0;
         }
 
+        /* ── Conditional border system ─────────────────────── */
+        .slip.has-border {
+            border: 3px solid var(--accent);
+            outline: 1px solid var(--accent-dark);
+            outline-offset: -6px;
+        }
+
         /* Inner decorative border overlay */
-        .slip::before {
+        .slip.has-border::before {
             content: '';
             position: absolute;
             inset: 8px;
-            border: 1px solid rgba(240, 165, 0, 0.35);
+            border: 1px solid var(--accent-a35);
             border-radius: 1px;
             pointer-events: none;
             z-index: 2;
         }
 
         /* Corner ornaments */
-        .slip::after {
+        .slip.has-border::after {
             content: '';
             position: absolute;
             inset: 4px;
             background:
-                linear-gradient(#f0a500, #f0a500) top left / 18px 3px no-repeat,
-                linear-gradient(#f0a500, #f0a500) top left / 3px 18px no-repeat,
-                linear-gradient(#f0a500, #f0a500) top right / 18px 3px no-repeat,
-                linear-gradient(#f0a500, #f0a500) top right / 3px 18px no-repeat,
-                linear-gradient(#f0a500, #f0a500) bottom left / 18px 3px no-repeat,
-                linear-gradient(#f0a500, #f0a500) bottom left / 3px 18px no-repeat,
-                linear-gradient(#f0a500, #f0a500) bottom right / 18px 3px no-repeat,
-                linear-gradient(#f0a500, #f0a500) bottom right / 3px 18px no-repeat;
+                linear-gradient(var(--accent), var(--accent)) top left / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top left / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top right / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top right / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom left / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom left / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom right / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom right / 3px 18px no-repeat;
             pointer-events: none;
             z-index: 2;
         }
 
         /* ════════════════════════════════════════════════════════════════
-   SCHOOL HEADER  (matches image: logo left, school name + phone right)
+   SCHOOL HEADER
 ════════════════════════════════════════════════════════════════ */
         .sch-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: .65rem 1.1rem .5rem;
-            border-bottom: 3px solid #f0a500;
+            border-bottom: 3px solid var(--accent);
         }
 
         .sch-logo-area {
@@ -175,7 +264,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            border: 2.5px solid #f0a500;
+            border: 2.5px solid var(--accent);
             overflow: hidden;
             flex-shrink: 0;
             display: flex;
@@ -192,7 +281,7 @@
 
         .sch-logo-box i {
             font-size: 1.6rem;
-            color: #f0a500;
+            color: var(--accent);
         }
 
         .sch-right {
@@ -200,7 +289,7 @@
         }
 
         .sch-name {
-            font-size: 1.05rem;
+            font-size: 22px;
             font-weight: 900;
             letter-spacing: .04em;
             color: #111;
@@ -208,18 +297,31 @@
             line-height: 1.15;
         }
 
-        .sch-phone {
-            font-size: .72rem;
+        .sch-arabic-name {
+            font-size: 18px;
+            font-weight: 600;
+            direction: rtl;
+            margin-top: 2px;
+        }
+
+        .sch-details {
+            font-size: 12px;
+            color: #444;
+            margin-top: 4px;
+        }
+
+        .sch-motto {
+            font-size: 11px;
+            font-style: italic;
             color: #666;
-            margin-top: .15rem;
-            font-weight: 500;
+            margin-top: 3px;
         }
 
         /* ════════════════════════════════════════════════════════════════
-   ORANGE TITLE BAND  (e.g. "ACADEMIC REPORT FORM – SENIOR 2 …")
+   ORANGE TITLE BAND
 ════════════════════════════════════════════════════════════════ */
         .title-band {
-            background: #f0a500;
+            background: var(--accent);
             padding: .45rem 1.1rem;
             text-align: center;
         }
@@ -233,7 +335,7 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
-   STUDENT INFO ROW  (photo | details | mini line chart)
+   STUDENT INFO ROW
 ════════════════════════════════════════════════════════════════ */
         .stu-row {
             display: flex;
@@ -243,7 +345,6 @@
             border-bottom: 1.5px solid #e0e0e0;
         }
 
-        /* Photo box */
         .stu-photo {
             flex-shrink: 0;
             width: 90px;
@@ -286,7 +387,6 @@
             letter-spacing: .04em;
         }
 
-        /* Info block */
         .stu-details {
             flex: 1;
             display: flex;
@@ -306,7 +406,6 @@
             font-weight: 700;
         }
 
-        /* Status pill */
         .status-pill {
             display: inline-block;
             padding: .2rem .75rem;
@@ -334,14 +433,14 @@
             border: 1px solid #f1948a;
         }
 
-/* Mini chart (student vs class) */
-.stu-chart-area {
-    flex-shrink: 0;
-    width: 215px; /* slightly reduced */
-    display: flex;
-    flex-direction: column;
-    padding-right: .4rem;
-}
+        /* Mini chart */
+        .stu-chart-area {
+            flex-shrink: 0;
+            width: 215px;
+            display: flex;
+            flex-direction: column;
+            padding-right: .4rem;
+        }
 
         .stu-chart-title {
             font-size: .68rem;
@@ -357,8 +456,59 @@
             flex: 1;
         }
 
+        /* QR column */
+        .stu-qr-col {
+            flex-shrink: 0;
+            width: 145px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            border-left: 1.5px solid #e8e8e8;
+            padding-left: 1rem;
+        }
+
+        .stu-qr-title {
+            font-size: .65rem;
+            font-weight: 800;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .stu-qr-box {
+            width: 130px;
+            height: 130px;
+            border: 2.5px solid var(--accent);
+            border-radius: 10px;
+            padding: 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px var(--accent-a22);
+        }
+
+        .stu-qr-box canvas,
+        .stu-qr-box img,
+        .stu-qr-box svg {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            object-fit: contain;
+        }
+
+        .stu-qr-label {
+            font-size: .68rem;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
         /* ════════════════════════════════════════════════════════════════
-   SUMMARY BAR  (Total Marks | Average Score | Result)
+   SUMMARY BAR
 ════════════════════════════════════════════════════════════════ */
         .sum-bar {
             display: flex;
@@ -467,9 +617,8 @@
             background: #fff8ee;
         }
 
-        /* Group row */
         .grp-row td {
-            background: #f0a500;
+            background: var(--accent);
             color: #fff;
             font-weight: 800;
             font-size: .68rem;
@@ -489,7 +638,6 @@
             font-size: .8rem;
         }
 
-        /* Grade pill */
         .g-pill {
             display: inline-block;
             min-width: 24px;
@@ -527,7 +675,6 @@
             color: #5351e4;
         }
 
-        /* Dev column arrows */
         .dev-up {
             color: #1a7a4a;
             font-weight: 800;
@@ -545,7 +692,6 @@
             font-size: .72rem;
         }
 
-        /* Totals row */
         .totals-row td {
             background: #f0f0f0;
             font-weight: 800;
@@ -554,7 +700,7 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
-   BOTTOM SECTION  (chart | remarks | signatures)
+   BOTTOM SECTION
 ════════════════════════════════════════════════════════════════ */
         .bottom-section {
             display: flex;
@@ -563,7 +709,6 @@
             min-height: 200px;
         }
 
-        /* Performance over time bar chart */
         .perf-chart-col {
             flex: 0 0 260px;
             padding: .7rem .9rem;
@@ -585,7 +730,6 @@
             flex: 1;
         }
 
-        /* Remarks & Signatures */
         .remarks-col {
             flex: 1;
             padding: .7rem 1rem;
@@ -631,7 +775,6 @@
             text-transform: uppercase;
         }
 
-        /* Signature column */
         .sig-col-right {
             flex: 0 0 130px;
             padding: .7rem .8rem;
@@ -683,60 +826,6 @@
             flex-wrap: wrap;
         }
 
-        .footer-qr {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-        }
-
-        .qr-box {
-            width: 50px;
-            height: 50px;
-            border: 1.5px solid #ccc;
-            border-radius: 4px;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .qr-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .qr-box i {
-            font-size: 1.6rem;
-            color: #bbb;
-        }
-
-        .qr-text {
-            font-size: .62rem;
-            color: #666;
-            max-width: 200px;
-            line-height: 1.4;
-        }
-
-        .footer-meta {
-            text-align: right;
-        }
-
-        .footer-meta small {
-            display: block;
-            font-size: .58rem;
-            color: #aaa;
-        }
-
-        .footer-meta .conf {
-            font-size: .63rem;
-            font-weight: 800;
-            color: #c0392b;
-            letter-spacing: .07em;
-        }
-
         /* ════════════════════════════════════════════════════════════════
    WATERMARK STAMP
 ════════════════════════════════════════════════════════════════ */
@@ -780,7 +869,7 @@
             line-height: 1.2;
         }
 
-        .slip>*:not(.watermark) {
+        .slip>*:not(.watermark):not(.watermark-text) {
             position: relative;
             z-index: 1;
         }
@@ -812,8 +901,11 @@
                 margin: 0;
                 box-shadow: none;
                 page-break-after: always;
-                border: 3px solid #f0a500;
-                outline: 1px solid #c8820a;
+            }
+
+            .slip.has-border {
+                border: 3px solid var(--accent);
+                outline: 1px solid var(--accent-dark);
                 outline-offset: -6px;
             }
 
@@ -822,13 +914,7 @@
             }
 
             .slip::before,
-            .slip::after {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                color-adjust: exact;
-            }
-
-            /* Force colors */
+            .slip::after,
             .title-band,
             .grp-row td,
             .g-pill,
@@ -847,12 +933,7 @@
             .status-fail,
             .watermark,
             .watermark-text,
-            .watermark img {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                color-adjust: exact;
-            }
-
+            .watermark img,
             .stu-qr-box,
             .stu-qr-box img {
                 -webkit-print-color-adjust: exact;
@@ -860,113 +941,12 @@
                 color-adjust: exact;
             }
         }
-
-        .sch-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #000;
-        }
-
-        .sch-arabic-name {
-            font-size: 18px;
-            font-weight: 600;
-            direction: rtl;
-            margin-top: 2px;
-        }
-
-        .sch-details {
-            font-size: 12px;
-            color: #444;
-            margin-top: 4px;
-        }
-
-        .sch-motto {
-            font-size: 11px;
-            font-style: italic;
-            color: #666;
-            margin-top: 3px;
-        }
-
-/* QR Code column */
-.stu-qr-col {
-    flex-shrink: 0;
-    width: 145px; /* increased */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: .45rem;
-    border-left: 1.5px solid #e8e8e8;
-    padding-left: 1rem;
-}
-
-/* Better labels */
-.stu-qr-title {
-    font-size: .65rem;
-    font-weight: 800;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-}
-
-/* Bigger QR container */
-.stu-qr-box {
-    width: 130px;
-    height: 130px;
-    border: 2.5px solid #f0a500;
-    border-radius: 10px;
-    padding: 6px;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(240, 165, 0, .22);
-}
-
-        .stu-qr-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-.stu-qr-label {
-    font-size: .68rem;
-    font-weight: 900;
-    color: #f0a500;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-}
-
-/* Force QR to fully occupy box */
-.stu-qr-box canvas,
-.stu-qr-box img,
-.stu-qr-box svg {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-    object-fit: contain;
-}
-
-        .stu-qr-box svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .stu-qr-box canvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block;
-        }
     </style>
 </head>
 
 <body>
 
-    <?php
-use App\Http\Controllers\Helper;
-    ?>
+    <?php use App\Http\Controllers\Helper; ?>
 
     {{-- ══ TOOLBAR ══════════════════════════════════════════════════ --}}
     <div class="toolbar">
@@ -999,7 +979,7 @@ use App\Http\Controllers\Helper;
     </div>
 
     @php
-        /* ── Normalise to single render array ────────────────────────── */
+        /* ── Normalise to single render array ─────────────────────────── */
         if ($mode === 'single') {
             $renderSlips = [
                 [
@@ -1062,7 +1042,7 @@ use App\Http\Controllers\Helper;
                 $oGrade = $slipData['overallGrade'];
                 $oRemark = $slipData['overallRemark'];
                 $rank = $slipData['classRank'];
-                $classTotal = $slipData['classTotal'];
+                $classTotalN = $slipData['classTotal'];
                 $growth = $slipData['growthData'];
                 $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
 
@@ -1070,13 +1050,15 @@ use App\Http\Controllers\Helper;
                 $statusLabel = $s->status ?? ($passed ? 'Promoted' : 'Repeat');
 
                 /* Resolve student photo */
-                /* Resolve student photo — stored in public/uploads/studentPhotos/{student_photo}.{ext} */
                 $photo = null;
                 if (!empty($s->student_photo)) {
                     foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                        $filePath = public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
-                        $filePath = str_replace('/', DIRECTORY_SEPARATOR, $filePath);
-                        if (file_exists($filePath)) {
+                        $fp = str_replace(
+                            '/',
+                            DIRECTORY_SEPARATOR,
+                            public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext)
+                        );
+                        if (file_exists($fp)) {
                             $photo = asset('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
                             break;
                         }
@@ -1087,101 +1069,97 @@ use App\Http\Controllers\Helper;
                 $grouped = $subjMarks->groupBy(fn($sm) => $sm->subject_type ?? '');
                 $useGroups = $grouped->count() > 1 || ($grouped->count() === 1 && !$grouped->has(''));
 
-                /* Build student-vs-class data for mini chart */
+                /* Mini chart arrays */
                 $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
                 $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
                 $miniClass = $subjMarks->map(fn($sm) => $sm->class_average ?? rand(55, 80))->values()->toArray();
 
-                /* Growth bar chart data */
+                /* Growth chart arrays */
                 $growthLabels = collect($growth)->pluck('label')->toArray();
                 $growthValues = collect($growth)->pluck('percentage')->toArray();
 
-                /* Delta from previous term */
+                /* Term delta */
                 $prevPct = isset($growth[count($growth) - 2]) ? $growth[count($growth) - 2]['percentage'] : null;
                 $termDelta = $prevPct !== null ? round($pct - $prevPct, 1) : null;
 
-                /* Unique chart IDs */
+                /* Unique IDs */
                 $cMini = 'mini_' . $slipCounter;
                 $cPerf = 'perf_' . $slipCounter;
+                $qrId = 'qr_canvas_' . $slipCounter;
 
-                /* School phone */
-                $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? config('app.phone', '');
-                $schoolNameArabic = Helper::schoolNameArabic(Session('LoggedSchool')) ?? config('app.schoolNameArabic', '');
+                /* School meta */
+                $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? '';
+                $schoolNameArabic = Helper::schoolNameArabic(Session('LoggedSchool')) ?? '';
                 $schoolEmail = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('email');
                 $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
                 $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
                 $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
 
                 $qrText = $slipData['qrText'] ?? '';
-                $qrId = 'qr_canvas_' . $slipCounter;
+
+                /*
+                |──────────────────────────────────────────────────────────────
+                | Build the dynamic table column list.
+                | We hide/show columns based on $cfg flags so the header and
+                | every data row always stay in sync.
+                |──────────────────────────────────────────────────────────────
+                */
+                // Count visible columns for colspan calculations
+                $visibleCols = 2 // Subject + Marks (always visible)
+                    + ($cfg['dev'] ? 1 : 0)
+                    + ($cfg['grade_pill'] ? 1 : 0)
+                    + 1 // Comment (always visible)
+                    + ($cfg['teacher_col'] ? 1 : 0);
             @endphp
 
-            <div class="slip">
+            {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
+            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
 
                 {{-- Watermark --}}
-                @if($schoolLogo && Storage::disk('public')->exists($schoolLogo))
-                    <div class="watermark">
-                        <img src="{{ asset('storage/' . $schoolLogo) }}" alt="watermark">
-                    </div>
-                @else
-                    <div class="watermark-text">{{ $schoolName }}</div>
+                @if($cfg['watermark'])
+                    @if($schoolLogo && Storage::disk('public')->exists($schoolLogo))
+                        <div class="watermark">
+                            <img src="{{ asset('storage/' . $schoolLogo) }}" alt="watermark">
+                        </div>
+                    @else
+                        <div class="watermark-text">{{ $schoolName }}</div>
+                    @endif
                 @endif
 
-                {{-- ══ SCHOOL HEADER ═══════════════════════════════════════════ --}}
+                {{-- ══ SCHOOL HEADER ══════════════════════════════════════════ --}}
                 <div class="sch-header">
                     <div class="sch-logo-area">
                         <div class="sch-logo-box">
-
-                            @if($schoolLogo && Storage::disk('public')->exists($schoolLogo))
+                            @if($cfg['logo'] && $schoolLogo && Storage::disk('public')->exists($schoolLogo))
                                 <img src="{{ asset('storage/' . $schoolLogo) }}" alt="logo">
                             @else
                                 <i class="fas fa-school"></i>
                             @endif
-
                         </div>
                     </div>
+
                     <div class="sch-right">
+                        <div class="sch-name">{{ $schoolName }}</div>
 
-                        {{-- Main School Name --}}
-                        <div class="sch-name">
-                            {{ $schoolName }}
-                        </div>
+                        @if($cfg['arabic'] && $schoolNameArabic)
+                            <div class="sch-arabic-name">{{ $schoolNameArabic }}</div>
+                        @endif
 
-                        {{-- Arabic Name --}}
-                        @if($schoolNameArabic)
-                            <div class="sch-arabic-name">
-                                {{ $schoolNameArabic }}
+                        @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
+                            <div class="sch-details">
+                                @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
+                                @if($schoolEmail)<span> | {{ $schoolEmail }}</span>@endif
+                                @if($schoolLocation)<span> | {{ $schoolLocation }}</span>@endif
                             </div>
                         @endif
 
-                        {{-- Contact Information --}}
-                        <div class="sch-details">
-
-                            @if($schoolPhone)
-                                <span>{{ $schoolPhone }}</span>
-                            @endif
-
-                            @if($schoolEmail)
-                                <span> | {{ $schoolEmail }}</span>
-                            @endif
-
-                            @if($schoolLocation)
-                                <span> | {{ $schoolLocation }}</span>
-                            @endif
-
-                        </div>
-
-                        {{-- Motto --}}
-                        @if($schoolMotto)
-                            <div class="sch-motto">
-                                MOTTO : "{{ $schoolMotto }}"
-                            </div>
+                        @if($cfg['motto'] && $schoolMotto)
+                            <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
-
                     </div>
                 </div>
 
-                {{-- ══ ORANGE TITLE BAND ════════════════════════════════════════ --}}
+                {{-- ══ TITLE BAND ═══════════════════════════════════════════════ --}}
                 <div class="title-band">
                     <span>
                         ACADEMIC REPORT FORM — {{ Helper::recordMdname($s->senior) }}
@@ -1189,29 +1167,33 @@ use App\Http\Controllers\Helper;
                     </span>
                 </div>
 
-                {{-- ══ STUDENT INFO ROW ══════════════════════════════════════════ --}}
+                {{-- ══ STUDENT INFO ROW ═══════════════════════════════════════════ --}}
                 <div class="stu-row">
 
                     {{-- Photo --}}
-                    <div class="stu-photo">
-                        @if($photo)
-                            <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}"
-                                style="width:100%;height:100%;object-fit:cover;">
-                        @else
-                            <div class="nophoto">
-                                <i class="fas fa-user"></i>
-                                <span>No Photo</span>
-                            </div>
-                        @endif
-                    </div>
+                    @if($cfg['photo'])
+                        <div class="stu-photo">
+                            @if($photo)
+                                <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}"
+                                    style="width:100%;height:100%;object-fit:cover;">
+                            @else
+                                <div class="nophoto">
+                                    <i class="fas fa-user"></i>
+                                    <span>No Photo</span>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
 
                     {{-- Details --}}
                     <div class="stu-details">
-                        <div class="stu-field"><strong>NAME:</strong> {{ $s->lastname }} {{ $s->firstname }}
-                            {{ $s->other_names ?? '' }}
+                        <div class="stu-field">
+                            <strong>NAME:</strong>
+                            {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
                         </div>
                         <div class="stu-field"><strong>ADMNO:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}</div>
-                        <div class="stu-field"><strong>CLASS:</strong>
+                        <div class="stu-field">
+                            <strong>CLASS:</strong>
                             {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
                         </div>
                         <div class="stu-field" style="margin-top:.2rem;">
@@ -1221,27 +1203,27 @@ use App\Http\Controllers\Helper;
                                 {{ ucfirst($statusLabel) }}
                             </span>
                         </div>
-                        @if(is_numeric($rank))
+                        @if($cfg['rank'] && is_numeric($rank))
                             <div class="stu-field" style="margin-top:.2rem;">
                                 <strong>POSITION:</strong>
-                                <span style="font-weight:800;color:#f0a500;">
+                                <span style="font-weight:800;color:var(--accent);">
                                     {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
-                                        {{ $classTotal }}</span>
+                                        {{ $classTotalN }}</span>
                                 </span>
                             </div>
                         @endif
                     </div>
 
-                    {{-- Mini Line Chart: Student vs Class --}}
-                    @if(count($miniLabels) > 0)
+                    {{-- Mini Line Chart --}}
+                    @if($cfg['minichart'] && count($miniLabels) > 0)
                         <div class="stu-chart-area">
                             <div class="stu-chart-title">Subject Performance — Student vs Class</div>
                             <canvas id="{{ $cMini }}" height="110"></canvas>
                         </div>
                     @endif
 
-                    {{-- QR Code column in student info row --}}
-                    @if($qrText)
+                    {{-- QR Code --}}
+                    @if($cfg['qr'] && $qrText)
                         <div class="stu-qr-col">
                             <div class="stu-qr-title">Scan to Verify</div>
                             <div class="stu-qr-box">
@@ -1253,12 +1235,14 @@ use App\Http\Controllers\Helper;
 
                 </div>
 
-                {{-- ══ SUMMARY BAR ══════════════════════════════════════════════ --}}
+                {{-- ══ SUMMARY BAR ═══════════════════════════════════════════════ --}}
                 <div class="sum-bar">
                     <div class="sum-cell">
                         <div class="sum-lbl">Total Marks</div>
-                        <div class="sum-val">{{ number_format($totObt, 0) }}<span
-                                style="font-size:.65rem;color:#aaa;font-weight:500;">/{{ $totMax }}</span></div>
+                        <div class="sum-val">
+                            {{ number_format($totObt, 0) }}<span
+                                style="font-size:.65rem;color:#aaa;font-weight:500;">/{{ $totMax }}</span>
+                        </div>
                         @if($termDelta !== null)
                             <div class="sum-sub">
                                 @if($termDelta > 0)
@@ -1273,6 +1257,7 @@ use App\Http\Controllers\Helper;
                             </div>
                         @endif
                     </div>
+
                     <div class="sum-cell">
                         <div class="sum-lbl">Average Score</div>
                         <div class="sum-val"
@@ -1288,10 +1273,12 @@ use App\Http\Controllers\Helper;
                             </div>
                         @endif
                     </div>
+
                     <div class="sum-cell" style="flex:.7">
                         <div class="sum-lbl">Grade</div>
                         <div class="sum-val" style="font-size:1.3rem;">{{ $oGrade }}</div>
                     </div>
+
                     <div class="sum-cell">
                         <div class="sum-lbl">Result</div>
                         <div class="sum-val"
@@ -1301,17 +1288,23 @@ use App\Http\Controllers\Helper;
                     </div>
                 </div>
 
-                {{-- ══ MARKS TABLE ══════════════════════════════════════════════ --}}
+                {{-- ══ MARKS TABLE ════════════════════════════════════════════════ --}}
                 <div class="marks-wrap">
                     <table class="marks-tbl">
                         <thead>
                             <tr>
                                 <th class="tl" style="min-width:110px;">SUBJECTS</th>
                                 <th style="width:48px;">MARKS</th>
-                                <th style="width:38px;">DEV.</th>
-                                <th style="width:38px;">GRADE</th>
+                                @if($cfg['dev'])
+                                    <th style="width:38px;">DEV.</th>
+                                @endif
+                                @if($cfg['grade_pill'])
+                                    <th style="width:38px;">GRADE</th>
+                                @endif
                                 <th class="tl">COMMENT</th>
-                                <th class="tl" style="min-width:100px;">TEACHER</th>
+                                @if($cfg['teacher_col'])
+                                    <th class="tl" style="min-width:100px;">TEACHER</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -1321,7 +1314,7 @@ use App\Http\Controllers\Helper;
                                 @foreach($grouped as $grpName => $grpSubjs)
                                     @if($grpName)
                                         <tr class="grp-row">
-                                            <td colspan="6">{{ strtoupper($grpName) }}</td>
+                                            <td colspan="{{ $visibleCols }}">{{ strtoupper($grpName) }}</td>
                                         </tr>
                                     @endif
                                     @foreach($grpSubjs as $sm)
@@ -1337,20 +1330,26 @@ use App\Http\Controllers\Helper;
                                         <tr>
                                             <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                             <td class="score-td">{{ $sm->percentage }}%</td>
-                                            <td class="num-td">
-                                                @if($delta !== null)
-                                                    @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                    @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                            @if($cfg['dev'])
+                                                <td class="num-td">
+                                                    @if($delta !== null)
+                                                        @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
+                                                        @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                        @else <span class="dev-eq">—</span>
+                                                        @endif
                                                     @else <span class="dev-eq">—</span>
                                                     @endif
-                                                @else <span class="dev-eq">—</span>
-                                                @endif
-                                            </td>
-                                            <td class="num-td">
-                                                <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
-                                            </td>
+                                                </td>
+                                            @endif
+                                            @if($cfg['grade_pill'])
+                                                <td class="num-td">
+                                                    <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
+                                                </td>
+                                            @endif
                                             <td>{{ $sm->grade_remark ?? '—' }}</td>
-                                            <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                            @if($cfg['teacher_col'])
+                                                <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 @endforeach
@@ -1368,273 +1367,264 @@ use App\Http\Controllers\Helper;
                                     <tr>
                                         <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                         <td class="score-td">{{ $sm->percentage }}%</td>
-                                        <td class="num-td">
-                                            @if($delta !== null)
-                                                @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                        @if($cfg['dev'])
+                                            <td class="num-td">
+                                                @if($delta !== null)
+                                                    @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
+                                                    @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                    @else <span class="dev-eq">—</span>
+                                                    @endif
                                                 @else <span class="dev-eq">—</span>
                                                 @endif
-                                            @else <span class="dev-eq">—</span>
-                                            @endif
-                                        </td>
-                                        <td class="num-td">
-                                            <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
-                                        </td>
+                                            </td>
+                                        @endif
+                                        @if($cfg['grade_pill'])
+                                            <td class="num-td">
+                                                <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
+                                            </td>
+                                        @endif
                                         <td>{{ $sm->grade_remark ?? '—' }}</td>
-                                        <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                        @if($cfg['teacher_col'])
+                                            <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             @endif
 
                             {{-- TOTALS ROW --}}
-                            <tr class="totals-row">
-                                <td
-                                    style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
-                                    TOTAL / AVERAGE
-                                </td>
-                                <td class="score-td">{{ $pct }}%</td>
-                                <td class="num-td">
-                                    @if($termDelta !== null)
-                                        @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
-                                        @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
-                                        @else <span class="dev-eq">—</span>
-                                        @endif
-                                    @else <span class="dev-eq">—</span>
+                            @if($cfg['totals_row'])
+                                <tr class="totals-row">
+                                    <td
+                                        style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
+                                        TOTAL / AVERAGE
+                                    </td>
+                                    <td class="score-td">{{ $pct }}%</td>
+                                    @if($cfg['dev'])
+                                        <td class="num-td">
+                                            @if($termDelta !== null)
+                                                @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
+                                                @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
+                                                @else <span class="dev-eq">—</span>
+                                                @endif
+                                            @else <span class="dev-eq">—</span>
+                                            @endif
+                                        </td>
                                     @endif
-                                </td>
-                                <td class="num-td">
-                                    <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
-                                </td>
-                                <td colspan="2">
-                                    <strong style="color:{{ $passed ? '#1a7a4a' : '#c0392b' }}">
-                                        {{ strtoupper($oRemark) }}
-                                    </strong>
-                                </td>
-                            </tr>
+                                    @if($cfg['grade_pill'])
+                                        <td class="num-td">
+                                            <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
+                                        </td>
+                                    @endif
+                                    <td colspan="{{ 1 + ($cfg['teacher_col'] ? 1 : 0) }}">
+                                        <strong style="color:{{ $passed ? '#1a7a4a' : '#c0392b' }}">
+                                            {{ strtoupper($oRemark) }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                            @endif
+
                         </tbody>
                     </table>
                 </div>
 
-                {{-- ══ BOTTOM SECTION ═══════════════════════════════════════════ --}}
-                <div class="bottom-section">
+                {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
+                @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['signatures'])
+                    <div class="bottom-section">
 
-                    {{-- Performance Over Time (bar chart) --}}
-                    @if(count($growth) > 0)
-                        <div class="perf-chart-col">
-                            <div class="perf-chart-title">{{ $s->firstname }}'s Performance over Time</div>
-                            <canvas id="{{ $cPerf }}" height="140"></canvas>
-                        </div>
-                    @endif
-
-                    {{-- Remarks --}}
-                    <div class="remarks-col">
-                        <div class="remarks-section-title">Remarks</div>
-
-                        {{-- Class Teacher --}}
-                        @php
-                            $classTeacher = $subjMarks->first()?->class_teacher ?? null;
-                            $classTeacherName = $classTeacher ?? ($s->class_teacher ?? 'Class Teacher');
-                            $ctRemark = $s->class_teacher_remark ?? '';
-                        @endphp
-                        <div class="remark-block">
-                            <div class="remark-teacher">{{ $classTeacherName }} — <span
-                                    style="font-weight:400;color:#888;font-size:.7rem;">Class Teacher</span></div>
-                            <div class="remark-text">{{ $ctRemark ?: 'No remarks recorded.' }}</div>
-                        </div>
-
-                        <div class="sig-dashes">House Teacher</div>
-                        <div style="height:18px;border-bottom:1px dashed #ccc;margin-bottom:.4rem;"></div>
-
-                        {{-- Head Teacher --}}
-                        <div class="remark-block">
-                            <div class="remark-teacher">
-                                {{ $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher') }}
-                                — <span style="font-weight:400;color:#888;font-size:.7rem;">Head Teacher</span>
+                        {{-- Performance Over Time chart --}}
+                        @if($cfg['perf_chart'] && count($growth) > 0)
+                            <div class="perf-chart-col">
+                                <div class="perf-chart-title">{{ $s->firstname }}'s Performance over Time</div>
+                                <canvas id="{{ $cPerf }}" height="140"></canvas>
                             </div>
-                            <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
-                        </div>
-                    </div>
+                        @endif
 
-                    {{-- Signatures --}}
-                    <div class="sig-col-right">
-                        <div class="sig-col-title">Signature</div>
-                        <div style="width:100%;margin-top:.5rem;">
-                            <div class="sig-slot">Class Teacher</div>
-                            <div class="sig-slot" style="margin-top:1.4rem;">House Teacher</div>
-                            <div class="sig-slot has-sig" style="margin-top:1.4rem;">
-                                @if(!empty($s->head_teacher_signature))
-                                    <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
-                                        style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
-                                @endif
-                                Head Teacher
+                        {{-- Remarks --}}
+                        @if($cfg['remarks'])
+                            <div class="remarks-col">
+                                <div class="remarks-section-title">Remarks</div>
+
+                                @php
+                                    $classTeacher = $subjMarks->first()?->class_teacher ?? null;
+                                    $classTeacherName = $classTeacher ?? ($s->class_teacher ?? 'Class Teacher');
+                                    $ctRemark = $s->class_teacher_remark ?? '';
+                                @endphp
+                                <div class="remark-block">
+                                    <div class="remark-teacher">
+                                        {{ $classTeacherName }}
+                                        — <span style="font-weight:400;color:#888;font-size:.7rem;">Class Teacher</span>
+                                    </div>
+                                    <div class="remark-text">{{ $ctRemark ?: 'No remarks recorded.' }}</div>
+                                </div>
+
+                                <div class="sig-dashes">House Teacher</div>
+                                <div style="height:18px;border-bottom:1px dashed #ccc;margin-bottom:.4rem;"></div>
+
+                                <div class="remark-block">
+                                    <div class="remark-teacher">
+                                        {{ $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher') }}
+                                        — <span style="font-weight:400;color:#888;font-size:.7rem;">Head Teacher</span>
+                                    </div>
+                                    <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
+                                </div>
                             </div>
-                            <div class="sig-slot" style="margin-top:1.4rem;">Parent / Guardian</div>
+                        @endif
+
+                        {{-- Signatures --}}
+                        @if($cfg['signatures'])
+                            <div class="sig-col-right">
+                                <div class="sig-col-title">Signature</div>
+                                <div style="width:100%;margin-top:.5rem;">
+                                    <div class="sig-slot">Class Teacher</div>
+                                    <div class="sig-slot" style="margin-top:1.4rem;">House Teacher</div>
+                                    <div class="sig-slot has-sig" style="margin-top:1.4rem;">
+                                        @if(!empty($s->head_teacher_signature))
+                                            <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
+                                                style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
+                                        @endif
+                                        Head Teacher
+                                    </div>
+                                    <div class="sig-slot" style="margin-top:1.4rem;">Parent / Guardian</div>
+                                </div>
+                            </div>
+                        @endif
+
+                    </div>
+                @endif
+
+                {{-- ══ FOOTER ════════════════════════════════════════════════════════ --}}
+                @if($cfg['footer_timestamp'] || $cfg['confidential'])
+                    <div class="slip-footer">
+                        <div style="font-size:.58rem;color:#aaa;">
+                            @if($cfg['footer_timestamp'])
+                                Generated: {{ now()->format('d M Y, H:i') }}
+                                &bull; {{ $exam->exam_code ?? '' }}
+                                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                            @endif
                         </div>
+                        @if($cfg['confidential'])
+                            <div style="font-size:.63rem;font-weight:800;color:#c0392b;letter-spacing:.07em;">CONFIDENTIAL</div>
+                        @endif
                     </div>
-
-                </div>
-
-                {{-- ══ FOOTER ════════════════════════════════════════════════════ --}}
-                <div class="slip-footer">
-                    <div style="font-size:.58rem;color:#aaa;">
-                        Generated: {{ now()->format('d M Y, H:i') }}
-                        &bull; {{ $exam->exam_code ?? '' }}
-                        &bull; {{ $exam->term }} {{ $exam->academic_year }}
-                    </div>
-                    <div style="font-size:.63rem;font-weight:800;color:#c0392b;letter-spacing:.07em;">CONFIDENTIAL</div>
-                </div>
+                @endif
 
             </div>{{-- /.slip --}}
 
-            {{-- ══ CHART SCRIPTS (per slip) ════════════════════════════════ --}}
+            {{-- ══ PER-SLIP SCRIPTS ═══════════════════════════════════════════════ --}}
             <script>
                 (function () {
-                    // Mini student-vs-class line chart
-                    var miniCtx = document.getElementById('{{ $cMini }}');
-                    if (miniCtx) {
-                        new Chart(miniCtx.getContext('2d'), {
-                            type: 'line',
-                            data: {
-                                labels: {!! json_encode($miniLabels) !!},
-                                datasets: [
-                                    {
-                                        label: '{{ addslashes($s->firstname) }}',
-                                        data: {!! json_encode($miniStudent) !!},
-                                        borderColor: '#1a7a4a',
-                                        backgroundColor: 'rgba(26,122,74,.08)',
-                                        tension: 0.35,
-                                        fill: true,
-                                        pointRadius: 3,
-                                        borderWidth: 2,
-                                        pointBackgroundColor: '#1a7a4a',
-                                    },
-                                    {
-                                        label: '{{ addslashes(Helper::recordMdname($s->senior)) }}',
-                                        data: {!! json_encode($miniClass) !!},
-                                        borderColor: '#aaa',
-                                        backgroundColor: 'transparent',
-                                        tension: 0.35,
-                                        fill: false,
-                                        pointRadius: 2,
-                                        borderWidth: 1.5,
-                                        borderDash: [4, 3],
-                                        pointBackgroundColor: '#aaa',
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                animation: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                        labels: { usePointStyle: true, padding: 8, font: { size: 9 } }
-                                    }
+                    /* Mini student-vs-class line chart */
+                    @if($cfg['minichart'] && count($miniLabels) > 0)
+                        var miniCtx = document.getElementById('{{ $cMini }}');
+                        if (miniCtx) {
+                            new Chart(miniCtx.getContext('2d'), {
+                                type: 'line',
+                                data: {
+                                    labels: {!! json_encode($miniLabels) !!},
+                                    datasets: [
+                                        {
+                                            label: '{{ addslashes($s->firstname) }}',
+                                            data: {!! json_encode($miniStudent) !!},
+                                            borderColor: '#1a7a4a',
+                                            backgroundColor: 'rgba(26,122,74,.08)',
+                                            tension: 0.35, fill: true,
+                                            pointRadius: 3, borderWidth: 2,
+                                            pointBackgroundColor: '#1a7a4a',
+                                        },
+                                        {
+                                            label: '{{ addslashes(Helper::recordMdname($s->senior)) }}',
+                                            data: {!! json_encode($miniClass) !!},
+                                            borderColor: '#aaa',
+                                            backgroundColor: 'transparent',
+                                            tension: 0.35, fill: false,
+                                            pointRadius: 2, borderWidth: 1.5,
+                                            borderDash: [4, 3],
+                                            pointBackgroundColor: '#aaa',
+                                        }
+                                    ]
                                 },
-                                scales: {
-                                    y: {
-                                        min: 0, max: 100,
-                                        ticks: { font: { size: 8 }, stepSize: 50 },
-                                        grid: { color: '#f0f0f0' }
-                                    },
-                                    x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                options: {
+                                    responsive: true, animation: false,
+                                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 8, font: { size: 9 } } } },
+                                    scales: {
+                                        y: { min: 0, max: 100, ticks: { font: { size: 8 }, stepSize: 50 }, grid: { color: '#f0f0f0' } },
+                                        x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                    }
                                 }
-                            }
-                        });
-                    }
+                            });
+                        }
+                    @endif
 
-                    // Performance over time bar chart
-                    var perfCtx = document.getElementById('{{ $cPerf }}');
-                    if (perfCtx) {
-                        var labels = {!! json_encode($growthLabels) !!};
-                        var values = {!! json_encode($growthValues) !!};
-                        var colors = values.map(function (v, i) {
-                            return i === values.length - 1 ? '#3498db' : '#555';
-                        });
-                        new Chart(perfCtx.getContext('2d'), {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    data: values,
-                                    backgroundColor: colors,
-                                    borderRadius: 3,
-                                    borderSkipped: false,
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                animation: false,
-                                plugins: { legend: { display: false } },
-                                scales: {
-                                    y: {
-                                        min: 0, max: 100,
-                                        ticks: { font: { size: 8 }, stepSize: 50 },
-                                        grid: { color: '#f0f0f0' }
+                        /* Performance over time bar chart */
+                        @if($cfg['perf_chart'] && count($growth) > 0)
+                            var perfCtx = document.getElementById('{{ $cPerf }}');
+                            if (perfCtx) {
+                                var vals = {!! json_encode($growthValues) !!};
+                                new Chart(perfCtx.getContext('2d'), {
+                                    type: 'bar',
+                                    data: {
+                                        labels: {!! json_encode($growthLabels) !!},
+                                        datasets: [{
+                                            data: vals,
+                                            backgroundColor: vals.map(function (v, i) {
+                                                return i === vals.length - 1 ? '{{ $accent }}' : '#555';
+                                            }),
+                                            borderRadius: 3, borderSkipped: false,
+                                        }]
                                     },
-                                    x: { ticks: { font: { size: 8 } }, grid: { display: false } }
-                                }
+                                    options: {
+                                        responsive: true, animation: false,
+                                        plugins: { legend: { display: false } },
+                                        scales: {
+                                            y: { min: 0, max: 100, ticks: { font: { size: 8 }, stepSize: 50 }, grid: { color: '#f0f0f0' } },
+                                            x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                        }
+                                    }
+                                });
                             }
-                        });
-                    }
-                })();
+                        @endif
+                    })();
             </script>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
+            {{-- QR Code --}}
+            @if($cfg['qr'] && $qrText)
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        var qrCanvas = document.getElementById('{{ $qrId }}');
+                        if (!qrCanvas || typeof QRCode === 'undefined') return;
 
-                    const qrCanvas = document.getElementById('{{ $qrId }}');
+                        var qrData = `{{ addslashes(implode('\n', array_filter([
+                    'Student: ' . trim($s->lastname . ' ' . $s->firstname . ' ' . ($s->other_names ?? '')),
+                    'Adm No: ' . ($s->adm_no ?? ($s->index_no ?? '')),
+                    'Class: ' . Helper::recordMdname($s->senior) . (($s->stream ?? false) ? ' - ' . $s->stream : ''),
+                    'Exam: ' . $exam->exam_name,
+                    'Term: ' . $exam->term,
+                    'Year: ' . $exam->academic_year,
+                    'Average: ' . $pct . '%',
+                    'Grade: ' . $oGrade,
+                    'Result: ' . ($passed ? 'PASS' : 'FAIL'),
+                    'School: ' . $schoolName,
+                ]))) }}`;
 
-                    if (!qrCanvas) {
-                        console.error('QR canvas not found');
-                        return;
-                    }
-
-                    if (typeof QRCode === 'undefined') {
-                        console.error('QRCode library not loaded');
-                        return;
-                    }
-
-                    const qrData = `
-                Student: {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
-                Adm No: {{ $s->adm_no ?? ($s->index_no ?? '') }}
-                Class: {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' - ' . $s->stream : '' }}
-                Exam: {{ $exam->exam_name }}
-                Term: {{ $exam->term }}
-                Year: {{ $exam->academic_year }}
-                Average: {{ $pct }}%
-                Grade: {{ $oGrade }}
-                Result: {{ $passed ? 'PASS' : 'FAIL' }}
-                School: {{ $schoolName }}
-                    `.trim();
-
-                    QRCode.toCanvas(qrCanvas, qrData, {
-                        width: 160,
-                        margin: 2,
-                        errorCorrectionLevel: 'H',
-                        color: {
-                            dark: '#000000',
-                            light: '#FFFFFF'
-                        }
-                    }, function (error) {
-
-                        if (error) {
-                            console.error('QR Error:', error);
-                        } else {
-                            console.log('QR generated');
-                        }
-
+                        QRCode.toCanvas(qrCanvas, qrData, {
+                            width: 160, margin: 2,
+                            errorCorrectionLevel: 'H',
+                            color: { dark: '#000000', light: '#FFFFFF' }
+                        }, function (error) {
+                            if (error) console.error('QR Error:', error);
+                        });
                     });
-
-                });
-            </script>
+                </script>
+            @endif
 
         @endforeach
     </div>{{-- /.page-wrap --}}
 
     <script>
         @if($mode === 'class' || $mode === 'all')
-            window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 900); });
+            window.addEventListener('load', function () {
+                setTimeout(function () { window.print(); }, 900);
+            });
         @endif
     </script>
 </body>

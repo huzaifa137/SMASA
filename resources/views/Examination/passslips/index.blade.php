@@ -663,6 +663,8 @@ use App\Http\Controllers\Helper;
         }
 
         #loadingText { color: #2C29CA !important; font-weight: 600; }
+
+        
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @endsection
@@ -728,7 +730,14 @@ use App\Http\Controllers\Helper;
                         <div class="cp-title">
                             <i class="fas fa-sliders"></i>
                             Customise Pass Slip
-                            <span class="cp-badge">PER SCHOOL</span>
+                            <span style="width: 18px; height: 18px; background: linear-gradient(135deg, #f0a500, #ff6b6b, #4ecdc4, #45b7d1); border-radius: 50%; display: inline-block; animation: rotateColors 3s infinite;"></span>
+
+                            <style>
+                            @keyframes rotateColors {
+                                0% { filter: hue-rotate(0deg); }
+                                100% { filter: hue-rotate(360deg); }
+                            }
+                            </style>
                         </div>
                         <div style="display:flex;align-items:center;gap:.5rem;">
                             <small id="cpSummary" style="color:rgba(255,255,255,.5);font-size:.65rem;font-weight:600;letter-spacing:.04em;"></small>
@@ -761,14 +770,47 @@ use App\Http\Controllers\Helper;
                         {{-- Colour presets --}}
                         <div class="cp-presets" id="cpPresets">
                             @foreach([
-                                ['#f0a500','Amber (default)'],
-                                ['#c0392b','Ruby Red'],
-                                ['#2C29CA','Brand Blue'],
-                                ['#10b981','Emerald'],
-                                ['#7c3aed','Violet'],
-                                ['#0f172a','Midnight'],
-                                ['#e11d48','Rose'],
-                                ['#0ea5e9','Sky'],
+['#f0a500','Amber (default)'],
+['#c0392b','Ruby Red'],
+['#2C29CA','Brand Blue'],
+['#10b981','Emerald'],
+['#7c3aed','Violet'],
+['#0f172a','Midnight'],
+['#e11d48','Rose'],
+['#0ea5e9','Sky'],
+
+// Additional school-friendly colors
+['#1d4ed8','Royal Blue'],
+['#2563eb','Academic Blue'],
+['#1e3a8a','Navy Blue'],
+['#15803d','Forest Green'],
+['#166534','Dark Green'],
+['#65a30d','Lime Green'],
+['#047857','Teal'],
+['#0f766e','Deep Teal'],
+['#b45309','Golden Brown'],
+['#ca8a04','School Gold'],
+['#f59e0b','Sunflower'],
+['#dc2626','Crimson'],
+['#991b1b','Maroon'],
+['#be123c','Burgundy'],
+['#6d28d9','Deep Purple'],
+['#4338ca','Indigo'],
+['#0369a1','Ocean Blue'],
+['#0891b2','Cyan'],
+['#374151','Slate Gray'],
+['#4b5563','Charcoal'],
+['#111827','Jet Black'],
+['#92400e','Chocolate'],
+['#78350f','Coffee Brown'],
+['#14532d','Hunter Green'],
+['#134e4a','Pine Green'],
+['#86198f','Plum'],
+['#9d174d','Wine'],
+['#ea580c','Orange'],
+['#fb7185','Soft Pink'],
+['#14b8a6','Turquoise'],
+['#84cc16','Olive'],
                             ] as [$hex, $label])
                             <div class="cp-preset-dot {{ $hex === '#f0a500' ? 'active' : '' }}"
                                  style="background:{{ $hex }};"
@@ -1252,6 +1294,9 @@ use App\Http\Controllers\Helper;
 
         </div>{{-- /.row --}}
     </div>{{-- /.side-app --}}
+     </div>
+                    </div>
+                </div>
 
     {{-- ═══════════════════════════════════════════════════════════
          JAVASCRIPT
@@ -1465,6 +1510,16 @@ use App\Http\Controllers\Helper;
             cb.addEventListener('change', updateAllLinks);
         });
     });
-    </script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const body = document.getElementById('cpBody');
+        const chevron = document.getElementById('cpChevron');
+        if (body && chevron) {
+            body.style.display = 'none';
+            chevron.style.transform = 'rotate(-90deg)';
+        }
+    });
+
+</script>
 
 @endsection
