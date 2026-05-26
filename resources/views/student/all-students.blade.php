@@ -340,6 +340,20 @@ use App\Http\Controllers\Helper;
             .swal2-container {
                 z-index: 99999 !important;
             }
+
+            .table tbody td {
+                vertical-align: middle;
+            }
+
+            .table tbody td img.rounded-circle {
+                width: 45px !important;
+                height: 45px !important;
+                min-width: 45px;
+                min-height: 45px;
+                object-fit: cover;
+                display: block;
+                margin: 0 auto;
+            }
         </style>
 
         <div class="row">
@@ -403,35 +417,37 @@ use App\Http\Controllers\Helper;
                                                                 </td>
 
                                                                 <!-- Photo -->
-                                                                <td class="text-center">
+                                                                <td class="text-center" style="width:70px;">
                                                                     @php
                                                                         $imagePath = null;
+                                                                        $imageUrl = null;
                                                                         if ($student->student_photo) {
-                                                                            foreach (
-                                                                                ['jpg', 'jpeg', 'png', 'gif']
-                                                                                as $ext
-                                                                            ) {
-                                                                                $path =
-                                                                                    'uploads/studentPhotos/' .
-                                                                                    $student->student_photo .
-                                                                                    '.' .
-                                                                                    $ext;
-                                                                                if (file_exists(public_path($path))) {
-                                                                                    $imagePath = $path;
+                                                                            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                                                                                $relativePath = 'uploads/studentPhotos/' . $student->student_photo . '.' . $ext;
+                                                                                $absolutePath = public_path($relativePath);
+                                                                                // Normalize slashes for Windows
+                                                                                $absolutePath = str_replace('/', DIRECTORY_SEPARATOR, $absolutePath);
+                                                                                if (file_exists($absolutePath)) {
+                                                                                    $imagePath = $relativePath;
+                                                                                    $imageUrl = asset($relativePath);
                                                                                     break;
                                                                                 }
                                                                             }
                                                                         }
                                                                     @endphp
 
-                                                                    @if ($imagePath)
-                                                                        <img src="{{ asset($imagePath) }}" class="rounded-circle border"
-                                                                            style="width:45px;height:45px;object-fit:cover;">
+                                                                    @if ($imageUrl)
+                                                                                                    <img src="{{ $imageUrl }}" alt="{{ $student->firstname }}" style="width:45px;height:45px;min-width:45px;min-height:45px;
+                                                                        border-radius:50%;object-fit:cover;
+                                                                        display:inline-block;border:2px solid #dee2e6;">
                                                                     @else
-                                                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center"
-                                                                            style="width:45px;height:45px;">
-                                                                            <i class="bi bi-person text-white"></i>
-                                                                        </div>
+                                                                                                    <div style="width:45px;height:45px;min-width:45px;min-height:45px;
+                                                                        border-radius:50%;background:#6c757d;
+                                                                        display:inline-flex;align-items:center;justify-content:center;
+                                                                        margin:0 auto;">
+                                                                                                        <i class="bi bi-person"
+                                                                                                            style="color:#fff;font-size:1.2rem;line-height:1;"></i>
+                                                                                                    </div>
                                                                     @endif
                                                                 </td>
 
@@ -518,7 +534,7 @@ use App\Http\Controllers\Helper;
                         <div class="student-details-wrapper">
                             <div class="text-center p-5" id="modalLoadingSpinner">
                                 <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                                    <span class="visually-hidden"></span>
                                 </div>
                             </div>
                             <div id="studentDetailsContent" class="d-none">
@@ -761,7 +777,7 @@ use App\Http\Controllers\Helper;
                     <div class="modal-body p-0">
                         <div class="text-center p-5" id="editModalLoadingSpinner">
                             <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden"></span>
                             </div>
                         </div>
                         <div id="editStudentForm" class="d-none p-4">
@@ -1236,10 +1252,10 @@ use App\Http\Controllers\Helper;
 
             if (student.photo_url) {
                 $('#currentPhotoPreview').html(`
-                        <p class="text-muted small mb-1">Current photo:</p>
-                        <img src="${student.photo_url}" class="rounded-circle border" style="width:60px;height:60px;object-fit:cover;">
-                        <p class="text-muted small mt-1">Upload a new file to replace it.</p>
-                    `);
+                            <p class="text-muted small mb-1">Current photo:</p>
+                            <img src="${student.photo_url}" class="rounded-circle border" style="width:60px;height:60px;object-fit:cover;">
+                            <p class="text-muted small mt-1">Upload a new file to replace it.</p>
+                        `);
             } else {
                 $('#currentPhotoPreview').html('<p class="text-muted small">No photo uploaded yet.</p>');
             }
@@ -1249,13 +1265,13 @@ use App\Http\Controllers\Helper;
             const preview = document.getElementById('editStudentPhotoPreview');
             if (preview) {
                 preview.innerHTML = `
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                        <span class="upload-text">Click to upload photo</span>
-                        <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
-                    `;
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            <span class="upload-text">Click to upload photo</span>
+                            <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
+                        `;
                 preview.classList.remove('success');
             }
         }
@@ -1341,13 +1357,13 @@ use App\Http\Controllers\Helper;
             removePreview() {
                 if (!this.preview) return;
                 this.preview.innerHTML = `
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                        <span class="upload-text">Click to upload photo</span>
-                        <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
-                    `;
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            <span class="upload-text">Click to upload photo</span>
+                            <span class="upload-hint">JPG, PNG, or GIF (Max 5MB)</span>
+                        `;
                 this.input.value = '';
                 this.preview.classList.remove('success');
             }

@@ -178,9 +178,9 @@ $controller = new Controller();
 
                     let fieldName = $(this).attr('name');
 
-                    // if (fieldName === 'school_name_arabic') {
-                    //     return true;
-                    // }
+                    if (fieldName === 'school_name_arabic') {
+                        return true;
+                    }
 
                     if (!$(this).val().trim()) {
                         $(this).addClass('is-invalid');

@@ -350,6 +350,15 @@ class Helper extends Controller
         return $schoolName;
     }
 
+    public static function schoolPhoneBySchoolID($school_id)
+    {
+        $schoolPhone = DB::table('schools')
+            ->where('id', $school_id)
+            ->value('phone');
+
+        return $schoolPhone;
+    }
+
     public static function schoolNumber($house_id)
     {
         $Number = DB::table('houses')

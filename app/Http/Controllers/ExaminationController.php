@@ -492,13 +492,36 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
-        $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam);
+        $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam, $student);
 
-        return view('Examination.passslips.slip', array_merge(
-            compact('exam', 'student'),
-            $passslipData,
-            ['mode' => 'single']
-        ));
+        // 🔥 KEY FIX: Extract individual variables from the array
+        $qrText = $passslipData['qrText'] ?? '';
+        $subjectMarks = $passslipData['subjectMarks'] ?? collect();
+        $totalObtained = $passslipData['totalObtained'] ?? 0;
+        $totalMax = $passslipData['totalMax'] ?? 0;
+        $percentage = $passslipData['percentage'] ?? 0;
+        $overallGrade = $passslipData['overallGrade'] ?? '—';
+        $overallRemark = $passslipData['overallRemark'] ?? '—';
+        $classRank = $passslipData['classRank'] ?? '—';
+        $classTotal = $passslipData['classTotal'] ?? 0;
+        $growthData = $passslipData['growthData'] ?? [];
+        $previousSubjectMarks = $passslipData['previousSubjectMarks'] ?? collect();
+
+        return view('Examination.passslips.slip', compact(
+            'exam',
+            'student',
+            'qrText',
+            'subjectMarks',
+            'totalObtained',
+            'totalMax',
+            'percentage',
+            'overallGrade',
+            'overallRemark',
+            'classRank',
+            'classTotal',
+            'growthData',
+            'previousSubjectMarks'
+        ) + ['mode' => 'single']);
     }
 
     /**
@@ -526,11 +549,24 @@ class ExaminationController extends Controller
             ->orderBy('lastname')
             ->get();
 
+        // 🔥 KEY FIX: Build complete slip structure for each student
         $slips = $students->map(function ($student) use ($examId, $schoolId, $exam) {
-            return array_merge(
-                ['student' => $student],
-                $this->buildPassslipData($examId, $student->id, $schoolId, $exam)
-            );
+            $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+
+            return [
+                'student' => $student,
+                'qrText' => $passslipData['qrText'] ?? '',
+                'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
+                'totalObtained' => $passslipData['totalObtained'] ?? 0,
+                'totalMax' => $passslipData['totalMax'] ?? 0,
+                'percentage' => $passslipData['percentage'] ?? 0,
+                'overallGrade' => $passslipData['overallGrade'] ?? '—',
+                'overallRemark' => $passslipData['overallRemark'] ?? '—',
+                'classRank' => $passslipData['classRank'] ?? '—',
+                'classTotal' => $passslipData['classTotal'] ?? 0,
+                'growthData' => $passslipData['growthData'] ?? [],
+                'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+            ];
         });
 
         return view('Examination.passslips.slip', compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
@@ -562,10 +598,23 @@ class ExaminationController extends Controller
                 ->get();
 
             foreach ($students as $student) {
-                $allSlips[] = array_merge(
-                    ['student' => $student],
-                    $this->buildPassslipData($examId, $student->id, $schoolId, $exam)
-                );
+                $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+
+                // 🔥 KEY FIX: Build complete slip structure explicitly
+                $allSlips[] = [
+                    'student' => $student,
+                    'qrText' => $passslipData['qrText'] ?? '',
+                    'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
+                    'totalObtained' => $passslipData['totalObtained'] ?? 0,
+                    'totalMax' => $passslipData['totalMax'] ?? 0,
+                    'percentage' => $passslipData['percentage'] ?? 0,
+                    'overallGrade' => $passslipData['overallGrade'] ?? '—',
+                    'overallRemark' => $passslipData['overallRemark'] ?? '—',
+                    'classRank' => $passslipData['classRank'] ?? '—',
+                    'classTotal' => $passslipData['classTotal'] ?? 0,
+                    'growthData' => $passslipData['growthData'] ?? [],
+                    'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+                ];
             }
         }
 
@@ -577,7 +626,7 @@ class ExaminationController extends Controller
     /**
      * Build all data needed for a single student's passslip.
      */
-    private function buildPassslipData($examId, $studentId, $schoolId, $exam): array
+    private function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
     {
         // This student's marks
         $marks = ExaminationMark::where('examination_id', $examId)
@@ -713,7 +762,30 @@ class ExaminationController extends Controller
                 ->keyBy('subject_id');
         }
 
+        // Fetch student record if not passed in
+        if (!$student) {
+            $student = DB::table('students')->where('id', $studentId)->first();
+        }
+
+        $studentName = trim(
+            (($student->lastname ?? '') . ' ' . ($student->firstname ?? ''))
+        );
+
+        $qrText = implode("\n", array_filter([
+            'SMASA',
+            Helper::schoolNameBySchoolID($schoolId) ?? '',
+            'NAME: ' . $studentName,
+            'CLASS: ' . (Helper::recordMdname($classId) ?? $classId),
+            'STREAM: ' . ($streamId ?? ''),
+            'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
+            'EXAM: ' . $exam->exam_name,
+            'TERM: ' . $exam->term . ' ' . $exam->academic_year,
+            'SCORE: ' . $percentage . '%',
+            'GRADE: ' . ($overallGradeRow?->grade ?? '—'),
+        ]));
+
         return [
+            'qrText' => $qrText,
             'subjectMarks' => $subjectMarks,
             'totalObtained' => $totalObtained,
             'totalMax' => $totalMax,
