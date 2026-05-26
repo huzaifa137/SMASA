@@ -346,7 +346,7 @@ class UserController extends Controller
     private function authenticateSchool(Request $request)
     {
 
-        $school_id = Helper::schoolIDFromHouseID(Helper::schoolNumber($request->school_id));
+        $school_id = Helper::schoolIDFromHouseRegistrationCode(Helper::schoolNumber($request->school_id));
 
         $school = School::where('id', $school_id)->first();
 

@@ -296,10 +296,24 @@ class Helper extends Controller
         return $school_product;
     }
 
-    public static function schoolIDFromHouseID($house_id)
+    public static function schoolIDFromHouseRegistrationCode($house_id)
     {
+        // using registration code
         $schoolID = DB::table('schools')
             ->where('registration_code', $house_id)
+            ->value('id');
+
+        return $schoolID;
+    }
+
+    public static function schoolIDFromHouseID($house_id)
+    {
+        $Number = DB::table('houses')
+            ->where('ID', $house_id)
+            ->value('Number');
+
+        $schoolID = DB::table('schools')
+            ->where('registration_code', $Number)
             ->value('id');
 
         return $schoolID;

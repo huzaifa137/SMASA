@@ -322,7 +322,7 @@
 
                 <!-- Password requirements -->
                 <ul class="requirements" id="requirements">
-                    <li id="req-len"><i class="fas"></i> At least 8 characters</li>
+                    <li id="req-len"><i class="fas"></i> At least 4 characters</li>
                     <li id="req-upper"><i class="fas"></i> One uppercase letter (A–Z)</li>
                     <li id="req-lower"><i class="fas"></i> One lowercase letter (a–z)</li>
                     <li id="req-num"><i class="fas"></i> One number (0–9)</li>
@@ -386,11 +386,11 @@
         const bars      = ['sb1','sb2','sb3','sb4'].map(id => document.getElementById(id));
         const barColors = ['#dc2626', '#d97706', '#2563eb', '#16a34a'];
         const reqMap = {
-            'req-len':     p => p.length >= 8,
-            'req-upper':   p => /[A-Z]/.test(p),
-            'req-lower':   p => /[a-z]/.test(p),
-            'req-num':     p => /[0-9]/.test(p),
-            'req-special': p => /[@$!%*?&#]/.test(p),
+            'req-len':     p => p.length >= 4,
+            // 'req-upper':   p => /[A-Z]/.test(p),
+            // 'req-lower':   p => /[a-z]/.test(p),
+            // 'req-num':     p => /[0-9]/.test(p),
+            // 'req-special': p => /[@$!%*?&#]/.test(p),
         };
 
         document.getElementById('password').addEventListener('input', function () {

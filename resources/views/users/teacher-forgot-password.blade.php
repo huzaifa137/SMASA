@@ -364,10 +364,19 @@
 
         .select-wrapper {
             position: relative;
+            display: block;
+            isolation: isolate;
         }
 
         .select-wrapper .input-icon {
             z-index: 1070 !important;
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 1.05rem;
+            pointer-events: none;
         }
 
         /* ── Back link ── */
@@ -619,9 +628,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // ── Initialize Select2 ──────────────────────────────────────────────
         $(document).ready(function () {
 
+            // ── Initialize Select2 ──────────────────────────────────────────────
             $('#school_id').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -631,7 +640,7 @@
                 minimumResultsForSearch: 0,
             });
 
-            // ── Form submission ─────────────────────────────────────────────
+            // ── Form submission ─────────────────────────────────────────────────
             $('#forgotPasswordForm').on('submit', function (e) {
 
                 e.preventDefault();
@@ -642,142 +651,119 @@
 
                 // Clear previous inline errors
                 $('.error-text').text('');
-                $('#errorAlert').removeClass('show');
 
-                // ── Client-side validation ────────────────────────────────
+                // ── Client-side validation ──────────────────────────────────────
                 let valid = true;
 
                 if (!schoolId) {
-                    $('#school_id-error').text(
-                        'Please select your school.'
-                    );
+                    $('#school_id-error').text('Please select your school.');
                     valid = false;
                 }
 
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
                 if (!email || !emailRegex.test(email)) {
-
-                    $('#email-error').text(
-                        'Please enter a valid email address.'
-                    );
-
+                    $('#email-error').text('Please enter a valid email address.');
                     valid = false;
                 }
 
                 if (!valid) return;
 
-                // ── Confirmation dialog ─────────────────────────────────
+                // ── Confirmation dialog ─────────────────────────────────────────
                 Swal.fire({
                     title: 'Send Reset Link?',
-                    html:
-                        `We'll send a secure reset link to:<br><strong>${email}</strong>`,
+                    html: `We'll send a secure reset link to:<br><strong>${email}</strong>`,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#2C29CA',
                     cancelButtonColor: '#71717a',
-                    confirmButtonText:
-                        '<i class="fas fa-paper-plane"></i> Yes, send it',
+                    confirmButtonText: 'Yes, send it',
                     cancelButtonText: 'Cancel',
 
                 }).then((result) => {
 
                     if (!result.isConfirmed) return;
 
-                    // ── Loading state ────────────────────────────────
+                    // ── Loading state ───────────────────────────────────────────
                     const originalHtml = submitBtn.html();
-
                     submitBtn.prop('disabled', true);
+                    submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Sending...');
 
-                    submitBtn.html(
-                        '<i class="fas fa-spinner fa-spin"></i> Sending...'
-                    );
-
-                    // ── AJAX REQUEST ─────────────────────────────────
+                    // ── AJAX REQUEST ────────────────────────────────────────────
                     $.ajax({
-
                         url: '{{ route("teacher.send.reset.link") }}',
-
                         type: 'POST',
-
                         data: $('#forgotPasswordForm').serialize(),
-
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
 
                         success: function (data) {
 
-                            // console.log('SUCCESS RESPONSE:', data);
+                            if (data.success) {
+                                // ── Show success state ──────────────────────────
+                                $('#sentEmailDisplay').text(email);
+                                $('#formFields').addClass('hidden');
+                                $('#successState').addClass('show');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            // ── Success state ────────────────────
-                            $('#sentEmailDisplay').text(email);
-
-                            $('#formFields').addClass('hidden');
-
-                            $('#successState').addClass('show');
-
-                            window.scrollTo({
-                                top: 0,
-                                behavior: 'smooth'
-                            });
+                            } else {
+                                // ── Unexpected success=false with 200 status ────
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Something Went Wrong',
+                                    text: data.message || 'Please try again.',
+                                    confirmButtonColor: '#2C29CA',
+                                    confirmButtonText: 'Try Again',
+                                });
+                            }
 
                         },
 
+                        error: function (xhr) {
+
+                            let errorTitle = 'Error';
+                            let errorMessage = 'Something went wrong. Please try again.';
+
+                            if (xhr.responseJSON) {
+
+                                // ── Laravel validation errors (422) ────────────
+                                if (xhr.responseJSON.errors) {
+                                    errorTitle = 'Validation Error';
+                                    errorMessage = '';
+                                    Object.values(xhr.responseJSON.errors).forEach(function (errorArray) {
+                                        errorMessage += errorArray[0] + '<br>';
+                                    });
+
+                                    // ── Our custom error messages (404, 500, etc.) ──
+                                } else if (xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+
+                                    // Give a more specific title based on HTTP status
+                                    if (xhr.status === 404) {
+                                        errorTitle = 'Account Not Found';
+                                    } else if (xhr.status === 500) {
+                                        errorTitle = 'Mail Error';
+                                    }
+                                }
+                            }
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: errorTitle,
+                                html: errorMessage,
+                                confirmButtonColor: '#2C29CA',
+                                confirmButtonText: 'Try Again',
+                            });
+
+                        },
                         // error: function (data) {
-
-                        //     console.log('FULL ERROR:', data);
-
-                        //     // ── DEBUGGING MODE ─────────────────────
-                        //     // Shows raw Laravel error directly
                         //     $('body').html(data.responseText);
-
-                        //     /*
-                        //     // ── SWEETALERT ERROR MODE ─────────────
-                        //     let errorMessage = 'Something went wrong.';
-    
-                        //     if (data.responseJSON) {
-    
-                        //         if (data.responseJSON.errors) {
-    
-                        //             errorMessage = '';
-    
-                        //             Object.values(data.responseJSON.errors)
-                        //                 .forEach(errorArray => {
-    
-                        //                     errorMessage +=
-                        //                         errorArray[0] + '<br>';
-    
-                        //                 });
-    
-                        //         } else if (data.responseJSON.message) {
-    
-                        //             errorMessage =
-                        //                 data.responseJSON.message;
-    
-                        //         }
-    
-                        //     }
-    
-                        //     Swal.fire({
-                        //         icon: 'error',
-                        //         title: 'Error',
-                        //         html: errorMessage,
-                        //     });
-                        //     */
-
                         // },
 
-                        error: function(data) {
-$('body').html(data.responseText);
-},
-
                         complete: function () {
-
                             submitBtn.prop('disabled', false);
-
                             submitBtn.html(originalHtml);
-
                         }
 
                     });
@@ -786,38 +772,16 @@ $('body').html(data.responseText);
 
             });
 
-            // ── "Try again" link in success state ───────────────────────
+            // ── "Try again" link in success state ──────────────────────────────
             $('#tryAgainLink').on('click', function (e) {
-
                 e.preventDefault();
-
                 $('#successState').removeClass('show');
-
                 $('#formFields').removeClass('hidden');
-
                 $('#forgotPasswordForm')[0].reset();
-
                 $('#school_id').val(null).trigger('change');
-
             });
 
         });
-
-        // ── Error Alert Helper ─────────────────────────────────────────────
-        function showError(message) {
-
-            const alert = document.getElementById('errorAlert');
-
-            document.getElementById('errorText').textContent = message;
-
-            alert.classList.add('show');
-
-            alert.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-
-        }
     </script>
 
 </body>

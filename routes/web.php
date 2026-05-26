@@ -43,7 +43,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
             Route::group(['middleware' => ['AdminAuth']], function () {
                 Route::get('/forgot-password', [TeacherPasswordResetController::class, 'showForgotPasswordForm'])->name('forgot-password');
-                Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link');
                 Route::get('/login', 'login')->name('users.login');
                 Route::post('auth-user-check', 'checkUser')->name('auth-user-check');
                 Route::get('/users-profile', 'userProfile')->name('users-profile');
@@ -60,6 +59,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/users/delete-user/{id}', 'deleteUserAccount')->name('users.delete-user');
             });
 
+            Route::get('/teacher-password-reset-form', [TeacherPasswordResetController::class, 'showResetPasswordForm'])->name('teacher.password.reset.form');
+            Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link');
+            Route::post('/teacher-password-reset', [TeacherPasswordResetController::class, 'resetPassword'])->name('teacher.password.reset');
             Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school');
             Route::post('store-internal-user', 'storeInternalUser')->name('store-internal-user');
             Route::post('update-internal-user', 'storeUpdatedInternalUser')->name('update.internal-user');

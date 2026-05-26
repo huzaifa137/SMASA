@@ -38,37 +38,27 @@ class TeacherPasswordResetController extends Controller
 
     public function sendResetLink(Request $request)
     {
-
         $request->validate([
-            'email'     => ['required', 'email'],
+            'email' => ['required', 'email'],
             'school_id' => ['required', 'integer'],
         ]);
 
-        $email    = trim(strtolower($request->email));
-        $schoolId = (int) $request->school_id;
+        $email = trim(strtolower($request->email));
+        $houseSchoolId = (int) $request->school_id;
+        $schoolId = Helper::schoolIDFromHouseID($houseSchoolId);
 
         // Look up the teacher by BOTH email and school_id.
-        // This is the crucial check since one email can exist across many schools.
         $teacher = Teacher::where('email', $email)
-                          ->where('school_id', $schoolId)
-                          ->first();
+            ->where('school_id', $schoolId)
+            ->first();
 
-        /*
-         * SECURITY NOTE – Prevent user enumeration:
-         * Whether the teacher exists or not, we return the same generic success
-         * message. This prevents attackers from fishing for valid email/school
-         * combinations.
-         */
-
-
-        if (! $teacher) {
+        // ── CHANGED: Return a real error if teacher not found ──
+        if (!$teacher) {
             return response()->json([
-                'success' => true,
-                'message' => 'If that email is registered under the selected school, a reset link has been sent.',
-            ]);
+                'success' => false,
+                'message' => 'No teacher account was found with that email address under the selected school. Please check your details and try again.',
+            ], 404);
         }
-
-
 
         // ── Invalidate all previous unused tokens for this teacher/school ──
         TeacherPasswordReset::where('email', $email)
@@ -77,61 +67,61 @@ class TeacherPasswordResetController extends Controller
             ->update(['link_status' => 1]);
 
         // ── Generate a cryptographically secure token ──
-        $plainToken = Str::random(64);          // What goes in the email URL
-        $hashedToken = hash('sha256', $plainToken); // What we store in DB (never the raw token)
+        $plainToken = Str::random(64);
+        $hashedToken = hash('sha256', $plainToken);
 
         // ── Persist the reset record ──
         TeacherPasswordReset::create([
-            'email'      => $email,
-            'school_id'  => $schoolId,
-            'token'      => $plainToken,        // Kept plain for URL; hashed value is what DB uses for lookup
+            'email' => $email,
+            'school_id' => $schoolId,
+            'token' => $plainToken,
             'token_hash' => $hashedToken,
-            'link_status'=> 0,
+            'link_status' => 0,
             'expires_at' => now()->addMinutes(self::TOKEN_EXPIRY_MINUTES),
         ]);
 
-        // ── Build the reset URL – token is plain in URL, school_id encoded ──
+        // ── Build the reset URL ──
         $resetUrl = route('teacher.password.reset.form', [
-            'token'    => $plainToken,
-            'school'   => $schoolId,
+            'token' => $plainToken,
+            'school' => $schoolId,
         ]);
 
         // ── Compose teacher display name ──
         $teacherName = trim(($teacher->firstname ?? '') . ' ' . ($teacher->surname ?? ''));
-        if (empty(trim($teacherName))) {
+        if (empty($teacherName)) {
             $teacherName = 'Teacher';
         }
 
         // ── Fetch school name for the email ──
-        $school = House::find($schoolId);
+        $school = House::find($houseSchoolId);
         $schoolName = $school ? $school->House : 'Your School';
 
         // ── Send the reset email ──
         $emailData = [
             'teacherName' => $teacherName,
-            'schoolName'  => $schoolName,
-            'resetUrl'    => $resetUrl,
-            'expiryMins'  => self::TOKEN_EXPIRY_MINUTES,
+            'schoolName' => $schoolName,
+            'resetUrl' => $resetUrl,
+            'expiryMins' => self::TOKEN_EXPIRY_MINUTES,
+            'teacherEmail' => $email,
         ];
 
         try {
             Mail::send('emails.teacher-reset-password', $emailData, function ($message) use ($email, $schoolName) {
                 $message->to($email)
-                        ->subject("Password Reset Request – {$schoolName} | SMASA");
+                    ->subject("Password Reset Request – {$schoolName} | SMASA");
             });
         } catch (\Exception $e) {
-            // Log but do NOT expose error details to the user
             \Log::error('Teacher password reset email failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'We could not send the reset email at this time. Please contact your school administrator.',
+                'message' => 'Teacher account found but we could not send the reset email. Please check your email address or contact your school administrator.',
             ], 500);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'If that email is registered under the selected school, a reset link has been sent.',
+            'message' => 'Password reset link sent successfully.',
         ]);
     }
 
@@ -139,43 +129,48 @@ class TeacherPasswordResetController extends Controller
     // STEP 3 – Show the "Reset Password" form (after clicking email link)
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function showResetPasswordForm(Request $request, string $token)
+    public function showResetPasswordForm(Request $request)
     {
+        $token = $request->query('token');
         $schoolId = $request->query('school');
 
-        // Look up by the plain token (stored in DB before hashing for lookup)
-        $resetRecord = TeacherPasswordReset::where('token', $token)
-                                           ->where('school_id', $schoolId)
-                                           ->first();
+        // Guard against missing query params
+        if (!$token || !$schoolId) {
+            return redirect()->route('forgot-password')
+                ->with('error', 'Invalid password reset link. Please request a new one.');
+        }
 
-        // ── Validate the token ──
-        if (! $resetRecord) {
-            return redirect()->route('teacher.forgot.password')
-                             ->with('error', 'This password reset link is invalid. Please request a new one.');
+        // Look up by the plain token
+        $resetRecord = TeacherPasswordReset::where('token', $token)
+            ->where('school_id', $schoolId)
+            ->first();
+
+        if (!$resetRecord) {
+            return redirect()->route('forgot-password')
+                ->with('error', 'This password reset link is invalid. Please request a new one.');
         }
 
         if ($resetRecord->link_status === 1) {
-            return redirect()->route('teacher.forgot.password')
-                             ->with('error', 'This reset link has already been used. Please request a new one.');
+            return redirect()->route('forgot-password')
+                ->with('error', 'This reset link has already been used. Please request a new one.');
         }
 
         if (now()->greaterThan($resetRecord->expires_at)) {
-            // Mark it as consumed to keep DB clean
             $resetRecord->markUsed();
 
-            return redirect()->route('teacher.forgot.password')
-                             ->with('error', 'This reset link has expired (links are valid for ' . self::TOKEN_EXPIRY_MINUTES . ' minutes). Please request a new one.');
+            return redirect()->route('forgot-password')
+                ->with('error', 'This reset link has expired (links are valid for ' . self::TOKEN_EXPIRY_MINUTES . ' minutes). Please request a new one.');
         }
 
         // Fetch school name for display
-        $school     = House::find($schoolId);
+        $school = House::find($schoolId);
         $schoolName = $school ? $school->House : '';
 
         return view('users.teacher-reset-password', [
-            'token'      => $token,
-            'school_id'  => $schoolId,
+            'token' => $token,
+            'school_id' => $schoolId,
             'schoolName' => $schoolName,
-            'email'      => $resetRecord->email,
+            'email' => $resetRecord->email,
         ]);
     }
 
@@ -187,37 +182,37 @@ class TeacherPasswordResetController extends Controller
     {
         $request->validate(
             [
-                'token'                 => ['required', 'string'],
-                'school_id'             => ['required', 'integer'],
-                'password'              => [
+                'token' => ['required', 'string'],
+                'school_id' => ['required', 'integer'],
+                'password' => [
                     'required',
-                    'string',
-                    'min:8',
-                    'regex:/[A-Z]/',      // at least one uppercase
-                    'regex:/[a-z]/',      // at least one lowercase
-                    'regex:/[0-9]/',      // at least one digit
-                    'regex:/[@$!%*?&#]/', // at least one special char
+                    // 'string',
+                    'min:4',
+                    // 'regex:/[A-Z]/',      // at least one uppercase
+                    // 'regex:/[a-z]/',      // at least one lowercase
+                    // 'regex:/[0-9]/',      // at least one digit
+                    // 'regex:/[@$!%*?&#]/', // at least one special char
                     'confirmed',          // must match password_confirmation field
                 ],
                 'password_confirmation' => ['required'],
             ],
             [
-                'password.min'    => 'Password must be at least 8 characters.',
-                'password.regex'  => 'Password must include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).',
+                'password.min' => 'Password must be at least 8 characters.',
+                'password.regex' => 'Password must include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).',
                 'password.confirmed' => 'Passwords do not match.',
             ]
         );
 
-        $token    = $request->token;
+        $token = $request->token;
         $schoolId = (int) $request->school_id;
 
         // Fetch the reset record
         $resetRecord = TeacherPasswordReset::where('token', $token)
-                                           ->where('school_id', $schoolId)
-                                           ->first();
+            ->where('school_id', $schoolId)
+            ->first();
 
         // ── Re-validate token integrity (guard against race conditions) ──
-        if (! $resetRecord || ! $resetRecord->isValid()) {
+        if (!$resetRecord || !$resetRecord->isValid()) {
             return response()->json([
                 'success' => false,
                 'message' => 'This reset link is invalid or has expired. Please request a new one.',
@@ -226,13 +221,13 @@ class TeacherPasswordResetController extends Controller
 
         // ── Update the teacher's password ──
         $updated = Teacher::where('email', $resetRecord->email)
-                          ->where('school_id', $schoolId)
-                          ->update([
-                              'password'             => Hash::make($request->password),
-                              'must_change_password' => false, // They've now set their own password
-                          ]);
+            ->where('school_id', $schoolId)
+            ->update([
+                'password' => Hash::make($request->password),
+                'must_change_password' => false, // They've now set their own password
+            ]);
 
-        if (! $updated) {
+        if (!$updated) {
             return response()->json([
                 'success' => false,
                 'message' => 'Could not update the password. Please contact your administrator.',
@@ -249,8 +244,8 @@ class TeacherPasswordResetController extends Controller
             ->update(['link_status' => 1]);
 
         return response()->json([
-            'success'  => true,
-            'message'  => 'Your password has been updated successfully. Please sign in with your new password.',
+            'success' => true,
+            'message' => 'Your password has been updated successfully. Please sign in with your new password.',
             'redirect' => route('users.login'),
         ]);
     }
