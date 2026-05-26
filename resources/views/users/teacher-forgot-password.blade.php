@@ -330,6 +330,13 @@
             margin-top: 4px !important;
         }
 
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+
         .select2-container--bootstrap-5 .select2-results__option--selected {
             background-color: var(--orange-subtle) !important;
             color: var(--orange-dark) !important;
@@ -636,7 +643,7 @@
                 width: '100%',
                 placeholder: 'Choose your school',
                 allowClear: true,
-                dropdownParent: $('.select-wrapper').first(),
+                dropdownParent: $('body'),
                 minimumResultsForSearch: 0,
             });
 
