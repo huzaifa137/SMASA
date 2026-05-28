@@ -1520,7 +1520,7 @@ function injectIntoForm(formEl) {
     function showLoading(msg) {
         document.getElementById('loadingText').textContent = msg ?? 'Generating…';
         document.getElementById('loadingOverlay').classList.add('active');
-        setTimeout(() => document.getElementById('loadingOverlay').classList.remove('active'), 10000);
+        setTimeout(() => document.getElementById('loadingOverlay').classList.remove('active'), 5000);
     }
 
     /* ── Student list filter ── */

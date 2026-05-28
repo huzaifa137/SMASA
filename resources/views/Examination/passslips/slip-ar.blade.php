@@ -354,7 +354,7 @@
         }
 
         .sch-details {
-            font-size: 11.5px;
+            font-size: 15.5px;
             color: #555;
             margin-top: 3px;
         }
@@ -1155,10 +1155,27 @@
 
                 /* School meta */
                 $schoolNameArabic = Helper::schoolNameArabic(Session('LoggedSchool')) ?? '';
-                $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? '';
-                $schoolEmail = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('email');
-                $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
-                $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
+                $schoolPhone = Helper::toArabicNumberDate(
+                    Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? ''
+                );
+
+                $schoolEmail = Helper::toArabicLettersCountriesAndWordsPackage(
+                    DB::table('school_profiles')
+                        ->where('school_id', Session('LoggedSchool'))
+                        ->value('email') ?? ''
+                );
+
+                $schoolMotto = Helper::toArabicLettersCountriesAndWordsPackage(
+                    DB::table('school_profiles')
+                        ->where('school_id', Session('LoggedSchool'))
+                        ->value('motto') ?? ''
+                );
+
+                $schoolLocation = Helper::toArabicLettersCountriesAndWordsPackage(
+                    DB::table('school_profiles')
+                        ->where('school_id', Session('LoggedSchool'))
+                        ->value('school_type') ?? ''
+                );
                 $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
 
                 $qrText = $slipData['qrText'] ?? '';
@@ -1177,6 +1194,7 @@
                 {{-- Decorative geometric strip --}}
                 <div class="geo-strip"></div>
 
+               
                 {{-- Watermark --}}
                 @if($cfg['watermark'])
                     @if($schoolLogo && Storage::disk('public')->exists($schoolLogo))
@@ -1209,20 +1227,30 @@
                         @endif
 
                         {{-- Latin name shown smaller underneath --}}
-                        <div class="sch-name-latin" style="direction:ltr; text-align:right;">
+                        <!-- <div class="sch-name-latin" style="direction:ltr; text-align:right;">
                             {{ $schoolName }}
-                        </div>
+                        </div> -->
 
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
                             <div class="sch-details" style="direction:rtl;">
-                                @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
-                                @if($schoolEmail)<span> &bull; {{ $schoolEmail }}</span>@endif
-                                @if($schoolLocation)<span> &bull; {{ $schoolLocation }}</span>@endif
+                                @if($schoolPhone)
+                                    <span>{{ $schoolPhone }}</span>
+                                @endif
+
+                                @if($schoolEmail)
+                                    <span> • {{ $schoolEmail }}</span>
+                                @endif
+
+                                @if($schoolLocation)
+                                    <span> • {{ $schoolLocation }}</span>
+                                @endif
                             </div>
                         @endif
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="sch-motto"> Motto : {{ $schoolMotto }}</div>
+                            <div class="sch-motto">
+                                الشعار : {{ $schoolMotto }}
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -1624,7 +1652,7 @@
                                 });
                             }
                         @endif
-                            })();
+                                })();
             </script>
 
             @if($cfg['qr'] && $qrText)
