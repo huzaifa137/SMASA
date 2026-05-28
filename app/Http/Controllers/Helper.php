@@ -978,4 +978,105 @@ class Helper extends Controller
             ->where('id', $schoolId)
             ->value('school_name_arabic') ?? '';
     }
+
+    public static function toArabicNumberDate($value)
+    {
+        $western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+        return str_replace($western, $arabic, $value);
+    }
+
+    public static function toArabicLettersCountriesAndWordsPackage($text)
+    {
+        $dictionary = [
+
+            // Countries
+            'UGANDA' => 'أوغندا',
+            'KENYA' => 'كينيا',
+            'TANZANIA' => 'تنزانيا',
+            'RWANDA' => 'رواندا',
+            'BURUNDI' => 'بوروندي',
+            'SOUTH SUDAN' => 'جنوب السودان',
+
+            // Cities
+            'KAMPALA' => 'كمبالا',
+            'JINJA' => 'جينجا',
+            'MASAKA' => 'مساكا',
+            'MBALE' => 'مبالي',
+
+            // Nationalities
+            'UGANDAN' => 'أوغندي',
+            'KENYAN' => 'كيني',
+
+            // Gender
+            'MALE' => 'ذكر',
+            'FEMALE' => 'أنثى',
+        ];
+
+        $upper = strtoupper(trim($text));
+
+        // Exact dictionary match
+        if (isset($dictionary[$upper])) {
+            return $dictionary[$upper];
+        }
+
+        // Fallback transliteration
+        $special = [
+            'TH' => 'ث',
+            'SH' => 'ش',
+            'CH' => 'تش',
+            'PH' => 'ف',
+            'KH' => 'خ',
+            'GH' => 'غ'
+        ];
+
+        $text = str_ireplace(
+            array_keys($special),
+            array_values($special),
+            strtoupper($text)
+        );
+
+        $map = [
+            'A' => 'ا',
+            'B' => 'ب',
+            'C' => 'ك',
+            'D' => 'د',
+            'E' => 'ي',
+            'F' => 'ف',
+            'G' => 'ج',
+            'H' => 'ه',
+            'I' => 'ي',
+            'J' => 'ج',
+            'K' => 'ك',
+            'L' => 'ل',
+            'M' => 'م',
+            'N' => 'ن',
+            'O' => 'و',
+            'P' => 'ب',
+            'Q' => 'ق',
+            'R' => 'ر',
+            'S' => 'س',
+            'T' => 'ت',
+            'U' => 'و',
+            'V' => 'ف',
+            'W' => 'و',
+            'X' => 'كس',
+            'Y' => 'ي',
+            'Z' => 'ز',
+
+            '0' => '٠',
+            '1' => '١',
+            '2' => '٢',
+            '3' => '٣',
+            '4' => '٤',
+            '5' => '٥',
+            '6' => '٦',
+            '7' => '٧',
+            '8' => '٨',
+            '9' => '٩',
+        ];
+
+        return strtr($text, $map);
+    }
 }

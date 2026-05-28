@@ -1031,7 +1031,7 @@
 
     <div class="page-wrap">
         @foreach($renderSlips as $slipData)
-
+            
             @php
                 $slipCounter++;
                 $s = (object) $slipData['student'];

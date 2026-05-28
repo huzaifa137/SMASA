@@ -507,7 +507,10 @@ class ExaminationController extends Controller
         $growthData = $passslipData['growthData'] ?? [];
         $previousSubjectMarks = $passslipData['previousSubjectMarks'] ?? collect();
 
-        return view('Examination.passslips.slip', compact(
+        $lang = request('lang', 'en');
+        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+
+        return view($view, compact(
             'exam',
             'student',
             'qrText',
@@ -569,7 +572,10 @@ class ExaminationController extends Controller
             ];
         });
 
-        return view('Examination.passslips.slip', compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
+        $lang = request('lang', 'en');
+        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+
+        return view($view, compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
     }
 
     /**
@@ -618,7 +624,10 @@ class ExaminationController extends Controller
             }
         }
 
-        return view('Examination.passslips.slip', compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
+        $lang = request('lang', 'en');
+        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+
+        return view($view, compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
     }
 
     // ─── Private helper ─────────────────────────────────────────────────────────

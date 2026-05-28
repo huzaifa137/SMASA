@@ -25,7 +25,7 @@ class TeacherController extends Controller
 
     public function storeTeacher(Request $request)
     {
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Add new Teacher'

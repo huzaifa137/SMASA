@@ -747,6 +747,56 @@ use App\Http\Controllers\Helper;
 
                     <div class="custom-panel-body" id="cpBody">
 
+                    {{-- Add this after the custom-panel or in the hero section --}}
+<div class="custom-panel mb-4">
+    <div class="custom-panel-header" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 60%, #1e1b4b 100%);">
+        <div class="cp-title">
+            <i class="fas fa-language"></i>
+            Language / اللغة
+        </div>
+    </div>
+    <div class="custom-panel-body">
+        <div class="d-flex gap-3 align-items-center">
+            <button class="lang-toggle-btn {{ request('lang', 'en') == 'en' ? 'active' : '' }}" 
+                    data-lang="en" 
+                    onclick="setLanguage('en')"
+                    style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang', 'en') == 'en' ? 'var(--brand)' : 'white' }}; color: {{ request('lang', 'en') == 'en' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
+                <i class="fas fa-flag-usa me-2"></i> English
+            </button>
+            <button class="lang-toggle-btn {{ request('lang') == 'ar' ? 'active' : '' }}" 
+                    data-lang="ar" 
+                    onclick="setLanguage('ar')"
+                    style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang') == 'ar' ? 'var(--brand)' : 'white' }}; color: {{ request('lang') == 'ar' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
+                <i class="fas fa-flag me-2"></i> العربية
+            </button>
+        </div>
+        <div class="mt-3 text-muted small text-center">
+            <i class="fas fa-info-circle"></i> Language preference will be applied to all pass slips
+        </div>
+    </div>
+</div>
+
+<script>
+function setLanguage(lang) {
+    // Update URL with lang parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.location.href = url.toString();
+}
+</script>
+
+<style>
+.lang-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44,41,202,.2);
+}
+.lang-toggle-btn.active {
+    border-color: var(--brand);
+    background: var(--brand) !important;
+    color: white !important;
+}
+</style>
+
                         {{-- CHECK ALL / NONE --}}
                         <div class="cp-check-all-row">
                             <span><i class="fas fa-check-square me-1"></i> Quick select</span>
@@ -1341,29 +1391,37 @@ use App\Http\Controllers\Helper;
     }
 
     /* ── Build query-string from currentSettings ── */
-    function buildQS() {
-        readSettings();
-        const p = new URLSearchParams();
-        for (const [k, v] of Object.entries(currentSettings)) {
-            p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
-        }
-        return p.toString();
+function buildQS() {
+    readSettings();
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(currentSettings)) {
+        p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
     }
+    // Preserve the current language
+    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+    p.set('lang', currentLang);
+    return p.toString();
+}
 
-    /* ── Inject hidden inputs into a <form> ── */
-    function injectIntoForm(formEl) {
-        readSettings();
-        // Remove previously injected
-        formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
-        for (const [k, v] of Object.entries(currentSettings)) {
-            const inp = document.createElement('input');
-            inp.type  = 'hidden';
-            inp.name  = k;
-            inp.value = typeof v === 'boolean' ? (v ? '1' : '0') : v;
-            inp.classList.add('cp-injected');
-            formEl.appendChild(inp);
-        }
+function injectIntoForm(formEl) {
+    readSettings();
+    formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
+    for (const [k, v] of Object.entries(currentSettings)) {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = typeof v === 'boolean' ? (v ? '1' : '0') : v;
+        inp.classList.add('cp-injected');
+        formEl.appendChild(inp);
     }
+    // Add lang
+    const langInp = document.createElement('input');
+    langInp.type = 'hidden';
+    langInp.name = 'lang';
+    langInp.value = new URLSearchParams(window.location.search).get('lang') || 'en';
+    langInp.classList.add('cp-injected');
+    formEl.appendChild(langInp);
+}
 
     /* ── Update ALL student links + Print All href ── */
     function updateAllLinks() {
