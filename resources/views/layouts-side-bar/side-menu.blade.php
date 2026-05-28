@@ -182,8 +182,6 @@ use App\Http\Controllers\Helper;
                     <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable Dashboard</a></li>
                     <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
                     <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard mr-2"></i>Teacher Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-print mr-2"></i>Print Timetables</a></li>
                 </ul>
             </li>
 

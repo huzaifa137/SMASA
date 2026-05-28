@@ -290,8 +290,7 @@ use App\Http\Controllers\Helper;
                             </div>
                             <div class="mt-3 p-3 rounded"
                                 style="background:#f8f7ff; border:1px solid #ede9ff; font-size:.82rem;">
-                                <strong><i class="fas fa-table me-1 text-primary"></i> Grading Scale (Uganda
-                                    O-Level)</strong><br>
+                                <strong><i class="fas fa-table me-1 text-primary"></i> Grading Scale (100% Scale)</strong><br>
                                 <div class="d-flex flex-wrap gap-2 mt-2">
                                     @foreach([['D1', '80–100', 'Distinction'], ['D2', '75–79', 'Distinction'], ['C3', '70–74', 'Credit'], ['C4', '65–69', 'Credit'], ['C5', '60–64', 'Credit'], ['C6', '55–59', 'Credit'], ['P7', '45–54', 'Pass'], ['P8', '40–44', 'Pass'], ['F9', '0–39', 'Fail']] as $g)
                                         <span class="badge text-white mb-1"

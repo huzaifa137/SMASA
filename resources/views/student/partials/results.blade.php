@@ -5,11 +5,128 @@ use App\Http\Controllers\Helper;
 @if($students->isEmpty())
     <p class="text-danger">No students found.</p>
 @else
+
+<style>
+    /* Make table container responsive with horizontal scroll */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+/* Style the table to prevent wrapping and ensure scroll works */
+.table-bordered {
+    min-width: 800px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+/* Allow some cells to wrap on very small screens if needed */
+@media (max-width: 576px) {
+    .table-bordered td,
+    .table-bordered th {
+        white-space: normal;
+        word-break: break-word;
+        min-width: 120px;
+    }
+    
+    .table-bordered td:first-child,
+    .table-bordered th:first-child {
+        min-width: 60px;
+    }
+    
+    .table-bordered td:last-child,
+    .table-bordered th:last-child {
+        min-width: 100px;
+    }
+}
+
+/* Style scrollbar for better UX */
+.table-responsive-wrapper::-webkit-scrollbar {
+    height: 8px;
+    -webkit-appearance: none;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #5351e4;
+}
+
+/* Scroll indicator (optional) */
+.scroll-indicator {
+    text-align: center;
+    padding: 8px 0;
+    font-size: 0.7rem;
+    color: #667eea;
+    background: linear-gradient(90deg, transparent, #f0f0ff, transparent);
+    margin-top: 8px;
+    border-radius: 20px;
+    display: none;
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Show indicator only on devices that need scrolling */
+@media (max-width: 992px) {
+    .scroll-indicator {
+        display: block;
+    }
+}
+
+/* Improve table readability */
+.table-bordered {
+    font-size: 0.85rem;
+}
+
+.table-bordered thead th {
+    background: linear-gradient(135deg, #3d4bb7 0%, #3d4bb7 100%);
+    color: white;
+    font-weight: 600;
+    padding: 12px 8px;
+    white-space: nowrap;
+}
+
+.table-bordered tbody td {
+    padding: 10px 8px;
+    vertical-align: middle;
+}
+
+/* Make action buttons more touch-friendly on mobile */
+@media (max-width: 768px) {
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .table-bordered thead th,
+    .table-bordered tbody td {
+        padding: 8px 6px;
+    }
+}
+</style>
+<div class="table-responsive-wrapper">
+
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Admission No</th>
+                <th>No</th>
+                <!-- <th>Admission No</th> -->
                 <th>Name</th>
                 <th>Class</th>
                 <th>Stream</th>
@@ -18,21 +135,20 @@ use App\Http\Controllers\Helper;
             </tr>
         </thead>
         <tbody>
-            @foreach($students as $student)
+            @foreach($students as $count => $student)
                 <tr>
-                    <td>{{ $student->id }}</td>
-                    <td>{{ $student->admission_number }}</td>
+                    <td>{{ $count + 1}}</td>
+                    <!-- <td>{{ $student->admission_number }}</td> -->
                     <td>{{ $student->firstname }} {{ $student->lastname }}</td>
                     <td>{{ Helper::recordMdname($student->senior) }}</td>
-                    <td>{{ Helper::recordMdname($student->stream) }}</td>
+                    <td>{{ $student->stream }}</td>
                     <td>{{ $student->gender }}</td>
                     <td style="text-align: center;">
                         <button class="btn btn-outline-primary btn-sm view-bio-btn" data-toggle="modal"
                             data-target="#viewStudentModal" data-id="{{ $student->id }}"
                             data-firstname="{{ $student->firstname }}" data-lastname="{{ $student->lastname }}"
                             data-gender="{{ $student->gender }}" data-admission_number="{{ $student->admission_number }}"
-                            data-senior="{{ Helper::recordMdname($student->senior) }}"
-                            data-stream="{{ Helper::recordMdname($student->stream) }}"
+                            data-senior="{{ Helper::recordMdname($student->senior) }}" data-stream="{{ $student->stream }}"
                             data-primary_contact="{{ $student->primary_contact }}"
                             data-other_contact="{{ $student->other_contact }}"
                             data-date_of_birth="{{ $student->date_of_birth }}" data-nationality="{{ $student->nationality }}"
@@ -45,12 +161,17 @@ use App\Http\Controllers\Helper;
             @endforeach
         </tbody>
     </table>
+</div>
+
+<div class="scroll-indicator">
+    <i class="fas fa-chevron-left"></i> Swipe to see more columns <i class="fas fa-chevron-right"></i>
+</div>
 
     <div class="modal fade" id="viewStudentModal" tabindex="-1" role="dialog" aria-labelledby="viewStudentModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header text-white" style="background:#5351e4;">
                     <h5 class="modal-title" id="viewStudentModalLabel">Student Information</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -58,8 +179,6 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="modal-body">
                     <dl class="row">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8" id="view_id"></dd>
 
                         <dt class="col-sm-4">First Name</dt>
                         <dd class="col-sm-8" id="view_firstname"></dd>

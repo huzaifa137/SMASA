@@ -502,16 +502,26 @@ use App\Http\Controllers\Helper;
         // Grading scale from PHP → JS
         const gradingScale = @json($gradingScale);
 
-        function getGrade(marks) {
-            if (marks === '' || marks === null || isNaN(marks)) return null;
-            marks = parseFloat(marks);
-            for (const g of gradingScale) {
-                if (marks >= g.min_mark && marks <= g.max_mark) {
-                    return g;
-                }
-            }
-            return null;
+// Pass total_marks from PHP into JS
+const examTotalMarks = {{ $exam->total_marks }};
+
+// ✅ Convert to percentage FIRST, then match scale
+function getGrade(marks) {
+    if (marks === '' || marks === null || isNaN(marks)) return null;
+    marks = parseFloat(marks);
+    
+    // Convert raw mark to percentage
+    const percentage = examTotalMarks > 0 
+        ? (marks / examTotalMarks) * 100 
+        : 0;
+    
+    for (const g of gradingScale) {
+        if (percentage >= g.min_mark && percentage <= g.max_mark) {
+            return g;
         }
+    }
+    return null;
+}
 
         function gradeCssClass(grade) {
             if (!grade) return '';

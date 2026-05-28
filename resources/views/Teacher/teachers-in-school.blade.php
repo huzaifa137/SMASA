@@ -213,6 +213,25 @@ $controller = new Controller();
         .select2-container--default .select2-selection--single .select2-selection__arrow b {
             border-top-color: #FFF !important;
         }
+
+      .teacher-profile-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    padding: 4px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Small screens */
+@media (max-width: 768px) {
+    .teacher-profile-img {
+        width: 60px;
+        height: 60px;
+    }
+}
     </style>
 @endsection
 
@@ -253,12 +272,11 @@ $controller = new Controller();
                                     @forelse ($teachers as $key => $teacher)
                                         <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
                                             <td style="width:1px;">{{ $key + 1 }}</td>
-                                            <td class="text-center">
-                                                <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
-                                                    class="img-fluid rounded-circle border p-2"
-                                                    style="width: 100px; height: 100px; object-fit: cover;"
-                                                    alt="Teacher Profile">
-                                            </td>
+                                           <td class="text-center">
+    <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
+        class="teacher-profile-img"
+        alt="Teacher Profile">
+</td>
                                             <td>{{ $teacher->surname }}</td>
                                             <td>{{ $teacher->firstname }}</td>
                                             <td>{{ $teacher->phonenumber }}</td>

@@ -96,10 +96,16 @@
     }
     .edit-btn:hover { background:var(--brand); color:white; }
 
-    .status-pill {
-        display:inline-flex; align-items:center; gap:0.3rem;
-        padding:0.3rem 0.85rem; border-radius:99px; font-size:0.72rem; font-weight:700;
-    }
+.status-pill {
+    display:inline-flex;
+    align-items:center;
+    gap:0.5rem;
+    padding:0.6rem 1.4rem;
+    border-radius:12px;
+    font-size:0.85rem;
+    font-weight:700;
+    min-height:44px;
+}
     .status-active  { background:rgba(16,185,129,0.1); color:#059669; }
     .status-draft   { background:rgba(245,158,11,0.1);  color:#d97706; }
     .status-archived{ background:rgba(100,116,139,0.1); color:#64748b; }
@@ -164,18 +170,28 @@
                 @if($timetable->term) · {{ $timetable->term }} @endif
                 · Created {{ $timetable->created_at->format('d M Y') }}</p>
         </div>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="status-pill status-{{ $timetable->status }}">
-                <i class="fas fa-{{ $timetable->status==='active'?'check-circle':($timetable->status==='draft'?'pen-ruler':'archive') }}"></i>
-                {{ ucfirst($timetable->status) }}
-            </span>
-            <a href="{{ route('timetable.edit', $timetable->id) }}" class="edit-btn">
-                <i class="fas fa-pen"></i> Edit Timetable
-            </a>
-            <button class="print-btn" onclick="window.print()">
-                <i class="fas fa-print"></i> Print
-            </button>
-        </div>
+<div class="d-flex align-items-center flex-wrap">
+
+    <span class="status-pill status-{{ $timetable->status }}">
+        <i class="fas fa-{{ $timetable->status==='active'?'check-circle':($timetable->status==='draft'?'pen-ruler':'archive') }}"></i>
+        {{ ucfirst($timetable->status) }}
+    </span>
+
+    <a href="{{ route('timetable.edit', $timetable->id) }}"
+       class="edit-btn"
+       style="margin-left:10px; margin-right:10px;">
+
+        <i class="fas fa-pen"></i> Edit Timetable
+    </a>
+
+    <button class="print-btn"
+            style="margin-left:10px;"
+            onclick="window.print()">
+
+        <i class="fas fa-print"></i> Print
+    </button>
+
+</div>
     </div>
 
     <div class="tt-wrapper">

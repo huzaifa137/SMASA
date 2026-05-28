@@ -314,9 +314,15 @@ class ExaminationController extends Controller
                 $points = null;
 
                 if ($marksObtained !== null) {
-                    $gradeRow = $gradingScale->first(function ($g) use ($marksObtained) {
-                        return $marksObtained >= $g->min_mark && $marksObtained <= $g->max_mark;
+                    // ✅ Convert raw mark to percentage against THIS exam's total_marks
+                    $percentage = $exam->total_marks > 0
+                        ? round(($marksObtained / $exam->total_marks) * 100, 4)
+                        : 0;
+
+                    $gradeRow = $gradingScale->first(function ($g) use ($percentage) {
+                        return $percentage >= $g->min_mark && $percentage <= $g->max_mark;
                     });
+
                     if ($gradeRow) {
                         $grade = $gradeRow->grade;
                         $remark = $gradeRow->remark;
@@ -435,47 +441,6 @@ class ExaminationController extends Controller
         ]);
     }
 
-    public function passslipIndex($examId)
-    {
-        $schoolId = Session('LoggedSchool');
-
-        $exam = Examination::where('id', $examId)
-            ->where('school_id', $schoolId)
-            ->firstOrFail();
-
-        // Only allow for closed / results_released
-        if (!in_array($exam->status, ['closed', 'results_released'])) {
-            return redirect()->route('examination.index')
-                ->with('error', 'Pass slips are only available after the examination is closed.');
-        }
-
-        // All class-stream combos in this exam
-        $examClasses = DB::table('examination_classes')
-            ->where('examination_id', $examId)
-            ->where('school_id', $schoolId)
-            ->get();
-
-        // Get all students for these classes
-        $allStudents = collect();
-        foreach ($examClasses as $ec) {
-            $students = DB::table('students')
-                ->where('school_id', $schoolId)
-                ->where('senior', $ec->class_id)
-                ->where('stream', $ec->stream_id)
-                ->orderBy('lastname')
-                ->get()
-                ->map(function ($s) use ($ec) {
-                    $s->class_id = $ec->class_id;
-                    $s->stream_id = $ec->stream_id;
-                    return $s;
-                });
-            $allStudents = $allStudents->merge($students);
-        }
-        $allStudents = $allStudents->sortBy('lastname');
-
-        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
-    }
-
     /**
      * Single student passslip (printable view).
      */
@@ -530,33 +495,93 @@ class ExaminationController extends Controller
     /**
      * All passslips for one class-stream (printable, paginated by student).
      */
-    public function passslipClass(Request $request, $examId)
-    {
-        $request->validate([
-            'class_id' => 'required|integer',
-            'stream_id' => 'nullable|string',
-        ]);
-
-        $schoolId = Session('LoggedSchool');
-        $classId = $request->class_id;
-        $streamId = $request->stream_id;
-
-        $exam = Examination::where('id', $examId)
-            ->where('school_id', $schoolId)
-            ->firstOrFail();
-
+  public function passslipClass(Request $request, $examId)
+{
+    $request->validate([
+        'class_id' => 'required|integer',
+        'stream_id' => 'nullable|string',
+    ]);
+ 
+    $schoolId = Session('LoggedSchool');
+    $classId = $request->class_id;
+    $streamId = $request->stream_id;
+ 
+    $exam = Examination::where('id', $examId)
+        ->where('school_id', $schoolId)
+        ->firstOrFail();
+ 
+    // ✅ Removed orderBy('lastname') - we'll sort by performance instead
+    $students = DB::table('students')
+        ->where('school_id', $schoolId)
+        ->where('senior', $classId)
+        ->where('stream', $streamId)
+        ->get();
+ 
+    // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
+    $slips = $students->map(function ($student) use ($examId, $schoolId, $exam) {
+        $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+ 
+        return [
+            'student' => $student,
+            'qrText' => $passslipData['qrText'] ?? '',
+            'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
+            'totalObtained' => $passslipData['totalObtained'] ?? 0,
+            'totalMax' => $passslipData['totalMax'] ?? 0,
+            'percentage' => $passslipData['percentage'] ?? 0,
+            'overallGrade' => $passslipData['overallGrade'] ?? '—',
+            'overallRemark' => $passslipData['overallRemark'] ?? '—',
+            'classRank' => $passslipData['classRank'] ?? '—',
+            'classTotal' => $passslipData['classTotal'] ?? 0,
+            'growthData' => $passslipData['growthData'] ?? [],
+            'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+        ];
+    })
+    // ✅ FIXED: Use sort() with comparison function instead of sortByDesc().thenBy()
+    ->sort(function ($a, $b) {
+        // First, compare by percentage (descending - highest first)
+        if ($b['percentage'] != $a['percentage']) {
+            return $b['percentage'] <=> $a['percentage'];
+        }
+        // If percentages are equal, compare by lastname (ascending)
+        return strcmp($a['student']->lastname, $b['student']->lastname);
+    })
+    ->values(); // Reset array keys
+ 
+    $lang = request('lang', 'en');
+    $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+ 
+    return view($view, compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
+}
+ 
+// ─── METHOD 2: passslipAll ────────────────────────────────────────────────
+ 
+public function passslipAll($examId)
+{
+    $schoolId = Session('LoggedSchool');
+ 
+    $exam = Examination::where('id', $examId)
+        ->where('school_id', $schoolId)
+        ->firstOrFail();
+ 
+    $examClasses = DB::table('examination_classes')
+        ->where('examination_id', $examId)
+        ->where('school_id', $schoolId)
+        ->get();
+ 
+    $allSlips = [];
+    
+    foreach ($examClasses as $ec) {
         $students = DB::table('students')
             ->where('school_id', $schoolId)
-            ->where('senior', $classId)
-            ->where('stream', $streamId)
-            ->orderBy('lastname')
-            ->get();
-
-        // 🔥 KEY FIX: Build complete slip structure for each student
-        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam) {
+            ->where('senior', $ec->class_id)
+            ->where('stream', $ec->stream_id)
+            ->get(); // ✅ Removed orderBy('lastname')
+ 
+        foreach ($students as $student) {
             $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
-
-            return [
+ 
+            // 🔥 KEY FIX: Build complete slip structure explicitly
+            $allSlips[] = [
                 'student' => $student,
                 'qrText' => $passslipData['qrText'] ?? '',
                 'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
@@ -570,65 +595,90 @@ class ExaminationController extends Controller
                 'growthData' => $passslipData['growthData'] ?? [],
                 'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
             ];
-        });
-
-        $lang = request('lang', 'en');
-        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
-
-        return view($view, compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
-    }
-
-    /**
-     * All passslips for every class in this exam (admin print-all).
-     */
-    public function passslipAll($examId)
-    {
-        $schoolId = Session('LoggedSchool');
-
-        $exam = Examination::where('id', $examId)
-            ->where('school_id', $schoolId)
-            ->firstOrFail();
-
-        $examClasses = DB::table('examination_classes')
-            ->where('examination_id', $examId)
-            ->where('school_id', $schoolId)
-            ->get();
-
-        $allSlips = [];
-        foreach ($examClasses as $ec) {
-            $students = DB::table('students')
-                ->where('school_id', $schoolId)
-                ->where('senior', $ec->class_id)
-                ->where('stream', $ec->stream_id)
-                ->orderBy('lastname')
-                ->get();
-
-            foreach ($students as $student) {
-                $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
-
-                // 🔥 KEY FIX: Build complete slip structure explicitly
-                $allSlips[] = [
-                    'student' => $student,
-                    'qrText' => $passslipData['qrText'] ?? '',
-                    'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
-                    'totalObtained' => $passslipData['totalObtained'] ?? 0,
-                    'totalMax' => $passslipData['totalMax'] ?? 0,
-                    'percentage' => $passslipData['percentage'] ?? 0,
-                    'overallGrade' => $passslipData['overallGrade'] ?? '—',
-                    'overallRemark' => $passslipData['overallRemark'] ?? '—',
-                    'classRank' => $passslipData['classRank'] ?? '—',
-                    'classTotal' => $passslipData['classTotal'] ?? 0,
-                    'growthData' => $passslipData['growthData'] ?? [],
-                    'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
-                ];
-            }
         }
-
-        $lang = request('lang', 'en');
-        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
-
-        return view($view, compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
     }
+ 
+    // ✅ FIXED: Use sort() with comparison function instead of sortByDesc().thenBy()
+    $allSlips = collect($allSlips)
+        ->sort(function ($a, $b) {
+            // First, compare by percentage (descending - highest first)
+            if ($b['percentage'] != $a['percentage']) {
+                return $b['percentage'] <=> $a['percentage'];
+            }
+            // If percentages are equal, compare by lastname (ascending)
+            return strcmp($a['student']->lastname, $b['student']->lastname);
+        })
+        ->values() // Reset array keys
+        ->toArray();
+ 
+    $lang = request('lang', 'en');
+    $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+ 
+    return view($view, compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
+}
+ 
+// ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
+ 
+public function passslipIndex($examId)
+{
+    $schoolId = Session('LoggedSchool');
+ 
+    $exam = Examination::where('id', $examId)
+        ->where('school_id', $schoolId)
+        ->firstOrFail();
+ 
+    // Only allow for closed / results_released
+    if (!in_array($exam->status, ['closed', 'results_released'])) {
+        return redirect()->route('examination.index')
+            ->with('error', 'Pass slips are only available after the examination is closed.');
+    }
+ 
+    // All class-stream combos in this exam
+    $examClasses = DB::table('examination_classes')
+        ->where('examination_id', $examId)
+        ->where('school_id', $schoolId)
+        ->get();
+ 
+    // Get all students for these classes WITH THEIR TOTALS for sorting
+    $allStudents = collect();
+    foreach ($examClasses as $ec) {
+        $students = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $ec->class_id)
+            ->where('stream', $ec->stream_id)
+            ->get()
+            ->map(function ($s) use ($ec, $examId, $schoolId) {
+                $s->class_id = $ec->class_id;
+                $s->stream_id = $ec->stream_id;
+                
+                // ✅ Add total marks for sorting
+                $studentTotal = ExaminationMark::where('examination_id', $examId)
+                    ->where('student_id', $s->id)
+                    ->where('school_id', $schoolId)
+                    ->whereNotNull('marks_obtained')
+                    ->sum('marks_obtained');
+                
+                $s->total_obtained = $studentTotal;
+                return $s;
+            });
+        $allStudents = $allStudents->merge($students);
+    }
+ 
+    // ✅ FIXED: Use sort() instead of sortByDesc().thenBy()
+    $allStudents = $allStudents
+        ->sort(function ($a, $b) {
+            // First, compare by total marks (descending - highest first)
+            if ($b->total_obtained != $a->total_obtained) {
+                return $b->total_obtained <=> $a->total_obtained;
+            }
+            // If totals are equal, compare by lastname (ascending)
+            return strcmp($a->lastname, $b->lastname);
+        })
+        ->values();
+ 
+    return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
+}
+
 
     // ─── Private helper ─────────────────────────────────────────────────────────
 
@@ -685,6 +735,7 @@ class ExaminationController extends Controller
         $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
 
         // ── Overall grade (by percentage) ─────────────────────────────────────
+// Fetch grading scale once before the map
         $gradingScale = DB::table('grading_scales')
             ->where(function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId)->orWhereNull('school_id');
@@ -692,6 +743,32 @@ class ExaminationController extends Controller
             ->orderByDesc('school_id')
             ->orderBy('min_mark', 'desc')
             ->get();
+
+        $subjectMarks = $marks->map(function ($m) use ($gradingScale) {
+            // ✅ Always derive percentage from marks/total
+            $pct = $m->total_marks > 0
+                ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
+                : 0;
+
+            // ✅ Re-derive grade from percentage — fixes any wrongly-stored grades
+            $gradeRow = $gradingScale->first(function ($g) use ($pct) {
+                return $pct >= $g->min_mark && $pct <= $g->max_mark;
+            });
+
+            return (object) [
+                'subject_id' => $m->subject_id,
+                'subject_name' => Helper::recordMdname($m->subject_id),
+                'subject_type' => $m->subject_type ?? null,
+                'marks_obtained' => $m->marks_obtained,
+                'total_marks' => $m->total_marks,
+                'grade' => $gradeRow?->grade ?? $m->grade,
+                'grade_remark' => $gradeRow?->remark ?? $m->grade_remark,
+                'grade_points' => $gradeRow?->points ?? $m->grade_points,
+                'percentage' => $pct,
+                'class_average' => $m->class_average ?? null,
+                'teacher_name' => $m->teacher_name ?? null,
+            ];
+        })->sortBy('subject_name');
 
         $overallGradeRow = $gradingScale->first(function ($g) use ($percentage) {
             return $percentage >= $g->min_mark && $percentage <= $g->max_mark;
@@ -811,7 +888,7 @@ class ExaminationController extends Controller
 
     public function dashboard(Request $request)
     {
-        // dd(count(Helper::getHelperMarksEntryProgress()));
+
         $schoolId = Session('LoggedSchool');
         // Get all examinations for the school
         $examinations = Examination::where('school_id', $schoolId)
@@ -865,7 +942,7 @@ class ExaminationController extends Controller
                 'exam_code' => $exam->exam_code,
             ];
         });
-
+    
         return view('Examination.dashboard', compact(
             'examinations',
             'stats',

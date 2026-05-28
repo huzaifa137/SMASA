@@ -2,166 +2,357 @@
 @extends('layouts-side-bar.master')
 
 @section('css')
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,700;9..144,900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --brand: #5351e4;
-            --brand-light: #2C29CA;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border: #e2e8f0;
+        /* ── Reset ── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        .glass-header {
-            background: linear-gradient(135deg, #5351e4 0%, #2C29CA 100%);
-            border-radius: 28px;
-            padding: 2rem 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 40px -12px rgba(83, 81, 228, 0.35);
+        .tt-root {
+            font-family: 'Instrument Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            margin-top: 2em;
+        }
+
+        /* ════════════════════════════════════
+               LEFT PANEL
+           ════════════════════════════════════ */
+        .tt-left {
+            width: 420px;
+            flex-shrink: 0;
+            background: linear-gradient(160deg, #1a18a0 0%, #2C29CA 45%, #5351e4 100%);
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3rem 2.5rem;
             overflow: hidden;
+            min-height: 100vh;
         }
 
-        .glass-header::before {
+        /* animated dot-grid */
+        .tt-left::before {
             content: '';
             position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1px);
+            background-size: 28px 28px;
+            animation: gridDrift 18s linear infinite;
         }
 
-        .btn-glass {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 12px;
-            padding: 0.5rem 1.2rem;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-decoration: none;
-            display: inline-flex;
+        /* radial glow top-right */
+        .tt-left::after {
+            content: '';
+            position: absolute;
+            top: -25%;
+            right: -20%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes gridDrift {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 28px 28px;
+            }
+        }
+
+        /* decorative calendar shapes */
+        .tt-deco-cal {
+            position: absolute;
+            bottom: -2rem;
+            right: -3rem;
+            width: 260px;
+            height: 260px;
+            border: 2px solid rgba(255, 255, 255, 0.13);
+            border-radius: 28px;
+            transform: rotate(12deg);
+            animation: floatCal 6s ease-in-out infinite;
+        }
+
+        .tt-deco-cal::before {
+            content: '';
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+        }
+
+        .tt-deco-cal-2 {
+            position: absolute;
+            top: 6rem;
+            right: -5rem;
+            width: 160px;
+            height: 160px;
+            border: 1.5px solid rgba(255, 255, 255, 0.07);
+            border-radius: 20px;
+            transform: rotate(-8deg);
+            animation: floatCal 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatCal {
+
+            0%,
+            100% {
+                transform: rotate(12deg) translateY(0);
+            }
+
+            50% {
+                transform: rotate(12deg) translateY(-12px);
+            }
+        }
+
+        .tt-left-top {
+            position: relative;
+            z-index: 2;
+        }
+
+        .tt-logo-area {
+            display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.6rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .tt-logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+        }
+
+        .tt-logo-text {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tt-left-eyebrow {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tt-left-eyebrow::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.55);
+            border-radius: 99px;
+        }
+
+        .tt-left-title {
+            font-family: 'Fraunces', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1.05;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+        }
+
+        .tt-left-title em {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.88);
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+        }
+
+        .tt-left-desc {
+            margin-top: 1.5rem;
+            font-size: 0.86rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 280px;
+        }
+
+        /* step pills */
+        .tt-left-steps {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .tt-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
             transition: all 0.2s;
         }
 
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
+        .tt-pill.active {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.32);
+            backdrop-filter: blur(8px);
         }
 
-        .wizard-card {
-            background: white;
-            border-radius: 24px;
-            max-width: 680px;
-            margin: 0 auto;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
-            border: 1px solid rgba(83, 81, 228, 0.08);
-            overflow: hidden;
-        }
-
-        .wizard-header {
-            background: linear-gradient(135deg, rgba(83, 81, 228, 0.04) 0%, rgba(44, 41, 202, 0.02) 100%);
-            padding: 2rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .wizard-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: rgba(83, 81, 228, 0.1);
+        .tt-pill-num {
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.72rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            color: var(--brand);
+            flex-shrink: 0;
         }
 
-        .wizard-body {
-            padding: 2rem;
+        .tt-pill.active .tt-pill-num {
+            background: #ffffff;
+            color: #2C29CA;
         }
 
-        .form-section {
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            font-size: 0.72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--brand);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(83, 81, 228, 0.1);
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .form-label {
+        .tt-pill-label {
             font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            display: block;
-            margin-bottom: 0.4rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.35);
         }
 
-        .form-control-modern {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            background: #f8fafc;
+        .tt-pill.active .tt-pill-label {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .tt-pill-check {
+            margin-left: auto;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            color: transparent;
+        }
+
+        /* ════════════════════════════════════
+               RIGHT PANEL
+           ════════════════════════════════════ */
+        .tt-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f1f5f9;
+            overflow-y: auto;
+        }
+
+        /* topbar */
+        .tt-topbar {
+            padding: 1.25rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(83, 81, 228, 0.1);
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 10px rgba(83, 81, 228, 0.06);
+        }
+
+        .tt-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #5351e4;
+            text-decoration: none;
+            padding: 0.45rem 1rem;
+            border-radius: 99px;
+            border: 1.5px solid rgba(83, 81, 228, 0.25);
+            background: rgba(83, 81, 228, 0.06);
             transition: all 0.2s;
-            box-sizing: border-box;
-            appearance: auto;
         }
 
-        .form-control-modern:focus {
-            outline: none;
-            border-color: var(--brand);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.12);
+        .tt-back:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, #2C29CA, #5351e4);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(83, 81, 228, 0.3);
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+        .tt-topbar-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* Class stream selector */
-        .stream-selector {
-            display: none;
-            animation: fadeIn 0.3s ease;
+        .tt-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #5351e4;
+            box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.2);
+            animation: statusPulse 2.5s ease-in-out infinite;
         }
 
-        .stream-selector.visible {
-            display: block;
+        @keyframes statusPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(83, 81, 228, 0.08);
+            }
         }
 
-        @keyframes fadeIn {
+        /* form area */
+        .tt-form-area {
+            flex: 1;
+            padding: 2.5rem;
+            max-width: 540px;
+            width: 100%;
+            animation: formIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes formIn {
             from {
                 opacity: 0;
-                transform: translateY(-6px);
+                transform: translateY(20px);
             }
 
             to {
@@ -170,290 +361,617 @@
             }
         }
 
-        .hint-box {
-            background: rgba(83, 81, 228, 0.05);
-            border: 1px solid rgba(83, 81, 228, 0.15);
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
+        /* field group */
+        .tt-fgroup {
+            margin-bottom: 2.2rem;
+        }
+
+        .tt-fgroup-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #2C29CA;
+            margin-bottom: 1rem;
             display: flex;
+            align-items: center;
             gap: 0.6rem;
+        }
+
+        .tt-fgroup-label::after {
+            content: '';
+            flex: 1;
+            height: 1.5px;
+            background: rgba(83, 81, 228, 0.15);
+            border-radius: 99px;
+        }
+
+        /* float-label fields */
+        .tt-float {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .tt-float label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.84rem;
+            font-weight: 500;
+            color: #94a3b8;
+            pointer-events: none;
+            transition: all 0.2s;
+            background: transparent;
+            padding: 0 0.2rem;
+        }
+
+        .tt-float input:not(:placeholder-shown)~label,
+        .tt-float input:focus~label,
+        .tt-float select:focus~label,
+        .tt-float.has-value label {
+            top: 0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #2C29CA;
+            letter-spacing: 0.06em;
+            background: #f1f5f9;
+        }
+
+        .tt-float input,
+        .tt-float select {
+            width: 100%;
+            padding: 1rem 1rem 0.6rem;
+            border: 1.5px solid rgba(83, 81, 228, 0.18);
+            border-radius: 14px;
+            font-size: 0.875rem;
+            font-family: 'Instrument Sans', sans-serif;
+            font-weight: 500;
+            color: #1e293b;
+            background: #ffffff;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            appearance: auto;
+        }
+
+        .tt-float input::placeholder {
+            color: transparent;
+        }
+
+        .tt-float input:focus,
+        .tt-float select:focus {
+            outline: none;
+            border-color: #5351e4;
+            box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.1);
+        }
+
+        .tt-float input:hover,
+        .tt-float select:hover {
+            border-color: rgba(83, 81, 228, 0.35);
+        }
+
+        .tt-grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* stream reveal */
+        .tt-stream-wrap {
+            display: none;
+            animation: formIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .tt-stream-wrap.show {
+            display: block;
+        }
+
+        .tt-no-streams {
+            display: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #DC2626;
+            margin-top: 0.4rem;
+            padding-left: 0.3rem;
+        }
+
+        /* hint box */
+        .tt-hint {
+            display: flex;
+            gap: 0.75rem;
             align-items: flex-start;
-            margin-top: 0.5rem;
+            padding: 1rem 1.2rem;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1.5px solid rgba(83, 81, 228, 0.12);
+            margin-bottom: 2rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #475569;
+            box-shadow: 0 2px 12px rgba(83, 81, 228, 0.06);
         }
 
-        .hint-box i {
-            color: var(--brand);
-            margin-top: 2px;
+        .tt-hint-icon {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, #2C29CA, #5351e4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #ffffff;
             flex-shrink: 0;
+            margin-top: 1px;
+            box-shadow: 0 4px 10px rgba(83, 81, 228, 0.35);
         }
 
-        .wizard-footer {
-            padding: 1.5rem 2rem;
-            border-top: 1px solid var(--border);
+        /* submit row */
+        .tt-submit-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding-top: 0.5rem;
         }
 
-        .btn-create {
-            background: var(--brand);
+        .tt-cancel-link {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .tt-cancel-link:hover {
+            color: #2C29CA;
+        }
+
+        /* primary action button */
+        .tt-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: linear-gradient(135deg, #2C29CA, #5351e4);
             color: white;
             border: none;
             border-radius: 14px;
-            padding: 0.85rem 2rem;
-            font-weight: 800;
-            font-size: 0.95rem;
+            padding: 0.9rem 2rem;
+            font-size: 0.875rem;
+            font-family: 'Instrument Sans', sans-serif;
+            font-weight: 700;
             cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+            letter-spacing: -0.01em;
+            box-shadow: 0 4px 16px rgba(83, 81, 228, 0.38);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* shimmer sweep on hover */
+        .tt-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .tt-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .tt-btn .btn-arrow {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            box-shadow: 0 4px 14px rgba(83, 81, 228, 0.3);
+            justify-content: center;
+            width: 1.6rem;
+            height: 1.6rem;
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+            flex-shrink: 0;
         }
 
-        .btn-create:hover {
-            background: var(--brand-light);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(83, 81, 228, 0.35);
+        .tt-btn:hover:not(:disabled) .btn-arrow {
+            transform: translateX(3px);
         }
 
-        .btn-cancel-link {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-decoration: none;
+        .tt-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(83, 81, 228, 0.45);
         }
 
-        .btn-cancel-link:hover {
-            color: var(--text-secondary);
+        .tt-btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 4px 16px rgba(83, 81, 228, 0.38);
         }
 
-        .no-streams-msg {
-            color: var(--danger);
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-top: 0.4rem;
-            display: none;
+        .tt-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
-        .toast-notif {
+        /* ── Toast ── */
+        .tt-toast {
             position: fixed;
             bottom: 1.5rem;
-            right: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
             z-index: 9999;
             background: #1e293b;
             color: white;
-            padding: 0.85rem 1.5rem;
-            border-radius: 14px;
-            font-size: 0.875rem;
+            padding: 0.75rem 1.4rem 0.75rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.82rem;
             font-weight: 600;
-            transform: translateY(80px);
+            font-family: 'Instrument Sans', sans-serif;
             opacity: 0;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
         }
 
-        .toast-notif.show {
-            transform: translateY(0);
+        .tt-toast.show {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
-        .toast-notif.error {
-            background: #dc2626;
+        .tt-toast-pip {
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            background: rgba(255, 255, 255, 0.12);
+            flex-shrink: 0;
+        }
+
+        .tt-toast.error {
+            background: #7F1D1D;
+        }
+
+        .tt-toast.success .tt-toast-pip {
+            background: linear-gradient(135deg, #2C29CA, #5351e4);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(83, 81, 228, 0.5);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .tt-root {
+                flex-direction: column;
+            }
+
+            .tt-left {
+                width: 100%;
+                min-height: auto;
+                padding: 2rem 1.5rem;
+                flex-direction: row;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 1.5rem;
+            }
+
+            .tt-left-steps {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .tt-deco-cal,
+            .tt-deco-cal-2 {
+                display: none;
+            }
+
+            .tt-left-title {
+                font-size: 2rem;
+            }
+
+            .tt-topbar {
+                padding: 1rem 1.5rem;
+            }
+
+            .tt-form-area {
+                padding: 1.5rem;
+                max-width: 100%;
+            }
+
+            .tt-grid2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .tt-topbar {
+                padding: 1rem;
+            }
+
+            .tt-form-area {
+                padding: 1.25rem 1rem;
+            }
+
+            .tt-left {
+                padding: 1.5rem 1rem;
+            }
+
+            .tt-left-title {
+                font-size: 1.7rem;
+            }
+
+            .tt-btn {
+                padding: 0.8rem 1.4rem;
+                font-size: 0.82rem;
+            }
+
+            .tt-submit-row {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .tt-btn {
+                justify-content: center;
+            }
         }
     </style>
 @endsection
 
-@section('page-header')
-<div class="glass-header">
-    <div class="row align-items-center" style="position:relative;z-index:1;">
-        <div class="col-lg-8">
-            <div class="mb-4">
-                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
-                    <i class="fas fa-calendar-alt me-2"></i> Timetable Setup
-                </span>
-            </div>
-            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                <i class="fas fa-calendar-plus me-3"></i> Create Timetable
-            </h1>
-            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                Set up a new timetable for a class stream
-            </p>
-        </div>
-        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                <a href="{{ route('timetable.dashboard') }}" class="btn"
-                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
-                    <i class="fas fa-arrow-left"></i> Back to Timetable
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
+@section('page-header'){{-- empty --}}@endsection
 
 @section('content')
-    <div class="container-fluid px-0">
-        <div class="wizard-card">
-            <div class="wizard-header">
-                <div class="wizard-icon"><i class="fas fa-calendar-alt"></i></div>
-                <div>
-                    <h5 style="font-weight:800;color:var(--text-primary);margin:0;">New Timetable</h5>
-                    <p style="color:var(--text-muted);margin:0;font-size:0.85rem;">Select the class stream and configure the
-                        timetable details</p>
+    <div class="tt-root">
+
+        <!-- ── LEFT PANEL ── -->
+        <aside class="tt-left">
+            <div class="tt-left-top">
+                <div class="tt-logo-area">
+                    <div class="tt-logo-dot"></div>
+                    <span class="tt-logo-text">Timetable Studio</span>
+                </div>
+                <div class="tt-left-eyebrow">New Timetable</div>
+                <h1 class="tt-left-title">
+                    Build your<br>
+                    <em>perfect</em><br>
+                    schedule.
+                </h1>
+                <p class="tt-left-desc">
+                    Choose a class stream, name your timetable, and step into the slot editor — all in under a minute.
+                </p>
+            </div>
+
+            <div class="tt-left-steps">
+                <div class="tt-pill active">
+                    <div class="tt-pill-num">1</div>
+                    <span class="tt-pill-label">Configure timetable</span>
+                    <div class="tt-pill-check"><i class="fas fa-check"></i></div>
+                </div>
+                <div class="tt-pill">
+                    <div class="tt-pill-num">2</div>
+                    <span class="tt-pill-label">Assign subjects &amp; slots</span>
+                    <div class="tt-pill-check"></div>
+                </div>
+                <div class="tt-pill">
+                    <div class="tt-pill-num">3</div>
+                    <span class="tt-pill-label">Review &amp; publish</span>
+                    <div class="tt-pill-check"></div>
                 </div>
             </div>
 
-            <div class="wizard-body">
-                <!-- Section: Class Selection -->
-                <div class="form-section">
-                    <div class="section-title"><i class="fas fa-school me-1"></i> Class Selection</div>
-                    <div class="form-group">
-                        <label class="form-label">Class *</label>
-                        <select id="classSelect" class="form-control-modern" onchange="loadStreams(this.value)">
-                            <option value="">— Select a Class —</option>
+            <!-- decorative shapes -->
+            <div class="tt-deco-cal"></div>
+            <div class="tt-deco-cal-2"></div>
+        </aside>
+
+        <!-- ── RIGHT PANEL ── -->
+        <main class="tt-right">
+
+            <!-- topbar -->
+            <div class="tt-topbar">
+                <a href="{{ route('timetable.dashboard') }}" class="tt-back"
+                    style="background:#000; color:#fff; border-color:#000;">
+                    <i class="fas fa-arrow-left"></i> Back to Timetable
+                </a>
+                <span class="tt-topbar-status">
+                    <span class="tt-status-dot"></span>
+                    Step 1 of 3
+                </span>
+            </div>
+
+            <!-- form -->
+            <div class="tt-form-area">
+
+                <!-- CLASS -->
+                <div class="tt-fgroup">
+                    <div class="tt-fgroup-label">Class &amp; Stream</div>
+
+                    <div class="tt-float has-value" id="classFloat">
+                        <select id="classSelect" onchange="loadStreams(this.value)">
+                            <option value="">— Select a class —</option>
                             @foreach($classrooms as $classroom)
                                 <option value="{{ $classroom->class_name }}">{{ Helper::recordMdname($classroom->class_name) }}
                                 </option>
                             @endforeach
                         </select>
+                        <label>Class *</label>
                     </div>
-                    <div class="stream-selector" id="streamContainer">
-                        <div class="form-group">
-                            <label class="form-label">Stream *</label>
-                            <select id="streamSelect" class="form-control-modern">
-                                <option value="">— Select a Stream —</option>
+
+                    <div class="tt-stream-wrap" id="streamContainer">
+                        <div class="tt-float has-value">
+                            <select id="streamSelect">
+                                <option value="">— Select a stream —</option>
                             </select>
-                            <div class="no-streams-msg" id="noStreamsMsg">
-                                <i class="fas fa-exclamation-circle"></i> No streams found for this class.
-                            </div>
+                            <label>Stream *</label>
+                        </div>
+                        <div class="tt-no-streams" id="noStreamsMsg">
+                            <i class="fas fa-exclamation-circle me-1"></i> No streams found for this class.
                         </div>
                     </div>
                 </div>
 
-                <!-- Section: Timetable Details -->
-                <div class="form-section">
-                    <div class="section-title"><i class="fas fa-info-circle me-1"></i> Timetable Details</div>
-                    <div class="form-group">
-                        <label class="form-label">Timetable Name <span
-                                style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-                        <input type="text" id="ttName" class="form-control-modern"
-                            placeholder="e.g. Term 2 2025 Timetable — auto-generated if blank">
+                <!-- DETAILS -->
+                <div class="tt-fgroup">
+                    <div class="tt-fgroup-label">Timetable Details</div>
+
+                    <div class="tt-float">
+                        <input type="text" id="ttName" placeholder=" ">
+                        <label>Timetable Name (optional)</label>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Academic Year</label>
-                            <select id="yearSelect" class="form-control-modern">
-                                <option value="">— None / Not Specified —</option>
+
+                    <div class="tt-grid2">
+                        <div class="tt-float has-value">
+                            <select id="yearSelect">
+                                <option value="">— None —</option>
                                 @foreach($academicYears as $ay)
                                     <option value="{{ $ay->id }}" {{ $ay->is_active ? 'selected' : '' }}>{{ $ay->name }}
                                     </option>
                                 @endforeach
                             </select>
+                            <label>Academic Year</label>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Term</label>
-                            <select id="termSelect" class="form-control-modern">
-                                <option value="">— None / Not Specified —</option>
+                        <div class="tt-float has-value">
+                            <select id="termSelect">
+                                <option value="">— None —</option>
                                 <option value="Term 1">Term 1</option>
                                 <option value="Term 2">Term 2</option>
                                 <option value="Term 3">Term 3</option>
                             </select>
+                            <label>Term</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="hint-box">
-                    <i class="fas fa-lightbulb"></i>
-                    <span>After creating the timetable, you'll be taken to the <strong>editor</strong> where you can drag
-                        and assign subjects to each day and period slot.</span>
+                <!-- HINT -->
+                <div class="tt-hint">
+                    <div class="tt-hint-icon"><i class="fas fa-bolt text-white"></i></div>
+                    <span>Once created, you'll land straight in the <strong>slot editor</strong> to drag subjects onto each
+                        period.</span>
                 </div>
-            </div>
 
-            <div class="wizard-footer">
-                <a href="{{ route('timetable.dashboard') }}" class="btn-cancel-link">
-                    <i class="fas fa-times me-1"></i> Cancel
-                </a>
-                <button class="btn-create" onclick="createTimetable()">
-                    <i class="fas fa-rocket"></i> Create & Open Editor
-                </button>
-            </div>
-        </div>
+                <!-- ACTIONS -->
+                <div class="tt-submit-row">
+                    <a href="{{ route('timetable.dashboard') }}" class="tt-cancel-link" style="background:#000 !important;
+                  color:#fff !important;
+                  border:1px solid #000 !important;
+                  padding:8px 16px;
+                  border-radius:5px;
+                  text-decoration:none;
+                  display:inline-block;">
+
+                        Cancel
+                    </a>
+                    <button class="tt-btn" id="createBtn" onclick="createTimetable()">
+                        Create Timetable
+                        <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </button>
+                </div>
+
+            </div><!-- /form-area -->
+        </main>
+
     </div>
+
+    <!-- Toast -->
+    <div class="tt-toast" id="toast">
+        <div class="tt-toast-pip" id="toastIcon"></div>
+        <span id="toastMsg"></span>
     </div>
     </div>
     </div>
 
-    <div class="toast-notif" id="toast"></div>
+    <script>
+        const csrfToken = '{{ csrf_token() }}';
+
+        async function loadStreams(classId) {
+            const container = document.getElementById('streamContainer');
+            const select = document.getElementById('streamSelect');
+            const noMsg = document.getElementById('noStreamsMsg');
+
+            if (!classId) { container.classList.remove('show'); return; }
+
+            select.innerHTML = '<option value="">Loading…</option>';
+            container.classList.add('show');
+            noMsg.style.display = 'none';
+
+            try {
+                const res = await fetch(`{{ url('attendance/ajax/streams') }}/${classId}`);
+                const data = await res.json();
+                if (!data.length) {
+                    select.innerHTML = '<option value="">No streams available</option>';
+                    noMsg.style.display = 'block';
+                } else {
+                    select.innerHTML = '<option value="">— Select a stream —</option>' +
+                        data.map(s => `<option value="${s.stream_id}">${s.stream_name || s.stream_id}</option>`).join('');
+                }
+            } catch (e) {
+                select.innerHTML = '<option value="">Error loading streams</option>';
+            }
+        }
+
+        async function createTimetable() {
+            const classId = document.getElementById('classSelect').value;
+            const streamId = document.getElementById('streamSelect').value;
+            const yearId = document.getElementById('yearSelect').value;
+            const term = document.getElementById('termSelect').value;
+            const name = document.getElementById('ttName').value.trim();
+
+            if (!classId) { showToast('Please select a class.', 'error'); return; }
+            if (!streamId) { showToast('Please select a stream.', 'error'); return; }
+
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+
+            try {
+                const res = await fetch('{{ route('timetable.store') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({
+                        class_id: classId,
+                        stream_id: streamId,
+                        academic_year_id: yearId || null,
+                        term: term || null,
+                        name: name || null
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Timetable created! Opening editor…', 'success');
+                    setTimeout(() => window.location.href = data.redirect, 900);
+                } else {
+                    showToast(data.message || 'Failed to create timetable.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Create Timetable <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>';
+                }
+            } catch (e) {
+                showToast('Connection error. Please try again.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'Create Timetable <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>';
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMsg');
+
+            icon.innerHTML = type === 'error' ? '<i class="fas fa-times"></i>' : '<i class="fas fa-check"></i>';
+            msgEl.textContent = msg;
+            toast.className = `tt-toast show ${type}`;
+
+            clearTimeout(window._tTimer);
+            window._tTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+    </script>
 @endsection
-
-
-<script>
-    const csrfToken = '{{ csrf_token() }}';
-
-    async function loadStreams(classId) {
-        const container = document.getElementById('streamContainer');
-        const select = document.getElementById('streamSelect');
-        const noMsg = document.getElementById('noStreamsMsg');
-
-        if (!classId) { container.classList.remove('visible'); return; }
-
-        select.innerHTML = '<option value="">Loading...</option>';
-        container.classList.add('visible');
-        noMsg.style.display = 'none';
-
-        try {
-            const res = await fetch(`{{ url('attendance/ajax/streams') }}/${classId}`);
-            const data = await res.json();
-            if (!data.length) {
-                select.innerHTML = '<option value="">No streams available</option>';
-                noMsg.style.display = 'block';
-            } else {
-                select.innerHTML = '<option value="">— Select a Stream —</option>' +
-                    data.map(s => `<option value="${s.stream_id}">${s.stream_name || s.stream_id}</option>`).join('');
-            }
-        } catch (e) {
-            select.innerHTML = '<option value="">Error loading streams</option>';
-        }
-    }
-
-    async function createTimetable() {
-        const classId = document.getElementById('classSelect').value;
-        const streamId = document.getElementById('streamSelect').value;
-        const yearId = document.getElementById('yearSelect').value;
-        const term = document.getElementById('termSelect').value;
-        const name = document.getElementById('ttName').value.trim();
-
-        if (!classId) { showToast('Please select a class.', 'error'); return; }
-        if (!streamId) { showToast('Please select a stream.', 'error'); return; }
-
-        const btn = document.querySelector('.btn-create');
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-
-        try {
-            const res = await fetch('{{ route('timetable.store') }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ class_id: classId, stream_id: streamId, academic_year_id: yearId || null, term: term || null, name: name || null })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('Timetable created! Opening editor...', 'success');
-                setTimeout(() => window.location.href = data.redirect, 700);
-            } else {
-                showToast(data.message || 'Failed to create timetable.', 'error');
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Create & Open Editor';
-            }
-        } catch (e) {
-            showToast('Connection error.', 'error');
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Create & Open Editor';
-        }
-    }
-
-    function showToast(msg, type = 'success') {
-        const t = document.getElementById('toast');
-        t.textContent = msg; t.className = `toast-notif show ${type}`;
-        clearTimeout(window._tt); window._tt = setTimeout(() => t.classList.remove('show'), 3000);
-    }
-</script>

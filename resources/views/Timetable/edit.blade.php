@@ -511,7 +511,44 @@ select.form-control-sm {
             <div style="margin-top:0.9rem;">
                 <label class="form-label">Colour</label>
                 <div class="color-row" id="colorPicker">
-                    @php $palette = ['#5351e4','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316']; @endphp
+                   @php
+$palette = [
+    '#5351e4',
+    '#10b981',
+    '#f59e0b',
+    '#ef4444',
+    '#3b82f6',
+    '#8b5cf6',
+    '#ec4899',
+    '#06b6d4',
+    '#84cc16',
+    '#f97316',
+
+    // Added unique colors only
+    '#f0a500', // Amber
+    '#c0392b', // Ruby Red
+    '#0f172a', // Midnight
+    '#1e3a8a', // Navy Blue
+    '#166534', // Dark Green
+    '#047857', // Teal
+    '#0f766e', // Deep Teal
+    '#b45309', // Golden Brown
+    '#ca8a04', // School Gold
+    '#991b1b', // Maroon
+    '#be123c', // Burgundy
+    '#6d28d9', // Deep Purple
+    '#0369a1', // Ocean Blue
+    '#374151', // Slate Gray
+    '#4b5563', // Charcoal
+    '#111827', // Jet Black
+    '#92400e', // Chocolate
+    '#78350f', // Coffee Brown
+    '#14532d', // Hunter Green
+    '#134e4a', // Pine Green
+    '#86198f', // Plum
+    '#9d174d', // Wine
+];
+@endphp
                     @foreach($palette as $col)
                     <div class="color-swatch" style="background:{{ $col }};" data-color="{{ $col }}" onclick="selectColor('{{ $col }}')"></div>
                     @endforeach

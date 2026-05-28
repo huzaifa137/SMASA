@@ -891,14 +891,16 @@ class Helper extends Controller
             // Calculate overall progress for the exam
             $overallProgress = $totalSubjects > 0 ? round(($submittedSubjects / $totalSubjects) * 100) : 0;
 
+            // ── NEW: skip this exam entirely if teacher has no assigned subjects ──
+            if ($totalSubjects === 0) {
+                continue;
+            }
+
             // Calculate deadline status
             $deadline = \Carbon\Carbon::parse($exam->marks_entry_deadline);
             $daysLeft = now()->diffInDays($deadline, false);
             $isDeadlinePassed = $daysLeft < 0;
 
-            // Only include exams that:
-            // 1. Haven't reached deadline yet, OR
-            // 2. Have reached deadline but still have pending marks
             if (!$isDeadlinePassed || ($isDeadlinePassed && $hasPendingMarks)) {
                 $urgency = $daysLeft <= 2 ? 'urgent' : ($daysLeft <= 5 ? 'warning' : 'normal');
 

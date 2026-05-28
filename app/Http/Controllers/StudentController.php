@@ -783,21 +783,26 @@ class StudentController extends Controller
 
         switch ($criteria) {
             case 'admission_number':
-                $students = Student::where('admission_number', $request->admission_number)->get();
+                $students = Student::where('admission_number', $request->admission_number)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
                 break;
             case 'name':
                 $students = Student::where('firstname', 'like', '%' . $request->firstname . '%')
                     ->where('lastname', 'like', '%' . $request->lastname . '%')
                     ->where('senior', $request->senior)
+                    ->where('school_id', Session('LoggedSchool'))
                     ->get();
                 break;
             case 'phone':
                 $students = Student::where('primary_contact', $request->phone)
-                    ->orWhere('other_contact', $request->phone)
+                    ->where('school_id', Session('LoggedSchool'))
                     ->get();
                 break;
             case 'student_id':
-                $students = Student::where('id', $request->student_id)->get();
+                $students = Student::where('id', $request->student_id)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
                 break;
             default:
                 return response()->json(['message' => 'Invalid criteria'], 400);

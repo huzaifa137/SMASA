@@ -212,8 +212,8 @@ class TimetableController extends Controller
 
         // All subjects for this class-stream
         $classSubjects = ClassSubject::where('school_id', $schoolId)
-            ->where('class_id', $timetable->class_id)
-            ->where('stream_id', $timetable->stream_id)
+            // ->where('class_id', $timetable->class_id)
+            // ->where('stream_id', $timetable->stream_id)
             ->get()
             ->map(function ($cs) {
                 $cs->subject_name = Helper::recordMdname($cs->subject_id);
