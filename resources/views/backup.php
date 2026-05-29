@@ -6,6 +6,20 @@
 $teacher->must_change_password = false;
 $teacher->save(); -->
 
+<!-- Remove-Item public/storage       -->
+<!-- php artisan storage:link         -->
+                                      
+<!-- symlinks above are not working, by pass with this (claude AI) -->
+rm public/storage && ln -s /home/u453625278/domains/smasa-academics.com/public_html/storage/app/public public/storage
+rm public/storage && ln -s /home/u453625278/domains/smasa-academics.com/public_html/storage/app/public public/storage
+
+<!-- To make it even easier, you can save it as an alias in your shell. Add this to your ~/.bashrc: -->
+echo "alias storage:relink='rm public/storage && ln -s /home/u453625278/domains/smasa-academics.com/public_html/storage/app/public public/storage'" >> ~/.bashrc && source ~/.bashrc
+<!-- Then anytime you need to relink, just run: -->
+storage:relink
+<!-- Note: The alias only works when you're inside your public_html directory since the rm public/storage path is relative. -->
+
+
 use App\Http\Controllers\Helper;
 
 <!-- USE FULL QUERIES IN THIS PROJECT -->
