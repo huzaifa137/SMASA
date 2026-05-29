@@ -18,6 +18,7 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TeacherPasswordResetController;
+use App\Http\Controllers\FinanceController;
 
 
 Route::get('/logout', function () {
@@ -525,4 +526,86 @@ Route::prefix('attendance')
         // AJAX helpers
         Route::get('/ajax/streams/{classId}', 'getStreamsByClass')->name('ajax.streams');
         Route::get('/ajax/class-summary', 'classAttendanceSummary')->name('ajax.summary');
+    });
+
+
+// ─── FINANCE MODULE ─────────────────────────────────────────────────────────
+
+Route::prefix('finance')
+    ->name('finance.')
+    ->controller(FinanceController::class)
+    ->middleware(['SchoolAuth'])
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/', 'dashboard')->name('dashboard');
+
+        // ── Fee Structures ──────────────────────────────────────────────────
+        Route::prefix('fee-structures')->name('fee-structures.')->group(function () {
+            Route::get('/', 'feeStructures')->name('index');
+            Route::get('/create', 'createFeeStructure')->name('create');
+            Route::post('/', 'storeFeeStructure')->name('store');
+            Route::get('/{id}/edit', 'editFeeStructure')->name('edit');
+            Route::put('/{id}', 'updateFeeStructure')->name('update');
+            Route::delete('/{id}', 'deleteFeeStructure')->name('destroy');
+        });
+        // Shortcut alias used in sidebar nav
+        // Route::get('/fee-structures', 'feeStructures')->name('fee-structures');
+
+        // ── Fee Allocations ─────────────────────────────────────────────────
+        Route::get('/fee-allocations', 'feeAllocations')->name('fee-allocations');
+        Route::post('/allocate-fees', 'allocateFees')->name('allocate-fees');
+        Route::get('/student-allocations', 'getStudentAllocations')->name('student-allocations');
+
+        // ── Payments ────────────────────────────────────────────────────────
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', 'payments')->name('index');
+            Route::get('/create', 'createPayment')->name('create');
+            Route::post('/', 'storePayment')->name('store');
+            Route::get('/{id}/receipt', 'receiptPdf')->name('receipt');
+            Route::post('/{id}/reverse', 'reversePayment')->name('reverse');
+        });
+
+        // ── Expenses ────────────────────────────────────────────────────────
+        Route::prefix('expenses')->name('expenses.')->group(function () {
+            Route::get('/', 'expenses')->name('index');
+            Route::get('/create', 'createExpense')->name('create');
+            Route::post('/', 'storeExpense')->name('store');
+            Route::get('/{id}/edit', 'editExpense')->name('edit');
+            Route::put('/{id}', 'updateExpense')->name('update');
+            Route::delete('/{id}', 'deleteExpense')->name('destroy');
+        });
+
+        // ── Expense Categories ──────────────────────────────────────────────
+        Route::prefix('expense-categories')->name('expense-categories.')->group(function () {
+            Route::get('/', 'expenseCategories')->name('index');
+            Route::post('/', 'storeExpenseCategory')->name('store');
+            Route::delete('/{id}', 'deleteExpenseCategory')->name('destroy');
+        });
+
+        // ── Payroll ─────────────────────────────────────────────────────────
+        Route::prefix('payroll')->name('payroll.')->group(function () {
+            Route::get('/', 'payroll')->name('index');
+            Route::get('/create', 'createPayrollPeriod')->name('create');
+            Route::post('/', 'storePayrollPeriod')->name('store');
+            Route::get('/{id}', 'showPayrollPeriod')->name('show');
+            Route::post('/{id}/approve', 'approvePayrollPeriod')->name('approve');
+            Route::post('/{id}/mark-paid', 'markPayrollPaid')->name('mark-paid');
+        });
+
+        // ── Salary Structures ───────────────────────────────────────────────
+        Route::get('/salary-structures', 'salaryStructures')->name('salary-structures');
+        Route::post('/salary-structures', 'storeSalaryStructure')->name('salary-structures.store');
+
+        // ── Budgets ─────────────────────────────────────────────────────────
+        Route::prefix('budgets')->name('budgets.')->group(function () {
+            Route::get('/', 'budgets')->name('index');
+            Route::get('/create', 'createBudget')->name('create');
+            Route::post('/', 'storeBudget')->name('store');
+            Route::get('/{id}', 'showBudget')->name('show');
+        });
+
+        // ── Reports ─────────────────────────────────────────────────────────
+        Route::get('/reports', 'reports')->name('reports');
+        Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
     });

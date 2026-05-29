@@ -64,11 +64,16 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance Dashboard</a></li>
-                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
-                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance
+                            Dashboard</a></li>
+                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
+                            Check-In</a></li>
+                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
+                            Report</a></li>
+                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
+                            Check-In</a></li>
+                    <li><a href="{{ route('attendance.teachers.report') }}"><i
+                                class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
                 </ul>
             </li>
 
@@ -80,11 +85,15 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable Dashboard</a></li>
+                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable
+                            Dashboard</a></li>
                     <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
-                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard mr-2"></i>Teacher Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-print mr-2"></i>Print Timetables</a></li>
+                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
+                            Timetable</a></li>
+                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard mr-2"></i>Teacher
+                            Timetable</a></li>
+                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-print mr-2"></i>Print
+                            Timetables</a></li>
                 </ul>
             </li>
 
@@ -104,7 +113,8 @@ use App\Http\Controllers\Helper;
                 </a>
                 <ul class="sub-menu">
                     <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
-                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
+                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
+                            Examination</a></li>
                     @if ($pendingMarksCount > 0)
                         <li>
                             <a href="{{ route('examination.marks-entry-portal') }}">
@@ -155,6 +165,24 @@ use App\Http\Controllers\Helper;
                 </a>
             </li>
 
+            <!-- Finance Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-wallet fa-2x mr-3"></i>
+                    <span>Finance</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+
+                <ul class="sub-menu">
+                    <li>
+                        <a href="{{ route('finance.dashboard') }}">
+                            <i class="fas fa-sack-dollar mr-2"></i>
+                            Finance Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <!-- Attendance Dropdown -->
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
@@ -163,11 +191,16 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance Dashboard</a></li>
-                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
-                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance
+                            Dashboard</a></li>
+                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
+                            Check-In</a></li>
+                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
+                            Report</a></li>
+                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
+                            Check-In</a></li>
+                    <li><a href="{{ route('attendance.teachers.report') }}"><i
+                                class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
                 </ul>
             </li>
 
@@ -179,9 +212,11 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable Dashboard</a></li>
+                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable
+                            Dashboard</a></li>
                     <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
-                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
+                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
+                            Timetable</a></li>
                 </ul>
             </li>
 
@@ -201,7 +236,8 @@ use App\Http\Controllers\Helper;
                 </a>
                 <ul class="sub-menu">
                     <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
-                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
+                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
+                            Examination</a></li>
                     @if ($pendingMarksCount > 0)
                         <li>
                             <a href="{{ route('examination.marks-entry-portal') }}">
@@ -212,6 +248,7 @@ use App\Http\Controllers\Helper;
                     @endif
                 </ul>
             </li>
+
         @endif
 
         <li class="slide">
@@ -261,8 +298,14 @@ use App\Http\Controllers\Helper;
         display: none;
         padding-left: 40px;
     }
-    .slide.active > .sub-menu { display: block; }
-    .has-sub > a { cursor: pointer; }
+
+    .slide.active>.sub-menu {
+        display: block;
+    }
+
+    .has-sub>a {
+        cursor: pointer;
+    }
 
     .side-menu__item .badge,
     .sub-menu .badge {
@@ -278,18 +321,44 @@ use App\Http\Controllers\Helper;
         justify-content: center;
         box-shadow: 0 0 0 2px white;
     }
-    .side-menu__item .badge { margin-left: 5px; }
-    .sub-menu .badge.float-right { margin-left: auto; margin-right: 10px; }
+
+    .side-menu__item .badge {
+        margin-left: 5px;
+    }
+
+    .sub-menu .badge.float-right {
+        margin-left: auto;
+        margin-right: 10px;
+    }
 
     @keyframes pulse {
-        0%   { transform: scale(1); }
-        50%  { transform: scale(1.2); }
-        100% { transform: scale(1); }
-    }
-    .badge-danger { animation: pulse 2s infinite; }
+        0% {
+            transform: scale(1);
+        }
 
-    .side-menu { list-style: none; padding: 0; margin: 0; }
-    .slide { position: relative; margin-bottom: 5px; }
+        50% {
+            transform: scale(1.2);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .badge-danger {
+        animation: pulse 2s infinite;
+    }
+
+    .side-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .slide {
+        position: relative;
+        margin-bottom: 5px;
+    }
 
     .side-menu__item {
         display: flex;
@@ -301,15 +370,25 @@ use App\Http\Controllers\Helper;
         border-radius: 8px;
         margin: 0 8px;
     }
+
     .side-menu__item:hover {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white !important;
         transform: translateX(5px);
     }
-    .side-menu__item i:first-child { width: 35px; }
 
-    .dropdown-icon { transition: transform 0.3s ease; font-size: 12px; }
-    .slide.active .dropdown-icon { transform: rotate(180deg); }
+    .side-menu__item i:first-child {
+        width: 35px;
+    }
+
+    .dropdown-icon {
+        transition: transform 0.3s ease;
+        font-size: 12px;
+    }
+
+    .slide.active .dropdown-icon {
+        transform: rotate(180deg);
+    }
 
     .sub-menu {
         display: none;
@@ -319,14 +398,28 @@ use App\Http\Controllers\Helper;
         background: rgba(102, 126, 234, 0.05);
         border-radius: 8px;
     }
-    .slide.active .sub-menu { display: block; animation: fadeIn 0.3s ease; }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to   { opacity: 1; transform: translateY(0); }
+    .slide.active .sub-menu {
+        display: block;
+        animation: fadeIn 0.3s ease;
     }
 
-    .sub-menu li { margin: 5px 0; }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .sub-menu li {
+        margin: 5px 0;
+    }
+
     .sub-menu li a {
         display: flex;
         align-items: center;
@@ -337,37 +430,73 @@ use App\Http\Controllers\Helper;
         transition: all 0.3s ease;
         font-size: 14px;
     }
+
     .sub-menu li a:hover {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white !important;
         transform: translateX(5px);
     }
-    .sub-menu li a i { width: 25px; font-size: 14px; }
+
+    .sub-menu li a i {
+        width: 25px;
+        font-size: 14px;
+    }
 
     .side-menu__item.active {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
     }
-    .has-sub:hover > .side-menu__item {
+
+    .has-sub:hover>.side-menu__item {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white !important;
     }
 
-    .sub-menu li { animation: slideIn 0.3s ease backwards; }
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to   { opacity: 1; transform: translateX(0); }
+    .sub-menu li {
+        animation: slideIn 0.3s ease backwards;
     }
-    .sub-menu li:nth-child(1) { animation-delay: 0.05s; }
-    .sub-menu li:nth-child(2) { animation-delay: 0.1s; }
-    .sub-menu li:nth-child(3) { animation-delay: 0.15s; }
-    .sub-menu li:nth-child(4) { animation-delay: 0.2s; }
-    .sub-menu li:nth-child(5) { animation-delay: 0.25s; }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .sub-menu li:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .sub-menu li:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .sub-menu li:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .sub-menu li:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    .sub-menu li:nth-child(5) {
+        animation-delay: 0.25s;
+    }
 
     @media (max-width: 768px) {
-        .sub-menu { padding-left: 30px; }
-        .side-menu__item { padding: 10px 15px; }
+        .sub-menu {
+            padding-left: 30px;
+        }
+
+        .side-menu__item {
+            padding: 10px 15px;
+        }
     }
 
     /* ── Sidebar Logo: large screens (theme handles positioning) ── */
@@ -378,7 +507,10 @@ use App\Http\Controllers\Helper;
         margin-bottom: 15px;
         transition: padding 0.3s ease;
     }
-    .app-sidebar__logo.scrolled { padding: 10px 0 15px 0; }
+
+    .app-sidebar__logo.scrolled {
+        padding: 10px 0 15px 0;
+    }
 
     .app-sidebar__logo .header-brand {
         display: block !important;
@@ -393,12 +525,13 @@ use App\Http\Controllers\Helper;
         border: 4px solid #667eea;
         padding: 5px;
         background: white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         transition: all 0.3s ease;
         display: block !important;
         visibility: visible !important;
         margin: 0 auto;
     }
+
     .app-sidebar__logo.scrolled .sidebar-logo {
         width: 70px;
         height: 70px;
@@ -407,7 +540,10 @@ use App\Http\Controllers\Helper;
     }
 
     /* Minimized sidebar on large screens */
-    .sidenav-toggled .app-sidebar__logo { padding: 10px 0 !important; }
+    .sidenav-toggled .app-sidebar__logo {
+        padding: 10px 0 !important;
+    }
+
     .sidenav-toggled .sidebar-logo {
         width: 45px !important;
         height: 45px !important;
@@ -416,7 +552,9 @@ use App\Http\Controllers\Helper;
         border-radius: 50% !important;
     }
 
-    .sidebar-logo:hover { transform: scale(1.05); }
+    .sidebar-logo:hover {
+        transform: scale(1.05);
+    }
 
     /* ── Mobile logo: fixed overlay that slides with the sidebar ── */
     @media (max-width: 768px) {
@@ -453,7 +591,7 @@ use App\Http\Controllers\Helper;
             background: transparent !important;
             padding: 12px 0 14px 0 !important;
             text-align: center !important;
-            border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
             margin-bottom: 0 !important;
         }
 
@@ -468,13 +606,14 @@ use App\Http\Controllers\Helper;
             border-radius: 50% !important;
             border: 3px solid #667eea !important;
             background: white !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
             object-fit: cover !important;
             pointer-events: all !important;
         }
     }
 
     @media (max-width: 480px) {
+
         div.app-sidebar.app-sidebar2 .sidebar-logo,
         .app-sidebar2 .sidebar-logo {
             width: 60px !important;
