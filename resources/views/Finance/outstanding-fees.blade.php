@@ -694,9 +694,14 @@ use App\Http\Controllers\Helper;
             </div>
         </div>
         </div>
+
+    @endif
+
+                </div>
+        </div>
+                </div>
             </div>
         </div>
-    @endif
 
     <script>
         function formatNumberWithCommas(value) {
