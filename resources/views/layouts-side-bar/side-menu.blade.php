@@ -179,6 +179,67 @@ use App\Http\Controllers\Helper;
                             <i class="fas fa-sack-dollar mr-2"></i>
                             Finance Dashboard
                         </a>
+
+                        <a href="{{ route('finance.fee-structures.index') }}">
+                            <i class="fas fa-money-check-alt mr-2"></i>
+                            Fee Structure
+                        </a>
+
+                        <a href="{{ route('finance.fee-allocations') }}">
+                            <i class="fas fa-layer-group mr-2"></i>
+                            Fee Allocations
+                        </a>
+
+                        <a href="{{ route('finance.payments.create') }}">
+                            <i class="fas fa-hand-holding-usd mr-2"></i>
+                            Fee Payment
+                        </a>
+
+                        <a href="{{ route('finance.payments.index') }}">
+                            <i class="fas fa-receipt mr-2"></i>
+                            Payments
+                        </a>
+
+                        <a href="{{ route('finance.expenses.index') }}">
+                            <i class="fas fa-money-bill-transfer mr-2"></i>
+                            Expenses Dashboard
+                        </a>
+
+                        <a href="{{ route('finance.expense-categories.index') }}">
+                            <i class="fas fa-tags mr-2"></i>
+                            Expense Categories
+                        </a>
+
+                        <a href="{{ route('finance.expenses.index') }}">
+                            <i class="fas fa-circle-plus mr-2"></i>
+                            Add Expense
+                        </a>
+
+                        <a href="{{ route('finance.payroll.index') }}">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Payroll Dashboard
+                        </a>
+
+                        <a href="{{ route('finance.salary-structures') }}">
+                            <i class="fas fa-clipboard-list mr-2"></i>
+                            Salary Structures
+                        </a>
+
+                        <a href="{{ route('finance.budgets.index') }}">
+                            <i class="fas fa-scale-balanced mr-2"></i>
+                            Budget Dashboard
+                        </a>
+
+                        <a href="{{ route('finance.reports') }}">
+                            <i class="fas fa-file-chart-column mr-2"></i>
+                            Reports
+                        </a>
+
+                        <a href="{{ route('finance.outstanding-fees') }}">
+                            <i class="fas fa-hourglass-half mr-2"></i>
+                            Outstanding Fees
+                        </a>
+
                     </li>
                 </ul>
             </li>

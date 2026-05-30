@@ -540,6 +540,9 @@ Route::prefix('finance')
         // Dashboard
         Route::get('/', 'dashboard')->name('dashboard');
 
+        Route::get('/streams-by-class', 'getStreamsByClass')->name('streams-by-class');
+        Route::get('/students-by-stream', 'getStudentsByStream')->name('students-by-stream');
+
         // ── Fee Structures ──────────────────────────────────────────────────
         Route::prefix('fee-structures')->name('fee-structures.')->group(function () {
             Route::get('/', 'feeStructures')->name('index');
@@ -549,13 +552,14 @@ Route::prefix('finance')
             Route::put('/{id}', 'updateFeeStructure')->name('update');
             Route::delete('/{id}', 'deleteFeeStructure')->name('destroy');
         });
-        // Shortcut alias used in sidebar nav
-        // Route::get('/fee-structures', 'feeStructures')->name('fee-structures');
 
         // ── Fee Allocations ─────────────────────────────────────────────────
         Route::get('/fee-allocations', 'feeAllocations')->name('fee-allocations');
         Route::post('/allocate-fees', 'allocateFees')->name('allocate-fees');
         Route::get('/student-allocations', 'getStudentAllocations')->name('student-allocations');
+        Route::get('/fee-allocation/{id}/data', 'getFeeAllocationData')->name('fee-allocation.data');
+        Route::put('/fee-allocation/{id}', 'updateFeeAllocation')->name('fee-allocation.update');
+        Route::delete('/fee-allocation/{id}', 'deleteFeeAllocation')->name('fee-allocation.delete');
 
         // ── Payments ────────────────────────────────────────────────────────
         Route::prefix('payments')->name('payments.')->group(function () {
@@ -580,6 +584,7 @@ Route::prefix('finance')
         Route::prefix('expense-categories')->name('expense-categories.')->group(function () {
             Route::get('/', 'expenseCategories')->name('index');
             Route::post('/', 'storeExpenseCategory')->name('store');
+            Route::put('/{id}', 'updateExpenseCategory')->name('update');  // Add this line
             Route::delete('/{id}', 'deleteExpenseCategory')->name('destroy');
         });
 
@@ -591,6 +596,7 @@ Route::prefix('finance')
             Route::get('/{id}', 'showPayrollPeriod')->name('show');
             Route::post('/{id}/approve', 'approvePayrollPeriod')->name('approve');
             Route::post('/{id}/mark-paid', 'markPayrollPaid')->name('mark-paid');
+            Route::get('/payslip/{id}', 'viewPayslip')->name('payslip');
         });
 
         // ── Salary Structures ───────────────────────────────────────────────
@@ -600,11 +606,13 @@ Route::prefix('finance')
         // ── Budgets ─────────────────────────────────────────────────────────
         Route::prefix('budgets')->name('budgets.')->group(function () {
             Route::get('/', 'budgets')->name('index');
-            Route::get('/create', 'createBudget')->name('create');
+            Route::get('/create', 'createBudget')->name('create');        // ← specific first
             Route::post('/', 'storeBudget')->name('store');
-            Route::get('/{id}', 'showBudget')->name('show');
+            Route::get('/{id}/edit', 'editBudget')->name('edit');         // ← /{id}/x before /{id}
+            Route::put('/{id}', 'updateBudget')->name('update');
+            Route::post('/{id}/approve', 'approveBudget')->name('approve');
+            Route::get('/{id}', 'showBudget')->name('show');              // ← wildcard last
         });
-
         // ── Reports ─────────────────────────────────────────────────────────
         Route::get('/reports', 'reports')->name('reports');
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');

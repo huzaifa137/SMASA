@@ -26,7 +26,6 @@ class TeacherSalaryStructure extends Model
 
     public function grossPay(): float
     {
-        return (float) ($this->basic_salary + $this->housing_allowance
-            + $this->transport_allowance + $this->other_allowances);
+        return (float) ($this->basic_salary + $this->housing_allowance + $this->transport_allowance + $this->other_allowances);
     }
 }

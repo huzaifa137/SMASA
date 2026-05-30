@@ -15,8 +15,6 @@ class Teacher extends Model
         'email',
         'password',
         'othername',
-        'email',
-        'password',
         'initials',
         'phonenumber',
         'registration_number',
@@ -31,5 +29,10 @@ class Teacher extends Model
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function salaryStructure()
+    {
+        return $this->hasOne(TeacherSalaryStructure::class, 'teacher_id');
     }
 }
