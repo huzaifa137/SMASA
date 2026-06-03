@@ -294,7 +294,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
                     Route::get('/add-new-student', 'addNewStudent')->name('students.add.new.student');
 
-                    // Route::put('/update/{id}', 'updateStudentInformation');
                     Route::post('/students/store', 'storeStudent')->name('students.store');
 
                     Route::get('/transfer-form', 'moveStudentForm')->name('students.transfer');

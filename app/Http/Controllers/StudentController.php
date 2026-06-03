@@ -612,19 +612,23 @@ class StudentController extends Controller
 
         if ($request->hasFile('student_photo')) {
             $file = $request->file('student_photo');
-
             $destinationPath = public_path('uploads/studentPhotos');
 
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
 
-            // ✅ FIX: use actual student ID
             $studentId = $student->id;
+
+            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                $old = $destinationPath . '/' . $studentId . '.' . $ext;
+                if (file_exists($old)) {
+                    unlink($old);
+                }
+            }
 
             $extension = $file->getClientOriginalExtension();
             $filename = $studentId . '.' . $extension;
-
             $file->move($destinationPath, $filename);
 
             $photoPath = $studentId;
@@ -784,8 +788,8 @@ class StudentController extends Controller
         switch ($criteria) {
             case 'admission_number':
                 $students = Student::where('admission_number', $request->admission_number)
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
                 break;
             case 'name':
                 $students = Student::where('firstname', 'like', '%' . $request->firstname . '%')
@@ -801,8 +805,8 @@ class StudentController extends Controller
                 break;
             case 'student_id':
                 $students = Student::where('id', $request->student_id)
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
                 break;
             default:
                 return response()->json(['message' => 'Invalid criteria'], 400);

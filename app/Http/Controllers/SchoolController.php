@@ -264,7 +264,7 @@ class SchoolController extends Controller
 
     public function schoolIndividualProfile($id)
     {
-        
+
         $school = School::where('id', Session('LoggedSchool'))->first();
         $profile = SchoolProfile::where('school_id', Session('LoggedSchool'))->first();
 
@@ -343,17 +343,25 @@ class SchoolController extends Controller
 
         if ($request->hasFile('logo')) {
 
+            // Delete old logo if exists
             if ($profile && $profile->logo) {
-                Storage::disk('public')->delete($profile->logo);
+                $oldPath = public_path('uploads/logos/' . $profile->logo);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
 
             $logoFile = $request->file('logo');
-            $logoPath = $logoFile->store('logos', 'public');
-            $validated['logo'] = $logoPath;
-        } elseif ($profile) {
-            $validated['logo'] = $profile->logo;
-        } else {
-            $validated['logo'] = null;
+            $extension = $logoFile->getClientOriginalExtension();
+            $filename = 'school_' . $validated['school_id'] . '_' . time() . '.' . $extension; // <-- changed
+
+            $destinationPath = public_path('uploads/logos');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $logoFile->move($destinationPath, $filename);
+            $validated['logo'] = $filename;
         }
 
         $validated['updated_at'] = now();

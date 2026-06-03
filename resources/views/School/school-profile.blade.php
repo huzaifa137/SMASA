@@ -48,7 +48,7 @@ $controller = new Controller();
                                 <div class="p-3 border rounded bg-light">
                                     <div class="text-center mb-4">
                                         <img id="logoPreview"
-                                            src="{{ $profile?->logo ? asset('storage/' . $profile->logo) : $school->logo ?? asset('assets/images/brand/uplogolight.png') }}"
+                                            src="{{ $profile?->logo ? asset('uploads/logos/' . $profile->logo) : ($school->logo ? asset('uploads/logos/' . $school->logo) : asset('assets/images/brand/uplogolight.png')) }}"
                                             class="img-fluid rounded border p-2"
                                             style="max-height: 180px; object-fit: contain;" alt="School Logo">
                                     </div>

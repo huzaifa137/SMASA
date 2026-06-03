@@ -1095,6 +1095,32 @@
                 $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
                 $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
 
+                // Resolve logo URL the same way student photos are resolved
+                $schoolLogoUrl = null;
+                if ($schoolLogo) {
+                    // New approach: stored in public/uploads/logos/
+                    $directPath = public_path('uploads/logos/' . $schoolLogo);
+                    if (file_exists($directPath)) {
+                        $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+                    }
+                    // Fallback: old Storage::disk('public') approach (logos/filename.ext)
+                    else {
+                        foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                            $fallback = public_path('storage/' . $schoolLogo);
+                            if (file_exists($fallback)) {
+                                $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                                break;
+                            }
+                            // Also try with extensions appended
+                            $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                            if (file_exists($fallback2)) {
+                                $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 $qrText = $slipData['qrText'] ?? '';
 
                 /*
@@ -1117,9 +1143,9 @@
 
                 {{-- Watermark --}}
                 @if($cfg['watermark'])
-                    @if($schoolLogo && Storage::disk('public')->exists($schoolLogo))
+                    @if($schoolLogoUrl)
                         <div class="watermark">
-                            <img src="{{ asset('storage/' . $schoolLogo) }}" alt="watermark">
+                            <img src="{{ $schoolLogoUrl }}" alt="watermark">
                         </div>
                     @else
                         <div class="watermark-text">{{ $schoolName }}</div>
@@ -1129,9 +1155,10 @@
                 {{-- ══ SCHOOL HEADER ══════════════════════════════════════════ --}}
                 <div class="sch-header">
                     <div class="sch-logo-area">
+                        {{-- Logo in header --}}
                         <div class="sch-logo-box">
-                            @if($cfg['logo'] && $schoolLogo && Storage::disk('public')->exists($schoolLogo))
-                                <img src="{{ asset('storage/' . $schoolLogo) }}" alt="logo">
+                            @if($cfg['logo'] && $schoolLogoUrl)
+                                <img src="{{ $schoolLogoUrl }}" alt="logo">
                             @else
                                 <i class="fas fa-school"></i>
                             @endif
@@ -1583,7 +1610,7 @@
                                 });
                             }
                         @endif
-                    })();
+                                })();
             </script>
 
             {{-- QR Code --}}
