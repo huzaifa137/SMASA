@@ -408,8 +408,8 @@
         }
 
         /* ══════════════════════════════════
-           MODALS
-        ══════════════════════════════════ */
+               MODALS
+            ══════════════════════════════════ */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -933,6 +933,38 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* ID Card Status Badges */
+        .badge-active {
+            background: var(--gl);
+            color: var(--g);
+        }
+
+        .badge-revoked {
+            background: var(--rl);
+            color: var(--r);
+        }
+
+        .badge-expired {
+            background: var(--al);
+            color: var(--a);
+        }
+
+        .badge-none {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        /* Print button style */
+        .btn-print {
+            background: var(--gl);
+            color: var(--g);
+        }
+
+        .btn-print:hover {
+            background: var(--g);
+            color: #fff;
+        }
     </style>
 @endsection
 
@@ -999,97 +1031,152 @@
                                 </span>
                             </div>
 
-                            {{-- Table --}}
-                            <div style="overflow-x:auto;">
-                                <table class="std-table">
-                                    <thead>
-                                        <tr>
-                                            <th width="4%">#</th>
-                                            <th width="7%">Photo</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th width="12%">Adm No.</th>
-                                            <th width="10%">Gender</th>
-                                            <th width="14%">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($students as $key => $student)
-                                            @php
-$imageUrl = null;
-if ($student->student_photo) {
-    // Check both public/ and public_html/ root since shared hosting varies
-    $basePaths = [
-        public_path('uploads/studentPhotos'),
-        base_path('uploads/studentPhotos'),
-    ];
-    foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-        $filename = $student->student_photo . '.' . $ext;
-        foreach ($basePaths as $base) {
-            if (file_exists($base . '/' . $filename)) {
-                $imageUrl = asset('uploads/studentPhotos/' . $filename);
-                break 2;
-            }
-        }
-    }
-}
-                                                $initials = strtoupper(substr($student->firstname, 0, 1) . substr($student->lastname ?? '', 0, 1));
-                                                $colors = ['#2f2ccb', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626'];
-                                                $avatarColor = $colors[ord($student->firstname[0]) % count($colors)];
-                                            @endphp
-                                            <tr id="row-{{ $student->id }}">
-                                                <td style="color:var(--t3);font-size:.8rem;font-weight:600;">
-                                                    {{ $students->firstItem() + $key }}
-                                                </td>
-                                                <td>
-                                                    @if($imageUrl)
-                                                        <img src="{{ $imageUrl }}" alt="{{ $student->firstname }}" class="std-avatar">
-                                                    @else
-                                                        <div class="std-avatar-placeholder"
-                                                            style="background:{{ $avatarColor }}1a;color:{{ $avatarColor }};">{{ $initials }}
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td style="font-weight:600;">{{ $student->firstname }}</td>
-                                                <td>{{ $student->lastname }}</td>
-                                                <td><span
-                                                        style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--t2);">{{ $student->admission_number ?? '—' }}</span>
-                                                </td>
-                                                <td>
-                                                    @if($student->gender === 'Male')
-                                                        <span class="badge badge-blue"><i class="fas fa-mars" style="font-size:.65rem;"></i>
-                                                            Male</span>
-                                                    @elseif($student->gender === 'Female')
-                                                        <span class="badge badge-pink"><i class="fas fa-venus" style="font-size:.65rem;"></i>
-                                                            Female</span>
-                                                    @else
-                                                        <span class="badge badge-gray">{{ $student->gender ?? '—' }}</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <div style="display:flex;gap:.4rem;align-items:center;">
-                                                        <button class="btn-icon btn-view" onclick="viewStudent({{ $student->id }})"
-                                                            title="View Details">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        @if(Helper::isAssignedClassTeacher($senior, $stream) || Helper::isTechSateAdminOrSchoolAdminsAlone())
-                                                            <button class="btn-icon btn-edit" onclick="editStudent({{ $student->id }})"
-                                                                title="Edit Student">
-                                                                <i class="fas fa-pen"></i>
-                                                            </button>
-                                                            <button class="btn-icon btn-del"
-                                                                onclick="deleteStudent({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
-                                                                title="Delete Student">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        @endif
+                            {{-- Inside the table, replace the existing columns with this --}}
+                            <table class="std-table">
+                                <thead>
+                                    <tr>
+                                        <th width="4%">#</th>
+                                        <th width="7%">Photo</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th width="12%">Adm No.</th>
+                                        <th width="10%">Gender</th>
+                                        <th width="12%">ID Card Status</th>
+                                        <th width="18%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($students as $key => $student)
+                                        @php
+                                            $imageUrl = null;
+                                            if ($student->student_photo) {
+                                                $basePaths = [
+                                                    public_path('uploads/studentPhotos'),
+                                                    base_path('uploads/studentPhotos'),
+                                                ];
+                                                foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                                                    $filename = $student->student_photo . '.' . $ext;
+                                                    foreach ($basePaths as $base) {
+                                                        if (file_exists($base . '/' . $filename)) {
+                                                            $imageUrl = asset('uploads/studentPhotos/' . $filename);
+                                                            break 2;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            $initials = strtoupper(substr($student->firstname, 0, 1) . substr($student->lastname ?? '', 0, 1));
+                                            $colors = ['#2f2ccb', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626'];
+                                            $avatarColor = $colors[ord($student->firstname[0]) % count($colors)];
+
+                                            $cardInfo = $student->card_info;
+                                            $cardStatus = $cardInfo['status'] ?? null;
+                                            $buttonType = $cardInfo['button_type'] ?? 'generate';
+                                            $cardId = $cardInfo['card_id'] ?? null;
+                                        @endphp
+                                        <tr id="row-{{ $student->id }}">
+                                            <td style="color:var(--t3);font-size:.8rem;font-weight:600;">
+                                                {{ $students->firstItem() + $key }}
+                                            </td>
+                                            <td>
+                                                @if($imageUrl)
+                                                    <img src="{{ $imageUrl }}" alt="{{ $student->firstname }}" class="std-avatar">
+                                                @else
+                                                    <div class="std-avatar-placeholder"
+                                                        style="background:{{ $avatarColor }}1a;color:{{ $avatarColor }};">{{ $initials }}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                                @endif
+                                            </td>
+                                            <td style="font-weight:600;">{{ $student->firstname }}</td>
+                                            <td>{{ $student->lastname }}</td>
+                                            <td><span
+                                                    style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--t2);">{{ $student->admission_number ?? '—' }}</span>
+                                            </td>
+                                            <td>
+                                                @if($student->gender === 'Male')
+                                                    <span class="badge badge-blue"><i class="fas fa-mars" style="font-size:.65rem;"></i>
+                                                        Male</span>
+                                                @elseif($student->gender === 'Female')
+                                                    <span class="badge badge-pink"><i class="fas fa-venus" style="font-size:.65rem;"></i>
+                                                        Female</span>
+                                                @else
+                                                    <span class="badge badge-gray">{{ $student->gender ?? '—' }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($cardStatus === 'active')
+                                                    <span class="badge" style="background: var(--gl); color: var(--g);">
+                                                        <i class="fas fa-check-circle"></i> Active
+                                                    </span>
+                                                @elseif($cardStatus === 'revoked')
+                                                    <span class="badge" style="background: var(--rl); color: var(--r);">
+                                                        <i class="fas fa-ban"></i> Revoked
+                                                    </span>
+                                                @elseif($cardStatus === 'expired')
+                                                    <span class="badge" style="background: var(--al); color: var(--a);">
+                                                        <i class="fas fa-clock"></i> Expired
+                                                    </span>
+                                                @else
+                                                    <span class="badge" style="background: #e2e8f0; color: #64748b;">
+                                                        <i class="fas fa-id-card"></i> No Card
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+                                                    <!-- View Student Details Button -->
+                                                    <button class="btn-icon btn-view" onclick="viewStudent({{ $student->id }})"
+                                                        title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+
+                                                    <!-- ID Card Action Button based on status -->
+                                                    @if($cardStatus === 'active')
+                                                        <button class="btn-icon" style="background: var(--g); color: #fff;"
+                                                            onclick="viewCard({{ $cardId }})" title="View ID Card">
+                                                            <i class="fas fa-id-card"></i>
+                                                        </button>
+                                                        <!-- <button class="btn-icon btn-print" onclick="printCard({{ $cardId }})"
+                                                            title="Print ID Card">
+                                                            <i class="fas fa-print"></i>
+                                                        </button> -->
+                                                    @elseif($cardStatus === 'revoked')
+                                                        <button class="btn-icon" style="background: var(--a); color: #fff;"
+                                                            onclick="reactivateCard({{ $cardId }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                            title="Reactivate Card">
+                                                            <i class="fas fa-sync-alt"></i>
+                                                        </button>
+                                                    @elseif($cardStatus === 'expired')
+                                                        <button class="btn-icon btn-primary"
+                                                            onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                            title="Generate New Card">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    @else
+                                                        <button class="btn-icon btn-primary"
+                                                            onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                            title="Generate ID Card">
+                                                            <i class="fas fa-magic"></i>
+                                                        </button>
+                                                    @endif
+
+                                                    <!-- Edit & Delete buttons (existing) -->
+                                                    @if(Helper::isAssignedClassTeacher($senior, $stream) || Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                        <button class="btn-icon btn-edit" onclick="editStudent({{ $student->id }})"
+                                                            title="Edit Student">
+                                                            <i class="fas fa-pen"></i>
+                                                        </button>
+                                                        <button class="btn-icon btn-del"
+                                                            onclick="deleteStudent({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                            title="Delete Student">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
 
                             {{-- Pagination --}}
                             @if($students->total() > 10)
@@ -1197,63 +1284,63 @@ if ($student->student_photo) {
                             : `<span class="badge badge-gray">${s.gender || '—'}</span>`;
 
                     document.getElementById('viewBody').innerHTML = `
-                    <div class="student-banner">
-                        ${photoHtml}
-                        <div>
-                            <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
-                            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
-                                ${genderBadge}
-                                ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
-                                ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
+                        <div class="student-banner">
+                            ${photoHtml}
+                            <div>
+                                <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
+                                    ${genderBadge}
+                                    ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
+                                    ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                    <div class="info-grid">
-                        ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
-                        ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
-                        ${infoItem('Place of Birth', s.place_of_birth)}
-                        ${infoItem('Nationality', s.nationality)}
-                        ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
-                        ${infoItem('Gender', s.gender)}
-                    </div>
+                        <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                        <div class="info-grid">
+                            ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
+                            ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
+                            ${infoItem('Place of Birth', s.place_of_birth)}
+                            ${infoItem('Nationality', s.nationality)}
+                            ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
+                            ${infoItem('Gender', s.gender)}
+                        </div>
 
-                    <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                    <div class="info-grid">
-                        ${infoItem('Admission Number', s.admission_number)}
-                        ${infoItem('Registration Number', s.registration_number)}
-                        ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
-                        ${infoItem('Admission Year', s.admission_year)}
-                        ${infoItem('Class / Senior', s.senior)}
-                        ${infoItem('Stream', s.stream)}
-                        ${infoItem('PLE Score', s.ple_score)}
-                        ${infoItem('UCE Score', s.uce_score)}
-                        ${infoItem('Previous School', s.previous_school)}
-                        ${infoItem('Primary School', s.primary_school_name)}
-                    </div>
+                        <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                        <div class="info-grid">
+                            ${infoItem('Admission Number', s.admission_number)}
+                            ${infoItem('Registration Number', s.registration_number)}
+                            ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
+                            ${infoItem('Admission Year', s.admission_year)}
+                            ${infoItem('Class / Senior', s.senior)}
+                            ${infoItem('Stream', s.stream)}
+                            ${infoItem('PLE Score', s.ple_score)}
+                            ${infoItem('UCE Score', s.uce_score)}
+                            ${infoItem('Previous School', s.previous_school)}
+                            ${infoItem('Primary School', s.primary_school_name)}
+                        </div>
 
-                    <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
-                    <div class="info-grid">
-                        ${infoItem('Primary Contact', s.primary_contact)}
-                        ${infoItem('Other Contact', s.other_contact)}
-                        ${infoItem('Home Address', s.home_address, true)}
-                    </div>
+                        <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
+                        <div class="info-grid">
+                            ${infoItem('Primary Contact', s.primary_contact)}
+                            ${infoItem('Other Contact', s.other_contact)}
+                            ${infoItem('Home Address', s.home_address, true)}
+                        </div>
 
-                    <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
-                    <div class="info-grid">
-                        ${infoItem('Guardian Names', s.guardian_names)}
-                        ${infoItem('Relation', s.relation)}
-                        ${infoItem('Guardian Phone', s.guardian_phone)}
-                        ${infoItem('Guardian Email', s.guardian_email)}
-                    </div>
+                        <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
+                        <div class="info-grid">
+                            ${infoItem('Guardian Names', s.guardian_names)}
+                            ${infoItem('Relation', s.relation)}
+                            ${infoItem('Guardian Phone', s.guardian_phone)}
+                            ${infoItem('Guardian Email', s.guardian_email)}
+                        </div>
 
-                    <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
-                    <div class="info-grid">
-                        ${infoItem('Medical History', s.medical_history, true)}
-                        ${infoItem('Comments', s.comments, true)}
-                    </div>
-                `;
+                        <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
+                        <div class="info-grid">
+                            ${infoItem('Medical History', s.medical_history, true)}
+                            ${infoItem('Comments', s.comments, true)}
+                        </div>
+                    `;
                 })
                 .catch(() => {
                     document.getElementById('viewBody').innerHTML = `<div class="empty-state"><div class="empty-icon-wrap"><i class="fas fa-times-circle"></i></div><p>Failed to load student data.</p></div>`;
@@ -1296,123 +1383,123 @@ if ($student->student_photo) {
                 : `<small style="color:var(--t3);">No photo uploaded yet</small>`;
 
             return `
-            <div class="edit-section">
-                <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                <div class="form-grid-2">
-                    <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
-                    <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
-                    <div class="form-group"><label class="form-label">Gender *</label>
-                        <select class="form-control" id="ef_gender">
-                            <option value="">Select</option>
-                            <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
-                            <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
-                            <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
-                        </select>
+                <div class="edit-section">
+                    <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
+                        <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
+                        <div class="form-group"><label class="form-label">Gender *</label>
+                            <select class="form-control" id="ef_gender">
+                                <option value="">Select</option>
+                                <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
+                                <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
+                                <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
+                        <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
+                        <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
+                        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
                     </div>
-                    <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
-                    <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
-                    <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
-                    <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
                 </div>
-            </div>
 
-            <div class="edit-section">
-                <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                <div class="form-grid-3">
-                    <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
-                    <div class="form-group"><label class="form-label">Admission No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
-                    <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
-                    <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
-                    <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
-                    <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
-                    <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
-                    <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
+                <div class="edit-section">
+                    <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                    <div class="form-grid-3">
+                        <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
+                        <div class="form-group"><label class="form-label">Admission No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
+                        <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
+                        <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
+                        <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
+                        <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
+                        <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
+                        <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
+                        <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
+                    </div>
                 </div>
-                <div class="form-grid-2">
-                    <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
-                    <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
-                </div>
-            </div>
 
-            <div class="edit-section">
-                <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
-                <div class="form-grid-3">
-                    <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
-                    <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
-                    <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
+                <div class="edit-section">
+                    <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
+                    <div class="form-grid-3">
+                        <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
+                        <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
+                        <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
+                        <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
+                        <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
+                        <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
+                    </div>
                 </div>
-                <div class="form-grid-2">
-                    <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
-                    <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
-                    <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
-                    <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
-                </div>
-            </div>
 
-            <div class="edit-section">
-                <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
-                <div class="form-grid-2">
-                    <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
-                    <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
+                <div class="edit-section">
+                    <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
+                        <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="edit-section">
-                <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
-                <div style="margin-bottom:.75rem;">${photoHtml}</div>
-                <div class="photo-upload-wrap" id="photoWrap">
-                    <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-                    <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-                    <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-                    <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
-                </div>
-                <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
-            </div>`;
+                <div class="edit-section">
+                    <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
+                    <div style="margin-bottom:.75rem;">${photoHtml}</div>
+                    <div class="photo-upload-wrap" id="photoWrap">
+                        <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+                        <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+                        <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
+                    </div>
+                    <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
+                </div>`;
         }
 
         function esc(v) { return (v ?? '').toString().replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
-let selectedPhotoFile = null; // 👈 store file here, outside DOM
+        let selectedPhotoFile = null; // 👈 store file here, outside DOM
 
-function initPhotoUpload() {
-    selectedPhotoFile = null; // reset on each edit modal open
-    const input = document.getElementById('ef_photo');
-    const wrap = document.getElementById('photoWrap');
-    if (!input) return;
+        function initPhotoUpload() {
+            selectedPhotoFile = null; // reset on each edit modal open
+            const input = document.getElementById('ef_photo');
+            const wrap = document.getElementById('photoWrap');
+            if (!input) return;
 
-    input.addEventListener('change', function () {
-        const file = this.files[0];
-        if (!file) return;
+            input.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            document.getElementById('photoErr').textContent = 'File too large (max 5MB)';
-            return;
+                if (file.size > 5 * 1024 * 1024) {
+                    document.getElementById('photoErr').textContent = 'File too large (max 5MB)';
+                    return;
+                }
+
+                selectedPhotoFile = file; // 👈 save reference BEFORE DOM changes
+
+                const reader = new FileReader();
+                reader.onload = e => {
+                    wrap.innerHTML = `
+                    <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
+                    <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        <i class='fas fa-times' style='font-size:.7rem;'></i>
+                    </button>`;
+                    wrap.style.position = 'relative';
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
-        selectedPhotoFile = file; // 👈 save reference BEFORE DOM changes
-
-        const reader = new FileReader();
-        reader.onload = e => {
-            wrap.innerHTML = `
-                <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
-                <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                    <i class='fas fa-times' style='font-size:.7rem;'></i>
-                </button>`;
-            wrap.style.position = 'relative';
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-function resetPhotoUpload() {
-    selectedPhotoFile = null; // 👈 clear saved file
-    document.getElementById('photoWrap').innerHTML = `
-        <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-        <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-        <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-        <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
-    initPhotoUpload();
-}
+        function resetPhotoUpload() {
+            selectedPhotoFile = null; // 👈 clear saved file
+            document.getElementById('photoWrap').innerHTML = `
+            <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+            <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+            <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+            <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
+            initPhotoUpload();
+        }
 
         // ── SAVE STUDENT ───────────────────────────────────────────────────
         function saveStudent() {
@@ -1469,9 +1556,9 @@ function resetPhotoUpload() {
                 fd.append('medical_history', document.getElementById('ef_med')?.value || '');
                 fd.append('comments', document.getElementById('ef_com')?.value || '');
 
-if (selectedPhotoFile) {
-    fd.append('student_photo', selectedPhotoFile);
-}
+                if (selectedPhotoFile) {
+                    fd.append('student_photo', selectedPhotoFile);
+                }
 
                 fetch(`{{ url('/students/update') }}/${currentEditId}`, {
                     method: 'POST',
@@ -1531,5 +1618,117 @@ if (selectedPhotoFile) {
                     .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.', confirmButtonColor: '#2f2ccb' }));
             });
         }
+
+        // ── ID CARD FUNCTIONS ───────────────────────────────────────────────────
+
+        // View existing active card
+        function viewCard(cardId) {
+            window.open(`/student-id-cards/preview/${cardId}`, '_blank');
+        }
+
+        // // Print ID card
+        // function printCard(cardId) {
+        //     window.open(`/student-id-cards/print/${cardId}`, '_blank');
+        // }
+
+        // Generate single card for student
+        function generateSingleCard(studentId, studentName) {
+            Swal.fire({
+                title: 'Generate ID Card?',
+                text: `Generate a new ID card for ${studentName}? This will revoke any existing active card.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2f2ccb',
+                confirmButtonText: 'Yes, generate',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Generating...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch('/student-id-cards/generate-single', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': CSRF
+                        },
+                        body: JSON.stringify({ student_id: studentId })
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: data.message,
+                                    icon: 'success',
+                                    confirmButtonColor: '#2f2ccb'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Generate error:', err);
+                            Swal.fire('Error', 'Failed to generate ID card', 'error');
+                        });
+                }
+            });
+        }
+
+        // Reactivate a revoked card
+        function reactivateCard(cardId, studentName) {
+            Swal.fire({
+                title: 'Reactivate ID Card?',
+                text: `Reactivate the ID card for ${studentName}? This will make the card valid again.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#d97706',
+                confirmButtonText: 'Yes, reactivate',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Reactivating...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch(`/student-id-cards/reactivate/${cardId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Reactivated!',
+                                    text: data.message,
+                                    icon: 'success',
+                                    confirmButtonColor: '#2f2ccb'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Reactivate error:', err);
+                            Swal.fire('Error', 'Failed to reactivate ID card', 'error');
+                        });
+                }
+            });
+        }
+
     </script>
 @endsection

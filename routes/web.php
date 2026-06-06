@@ -19,6 +19,9 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TeacherPasswordResetController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\StudentIdCardController;
+use App\Http\Controllers\TeacherIdCardController;
+use App\Http\Controllers\LibraryController;
 
 
 Route::get('/logout', function () {
@@ -311,6 +314,57 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 });
             });
     });
+
+    // ── Student ID Cards ──────────────────────────────────────────────────
+    Route::controller(StudentIdCardController::class)
+        ->prefix('student-id-cards')
+        ->group(function () {
+            Route::group(['middleware' => ['AdminAuth']], function () {
+                Route::get('/', 'index')->name('id-cards.index');
+                Route::get('/create', 'create')->name('id-cards.create');
+                Route::post('/generate', 'generate')->name('id-cards.generate');
+                Route::post('/generate-single', 'generateSingle')->name('id-cards.generate.single');
+                Route::get('/preview/{cardId}', 'preview')->name('id-cards.preview');
+                Route::get('/print/{cardId}', 'printCard')->name('id-cards.print');
+                Route::get('/print-bulk', 'printBulk')->name('id-cards.print.bulk');
+                Route::patch('/revoke/{cardId}', 'revoke')->name('id-cards.revoke');
+
+                // ADD THIS MISSING ROUTE:
+                Route::patch('/reactivate/{cardId}', 'reactivate')->name('id-cards.reactivate');
+
+                Route::get('/scanner', 'scannerPage')->name('id-cards.scanner');
+                Route::get('/stats', 'stats')->name('id-cards.stats');
+                Route::get('/streams-by-senior', 'getStreamsBySenior')->name('id-cards.streams.by.senior');
+                Route::get('/generate-preview', 'getStudentsPreview')->name('id-cards.generate.preview');
+                Route::get('/search-students', 'searchStudents')->name('id-cards.search.students');
+            });
+            // Public verify endpoint (no auth – for QR scanning)
+            Route::get('/verify/{cardNumber}', 'verify')->name('id-cards.verify');
+        });
+    // ─────────────────────────────────────────────────────────────────────
+
+
+    // ── Teacher ID Cards ──────────────────────────────────────────────────
+    Route::controller(TeacherIdCardController::class)
+        ->prefix('teacher-id-cards')
+        ->group(function () {
+            Route::group(['middleware' => ['AdminAuth']], function () {
+                Route::get('/', 'index')->name('teacher-id-cards.index');
+                Route::get('/create', 'create')->name('teacher-id-cards.create');
+                Route::post('/generate', 'generate')->name('teacher-id-cards.generate');
+                Route::post('/generate-single', 'generateSingle')->name('teacher-id-cards.generate.single');
+                Route::get('/preview/{cardId}', 'preview')->name('teacher-id-cards.preview');
+                Route::get('/print/{cardId}', 'printCard')->name('teacher-id-cards.print');
+                Route::get('/print-bulk', 'printBulk')->name('teacher-id-cards.print.bulk');
+                Route::patch('/revoke/{cardId}', 'revoke')->name('teacher-id-cards.revoke');
+                Route::patch('/reactivate/{cardId}', 'reactivate')->name('teacher-id-cards.reactivate');
+                Route::get('/scanner', 'scannerPage')->name('teacher-id-cards.scanner');
+                Route::get('/stats', 'stats')->name('teacher-id-cards.stats');
+                Route::get('/search-teachers', 'searchTeachers')->name('teacher-id-cards.search.teachers');
+            });
+            Route::get('/verify/{cardNumber}', 'verify')->name('teacher-id-cards.verify');
+        });
+    // ─────────────────────────────────────────────────────────────────────
 
     Route::controller(ExamController::class)->group(function () {
         Route::group(['middleware' => ['AdminAuth']], function () {
@@ -615,4 +669,88 @@ Route::prefix('finance')
         // ── Reports ─────────────────────────────────────────────────────────
         Route::get('/reports', 'reports')->name('reports');
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
+    });
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIBRARY MODULE ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+Route::controller(LibraryController::class)
+    ->prefix('library')
+    ->name('library.')
+    ->middleware(['AdminAuth'])
+    ->group(function () {
+
+        Route::get('/dashboard', 'dashboard')->name('dashboard');
+
+        // Books
+        Route::get('/books', 'books')->name('books');
+        Route::get('/books/create', 'createBook')->name('books.create');
+        Route::post('/books', 'storeBook')->name('books.store');
+        Route::get('/books/{id}', 'showBook')->name('books.show');
+        Route::get('/books/{id}/edit', 'editBook')->name('books.edit');
+        Route::put('/books/{id}', 'updateBook')->name('books.update');
+        Route::delete('/books/{id}', 'deleteBook')->name('books.destroy');
+        Route::post('/books/import', 'importBooks')->name('books.import');
+        Route::get('/books/export', 'exportBooks')->name('books.export');
+        Route::get('/books/{id}/ebook', 'downloadEbook')->name('books.ebook');
+
+        // Categories
+        Route::get('/categories', 'categories')->name('categories');
+        Route::post('/categories', 'storeCategory')->name('categories.store');
+        Route::put('/categories/{id}', 'updateCategory')->name('categories.update');
+        Route::delete('/categories/{id}', 'deleteCategory')->name('categories.destroy');
+
+        // Authors
+        Route::get('/authors', 'authors')->name('authors');
+        Route::post('/authors', 'storeAuthor')->name('authors.store');
+        Route::put('/authors/{id}', 'updateAuthor')->name('authors.update');
+        Route::delete('/authors/{id}', 'deleteAuthor')->name('authors.destroy');
+
+        // Subjects
+        Route::get('/subjects', 'subjects')->name('subjects');
+        Route::post('/subjects', 'storeSubject')->name('subjects.store');
+        Route::put('/subjects/{id}', 'updateSubject')->name('subjects.update');
+        Route::delete('/subjects/{id}', 'deleteSubject')->name('subjects.destroy');
+
+        // Members
+        Route::get('/members', 'members')->name('members');
+        Route::post('/members', 'storeMember')->name('members.store');
+        Route::put('/members/{id}', 'updateMember')->name('members.update');
+        Route::delete('/members/{id}', 'deleteMember')->name('members.destroy');
+
+        // Borrowings
+        Route::get('/borrowings', 'borrowings')->name('borrowings');
+        Route::post('/borrowings', 'borrowBook')->name('borrowings.store');
+        Route::post('/borrowings/{id}/return', 'returnBook')->name('borrowings.return');
+        Route::post('/borrowings/{id}/renew', 'renewBorrowing')->name('borrowings.renew');
+        Route::post('/borrowings/{id}/lost', 'markLost')->name('borrowings.lost');
+
+        // Reservations
+        Route::get('/reservations', 'reservations')->name('reservations');
+        Route::post('/reservations', 'storeReservation')->name('reservations.store');
+        Route::put('/reservations/{id}/status', 'updateReservationStatus')->name('reservations.status');
+
+        // Fines
+        Route::get('/fines', 'fines')->name('fines');
+        Route::post('/fines/{id}/pay', 'payFine')->name('fines.pay');
+        Route::post('/fines/{id}/waive', 'waiveFine')->name('fines.waive');
+
+        // Book Requests
+        Route::get('/book-requests', 'bookRequests')->name('book-requests');
+        Route::post('/book-requests', 'storeBookRequest')->name('book-requests.store');
+        Route::put('/book-requests/{id}/review', 'reviewBookRequest')->name('book-requests.review');
+
+        // Catalogue (Student/Teacher accessible)
+        Route::get('/catalogue', 'catalogue')->name('catalogue');
+        Route::get('/my-borrowings', 'myBorrowings')->name('my-borrowings');
+
+        // Reports
+        Route::get('/reports', 'reports')->name('reports');
+
+        // Settings
+        Route::get('/settings', 'settings')->name('settings');
+        Route::post('/settings', 'updateSettings')->name('settings.update');
     });

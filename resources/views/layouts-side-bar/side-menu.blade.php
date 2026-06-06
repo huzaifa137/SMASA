@@ -56,7 +56,120 @@ use App\Http\Controllers\Helper;
                 </a>
             </li>
 
-                 <!-- Finance Dropdown -->
+            <!-- ID Cards Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-id-card fa-2x mr-3"></i>
+                    <span>ID Cards</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="{{ route('id-cards.index') }}">
+                            <i class="fas fa-id-badge mr-2"></i>
+                            Student ID Cards
+                        </a>
+
+                        <a href="{{ route('id-cards.create') }}">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Create Individual ID
+                        </a>
+
+                        <a href="{{ route('id-cards.scanner') }}">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            QR Scanner
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="{{ route('teacher-id-cards.index') }}">
+                            <i class="fas fa-id-badge mr-2"></i>
+                            Teacher ID Cards
+                        </a>
+
+                        <a href="{{ route('teacher-id-cards.create') }}">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                            Create Teacher ID
+                        </a>
+
+                        <a href="{{ route('teacher-id-cards.scanner') }}">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            Teacher QR Scanner
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Library Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-landmark fa-2x mr-3"></i>
+
+                    <span>Library</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="{{ route('library.dashboard') }}">
+                            <i class="fas fa-chart-bar mr-2"></i>Library Dashboard
+                        </a>
+                    </li>
+                     <li>
+                        <a href="{{ route('library.catalogue') }}">
+                            <i class="fas fa-book-reader mr-2"></i>Library Catalogue
+                        </a>
+                    </li>
+                    <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                    <li>
+                        <a href="{{ route('library.categories') }}">
+                            <i class="fas fa-tags mr-2"></i>Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.subjects') }}">
+                            <i class="fas fa-book mr-2"></i>Subjects
+                        </a>
+                    </li>
+                    <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                    <li>
+                        <a href="{{ route('library.members') }}">
+                            <i class="fas fa-users mr-2"></i>Members
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.borrowings') }}">
+                            <i class="fas fa-exchange-alt mr-2"></i>Borrowings
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.reservations') }}">
+                            <i class="fas fa-calendar-check mr-2"></i>Reservations
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.book-requests') }}">
+                            <i class="fas fa-file-signature mr-2"></i>Book Requests
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.fines') }}">
+                            <i class="fas fa-money-bill-wave mr-2"></i>Fines
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('library.reports') }}">
+                            <i class="fas fa-chart-line mr-2"></i>Reports
+                        </a>
+                    </li>
+                    <li>
+    <a href="{{ route('library.settings') }}">
+        <i class="fas fa-cog mr-2"></i>Settings
+    </a>
+</li>
+                </ul>
+            </li>
+
+            <!-- Finance Dropdown -->
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-wallet fa-2x mr-3"></i>
@@ -243,6 +356,50 @@ use App\Http\Controllers\Helper;
                 <a class="side-menu__item" href="{{ route('students.individual.search') }}">
                     <i class="fa fa-user-graduate fa-2x mr-3"></i>Students
                 </a>
+            </li>
+
+            <!-- ID Cards Dropdown -->
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-id-card fa-2x mr-3"></i>
+                    <span>ID Cards</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="{{ route('id-cards.index') }}">
+                            <i class="fas fa-id-badge mr-2"></i>
+                            Student ID Cards
+                        </a>
+
+                        <a href="{{ route('id-cards.create') }}">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Create Individual ID
+                        </a>
+
+                        <a href="{{ route('id-cards.scanner') }}">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            QR Scanner
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="{{ route('teacher-id-cards.index') }}">
+                            <i class="fas fa-id-badge mr-2"></i>
+                            Teacher ID Cards
+                        </a>
+
+                        <a href="{{ route('teacher-id-cards.create') }}">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                            Create Teacher ID
+                        </a>
+
+                        <a href="{{ route('teacher-id-cards.scanner') }}">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            Teacher QR Scanner
+                        </a>
+                    </li>
+                </ul>
             </li>
 
             <!-- Finance Dropdown -->

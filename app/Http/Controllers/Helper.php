@@ -1081,4 +1081,54 @@ class Helper extends Controller
 
         return strtr($text, $map);
     }
+
+    // Optional: Get student initials for avatar fallback
+    public static function getStudentInitials($student)
+    {
+
+        $firstname = Student::where('id', $student)->value('firstname');
+        $lastname = Student::where('id', $student)->value('lastname');
+
+
+        $first = substr($firstname ?? 'S', 0, 1);
+        $last = substr($lastname ?? 'T', 0, 1);
+        return strtoupper($first . $last);
+    }
+
+    // student Image
+
+    public static function getStudentPhotoUrl($studentID)
+    {
+        $student_photo_id = $studentID;
+        if (empty($student_photo_id)) {
+            return null;
+        }
+
+        foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+            $path = 'uploads/studentPhotos/' . $student_photo_id . '.' . $ext;
+            if (file_exists(public_path($path))) {
+                return asset($path);
+            }
+        }
+
+        return null;
+
+        // Applicability in the blade
+
+        // @php
+        //     $photoUrl = Helper::getStudentPhotoUrl($student);
+        //     $initials = Helper::getStudentInitials($student);
+        // @endphp
+
+        // <div class="preview-item">
+        //     @if($photoUrl)
+        //         <img src="{{ $photoUrl }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+        //     @else
+        //         <div style="width:24px;height:24px;border-radius:50%;background:var(--bl);color:var(--b);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;">
+        //             {{ $initials }}
+        //         </div>
+        //     @endif
+        //     <span><strong>{{ $student->firstname }} {{ $student->lastname }}</strong></span>
+        // </div>
+    }
 }

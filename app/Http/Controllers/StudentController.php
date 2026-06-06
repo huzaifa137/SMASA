@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\StudentBasic;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\StudentIdCard;
 use App\Services\GradingService;
 use Illuminate\Support\Facades\Log;
 use DB;
@@ -536,41 +537,57 @@ class StudentController extends Controller
         }
     }
 
-    public function allStudents()
-    {
-        $schoolId = Helper::requireSchool();
+public function allStudents()
+{
+    $schoolId = Helper::requireSchool();
+    $activeYear = Helper::active_year();
 
-        // Get unique seniors
-        $seniors = Student::where('school_id', $schoolId)
-            ->select('senior')
+    // Get unique seniors
+    $seniors = Student::where('school_id', $schoolId)
+        ->select('senior')
+        ->distinct()
+        ->orderBy('senior')
+        ->pluck('senior');
+
+    $groupedStudents = [];
+
+    foreach ($seniors as $senior) {
+        // Get streams under this senior
+        $streams = Student::where('school_id', $schoolId)
+            ->where('senior', $senior)
+            ->select('stream')
             ->distinct()
-            ->orderBy('senior')
-            ->pluck('senior');
+            ->orderBy('stream')
+            ->pluck('stream');
 
-        $groupedStudents = [];
-
-        foreach ($seniors as $senior) {
-
-            // Get streams under this senior
-            $streams = Student::where('school_id', $schoolId)
+        foreach ($streams as $stream) {
+            $students = Student::where('school_id', $schoolId)
                 ->where('senior', $senior)
-                ->select('stream')
-                ->distinct()
-                ->orderBy('stream')
-                ->pluck('stream');
-
-            foreach ($streams as $stream) {
-
-                $groupedStudents[$senior][$stream] = Student::where('school_id', $schoolId)
-                    ->where('senior', $senior)
-                    ->where('stream', $stream)
-                    ->orderByDesc('id')
-                    ->paginate(10, ['*'], "page_{$senior}_{$stream}");
+                ->where('stream', $stream)
+                ->orderByDesc('id')
+                ->paginate(10, ['*'], "page_{$senior}_{$stream}");
+            
+            // Add card info to each student
+            foreach ($students as $student) {
+                $card = StudentIdCard::where('student_id', $student->id)
+                    ->where('school_id', $schoolId)
+                    ->where('academic_year', $activeYear)
+                    ->first();
+                
+                $student->card_info = [
+                    'status' => $card->status ?? null,
+                    'card_id' => $card->id ?? null,
+                    'card_number' => $card->card_number ?? null,
+                    'button_type' => $card ? ($card->status === 'active' ? 'active' : ($card->status === 'revoked' ? 'reactivate' : 'expired')) : 'generate'
+                ];
             }
+            
+            $groupedStudents[$senior][$stream] = $students;
         }
-
-        return view('student.all-students', compact('groupedStudents'));
     }
+
+    return view('student.all-students', compact('groupedStudents'));
+}
 
     public function viewStudent($id)
     {
