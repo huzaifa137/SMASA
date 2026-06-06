@@ -356,7 +356,7 @@ class AttendanceController extends Controller
                     ],
                     [
                         'status'       => $row['status'],
-                        'arrival_time' => $row['arrival_time'] ?? null,
+                        'arrival_time' => Carbon::now()->format('H:i:s'), // auto-set to current time
                         'remarks'      => $row['remarks'] ?? null,
                         'taken_by'     => $teacherId,
                         'period_label' => $request->period_label ?? null,
@@ -496,7 +496,7 @@ class AttendanceController extends Controller
                 'attendance_date' => $request->attendance_date,
             ],
             [
-                'arrival_time'   => $request->arrival_time   ?: null,
+                'arrival_time'   => Carbon::now()->format('H:i:s'), // auto-assigned
                 'departure_time' => $request->departure_time ?: null,
                 'status'         => $request->status,
                 'leave_type'     => $request->leave_type     ?: null,
@@ -537,7 +537,7 @@ class AttendanceController extends Controller
                         'attendance_date' => $request->attendance_date,
                     ],
                     [
-                        'arrival_time'   => $data['arrival_time']   ?? null,
+                        'arrival_time'   => Carbon::now()->format('H:i:s'), // auto-assigned on save
                         'departure_time' => $data['departure_time'] ?? null,
                         'status'         => $data['status'],
                         'leave_type'     => $data['leave_type']     ?? null,

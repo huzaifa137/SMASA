@@ -22,6 +22,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\StudentIdCardController;
 use App\Http\Controllers\TeacherIdCardController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\CardScanController;
 
 
 Route::get('/logout', function () {
@@ -753,4 +754,22 @@ Route::controller(LibraryController::class)
         // Settings
         Route::get('/settings', 'settings')->name('settings');
         Route::post('/settings', 'updateSettings')->name('settings.update');
+    });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CARD SCAN HUB ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+Route::controller(CardScanController::class)
+    ->prefix('card-scan')
+    ->name('card-scan.')
+    ->middleware(['SchoolAuth'])
+    ->group(function () {
+        Route::get('/', 'hub')->name('hub');
+        Route::post('/scan', 'scan')->name('scan');
+        Route::get('/logs', 'scanLogs')->name('logs');
+        Route::get('/arrival', 'arrivalAttendancePage')->name('arrival');
+        Route::post('/arrival/save', 'saveArrivalAttendance')->name('arrival.save');
+        Route::post('/arrival/save-bulk', 'saveBulkArrivalAttendance')->name('arrival.save.bulk');
+        Route::get('/arrival/report', 'arrivalReport')->name('arrival.report');
     });

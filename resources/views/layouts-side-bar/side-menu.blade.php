@@ -65,6 +65,21 @@ use App\Http\Controllers\Helper;
                 </a>
                 <ul class="sub-menu">
                     <li>
+                        <a href="{{ route('card-scan.hub') }}">
+                            <i class="fas fa-barcode mr-2"></i>
+                            QR Scanner
+                        </a>
+
+                        <a href="{{ url('/card-scan/arrival') }}">
+                            <i class="fas fa-user-check mr-2"></i>
+                            School Attendance
+                        </a>
+
+                        <a href="{{ url('/card-scan/arrival/report') }}">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Arrival Report
+                        </a>
+
                         <a href="{{ route('id-cards.index') }}">
                             <i class="fas fa-id-badge mr-2"></i>
                             Student ID Cards
@@ -77,9 +92,8 @@ use App\Http\Controllers\Helper;
 
                         <a href="{{ route('id-cards.scanner') }}">
                             <i class="fas fa-qrcode mr-2"></i>
-                            QR Scanner
+                            Student QR Verifier
                         </a>
-
                     </li>
                     <li>
                         <a href="{{ route('teacher-id-cards.index') }}">
@@ -94,7 +108,7 @@ use App\Http\Controllers\Helper;
 
                         <a href="{{ route('teacher-id-cards.scanner') }}">
                             <i class="fas fa-qrcode mr-2"></i>
-                            Teacher QR Scanner
+                            Teacher QR Verifier
                         </a>
                     </li>
                 </ul>
@@ -114,7 +128,7 @@ use App\Http\Controllers\Helper;
                             <i class="fas fa-chart-bar mr-2"></i>Library Dashboard
                         </a>
                     </li>
-                     <li>
+                    <li>
                         <a href="{{ route('library.catalogue') }}">
                             <i class="fas fa-book-reader mr-2"></i>Library Catalogue
                         </a>
@@ -162,10 +176,10 @@ use App\Http\Controllers\Helper;
                         </a>
                     </li>
                     <li>
-    <a href="{{ route('library.settings') }}">
-        <i class="fas fa-cog mr-2"></i>Settings
-    </a>
-</li>
+                        <a href="{{ route('library.settings') }}">
+                            <i class="fas fa-cog mr-2"></i>Settings
+                        </a>
+                    </li>
                 </ul>
             </li>
 
