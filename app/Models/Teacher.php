@@ -35,4 +35,9 @@ class Teacher extends Model
     {
         return $this->hasOne(TeacherSalaryStructure::class, 'teacher_id');
     }
+
+    public function schoolRoleAssignment()
+    {
+        return $this->hasOne(TeacherSchoolRole::class, 'teacher_id');
+    }
 }

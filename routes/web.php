@@ -23,6 +23,7 @@ use App\Http\Controllers\StudentIdCardController;
 use App\Http\Controllers\TeacherIdCardController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\CardScanController;
+use App\Http\Controllers\UserRightsController;
 
 
 Route::get('/logout', function () {
@@ -773,3 +774,36 @@ Route::controller(CardScanController::class)
         Route::post('/arrival/save-bulk', 'saveBulkArrivalAttendance')->name('arrival.save.bulk');
         Route::get('/arrival/report', 'arrivalReport')->name('arrival.report');
     });
+
+// ═══════════════════════════════════════════════════════════
+//  USER RIGHTS & PRIVILEGES — NEW SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+Route::group([
+    'prefix' => 'user-rights',
+    'middleware' => ['AdminAuth', 'localized'],
+    'as' => 'urp.',
+], function () {
+
+    // Dashboard
+    Route::get('/dashboard', [UserRightsController::class, 'dashboard'])->name('dashboard');
+
+    // Roles
+    Route::get('/roles', [UserRightsController::class, 'rolesIndex'])->name('roles.index');
+    Route::post('/roles', [UserRightsController::class, 'storeRole'])->name('roles.store');
+    Route::get('/roles/{id}', [UserRightsController::class, 'getRole'])->name('roles.get');
+    Route::put('/roles/{id}', [UserRightsController::class, 'updateRole'])->name('roles.update');
+    Route::delete('/roles/{id}', [UserRightsController::class, 'deleteRole'])->name('roles.delete');
+
+    // Permissions Matrix
+    Route::get('/permissions', [UserRightsController::class, 'permissionsIndex'])->name('permissions.index');
+    Route::post('/permissions/{roleId}/save', [UserRightsController::class, 'saveRolePermissions'])->name('permissions.save');
+    Route::get('/permissions/{roleId}/get', [UserRightsController::class, 'getRolePermissions'])->name('permissions.get');
+    Route::post('/permissions/toggle-module', [UserRightsController::class, 'toggleModuleAccess'])->name('permissions.toggle.module');
+    Route::post('/permissions/toggle-feature', [UserRightsController::class, 'toggleFeatureAccess'])->name('permissions.toggle.feature');
+
+    // Assign Roles to Teachers
+    Route::get('/assign-roles', [UserRightsController::class, 'assignRolesIndex'])->name('assign.index');
+    Route::post('/assign-roles/assign', [UserRightsController::class, 'assignRoleToTeacher'])->name('assign.store');
+    Route::post('/assign-roles/remove', [UserRightsController::class, 'removeRoleFromTeacher'])->name('assign.remove');
+});

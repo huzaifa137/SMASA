@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Artisan;
 
 class SetupLibraryModule extends Command
 {
+
+    // php artisan library:setup
     protected $signature = 'library:setup';
     protected $description = 'Setup complete library module with migrations and models';
 
@@ -103,188 +105,188 @@ class SetupLibraryModule extends Command
     {
         return '<?php
 
-namespace App\Models;
+        namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+        use Illuminate\Database\Eloquent\Model;
 
-class LibraryCategory extends Model
-{
-    protected $table = "library_categories";
-    
-    protected $fillable = [
-        "school_id", "name", "slug", "description", "color", "is_active"
-    ];
-    
-    protected $casts = [
-        "is_active" => "boolean"
-    ];
-    
-    public function books()
-    {
-        return $this->hasMany(LibraryBook::class, "category_id");
-    }
-    
-    public function scopeActive($query)
-    {
-        return $query->where("is_active", true);
-    }
-    
-    public function scopeForSchool($query, $schoolId)
-    {
-        return $query->where("school_id", $schoolId);
-    }
-}
-';
+        class LibraryCategory extends Model
+        {
+            protected $table = "library_categories";
+            
+            protected $fillable = [
+                "school_id", "name", "slug", "description", "color", "is_active"
+            ];
+            
+            protected $casts = [
+                "is_active" => "boolean"
+            ];
+            
+            public function books()
+            {
+                return $this->hasMany(LibraryBook::class, "category_id");
+            }
+            
+            public function scopeActive($query)
+            {
+                return $query->where("is_active", true);
+            }
+            
+            public function scopeForSchool($query, $schoolId)
+            {
+                return $query->where("school_id", $schoolId);
+            }
+        }
+        ';
     }
 
     private function getLibraryAuthorModel()
     {
         return '<?php
 
-namespace App\Models;
+        namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+        use Illuminate\Database\Eloquent\Model;
 
-class LibraryAuthor extends Model
-{
-    protected $table = "library_authors";
-    
-    protected $fillable = [
-        "school_id", "name", "bio", "nationality", "is_active"
-    ];
-    
-    protected $casts = [
-        "is_active" => "boolean"
-    ];
-    
-    public function books()
-    {
-        return $this->hasMany(LibraryBook::class, "author_id");
-    }
-    
-    public function scopeActive($query)
-    {
-        return $query->where("is_active", true);
-    }
-    
-    public function scopeForSchool($query, $schoolId)
-    {
-        return $query->where("school_id", $schoolId);
-    }
-}
-';
+        class LibraryAuthor extends Model
+        {
+            protected $table = "library_authors";
+            
+            protected $fillable = [
+                "school_id", "name", "bio", "nationality", "is_active"
+            ];
+            
+            protected $casts = [
+                "is_active" => "boolean"
+            ];
+            
+            public function books()
+            {
+                return $this->hasMany(LibraryBook::class, "author_id");
+            }
+            
+            public function scopeActive($query)
+            {
+                return $query->where("is_active", true);
+            }
+            
+            public function scopeForSchool($query, $schoolId)
+            {
+                return $query->where("school_id", $schoolId);
+            }
+        }
+        ';
     }
 
     private function getLibrarySubjectModel()
     {
         return '<?php
 
-namespace App\Models;
+        namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+        use Illuminate\Database\Eloquent\Model;
 
-class LibrarySubject extends Model
-{
-    protected $table = "library_subjects";
-    
-    protected $fillable = [
-        "school_id", "name", "description", "is_active"
-    ];
-    
-    protected $casts = [
-        "is_active" => "boolean"
-    ];
-    
-    public function books()
-    {
-        return $this->hasMany(LibraryBook::class, "subject_id");
-    }
-    
-    public function scopeActive($query)
-    {
-        return $query->where("is_active", true);
-    }
-    
-    public function scopeForSchool($query, $schoolId)
-    {
-        return $query->where("school_id", $schoolId);
-    }
-}
-';
+        class LibrarySubject extends Model
+        {
+            protected $table = "library_subjects";
+            
+            protected $fillable = [
+                "school_id", "name", "description", "is_active"
+            ];
+            
+            protected $casts = [
+                "is_active" => "boolean"
+            ];
+            
+            public function books()
+            {
+                return $this->hasMany(LibraryBook::class, "subject_id");
+            }
+            
+            public function scopeActive($query)
+            {
+                return $query->where("is_active", true);
+            }
+            
+            public function scopeForSchool($query, $schoolId)
+            {
+                return $query->where("school_id", $schoolId);
+            }
+        }
+        ';
     }
 
     private function getLibraryBookModel()
     {
         return '<?php
 
-namespace App\Models;
+        namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+        use Illuminate\Database\Eloquent\Model;
 
-class LibraryBook extends Model
-{
-    protected $table = "library_books";
-    
-    protected $fillable = [
-        "school_id", "title", "isbn", "author_id", "category_id", "subject_id",
-        "publisher", "publication_year", "edition", "language", "total_copies",
-        "available_copies", "location", "price", "description", "cover_image",
-        "ebook_file", "has_ebook", "is_active", "added_by"
-    ];
-    
-    protected $casts = [
-        "has_ebook" => "boolean",
-        "is_active" => "boolean",
-        "price" => "decimal:2"
-    ];
-    
-    public function author()
-    {
-        return $this->belongsTo(LibraryAuthor::class, "author_id");
-    }
-    
-    public function category()
-    {
-        return $this->belongsTo(LibraryCategory::class, "category_id");
-    }
-    
-    public function subject()
-    {
-        return $this->belongsTo(LibrarySubject::class, "subject_id");
-    }
-    
-    public function borrowings()
-    {
-        return $this->hasMany(LibraryBorrowing::class, "book_id");
-    }
-    
-    public function reservations()
-    {
-        return $this->hasMany(LibraryReservation::class, "book_id");
-    }
-    
-    public function activeBorrowings()
-    {
-        return $this->hasMany(LibraryBorrowing::class, "book_id")
-                    ->whereIn("status", ["borrowed", "overdue"]);
-    }
-    
-    public function getIsAvailableAttribute()
-    {
-        return $this->available_copies > 0;
-    }
-    
-    public function scopeActive($query)
-    {
-        return $query->where("is_active", true);
-    }
-    
-    public function scopeForSchool($query, $schoolId)
-    {
-        return $query->where("school_id", $schoolId);
-    }
-}
-';
+        class LibraryBook extends Model
+        {
+            protected $table = "library_books";
+            
+            protected $fillable = [
+                "school_id", "title", "isbn", "author_id", "category_id", "subject_id",
+                "publisher", "publication_year", "edition", "language", "total_copies",
+                "available_copies", "location", "price", "description", "cover_image",
+                "ebook_file", "has_ebook", "is_active", "added_by"
+            ];
+            
+            protected $casts = [
+                "has_ebook" => "boolean",
+                "is_active" => "boolean",
+                "price" => "decimal:2"
+            ];
+            
+            public function author()
+            {
+                return $this->belongsTo(LibraryAuthor::class, "author_id");
+            }
+            
+            public function category()
+            {
+                return $this->belongsTo(LibraryCategory::class, "category_id");
+            }
+            
+            public function subject()
+            {
+                return $this->belongsTo(LibrarySubject::class, "subject_id");
+            }
+            
+            public function borrowings()
+            {
+                return $this->hasMany(LibraryBorrowing::class, "book_id");
+            }
+            
+            public function reservations()
+            {
+                return $this->hasMany(LibraryReservation::class, "book_id");
+            }
+            
+            public function activeBorrowings()
+            {
+                return $this->hasMany(LibraryBorrowing::class, "book_id")
+                            ->whereIn("status", ["borrowed", "overdue"]);
+            }
+            
+            public function getIsAvailableAttribute()
+            {
+                return $this->available_copies > 0;
+            }
+            
+            public function scopeActive($query)
+            {
+                return $query->where("is_active", true);
+            }
+            
+            public function scopeForSchool($query, $schoolId)
+            {
+                return $query->where("school_id", $schoolId);
+            }
+        }
+        ';
     }
 
     private function getLibraryMemberModel()

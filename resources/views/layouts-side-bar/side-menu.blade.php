@@ -1,339 +1,33 @@
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
+
 <div class="app-sidebar app-sidebar2">
     <div class="app-sidebar__logo text-center">
-
         @if (Session('LoggedAdmin'))
             <a class="header-brand" href="{{ url('/admin/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo" class="sidebar-logo">
+                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
             </a>
-
         @elseif(Session('LoggedSchool'))
             <a class="header-brand" href="{{ url('/school/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="Covido logo" class="sidebar-logo">
+                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
             </a>
         @endif
-
     </div>
 </div>
 
-<?php
-use App\Http\Controllers\Helper;
-?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <aside class="app-sidebar app-sidebar3">
     <ul class="side-menu" style="margin-top:100px !important;">
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+        {{-- ═══════════════════════════════════════════════════
+        SECTION A: SUPER-ADMIN + SCHOOL (both sessions)
+        Full access — no permission checks needed
+        ════════════════════════════════════════════════════ --}}
         @if (Session('LoggedAdmin') && Session('LoggedSchool'))
-            <li class="slide">
-                <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
-                    <i class="fa fa-home fa-2x mr-3"></i>
-                    Dashboard
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('school.allSchools') }}">
-                    <i class="fa fa-school fa-2x mr-3"></i>
-                    Schools
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('all.my-classes') }}">
-                    <i class="fa fa-chalkboard-teacher fa-2x mr-3"></i>
-                    Classes
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('school.teachers') }}">
-                    <i class="fa fa-user-tie fa-2x mr-3"></i>
-                    Teachers
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('students.individual.search') }}">
-                    <i class="fa fa-user-graduate fa-2x mr-3"></i>
-                    Students
-                </a>
-            </li>
 
-            <!-- ID Cards Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-id-card fa-2x mr-3"></i>
-                    <span>ID Cards</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('card-scan.hub') }}">
-                            <i class="fas fa-barcode mr-2"></i>
-                            QR Scanner
-                        </a>
-
-                        <a href="{{ url('/card-scan/arrival') }}">
-                            <i class="fas fa-user-check mr-2"></i>
-                            School Attendance
-                        </a>
-
-                        <a href="{{ url('/card-scan/arrival/report') }}">
-                            <i class="fas fa-chart-line mr-2"></i>
-                            Arrival Report
-                        </a>
-
-                        <a href="{{ route('id-cards.index') }}">
-                            <i class="fas fa-id-badge mr-2"></i>
-                            Student ID Cards
-                        </a>
-
-                        <a href="{{ route('id-cards.create') }}">
-                            <i class="fas fa-user-plus mr-2"></i>
-                            Create Individual ID
-                        </a>
-
-                        <a href="{{ route('id-cards.scanner') }}">
-                            <i class="fas fa-qrcode mr-2"></i>
-                            Student QR Verifier
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('teacher-id-cards.index') }}">
-                            <i class="fas fa-id-badge mr-2"></i>
-                            Teacher ID Cards
-                        </a>
-
-                        <a href="{{ route('teacher-id-cards.create') }}">
-                            <i class="fas fa-chalkboard-teacher mr-2"></i>
-                            Create Teacher ID
-                        </a>
-
-                        <a href="{{ route('teacher-id-cards.scanner') }}">
-                            <i class="fas fa-qrcode mr-2"></i>
-                            Teacher QR Verifier
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- Library Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-landmark fa-2x mr-3"></i>
-
-                    <span>Library</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('library.dashboard') }}">
-                            <i class="fas fa-chart-bar mr-2"></i>Library Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.catalogue') }}">
-                            <i class="fas fa-book-reader mr-2"></i>Library Catalogue
-                        </a>
-                    </li>
-                    <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
-                    <li>
-                        <a href="{{ route('library.categories') }}">
-                            <i class="fas fa-tags mr-2"></i>Categories
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.subjects') }}">
-                            <i class="fas fa-book mr-2"></i>Subjects
-                        </a>
-                    </li>
-                    <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
-                    <li>
-                        <a href="{{ route('library.members') }}">
-                            <i class="fas fa-users mr-2"></i>Members
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.borrowings') }}">
-                            <i class="fas fa-exchange-alt mr-2"></i>Borrowings
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.reservations') }}">
-                            <i class="fas fa-calendar-check mr-2"></i>Reservations
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.book-requests') }}">
-                            <i class="fas fa-file-signature mr-2"></i>Book Requests
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.fines') }}">
-                            <i class="fas fa-money-bill-wave mr-2"></i>Fines
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.reports') }}">
-                            <i class="fas fa-chart-line mr-2"></i>Reports
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('library.settings') }}">
-                            <i class="fas fa-cog mr-2"></i>Settings
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- Finance Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-wallet fa-2x mr-3"></i>
-                    <span>Finance</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-
-                <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('finance.dashboard') }}">
-                            <i class="fas fa-sack-dollar mr-2"></i>
-                            Finance Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.fee-structures.index') }}">
-                            <i class="fas fa-money-check-alt mr-2"></i>
-                            Fee Structure
-                        </a>
-
-                        <a href="{{ route('finance.fee-allocations') }}">
-                            <i class="fas fa-layer-group mr-2"></i>
-                            Fee Allocations
-                        </a>
-
-                        <a href="{{ route('finance.payments.create') }}">
-                            <i class="fas fa-hand-holding-usd mr-2"></i>
-                            Fee Payment
-                        </a>
-
-                        <a href="{{ route('finance.payments.index') }}">
-                            <i class="fas fa-receipt mr-2"></i>
-                            Payments
-                        </a>
-
-                        <a href="{{ route('finance.expenses.index') }}">
-                            <i class="fas fa-money-bill-transfer mr-2"></i>
-                            Expenses Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.expense-categories.index') }}">
-                            <i class="fas fa-tags mr-2"></i>
-                            Expense Categories
-                        </a>
-
-                        <a href="{{ route('finance.expenses.index') }}">
-                            <i class="fas fa-circle-plus mr-2"></i>
-                            Add Expense
-                        </a>
-
-                        <a href="{{ route('finance.payroll.index') }}">
-                            <i class="fas fa-chart-line mr-2"></i>
-                            Payroll Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.salary-structures') }}">
-                            <i class="fas fa-clipboard-list mr-2"></i>
-                            Salary Structures
-                        </a>
-
-                        <a href="{{ route('finance.budgets.index') }}">
-                            <i class="fas fa-scale-balanced mr-2"></i>
-                            Budget Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.reports') }}">
-                            <i class="fas fa-file-chart-column mr-2"></i>
-                            Reports
-                        </a>
-
-                        <a href="{{ route('finance.outstanding-fees') }}">
-                            <i class="fas fa-hourglass-half mr-2"></i>
-                            Outstanding Fees
-                        </a>
-
-                    </li>
-                </ul>
-            </li>
-
-
-            <!-- Attendance Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-user-check fa-2x mr-3"></i>
-                    <span>Attendance</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance
-                            Dashboard</a></li>
-                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
-                            Check-In</a></li>
-                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
-                            Report</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
-                            Check-In</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i
-                                class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
-                </ul>
-            </li>
-
-            <!-- Timetable Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-calendar-alt fa-2x mr-3"></i>
-                    <span>Timetable</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable
-                            Dashboard</a></li>
-                    <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
-                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
-                            Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard mr-2"></i>Teacher
-                            Timetable</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-print mr-2"></i>Print
-                            Timetables</a></li>
-                </ul>
-            </li>
-
-            <!-- Examinations Dropdown -->
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-layer-group fa-2x mr-3"></i>
-                    <span>Examinations</span>
-                    @php
-                        $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
-                        $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
-                    @endphp
-                    @if ($pendingMarksCount > 0)
-                        <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
-                    @endif
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
-                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
-                            Examination</a></li>
-                    @if ($pendingMarksCount > 0)
-                        <li>
-                            <a href="{{ route('examination.marks-entry-portal') }}">
-                                <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
-                                <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
-            </li>
-
-        @elseif(Session('LoggedAdmin'))
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
                     <i class="fa fa-home fa-2x mr-3"></i>Dashboard
@@ -342,18 +36,6 @@ use App\Http\Controllers\Helper;
             <li class="slide">
                 <a class="side-menu__item" href="{{ route('school.allSchools') }}">
                     <i class="fa fa-school fa-2x mr-3"></i>Schools
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ url('/user-rights-and-previledges/setup') }}">
-                    <i class="fas fa-user-shield fa-2x mr-3"></i>Rights & Privileges
-                </a>
-            </li>
-
-        @elseif(Session('LoggedSchool'))
-            <li class="slide">
-                <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
-                    <i class="fa fa-home fa-2x mr-3"></i>Dashboard
                 </a>
             </li>
             <li class="slide">
@@ -372,7 +54,7 @@ use App\Http\Controllers\Helper;
                 </a>
             </li>
 
-            <!-- ID Cards Dropdown -->
+            {{-- ID Cards --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-id-card fa-2x mr-3"></i>
@@ -380,122 +62,89 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('id-cards.index') }}">
-                            <i class="fas fa-id-badge mr-2"></i>
-                            Student ID Cards
-                        </a>
-
-                        <a href="{{ route('id-cards.create') }}">
-                            <i class="fas fa-user-plus mr-2"></i>
-                            Create Individual ID
-                        </a>
-
-                        <a href="{{ route('id-cards.scanner') }}">
-                            <i class="fas fa-qrcode mr-2"></i>
-                            QR Scanner
-                        </a>
-
+                    <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                    <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a>
                     </li>
-                    <li>
-                        <a href="{{ route('teacher-id-cards.index') }}">
-                            <i class="fas fa-id-badge mr-2"></i>
-                            Teacher ID Cards
-                        </a>
-
-                        <a href="{{ route('teacher-id-cards.create') }}">
-                            <i class="fas fa-chalkboard-teacher mr-2"></i>
-                            Create Teacher ID
-                        </a>
-
-                        <a href="{{ route('teacher-id-cards.scanner') }}">
-                            <i class="fas fa-qrcode mr-2"></i>
-                            Teacher QR Scanner
-                        </a>
+                    <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival
+                            Report</a></li>
+                    <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a>
                     </li>
+                    <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a>
+                    </li>
+                    <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a>
+                    </li>
+                    <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID
+                            Cards</a></li>
+                    <li><a href="{{ route('teacher-id-cards.create') }}"><i
+                                class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                    <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR
+                            Verifier</a></li>
                 </ul>
             </li>
 
-            <!-- Finance Dropdown -->
+            {{-- Library --}}
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-landmark fa-2x mr-3"></i>
+                    <span>Library</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library
+                            Dashboard</a></li>
+                    <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                    <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                    <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                    <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                    <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                    <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                    <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a>
+                    </li>
+                    <li><a href="{{ route('library.reservations') }}"><i
+                                class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                    <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book
+                            Requests</a></li>
+                    <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                    <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                    <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
+                </ul>
+            </li>
+
+            {{-- Finance --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-wallet fa-2x mr-3"></i>
                     <span>Finance</span>
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
-
                 <ul class="sub-menu">
-                    <li>
-                        <a href="{{ route('finance.dashboard') }}">
-                            <i class="fas fa-sack-dollar mr-2"></i>
-                            Finance Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.fee-structures.index') }}">
-                            <i class="fas fa-money-check-alt mr-2"></i>
-                            Fee Structure
-                        </a>
-
-                        <a href="{{ route('finance.fee-allocations') }}">
-                            <i class="fas fa-layer-group mr-2"></i>
-                            Fee Allocations
-                        </a>
-
-                        <a href="{{ route('finance.payments.create') }}">
-                            <i class="fas fa-hand-holding-usd mr-2"></i>
-                            Fee Payment
-                        </a>
-
-                        <a href="{{ route('finance.payments.index') }}">
-                            <i class="fas fa-receipt mr-2"></i>
-                            Payments
-                        </a>
-
-                        <a href="{{ route('finance.expenses.index') }}">
-                            <i class="fas fa-money-bill-transfer mr-2"></i>
-                            Expenses Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.expense-categories.index') }}">
-                            <i class="fas fa-tags mr-2"></i>
-                            Expense Categories
-                        </a>
-
-                        <a href="{{ route('finance.expenses.index') }}">
-                            <i class="fas fa-circle-plus mr-2"></i>
-                            Add Expense
-                        </a>
-
-                        <a href="{{ route('finance.payroll.index') }}">
-                            <i class="fas fa-chart-line mr-2"></i>
-                            Payroll Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.salary-structures') }}">
-                            <i class="fas fa-clipboard-list mr-2"></i>
-                            Salary Structures
-                        </a>
-
-                        <a href="{{ route('finance.budgets.index') }}">
-                            <i class="fas fa-scale-balanced mr-2"></i>
-                            Budget Dashboard
-                        </a>
-
-                        <a href="{{ route('finance.reports') }}">
-                            <i class="fas fa-file-chart-column mr-2"></i>
-                            Reports
-                        </a>
-
-                        <a href="{{ route('finance.outstanding-fees') }}">
-                            <i class="fas fa-hourglass-half mr-2"></i>
-                            Outstanding Fees
-                        </a>
-
+                    <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance
+                            Dashboard</a></li>
+                    <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee
+                            Structure</a></li>
+                    <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee
+                            Allocations</a></li>
+                    <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee
+                            Payment</a></li>
+                    <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                    <li><a href="{{ route('finance.expenses.index') }}"><i
+                                class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                    <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense
+                            Categories</a></li>
+                    <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a>
                     </li>
+                    <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary
+                            Structures</a></li>
+                    <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a>
+                    </li>
+                    <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a>
+                    </li>
+                    <li><a href="{{ route('finance.outstanding-fees') }}"><i
+                                class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
                 </ul>
             </li>
 
-            <!-- Attendance Dropdown -->
+            {{-- Attendance --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-user-check fa-2x mr-3"></i>
@@ -503,8 +152,8 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Attendance
-                            Dashboard</a></li>
+                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
+                    </li>
                     <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
                             Check-In</a></li>
                     <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
@@ -516,7 +165,7 @@ use App\Http\Controllers\Helper;
                 </ul>
             </li>
 
-            <!-- Timetable Dropdown -->
+            {{-- Timetable --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-calendar-alt fa-2x mr-3"></i>
@@ -524,15 +173,15 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Timetable
-                            Dashboard</a></li>
+                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
+                    </li>
                     <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
                     <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
                             Timetable</a></li>
                 </ul>
             </li>
 
-            <!-- Examinations Dropdown -->
+            {{-- Examinations --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-layer-group fa-2x mr-3"></i>
@@ -561,21 +210,414 @@ use App\Http\Controllers\Helper;
                 </ul>
             </li>
 
-        @endif
+            {{-- User Rights (always visible to super admin) --}}
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-shield-alt fa-2x mr-3"></i>
+                    <span>User Rights</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
+                    <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                    <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module
+                            Permissions</a></li>
+                    <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a>
+                    </li>
+                </ul>
+            </li>
 
+
+            {{-- ═══════════════════════════════════════════════════
+            SECTION B: SYSTEM ADMIN ONLY (no school selected)
+            ════════════════════════════════════════════════════ --}}
+        @elseif(Session('LoggedAdmin'))
+
+            <li class="slide">
+                <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
+                    <i class="fa fa-home fa-2x mr-3"></i>Dashboard
+                </a>
+            </li>
+            <li class="slide">
+                <a class="side-menu__item" href="{{ route('school.allSchools') }}">
+                    <i class="fa fa-school fa-2x mr-3"></i>Schools
+                </a>
+            </li>
+            <li class="slide">
+                <a class="side-menu__item" href="{{ url('/user-rights-and-previledges/setup') }}">
+                    <i class="fas fa-user-shield fa-2x mr-3"></i>Rights &amp; Privileges
+                </a>
+            </li>
+
+
+            {{-- ═══════════════════════════════════════════════════
+            SECTION C: SCHOOL (TEACHER) LOGIN
+            All items are permission-guarded via PermissionHelper
+            ════════════════════════════════════════════════════ --}}
+        @elseif(Session('LoggedSchool'))
+
+            {{-- Dashboard — always visible --}}
+            <li class="slide">
+                <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
+                    <i class="fa fa-home fa-2x mr-3"></i>Dashboard
+                </a>
+            </li>
+
+            {{-- Current Role Tag --}}
+            @php $roleName = PermissionHelper::currentRoleName(); @endphp
+            @if($roleName !== 'System Administrator')
+                <li class="slide px-3 pb-1" style="pointer-events:none;">
+                    <div
+                        style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
+                        Role
+                    </div>
+                    <div
+                        style="background:#eef2ff;color:#4f46e5;border-radius:8px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;">
+                        <i class="fa fa-crown mr-1"></i>{{ $roleName }}
+                    </div>
+                </li>
+            @endif
+
+            {{-- Classes --}}
+            @if(PermissionHelper::canModule('classes'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('all.my-classes') }}">
+                        <i class="fa fa-chalkboard-teacher fa-2x mr-3"></i>Classes
+                    </a>
+                </li>
+            @endif
+
+            {{-- Teachers --}}
+            @if(PermissionHelper::canModule('teachers'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('school.teachers') }}">
+                        <i class="fa fa-user-tie fa-2x mr-3"></i>Teachers
+                    </a>
+                </li>
+            @endif
+
+            {{-- Students --}}
+            @if(PermissionHelper::canModule('students'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('students.individual.search') }}">
+                        <i class="fa fa-user-graduate fa-2x mr-3"></i>Students
+                    </a>
+                </li>
+            @endif
+
+            {{-- ID Cards --}}
+            @if(PermissionHelper::canModule('id_cards'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-id-card fa-2x mr-3"></i>
+                        <span>ID Cards</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('scan_id_cards'))
+                            <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('school_arrival'))
+                            <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a>
+                            </li>
+                            <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival
+                                    Report</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_id_cards'))
+                            <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a>
+                            </li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_id_cards'))
+                            <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a>
+                            </li>
+                        @endif
+                        @if(PermissionHelper::canFeature('scan_id_cards'))
+                            <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a>
+                            </li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_id_cards'))
+                            <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID
+                                    Cards</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_id_cards'))
+                            <li><a href="{{ route('teacher-id-cards.create') }}"><i
+                                        class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('scan_id_cards'))
+                            <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR
+                                    Verifier</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Library --}}
+            @if(PermissionHelper::canModule('library'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-landmark fa-2x mr-3"></i>
+                        <span>Library</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_library'))
+                            <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library
+                                    Dashboard</a></li>
+                            <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_books'))
+                            <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                            <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                            <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                            <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_members'))
+                            <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowings'))
+                            <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a>
+                            </li>
+                            <li><a href="{{ route('library.reservations') }}"><i
+                                        class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                            <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book
+                                    Requests</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fines'))
+                            <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('library_reports'))
+                            <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('library_settings'))
+                            <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Finance --}}
+            @if(PermissionHelper::canModule('finance'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-wallet fa-2x mr-3"></i>
+                        <span>Finance</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_finance'))
+                            <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance
+                                    Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fee_structure'))
+                            <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee
+                                    Structure</a></li>
+                            <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee
+                                    Allocations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('record_payment'))
+                            <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee
+                                    Payment</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_finance'))
+                            <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_expenses'))
+                            <li><a href="{{ route('finance.expenses.index') }}"><i
+                                        class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                            <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense
+                                    Categories</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_payroll'))
+                            <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a>
+                            </li>
+                            <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary
+                                    Structures</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_finance'))
+                            <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a>
+                            </li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_financial_reports'))
+                            <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a>
+                            </li>
+                            <li><a href="{{ route('finance.outstanding-fees') }}"><i
+                                        class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Attendance --}}
+            @if(PermissionHelper::canModule('attendance'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-user-check fa-2x mr-3"></i>
+                        <span>Attendance</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_attendance'))
+                            <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
+                            </li>
+                        @endif
+                        @if(PermissionHelper::canFeature('mark_attendance'))
+                            <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
+                                    Check-In</a></li>
+                            <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
+                                    Check-In</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('attendance_reports'))
+                            <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
+                                    Report</a></li>
+                            <li><a href="{{ route('attendance.teachers.report') }}"><i
+                                        class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Timetable --}}
+            @if(PermissionHelper::canModule('timetable'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-calendar-alt fa-2x mr-3"></i>
+                        <span>Timetable</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_timetable'))
+                            <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
+                            </li>
+                            <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_timetable'))
+                            <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
+                                    Timetable</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Examinations --}}
+            @if(PermissionHelper::canModule('examinations'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-layer-group fa-2x mr-3"></i>
+                        <span>Examinations</span>
+                        @php
+                            $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
+                            $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
+                        @endphp
+                        @if ($pendingMarksCount > 0)
+                            <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
+                        @endif
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_examinations'))
+                            <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_examination'))
+                            <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
+                                    Examination</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('enter_marks') && $pendingMarksCount > 0)
+                            <li>
+                                <a href="{{ route('examination.marks-entry-portal') }}">
+                                    <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
+                                    <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Grading --}}
+            @if(PermissionHelper::canModule('grading'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ url('/grading') }}">
+                        <i class="fa fa-star fa-2x mr-3"></i>Grading
+                    </a>
+                </li>
+            @endif
+
+            {{-- User Rights --}}
+            @if(PermissionHelper::canModule('user_rights'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-shield-alt fa-2x mr-3"></i>
+                        <span>User Rights</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
+                        @if(PermissionHelper::canFeature('manage_roles'))
+                            <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('set_permissions'))
+                            <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module
+                                    Permissions</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('assign_roles'))
+                            <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- School Settings --}}
+            @if(PermissionHelper::canModule('school_settings'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-cog fa-2x mr-3"></i>
+                        <span>School Settings</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_school_settings'))
+                            <li><a href="{{ route('profile.school') }}"><i class="fas fa-school mr-2"></i>School Profile</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_academic_years'))
+                            <li><a href="{{ route('add-academic-year') }}"><i class="fas fa-calendar-alt mr-2"></i>Academic
+                                    Years</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_term_dates'))
+                            <li><a href="{{ route('school.term-dates', session('LoggedSchool')) }}"><i
+                                        class="fas fa-calendar-week mr-2"></i>Term Dates</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            {{-- NO MODULE ACCESS WARNING --}}
+            @php $accessible = PermissionHelper::accessibleModuleKeys(); @endphp
+            @if(empty($accessible))
+                <li class="slide px-3 py-2">
+                    <div
+                        style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:.75rem 1rem;font-size:.78rem;color:#92400e;">
+                        <i class="fa fa-lock mr-2"></i>
+                        <strong>No modules assigned.</strong><br>
+                        Contact your school administrator.
+                    </div>
+                </li>
+            @endif
+
+        @endif
+        {{-- ── END SECTIONS ── --}}
+
+        {{-- LOGOUT (always) --}}
         <li class="slide">
             <a class="side-menu__item" href="#" id="logoutMenu">
-                <i class="fa fa-sign-out fa-2x mr-3"></i>
-                Logout
+                <i class="fa fa-sign-out fa-2x mr-3"></i>Logout
             </a>
         </li>
     </ul>
 </aside>
 
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
     $(document).ready(function () {
         $('[data-toggle="submenu"]').on('click', function (e) {
@@ -584,83 +626,39 @@ use App\Http\Controllers\Helper;
             $('.slide').not($slide).removeClass('active');
             $slide.toggleClass('active');
         });
+    });
 
-        $('#logoutMenu').on('click', function (event) {
-            event.preventDefault();
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Do you really want to Logout?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, Logout",
-                cancelButtonText: "Cancel",
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '{{ route('student-logout') }}';
-                }
-            });
+    document.getElementById('logoutMenu').addEventListener('click', function (event) {
+        event.preventDefault();
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you really want to Logout?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Logout",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '{{ route("student-logout") }}';
+            }
         });
     });
+
+    // Scroll-aware logo shrink
+    (function () {
+        const sidebar = document.querySelector('.app-sidebar3');
+        const logoWrapper = document.querySelector('.app-sidebar__logo');
+        if (!sidebar || !logoWrapper) return;
+        sidebar.addEventListener('scroll', () => {
+            logoWrapper.classList.toggle('scrolled', sidebar.scrollTop > 20);
+        });
+    })();
 </script>
 
 <style>
-    .sub-menu {
-        display: none;
-        padding-left: 40px;
-    }
-
-    .slide.active>.sub-menu {
-        display: block;
-    }
-
-    .has-sub>a {
-        cursor: pointer;
-    }
-
-    .side-menu__item .badge,
-    .sub-menu .badge {
-        position: relative;
-        top: -2px;
-        font-size: 10px;
-        padding: 3px 6px;
-        border-radius: 10px;
-        min-width: 18px;
-        height: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 0 2px white;
-    }
-
-    .side-menu__item .badge {
-        margin-left: 5px;
-    }
-
-    .sub-menu .badge.float-right {
-        margin-left: auto;
-        margin-right: 10px;
-    }
-
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.2);
-        }
-
-        100% {
-            transform: scale(1);
-        }
-    }
-
-    .badge-danger {
-        animation: pulse 2s infinite;
-    }
-
+    /* ── Sidebar base ── */
     .side-menu {
         list-style: none;
         padding: 0;
@@ -669,24 +667,25 @@ use App\Http\Controllers\Helper;
 
     .slide {
         position: relative;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
     }
 
     .side-menu__item {
         display: flex;
         align-items: center;
-        padding: 12px 20px;
+        padding: 11px 20px;
         color: #333;
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: all .25s ease;
         border-radius: 8px;
         margin: 0 8px;
     }
 
-    .side-menu__item:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white !important;
-        transform: translateX(5px);
+    .side-menu__item:hover,
+    .slide.active>.side-menu__item {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: #fff !important;
+        transform: translateX(4px);
     }
 
     .side-menu__item i:first-child {
@@ -694,7 +693,7 @@ use App\Http\Controllers\Helper;
     }
 
     .dropdown-icon {
-        transition: transform 0.3s ease;
+        transition: transform .25s;
         font-size: 12px;
     }
 
@@ -702,24 +701,68 @@ use App\Http\Controllers\Helper;
         transform: rotate(180deg);
     }
 
+    /* Sub-menus */
     .sub-menu {
         display: none;
         list-style: none;
-        padding: 8px 0 8px 45px;
-        margin: 5px 0;
-        background: rgba(102, 126, 234, 0.05);
+        padding: 6px 0 6px 44px;
+        margin: 4px 0;
+        background: rgba(79, 70, 229, .04);
         border-radius: 8px;
     }
 
-    .slide.active .sub-menu {
+    .slide.active>.sub-menu {
         display: block;
-        animation: fadeIn 0.3s ease;
+        animation: fadeIn .25s ease;
+    }
+
+    .sub-menu li {
+        margin: 3px 0;
+    }
+
+    .sub-menu li a {
+        display: flex;
+        align-items: center;
+        padding: 7px 14px;
+        color: #555;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all .2s;
+        font-size: 13.5px;
+    }
+
+    .sub-menu li a:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: #fff !important;
+        transform: translateX(4px);
+    }
+
+    .sub-menu li a i {
+        width: 24px;
+        font-size: 13px;
+    }
+
+    /* Badges */
+    .badge-danger {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.18);
+        }
     }
 
     @keyframes fadeIn {
         from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-8px);
         }
 
         to {
@@ -728,269 +771,79 @@ use App\Http\Controllers\Helper;
         }
     }
 
-    .sub-menu li {
-        margin: 5px 0;
-    }
-
-    .sub-menu li a {
-        display: flex;
-        align-items: center;
-        padding: 8px 15px;
-        color: #555;
-        text-decoration: none;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
-
-    .sub-menu li a:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white !important;
-        transform: translateX(5px);
-    }
-
-    .sub-menu li a i {
-        width: 25px;
-        font-size: 14px;
-    }
-
-    .side-menu__item.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .has-sub:hover>.side-menu__item {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white !important;
-    }
-
-    .sub-menu li {
-        animation: slideIn 0.3s ease backwards;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .sub-menu li:nth-child(1) {
-        animation-delay: 0.05s;
-    }
-
-    .sub-menu li:nth-child(2) {
-        animation-delay: 0.1s;
-    }
-
-    .sub-menu li:nth-child(3) {
-        animation-delay: 0.15s;
-    }
-
-    .sub-menu li:nth-child(4) {
-        animation-delay: 0.2s;
-    }
-
-    .sub-menu li:nth-child(5) {
-        animation-delay: 0.25s;
-    }
-
-    @media (max-width: 768px) {
-        .sub-menu {
-            padding-left: 30px;
-        }
-
-        .side-menu__item {
-            padding: 10px 15px;
-        }
-    }
-
-    /* ── Sidebar Logo: large screens (theme handles positioning) ── */
+    /* Logo */
     .app-sidebar__logo {
-        padding: 20px 0 30px 0;
+        padding: 20px 0 30px;
         text-align: center;
         border-bottom: 1px solid #eee;
-        margin-bottom: 15px;
-        transition: padding 0.3s ease;
+        margin-bottom: 14px;
+        transition: padding .3s;
     }
 
     .app-sidebar__logo.scrolled {
-        padding: 10px 0 15px 0;
-    }
-
-    .app-sidebar__logo .header-brand {
-        display: block !important;
-        text-align: center;
+        padding: 10px 0 14px;
     }
 
     .sidebar-logo {
-        width: 140px;
-        height: 140px;
+        width: 130px;
+        height: 130px;
         object-fit: cover;
-        border-radius: 50% !important;
-        border: 4px solid #667eea;
-        padding: 5px;
-        background: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
-        display: block !important;
-        visibility: visible !important;
+        border-radius: 50%;
+        border: 4px solid #4f46e5;
+        padding: 4px;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        transition: all .3s;
+        display: block;
         margin: 0 auto;
     }
 
     .app-sidebar__logo.scrolled .sidebar-logo {
-        width: 70px;
-        height: 70px;
+        width: 62px;
+        height: 62px;
         border-width: 2px;
-        padding: 3px;
-    }
-
-    /* Minimized sidebar on large screens */
-    .sidenav-toggled .app-sidebar__logo {
-        padding: 10px 0 !important;
     }
 
     .sidenav-toggled .sidebar-logo {
-        width: 45px !important;
-        height: 45px !important;
+        width: 40px !important;
+        height: 40px !important;
         border-width: 2px !important;
-        padding: 3px !important;
-        border-radius: 50% !important;
     }
 
     .sidebar-logo:hover {
-        transform: scale(1.05);
+        transform: scale(1.04);
     }
 
-    /* ── Mobile logo: fixed overlay that slides with the sidebar ── */
-    @media (max-width: 768px) {
-
-        /* The logo wrapper div follows the sidebar slide-in/out */
-        div.app-sidebar.app-sidebar2,
-        .app-sidebar2 {
+    @media(max-width:768px) {
+        div.app-sidebar.app-sidebar2 {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 250px !important;
             height: auto !important;
-            overflow: visible !important;
             z-index: 10001 !important;
             background: transparent !important;
             pointer-events: none !important;
-            /* hidden by default — matches closed sidebar */
             transform: translateX(-250px) !important;
-            transition: transform 0.3s ease !important;
+            transition: transform .3s ease !important;
         }
 
-        /* Slide in when sidebar opens (.sidenav-toggled on body) */
-        .sidenav-toggled div.app-sidebar.app-sidebar2,
-        .sidenav-toggled .app-sidebar2 {
+        .sidenav-toggled div.app-sidebar.app-sidebar2 {
             transform: translateX(0) !important;
         }
 
-        div.app-sidebar.app-sidebar2 .app-sidebar__logo,
-        .app-sidebar2 .app-sidebar__logo {
+        div.app-sidebar.app-sidebar2 .app-sidebar__logo {
             display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
             pointer-events: all !important;
             background: transparent !important;
-            padding: 12px 0 14px 0 !important;
-            text-align: center !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-            margin-bottom: 0 !important;
+            padding: 12px 0 14px !important;
         }
 
-        div.app-sidebar.app-sidebar2 .sidebar-logo,
-        .app-sidebar2 .sidebar-logo {
-            width: 75px !important;
-            height: 75px !important;
+        div.app-sidebar.app-sidebar2 .sidebar-logo {
+            width: 70px !important;
+            height: 70px !important;
             display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
             margin: 0 auto !important;
-            border-radius: 50% !important;
-            border: 3px solid #667eea !important;
-            background: white !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-            object-fit: cover !important;
-            pointer-events: all !important;
-        }
-    }
-
-    @media (max-width: 480px) {
-
-        div.app-sidebar.app-sidebar2 .sidebar-logo,
-        .app-sidebar2 .sidebar-logo {
-            width: 60px !important;
-            height: 60px !important;
         }
     }
 </style>
-
-<script>
-    (function () {
-        const sidebar = document.querySelector('.app-sidebar3');
-        const logoWrapper = document.querySelector('.app-sidebar__logo');
-
-        if (!sidebar || !logoWrapper) return;
-
-        function handleScroll() {
-            if (sidebar.scrollTop > 20) {
-                logoWrapper.classList.add('scrolled');
-            } else {
-                logoWrapper.classList.remove('scrolled');
-            }
-        }
-
-        sidebar.addEventListener('scroll', handleScroll);
-
-        const toggleButtons = document.querySelectorAll('.app-sidebar__toggle');
-        toggleButtons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                setTimeout(function () {
-                    sidebar.scrollTop = 0;
-                    logoWrapper.classList.remove('scrolled');
-                }, 150);
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            sidebar.scrollTop = 0;
-            logoWrapper.classList.remove('scrolled');
-        });
-    })();
-</script>
-
-<script>
-    $(document).ready(function () {
-        $('#helpSupportToggle').on('click', function (e) {
-            e.preventDefault();
-            $(this).parent('.slide').toggleClass('active');
-        });
-    });
-
-    document.getElementById('logoutMenu').addEventListener('click', function (event) {
-        event.preventDefault();
-        Swal.fire({
-            title: "Are you sure?",
-            text: "Do you really want to Logout ?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, Logout",
-            cancelButtonText: "Cancel",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '{{ route('student-logout') }}';
-            }
-        });
-    });
-</script>
-
-<!--aside closed-->

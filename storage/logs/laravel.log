@@ -2897,3 +2897,25 @@
 #50 C:/Users/USER/Desktop/SMASA/server.php(25): require_once('C://Users//USER//D...')
 #51 {main}
 "} 
+[2026-06-07 14:04:23] local.ERROR: file_put_contents(C:\Users\USER\Desktop\SMASA\database\seeders/SystemModulesSeeder.php): Failed to open stream: No such file or directory {"exception":"[object] (ErrorException(code: 0): file_put_contents(C:\\Users\\USER\\Desktop\\SMASA\\database\\seeders/SystemModulesSeeder.php): Failed to open stream: No such file or directory at C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php:204)
+[stacktrace]
+#0 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate/Foundation/Bootstrap/HandleExceptions->handleError(2, 'file_put_conten...', 'C://Users//USER//D...', 204)
+#1 [internal function]: Illuminate/Foundation/Bootstrap/HandleExceptions->Illuminate/Foundation/Bootstrap/{closure}(2, 'file_put_conten...', 'C://Users//USER//D...', 204)
+#2 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(204): file_put_contents('C://Users//USER//D...', '<?php/r/n/r/nnamesp...', 0)
+#3 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(361): Illuminate/Filesystem/Filesystem->put('C://Users//USER//D...', '<?php/r/n/r/nnamesp...')
+#4 C:/Users/USER/Desktop/SMASA/app/Console/Commands/SetupUserRightsModule.php(81): Illuminate/Support/Facades/Facade::__callStatic('put', Array)
+#5 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): App/Console/Commands/SetupUserRightsModule->handle()
+#6 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#7 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#8 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#9 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#10 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate/Container/Container->call(Array)
+#11 C:/Users/USER/Desktop/SMASA/vendor/symfony/console/Command/Command.php(341): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#12 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#13 C:/Users/USER/Desktop/SMASA/vendor/symfony/console/Application.php(1117): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#14 C:/Users/USER/Desktop/SMASA/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(App/Console/Commands/SetupUserRightsModule), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#15 C:/Users/USER/Desktop/SMASA/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#16 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#17 C:/Users/USER/Desktop/SMASA/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#18 {main}
+"} 
