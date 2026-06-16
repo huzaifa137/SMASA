@@ -210,6 +210,30 @@ use App\Helpers\PermissionHelper;
                 </ul>
             </li>
 
+            {{-- Notifications --}}
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-bell fa-2x mr-3"></i>
+                    <span>Notifications</span>
+                    @php
+                        // Optional: show unread count badge – you can fetch it here if desired
+                        $unreadCount = 0; // Replace with a helper if needed
+                    @endphp
+                    @if($unreadCount > 0)
+                        <span class="badge badge-danger ml-2">{{ $unreadCount }}</span>
+                    @endif
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My
+                            Notifications</a></li>
+                    <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage
+                            Notifications</a></li>
+                    <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a>
+                    </li>
+                </ul>
+            </li>
+
             {{-- User Rights (always visible to super admin) --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
@@ -226,7 +250,6 @@ use App\Helpers\PermissionHelper;
                     </li>
                 </ul>
             </li>
-
 
             {{-- ═══════════════════════════════════════════════════
             SECTION B: SYSTEM ADMIN ONLY (no school selected)
@@ -256,13 +279,6 @@ use App\Helpers\PermissionHelper;
             ════════════════════════════════════════════════════ --}}
         @elseif(Session('LoggedSchool'))
 
-            {{-- Dashboard — always visible --}}
-            <li class="slide">
-                <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
-                    <i class="fa fa-home fa-2x mr-3"></i>Dashboard
-                </a>
-            </li>
-
             {{-- Current Role Tag --}}
             @php $roleName = PermissionHelper::currentRoleName(); @endphp
             @if($roleName !== 'System Administrator')
@@ -277,6 +293,13 @@ use App\Helpers\PermissionHelper;
                     </div>
                 </li>
             @endif
+
+            {{-- Dashboard — always visible --}}
+            <li class="slide">
+                <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
+                    <i class="fa fa-home fa-2x mr-3"></i>Dashboard
+                </a>
+            </li>
 
             {{-- Classes --}}
             @if(PermissionHelper::canModule('classes'))

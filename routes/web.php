@@ -821,3 +821,35 @@ Route::group([
     Route::post('/assign-roles/assign', [UserRightsController::class, 'assignRoleToTeacher'])->name('assign.store');
     Route::post('/assign-roles/remove', [UserRightsController::class, 'removeRoleFromTeacher'])->name('assign.remove');
 });
+
+
+// ============================================================
+// ADD THESE ROUTES TO YOUR routes/web.php
+// Inside your existing AdminAuth middleware group
+// ============================================================
+
+Route::group(['middleware' => ['AdminAuth']], function () {
+
+    // ── Notification Module ──────────────────────────────────
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+
+        // Admin panel — manage & broadcast
+        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\NotificationController::class, 'create'])->name('create');
+        Route::post('/store', [App\Http\Controllers\NotificationController::class, 'store'])->name('store');
+
+        // My notifications page (must be ABOVE /{id})
+        Route::get('/my', [App\Http\Controllers\NotificationController::class, 'myNotifications'])->name('my');
+
+        // AJAX endpoints (must be ABOVE /{id})
+        Route::get('/ajax/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('ajax.unread');
+        Route::get('/ajax/dropdown', [App\Http\Controllers\NotificationController::class, 'dropdown'])->name('ajax.dropdown');
+        Route::post('/read-all', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markRead'])->name('mark-read');
+
+        // Wildcard routes LAST
+        Route::get('/{id}', [App\Http\Controllers\NotificationController::class, 'show'])->name('show');
+        Route::delete('/{id}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+    });
+
+});

@@ -506,6 +506,15 @@ class FinanceController extends Controller
             );
 
             DB::commit();
+
+            \App\Services\NotificationService::sendToAllAdmins([
+                'title' => 'Fee Payment Received',
+                'body' => "UGX " . number_format($validated['amount_paid'], 0) . " received (Receipt {$receiptNum}).",
+                'type' => \App\Models\SmasaNotification::TYPE_FEE,
+                'module' => 'finance',
+                'triggered_by' => session('LoggedAdmin') ?? session('LoggedTeacher'),
+            ], $schoolId);
+
             return redirect()->route('finance.payments')
                 ->with('success', "Payment recorded. Receipt: {$receiptNum}");
         } catch (\Exception $e) {

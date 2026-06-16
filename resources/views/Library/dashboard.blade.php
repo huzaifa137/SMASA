@@ -221,7 +221,7 @@
         letter-spacing: .05em;
         color: var(--text-3);
         border-bottom: 1px solid var(--border);
-        background: #fafbff;
+        background: #3431ca;
     }
 
     .lib-table td {

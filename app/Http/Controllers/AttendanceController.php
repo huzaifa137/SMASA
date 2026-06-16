@@ -21,9 +21,9 @@ class AttendanceController extends Controller
 
     public function dashboard()
     {
-        $schoolId  = session('LoggedSchool');
+        $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
-        $today     = Carbon::today()->toDateString();
+        $today = Carbon::today()->toDateString();
 
         // ── Student Attendance Today ──────────────────────────────
         $studentStats = StudentAttendance::where('school_id', $schoolId)
@@ -74,9 +74,9 @@ class AttendanceController extends Controller
             ->groupBy('class_id', 'stream_id')
             ->get()
             ->map(function ($row) {
-                $row->class_name  = Helper::recordMdname($row->class_id);
+                $row->class_name = Helper::recordMdname($row->class_id);
                 $row->stream_name = Helper::recordMdname($row->stream_id);
-                $row->rate        = $row->total > 0 ? round(($row->present / $row->total) * 100) : 0;
+                $row->rate = $row->total > 0 ? round(($row->present / $row->total) * 100) : 0;
                 return $row;
             });
 
@@ -93,11 +93,11 @@ class AttendanceController extends Controller
             $myClasses = ClassSubject::where('school_id', $schoolId)
                 ->where(function ($q) use ($teacherId) {
                     $q->where('subject_teacher_1', $teacherId)
-                      ->orWhere('subject_teacher_2', $teacherId);
+                        ->orWhere('subject_teacher_2', $teacherId);
                 })
                 ->get()
                 ->map(function ($cs) {
-                    $cs->class_name  = Helper::recordMdname($cs->class_id);
+                    $cs->class_name = Helper::recordMdname($cs->class_id);
                     $cs->stream_name = Helper::recordMdname($cs->stream_id);
                     $cs->subject_name = Helper::recordMdname($cs->subject_id);
                     return $cs;
@@ -134,31 +134,31 @@ class AttendanceController extends Controller
     public function studentAttendancePortal()
     {
 
-        $schoolId  = session('LoggedSchool');
+        $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
-        $today     = Carbon::today()->toDateString();
+        $today = Carbon::today()->toDateString();
 
         $isAdmin = Helper::isTechSateAdminOrSchoolAdminsAlone();
 
-        
+
         if ($isAdmin) {
             // Admin sees all classes in school
             $classrooms = Classroom::where('school_id', $schoolId)
                 ->orderBy('class_name')
                 ->get();
         } else {
-           
+
             // Teacher sees only their assigned classes/subjects
             $assignedClassIds = ClassSubject::where('school_id', $schoolId)
                 ->where(function ($q) use ($teacherId) {
                     $q->where('subject_teacher_1', $teacherId)
-                      ->orWhere('subject_teacher_2', $teacherId);
+                        ->orWhere('subject_teacher_2', $teacherId);
                 })
                 ->pluck('class_id')
                 ->unique()
                 ->toArray();
 
-                // dd($assignedClassIds);
+            // dd($assignedClassIds);
 
             $supervisedClassIds = Classroom::where('school_id', $schoolId)
                 ->where('class_supervisor', $teacherId)
@@ -198,10 +198,10 @@ class AttendanceController extends Controller
                     ->where('status', 'present')
                     ->count();
 
-                $stream->class_name    = Helper::recordMdname($classroom->class_name);
-                $stream->stream_name   = Helper::recordMdname($stream->stream_id);
-                $stream->total         = $totalStudents;
-                $stream->taken         = $attendanceTaken;
+                $stream->class_name = Helper::recordMdname($classroom->class_name);
+                $stream->stream_name = Helper::recordMdname($stream->stream_id);
+                $stream->total = $totalStudents;
+                $stream->taken = $attendanceTaken;
                 $stream->present_count = $presentCount;
 
                 // Check if teacher is class teacher for this stream
@@ -213,7 +213,7 @@ class AttendanceController extends Controller
                     ->where('stream_id', $stream->stream_id)
                     ->where(function ($q) use ($teacherId) {
                         $q->where('subject_teacher_1', $teacherId)
-                          ->orWhere('subject_teacher_2', $teacherId);
+                            ->orWhere('subject_teacher_2', $teacherId);
                     })
                     ->get()
                     ->map(function ($cs) {
@@ -237,9 +237,9 @@ class AttendanceController extends Controller
 
     public function takeStudentAttendance(Request $request, $classId, $streamId)
     {
-        $schoolId  = session('LoggedSchool');
+        $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
-        $date      = $request->get('date', Carbon::today()->toDateString());
+        $date = $request->get('date', Carbon::today()->toDateString());
         $subjectId = $request->get('class_subject_id'); // optional: for subject-specific
 
         // Authorise
@@ -250,7 +250,7 @@ class AttendanceController extends Controller
                 ->where('stream_id', $streamId)
                 ->where(function ($q) use ($teacherId) {
                     $q->where('subject_teacher_1', $teacherId)
-                      ->orWhere('subject_teacher_2', $teacherId);
+                        ->orWhere('subject_teacher_2', $teacherId);
                 })->exists();
 
             $isSupervisor = Classroom::where('school_id', $schoolId)
@@ -313,13 +313,21 @@ class AttendanceController extends Controller
             ->get()
             ->groupBy('student_id');
 
-        $className  = Helper::recordMdname($classId);
+        $className = Helper::recordMdname($classId);
         $streamName = Helper::recordMdname($streamId);
 
         return view('Attendance.take-student-attendance', compact(
-            'students', 'existing', 'subjects', 'history',
-            'classId', 'streamId', 'className', 'streamName',
-            'date', 'subjectId', 'teacherId'
+            'students',
+            'existing',
+            'subjects',
+            'history',
+            'classId',
+            'streamId',
+            'className',
+            'streamName',
+            'date',
+            'subjectId',
+            'teacherId'
         ));
     }
 
@@ -330,15 +338,15 @@ class AttendanceController extends Controller
     public function saveStudentAttendance(Request $request)
     {
         $request->validate([
-            'class_id'        => 'required|string',
-            'stream_id'       => 'required|string',
+            'class_id' => 'required|string',
+            'stream_id' => 'required|string',
             'attendance_date' => 'required|date',
-            'attendance'      => 'required|array',
+            'attendance' => 'required|array',
             'attendance.*.student_id' => 'required|integer',
-            'attendance.*.status'     => 'required|in:present,absent,late,excused',
+            'attendance.*.status' => 'required|in:present,absent,late,excused',
         ]);
 
-        $schoolId  = session('LoggedSchool');
+        $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
 
         DB::beginTransaction();
@@ -346,24 +354,36 @@ class AttendanceController extends Controller
             foreach ($request->attendance as $row) {
                 StudentAttendance::updateOrCreate(
                     [
-                        'school_id'        => $schoolId,
-                        'student_id'       => $row['student_id'],
-                        'class_id'         => $request->class_id,
-                        'stream_id'        => $request->stream_id,
-                        'attendance_date'  => $request->attendance_date,
+                        'school_id' => $schoolId,
+                        'student_id' => $row['student_id'],
+                        'class_id' => $request->class_id,
+                        'stream_id' => $request->stream_id,
+                        'attendance_date' => $request->attendance_date,
                         'class_subject_id' => $request->class_subject_id ?: null,
-                        'session'          => $request->session ?? 'morning',
+                        'session' => $request->session ?? 'morning',
                     ],
                     [
-                        'status'       => $row['status'],
+                        'status' => $row['status'],
                         'arrival_time' => Carbon::now()->format('H:i:s'), // auto-set to current time
-                        'remarks'      => $row['remarks'] ?? null,
-                        'taken_by'     => $teacherId,
+                        'remarks' => $row['remarks'] ?? null,
+                        'taken_by' => $teacherId,
                         'period_label' => $request->period_label ?? null,
                     ]
                 );
             }
+
             DB::commit();
+
+            $absentCount = collect($request->attendance)->where('status', 'absent')->count();
+            if ($absentCount > 0) {
+                \App\Services\NotificationService::sendToAllAdmins([
+                    'title' => 'Attendance Marked — Absentees Recorded',
+                    'body' => "{$absentCount} student(s) marked absent on " . \Carbon\Carbon::parse($request->attendance_date)->format('d M Y') . ".",
+                    'type' => \App\Models\SmasaNotification::TYPE_ATTENDANCE,
+                    'module' => 'attendance',
+                    'triggered_by' => $teacherId,
+                ], $schoolId);
+            }
 
             return response()->json([
                 'success' => true,
@@ -382,15 +402,15 @@ class AttendanceController extends Controller
     public function studentAttendanceReport(Request $request)
     {
         $schoolId = session('LoggedSchool');
-        $classId  = $request->class_id;
+        $classId = $request->class_id;
         $streamId = $request->stream_id;
-        $from     = $request->from ?? Carbon::today()->startOfMonth()->toDateString();
-        $to       = $request->to   ?? Carbon::today()->toDateString();
-        $status   = $request->status;
+        $from = $request->from ?? Carbon::today()->startOfMonth()->toDateString();
+        $to = $request->to ?? Carbon::today()->toDateString();
+        $status = $request->status;
 
         // All classes and streams for filter dropdowns
         $classrooms = Classroom::where('school_id', $schoolId)->orderBy('class_name')->get();
-        $streams    = $classId
+        $streams = $classId
             ? Stream::where('school_id', $schoolId)->where('class_id', $classId)->get()
             : collect();
 
@@ -403,7 +423,8 @@ class AttendanceController extends Controller
                 ->where('stream_id', $streamId)
                 ->whereBetween('attendance_date', [$from, $to]);
 
-            if ($status) $query->where('status', $status);
+            if ($status)
+                $query->where('status', $status);
 
             $records = $query->orderBy('attendance_date', 'desc')->get();
 
@@ -432,13 +453,21 @@ class AttendanceController extends Controller
                 ->sortByDesc('attendance_rate');
         }
 
-        $className  = $classId  ? Helper::recordMdname($classId)  : null;
+        $className = $classId ? Helper::recordMdname($classId) : null;
         $streamName = $streamId ? Helper::recordMdname($streamId) : null;
 
         return view('Attendance.student-report', compact(
-            'classrooms', 'streams', 'records', 'studentSummary',
-            'classId', 'streamId', 'from', 'to', 'status',
-            'className', 'streamName'
+            'classrooms',
+            'streams',
+            'records',
+            'studentSummary',
+            'classId',
+            'streamId',
+            'from',
+            'to',
+            'status',
+            'className',
+            'streamName'
         ));
     }
 
@@ -449,7 +478,7 @@ class AttendanceController extends Controller
     public function teacherAttendancePage(Request $request)
     {
         $schoolId = session('LoggedSchool');
-        $date     = $request->get('date', Carbon::today()->toDateString());
+        $date = $request->get('date', Carbon::today()->toDateString());
 
         $teachers = Teacher::where('school_id', $schoolId)
             ->orderBy('surname')
@@ -462,16 +491,19 @@ class AttendanceController extends Controller
 
         // Stats for today
         $stats = [
-            'total'    => $teachers->count(),
-            'present'  => $existing->where('status', 'present')->count(),
-            'absent'   => $existing->where('status', 'absent')->count(),
-            'late'     => $existing->where('status', 'late')->count(),
+            'total' => $teachers->count(),
+            'present' => $existing->where('status', 'present')->count(),
+            'absent' => $existing->where('status', 'absent')->count(),
+            'late' => $existing->where('status', 'late')->count(),
             'on_leave' => $existing->where('status', 'on_leave')->count(),
             'not_marked' => $teachers->count() - $existing->count(),
         ];
 
         return view('Attendance.teacher-attendance', compact(
-            'teachers', 'existing', 'date', 'stats'
+            'teachers',
+            'existing',
+            'date',
+            'stats'
         ));
     }
 
@@ -482,33 +514,33 @@ class AttendanceController extends Controller
     public function saveTeacherAttendance(Request $request)
     {
         $request->validate([
-            'teacher_id'      => 'required|exists:teachers,id',
+            'teacher_id' => 'required|exists:teachers,id',
             'attendance_date' => 'required|date',
-            'status'          => 'required|in:present,absent,late,on_leave,half_day,excused',
+            'status' => 'required|in:present,absent,late,on_leave,half_day,excused',
         ]);
 
         $schoolId = session('LoggedSchool');
 
         $record = TeacherAttendance::updateOrCreate(
             [
-                'school_id'       => $schoolId,
-                'teacher_id'      => $request->teacher_id,
+                'school_id' => $schoolId,
+                'teacher_id' => $request->teacher_id,
                 'attendance_date' => $request->attendance_date,
             ],
             [
-                'arrival_time'   => Carbon::now()->format('H:i:s'), // auto-assigned
+                'arrival_time' => Carbon::now()->format('H:i:s'), // auto-assigned
                 'departure_time' => $request->departure_time ?: null,
-                'status'         => $request->status,
-                'leave_type'     => $request->leave_type     ?: null,
-                'remarks'        => $request->remarks        ?: null,
-                'recorded_by'    => session('LoggedTeacher') ?? session('LoggedAdmin'),
+                'status' => $request->status,
+                'leave_type' => $request->leave_type ?: null,
+                'remarks' => $request->remarks ?: null,
+                'recorded_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
             ]
         );
 
         return response()->json([
             'success' => true,
             'message' => 'Teacher attendance recorded.',
-            'data'    => $record,
+            'data' => $record,
         ]);
     }
 
@@ -520,7 +552,7 @@ class AttendanceController extends Controller
     {
         $request->validate([
             'attendance_date' => 'required|date',
-            'attendance'      => 'required|array',
+            'attendance' => 'required|array',
         ]);
 
         $schoolId = session('LoggedSchool');
@@ -528,21 +560,22 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->attendance as $teacherId => $data) {
-                if (empty($data['status'])) continue;
+                if (empty($data['status']))
+                    continue;
 
                 TeacherAttendance::updateOrCreate(
                     [
-                        'school_id'       => $schoolId,
-                        'teacher_id'      => $teacherId,
+                        'school_id' => $schoolId,
+                        'teacher_id' => $teacherId,
                         'attendance_date' => $request->attendance_date,
                     ],
                     [
-                        'arrival_time'   => Carbon::now()->format('H:i:s'), // auto-assigned on save
+                        'arrival_time' => Carbon::now()->format('H:i:s'), // auto-assigned on save
                         'departure_time' => $data['departure_time'] ?? null,
-                        'status'         => $data['status'],
-                        'leave_type'     => $data['leave_type']     ?? null,
-                        'remarks'        => $data['remarks']        ?? null,
-                        'recorded_by'    => session('LoggedTeacher') ?? session('LoggedAdmin'),
+                        'status' => $data['status'],
+                        'leave_type' => $data['leave_type'] ?? null,
+                        'remarks' => $data['remarks'] ?? null,
+                        'recorded_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
                     ]
                 );
             }
@@ -561,19 +594,21 @@ class AttendanceController extends Controller
 
     public function teacherAttendanceReport(Request $request)
     {
-        $schoolId  = session('LoggedSchool');
+        $schoolId = session('LoggedSchool');
         $teacherId = $request->teacher_id;
-        $from      = $request->from ?? Carbon::today()->startOfMonth()->toDateString();
-        $to        = $request->to   ?? Carbon::today()->toDateString();
-        $status    = $request->status;
+        $from = $request->from ?? Carbon::today()->startOfMonth()->toDateString();
+        $to = $request->to ?? Carbon::today()->toDateString();
+        $status = $request->status;
 
         $teachers = Teacher::where('school_id', $schoolId)->orderBy('surname')->get();
 
         $query = TeacherAttendance::where('school_id', $schoolId)
             ->whereBetween('attendance_date', [$from, $to]);
 
-        if ($teacherId) $query->where('teacher_id', $teacherId);
-        if ($status)    $query->where('status', $status);
+        if ($teacherId)
+            $query->where('teacher_id', $teacherId);
+        if ($status)
+            $query->where('status', $status);
 
         $records = $query->with('teacher')->orderBy('attendance_date', 'desc')->get();
 
@@ -596,14 +631,19 @@ class AttendanceController extends Controller
             ->map(function ($row) {
                 $teacher = Teacher::find($row->teacher_id);
                 $row->full_name = $teacher ? $teacher->firstname . ' ' . $teacher->surname : 'N/A';
-                $row->phone     = $teacher->phonenumber ?? '';
+                $row->phone = $teacher->phonenumber ?? '';
                 return $row;
             })
             ->sortByDesc('attendance_rate');
 
         return view('Attendance.teacher-report', compact(
-            'teachers', 'records', 'teacherSummary',
-            'teacherId', 'from', 'to', 'status'
+            'teachers',
+            'records',
+            'teacherSummary',
+            'teacherId',
+            'from',
+            'to',
+            'status'
         ));
     }
 
@@ -614,7 +654,7 @@ class AttendanceController extends Controller
     public function getStreamsByClass($classId)
     {
         $schoolId = session('LoggedSchool');
-        $streams  = Stream::where('school_id', $schoolId)
+        $streams = Stream::where('school_id', $schoolId)
             ->where('class_id', $classId)
             ->get()
             ->map(function ($s) {

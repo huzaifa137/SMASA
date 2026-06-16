@@ -1309,6 +1309,14 @@ class LibraryController extends Controller
 
             DB::commit();
 
+            \App\Services\NotificationService::sendToAllAdmins([
+                'title' => 'Library Book Issued',
+                'body' => "\"{$book->title}\" issued to {$member->name}. Due " . \Carbon\Carbon::parse($request->due_date)->format('d M Y') . ".",
+                'type' => \App\Models\SmasaNotification::TYPE_LIBRARY,
+                'module' => 'library',
+                'triggered_by' => $userId,
+            ], $schoolId);
+
             $message = "Book issued to {$member->name}. Due: " . \Carbon\Carbon::parse($request->due_date)->format('d M Y');
 
             if ($request->ajax() || $request->wantsJson()) {
@@ -1394,6 +1402,15 @@ class LibraryController extends Controller
 
             DB::commit();
 
+            \App\Services\NotificationService::sendToAllAdmins([
+                'title' => 'Library Book Returned',
+                'body' => "\"{$borrowing->book->title}\" returned by {$borrowing->member->name}." . ($fineAmount > 0 ? " Fine of UGX " . number_format($fineAmount, 0) . " applied." : ''),
+                'type' => \App\Models\SmasaNotification::TYPE_LIBRARY,
+                'module' => 'library',
+                'triggered_by' => $userId,
+            ], $schoolId);
+
+            
             $msg = "Book returned successfully.";
             if ($fineAmount > 0) {
                 $msg .= " Fine generated: UGX " . number_format($fineAmount, 0);

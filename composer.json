@@ -12,6 +12,7 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "guzzlehttp/guzzle": "^7.9",
+        "laravel-notification-channels/webpush": "^10.5",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
