@@ -54,7 +54,7 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
                 <h2><i class="fa fa-users-cog mr-2"></i>Assign Roles to Staff</h2>
-                <p class="mb-0" style="opacity:.8;">Link each staff member to a role. Their access is controlled by that role's permissions.</p>
+                <p class="mt-1" style="opacity:.8;">Link each staff member to a role. Their access is controlled by that role's permissions.</p>
             </div>
             <div>@include('user-rights._nav')</div>
         </div>
@@ -151,7 +151,8 @@
         @endforeach
     </div>
     @endif
-
+</div>
+            </div>
 </div>
 @endsection
 

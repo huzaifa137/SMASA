@@ -210,6 +210,15 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
 
         Route::delete('/teachers/{id}', 'destroyTeacher')->name('teachers.destroy');
+
+        // Teacher Bulk Import
+        Route::get('/teachers/bulk-import', 'bulkImportTeacherForm')->name('teachers.bulk.import.form');
+        Route::post('/teachers/bulk-import', 'bulkImportTeachers')->name('teachers.bulk.import');
+        Route::get('/teachers/download-template', 'downloadTeacherTemplate')->name('teachers.download.template');
+
+        // Teacher Account Status
+        Route::post('/teacher/{id}/status', 'updateTeacherStatus')->name('teacher.update.status');
+        Route::get('/teacher/{id}/status', 'getTeacherStatus')->name('teacher.get.status');
     });
 
     Route::controller(ClassandSubjectController::class)->group(function () {
@@ -312,6 +321,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                     Route::post('/update/{id}', 'updateStudent');
 
                     Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
+
+                    // Student Bulk Import
+                    Route::get('/bulk-import', 'bulkImportStudentForm')->name('students.bulk.import.form');
+                    Route::post('/bulk-import', 'bulkImportStudents')->name('students.bulk.import');
+                    Route::get('/download-template', 'downloadStudentTemplate')->name('students.download.template');
 
                 });
             });

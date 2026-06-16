@@ -42,4 +42,8 @@
         border-color: #667eea !important;
         transform: translateY(-1px);
     }
+
+    .urp-nav {
+    gap: 0.75rem !important;
+}
 </style>

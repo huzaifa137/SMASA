@@ -1,4 +1,3 @@
-{{-- resources/views/student/all-students.blade.php --}}
 <?php use App\Http\Controllers\Helper; ?>
 @extends('layouts-side-bar.master')
 
@@ -408,8 +407,8 @@
         }
 
         /* ══════════════════════════════════
-               MODALS
-            ══════════════════════════════════ */
+                       MODALS
+                    ══════════════════════════════════ */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -975,6 +974,20 @@
             <h1>All Students</h1>
             <p>Browse students by class and stream</p>
         </div>
+        <div style="position:relative;z-index:1;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{{ route('students.bulk.import.form') }}"
+                style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                onmouseout="this.style.background='rgba(255,255,255,.18)'">
+                <i class="fas fa-file-import"></i> Bulk Import
+            </a>
+            <a href="{{ route('students.add.new.student') }}"
+                style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                onmouseout="this.style.background='rgba(255,255,255,.18)'">
+                <i class="fas fa-user-plus"></i> Add Student
+            </a>
+        </div>
     </div>
 @endsection
 
@@ -1136,9 +1149,9 @@
                                                             <i class="fas fa-id-card"></i>
                                                         </button>
                                                         <!-- <button class="btn-icon btn-print" onclick="printCard({{ $cardId }})"
-                                                            title="Print ID Card">
-                                                            <i class="fas fa-print"></i>
-                                                        </button> -->
+                                                                                                            title="Print ID Card">
+                                                                                                            <i class="fas fa-print"></i>
+                                                                                                        </button> -->
                                                     @elseif($cardStatus === 'revoked')
                                                         <button class="btn-icon" style="background: var(--a); color: #fff;"
                                                             onclick="reactivateCard({{ $cardId }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
@@ -1284,63 +1297,63 @@
                             : `<span class="badge badge-gray">${s.gender || '—'}</span>`;
 
                     document.getElementById('viewBody').innerHTML = `
-                        <div class="student-banner">
-                            ${photoHtml}
-                            <div>
-                                <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
-                                <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
-                                    ${genderBadge}
-                                    ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
-                                    ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
+                                <div class="student-banner">
+                                    ${photoHtml}
+                                    <div>
+                                        <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
+                                        <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
+                                            ${genderBadge}
+                                            ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
+                                            ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                        <div class="info-grid">
-                            ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
-                            ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
-                            ${infoItem('Place of Birth', s.place_of_birth)}
-                            ${infoItem('Nationality', s.nationality)}
-                            ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
-                            ${infoItem('Gender', s.gender)}
-                        </div>
+                                <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                                <div class="info-grid">
+                                    ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
+                                    ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
+                                    ${infoItem('Place of Birth', s.place_of_birth)}
+                                    ${infoItem('Nationality', s.nationality)}
+                                    ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
+                                    ${infoItem('Gender', s.gender)}
+                                </div>
 
-                        <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                        <div class="info-grid">
-                            ${infoItem('Admission Number', s.admission_number)}
-                            ${infoItem('Registration Number', s.registration_number)}
-                            ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
-                            ${infoItem('Admission Year', s.admission_year)}
-                            ${infoItem('Class / Senior', s.senior)}
-                            ${infoItem('Stream', s.stream)}
-                            ${infoItem('PLE Score', s.ple_score)}
-                            ${infoItem('UCE Score', s.uce_score)}
-                            ${infoItem('Previous School', s.previous_school)}
-                            ${infoItem('Primary School', s.primary_school_name)}
-                        </div>
+                                <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                                <div class="info-grid">
+                                    ${infoItem('Admission Number', s.admission_number)}
+                                    ${infoItem('Registration Number', s.registration_number)}
+                                    ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
+                                    ${infoItem('Admission Year', s.admission_year)}
+                                    ${infoItem('Class / Senior', s.senior)}
+                                    ${infoItem('Stream', s.stream)}
+                                    ${infoItem('PLE Score', s.ple_score)}
+                                    ${infoItem('UCE Score', s.uce_score)}
+                                    ${infoItem('Previous School', s.previous_school)}
+                                    ${infoItem('Primary School', s.primary_school_name)}
+                                </div>
 
-                        <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
-                        <div class="info-grid">
-                            ${infoItem('Primary Contact', s.primary_contact)}
-                            ${infoItem('Other Contact', s.other_contact)}
-                            ${infoItem('Home Address', s.home_address, true)}
-                        </div>
+                                <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
+                                <div class="info-grid">
+                                    ${infoItem('Primary Contact', s.primary_contact)}
+                                    ${infoItem('Other Contact', s.other_contact)}
+                                    ${infoItem('Home Address', s.home_address, true)}
+                                </div>
 
-                        <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
-                        <div class="info-grid">
-                            ${infoItem('Guardian Names', s.guardian_names)}
-                            ${infoItem('Relation', s.relation)}
-                            ${infoItem('Guardian Phone', s.guardian_phone)}
-                            ${infoItem('Guardian Email', s.guardian_email)}
-                        </div>
+                                <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
+                                <div class="info-grid">
+                                    ${infoItem('Guardian Names', s.guardian_names)}
+                                    ${infoItem('Relation', s.relation)}
+                                    ${infoItem('Guardian Phone', s.guardian_phone)}
+                                    ${infoItem('Guardian Email', s.guardian_email)}
+                                </div>
 
-                        <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
-                        <div class="info-grid">
-                            ${infoItem('Medical History', s.medical_history, true)}
-                            ${infoItem('Comments', s.comments, true)}
-                        </div>
-                    `;
+                                <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
+                                <div class="info-grid">
+                                    ${infoItem('Medical History', s.medical_history, true)}
+                                    ${infoItem('Comments', s.comments, true)}
+                                </div>
+                            `;
                 })
                 .catch(() => {
                     document.getElementById('viewBody').innerHTML = `<div class="empty-state"><div class="empty-icon-wrap"><i class="fas fa-times-circle"></i></div><p>Failed to load student data.</p></div>`;
@@ -1383,78 +1396,78 @@
                 : `<small style="color:var(--t3);">No photo uploaded yet</small>`;
 
             return `
-                <div class="edit-section">
-                    <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                    <div class="form-grid-2">
-                        <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
-                        <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
-                        <div class="form-group"><label class="form-label">Gender *</label>
-                            <select class="form-control" id="ef_gender">
-                                <option value="">Select</option>
-                                <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
-                                <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
-                                <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
-                            </select>
+                        <div class="edit-section">
+                            <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                            <div class="form-grid-2">
+                                <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
+                                <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
+                                <div class="form-group"><label class="form-label">Gender *</label>
+                                    <select class="form-control" id="ef_gender">
+                                        <option value="">Select</option>
+                                        <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
+                                        <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
+                                        <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
+                                <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
+                                <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
+                                <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
+                            </div>
                         </div>
-                        <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
-                        <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
-                        <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
-                        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
-                    </div>
-                </div>
 
-                <div class="edit-section">
-                    <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
-                        <div class="form-group"><label class="form-label">Admission No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
-                        <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
-                        <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
-                        <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
-                        <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
-                        <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
-                        <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
-                    </div>
-                    <div class="form-grid-2">
-                        <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
-                        <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
-                    </div>
-                </div>
+                        <div class="edit-section">
+                            <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                            <div class="form-grid-3">
+                                <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
+                                <div class="form-group"><label class="form-label">Admission No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
+                                <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
+                                <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
+                                <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
+                                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
+                                <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
+                                <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
+                                <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
+                            </div>
+                        </div>
 
-                <div class="edit-section">
-                    <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
-                        <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
-                        <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
-                    </div>
-                    <div class="form-grid-2">
-                        <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
-                        <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
-                        <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
-                        <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
-                    </div>
-                </div>
+                        <div class="edit-section">
+                            <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
+                            <div class="form-grid-3">
+                                <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
+                                <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
+                                <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
+                                <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
+                                <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
+                                <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
+                            </div>
+                        </div>
 
-                <div class="edit-section">
-                    <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
-                    <div class="form-grid-2">
-                        <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
-                        <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
-                    </div>
-                </div>
+                        <div class="edit-section">
+                            <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
+                            <div class="form-grid-2">
+                                <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
+                                <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
+                            </div>
+                        </div>
 
-                <div class="edit-section">
-                    <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
-                    <div style="margin-bottom:.75rem;">${photoHtml}</div>
-                    <div class="photo-upload-wrap" id="photoWrap">
-                        <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-                        <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-                        <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-                        <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
-                    </div>
-                    <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
-                </div>`;
+                        <div class="edit-section">
+                            <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
+                            <div style="margin-bottom:.75rem;">${photoHtml}</div>
+                            <div class="photo-upload-wrap" id="photoWrap">
+                                <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+                                <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+                                <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+                                <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
+                            </div>
+                            <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
+                        </div>`;
         }
 
         function esc(v) { return (v ?? '').toString().replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -1481,10 +1494,10 @@
                 const reader = new FileReader();
                 reader.onload = e => {
                     wrap.innerHTML = `
-                    <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
-                    <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                        <i class='fas fa-times' style='font-size:.7rem;'></i>
-                    </button>`;
+                            <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
+                            <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                <i class='fas fa-times' style='font-size:.7rem;'></i>
+                            </button>`;
                     wrap.style.position = 'relative';
                 };
                 reader.readAsDataURL(file);
@@ -1494,10 +1507,10 @@
         function resetPhotoUpload() {
             selectedPhotoFile = null; // 👈 clear saved file
             document.getElementById('photoWrap').innerHTML = `
-            <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-            <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-            <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-            <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
+                    <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+                    <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+                    <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
             initPhotoUpload();
         }
 

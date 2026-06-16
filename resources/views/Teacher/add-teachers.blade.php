@@ -23,10 +23,16 @@ $controller = new Controller();
                 <div class="card bg-primary">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0 text-white">Add Teacher</h4>
-                        <a href="{{ route('school.teachers') }}" class="btn"
-                            style="background-color: #5351e4; color:#FFF;">
-                            <i class="fas fa-users"></i> All Teachers
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('teachers.bulk.import.form') }}" class="btn"
+                                style="background-color: #059669; color:#FFF;">
+                                <i class="fas fa-file-import"></i> Bulk Import
+                            </a>
+                            <a href="{{ route('school.teachers') }}" class="btn"
+                                style="background-color: #5351e4; color:#FFF;">
+                                <i class="fas fa-users"></i> All Teachers
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body bg-light">
                         <form id="createSchoolTeacher">

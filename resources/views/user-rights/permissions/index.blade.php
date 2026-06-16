@@ -87,7 +87,7 @@
         }
 
         .module-card.module-disabled {
-            opacity: .65;
+            /* opacity: .65; */
         }
 
         .module-header {
@@ -236,6 +236,94 @@
             margin-bottom: 1rem;
             opacity: .3;
         }
+        #roleTabs .role-tab {
+    margin-right: 0.6rem;
+}
+
+/* ── Action buttons group ── */
+#btnEnableAll,
+#btnDisableAll,
+#btnSaveAll {
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: .5rem 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    transition: all .2s;
+    border-width: 1.5px;
+    letter-spacing: .01em;
+}
+
+/* Enable All */
+#btnEnableAll {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+#btnEnableAll:hover {
+    background: #059669;
+    color: #fff;
+    border-color: #059669;
+    box-shadow: 0 3px 10px rgba(5, 150, 105, .25);
+    transform: translateY(-1px);
+}
+
+/* Disable All */
+#btnDisableAll {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+
+#btnDisableAll:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+    box-shadow: 0 3px 10px rgba(220, 38, 38, .22);
+    transform: translateY(-1px);
+}
+
+/* Save Permissions */
+#btnSaveAll {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    border: none;
+    box-shadow: 0 3px 12px rgba(79, 70, 229, .35);
+    padding-left: 1.3rem;
+    padding-right: 1.3rem;
+}
+
+#btnSaveAll:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
+    box-shadow: 0 5px 18px rgba(79, 70, 229, .45);
+    transform: translateY(-1px);
+}
+
+#btnSaveAll:disabled {
+    opacity: .75;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Divider between enable/disable and save */
+#btnSaveAll {
+    margin-left: .35rem;
+    border-left: none;
+    position: relative;
+}
+
+#btnSaveAll::before {
+    content: '';
+    position: absolute;
+    left: -.6rem;
+    top: 15%;
+    height: 70%;
+    width: 1px;
+    background: #e2e8f0;
+}
     </style>
 @endsection
 
@@ -247,7 +335,7 @@
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div>
                     <h2><i class="fa fa-shield-alt mr-2"></i>Module Permissions</h2>
-                    <p class="mb-0" style="opacity:.8;">Select a role then toggle which modules and features it can access.
+                    <p class="mt-2" style="opacity:.8;">Select a role then toggle which modules and features it can access.
                     </p>
                 </div>
                 <div>@include('user-rights._nav')</div>
@@ -291,7 +379,7 @@
                 <div class="d-flex gap-2 align-items-center">
                     <button id="btnEnableAll" class="btn btn-sm btn-outline-success">
                         <i class="fa fa-check-double mr-1"></i>Enable All Modules
-                    </button>
+                    </button> &nbsp;&nbsp;
                     <button id="btnDisableAll" class="btn btn-sm btn-outline-danger">
                         <i class="fa fa-times mr-1"></i>Disable All
                     </button>
@@ -307,25 +395,25 @@
                 {{-- Rendered by JS after role selection --}}
                 <div class="row g-3" id="moduleGrid">
                     @foreach($modules as $module)
-                        <div class="col-md-6 col-lg-4">
+                        <div class="col-md-6 col-lg-4 mb-1">
                             <div class="module-card" data-module-id="{{ $module->id }}" data-module-key="{{ $module->key }}">
                                 <div class="module-header" onclick="toggleModuleExpand(this)">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="module-icon-wrap" style="background:#eef2ff;color:var(--urp-primary);">
                                             <i class="{{ $module->icon }}"></i>
-                                        </div>
+                                        </div> &nbsp;
                                         <div>
                                             <div class="module-name">{{ $module->name }}</div>
-                                            <div style="font-size:.72rem;color:#9ca3af;">{{ $module->features->count() }}
+                                            <div style="font-size:.72rem;color:#9ca3af;">&nbsp;{{ $module->features->count() }}
                                                 feature{{ $module->features->count() != 1 ? 's' : '' }}</div>
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
-                                        <label class="tog-wrap" title="Toggle module access">
+                                        <label class="tog-wrap mt-2" title="Toggle module access">
                                             <input type="checkbox" class="module-toggle" data-module-id="{{ $module->id }}"
                                                 value="{{ $module->id }}">
                                             <span class="tog-slider"></span>
-                                        </label>
+                                        </label> &nbsp;&nbsp;&nbsp;
                                         <i class="fa fa-chevron-down text-muted"
                                             style="font-size:.75rem;transition:transform .2s;"></i>
                                     </div>
@@ -359,6 +447,8 @@
 
         @endif
     </div>
+     </div>
+            </div>
 @endsection
 
 @section('js')

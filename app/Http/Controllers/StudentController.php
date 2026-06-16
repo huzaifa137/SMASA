@@ -24,6 +24,10 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Mail;
 
+use App\Exports\StudentBulkTemplate;
+use App\Imports\StudentBulkImport;
+
+
 class StudentController extends Controller
 {
     public function register(Request $request)
@@ -378,7 +382,8 @@ class StudentController extends Controller
 
         $schoolNumber = $school->Number;
 
-        $lastNumber = DB::table('students_basic')
+        // Check students_basic (legacy)
+        $lastNumberLegacy = DB::table('students_basic')
             ->where('Student_ID', 'LIKE', $schoolNumber . '-' . $category . '-%-' . $year)
             ->selectRaw("
             MAX(
@@ -393,7 +398,24 @@ class StudentController extends Controller
         ")
             ->value('max_number');
 
-        $newNumber = str_pad(($lastNumber ?? 0) + 1, 3, '0', STR_PAD_LEFT);
+        // Also check students table registration_number (new students)
+        $lastNumberStudents = DB::table('students')
+            ->where('registration_number', 'LIKE', $schoolNumber . '-' . $category . '-%-' . $year)
+            ->selectRaw("
+            MAX(
+                CAST(
+                    SUBSTRING_INDEX(
+                        SUBSTRING_INDEX(registration_number, '-', 4),
+                        '-',
+                        -1
+                    ) AS UNSIGNED
+                )
+            ) as max_number
+        ")
+            ->value('max_number');
+
+        $lastNumber = max(($lastNumberLegacy ?? 0), ($lastNumberStudents ?? 0));
+        $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
 
         $newStudentID = $schoolNumber . '-' . $category . '-' . $newNumber . '-' . $year;
 
@@ -537,57 +559,57 @@ class StudentController extends Controller
         }
     }
 
-public function allStudents()
-{
-    $schoolId = Helper::requireSchool();
-    $activeYear = Helper::active_year();
+    public function allStudents()
+    {
+        $schoolId = Helper::requireSchool();
+        $activeYear = Helper::active_year();
 
-    // Get unique seniors
-    $seniors = Student::where('school_id', $schoolId)
-        ->select('senior')
-        ->distinct()
-        ->orderBy('senior')
-        ->pluck('senior');
-
-    $groupedStudents = [];
-
-    foreach ($seniors as $senior) {
-        // Get streams under this senior
-        $streams = Student::where('school_id', $schoolId)
-            ->where('senior', $senior)
-            ->select('stream')
+        // Get unique seniors
+        $seniors = Student::where('school_id', $schoolId)
+            ->select('senior')
             ->distinct()
-            ->orderBy('stream')
-            ->pluck('stream');
+            ->orderBy('senior')
+            ->pluck('senior');
 
-        foreach ($streams as $stream) {
-            $students = Student::where('school_id', $schoolId)
+        $groupedStudents = [];
+
+        foreach ($seniors as $senior) {
+            // Get streams under this senior
+            $streams = Student::where('school_id', $schoolId)
                 ->where('senior', $senior)
-                ->where('stream', $stream)
-                ->orderByDesc('id')
-                ->paginate(10, ['*'], "page_{$senior}_{$stream}");
-            
-            // Add card info to each student
-            foreach ($students as $student) {
-                $card = StudentIdCard::where('student_id', $student->id)
-                    ->where('school_id', $schoolId)
-                    ->where('academic_year', $activeYear)
-                    ->first();
-                
-                $student->card_info = [
-                    'status' => $card->status ?? null,
-                    'card_id' => $card->id ?? null,
-                    'card_number' => $card->card_number ?? null,
-                    'button_type' => $card ? ($card->status === 'active' ? 'active' : ($card->status === 'revoked' ? 'reactivate' : 'expired')) : 'generate'
-                ];
-            }
-            
-            $groupedStudents[$senior][$stream] = $students;
-        }
-    }
+                ->select('stream')
+                ->distinct()
+                ->orderBy('stream')
+                ->pluck('stream');
 
-    return view('student.all-students', compact('groupedStudents'));
-}
+            foreach ($streams as $stream) {
+                $students = Student::where('school_id', $schoolId)
+                    ->where('senior', $senior)
+                    ->where('stream', $stream)
+                    ->orderByDesc('id')
+                    ->paginate(10, ['*'], "page_{$senior}_{$stream}");
+
+                // Add card info to each student
+                foreach ($students as $student) {
+                    $card = StudentIdCard::where('student_id', $student->id)
+                        ->where('school_id', $schoolId)
+                        ->where('academic_year', $activeYear)
+                        ->first();
+
+                    $student->card_info = [
+                        'status' => $card->status ?? null,
+                        'card_id' => $card->id ?? null,
+                        'card_number' => $card->card_number ?? null,
+                        'button_type' => $card ? ($card->status === 'active' ? 'active' : ($card->status === 'revoked' ? 'reactivate' : 'expired')) : 'generate'
+                    ];
+                }
+
+                $groupedStudents[$senior][$stream] = $students;
+            }
+        }
+
+        return view('student.all-students', compact('groupedStudents'));
+    }
 
     public function viewStudent($id)
     {
@@ -993,14 +1015,15 @@ public function allStudents()
     public function getStreamsByClass(Request $request)
     {
         $classId = $request->input('class_id');
-        $streams = Stream::where('class_id', $classId)->get();
+        $schoolId = session('LoggedSchool');
 
-        // Map streams to include helper processed names
-        $streams = $streams->map(function ($stream) {
-            $stream->display_name = Helper::recordMdname($stream->stream_id);
-
-            return $stream;
-        });
+        $streams = Stream::where('class_id', $classId)
+            ->where('school_id', $schoolId)
+            ->get()
+            ->map(function ($stream) {
+                $stream->display_name = Helper::recordMdname($stream->stream_id) ?? $stream->stream_id;
+                return $stream;
+            });
 
         return response()->json($streams);
     }
@@ -1053,5 +1076,133 @@ public function allStudents()
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+public function bulkImportStudentForm()
+{
+    Helper::requireSchool();
+
+    $schoolId      = Helper::requireSchool();
+    $school        = School::findOrFail($schoolId);
+    $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
+
+    $classrooms = Classroom::where('school_id', $schoolId)->get();
+
+    return view(
+        'student.bulk-import-students',
+        compact(
+            'schoolId',
+            'school',
+            'classrooms',
+            'schoolProduct'
+        )
+    );
+}
+
+    public function downloadStudentTemplate(Request $request)
+    {
+        Helper::requireSchool();
+
+        $schoolId = Helper::requireSchool();
+
+        $classId = $request->class_id;
+        $streamId = $request->stream_id;
+        $year = $request->year ?? date('Y');
+        $category = $request->category ?? '';
+
+        $className = Helper::recordMdname($classId) ?? 'Class';
+        $streamName = Helper::recordMdname($streamId) ?? 'Stream';
+
+        $schoolName = DB::table('schools')
+            ->where('id', $schoolId)
+            ->value('name') ?? 'School';
+
+        $filename =
+            'students_import_' .
+            preg_replace('/\\s+/', '_', $className) . '_' .
+            preg_replace('/\\s+/', '_', $streamName) . '_' .
+            $year . '.xlsx';
+
+        return Excel::download(
+            new StudentBulkTemplate(
+                $className,
+                $streamName,
+                $year,
+                $schoolName,
+                $category
+            ),
+            $filename
+        );
+    }
+
+    /**
+     * Import Students from Excel
+     */
+    public function bulkImportStudents(Request $request)
+    {
+        if (
+            !Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
+        ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access.'
+            ], 403);
+        }
+
+        $request->validate([
+            'class_id' => 'required',
+            'stream_id' => 'required',
+            'year' => 'required|digits:4',
+            'file' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        $schoolId = Helper::requireSchool();
+
+        $school = DB::table('schools')
+            ->where('id', $schoolId)
+            ->first();
+
+        /**
+         * Student category.
+         * Example:
+         * STD, DAY, BOARDING, etc.
+         */
+        $category = $request->category ?? 'STD';
+
+        $addedBy =
+            session('LoggedTeacher')
+            ?? session('LoggedAdmin');
+
+        $importer = new StudentBulkImport(
+            $schoolId,
+            $request->class_id,
+            $request->stream_id,
+            $request->year,
+            $category,
+            $addedBy
+        );
+
+        Excel::import(
+            $importer,
+            $request->file('file')
+        );
+
+        return response()->json([
+            'status' => 'success',
+
+            'imported' => $importer->importedCount,
+
+            'errors' => $importer->errors,
+
+            'message' =>
+                $importer->importedCount .
+                ' student(s) imported successfully.' .
+                (
+                    count($importer->errors)
+                    ? ' ' . count($importer->errors) . ' row(s) had errors.'
+                    : ''
+                ),
+        ]);
     }
 }

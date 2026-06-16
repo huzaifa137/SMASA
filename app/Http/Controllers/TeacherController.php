@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\School;
 use App\Models\Teacher;
 use DB;
 use Illuminate\Http\Request;
@@ -308,4 +309,102 @@ class TeacherController extends Controller
         }
     }
 
+
+    // ─────────────────────── BULK IMPORT – TEACHERS ───────────────────────
+
+    public function bulkImportTeacherForm()
+    {
+        Helper::requireSchool();
+        $schoolId = Helper::requireSchool();
+        $school = \App\Models\School::findOrFail($schoolId);
+
+        return view('teacher.bulk-import-teachers', compact('schoolId', 'school'));
+    }
+
+    public function downloadTeacherTemplate()
+    {
+        Helper::requireSchool();
+        $schoolId = Helper::requireSchool();
+        $schoolName = DB::table('schools')->where('id', $schoolId)->value('name') ?? 'School';
+        $filename = 'teachers_import_' . preg_replace('/\s+/', '_', $schoolName) . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\TeacherBulkTemplate($schoolName),
+            $filename
+        );
+    }
+
+    public function bulkImportTeachers(Request $request)
+    {
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized Access.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        $schoolId = Helper::requireSchool();
+        $addedBy = session('LoggedTeacher') ?? session('LoggedAdmin');
+
+        $importer = new \App\Imports\TeacherBulkImport($schoolId, $addedBy);
+        \Maatwebsite\Excel\Facades\Excel::import($importer, $request->file('file'));
+
+        return response()->json([
+            'status' => 'success',
+            'imported' => $importer->importedCount,
+            'skipped' => $importer->skippedCount,
+            'errors' => $importer->errors,
+            'message' => $importer->importedCount . ' teacher(s) imported.'
+                . ($importer->skippedCount ? ' ' . $importer->skippedCount . ' skipped (already exist).' : '')
+                . (count($importer->errors) ? ' ' . count($importer->errors) . ' row(s) had errors.' : ''),
+        ]);
+    }
+
+    // ─────────────────────── TEACHER ACCOUNT STATUS ───────────────────────
+
+    public function updateTeacherStatus(Request $request, $id)
+    {
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'account_status' => 'required|in:active,suspended,blocked',
+            'status_reason' => 'nullable|string|max:500',
+        ]);
+
+        $teacher = \App\Models\Teacher::findOrFail($id);
+
+        if ($teacher->school_id !== Helper::requireSchool()) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $teacher->account_status = $request->account_status;
+        $teacher->status_reason = $request->status_reason;
+        $teacher->status_changed_at = now();
+        $teacher->status_changed_by = session('LoggedAdmin') ?? session('LoggedTeacher');
+        $teacher->save();
+
+        $label = ucfirst($request->account_status);
+
+        return response()->json([
+            'status' => true,
+            'message' => "Teacher account has been {$label}.",
+            'new_status' => $request->account_status,
+        ]);
+    }
+
+    public function getTeacherStatus($id)
+    {
+        $teacher = \App\Models\Teacher::where('school_id', Helper::requireSchool())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return response()->json([
+            'account_status' => $teacher->account_status ?? 'active',
+            'status_reason' => $teacher->status_reason,
+            'status_changed_at' => $teacher->status_changed_at,
+        ]);
+    }
 }

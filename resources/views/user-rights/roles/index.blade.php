@@ -47,7 +47,7 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
                 <h2><i class="fa fa-user-tag mr-2"></i>Manage Roles</h2>
-                <p class="mb-0" style="opacity:.8;">Create custom roles for your school — Headteacher, Bursar, Secretary, etc.</p>
+                <p class="mt-2" style="opacity:.8;">Create custom roles for your school — Headteacher, Bursar, Secretary, etc.</p>
             </div>
             <div>@include('user-rights._nav')</div>
         </div>
@@ -162,6 +162,9 @@
                     <i class="fa fa-save mr-1"></i>Update Role
                 </button>
             </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </div>

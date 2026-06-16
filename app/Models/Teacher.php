@@ -24,6 +24,12 @@ class Teacher extends Model
         'employee_number',
         'group_teacher',
         'teacher_profile',
+        'teacher_role',
+        'account_status',
+        'status_reason',
+        'status_changed_at',
+        'status_changed_by',
+        'must_change_password',
     ];
 
     public function school()

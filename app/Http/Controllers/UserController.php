@@ -378,6 +378,24 @@ class UserController extends Controller
             ], 422);
         }
 
+        // ── Account status check ──────────────────────────────────────────
+        $accountStatus = $schoolTeacher->account_status ?? 'active';
+        if ($accountStatus === 'blocked') {
+            return response()->json([
+                'errors' => [
+                    'username' => ['Your account has been blocked. Please contact the school administrator.'],
+                ],
+            ], 422);
+        }
+        if ($accountStatus === 'suspended') {
+            return response()->json([
+                'errors' => [
+                    'username' => ['Your account is currently suspended. Please contact the school administrator to reactivate your access.'],
+                ],
+            ], 422);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         $request->session()->regenerate();
         // dd($school->id);
         $request->session()->put('LoggedSchool', $school->id);

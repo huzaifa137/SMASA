@@ -183,7 +183,6 @@ $controller = new Controller();
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .role-select+.select2-container {
                 min-width: 120px;
@@ -195,7 +194,6 @@ $controller = new Controller();
             }
         }
 
-        /* FORCE WHITE TEXT ON SELECT2 */
         .select2-container--default .select2-selection--single {
             background: #5351e4 !important;
             border: none !important;
@@ -214,43 +212,47 @@ $controller = new Controller();
             border-top-color: #FFF !important;
         }
 
-      .teacher-profile-img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #fff;
-    padding: 4px;
-    display: block;
-    margin: 0 auto;
-}
+        .teacher-profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            padding: 4px;
+            display: block;
+            margin: 0 auto;
+        }
 
-/* Small screens */
-@media (max-width: 768px) {
-    .teacher-profile-img {
-        width: 60px;
-        height: 60px;
-    }
-}
+        @media (max-width: 768px) {
+            .teacher-profile-img {
+                width: 60px;
+                height: 60px;
+            }
+        }
     </style>
 @endsection
 
 @section('content')
-    <!-- Student Dashboard -->
     <div class="side-app">
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title text-primary">Teachers</h3>
-                        <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style=";color:#FFF;">
-                            <span
-                                class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
-                                style="width: 20px; height: 20px; color:#5351e4;">
-                                <i class="fas fa-plus" style="font-size: 12px;"></i>
-                            </span>
-                            Add Teacher
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ route('teachers.bulk.import.form') }}" class="btn btn-sm btn-success"
+                                style="color:#FFF;">
+                                <i class="fas fa-file-import me-1"></i> Bulk Import
+                            </a> &nbsp; &nbsp;
+                            <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
+                                <span
+                                    class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
+                                    style="width: 20px; height: 20px; color:#5351e4;">
+                                    <i class="fas fa-plus" style="font-size: 12px;"></i>
+                                </span>
+                                Add Teacher
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -263,8 +265,9 @@ $controller = new Controller();
                                         <th>Firstname</th>
                                         <th>Phone Number</th>
                                         <th>Role</th>
+                                        <th class="text-center">Status</th>
                                         @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
-                                        <th class="text-center">Action</th>
+                                            <th class="text-center">Action</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -272,11 +275,10 @@ $controller = new Controller();
                                     @forelse ($teachers as $key => $teacher)
                                         <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
                                             <td style="width:1px;">{{ $key + 1 }}</td>
-                                           <td class="text-center">
-    <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
-        class="teacher-profile-img"
-        alt="Teacher Profile">
-</td>
+                                            <td class="text-center">
+                                                <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
+                                                    class="teacher-profile-img" alt="Teacher Profile">
+                                            </td>
                                             <td>{{ $teacher->surname }}</td>
                                             <td>{{ $teacher->firstname }}</td>
                                             <td>{{ $teacher->phonenumber }}</td>
@@ -285,22 +287,17 @@ $controller = new Controller();
                                                     <select class="form-select form-control role-select text-white"
                                                         data-teacher-id="{{ $teacher->id }}"
                                                         style="width:220px; background:#5351e4; color:#FFF;">
-
                                                         <option value="" style="color:#000;">Select Role</option>
-
                                                         @foreach($schoolRoles as $role)
                                                             <option value="{{ $role->id }}" {{ $teacher->teacher_role == $role->id ? 'selected' : '' }}>
                                                                 {{ $role->name }}
                                                             </option>
                                                         @endforeach
-
                                                     </select>
-
                                                     <button class="btn btn-sm btn-primary update-role-btn ms-2"
                                                         data-teacher-id="{{ $teacher->id }}">
                                                         <i class="fas fa-save"></i>
                                                     </button>
-
                                                     <div class="role-update-spinner" id="spinner-{{ $teacher->id }}"
                                                         style="display:none;">
                                                         <div class="spinner-border spinner-border-sm text-primary"
@@ -310,27 +307,44 @@ $controller = new Controller();
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <!-- <button class="btn btn-sm btn-info btn-view-teacher" title="View"
-                                                    data-id="{{ $teacher->id }}">
-                                                    <i class="fas fa-eye"></i>
-                                                </button> -->
-
+                                                @php
+                                                    $status = $teacher->account_status ?? 'active';
+                                                    $statusConfig = [
+                                                        'active' => ['badge' => 'badge-success', 'icon' => 'fa-check-circle', 'label' => 'Active'],
+                                                        'suspended' => ['badge' => 'badge-warning', 'icon' => 'fa-pause-circle', 'label' => 'Suspended'],
+                                                        'blocked' => ['badge' => 'badge-danger', 'icon' => 'fa-ban', 'label' => 'Blocked'],
+                                                    ];
+                                                    $sc = $statusConfig[$status] ?? $statusConfig['active'];
+                                                @endphp
+                                                <span class="badge {{ $sc['badge'] }} status-badge-{{ $teacher->id }}">
+                                                    <i class="fas {{ $sc['icon'] }} me-1"></i>{{ $sc['label'] }}
+                                                </span>
                                                 @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                    <br>
+                                                    <button class="btn btn-xs btn-outline-secondary mt-1 btn-manage-status"
+                                                        data-id="{{ $teacher->id }}"
+                                                        data-name="{{ $teacher->surname }} {{ $teacher->firstname }}"
+                                                        data-status="{{ $status }}" title="Manage Status">
+                                                        <i class="fas fa-sliders-h"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
+                                            @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                <td class="text-center">
                                                     <button class="btn btn-sm btn-warning btn-edit-teacher" title="Edit"
                                                         data-id="{{ $teacher->id }}">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
-
                                                     <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
                                                         data-id="{{ $teacher->id }}">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
-                                                @endif
-                                            </td>
+                                                </td>
+                                            @endif
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center py-5">
+                                            <td colspan="8" class="text-center py-5">
                                                 <div class="text-center">
                                                     <div class="mb-3">
                                                         <i class="fas fa-users-slash fa-4x text-muted"></i>
@@ -349,7 +363,7 @@ $controller = new Controller();
                                 </tbody>
                             </table>
 
-                            <!-- Teacher Profile Modal -->
+                            {{-- Teacher Profile Modal --}}
                             <div class="modal fade" id="teacherProfileModal" tabindex="-1" role="dialog"
                                 aria-labelledby="teacherProfileModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
@@ -384,457 +398,19 @@ $controller = new Controller();
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+                </div>
+        </div>
     </div>
-    </div>
-    </div>
-
-
-    <script>
-
-        // APPLY ROLE COLORS
-        // APPLY ROLE COLORS
-        function applyRoleColor(select) {
-            const value = select.val();
-            const container = select.next('.select2-container');
-
-            // Remove existing classes
-            container.removeClass('role-select-admin role-select-teacher role-select-default');
-
-            // School Administrators - Role ID 3
-            if (value == '3') {
-                container.addClass('role-select-admin');
-            }
-            // School Teachers - Role ID 4
-            else if (value == '4') {
-                container.addClass('role-select-teacher');
-            }
-            // Default for other roles
-            else {
-                container.addClass('role-select-default');
-            }
-        }
-
-
-        // SORT TABLE
-        function sortTeachersTable() {
-
-            const tbody = $('#teachersTable tbody');
-
-            const rows = tbody.find('tr').get();
-
-            rows.sort(function (a, b) {
-
-                const roleA = $(a).find('.role-select').val();
-
-                const roleB = $(b).find('.role-select').val();
-
-                // Push School Teachers (role 4) to bottom
-                if (roleA == '4' && roleB != '4') {
-
-                    return 1;
-
-                }
-
-                if (roleA != '4' && roleB == '4') {
-
-                    return -1;
-
-                }
-
-                return 0;
-
-            });
-
-            $.each(rows, function (index, row) {
-
-                tbody.append(row);
-
-            });
-
-        }
-
-
-        $(document).ready(function () {
-
-            setTimeout(function () {
-
-                $('.role-select').each(function () {
-
-                    const select = $(this);
-
-                    // Destroy duplicate select2
-                    if (select.hasClass('select2-hidden-accessible')) {
-
-                        select.select2('destroy');
-
-                    }
-
-                    // Initialize select2
-                    select.select2({
-
-                        width: '100%',
-
-                        dropdownAutoWidth: true,
-
-                        placeholder: 'Select Role',
-
-                        allowClear: false,
-
-                        minimumResultsForSearch: Infinity
-
-                    });
-
-                    // Apply role color
-                    applyRoleColor(select);
-
-                });
-
-                // SORT TABLE AFTER LOADING
-                sortTeachersTable();
-
-            }, 500);
-
-        });
-
-
-        // CHANGE ROLE COLOR LIVE
-        $(document).on('change', '.role-select', function () {
-
-            applyRoleColor($(this));
-
-        });
-
-
-        // UPDATE ROLE
-        $(document).on('click', '.update-role-btn', function () {
-
-            const teacherId = $(this).data('teacher-id');
-
-            const selectEl = $(`.role-select[data-teacher-id="${teacherId}"]`);
-
-            const roleId = selectEl.val();
-
-            const spinner = $(`#spinner-${teacherId}`);
-
-            const btn = $(this);
-
-            if (!roleId) {
-
-                Swal.fire({
-
-                    title: 'Error!',
-
-                    text: 'Please select a role first.',
-
-                    icon: 'error',
-
-                    timer: 2000,
-
-                    showConfirmButton: false
-
-                });
-
-                return;
-
-            }
-
-            btn.prop('disabled', true);
-
-            spinner.show();
-
-            $.ajax({
-
-                url: '/teacher/update-role/' + teacherId,
-
-                type: 'POST',
-
-                data: {
-
-                    role_id: roleId,
-
-                    _token: '{{ csrf_token() }}'
-
-                },
-
-                success: function (response) {
-
-                    Swal.fire({
-
-                        title: 'Success!',
-
-                        text: response.message || 'Teacher role updated successfully!',
-
-                        icon: 'success',
-
-                        timer: 1500,
-
-                        showConfirmButton: false
-
-                    });
-
-                    // Re-sort table
-                    sortTeachersTable();
-
-                    // Refresh page
-                    setTimeout(function () {
-
-                        location.reload();
-
-                    }, 1500);
-
-                },
-
-                error: function (xhr) {
-
-                    Swal.fire({
-
-                        title: 'Error!',
-
-                        text: xhr.responseJSON?.message || 'Error updating teacher role.',
-
-                        icon: 'error'
-
-                    });
-
-                },
-
-                complete: function () {
-
-                    btn.prop('disabled', false);
-
-                    spinner.hide();
-
-                }
-
-            });
-
-        });
-
-
-        // VIEW TEACHER PROFILE
-        $(document).on('click', '.btn-view-teacher', function () {
-
-            const teacherId = $(this).data('id');
-
-            $('#modalContent').html(`
-                                        <div class="d-flex justify-content-center py-5">
-                                            <div class="spinner-border text-primary"
-                                                role="status"
-                                                style="width: 3rem; height: 3rem;">
-                                            </div>
-                                        </div>
-                                    `);
-
-            $('#teacherProfileModal').modal('show');
-
-            $.ajax({
-
-                url: '/teacher/profile/' + teacherId + '/data',
-
-                type: 'GET',
-
-                success: function (response) {
-
-                    displayTeacherProfile(response);
-
-                },
-
-                error: function () {
-
-                    $('#modalContent').html(`
-                                                <div class="text-center py-5">
-                                                    <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-
-                                                    <p class="text-danger">
-                                                        Error loading teacher information.
-                                                    </p>
-                                                </div>
-                                            `);
-
-                }
-
-            });
-
-        });
-
-
-        // EDIT TEACHER
-        $(document).on('click', '.btn-edit-teacher', function () {
-
-            const teacherId = $(this).data('id');
-
-            Swal.fire({
-
-                title: 'Edit Teacher Profile?',
-
-                text: "Are you sure you want to edit this teacher's profile?",
-
-                icon: 'warning',
-
-                showCancelButton: true,
-
-                confirmButtonColor: '#3085d6',
-
-                cancelButtonColor: '#d33',
-
-                confirmButtonText: 'Yes, proceed'
-
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-
-                    window.location.href = `/update-teacher-profile/${teacherId}`;
-
-                }
-
-            });
-
-        });
-
-
-        // DELETE TEACHER
-        $(document).on('click', '.btn-delete-teacher', function () {
-
-            const teacherId = $(this).data('id');
-
-            const row = $(this).closest('tr');
-
-            Swal.fire({
-
-                title: 'Are you sure?',
-
-                text: "You won't be able to revert this!",
-
-                icon: 'warning',
-
-                showCancelButton: true,
-
-                confirmButtonColor: '#d33',
-
-                cancelButtonColor: '#3085d6',
-
-                confirmButtonText: 'Yes, delete it!'
-
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-
-                    $.ajax({
-
-                        url: '/teachers/' + teacherId,
-
-                        type: 'DELETE',
-
-                        headers: {
-
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-
-                        },
-
-                        success: function () {
-
-                            Swal.fire(
-                                'Deleted!',
-                                'Teacher has been deleted.',
-                                'success'
-                            ).then(() => {
-
-                                row.remove();
-
-                            });
-
-                        },
-
-                        error: function (xhr) {
-
-                            Swal.fire(
-                                'Error!',
-                                xhr.responseJSON?.message || 'Error deleting teacher.',
-                                'error'
-                            );
-
-                        }
-
-                    });
-
-                }
-
-            });
-
-        });
-
-
-        // DISPLAY PROFILE
-        function displayTeacherProfile(teacher) {
-
-            const profileHtml = `
-                                        <div class="container-fluid p-4">
-
-                                            <div class="row">
-
-                                                <div class="col-lg-4 mb-4">
-
-                                                    <div class="card border-0 shadow-sm rounded-4 h-100">
-
-                                                        <div class="card-body text-center p-4">
-
-                                                            <div class="position-relative d-inline-block mb-3">
-
-                                                                <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                                                    class="rounded-circle shadow"
-                                                                    style="width: 180px; height: 180px; object-fit: cover;"
-                                                                    alt="Teacher Profile">
-
-                                                            </div>
-
-                                                            <h4 class="fw-bold mb-1">
-
-                                                                ${escapeHtml(teacher.firstname)}
-                                                                ${escapeHtml(teacher.surname)}
-
-                                                            </h4>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-                                    `;
-
-            $('#modalContent').html(profileHtml);
-
-        }
-
-
-        // ESCAPE HTML
-        function escapeHtml(str) {
-
-            if (!str) return '';
-
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-
-        }
-
-    </script>
 @endsection
 
 @section('js')
-    <!-- Your existing JS includes -->
     <script src="{{ URL::asset('assets/plugins/charts-c3/d3.v5.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/charts-c3/c3-chart.js') }}"></script>
     <script src="{{ URL::asset('assets/js/charts.js') }}"></script>
@@ -866,4 +442,317 @@ $controller = new Controller();
     <script src="{{ URL::asset('assets/plugins/counters/waypoints.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/chart/chart.bundle.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/chart/utils.js') }}"></script>
+    <!-- Select2 JS (must come after jQuery which the layout loads) -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // ─── Helpers ────────────────────────────────────────────────────────────────
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ─── Role colour on the Select2 widget ──────────────────────────────────────
+
+        function applyRoleColor(select) {
+            const value = select.val();
+            const container = select.next('.select2-container');
+            container.removeClass('role-select-admin role-select-teacher role-select-default');
+            if (value == '3') {
+                container.addClass('role-select-admin');
+            } else if (value == '4') {
+                container.addClass('role-select-teacher');
+            } else {
+                container.addClass('role-select-default');
+            }
+        }
+
+        // ─── Sort teachers: admins first, teachers last ──────────────────────────────
+
+        function sortTeachersTable() {
+            const tbody = $('#teachersTable tbody');
+            const rows = tbody.find('tr').get();
+            rows.sort(function (a, b) {
+                const roleA = $(a).find('.role-select').val();
+                const roleB = $(b).find('.role-select').val();
+                if (roleA == '4' && roleB != '4') return 1;
+                if (roleA != '4' && roleB == '4') return -1;
+                return 0;
+            });
+            $.each(rows, function (index, row) { tbody.append(row); });
+        }
+
+        // ─── Boot ────────────────────────────────────────────────────────────────────
+
+        $(document).ready(function () {
+
+            // Initialise Select2 on all role dropdowns after a tick so the DOM is stable
+            setTimeout(function () {
+                $('.role-select').each(function () {
+                    const select = $(this);
+                    if (select.hasClass('select2-hidden-accessible')) {
+                        select.select2('destroy');
+                    }
+                    select.select2({
+                        width: '100%',
+                        dropdownAutoWidth: true,
+                        placeholder: 'Select Role',
+                        allowClear: false,
+                        minimumResultsForSearch: Infinity
+                    });
+                    applyRoleColor(select);
+                });
+                sortTeachersTable();
+            }, 300);
+
+        });
+
+        // ─── Live role-colour update ─────────────────────────────────────────────────
+
+        $(document).on('change', '.role-select', function () {
+            applyRoleColor($(this));
+        });
+
+        // ─── Save role ───────────────────────────────────────────────────────────────
+
+        $(document).on('click', '.update-role-btn', function () {
+            const teacherId = $(this).data('teacher-id');
+            const selectEl = $(`.role-select[data-teacher-id="${teacherId}"]`);
+            const roleId = selectEl.val();
+            const spinner = $(`#spinner-${teacherId}`);
+            const btn = $(this);
+
+            if (!roleId) {
+                Swal.fire({ title: 'Error!', text: 'Please select a role first.', icon: 'error', timer: 2000, showConfirmButton: false });
+                return;
+            }
+
+            btn.prop('disabled', true);
+            spinner.show();
+
+            $.ajax({
+                url: '/teacher/update-role/' + teacherId,
+                type: 'POST',
+                data: { role_id: roleId, _token: '{{ csrf_token() }}' },
+                success: function (response) {
+                    Swal.fire({ title: 'Success!', text: response.message || 'Role updated!', icon: 'success', timer: 1500, showConfirmButton: false });
+                    sortTeachersTable();
+                    setTimeout(() => location.reload(), 1500);
+                },
+                error: function (xhr) {
+                    Swal.fire({ title: 'Error!', text: xhr.responseJSON?.message || 'Error updating role.', icon: 'error' });
+                },
+                complete: function () {
+                    btn.prop('disabled', false);
+                    spinner.hide();
+                }
+            });
+        });
+
+        // ─── View teacher profile (modal) ────────────────────────────────────────────
+
+        $(document).on('click', '.btn-view-teacher', function () {
+            const teacherId = $(this).data('id');
+            $('#modalContent').html(`
+                    <div class="d-flex justify-content-center py-5">
+                        <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+                    </div>`);
+            $('#teacherProfileModal').modal('show');
+
+            $.ajax({
+                url: '/teacher/profile/' + teacherId + '/data',
+                type: 'GET',
+                success: function (response) { displayTeacherProfile(response); },
+                error: function () {
+                    $('#modalContent').html(`
+                            <div class="text-center py-5">
+                                <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                                <p class="text-danger">Error loading teacher information.</p>
+                            </div>`);
+                }
+            });
+        });
+
+        // ─── Edit teacher ────────────────────────────────────────────────────────────
+
+        $(document).on('click', '.btn-edit-teacher', function () {
+            const teacherId = $(this).data('id');
+            Swal.fire({
+                title: 'Edit Teacher Profile?',
+                text: "Are you sure you want to edit this teacher's profile?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/update-teacher-profile/${teacherId}`;
+                }
+            });
+        });
+
+        // ─── Delete teacher ──────────────────────────────────────────────────────────
+
+        $(document).on('click', '.btn-delete-teacher', function () {
+            const teacherId = $(this).data('id');
+            const row = $(this).closest('tr');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/teachers/' + teacherId,
+                        type: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        success: function () {
+                            Swal.fire('Deleted!', 'Teacher has been deleted.', 'success')
+                                .then(() => row.remove());
+                        },
+                        error: function (xhr) {
+                            Swal.fire('Error!', xhr.responseJSON?.message || 'Error deleting teacher.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // ─── Display teacher profile in modal ────────────────────────────────────────
+
+        function displayTeacherProfile(teacher) {
+            const profileHtml = `
+                    <div class="container-fluid p-4">
+                        <div class="row">
+                            <div class="col-lg-4 mb-4">
+                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body text-center p-4">
+                                        <div class="position-relative d-inline-block mb-3">
+                                            <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
+                                                class="rounded-circle shadow"
+                                                style="width:180px;height:180px;object-fit:cover;"
+                                                alt="Teacher Profile">
+                                        </div>
+                                        <h4 class="fw-bold mb-1">
+                                            ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            $('#modalContent').html(profileHtml);
+        }
+
+        // ─── Account Status modal ────────────────────────────────────────────────────
+
+        let currentStatusTeacherId = null;
+
+        $(document).on('click', '.btn-manage-status', function () {
+            currentStatusTeacherId = $(this).data('id');
+            const name = $(this).data('name');
+            const status = $(this).data('status') || 'active';
+            $('#status-teacher-name').text(name);
+            $('#new_status').val(status);
+            $('#status_reason').val('');
+            $('#status-result').hide().removeClass('alert-success alert-danger');
+            $('#statusModal').modal('show');
+        });
+
+        $('#btn-save-status').on('click', function () {
+            if (!currentStatusTeacherId) return;
+            const spinner = $('#status-spinner');
+            spinner.show();
+            $(this).prop('disabled', true);
+
+            $.ajax({
+                url: `/teacher/${currentStatusTeacherId}/status`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    account_status: $('#new_status').val(),
+                    status_reason: $('#status_reason').val(),
+                },
+                success: function (res) {
+                    spinner.hide();
+                    $('#btn-save-status').prop('disabled', false);
+
+                    const newStatus = $('#new_status').val();
+                    const labels = { active: 'Active', suspended: 'Suspended', blocked: 'Blocked' };
+                    const icons = { active: 'fa-check-circle', suspended: 'fa-pause-circle', blocked: 'fa-ban' };
+                    const badgeCls = { active: 'badge-success', suspended: 'badge-warning', blocked: 'badge-danger' };
+
+                    $(`.status-badge-${currentStatusTeacherId}`)
+                        .attr('class', `badge ${badgeCls[newStatus]} status-badge-${currentStatusTeacherId}`)
+                        .html(`<i class="fas ${icons[newStatus]} me-1"></i>${labels[newStatus]}`);
+
+                    $(`.btn-manage-status[data-id="${currentStatusTeacherId}"]`).data('status', newStatus);
+
+                    $('#status-result').show().removeClass('alert-danger').addClass('alert-success').text(res.message);
+                    setTimeout(() => $('#statusModal').modal('hide'), 1500);
+                },
+                error: function (xhr) {
+                    spinner.hide();
+                    $('#btn-save-status').prop('disabled', false);
+                    const msg = xhr.responseJSON?.message || 'An error occurred.';
+                    $('#status-result').show().removeClass('alert-success').addClass('alert-danger').text(msg);
+                }
+            });
+        });
+    </script>
 @endsection
+
+
+{{-- Teacher Account Status Modal --}}
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+            <div class="modal-header"
+                style="background:linear-gradient(135deg,#1e40af,#6d28d9);color:#fff;border:none;">
+                <h5 class="modal-title"><i class="fas fa-user-shield me-2"></i>Manage Teacher Account Status</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <p class="text-muted mb-1" style="font-size:.85rem">Teacher</p>
+                    <strong id="status-teacher-name" style="font-size:1rem;color:#0f172a"></strong>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Account Status</label>
+                    <select id="new_status" class="form-control">
+                        <option value="active">✅ Active – Full system access</option>
+                        <option value="suspended">⏸️ Suspended – Temporarily blocked, can be re-activated</option>
+                        <option value="blocked">🚫 Blocked – Permanently disabled until unlocked</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Reason <small
+                            class="text-muted fw-normal">(optional)</small></label>
+                    <textarea id="status_reason" class="form-control" rows="3"
+                        placeholder="Enter reason for this status change…"></textarea>
+                </div>
+                <div id="status-result" style="display:none" class="alert mt-2"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-status">
+                    <span id="status-spinner" class="spinner-border spinner-border-sm me-1" style="display:none"></span>
+                    Save Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
