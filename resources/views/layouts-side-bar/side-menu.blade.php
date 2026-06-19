@@ -54,6 +54,25 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
+            {{-- Master Data --}}
+            @if(PermissionHelper::canModule('master_data'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-database fa-2x mr-3"></i>
+                        <span>Master Data</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_master_data'))
+                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Data</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_master_codes'))
+                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Codes</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
             {{-- ID Cards --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
@@ -62,194 +81,177 @@ use App\Helpers\PermissionHelper;
                     <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
-                    <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a>
-                    </li>
-                    <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival
-                            Report</a></li>
-                    <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a>
-                    </li>
-                    <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a>
-                    </li>
-                    <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a>
-                    </li>
-                    <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID
-                            Cards</a></li>
-                    <li><a href="{{ route('teacher-id-cards.create') }}"><i
-                                class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
-                    <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR
-                            Verifier</a></li>
+                    @if(PermissionHelper::canModule('card_scan'))
+                        <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                        <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                        <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
+                    @endif
+                    @if(PermissionHelper::canModule('student_id_cards'))
+                        <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
+                        <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
+                        <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
+                    @endif
+                    @if(PermissionHelper::canModule('teacher_id_cards'))
+                        <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
+                        <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                        <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
+                    @endif
                 </ul>
             </li>
 
             {{-- Library --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-landmark fa-2x mr-3"></i>
-                    <span>Library</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library
-                            Dashboard</a></li>
-                    <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
-                    <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
-                    <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
-                    <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
-                    <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
-                    <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
-                    <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a>
-                    </li>
-                    <li><a href="{{ route('library.reservations') }}"><i
-                                class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
-                    <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book
-                            Requests</a></li>
-                    <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
-                    <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
-                    <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('library'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-landmark fa-2x mr-3"></i>
+                        <span>Library</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library Dashboard</a></li>
+                        <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                        <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                        <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                        <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                        <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                        <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                        <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a></li>
+                        <li><a href="{{ route('library.reservations') }}"><i class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                        <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book Requests</a></li>
+                        <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                        <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                        <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- Finance --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-wallet fa-2x mr-3"></i>
-                    <span>Finance</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance
-                            Dashboard</a></li>
-                    <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee
-                            Structure</a></li>
-                    <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee
-                            Allocations</a></li>
-                    <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee
-                            Payment</a></li>
-                    <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
-                    <li><a href="{{ route('finance.expenses.index') }}"><i
-                                class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
-                    <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense
-                            Categories</a></li>
-                    <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a>
-                    </li>
-                    <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary
-                            Structures</a></li>
-                    <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a>
-                    </li>
-                    <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a>
-                    </li>
-                    <li><a href="{{ route('finance.outstanding-fees') }}"><i
-                                class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('finance'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-wallet fa-2x mr-3"></i>
+                        <span>Finance</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance Dashboard</a></li>
+                        <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee Structure</a></li>
+                        <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee Allocations</a></li>
+                        <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee Payment</a></li>
+                        <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                        <li><a href="{{ route('finance.expenses.index') }}"><i class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                        <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense Categories</a></li>
+                        <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a></li>
+                        <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary Structures</a></li>
+                        <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a></li>
+                        <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a></li>
+                        <li><a href="{{ route('finance.outstanding-fees') }}"><i class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- Attendance --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-user-check fa-2x mr-3"></i>
-                    <span>Attendance</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
-                    </li>
-                    <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
-                            Check-In</a></li>
-                    <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
-                            Report</a></li>
-                    <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
-                            Check-In</a></li>
-                    <li><a href="{{ route('attendance.teachers.report') }}"><i
-                                class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('attendance'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-user-check fa-2x mr-3"></i>
+                        <span>Attendance</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                        <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
+                        <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
+                        <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
+                        <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- Timetable --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-calendar-alt fa-2x mr-3"></i>
-                    <span>Timetable</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
-                    </li>
-                    <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
-                    <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
-                            Timetable</a></li>
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('timetable'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-calendar-alt fa-2x mr-3"></i>
+                        <span>Timetable</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a></li>
+                        <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                        <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- Examinations --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-layer-group fa-2x mr-3"></i>
-                    <span>Examinations</span>
-                    @php
-                        $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
-                        $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
-                    @endphp
-                    @if ($pendingMarksCount > 0)
-                        <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
-                    @endif
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
-                    <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
-                            Examination</a></li>
-                    @if ($pendingMarksCount > 0)
-                        <li>
-                            <a href="{{ route('examination.marks-entry-portal') }}">
-                                <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
-                                <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('examinations'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-layer-group fa-2x mr-3"></i>
+                        <span>Examinations</span>
+                        @php
+                            $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
+                            $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
+                        @endphp
+                        @if ($pendingMarksCount > 0)
+                            <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
+                        @endif
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
+                        <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
+                        @if ($pendingMarksCount > 0)
+                            <li>
+                                <a href="{{ route('examination.marks-entry-portal') }}">
+                                    <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
+                                    <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
 
             {{-- Notifications --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-bell fa-2x mr-3"></i>
-                    <span>Notifications</span>
-                    @php
-                        // Optional: show unread count badge – you can fetch it here if desired
-                        $unreadCount = 0; // Replace with a helper if needed
-                    @endphp
-                    @if($unreadCount > 0)
-                        <span class="badge badge-danger ml-2">{{ $unreadCount }}</span>
-                    @endif
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My
-                            Notifications</a></li>
-                    <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage
-                            Notifications</a></li>
-                    <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a>
-                    </li>
-                </ul>
-            </li>
+            @if(PermissionHelper::canModule('notifications'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-bell fa-2x mr-3"></i>
+                        <span>Notifications</span>
+                        @php
+                            $unreadCount = 0;
+                        @endphp
+                        @if($unreadCount > 0)
+                            <span class="badge badge-danger ml-2">{{ $unreadCount }}</span>
+                        @endif
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My Notifications</a></li>
+                        <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage Notifications</a></li>
+                        <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a></li>
+                    </ul>
+                </li>
+            @endif
 
-            {{-- User Rights (always visible to super admin) --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-shield-alt fa-2x mr-3"></i>
-                    <span>User Rights</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
-                    <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
-                    <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module
-                            Permissions</a></li>
-                    <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a>
-                    </li>
-                </ul>
-            </li>
+            {{-- User Rights --}}
+            @if(PermissionHelper::canModule('user_rights'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-shield-alt fa-2x mr-3"></i>
+                        <span>User Rights</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
+                        <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                        <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module Permissions</a></li>
+                        <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a></li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- ═══════════════════════════════════════════════════
             SECTION B: SYSTEM ADMIN ONLY (no school selected)
@@ -271,7 +273,11 @@ use App\Helpers\PermissionHelper;
                     <i class="fas fa-user-shield fa-2x mr-3"></i>Rights &amp; Privileges
                 </a>
             </li>
-
+            <li class="slide">
+                <a class="side-menu__item" href="{{ route('urp.admin.index') }}">
+                    <i class="fas fa-sitemap fa-2x mr-3"></i>Schools &amp; Roles
+                </a>
+            </li>
 
             {{-- ═══════════════════════════════════════════════════
             SECTION C: SCHOOL (TEACHER) LOGIN
@@ -279,16 +285,45 @@ use App\Helpers\PermissionHelper;
             ════════════════════════════════════════════════════ --}}
         @elseif(Session('LoggedSchool'))
 
+            {{-- ── Resolve school status once ── --}}
+            @php
+                $__schoolStatus = \App\Http\Controllers\Helper::currentSchoolStatus();
+                // 10 = Active | 1 = Pending Activation | null = unknown (treat as pending)
+            @endphp
+
+            {{-- ══════════════════════════════════════════════════════
+                 STATUS: PENDING ACTIVATION
+                 School exists but is not yet active — show only a
+                 "pending" notice. No modules accessible until active.
+            ═══════════════════════════════════════════════════════ --}}
+            @if($__schoolStatus !== 10)
+
+                <li class="slide px-3 py-3">
+                    <div style="background:#fff7ed;border:1px dashed #f97316;border-radius:12px;padding:1rem 1rem;font-size:.8rem;color:#92400e;line-height:1.55;">
+                        <div style="font-size:1.3rem;text-align:center;margin-bottom:.5rem;">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                        <div style="font-weight:700;font-size:.85rem;text-align:center;margin-bottom:.4rem;">
+                            Pending Activation
+                        </div>
+                        Your school account is awaiting activation by the system administrator. Full access will be granted once your account is active.
+                    </div>
+                </li>
+
+            {{-- ══════════════════════════════════════════════════════
+                 STATUS: ACTIVE (school_status = 10)
+                 Show only what the logged-in user's role permits.
+            ═══════════════════════════════════════════════════════ --}}
+            @else
+
             {{-- Current Role Tag --}}
             @php $roleName = PermissionHelper::currentRoleName(); @endphp
             @if($roleName !== 'System Administrator')
                 <li class="slide px-3 pb-1" style="pointer-events:none;">
-                    <div
-                        style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
+                    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
                         Role
                     </div>
-                    <div
-                        style="background:#eef2ff;color:#4f46e5;border-radius:8px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;">
+                    <div style="background:#eef2ff;color:#4f46e5;border-radius:8px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;">
                         <i class="fa fa-crown mr-1"></i>{{ $roleName }}
                     </div>
                 </li>
@@ -300,6 +335,25 @@ use App\Helpers\PermissionHelper;
                     <i class="fa fa-home fa-2x mr-3"></i>Dashboard
                 </a>
             </li>
+
+            {{-- Master Data --}}
+            @if(PermissionHelper::canModule('master_data'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-database fa-2x mr-3"></i>
+                        <span>Master Data</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_master_data'))
+                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Data</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_master_codes'))
+                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Codes</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
 
             {{-- Classes --}}
             @if(PermissionHelper::canModule('classes'))
@@ -329,7 +383,7 @@ use App\Helpers\PermissionHelper;
             @endif
 
             {{-- ID Cards --}}
-            @if(PermissionHelper::canModule('id_cards'))
+            @if(PermissionHelper::canModule('card_scan') || PermissionHelper::canModule('student_id_cards') || PermissionHelper::canModule('teacher_id_cards'))
                 <li class="slide has-sub">
                     <a class="side-menu__item" href="#" data-toggle="submenu">
                         <i class="fas fa-id-card fa-2x mr-3"></i>
@@ -337,38 +391,20 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('scan_id_cards'))
+                        @if(PermissionHelper::canModule('card_scan'))
                             <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                            <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                            <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
                         @endif
-                        @if(PermissionHelper::canFeature('school_arrival'))
-                            <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a>
-                            </li>
-                            <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival
-                                    Report</a></li>
+                        @if(PermissionHelper::canModule('student_id_cards'))
+                            <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
+                            <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
+                            <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
                         @endif
-                        @if(PermissionHelper::canFeature('view_id_cards'))
-                            <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a>
-                            </li>
-                        @endif
-                        @if(PermissionHelper::canFeature('create_id_cards'))
-                            <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a>
-                            </li>
-                        @endif
-                        @if(PermissionHelper::canFeature('scan_id_cards'))
-                            <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a>
-                            </li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_id_cards'))
-                            <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID
-                                    Cards</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('create_id_cards'))
-                            <li><a href="{{ route('teacher-id-cards.create') }}"><i
-                                        class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('scan_id_cards'))
-                            <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR
-                                    Verifier</a></li>
+                        @if(PermissionHelper::canModule('teacher_id_cards'))
+                            <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
+                            <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                            <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
                         @endif
                     </ul>
                 </li>
@@ -383,37 +419,19 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_library'))
-                            <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library
-                                    Dashboard</a></li>
-                            <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_books'))
-                            <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
-                            <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
-                            <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
-                            <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_members'))
-                            <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_borrowings'))
-                            <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a>
-                            </li>
-                            <li><a href="{{ route('library.reservations') }}"><i
-                                        class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
-                            <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book
-                                    Requests</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_fines'))
-                            <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('library_reports'))
-                            <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('library_settings'))
-                            <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
-                        @endif
+                        <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library Dashboard</a></li>
+                        <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                        <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                        <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                        <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                        <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                        <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                        <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a></li>
+                        <li><a href="{{ route('library.reservations') }}"><i class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                        <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book Requests</a></li>
+                        <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                        <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                        <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
                     </ul>
                 </li>
             @endif
@@ -427,45 +445,18 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_finance'))
-                            <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance
-                                    Dashboard</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_fee_structure'))
-                            <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee
-                                    Structure</a></li>
-                            <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee
-                                    Allocations</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('record_payment'))
-                            <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee
-                                    Payment</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_finance'))
-                            <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_expenses'))
-                            <li><a href="{{ route('finance.expenses.index') }}"><i
-                                        class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
-                            <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense
-                                    Categories</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_payroll'))
-                            <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a>
-                            </li>
-                            <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary
-                                    Structures</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_finance'))
-                            <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a>
-                            </li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_financial_reports'))
-                            <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a>
-                            </li>
-                            <li><a href="{{ route('finance.outstanding-fees') }}"><i
-                                        class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
-                        @endif
+                        <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance Dashboard</a></li>
+                        <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee Structure</a></li>
+                        <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee Allocations</a></li>
+                        <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee Payment</a></li>
+                        <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                        <li><a href="{{ route('finance.expenses.index') }}"><i class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                        <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense Categories</a></li>
+                        <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a></li>
+                        <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary Structures</a></li>
+                        <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a></li>
+                        <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a></li>
+                        <li><a href="{{ route('finance.outstanding-fees') }}"><i class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
                     </ul>
                 </li>
             @endif
@@ -479,22 +470,11 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_attendance'))
-                            <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
-                            </li>
-                        @endif
-                        @if(PermissionHelper::canFeature('mark_attendance'))
-                            <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student
-                                    Check-In</a></li>
-                            <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher
-                                    Check-In</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('attendance_reports'))
-                            <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student
-                                    Report</a></li>
-                            <li><a href="{{ route('attendance.teachers.report') }}"><i
-                                        class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
-                        @endif
+                        <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                        <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
+                        <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
+                        <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
+                        <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
                     </ul>
                 </li>
             @endif
@@ -508,15 +488,9 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_timetable'))
-                            <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
-                            </li>
-                            <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('create_timetable'))
-                            <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
-                                    Timetable</a></li>
-                        @endif
+                        <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a></li>
+                        <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                        <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
                     </ul>
                 </li>
             @endif
@@ -537,14 +511,9 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_examinations'))
-                            <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('create_examination'))
-                            <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
-                                    Examination</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('enter_marks') && $pendingMarksCount > 0)
+                        <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
+                        <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
+                        @if ($pendingMarksCount > 0)
                             <li>
                                 <a href="{{ route('examination.marks-entry-portal') }}">
                                     <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
@@ -556,17 +525,32 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
-            {{-- Grading --}}
-            @if(PermissionHelper::canModule('grading'))
-                <li class="slide">
-                    <a class="side-menu__item" href="{{ url('/grading') }}">
-                        <i class="fa fa-star fa-2x mr-3"></i>Grading
+            {{-- Notifications --}}
+            @if(PermissionHelper::canModule('notifications'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-bell fa-2x mr-3"></i>
+                        <span>Notifications</span>
+                        @php
+                            $unreadCount = 0;
+                        @endphp
+                        @if($unreadCount > 0)
+                            <span class="badge badge-danger ml-2">{{ $unreadCount }}</span>
+                        @endif
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
+                    <ul class="sub-menu">
+                        <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My Notifications</a></li>
+                        <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage Notifications</a></li>
+                        <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a></li>
+                    </ul>
                 </li>
             @endif
 
             {{-- User Rights --}}
-            @if(PermissionHelper::canModule('user_rights'))
+            {{-- Always shown on an active school — a freshly-added school needs this
+                 to configure roles before any other module becomes accessible. --}}
+            @if(PermissionHelper::canModule('user_rights') || empty(PermissionHelper::accessibleModuleKeys()))
                 <li class="slide has-sub">
                     <a class="side-menu__item" href="#" data-toggle="submenu">
                         <i class="fas fa-shield-alt fa-2x mr-3"></i>
@@ -575,57 +559,28 @@ use App\Helpers\PermissionHelper;
                     </a>
                     <ul class="sub-menu">
                         <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
-                        @if(PermissionHelper::canFeature('manage_roles'))
-                            <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('set_permissions'))
-                            <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module
-                                    Permissions</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('assign_roles'))
-                            <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a>
-                            </li>
-                        @endif
+                        <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                        <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module Permissions</a></li>
+                        <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a></li>
                     </ul>
                 </li>
             @endif
-
-            {{-- School Settings --}}
-            @if(PermissionHelper::canModule('school_settings'))
-                <li class="slide has-sub">
-                    <a class="side-menu__item" href="#" data-toggle="submenu">
-                        <i class="fas fa-cog fa-2x mr-3"></i>
-                        <span>School Settings</span>
-                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                    </a>
-                    <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_school_settings'))
-                            <li><a href="{{ route('profile.school') }}"><i class="fas fa-school mr-2"></i>School Profile</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_academic_years'))
-                            <li><a href="{{ route('add-academic-year') }}"><i class="fas fa-calendar-alt mr-2"></i>Academic
-                                    Years</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('manage_term_dates'))
-                            <li><a href="{{ route('school.term-dates', session('LoggedSchool')) }}"><i
-                                        class="fas fa-calendar-week mr-2"></i>Term Dates</a></li>
-                        @endif
-                    </ul>
-                </li>
-            @endif
-
-            {{-- NO MODULE ACCESS WARNING --}}
-            @php $accessible = PermissionHelper::accessibleModuleKeys(); @endphp
-            @if(empty($accessible))
+            @php
+                $accessible = PermissionHelper::accessibleModuleKeys();
+                $hasRole = PermissionHelper::getCurrentSchoolRole() !== null;
+            @endphp
+            {{-- Only show "no modules" warning when a role IS assigned but grants nothing --}}
+            @if($hasRole && empty($accessible))
                 <li class="slide px-3 py-2">
-                    <div
-                        style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:.75rem 1rem;font-size:.78rem;color:#92400e;">
+                    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:.75rem 1rem;font-size:.78rem;color:#92400e;">
                         <i class="fa fa-lock mr-2"></i>
-                        <strong>No modules assigned.</strong><br>
+                        <strong>No modules assigned to your role.</strong><br>
                         Contact your school administrator.
                     </div>
                 </li>
             @endif
+
+            @endif {{-- end @else (active school) --}}
 
         @endif
         {{-- ── END SECTIONS ── --}}

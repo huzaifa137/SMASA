@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\School;
 use App\Models\SchoolProfile;
 use App\Models\Teacher;
@@ -20,6 +21,8 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function index()
     {
+        PermissionHelper::denyUnlessFeature('view_teacher_cards');
+
         Helper::requireSchool();
         $schoolId      = session('LoggedSchool');
         $school        = School::find($schoolId);
@@ -38,6 +41,8 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function create()
     {
+        PermissionHelper::denyUnlessFeature('generate_teacher_cards');
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $teachers = Teacher::where('school_id', $schoolId)->orderBy('surname')->get();
@@ -50,6 +55,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function generate(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to generate teacher ID cards.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId   = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -114,6 +123,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function generateSingle(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId   = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -169,6 +182,8 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function preview($cardId)
     {
+        PermissionHelper::denyUnlessFeature('print_teacher_cards');
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -191,6 +206,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function printCard($cardId)
     {
+        if (!PermissionHelper::canFeature('print_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -217,6 +236,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function printBulk(Request $request)
     {
+        if (!PermissionHelper::canFeature('print_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId   = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -252,6 +275,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function revoke($cardId)
     {
+        if (!PermissionHelper::canFeature('revoke_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -266,6 +293,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function reactivate($cardId)
     {
+        if (!PermissionHelper::canFeature('reactivate_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         try {
             Helper::requireSchool();
             $schoolId = session('LoggedSchool');
@@ -317,6 +348,7 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function verify($cardNumber)
     {
+        // Public endpoint - no permission check needed
         $card = TeacherIdCard::where('card_number', $cardNumber)->with('teacher')->first();
 
         if (!$card) {
@@ -346,6 +378,8 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function scannerPage()
     {
+        PermissionHelper::denyUnlessFeature('verify_teacher_cards');
+
         return view('teacher.id-cards.scanner');
     }
 
@@ -354,6 +388,8 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function stats()
     {
+        PermissionHelper::denyUnlessFeature('view_teacher_cards');
+
         $schoolId   = session('LoggedSchool');
         $activeYear = Helper::active_year();
 
@@ -370,6 +406,10 @@ class TeacherIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function searchTeachers(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_teacher_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId   = session('LoggedSchool');
         $activeYear = Helper::active_year();

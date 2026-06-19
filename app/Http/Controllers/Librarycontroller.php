@@ -29,6 +29,8 @@ class LibraryController extends Controller
 
     public function dashboard()
     {
+        PermissionHelper::denyUnlessFeature('view_library_dashboard');
+        
         $schoolId = session('LoggedSchool');
         $settings = LibrarySetting::forSchool($schoolId);
 
@@ -106,6 +108,8 @@ class LibraryController extends Controller
     public function books(Request $request)
     {
 
+     PermissionHelper::denyUnlessFeature('add_book');
+
         $schoolId = session('LoggedSchool');
         $query = LibraryBook::forSchool($schoolId)->with('author', 'category', 'subject');
 
@@ -140,8 +144,9 @@ class LibraryController extends Controller
         return view('Library.books', compact('books', 'categories', 'authors', 'subjects'));
     }
 
-    public function createBook()
-    {
+public function createBook()
+{
+    PermissionHelper::denyUnlessFeature('add_book');
         $schoolId = session('LoggedSchool');
         $categories = LibraryCategory::where('school_id', $schoolId)->active()->orderBy('name')->get();
         $authors = LibraryAuthor::where('school_id', $schoolId)->orderBy('name')->get();
@@ -149,8 +154,11 @@ class LibraryController extends Controller
         return view('Library.book-form', compact('categories', 'authors', 'subjects'));
     }
 
-    public function storeBook(Request $request)
-    {
+public function storeBook(Request $request)
+{
+    if (!PermissionHelper::canFeature('add_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -216,6 +224,8 @@ class LibraryController extends Controller
 
     public function editBook(int $id)
     {
+            PermissionHelper::denyUnlessFeature('edit_book');
+
         $schoolId = session('LoggedSchool');
 
         try {
@@ -259,8 +269,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function updateBook(Request $request, int $id)
-    {
+public function updateBook(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('edit_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -342,8 +355,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function deleteBook(int $id)
-    {
+public function deleteBook(int $id)
+{
+    if (!PermissionHelper::canFeature('delete_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -402,8 +418,9 @@ class LibraryController extends Controller
         }
     }
 
-    public function showBook(int $id)
-    {
+public function showBook(int $id)
+{
+    PermissionHelper::denyUnlessFeature('view_books');
         $schoolId = session('LoggedSchool');
         $book = LibraryBook::where('school_id', $schoolId)
             ->with('author', 'category', 'subject')
@@ -430,8 +447,11 @@ class LibraryController extends Controller
         return view('Library.book-detail', compact('book', 'borrowings', 'reservations', 'recommendations'));
     }
 
-    public function importBooks(Request $request)
-    {
+public function importBooks(Request $request)
+{
+    if (!PermissionHelper::canFeature('add_book')) {
+        return back()->with('error', 'Unauthorized.');
+    }
         $request->validate(['file' => 'required|file|mimes:xlsx,csv']);
         $schoolId = session('LoggedSchool');
 
@@ -481,8 +501,9 @@ class LibraryController extends Controller
         }
     }
 
-    public function exportBooks()
-    {
+public function exportBooks()
+{
+    PermissionHelper::denyUnlessFeature('library_reports');
         $schoolId = session('LoggedSchool');
         $books = LibraryBook::forSchool($schoolId)->with('author', 'category', 'subject')->get();
 
@@ -514,8 +535,11 @@ class LibraryController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function downloadEbook(int $id)
-    {
+public function downloadEbook(int $id)
+{
+    if (!PermissionHelper::canFeature('library_reports')) {
+        return back()->with('error', 'Unauthorized.');
+    }
         $schoolId = session('LoggedSchool');
         $book = LibraryBook::where('school_id', $schoolId)->findOrFail($id);
 
@@ -535,16 +559,20 @@ class LibraryController extends Controller
     // CATEGORIES
     // ─────────────────────────────────────────────────────────────────────
 
-    public function categories()
-    {
+public function categories()
+{
+    PermissionHelper::denyUnlessFeature('view_books');
         $schoolId = session('LoggedSchool');
         $categories = LibraryCategory::where('school_id', $schoolId)
             ->withCount('books')->orderBy('name')->paginate(20);
         return view('Library.categories', compact('categories'));
     }
 
-    public function storeCategory(Request $request)
-    {
+public function storeCategory(Request $request)
+{
+    if (!PermissionHelper::canFeature('add_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -595,8 +623,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function updateCategory(Request $request, int $id)
-    {
+public function updateCategory(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('edit_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -657,8 +688,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function deleteCategory(int $id)
-    {
+public function deleteCategory(int $id)
+{
+    if (!PermissionHelper::canFeature('delete_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -717,14 +751,19 @@ class LibraryController extends Controller
 
     public function authors()
     {
+        PermissionHelper::denyUnlessFeature('view_books');
+
         $schoolId = session('LoggedSchool');
         $authors = LibraryAuthor::where('school_id', $schoolId)
             ->withCount('books')->orderBy('name')->paginate(20);
         return view('Library.authors', compact('authors'));
     }
 
-    public function storeAuthor(Request $request)
-    {
+public function storeAuthor(Request $request)
+{
+    if (!PermissionHelper::canFeature('add_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $request->validate(['name' => 'required|string|max:150']);
         LibraryAuthor::create([
@@ -742,8 +781,11 @@ class LibraryController extends Controller
         return redirect()->route('library.authors.index')->with('success', 'Author added successfully');
     }
 
-    public function updateAuthor(Request $request, int $id)
-    {
+public function updateAuthor(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('edit_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $author = LibraryAuthor::where('school_id', $schoolId)->findOrFail($id);
         $request->validate(['name' => 'required|string|max:150']);
@@ -756,8 +798,11 @@ class LibraryController extends Controller
         return redirect()->route('library.authors.index')->with('success', 'Author updated successfully');
     }
 
-    public function deleteAuthor(int $id)
-    {
+public function deleteAuthor(int $id)
+{
+    if (!PermissionHelper::canFeature('delete_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $author = LibraryAuthor::where('school_id', $schoolId)->findOrFail($id);
         if ($author->books()->count() > 0) {
@@ -776,16 +821,20 @@ class LibraryController extends Controller
     // SUBJECTS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function subjects()
-    {
+public function subjects()
+{
+    PermissionHelper::denyUnlessFeature('view_books');
         $schoolId = session('LoggedSchool');
         $subjects = LibrarySubject::where('school_id', $schoolId)
             ->withCount('books')->orderBy('name')->paginate(20);
         return view('Library.subjects', compact('subjects'));
     }
 
-    public function storeSubject(Request $request)
-    {
+public function storeSubject(Request $request)
+{
+    if (!PermissionHelper::canFeature('add_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -831,8 +880,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function updateSubject(Request $request, int $id)
-    {
+public function updateSubject(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('edit_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -885,8 +937,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function deleteSubject(int $id)
-    {
+public function deleteSubject(int $id)
+{
+    if (!PermissionHelper::canFeature('delete_book')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -943,8 +998,9 @@ class LibraryController extends Controller
     // MEMBERS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function members(Request $request)
-    {
+public function members(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('manage_members');
         $schoolId = session('LoggedSchool');
         $query = LibraryMember::forSchool($schoolId);
 
@@ -985,8 +1041,11 @@ class LibraryController extends Controller
         return view('Library.members', compact('members', 'teachers', 'classrooms'));
     }
 
-    public function storeMember(Request $request)
-    {
+public function storeMember(Request $request)
+{
+    if (!PermissionHelper::canFeature('manage_members')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1116,8 +1175,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function updateMember(Request $request, int $id)
-    {
+public function updateMember(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('manage_members')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1177,8 +1239,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function deleteMember(int $id)
-    {
+public function deleteMember(int $id)
+{
+    if (!PermissionHelper::canFeature('manage_members')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1226,8 +1291,9 @@ class LibraryController extends Controller
     // BORROWINGS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function borrowings(Request $request)
-    {
+public function borrowings(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('manage_borrowing');
         $schoolId = session('LoggedSchool');
         $query = LibraryBorrowing::where('school_id', $schoolId)
             ->with('book', 'member');
@@ -1259,8 +1325,11 @@ class LibraryController extends Controller
         return view('Library.borrowings', compact('borrowings', 'books', 'members', 'settings'));
     }
 
-    public function borrowBook(Request $request)
-    {
+public function borrowBook(Request $request)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1352,8 +1421,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function returnBook(Request $request, int $borrowingId)
-    {
+public function returnBook(Request $request, int $borrowingId)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1448,8 +1520,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function renewBorrowing(Request $request, int $borrowingId)
-    {
+public function renewBorrowing(Request $request, int $borrowingId)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1511,8 +1586,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function markLost(Request $request, int $borrowingId)
-    {
+public function markLost(Request $request, int $borrowingId)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1555,8 +1633,9 @@ class LibraryController extends Controller
     // RESERVATIONS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function reservations(Request $request)
-    {
+public function reservations(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('manage_borrowing');
         $schoolId = session('LoggedSchool');
         $query = LibraryReservation::where('school_id', $schoolId)->with('book', 'member');
         if ($request->filled('status'))
@@ -1569,8 +1648,11 @@ class LibraryController extends Controller
         return view('Library.reservations', compact('reservations', 'books', 'members'));
     }
 
-    public function storeReservation(Request $request)
-    {
+public function storeReservation(Request $request)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1637,8 +1719,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function updateReservationStatus(Request $request, int $id)
-    {
+public function updateReservationStatus(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {
@@ -1705,8 +1790,9 @@ class LibraryController extends Controller
     // FINES
     // ─────────────────────────────────────────────────────────────────────
 
-    public function fines(Request $request)
-    {
+public function fines(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('manage_borrowing');
         $schoolId = session('LoggedSchool');
         $query = LibraryFine::where('school_id', $schoolId)
             ->with('member', 'borrowing.book');
@@ -1724,8 +1810,11 @@ class LibraryController extends Controller
         return view('Library.fines', compact('fines', 'totalUnpaid', 'totalPaid', 'totalWaived'));
     }
 
-    public function payFine(Request $request, int $id)
-    {
+public function payFine(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1778,8 +1867,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function waiveFine(Request $request, int $id)
-    {
+public function waiveFine(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('manage_borrowing')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1842,8 +1934,9 @@ class LibraryController extends Controller
     // BOOK REQUESTS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function bookRequests(Request $request)
-    {
+public function bookRequests(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('manage_members');
         $schoolId = session('LoggedSchool');
         $query = LibraryBookRequest::where('school_id', $schoolId)->with('member');
         if ($request->filled('status'))
@@ -1854,8 +1947,11 @@ class LibraryController extends Controller
 
         return view('Library.book-requests', compact('requests', 'member'));
     }
-    public function storeBookRequest(Request $request)
-    {
+public function storeBookRequest(Request $request)
+{
+    if (!PermissionHelper::canFeature('manage_members')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $member = $this->getSessionMember($schoolId);
 
@@ -1920,8 +2016,11 @@ class LibraryController extends Controller
         }
     }
 
-    public function reviewBookRequest(Request $request, int $id)
-    {
+public function reviewBookRequest(Request $request, int $id)
+{
+    if (!PermissionHelper::canFeature('manage_members')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
         $userId = session('LoggedUser');
 
@@ -1995,8 +2094,9 @@ class LibraryController extends Controller
     // REPORTS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function reports()
-    {
+public function reports()
+{
+    PermissionHelper::denyUnlessFeature('library_reports');
         $schoolId = session('LoggedSchool');
 
         $overdueBooks = LibraryBorrowing::where('school_id', $schoolId)
@@ -2049,8 +2149,9 @@ class LibraryController extends Controller
     // CATALOGUE (Student/Teacher portal)
     // ─────────────────────────────────────────────────────────────────────
 
-    public function catalogue(Request $request)
-    {
+public function catalogue(Request $request)
+{
+    PermissionHelper::denyUnlessFeature('view_books');
         $schoolId = session('LoggedSchool');
         $member = $this->getSessionMember($schoolId);
 
@@ -2110,8 +2211,9 @@ class LibraryController extends Controller
         ));
     }
 
-    public function myBorrowings()
-    {
+public function myBorrowings()
+{
+    PermissionHelper::denyUnlessFeature('view_books');
         $schoolId = session('LoggedSchool');
         $member = $this->getSessionMember($schoolId);
         if (!$member)
@@ -2130,15 +2232,19 @@ class LibraryController extends Controller
     // SETTINGS
     // ─────────────────────────────────────────────────────────────────────
 
-    public function settings()
-    {
+public function settings()
+{
+    PermissionHelper::denyUnlessFeature('manage_settings');
         $schoolId = session('LoggedSchool');
         $settings = LibrarySetting::forSchool($schoolId);
         return view('Library.settings', compact('settings'));
     }
 
-    public function updateSettings(Request $request)
-    {
+public function updateSettings(Request $request)
+{
+    if (!PermissionHelper::canFeature('manage_settings')) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
         $schoolId = session('LoggedSchool');
 
         try {

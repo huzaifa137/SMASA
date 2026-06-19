@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-	<head>
-		<!-- Meta data -->
-		<meta charset="UTF-8">
-		<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
-		<meta content="SMASA" name="description">
-		<meta content="Spruko Technologies Private Limited" name="author">
-		<meta name="keywords" content="Admin, Admin Template, Dashboard, Responsive, Admin Dashboard, Bootstrap, Bootstrap 4, Clean, Backend, Jquery, Modern, Web App, Admin Panel, Ui, Premium Admin Templates, Flat, Admin Theme, Ui Kit, Bootstrap Admin, Responsive Admin, Application, Template, Admin Themes, Dashboard Template"/>
-		@include('layouts.custom-head')
-	</head>
-		
-	<body class="h-100vh light-mode">	    
-		@yield('content')		
-		@include('layouts.custom-footer-scripts')	
-	</body>
+
+<head>
+	<!-- Meta data -->
+	<meta charset="UTF-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+	<meta content="SMASA" name="description">
+	<meta content="Spruko Technologies Private Limited" name="author">
+	<meta name="keywords"
+		content="Admin, Admin Template, Dashboard, Responsive, Admin Dashboard, Bootstrap, Bootstrap 4, Clean, Backend, Jquery, Modern, Web App, Admin Panel, Ui, Premium Admin Templates, Flat, Admin Theme, Ui Kit, Bootstrap Admin, Responsive Admin, Application, Template, Admin Themes, Dashboard Template" />
+	<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
+	@include('layouts.custom-head')
+</head>
+
+<body class="h-100vh light-mode">
+	@yield('content')
+	@include('layouts.custom-footer-scripts')
+	@auth
+		<script src="{{ asset('js/push-init.js') }}"></script>
+	@endauth
+</body>
+
 </html>

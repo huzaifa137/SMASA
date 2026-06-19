@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <style>
         :root {
             --orange: #2C29CA;
@@ -30,7 +32,11 @@
             --transition: all 0.2s ease;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -51,77 +57,290 @@
             box-shadow: var(--shadow);
             transition: transform 0.2s;
         }
-        .login-card:hover { transform: scale(1.01); }
 
-        .brand { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--black); margin-bottom: 0.5rem; }
-        .brand span { color: var(--orange); }
-
-        .welcome-text { font-size: 1rem; font-weight: 500; color: var(--gray-700); margin-bottom: 2rem; line-height: 1.6; }
-
-        .user-role-selector { display: flex; gap: 0.75rem; margin-bottom: 2.5rem; }
-        .role-btn {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
-            padding: 1rem 0.5rem; background: var(--gray-100); border: 2px solid transparent;
-            border-radius: var(--radius-sm); color: var(--gray-700); font-weight: 600;
-            font-size: 0.85rem; transition: var(--transition); cursor: pointer;
+        .login-card:hover {
+            transform: scale(1.01);
         }
-        .role-btn i { font-size: 1.3rem; color: var(--gray-500); transition: var(--transition); }
-        .role-btn.active { background: var(--orange-subtle); border-color: var(--orange); color: var(--orange-dark); }
-        .role-btn.active i { color: var(--orange); }
-        .role-btn:hover:not(.active) { background: #fafafa; border-color: var(--gray-300); }
 
-        .school-dropdown-container { margin-bottom: 1.75rem; display: none; }
-        .school-dropdown-container.visible { display: block; }
+        .brand {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--black);
+            margin-bottom: 0.5rem;
+        }
 
-        .login-form { width: 100%; }
-        .form-group { margin-bottom: 1.75rem; }
-        .form-label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-900); margin-bottom: 0.6rem; }
+        .brand span {
+            color: var(--orange);
+        }
 
-        .input-group { position: relative; display: flex; align-items: center; }
+        .welcome-text {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .user-role-selector {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .role-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 1rem 0.5rem;
+            background: var(--gray-100);
+            border: 2px solid transparent;
+            border-radius: var(--radius-sm);
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .role-btn i {
+            font-size: 1.3rem;
+            color: var(--gray-500);
+            transition: var(--transition);
+        }
+
+        .role-btn.active {
+            background: var(--orange-subtle);
+            border-color: var(--orange);
+            color: var(--orange-dark);
+        }
+
+        .role-btn.active i {
+            color: var(--orange);
+        }
+
+        .role-btn:hover:not(.active) {
+            background: #fafafa;
+            border-color: var(--gray-300);
+        }
+
+        .school-dropdown-container {
+            margin-bottom: 1.75rem;
+            display: none;
+        }
+
+        .school-dropdown-container.visible {
+            display: block;
+        }
+
+        .login-form {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-900);
+            margin-bottom: 0.6rem;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
 
         .form-input {
-            width: 100%; padding: 1rem 1rem 1rem 3rem;
-            border: 1.5px solid var(--gray-300); border-radius: 40px;
-            font-size: 0.95rem; background: var(--white); transition: var(--transition);
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1.5px solid var(--gray-300);
+            border-radius: 40px;
+            font-size: 0.95rem;
+            background: var(--white);
+            transition: var(--transition);
         }
-        .form-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.08); }
 
-        .input-icon { position: absolute; left: 1.2rem; color: var(--gray-500); font-size: 1.1rem; pointer-events: none; z-index: 2; }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.08);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1.2rem;
+            color: var(--gray-500);
+            font-size: 1.1rem;
+            pointer-events: none;
+            z-index: 2;
+        }
 
         .password-toggle {
-            position: absolute; right: 1.2rem; background: none; border: none;
-            color: var(--gray-500); font-size: 1.1rem; cursor: pointer; padding: 0;
-            display: flex; align-items: center; justify-content: center;
+            position: absolute;
+            right: 1.2rem;
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .form-options { display: flex; justify-content: space-between; align-items: center; margin: 1.5rem 0 2rem; }
-        .remember-me { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.95rem; color: var(--gray-700); font-weight: 500; }
-        .remember-me input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--orange); cursor: pointer; }
-        .forgot-password { color: var(--orange); text-decoration: none; font-size: 0.95rem; font-weight: 600; transition: var(--transition); }
-        .forgot-password:hover { color: var(--orange-dark); text-decoration: underline; }
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0 2rem;
+        }
 
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 1rem 1.5rem; border: none; border-radius: 40px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: var(--transition); text-decoration: none; }
-        .btn-primary { background: var(--orange); color: white; box-shadow: 0 8px 16px -4px rgba(22, 163, 74, 0.28); margin-bottom: 1.5rem; }
-        .btn-primary:hover { background: var(--orange-dark); transform: translateY(-2px); box-shadow: 0 12px 20px -6px rgba(22, 78, 163, 0.36); }
-        .btn-secondary { background: transparent; color: var(--gray-900); border: 2px solid var(--gray-300); box-shadow: none; margin-top: 0.5rem; }
-        .btn-secondary:hover { border-color: var(--orange); color: var(--orange); background: rgba(22, 163, 74, 0.04); transform: translateY(-2px); }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
 
-        .divider { display: flex; align-items: center; color: var(--gray-500); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin: 1.2rem 0 1.5rem; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--gray-300); }
-        .divider span { margin: 0 1rem; font-weight: 600; color: var(--gray-700); }
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--orange);
+            cursor: pointer;
+        }
 
-        .error-text { display: block; color: #dc2626; font-size: 0.8rem; margin-top: 6px; margin-left: 12px; font-weight: 500; }
-        button:disabled { opacity: 0.75; cursor: not-allowed; }
+        .forgot-password {
+            color: var(--orange);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .forgot-password:hover {
+            color: var(--orange-dark);
+            text-decoration: underline;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--orange);
+            color: white;
+            box-shadow: 0 8px 16px -4px rgba(22, 163, 74, 0.28);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--orange-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -6px rgba(22, 78, 163, 0.36);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--gray-900);
+            border: 2px solid var(--gray-300);
+            box-shadow: none;
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            background: rgba(22, 163, 74, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            color: var(--gray-500);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 1.2rem 0 1.5rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--gray-300);
+        }
+
+        .divider span {
+            margin: 0 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .error-text {
+            display: block;
+            color: #dc2626;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            margin-left: 12px;
+            font-weight: 500;
+        }
+
+        button:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+        }
 
         @media (max-width: 480px) {
-            .login-card { padding: 2rem 1.5rem; }
-            .brand { font-size: 2rem; }
-            .user-role-selector { flex-wrap: wrap; }
-            .role-btn { min-width: 100px; }
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .brand {
+                font-size: 2rem;
+            }
+
+            .user-role-selector {
+                flex-wrap: wrap;
+            }
+
+            .role-btn {
+                min-width: 100px;
+            }
         }
 
         /* ── SELECT2 STYLES (single clean set, matches forgot password) ── */
-        .select-wrapper { position: relative; display: block; isolation: isolate; }
+        .select-wrapper {
+            position: relative;
+            display: block;
+            isolation: isolate;
+        }
+
         .select-wrapper .input-icon {
             z-index: 1070 !important;
             position: absolute;
@@ -133,7 +352,9 @@
             pointer-events: none;
         }
 
-        .select2-container { z-index: 9999 !important; }
+        .select2-container {
+            z-index: 9999 !important;
+        }
 
         .select2-container--bootstrap-5 .select2-selection {
             border-radius: 40px !important;
@@ -213,7 +434,8 @@
     <div class="login-card">
         <div class="brand">SM<span>A</span>SA</div>
         <div class="welcome-text">
-            <i class="fas fa-hand-sparkles" style="color: var(--orange);"></i> Welcome to SM<span style="color:var(--orange)">A</span>SA! <br>
+            <i class="fas fa-hand-sparkles" style="color: var(--orange);"></i> Welcome to SM<span
+                style="color:var(--orange)">A</span>SA! <br>
             Please sign-in to your account
         </div>
 
@@ -239,8 +461,11 @@
                     <i class="fas fa-school input-icon"></i>
                     <select name="school_id" id="school_id" class="select2">
                         <option value="" disabled selected>Choose your school</option>
+
                         @foreach($schools as $school)
-                            <option value="{{ $school->ID }}">{{ $school->House }}</option>
+                            <option value="{{ $school->ID }}">
+                                {{ $school->House }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -251,7 +476,8 @@
                 <label for="username" class="form-label" id="usernameLabel">REGISTRATION NUMBER</label>
                 <div class="input-group">
                     <i class="fas fa-id-card input-icon"></i>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="Enter your student registration number">
+                    <input type="text" id="username" name="username" class="form-input"
+                        placeholder="Enter your student registration number">
                 </div>
                 <small class="error-text" id="username-error"></small>
             </div>
@@ -260,7 +486,8 @@
                 <label for="password" class="form-label" id="passwordLabel">STUDENT PASSWORD</label>
                 <div class="input-group">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your secure password">
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="Enter your secure password">
                     <button type="button" class="password-toggle" id="togglePassword">
                         <i class="fas fa-eye"></i>
                     </button>
@@ -273,7 +500,8 @@
                     <input type="checkbox" name="remember" id="remember" value="1">
                     <span>Remember me</span>
                 </label>
-                <a href="{{route('forgot-password')}}" class="forgot-password" style="text-decoration: none;">Forgot password ?</a>
+                <a href="{{route('forgot-password')}}" class="forgot-password" style="text-decoration: none;">Forgot
+                    password ?</a>
             </div>
 
             <button type="submit" class="btn btn-primary" id="loginBtn">
@@ -397,33 +625,34 @@
                     },
                     body: formData
                 })
-                .then(async response => {
-                    const data = await response.json();
-                    if (!response.ok) throw data;
-                    return data;
-                })
-                .then(data => {
-                    if (data.status && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        throw { message: 'Redirect missing' };
-                    }
-                })
-                .catch(data => {
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = originalBtnHtml;
-                    if (data.errors) {
-                        Object.keys(data.errors).forEach(key => {
-                            const errorEl = document.getElementById(`${key}-error`);
-                            if (errorEl) errorEl.textContent = data.errors[key][0];
-                        });
-                    }
-                    if (data.message && !data.errors) {
-                        alert(data.message);
-                    }
-                });
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok) throw data;
+                        return data;
+                    })
+                    .then(data => {
+                        if (data.status && data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            throw { message: 'Redirect missing' };
+                        }
+                    })
+                    .catch(data => {
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = originalBtnHtml;
+                        if (data.errors) {
+                            Object.keys(data.errors).forEach(key => {
+                                const errorEl = document.getElementById(`${key}-error`);
+                                if (errorEl) errorEl.textContent = data.errors[key][0];
+                            });
+                        }
+                        if (data.message && !data.errors) {
+                            alert(data.message);
+                        }
+                    });
             });
         });
     </script>
 </body>
+
 </html>

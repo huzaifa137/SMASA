@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
   <title>SMASA – Comprehensive Academic System</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"
@@ -2991,6 +2992,11 @@
     }, { threshold: 0.4 });
     document.querySelectorAll('.hero-stats,.impact-grid').forEach(el => cObs.observe(el));
   </script>
+
+  @auth
+<script src="{{ asset('js/push-init.js') }}"></script>
+@endauth
+
 </body>
 
 </html>

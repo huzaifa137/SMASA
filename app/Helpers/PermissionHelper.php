@@ -20,6 +20,28 @@ use Illuminate\Support\Facades\DB;
  *   @if(PermissionHelper::canModule('finance')) ... @endif
  *   @if(PermissionHelper::canFeature('add_student')) ... @endif
  */
+
+
+//  Hide the "View Students" button if the user lacks permission --}}
+// @if(PermissionHelper::canFeature('view_students'))
+//     <a href="{{ route('students.individual.search') }}" class="btn btn-primary">
+//         <i class="fas fa-users"></i> View Students
+//     </a>
+// @endif
+
+// {{-- Hide "Add Student" button --}}
+// @if(PermissionHelper::canFeature('add_student'))
+//     <a href="{{ route('students.create') }}" class="btn btn-success">
+//         <i class="fas fa-plus"></i> Add Student
+//     </a>
+// @endif
+
+// {{-- Hide "Delete" button in a table row --}}
+// @if(PermissionHelper::canFeature('delete_student'))
+//     <button class="btn btn-danger btn-sm">Delete</button>
+// @endif
+
+
 class PermissionHelper
 {
     /**
@@ -80,21 +102,50 @@ class PermissionHelper
      *
      * @param string $moduleKey  e.g. 'finance', 'library', 'examinations'
      */
+   /**
+     * Returns true if the current user can access the given module.
+     * System admins always return true.
+     * Teachers with NO role assigned yet get a bootstrap allowance:
+     * they may still reach the User Rights module so the school can
+     * be set up. Once a teacher is assigned a SchoolRole, they are
+     * governed strictly by that role's configured access — no bypass.
+     *
+     * @param string $moduleKey  e.g. 'finance', 'library', 'user_rights'
+     */
     public static function canModule(string $moduleKey): bool
     {
-        // System admin: unrestricted
-        if (session()->has('LoggedAdmin') && !session()->has('LoggedSchool')) {
+        if (self::isSystemAdmin()) {
             return true;
         }
 
         $role = self::getCurrentSchoolRole();
 
-        // No role found → deny by default
         if (!$role) {
-            return false;
+            return self::isBootstrapAllowed() && in_array($moduleKey, self::bootstrapModules(), true);
         }
 
         return $role->canAccessModule($moduleKey);
+    }
+
+    /**
+     * Returns true if the current user can use the specific feature.
+     * Same bootstrap allowance as canModule() — see above.
+     *
+     * @param string $featureKey  e.g. 'add_student', 'assign_permissions'
+     */
+    public static function canFeature(string $featureKey): bool
+    {
+        if (self::isSystemAdmin()) {
+            return true;
+        }
+
+        $role = self::getCurrentSchoolRole();
+
+        if (!$role) {
+            return self::isBootstrapAllowed() && in_array($featureKey, self::bootstrapFeatures(), true);
+        }
+
+        return $role->canAccessFeature($featureKey);
     }
 
     /**
@@ -102,13 +153,17 @@ class PermissionHelper
      */
     public static function accessibleModuleKeys(): array
     {
-        if (session()->has('LoggedAdmin') && !session()->has('LoggedSchool')) {
-            // Return all module keys for admins
+        if (self::isSystemAdmin()) {
             return DB::table('system_modules')->where('is_active', true)->pluck('key')->toArray();
         }
 
         $role = self::getCurrentSchoolRole();
-        if (!$role) return [];
+
+        if (!$role) {
+            // Roleless teachers only ever "see" user_rights as accessible,
+            // matching the bootstrap allowance in canModule()/canFeature().
+            return self::isBootstrapAllowed() ? self::bootstrapModules() : [];
+        }
 
         return $role->moduleAccess()
             ->where('can_access', true)
@@ -119,28 +174,45 @@ class PermissionHelper
             ->toArray();
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // Feature-level checks
-    // ─────────────────────────────────────────────────────────────────
-
     /**
-     * Returns true if the current user can use the specific feature.
-     * Feature check ALSO requires the parent module to be accessible.
-     *
-     * @param string $featureKey  e.g. 'add_student', 'delete_exam', 'export_finance'
+     * Bootstrap is only allowed for a teacher who is actually logged
+     * into a school session (not an unauthenticated request, and not
+     * a system admin who already bypassed above).
      */
-    public static function canFeature(string $featureKey): bool
+    private static function isBootstrapAllowed(): bool
     {
-        if (session()->has('LoggedAdmin') && !session()->has('LoggedSchool')) {
-            return true;
-        }
-
-        $role = self::getCurrentSchoolRole();
-        if (!$role) return false;
-
-        return $role->canAccessFeature($featureKey);
+        return session()->has('LoggedTeacher') && session()->has('LoggedSchool');
     }
 
+    /**
+     * Modules a roleless teacher may still reach, so the school can be
+     * configured. Keep this in sync with the 'user_rights' module key
+     * in database/seeders/SystemModulesSeeder.php.
+     */
+    private static function bootstrapModules(): array
+    {
+        return ['user_rights'];
+    }
+
+    /**
+     * Features a roleless teacher may still use, so roles/permissions
+     * can be set up. Keep this in sync with the feature keys under the
+     * 'user_rights' module in database/seeders/SystemModulesSeeder.php.
+     */
+    private static function bootstrapFeatures(): array
+    {
+        return [
+            'view_dashboard',
+            'view_roles',
+            'create_role',
+            'edit_role',
+            'delete_role',
+            'view_permissions',
+            'assign_permissions',
+            'assign_roles_to_users',
+            'remove_roles_from_users',
+        ];
+    }
     /**
      * Get all accessible feature keys for the current user
      */

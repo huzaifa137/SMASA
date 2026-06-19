@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\SmasaNotification;
 use App\Models\SmasaNotificationRecipient;
+use App\Models\Teacher;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -17,6 +21,8 @@ class NotificationController extends Controller
      */
     public function index()
     {
+        PermissionHelper::denyUnlessFeature('view_notifications');
+
         $school_id = session('LoggedSchool');
 
         $notifications = SmasaNotification::where('school_id', $school_id)
@@ -43,6 +49,8 @@ class NotificationController extends Controller
      */
     public function create()
     {
+        PermissionHelper::denyUnlessFeature('create_notification');
+
         $school_id = session('LoggedSchool');
         $types = SmasaNotification::typeConfig();
 
@@ -66,6 +74,11 @@ class NotificationController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionHelper::canFeature('send_notification')) {
+            return redirect()->route('notifications.index')
+                ->with('error', 'Unauthorized. You do not have permission to send notifications.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
@@ -130,6 +143,8 @@ class NotificationController extends Controller
      */
     public function show(int $id)
     {
+        PermissionHelper::denyUnlessFeature('view_notifications');
+
         $school_id = session('LoggedSchool');
         $notification = SmasaNotification::where('school_id', $school_id)->findOrFail($id);
 
@@ -151,6 +166,11 @@ class NotificationController extends Controller
      */
     public function destroy(int $id)
     {
+        if (!PermissionHelper::canFeature('delete_notification')) {
+            return redirect()->route('notifications.index')
+                ->with('error', 'Unauthorized. You do not have permission to delete notifications.');
+        }
+
         $school_id = session('LoggedSchool');
         SmasaNotification::where('school_id', $school_id)->findOrFail($id)->delete();
 
@@ -165,6 +185,8 @@ class NotificationController extends Controller
      */
     public function myNotifications()
     {
+        PermissionHelper::denyUnlessFeature('view_my_notifications');
+
         $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
         $items = NotificationService::forRecipient('admin', $adminId, 20);
         $unreadCount = NotificationService::unreadCount('admin', $adminId);
@@ -179,6 +201,10 @@ class NotificationController extends Controller
      */
     public function unreadCount()
     {
+        if (!PermissionHelper::canFeature('view_my_notifications')) {
+            return response()->json(['count' => 0]);
+        }
+
         $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
         $count = NotificationService::unreadCount('admin', $adminId);
 
@@ -190,6 +216,10 @@ class NotificationController extends Controller
      */
     public function dropdown()
     {
+        if (!PermissionHelper::canFeature('view_my_notifications')) {
+            return response()->json(['notifications' => []]);
+        }
+
         $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
 
         $items = SmasaNotificationRecipient::with('notification')
@@ -219,6 +249,10 @@ class NotificationController extends Controller
      */
     public function markRead(int $id)
     {
+        if (!PermissionHelper::canFeature('mark_notification_read')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
         NotificationService::markRead('admin', $adminId, $id);
 
@@ -230,9 +264,87 @@ class NotificationController extends Controller
      */
     public function markAllRead()
     {
+        if (!PermissionHelper::canFeature('mark_all_read')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
         NotificationService::markAllRead('admin', $adminId);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * POST /notifications/push/subscribe
+     * Called by the JS service worker registration snippet.
+     */
+    public function savePushSubscription(Request $request)
+    {
+        if (!PermissionHelper::canFeature('push_notifications')) {
+            return response()->json([
+                'error' => 'Unauthorized. You do not have permission to enable push notifications.'
+            ], 403);
+        }
+
+        Log::info('Push subscription request received', [
+            'admin_session'   => session()->has('LoggedAdmin'),
+            'teacher_session' => session()->has('LoggedTeacher'),
+            'endpoint'        => filled($request->endpoint),
+            'public_key'      => filled($request->key),
+            'auth_token'      => filled($request->token),
+        ]);
+
+        $subscriber = $this->resolvePushSubscriber();
+
+        if (!$subscriber) {
+            Log::warning('Push subscription failed: unauthenticated user');
+
+            return response()->json([
+                'error' => 'Unauthenticated user.',
+            ], 401);
+        }
+
+        try {
+            $subscriber->updatePushSubscription(
+                endpoint: $request->endpoint,
+                key: $request->key,
+                token: $request->token,
+                contentEncoding: $request->contentEncoding ?? 'aesgcm'
+            );
+
+            Log::info('Push subscription saved successfully', [
+                'model' => class_basename($subscriber),
+                'id'    => $subscriber->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Push subscription saved successfully.',
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to save push subscription', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to save push subscription.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Resolve the currently authenticated push notification subscriber.
+     */
+    private function resolvePushSubscriber()
+    {
+        if ($adminId = session('LoggedAdmin')) {
+            return User::find($adminId);
+        }
+
+        if ($teacherId = session('LoggedTeacher')) {
+            return Teacher::find($teacherId);
+        }
+
+        return null;
     }
 }

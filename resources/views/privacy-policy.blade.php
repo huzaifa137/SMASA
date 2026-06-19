@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
   <title>SMASA – Privacy Policy | Comprehensive Academic System</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"
@@ -716,6 +717,10 @@
     // force first visible
     document.querySelector('.policy-card').style.opacity = '1';
   </script>
+
+  @auth
+<script src="{{ asset('js/push-init.js') }}"></script>
+@endauth
 </body>
 
 </html>

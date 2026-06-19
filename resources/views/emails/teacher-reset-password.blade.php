@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     <title>Password Reset Request | SMASA</title>
     <style>
         /* Email-safe inline-friendly styles */
@@ -283,6 +284,11 @@
         </div>
 
     </div>
+
+    @auth
+<script src="{{ asset('js/push-init.js') }}"></script>
+@endauth
+
 </body>
 
 </html>

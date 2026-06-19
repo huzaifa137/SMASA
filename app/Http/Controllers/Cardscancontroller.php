@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\CardScanLog;
 use App\Models\SchoolArrivalAttendance;
 use App\Models\Student;
@@ -27,6 +28,8 @@ class CardScanController extends Controller
 
     public function hub()
     {
+        PermissionHelper::denyUnlessFeature('view_hub');
+
         $schoolId = session('LoggedSchool');
 
         // Recent scan activity (last 20)
@@ -69,6 +72,10 @@ class CardScanController extends Controller
 
     public function scan(Request $request)
     {
+        if (!PermissionHelper::canFeature('scan_cards')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. You do not have permission to scan cards.'], 403);
+        }
+
         $request->validate([
             'card_number' => 'required|string',
             'category' => 'required|string|in:attendance_arrival,attendance_class,library_issue,library_return,library_reserve,finance_balance,finance_payment,info',
@@ -627,6 +634,8 @@ class CardScanController extends Controller
 
     public function arrivalAttendancePage(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('manage_arrival_attendance');
+
         $schoolId = session('LoggedSchool');
         $date = $request->get('date', Carbon::today()->toDateString());
         $personType = $request->get('person_type', 'student');
@@ -696,6 +705,10 @@ class CardScanController extends Controller
 
     public function saveArrivalAttendance(Request $request)
     {
+        if (!PermissionHelper::canFeature('manage_arrival_attendance')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate([
             'person_id' => 'required|integer',
             'person_type' => 'required|in:student,teacher',
@@ -732,6 +745,10 @@ class CardScanController extends Controller
 
     public function saveBulkArrivalAttendance(Request $request)
     {
+        if (!PermissionHelper::canFeature('manage_arrival_attendance')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate([
             'attendance_date' => 'required|date',
             'person_type' => 'required|in:student,teacher',
@@ -777,6 +794,8 @@ class CardScanController extends Controller
 
     public function scanLogs(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('view_scan_logs');
+
         $schoolId = session('LoggedSchool');
         $category = $request->category;
         $date = $request->date ?? Carbon::today()->toDateString();
@@ -808,6 +827,8 @@ class CardScanController extends Controller
 
     public function arrivalReport(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('view_arrival_reports');
+
         $schoolId = session('LoggedSchool');
         $from = $request->from ?? Carbon::today()->startOfMonth()->toDateString();
         $to = $request->to ?? Carbon::today()->toDateString();

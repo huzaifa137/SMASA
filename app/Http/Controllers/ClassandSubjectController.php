@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\Classroom;
 use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
@@ -16,6 +17,8 @@ class ClassandSubjectController extends Controller
 {
     public function createClass()
     {
+        PermissionHelper::denyUnlessFeature('add_class');
+
         $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
         $SecondaryClasses = collect();
         $PrimaryClasses = collect();
@@ -134,6 +137,8 @@ class ClassandSubjectController extends Controller
     }
     public function storeClass(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('add_class');
+
         $request->validate([
             'class_id' => 'required',
             'class_stream' => 'required',
@@ -207,6 +212,8 @@ class ClassandSubjectController extends Controller
     }
     public function updateClassSubjects(Request $request, $id)
     {
+        PermissionHelper::denyUnlessFeature('edit_class');
+
         $assignment = ClassStreamAssignment::findOrFail($id);
 
         // Validate request
@@ -255,13 +262,8 @@ class ClassandSubjectController extends Controller
 
     public function manageClasses()
     {
+        PermissionHelper::denyUnlessFeature('edit_class');
 
-        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
-            abort(
-                403,
-                'Unauthorized Access. Contact TechSate Software Company Limited.'
-            );
-        }
         Helper::requireSchool();
         $classRecord = Classroom::where('school_id', Helper::requireSchool())->orderBy('class_name', 'Asc')->get();
 
@@ -274,12 +276,7 @@ class ClassandSubjectController extends Controller
 
     public function destroyClass($id)
     {
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
-            abort(
-                403,
-                'Unauthorized Access. Contact TechSate Software Company Limited.'
-            );
-        }
+        PermissionHelper::denyUnlessFeature('delete_class');
 
         $class = Classroom::findOrFail($id);
         $class_id = $class->class_name;
@@ -306,12 +303,7 @@ class ClassandSubjectController extends Controller
 
     public function deleteStream(Stream $stream)
     {
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
-            abort(
-                403,
-                'Unauthorized Access. Contact TechSate Software Company Limited.'
-            );
-        }
+        PermissionHelper::denyUnlessFeature('manage_streams');
 
         $class_id = $stream->class_id;
         $stream_id = $stream->stream_id;
@@ -331,8 +323,7 @@ class ClassandSubjectController extends Controller
 
     public function assignSupervisor(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_class_teacher')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Class Supervisor'
@@ -361,6 +352,13 @@ class ClassandSubjectController extends Controller
 
     public function removeSupervisor(Request $request)
     {
+        if (!PermissionHelper::canFeature('assign_class_teacher')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Remove Class Supervisor'
+            ], 403);
+        }
+
         $request->validate([
             'class_id' => 'required|exists:classrooms,id',
         ]);
@@ -379,8 +377,7 @@ class ClassandSubjectController extends Controller
 
     public function assignSubjectTeacher1(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_subject_teachers')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
@@ -409,8 +406,7 @@ class ClassandSubjectController extends Controller
 
     public function removeSubjectTeacher1(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_subject_teachers')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
@@ -435,8 +431,7 @@ class ClassandSubjectController extends Controller
 
     public function assignSubjectTeacher2(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_subject_teachers')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
@@ -465,8 +460,7 @@ class ClassandSubjectController extends Controller
 
     public function removeSubjectTeacher2(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_subject_teachers')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
@@ -491,6 +485,7 @@ class ClassandSubjectController extends Controller
 
     public function manageClassStreams($class_id)
     {
+        PermissionHelper::denyUnlessFeature('manage_streams');
 
         $Streams = DB::table('streams')->where('class_id', $class_id)->where('school_id', Helper::requireSchool())->orderBy('stream_id', 'Asc')->get();
 
@@ -503,8 +498,7 @@ class ClassandSubjectController extends Controller
 
     public function assignClassTeacher(Request $request)
     {
-
-        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
+        if (!PermissionHelper::canFeature('assign_class_teacher')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Subject Supervisor'
@@ -533,6 +527,13 @@ class ClassandSubjectController extends Controller
 
     public function removeClassTeacher(Request $request)
     {
+        if (!PermissionHelper::canFeature('assign_class_teacher')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized Access. Contact School Admin to Remove Class Teacher'
+            ], 403);
+        }
+
         $request->validate([
             'class_id' => 'required|exists:streams,id',
         ]);
@@ -551,6 +552,8 @@ class ClassandSubjectController extends Controller
 
     public function attachedStreamSubjects($classId, $streamId)
     {
+        PermissionHelper::denyUnlessFeature('view_classes');
+
         $assignment = ClassStreamAssignment::where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', Session('LoggedSchool'))
@@ -578,6 +581,8 @@ class ClassandSubjectController extends Controller
 
     public function editClassSubjects($classId, $streamId)
     {
+        PermissionHelper::denyUnlessFeature('edit_class');
+
         $assignment = ClassStreamAssignment::with([
             'classSubjects' => function ($query) use ($classId, $streamId) {
                 $query->where('stream_id', $streamId)

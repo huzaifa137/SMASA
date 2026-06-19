@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-
+use App\Helpers\PermissionHelper;
 
 class TeacherController extends Controller
 {
     public function addTeachers()
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
         Helper::requireSchool();
 
         $school_id = Helper::requireSchool();
@@ -26,6 +27,11 @@ class TeacherController extends Controller
 
     public function storeTeacher(Request $request)
     {
+
+        if (!PermissionHelper::canFeature('add_teacher')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized Access. You do not have permission to add teachers.'], 403);
+        }
+
 
         if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
             return response()->json([
@@ -77,6 +83,7 @@ class TeacherController extends Controller
 
     public function allTeachers()
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
         $teachers = Teacher::orderBy('surname')->get();
 
         return view('Teacher.teachers-in-school', compact('teachers'));
@@ -84,6 +91,7 @@ class TeacherController extends Controller
 
     public function teacherProfile($id)
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
         Helper::requireSchool();
 
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
@@ -95,6 +103,7 @@ class TeacherController extends Controller
     public function updateteacherProfile($id)
     {
 
+        PermissionHelper::denyUnlessFeature('edit_teacher');
         Helper::requireSchool();
 
         $roles = Role::all();
@@ -106,6 +115,8 @@ class TeacherController extends Controller
 
     public function getTeacherData($id)
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
+
         $teacher = Teacher::where('school_id', Helper::requireSchool())
             ->where('id', $id)
             ->firstOrFail();
@@ -115,6 +126,12 @@ class TeacherController extends Controller
 
     public function storeUpdatedTeacherProfile(Request $request, Teacher $teacher)
     {
+
+        if (!PermissionHelper::canFeature('edit_teacher')) {
+            return response()->json(['message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+        }
+
+
         $validated = $request->validate([
             'surname' => 'required|string|max:255',
             'firstname' => 'required|string|max:255',
@@ -154,7 +171,8 @@ class TeacherController extends Controller
 
     public function schoolTeachers()
     {
-        Helper::requireSchool();
+         PermissionHelper::denyUnlessFeature('view_teachers');
+    Helper::requireSchool();
 
         $school_id = Helper::requireSchool();
 
@@ -173,6 +191,10 @@ class TeacherController extends Controller
 
     public function updateTeacherRole(Request $request, $id)
     {
+         if (!PermissionHelper::canFeature('edit_teacher')) {
+        return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+    }
+
         try {
             $teacher = Teacher::findOrFail($id);
 
@@ -213,6 +235,7 @@ class TeacherController extends Controller
 
     public function getTeacherProfileData($id)
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
         $teacher = Teacher::with('role')->findOrFail($id);
 
         // Add role name to the response
@@ -223,6 +246,10 @@ class TeacherController extends Controller
 
     public function assignTeacherRole(Request $request)
     {
+         if (!PermissionHelper::canFeature('edit_teacher')) {
+        return response()->json(['message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+    }
+
         $request->validate([
             'teacher_id' => 'required|exists:teachers,id',
             'role_id' => 'required|exists:roles,id',
@@ -245,6 +272,7 @@ class TeacherController extends Controller
 
     public function individualSchoolTeachers($schoolId)
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
         $teachers = Teacher::with('school')
             ->where('school_id', $schoolId)
             ->orderBy('id')
@@ -257,6 +285,16 @@ class TeacherController extends Controller
 
     public function destroyTeacher($id)
     {
+        if (!PermissionHelper::canFeature('delete_teacher')) {
+        return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
+    }
+
+
+        // --- THE INTENDED NEW CODE ---
+        if (!PermissionHelper::canFeature('delete_teacher')) {
+            return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
+        }
+
         $teacher = Teacher::findOrFail($id);
 
         if ($teacher->teacher_profile && File::exists(public_path($teacher->teacher_profile))) {
@@ -270,6 +308,11 @@ class TeacherController extends Controller
 
     public function updatePassword(Request $request)
     {
+
+     if (!PermissionHelper::canFeature('edit_teacher')) {
+        return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+    }
+
         try {
             // Validate request
             $request->validate([
@@ -314,7 +357,9 @@ class TeacherController extends Controller
 
     public function bulkImportTeacherForm()
     {
-        Helper::requireSchool();
+            PermissionHelper::denyUnlessFeature('add_teacher');
+    Helper::requireSchool();
+
         $schoolId = Helper::requireSchool();
         $school = \App\Models\School::findOrFail($schoolId);
 
@@ -323,7 +368,8 @@ class TeacherController extends Controller
 
     public function downloadTeacherTemplate()
     {
-        Helper::requireSchool();
+        PermissionHelper::denyUnlessFeature('add_teacher');
+    Helper::requireSchool();
         $schoolId = Helper::requireSchool();
         $schoolName = DB::table('schools')->where('id', $schoolId)->value('name') ?? 'School';
         $filename = 'teachers_import_' . preg_replace('/\s+/', '_', $schoolName) . '.xlsx';
@@ -336,6 +382,12 @@ class TeacherController extends Controller
 
     public function bulkImportTeachers(Request $request)
     {
+
+     if (!PermissionHelper::canFeature('add_teacher')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized Access. You do not have permission to add teachers.'], 403);
+    }
+
+
         if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized Access.'], 403);
         }
@@ -365,6 +417,11 @@ class TeacherController extends Controller
 
     public function updateTeacherStatus(Request $request, $id)
     {
+
+        if (!PermissionHelper::canFeature('manage_teacher_status')) {
+        return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to manage teacher status.'], 403);
+    }
+
         if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
             return response()->json(['status' => false, 'message' => 'Unauthorized.'], 403);
         }
@@ -397,6 +454,8 @@ class TeacherController extends Controller
 
     public function getTeacherStatus($id)
     {
+        PermissionHelper::denyUnlessFeature('view_teachers');
+        
         $teacher = \App\Models\Teacher::where('school_id', Helper::requireSchool())
             ->where('id', $id)
             ->firstOrFail();

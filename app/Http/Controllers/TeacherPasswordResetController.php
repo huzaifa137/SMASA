@@ -26,8 +26,11 @@ class TeacherPasswordResetController extends Controller
     public function showForgotPasswordForm()
     {
 
-        // Fetch schools for the dropdown (same query as login page)
-        $schools = House::where('Head', 0)->where('ContactPerson', 0)->get();
+        $schools = House::whereNotIn('Number', function ($query) {
+            $query->select('registration_code')
+                ->from('schools')
+                ->where('school_status', 1);
+        })->get();
 
         return view('users.teacher-forgot-password', compact('schools'));
     }

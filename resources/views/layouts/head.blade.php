@@ -22,3 +22,6 @@
 <link href="{{ URL::asset('assets/plugins/web-fonts/plugin.css') }}" rel="stylesheet" />
 
 @yield('css')
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">

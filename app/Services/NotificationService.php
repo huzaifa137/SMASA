@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\SmasaNotification;
 use App\Models\SmasaNotificationRecipient;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
@@ -51,8 +52,58 @@ class NotificationService
             ]);
         }
 
+        // ── Fire Web Push to all User accounts that are recipients ──
+        // ── Fire Web Push to all User accounts that are recipients ──
+        self::dispatchPush($recipients, [
+            'title' => $notification->title,
+            'body' => $notification->body,
+            'url' => $notification->url,
+            'icon' => $notification->icon ?? '/favicon.ico',
+        ]);
+
         return $notification;
     }
+
+    /**
+     * Resolve User models for push-eligible recipients and send.
+     * Only 'admin' type recipients map to the users table right now.
+     * Teachers/students can be added when those models get Notifiable.
+     */
+private static function dispatchPush(array $recipients, array $payload): void
+{
+    try {
+        $pushNotification = new \App\Notifications\SmasaPushNotification(
+            title: $payload['title'],
+            body: $payload['body'],
+            url: $payload['url'] ?? null,
+            icon: $payload['icon'] ?? '/favicon.ico',
+        );
+
+        $adminIds = collect($recipients)->where('type', 'admin')->pluck('id')->unique()->values();
+        if ($adminIds->isNotEmpty()) {
+            foreach (\App\Models\User::whereIn('id', $adminIds)->get() as $user) {
+                if ($user->pushSubscriptions()->exists()) {
+                    $user->notify($pushNotification);
+                }
+            }
+        }
+
+        $teacherIds = collect($recipients)->where('type', 'teacher')->pluck('id')->unique()->values();
+        if ($teacherIds->isNotEmpty()) {
+            foreach (\App\Models\Teacher::whereIn('id', $teacherIds)->get() as $teacher) {
+                if ($teacher->pushSubscriptions()->exists()) {
+                    $teacher->notify($pushNotification);
+                }
+            }
+        }
+
+        // Student push is not wired yet — Student model has no Notifiable/HasPushSubscriptions
+        // trait, and no student-facing page registers a push subscription. Add both if needed.
+    } catch (\Throwable $e) {
+        // Push failure must NEVER crash the main notification flow
+        \Log::warning('WebPush dispatch failed: ' . $e->getMessage());
+    }
+}
 
     /**
      * Send to all admins in a school.
@@ -61,8 +112,8 @@ class NotificationService
         array $data,
         int $schoolId
     ): SmasaNotification {
-       $admins = DB::table('users')
-    ->where('user_role', 'admin')
+        $admins = DB::table('users')
+            ->where('user_role', 'admin')
             ->pluck('id')
             ->map(fn($id) => [
                 'type' => 'admin',
@@ -131,8 +182,8 @@ class NotificationService
         int $schoolId
     ): SmasaNotification {
 
-       $admins = DB::table('users')
-    ->where('user_role', 'admin')
+        $admins = DB::table('users')
+            ->where('user_role', 'admin')
             ->pluck('id')
             ->map(fn($id) => [
                 'type' => 'admin',

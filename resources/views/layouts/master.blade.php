@@ -9,6 +9,7 @@
     <meta content="Spruko Technologies Private Limited" name="author">
     <meta name="keywords"
         content="Admin, Admin Template, Dashboard, Responsive, Admin Dashboard, Bootstrap, Bootstrap 4, Clean, Backend, Jquery, Modern, Web App, Admin Panel, Ui, Premium Admin Templates, Flat, Admin Theme, Ui Kit, Bootstrap Admin, Responsive Admin, Application, Template, Admin Themes, Dashboard Template" />
+    <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     @include('layouts.head')
 </head>
 
@@ -29,6 +30,10 @@
                     @include('layouts.footer')
                 </div><!-- End Page -->
                 @include('layouts.footer-scripts')
+
+                @auth
+                    <script src="{{ asset('js/push-init.js') }}"></script>
+                @endauth
 </body>
 
 </html>

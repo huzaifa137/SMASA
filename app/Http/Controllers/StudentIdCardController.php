@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\School;
 use App\Models\SchoolProfile;
 use App\Models\Student;
@@ -22,6 +23,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function index()
     {
+        PermissionHelper::denyUnlessFeature('view_cards');
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $schoolProfile = SchoolProfile::where('school_id', $schoolId)->first();
@@ -43,6 +46,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function create()
     {
+        PermissionHelper::denyUnlessFeature('generate_cards');
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $classrooms = Classroom::where('school_id', $schoolId)->get();
@@ -56,6 +61,10 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function generate(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to generate ID cards.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -133,6 +142,10 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function generateSingle(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -192,6 +205,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function preview($cardId)
     {
+        PermissionHelper::denyUnlessFeature('print_cards');
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -222,6 +237,10 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function printCard($cardId)
     {
+        if (!PermissionHelper::canFeature('print_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -258,6 +277,10 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function printBulk(Request $request)
     {
+        if (!PermissionHelper::canFeature('print_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -305,6 +328,10 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function revoke($cardId)
     {
+        if (!PermissionHelper::canFeature('revoke_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
 
@@ -319,6 +346,7 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function verify($cardNumber)
     {
+        // Public endpoint - no permission check needed
         $card = StudentIdCard::where('card_number', $cardNumber)->with('student')->first();
 
         if (!$card) {
@@ -350,6 +378,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function scannerPage()
     {
+        PermissionHelper::denyUnlessFeature('verify_cards');
+
         return view('student.id-cards.scanner');
     }
 
@@ -358,6 +388,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function getStreamsBySenior(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('view_cards');
+
         $schoolId = session('LoggedSchool');
         $streams = Stream::where('school_id', $schoolId)
             ->where('class_id', $request->class_id)
@@ -375,6 +407,8 @@ class StudentIdCardController extends Controller
     // ──────────────────────────────────────────────
     public function stats()
     {
+        PermissionHelper::denyUnlessFeature('view_cards');
+
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
 
@@ -448,10 +482,14 @@ class StudentIdCardController extends Controller
     }
 
     // ──────────────────────────────────────────────
-//  GET STUDENTS PREVIEW for generation
-// ──────────────────────────────────────────────
+    //  GET STUDENTS PREVIEW for generation
+    // ──────────────────────────────────────────────
     public function getStudentsPreview(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -490,11 +528,14 @@ class StudentIdCardController extends Controller
     }
 
     // ──────────────────────────────────────────────
-//  SEARCH STUDENTS for single card generation
-// ──────────────────────────────────────────────
-// In StudentIdCardController.php
+    //  SEARCH STUDENTS for single card generation
+    // ──────────────────────────────────────────────
     public function searchStudents(Request $request)
     {
+        if (!PermissionHelper::canFeature('generate_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         Helper::requireSchool();
         $schoolId = session('LoggedSchool');
         $activeYear = Helper::active_year();
@@ -555,61 +596,67 @@ class StudentIdCardController extends Controller
         return response()->json($students);
     }
 
-    // In StudentIdCardController.php
-public function reactivate($cardId)
-{
-    try {
-        Helper::requireSchool();
-        $schoolId = session('LoggedSchool');
+    // ──────────────────────────────────────────────
+    //  REACTIVATE a card
+    // ──────────────────────────────────────────────
+    public function reactivate($cardId)
+    {
+        if (!PermissionHelper::canFeature('reactivate_cards')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
 
-        $card = StudentIdCard::where('id', $cardId)->where('school_id', $schoolId)->first();
-        
-        if (!$card) {
-            return response()->json([
-                'status' => 'error', 
-                'message' => 'ID card not found.'
-            ], 404);
-        }
-        
-        // Check if card is expired
-        if ($card->expiry_date && Carbon::parse($card->expiry_date)->isPast()) {
-            return response()->json([
-                'status' => 'error', 
-                'message' => 'Cannot reactivate an expired card. Please generate a new one instead.',
-                'error_code' => 'CARD_EXPIRED'
-            ], 422);
-        }
-        
-        // Check if already active
-        if ($card->status === 'active') {
-            return response()->json([
-                'status' => 'error', 
-                'message' => 'This card is already active.',
-                'error_code' => 'CARD_ALREADY_ACTIVE'
-            ], 422);
-        }
-        
-        $card->update([
-            'status' => 'active',
-            'issue_date' => now()->toDateString(),
-            'issued_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
-        ]);
+        try {
+            Helper::requireSchool();
+            $schoolId = session('LoggedSchool');
 
-        return response()->json([
-            'status' => 'success', 
-            'message' => 'ID card reactivated successfully.',
-            'card_id' => $card->id
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'An error occurred while reactivating the card.',
-            'error' => $e->getMessage(),
-            'exception' => get_class($e),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ], 500);
+            $card = StudentIdCard::where('id', $cardId)->where('school_id', $schoolId)->first();
+            
+            if (!$card) {
+                return response()->json([
+                    'status' => 'error', 
+                    'message' => 'ID card not found.'
+                ], 404);
+            }
+            
+            // Check if card is expired
+            if ($card->expiry_date && Carbon::parse($card->expiry_date)->isPast()) {
+                return response()->json([
+                    'status' => 'error', 
+                    'message' => 'Cannot reactivate an expired card. Please generate a new one instead.',
+                    'error_code' => 'CARD_EXPIRED'
+                ], 422);
+            }
+            
+            // Check if already active
+            if ($card->status === 'active') {
+                return response()->json([
+                    'status' => 'error', 
+                    'message' => 'This card is already active.',
+                    'error_code' => 'CARD_ALREADY_ACTIVE'
+                ], 422);
+            }
+            
+            $card->update([
+                'status' => 'active',
+                'issue_date' => now()->toDateString(),
+                'issued_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
+            ]);
+
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'ID card reactivated successfully.',
+                'card_id' => $card->id
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while reactivating the card.',
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
-}
 }

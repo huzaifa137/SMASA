@@ -8,6 +8,7 @@
     <meta content="SMASA" name="description">
     <meta content="Spruko Technologies Private Limited" name="author">
     <meta name="keywords" content="UP" />
+    <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     @include('layouts.custom-head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -16,6 +17,10 @@
 <body class="h-100vh page-style1 light-mode">
     @yield('content')
     @include('layouts.custom-footer-scripts')
+
+    @auth
+<script src="{{ asset('js/push-init.js') }}"></script>
+@endauth
 </body>
 
 </html>

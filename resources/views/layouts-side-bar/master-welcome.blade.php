@@ -7,7 +7,7 @@
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
 	<meta content="SMASA" name="description">
 <meta name="keywords" content="SMASA, school management system, student information system, online school platform, school ERP, digital classroom tools, school attendance tracking, exam management system, timetable scheduling, fee management system, parent-teacher communication, learning management system, education technology, school reporting tools, smart education software, school administration platform" />
-
+<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 	@include('layouts-side-bar.head')
 </head>
@@ -29,6 +29,9 @@
 					@include('layouts-side-bar.footer')
 				</div><!-- End Page -->
 				@include('layouts-side-bar.footer-scripts1')
+				@auth
+<script src="{{ asset('js/push-init.js') }}"></script>
+@endauth
 </body>
 
 </html>

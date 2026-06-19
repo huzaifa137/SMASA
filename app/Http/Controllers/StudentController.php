@@ -23,7 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Mail;
-
+use App\Helpers\PermissionHelper;
 use App\Exports\StudentBulkTemplate;
 use App\Imports\StudentBulkImport;
 
@@ -265,6 +265,7 @@ class StudentController extends Controller
 
     public function studentPortal()
     {
+        PermissionHelper::denyUnlessFeature('view_students');
         $school_id = Session('LoggedSchool');
 
         $classRecord = Helper::MasterRecordMerge(
@@ -284,6 +285,7 @@ class StudentController extends Controller
 
     public function addNewStudent()
     {
+        PermissionHelper::denyUnlessFeature('add_student');
         Helper::requireSchool();
         $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
         $schoolId = Helper::requireSchool();
@@ -350,6 +352,9 @@ class StudentController extends Controller
     public function generateStudentID(Request $request)
     {
 
+     if (!PermissionHelper::canFeature('view_student_details')) {
+        return response()->json(['message' => 'Unauthorized.'], 403);
+    }
 
         $schoolNumber = DB::table('schools')
             ->where('id', $request->school_id)
@@ -436,6 +441,10 @@ class StudentController extends Controller
 
     public function storeStudent(Request $request)
     {
+
+     if (!PermissionHelper::canFeature('add_student')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to add students.'], 403);
+    }
 
         if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
             return response()->json([
@@ -561,6 +570,7 @@ class StudentController extends Controller
 
     public function allStudents()
     {
+        PermissionHelper::denyUnlessFeature('view_students');
         $schoolId = Helper::requireSchool();
         $activeYear = Helper::active_year();
 
@@ -613,6 +623,8 @@ class StudentController extends Controller
 
     public function viewStudent($id)
     {
+
+    PermissionHelper::denyUnlessFeature('view_student_details');
         $student = Student::findOrFail($id);
 
         $student->photo_url = null;
@@ -637,6 +649,11 @@ class StudentController extends Controller
 
     public function updateStudent(Request $request)
     {
+
+    if (!PermissionHelper::canFeature('edit_student')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to edit students.'], 403);
+    }
+
         $student = Student::findOrFail($request->student_id);
 
         $validated = $request->validate([
@@ -705,6 +722,12 @@ class StudentController extends Controller
 
     public function destroyStudent(Student $student)
     {
+
+    if (!PermissionHelper::canFeature('delete_student')) {
+        return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
+    }
+
+
         try {
             if ($student->student_photo) {
                 $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
@@ -740,6 +763,9 @@ class StudentController extends Controller
 
     public function exportStudents($schoolId, $type)
     {
+
+    PermissionHelper::denyUnlessFeature('export_students');
+
         $activeYear = Helper::active_year();
 
         if ($activeYear == 'No Active year Set') {
@@ -892,6 +918,7 @@ class StudentController extends Controller
 
     public function showStudentInformation($id)
     {
+        PermissionHelper::denyUnlessFeature('view_student_details');
         $student = Student::findOrFail($id);
 
         return response()->json([
@@ -956,6 +983,7 @@ class StudentController extends Controller
 
     public function moveStudentForm()
     {
+        PermissionHelper::denyUnlessFeature('edit_student');
         $school_id = Session('LoggedSchool');
 
         $classrooms = Classroom::where('school_id', $school_id)->get();
@@ -1049,6 +1077,10 @@ class StudentController extends Controller
     public function moveStudent(Request $request)
     {
 
+    if (!PermissionHelper::canFeature('edit_student')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to move students.'], 403);
+    }
+
         $validated = $request->validate([
             'student_ids' => 'required|array',
             'student_ids.*' => 'integer|exists:students,id',
@@ -1081,6 +1113,7 @@ class StudentController extends Controller
 
 public function bulkImportStudentForm()
 {
+    PermissionHelper::denyUnlessFeature('import_students');
     Helper::requireSchool();
 
     $schoolId      = Helper::requireSchool();
@@ -1141,6 +1174,12 @@ public function bulkImportStudentForm()
      */
     public function bulkImportStudents(Request $request)
     {
+
+    if (!PermissionHelper::canFeature('import_students')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to import students.'], 403);
+    }
+
+
         if (
             !Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
         ) {

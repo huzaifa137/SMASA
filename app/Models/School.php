@@ -27,4 +27,14 @@ class School extends Model
         return $this->hasMany(Classroom::class);
     }
 
+    public function schoolRoles()
+    {
+        return $this->hasMany(SchoolRole::class, 'school_id');
+    }
+
+    public function teachers()
+    {
+        return $this->hasMany(Teacher::class, 'school_id');
+    }
+
 }

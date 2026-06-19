@@ -817,6 +817,20 @@ class Helper extends Controller
         return $schoolStatus;
     }
 
+    /**
+     * Get the school_status for the currently logged-in school (by school ID).
+     * Status codes: 10 = Active, 1 = Pending Activation, 0 = Banned, 8 = Locked, 9 = Suspended
+     */
+    public static function currentSchoolStatus(): ?int
+    {
+        $schoolId = Session('LoggedSchool');
+        if (!$schoolId) return null;
+
+        return DB::table('schools')
+            ->where('id', $schoolId)
+            ->value('school_status');
+    }
+
     public static function getHelperMarksEntryProgress()
     {
         $schoolId = Session('LoggedSchool');

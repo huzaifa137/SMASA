@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use App\Models\DynamicFormValue;
 use App\Models\master_code;
@@ -44,6 +45,8 @@ class MasterDataController extends Controller
 
     public function supplierPrequalificationEvaluationCriteria()
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
+
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
             ->where('md_code', 'PREQUALIFICATION_CRITERIA')
@@ -58,6 +61,10 @@ class MasterDataController extends Controller
 
     public function storePrequalificationCriteria(Request $request)
     {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
+            return back();
+        }
 
         $select = DB::table('master_datas')->where('md_code', 'PREQUALIFICATION_CRITERIA')->where('md_name', $request->supplier_document)->where('md_misc1', $request->category_of_procurement)->get();
 
@@ -82,6 +89,7 @@ class MasterDataController extends Controller
 
     public function requisitionDocuments()
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
 
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
@@ -93,8 +101,10 @@ class MasterDataController extends Controller
         return view('master-logic.requisition-documents', $data)
             ->with('documents', $documents);
     }
+
     public function documentsToLoadRequisition(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
 
         $category = $request->Category;
 
@@ -138,6 +148,7 @@ class MasterDataController extends Controller
 
     public function master_table()
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
 
         $mc_code = DB::table('master_datas')
             ->join('master_codes', 'md_master_code_id', '=', 'master_codes.id')
@@ -153,6 +164,8 @@ class MasterDataController extends Controller
 
     public function master_code()
     {
+        PermissionHelper::denyUnlessFeature('view_master_codes');
+
         $all_data = DB::table('master_codes')->orderBy('mc_name', 'ASC')->get();
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
@@ -161,6 +174,7 @@ class MasterDataController extends Controller
 
     public function masterCodeToData()
     {
+        PermissionHelper::denyUnlessFeature('view_master_codes');
 
         $all_data = DB::table('master_codes')
             ->orderBy('mc_name', 'ASC')
@@ -175,6 +189,7 @@ class MasterDataController extends Controller
 
     public function travelRequisitionDocuments()
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
 
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
@@ -190,6 +205,7 @@ class MasterDataController extends Controller
 
     public function editRecord($md_id)
     {
+        PermissionHelper::denyUnlessFeature('edit_master_data');
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
@@ -240,6 +256,8 @@ class MasterDataController extends Controller
 
     public function addRecord(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('create_master_data');
+
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
         $selected = DB::select('select id, mc_name from master_codes');
 
@@ -248,12 +266,15 @@ class MasterDataController extends Controller
 
     public function addMasterCode()
     {
+        PermissionHelper::denyUnlessFeature('create_master_codes');
+
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
         return view('master-logic.add-code', $data);
     }
 
     public function editMasterCode($id)
     {
+        PermissionHelper::denyUnlessFeature('edit_master_codes');
 
         $record_code = DB::table('master_codes')
             ->where('id', $id)
@@ -268,6 +289,8 @@ class MasterDataController extends Controller
 
     public function masterCodeList(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('view_master_data');
+
         $id = $request->id;
 
         $code_totals = DB::table('master_datas')
@@ -335,6 +358,8 @@ class MasterDataController extends Controller
 
     public function editSupplierDocument($id)
     {
+        PermissionHelper::denyUnlessFeature('edit_master_data');
+
         $user_data = DB::table('master_datas')
             ->where('md_id', '=', $id)
             ->first();
@@ -346,6 +371,13 @@ class MasterDataController extends Controller
 
     public function addNewRecord(Request $request)
     {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. You do not have permission to create master data.'
+            ], 403);
+        }
+
         try {
             $request->validate([
                 'master_code_id' => 'required|integer|exists:master_codes,id',
@@ -439,6 +471,10 @@ class MasterDataController extends Controller
 
     public function deleteRecord($md_id)
     {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
+            return back();
+        }
 
         $masterRecord = DB::table('master_datas')->where('md_id', $md_id)->first();
         $masterCode = DB::table('master_datas')->where('md_id', $md_id)->value('md_master_code_id');
@@ -475,6 +511,9 @@ class MasterDataController extends Controller
 
     public function updateMasterrecord(Request $request)
     {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to edit master data.');
+        }
 
         $record_id = $request->record_id;
 
@@ -496,6 +535,10 @@ class MasterDataController extends Controller
 
     public function sendMasterCode(Request $request)
     {
+        if (!PermissionHelper::canFeature('create_master_codes')) {
+            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to create master codes.');
+        }
+
         $date = time();
         $session = Helper::user_id();
 
@@ -509,6 +552,10 @@ class MasterDataController extends Controller
 
     public function deleteCode($mc_id)
     {
+        if (!PermissionHelper::canFeature('delete_master_codes')) {
+            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to delete master codes.');
+        }
+
         DB::table('master_codes')
             ->where('mc_id', $mc_id)
             ->delete();
@@ -518,6 +565,9 @@ class MasterDataController extends Controller
 
     public function updateMasterCode(Request $request)
     {
+        if (!PermissionHelper::canFeature('edit_master_codes')) {
+            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to edit master codes.');
+        }
 
         $mc_id = $request->mc_id;
 
@@ -534,6 +584,10 @@ class MasterDataController extends Controller
 
     public function storeRequisitionDocument(Request $request)
     {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
+            return back();
+        }
 
         $select = DB::table('master_datas')->where('md_master_code_id', 30075)->where('md_code', 'REQ_DOC')->where('md_name', $request->supplier_document)->where('md_misc1', $request->category_of_procurement)->get();
 
@@ -558,6 +612,11 @@ class MasterDataController extends Controller
 
     public function deleteSupplierDocument($id)
     {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
+            return back();
+        }
+
         DB::table('master_datas')
             ->where('md_id', '=', $id)
             ->delete();
@@ -568,6 +627,10 @@ class MasterDataController extends Controller
 
     public function updateSupplierDocument(Request $request)
     {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to edit master data.');
+            return back();
+        }
 
         $md_md = $request->md_id;
         $doc = $request->supplier_document;
@@ -590,6 +653,10 @@ class MasterDataController extends Controller
 
     public function storeTravelRequisitionDocument(Request $request)
     {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
+            return back();
+        }
 
         $select = DB::table('master_datas')->where('md_code', 'TRA_DOC')
             ->where('md_name', $request->supplier_document)->get();

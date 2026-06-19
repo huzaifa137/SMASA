@@ -168,7 +168,7 @@
 
                 .modal-header {
                     border-radius: 15px 15px 0 0;
-                    background: linear-gradient(135deg, #dc3545, #c82333);
+                    background: linear-gradient(135deg, #2C29CA , #2C29CA );
                 }
 
                 /* Input focus effects */

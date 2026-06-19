@@ -6,6 +6,7 @@ use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
@@ -38,6 +39,8 @@ class ExaminationController extends Controller
 
     public function index()
     {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
         $schoolId = Session('LoggedSchool');
         $examinations = Examination::where('school_id', $schoolId)
             ->orderBy('created_at', 'desc')
@@ -51,6 +54,11 @@ class ExaminationController extends Controller
 
     public function create()
     {
+
+        if (!PermissionHelper::canFeature('create_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to create exams.'], 403);
+        }
+
         $examCode = $this->generateExamCode();
         $schoolId = Session('LoggedSchool');
 
@@ -132,6 +140,10 @@ class ExaminationController extends Controller
     public function updateStatus(Request $request, $id)
     {
 
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to update exam status.'], 403);
+        }
+
         $request->validate(['status' => 'required|in:draft,active,marks_entry,closed,results_released']);
 
         $exam = Examination::where('id', $id)
@@ -151,6 +163,8 @@ class ExaminationController extends Controller
 
     public function marksEntry($examId)
     {
+
+        PermissionHelper::denyUnlessFeature('view_exams');
 
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher'); // assumes logged user id
@@ -209,6 +223,8 @@ class ExaminationController extends Controller
      */
     public function marksEntrySubject($examId, $classSubjectId)
     {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
 
@@ -272,6 +288,11 @@ class ExaminationController extends Controller
      */
     public function saveMarks(Request $request, $examId)
     {
+
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to enter marks.'], 403);
+        }
+
         $request->validate([
             'marks' => 'required|array',
             'marks.*.student_id' => 'required|integer',
@@ -365,6 +386,11 @@ class ExaminationController extends Controller
 
     public function destroy($id)
     {
+
+        if (!PermissionHelper::canFeature('delete_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to delete exams.'], 403);
+        }
+
         $exam = Examination::where('id', $id)
             ->where('school_id', Session('LoggedSchool'))
             ->firstOrFail();
@@ -446,6 +472,9 @@ class ExaminationController extends Controller
      */
     public function passslipStudent($examId, $studentId)
     {
+
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
         $schoolId = Session('LoggedSchool');
 
         $exam = Examination::where('id', $examId)
@@ -497,6 +526,8 @@ class ExaminationController extends Controller
      */
     public function passslipClass(Request $request, $examId)
     {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
         $request->validate([
             'class_id' => 'required|integer',
             'stream_id' => 'nullable|string',
@@ -557,6 +588,8 @@ class ExaminationController extends Controller
 
     public function passslipAll($examId)
     {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
         $schoolId = Session('LoggedSchool');
 
         $exam = Examination::where('id', $examId)
@@ -621,6 +654,9 @@ class ExaminationController extends Controller
 
     public function passslipIndex($examId)
     {
+
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
         $schoolId = Session('LoggedSchool');
 
         $exam = Examination::where('id', $examId)
@@ -889,6 +925,9 @@ class ExaminationController extends Controller
     public function dashboard(Request $request)
     {
 
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+
         $schoolId = Session('LoggedSchool');
         // Get all examinations for the school
         $examinations = Examination::where('school_id', $schoolId)
@@ -1061,6 +1100,10 @@ class ExaminationController extends Controller
 
     public function marksEntryPortal(Request $request)
     {
+
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+
         $schoolId = Session('LoggedSchool');
         // Get all examinations for the school
         $examinations = Examination::where('school_id', $schoolId)
@@ -1155,6 +1198,10 @@ class ExaminationController extends Controller
 
     public function updateExaminationStatus(Request $request, $id)
     {
+        if (!PermissionHelper::canFeature('publish_results')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to publish results.'], 403);
+        }
+
         $examination = Examination::findOrFail($id);
         $newStatus = $request->status;
 
@@ -1207,6 +1254,12 @@ class ExaminationController extends Controller
 
     public function destroyExamination($id)
     {
+
+        if (!PermissionHelper::canFeature('delete_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to delete examinations.'], 403);
+        }
+
+
         $examination = Examination::findOrFail($id);
 
         // Only allow deletion of draft examinations
@@ -1227,6 +1280,10 @@ class ExaminationController extends Controller
 
     public function editDetails($id)
     {
+
+        PermissionHelper::denyUnlessFeature('edit_exam');
+
+
         $examination = Examination::findOrFail($id);
 
         return response()->json([
@@ -1246,6 +1303,12 @@ class ExaminationController extends Controller
 
     public function updateDetails(Request $request, $id)
     {
+
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to edit exam details.'], 403);
+        }
+
+
         $examination = Examination::findOrFail($id);
 
         $validated = $request->validate([
@@ -1309,6 +1372,10 @@ class ExaminationController extends Controller
     // Add this method to your ExaminationController
     public function getResultsSummary($examId)
     {
+        if (!PermissionHelper::canFeature('generate_reports')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $schoolId = Session('LoggedSchool');
 
         $exam = Examination::where('id', $examId)

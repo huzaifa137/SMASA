@@ -221,9 +221,13 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $schools = House::where('Head', 0)->where('ContactPerson', 0)->get();
+        $schools = House::whereNotIn('Number', function ($query) {
+            $query->select('registration_code')
+                ->from('schools')
+                ->where('school_status', 1);
+        })->get();
 
-        return view('users.login', compact(['schools']));
+        return view('users.login', compact('schools'));
     }
 
     public function courseInformation(Request $request)

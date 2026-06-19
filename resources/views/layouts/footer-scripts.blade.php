@@ -27,3 +27,6 @@
 @yield('js')
 <!-- Custom js-->
 <script src="{{ URL::asset('assets/js/custom.js') }}"></script>
+@auth
+<script src="{{ URL::asset('js/push-init.js') }}"></script>
+@endauth
