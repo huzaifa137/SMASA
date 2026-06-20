@@ -29,7 +29,7 @@ $controller = new Controller();
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <h3 class="text-muted text-uppercase fw-semibold mb-0">School Profle</h3>
+                                    <h3 class="text-muted text-uppercase fw-semibold mb-0">School Profile</h3>
                                 </div>
                             </div>
 
@@ -48,7 +48,13 @@ $controller = new Controller();
                                 <div class="p-3 border rounded bg-light">
                                     <div class="text-center mb-4">
                                         <img id="logoPreview"
-                                            src="{{ $profile?->logo ? asset('uploads/logos/' . $profile->logo) : ($school->logo ? asset('uploads/logos/' . $school->logo) : asset('assets/images/brand/uplogolight.png')) }}"
+                                            src="{{ 
+                                                (!empty($profile) && !empty($profile->logo)) 
+                                                    ? asset('uploads/logos/' . $profile->logo) 
+                                                    : ((!empty($school) && !empty($school->logo)) 
+                                                        ? asset('uploads/logos/' . $school->logo) 
+                                                        : asset('assets/images/brand/uplogolight.png')) 
+                                            }}"
                                             class="img-fluid rounded border p-2"
                                             style="max-height: 180px; object-fit: contain;" alt="School Logo">
                                     </div>
@@ -71,34 +77,35 @@ $controller = new Controller();
                                                 <div class="form-group">
                                                     <label for="schoolName" class="form-label">School Name</label>
                                                     <input type="text" name="name" id="schoolName" class="form-control"
-                                                        value="{{ $profile->name ?? $school->name }}">
+                                                        value="{{ (!empty($profile) && !empty($profile->name)) ? $profile->name : (!empty($school) ? $school->name : '') }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolEmail" class="form-label">Email</label>
                                                     <input type="email" name="email" id="schoolEmail" class="form-control"
-                                                        value="{{ $profile->email ?? $school->email }}">
+                                                        value="{{ (!empty($profile) && !empty($profile->email)) ? $profile->email : (!empty($school) ? $school->email : '') }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolType" class="form-label">Postal Address</label>
                                                     <input type="text" name="school_type" id="schoolType"
                                                         class="form-control" placeholder="P.O BOX 000-00100 Kampala"
-                                                        value="{{ $profile->school_type ?? '' }}">
+                                                        value="{{ !empty($profile) ? $profile->school_type : '' }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label class="form-label">Boarding Status</label>
                                                     <?php
-    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->boarding_status ?? $school->boarding_status, 'boarding_status', 1);
-                                                        ?>
+                                                    $boardingStatus = !empty($profile) ? $profile->boarding_status : (!empty($school) ? $school->boarding_status : '');
+                                                    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $boardingStatus, 'boarding_status', 1);
+                                                    ?>
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolPopulation" class="form-label">Mission</label>
                                                     <textarea name="population" id="schoolPopulation" class="form-control"
                                                         rows="4" maxlength="300"
-                                                        placeholder="Enter your mission here...">{{ $profile->population ?? '' }}</textarea>
+                                                        placeholder="Enter your mission here...">{{ !empty($profile) ? $profile->population : '' }}</textarea>
                                                 </div>
                                             </div>
 
@@ -108,33 +115,34 @@ $controller = new Controller();
                                                         Version)</label>
                                                     <input type="text" name="registration_code" id="registrationCode"
                                                         class="form-control"
-                                                        value="{{ $profile->registration_code ?? '' }}">
+                                                        value="{{ !empty($profile) ? $profile->registration_code : '' }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolPhone" class="form-label">Phone Number</label>
                                                     <input type="text" name="phone" id="schoolPhone" class="form-control"
-                                                        value="{{ $profile->phone ?? $school->phone }}">
+                                                        value="{{ (!empty($profile) && !empty($profile->phone)) ? $profile->phone : (!empty($school) ? $school->phone : '') }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolGender" class="form-label">Gender</label>
                                                     <?php
-    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $profile->gender ?? $school->gender, 'gender');
-                                                        ?>
+                                                    $gender = !empty($profile) ? $profile->gender : (!empty($school) ? $school->gender : '');
+                                                    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $gender, 'gender');
+                                                    ?>
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolMotto" class="form-label">School Motto</label>
                                                     <input type="text" name="motto" id="schoolMotto" class="form-control"
-                                                        value="{{ $profile->motto ?? '' }}">
+                                                        value="{{ !empty($profile) ? $profile->motto : '' }}">
                                                 </div>
 
                                                 <div class="form-group">
                                                     <label for="schoolVision" class="form-label">Vision</label>
                                                     <textarea name="vision" id="schoolVision" class="form-control" rows="4"
                                                         maxlength="300"
-                                                        placeholder="Enter your vision here...">{{ $profile->vision ?? '' }}</textarea>
+                                                        placeholder="Enter your vision here...">{{ !empty($profile) ? $profile->vision : '' }}</textarea>
                                                 </div>
                                             </div>
 
@@ -146,7 +154,7 @@ $controller = new Controller();
                                                                 Prefix</label>
                                                             <input type="text" name="admission_prefix" id="admissionPrefix"
                                                                 class="form-control" placeholder="e.g ADMNO/"
-                                                                value="{{ $profile->admission_prefix ?? '' }}">
+                                                                value="{{ !empty($profile) ? $profile->admission_prefix : '' }}">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
@@ -155,7 +163,7 @@ $controller = new Controller();
                                                                 Begins At</label>
                                                             <input type="text" name="admission_start" id="admissionStart"
                                                                 class="form-control" placeholder="e.g 0001/"
-                                                                value="{{ $profile->admission_start ?? '' }}">
+                                                                value="{{ !empty($profile) ? $profile->admission_start : '' }}">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
@@ -164,7 +172,7 @@ $controller = new Controller();
                                                                 Suffix</label>
                                                             <input type="text" name="admission_suffix" id="admissionSuffix"
                                                                 class="form-control" placeholder="e.g /2025"
-                                                                value="{{ $profile->admission_suffix ?? '' }}">
+                                                                value="{{ !empty($profile) ? $profile->admission_suffix : '' }}">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -214,12 +222,12 @@ $controller = new Controller();
                                 <!-- LEFT SIDE (icon + name grouped) -->
                                 <div class="d-none d-lg-flex">
                                     <i class="fas fa-school fa-2x"></i>
-                                    <h3 class="mb-0 ms-3"> &nbsp;{{ $school->name }}</h3>
+                                    <h3 class="mb-0 ms-3"> &nbsp;{{ !empty($school) ? $school->name : 'School Name' }}</h3>
                                 </div>
 
                                 <!-- RIGHT SIDE (badge) -->
                                 <span class="badge bg-light text-primary px-3 py-2 mx-auto d-block d-lg-inline-block">
-                                    ID: {{ $school->registration_code }}
+                                    ID: {{ !empty($school) ? $school->registration_code : 'N/A' }}
                                 </span>
 
                             </div>
@@ -233,14 +241,14 @@ $controller = new Controller();
                                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                                     <i class="fas fa-envelope text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Email</h6>
-                                    <p class="mb-0 fw-bold">{{ $school->email }}</p>
+                                    <p class="mb-0 fw-bold">{{ !empty($school) ? $school->email : 'N/A' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                                     <i class="fas fa-phone-alt text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Phone</h6>
-                                    <p class="mb-0 fw-bold">{{ $school->phone ?: '00-000-000-00' }}</p>
+                                    <p class="mb-0 fw-bold">{{ (!empty($school) && !empty($school->phone)) ? $school->phone : '00-000-000-00' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -248,7 +256,7 @@ $controller = new Controller();
                                     <i class="fas fa-calendar-alt text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Date Added</h6>
                                     <p class="mb-0 fw-bold">
-                                        {{ \Carbon\Carbon::parse($school->date_added)->format('M d, Y') }}
+                                        {{ (!empty($school) && !empty($school->date_added)) ? \Carbon\Carbon::parse($school->date_added)->format('M d, Y') : 'N/A' }}
                                     </p>
                                 </div>
                             </div>
@@ -256,7 +264,7 @@ $controller = new Controller();
                                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                                     <i class="fas fa-users text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Population</h6>
-                                    <p class="mb-0 fw-bold">{{ Helper::recordMdname($school->population) ?: '0 - 0'}}</p>
+                                    <p class="mb-0 fw-bold">{{ (!empty($school) && !empty($school->population)) ? Helper::recordMdname($school->population) : '0 - 0'}}</p>
                                 </div>
                             </div>
                         </div>
@@ -272,20 +280,19 @@ $controller = new Controller();
                                     <div class="info-list">
                                         <div class="info-item d-flex justify-content-between py-2">
                                             <span class="text-muted fw-semibold">School Type</span>
-                                            <span class="fw-bold">{{ Helper::recordMdname($school->school_type) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->school_type)) ? Helper::recordMdname($school->school_type) : 'N/A' }}</span>
                                         </div>
                                         <div class="info-item d-flex justify-content-between py-2 border-top">
                                             <span class="text-muted fw-semibold">Gender</span>
-                                            <span class="fw-bold">{{ Helper::recordMdname($school->gender) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->gender)) ? Helper::recordMdname($school->gender) : 'N/A' }}</span>
                                         </div>
                                         <div class="info-item d-flex justify-content-between py-2 border-top">
                                             <span class="text-muted fw-semibold">Regional Level</span>
-                                            <span class="fw-bold">{{ Helper::recordMdname($school->regional_level) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->regional_level)) ? Helper::recordMdname($school->regional_level) : 'N/A' }}</span>
                                         </div>
                                         <div class="info-item d-flex justify-content-between py-2 border-top">
                                             <span class="text-muted fw-semibold">Ownership</span>
-                                            <span
-                                                class="fw-bold">{{ Helper::recordMdname($school->school_ownership) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->school_ownership)) ? Helper::recordMdname($school->school_ownership) : 'N/A' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -300,16 +307,15 @@ $controller = new Controller();
                                     <div class="info-list">
                                         <div class="info-item d-flex justify-content-between py-2">
                                             <span class="text-muted fw-semibold">Boarding Status</span>
-                                            <span
-                                                class="fw-bold">{{ Helper::recordMdname($school->boarding_status) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->boarding_status)) ? Helper::recordMdname($school->boarding_status) : 'N/A' }}</span>
                                         </div>
                                         <div class="info-item d-flex justify-content-between py-2 border-top">
                                             <span class="text-muted fw-semibold">Products/Services</span>
-                                            <span class="fw-bold">{{ Helper::recordMdname($school->school_product) }}</span>
+                                            <span class="fw-bold">{{ (!empty($school) && !empty($school->school_product)) ? Helper::recordMdname($school->school_product) : 'N/A' }}</span>
                                         </div>
                                         <div class="info-item d-flex justify-content-between py-2 border-top">
                                             <span class="text-muted fw-semibold">Registration Code</span>
-                                            <span class="fw-bold font-monospace">{{ $school->registration_code }}</span>
+                                            <span class="fw-bold font-monospace">{{ !empty($school) ? $school->registration_code : 'N/A' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -317,7 +323,7 @@ $controller = new Controller();
                         </div>
 
                         <!-- Additional Information Card (if needed) -->
-                        @if(isset($school->description) || isset($school->address))
+                        @if(!empty($school) && (isset($school->description) || isset($school->address)))
                             <div class="row mt-4">
                                 <div class="col-12">
                                     <div class="info-section">
@@ -325,13 +331,13 @@ $controller = new Controller();
                                             <i class="fas fa-file-alt me-2"></i>Additional Information
                                         </h5>
                                         <div class="additional-info">
-                                            @if(isset($school->address))
+                                            @if(!empty($school) && isset($school->address))
                                                 <div class="mb-2">
                                                     <span class="text-muted fw-semibold">Address:</span>
                                                     <span class="ms-2">{{ $school->address }}</span>
                                                 </div>
                                             @endif
-                                            @if(isset($school->description))
+                                            @if(!empty($school) && isset($school->description))
                                                 <div>
                                                     <span class="text-muted fw-semibold">Description:</span>
                                                     <p class="mt-1 mb-0">{{ $school->description }}</p>

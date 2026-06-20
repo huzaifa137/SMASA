@@ -45,6 +45,521 @@
 .role-action-buttons > *:last-child {
     margin-right: 0;
 }
+
+/* Manage Roles - Stack layout on mobile */
+
+/* Hero section */
+.urp-hero {
+    padding: 2rem 2rem 2.8rem;
+}
+
+.urp-hero h2 {
+    font-size: 1.7rem;
+}
+
+.urp-hero p {
+    opacity: .8;
+}
+
+/* Role rows */
+.role-row {
+    padding: 1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.role-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.role-name {
+    font-size: 1rem;
+}
+
+.role-desc {
+    font-size: .78rem;
+}
+
+.staff-badge {
+    font-size: .75rem;
+    padding: .2rem .65rem;
+}
+
+.role-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-action-buttons > * {
+    margin-right: 0;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .urp-hero {
+        padding: 1.5rem 1.5rem 2.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.4rem;
+    }
+    
+    .urp-hero p {
+        font-size: .9rem;
+    }
+    
+    /* Stack the hero content */
+    .urp-hero .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    
+    .urp-hero .d-flex > div:last-child {
+        width: 100%;
+    }
+    
+    /* Make form and list stack */
+    .row.g-3 {
+        flex-direction: column;
+    }
+    
+    .col-lg-4,
+    .col-lg-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    /* Remove sticky on form */
+    .sticky-top {
+        position: relative !important;
+        top: 0 !important;
+    }
+    
+    .role-row {
+        padding: 0.85rem 1rem;
+        gap: 0.75rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .urp-hero {
+        padding: 1.25rem 1.25rem 2rem;
+        border-radius: 12px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.2rem;
+    }
+    
+    .urp-hero p {
+        font-size: .82rem;
+        margin-top: 0.2rem !important;
+    }
+    
+    .card-body.p-4 {
+        padding: 1.25rem !important;
+    }
+    
+    .role-row {
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .role-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+    
+    .role-name {
+        font-size: 0.9rem;
+    }
+    
+    .role-desc {
+        font-size: 0.72rem;
+    }
+    
+    .staff-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+    }
+    
+    .role-action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.4rem;
+        margin-top: 0.25rem;
+    }
+    
+    .role-action-buttons .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .role-action-buttons .btn-sm i {
+        font-size: 0.7rem;
+    }
+    
+    /* Card header on mobile */
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.9rem;
+    }
+    
+    .card-header input {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .card-body.p-3 {
+        padding: 0.75rem !important;
+    }
+    
+    /* Form group labels */
+    .form-label {
+        font-size: 0.82rem;
+    }
+    
+    .form-control {
+        font-size: 14px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    /* Buttons */
+    .btn {
+        font-size: 0.82rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .btn-block {
+        padding: 0.5rem;
+    }
+    
+    /* Modal on mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 12px !important;
+    }
+    
+    .modal-header {
+        padding: 0.75rem 1rem;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .modal-header h5 {
+        font-size: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+    }
+    
+    .modal-footer {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        flex: 1;
+        min-width: 80px;
+        justify-content: center;
+    }
+}
+
+/* Mobile small screens */
+@media (max-width: 576px) {
+    .urp-hero {
+        padding: 1rem 1rem 1.75rem;
+        border-radius: 10px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1rem;
+    }
+    
+    .urp-hero p {
+        font-size: 0.75rem;
+    }
+    
+    .card-body.p-4 {
+        padding: 1rem !important;
+    }
+    
+    .role-row {
+        padding: 0.6rem 0.75rem;
+        gap: 0.4rem;
+        border-radius: 8px;
+    }
+    
+    .role-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+    
+    .role-name {
+        font-size: 0.82rem;
+    }
+    
+    .role-desc {
+        font-size: 0.68rem;
+    }
+    
+    .staff-badge {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+    }
+    
+    .role-action-buttons {
+        gap: 0.3rem;
+    }
+    
+    .role-action-buttons .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.65rem;
+        min-height: 28px;
+        min-width: 28px;
+    }
+    
+    .role-action-buttons .btn-sm i {
+        font-size: 0.65rem;
+    }
+    
+    .card-header {
+        padding: 0.6rem 0.75rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.82rem;
+    }
+    
+    .card-body.p-3 {
+        padding: 0.5rem !important;
+    }
+    
+    .form-label {
+        font-size: 0.75rem;
+    }
+    
+    .form-control {
+        font-size: 13px;
+        padding: 0.4rem 0.6rem;
+        border-radius: 8px;
+    }
+    
+    .btn {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.6rem;
+    }
+    
+    .btn-block {
+        padding: 0.4rem;
+    }
+    
+    .card-footer {
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .card-footer i {
+        font-size: 0.7rem;
+    }
+    
+    /* Modal on small screens */
+    .modal-dialog {
+        margin: 0.25rem;
+    }
+    
+    .modal-box {
+        padding: 0.75rem;
+    }
+    
+    .modal-title {
+        font-size: 0.9rem;
+    }
+    
+    .modal-body .form-group {
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .urp-hero {
+        padding: 0.75rem 0.75rem 1.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 0.9rem;
+    }
+    
+    .role-row {
+        padding: 0.5rem 0.6rem;
+    }
+    
+    .role-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.65rem;
+    }
+    
+    .role-name {
+        font-size: 0.75rem;
+    }
+    
+    .role-desc {
+        font-size: 0.62rem;
+    }
+    
+    .role-action-buttons .btn-sm {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.6rem;
+        min-height: 24px;
+        min-width: 24px;
+    }
+    
+    .role-action-buttons .btn-sm i {
+        font-size: 0.6rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.75rem;
+    }
+    
+    .card-header input {
+        font-size: 12px;
+        padding: 0.3rem 0.5rem;
+    }
+    
+    .form-control {
+        font-size: 12px;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+/* Empty state on mobile */
+@media (max-width: 576px) {
+    .empty-state {
+        padding: 1.5rem 0.5rem;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+    }
+    
+    .empty-state h5 {
+        font-size: 0.9rem;
+    }
+    
+    .empty-state p {
+        font-size: 0.75rem;
+    }
+}
+
+/* Fix for nested flex on mobile */
+@media (max-width: 768px) {
+    .role-row .flex-grow-1 {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .btn,
+    .role-row,
+    .role-action-buttons .btn-sm,
+    .card-header input,
+    .form-control {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .btn:active,
+    .role-row:active {
+        transform: scale(0.98);
+    }
+    
+    .role-action-buttons .btn-sm {
+        min-height: 32px;
+        min-width: 32px;
+    }
+}
+
+/* Smooth transitions */
+.role-row,
+.btn,
+.card,
+.urp-hero {
+    transition: all 0.2s ease;
+}
+
+/* Fix for role action buttons spacing */
+.role-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-action-buttons > * {
+    margin-right: 0;
+}
+
+@media (max-width: 768px) {
+    .role-action-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+/* Fix for navbar include on mobile */
+@media (max-width: 768px) {
+    .urp-hero .d-flex > div:last-child {
+        width: 100%;
+    }
+    
+    .urp-hero .d-flex > div:last-child .btn-group {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+    
+    .urp-hero .d-flex > div:last-child .btn-group .btn {
+        flex: 1;
+        min-width: 60px;
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+/* Fix for search input placeholder on mobile */
+@media (max-width: 576px) {
+    .card-header input::placeholder {
+        font-size: 12px;
+        opacity: 0.6;
+    }
+}
 </style>
 @endsection
 

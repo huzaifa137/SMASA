@@ -288,6 +288,379 @@
         background: var(--lib-blue-l);
         color: var(--lib-blue);
     }
+
+    /* Library Catalogue - Stack layout on mobile */
+
+/* Hero section */
+.lib-hero {
+    padding: 1.5rem 2rem;
+}
+
+.lib-hero form {
+    max-width: 100%;
+    flex-wrap: wrap;
+}
+
+/* Main grid layout - side by side on large screens */
+[style*="display:grid;grid-template-columns:220px 1fr;"] {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Book grid */
+.book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+/* Recommendations grid */
+[style*="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"] {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+/* Book cards */
+.book-card {
+    height: 100%;
+}
+
+.book-cover {
+    height: 160px;
+}
+
+.book-cover-placeholder {
+    height: 160px;
+}
+
+/* Tablet - collapse sidebar */
+@media (max-width: 992px) {
+    [style*="display:grid;grid-template-columns:220px 1fr;"] {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+    
+    .filter-sidebar {
+        position: relative;
+        top: 0;
+    }
+    
+    .filter-sidebar .lib-card {
+        margin-bottom: 1rem;
+    }
+    
+    .lib-hero {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .lib-hero form {
+        max-width: 100%;
+    }
+    
+    .lib-hero form input {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+/* Mobile landscape */
+@media (max-width: 768px) {
+    .lib-hero {
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.3rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .8rem !important;
+    }
+    
+    .lib-hero form {
+        flex-direction: column;
+        gap: .5rem;
+    }
+    
+    .lib-hero form input {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+    
+    [style*="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"] {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: .75rem;
+    }
+    
+    .book-cover {
+        height: 140px;
+    }
+    
+    .book-cover-placeholder {
+        height: 140px;
+    }
+    
+    .lib-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: 1rem 1.25rem;
+    }
+    
+    .lib-card-header .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .lib-card-body {
+        padding: 1rem 1.25rem;
+    }
+    
+    .cat-chip {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    [style*="padding:1.5rem;"] {
+        padding: 0.75rem !important;
+    }
+}
+
+/* Mobile portrait */
+@media (max-width: 576px) {
+    .lib-hero {
+        padding: .75rem 1rem;
+        border-radius: 14px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.1rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .75rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .lib-hero form input {
+        font-size: 14px;
+        padding: .5rem .75rem;
+    }
+    
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: .75rem;
+    }
+    
+    [style*="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"] {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: .5rem;
+    }
+    
+    .book-cover {
+        height: 120px;
+    }
+    
+    .book-cover-placeholder {
+        height: 120px;
+    }
+    
+    .book-info {
+        padding: .65rem;
+    }
+    
+    .book-title {
+        font-size: .75rem;
+    }
+    
+    .book-author {
+        font-size: .65rem;
+    }
+    
+    .badge {
+        font-size: .6rem;
+        padding: .15rem .5rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .85rem;
+    }
+    
+    .lib-card-header h3 i {
+        font-size: .85rem;
+    }
+    
+    .lib-card-header {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-body {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-header .btn-lib {
+        font-size: .75rem;
+        padding: .4rem .75rem;
+    }
+    
+    .filter-sidebar .lib-card {
+        margin-bottom: .75rem;
+    }
+    
+    .form-label {
+        font-size: .75rem;
+    }
+    
+    .form-control {
+        font-size: .8rem;
+        padding: .5rem .7rem;
+    }
+    
+    .cat-chip {
+        font-size: .7rem;
+        padding: .35rem .5rem;
+    }
+    
+    .cat-chip .badge {
+        font-size: .6rem;
+    }
+    
+    .btn-lib {
+        font-size: .75rem;
+        padding: .4rem .75rem;
+    }
+    
+    .alert {
+        font-size: .8rem;
+        padding: .65rem .85rem;
+    }
+    
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+    
+    /* Pagination on mobile */
+    nav[role="navigation"] {
+        font-size: .8rem;
+    }
+    
+    nav[role="navigation"] .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    nav[role="navigation"] .page-link {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    /* Make filters expandable/collapsible hint */
+    .filter-sidebar .lib-card:first-child .lib-card-header {
+        cursor: pointer;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.5rem !important;
+    }
+    
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: .5rem;
+    }
+    
+    .book-cover {
+        height: 100px;
+    }
+    
+    .book-cover-placeholder {
+        height: 100px;
+        font-size: 2rem;
+    }
+    
+    [style*="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"] {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: .4rem;
+    }
+    
+    .lib-hero {
+        padding: .5rem .75rem;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1rem !important;
+    }
+    
+    .book-info {
+        padding: .5rem;
+    }
+    
+    .book-title {
+        font-size: .65rem;
+    }
+    
+    .book-author {
+        font-size: .6rem;
+    }
+    
+    .badge {
+        font-size: .5rem;
+        padding: .1rem .4rem;
+    }
+}
+
+/* Fix scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow:"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .cat-chip,
+    .btn-lib,
+    .book-card,
+    .lib-hero form input,
+    .form-control,
+    select.form-control {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        min-height: 44px;
+    }
+    
+    .book-card:active {
+        transform: scale(0.97);
+    }
+    
+    .cat-chip {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* Smooth transitions for responsive changes */
+.lib-card,
+.book-card,
+.lib-hero,
+.filter-sidebar {
+    transition: all 0.2s ease;
+}
 </style>
 @endsection
 

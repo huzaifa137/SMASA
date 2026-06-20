@@ -329,6 +329,293 @@
             white-space: nowrap;
             color: var(--text-2);
         }
+
+        /* Authors page responsive fixes - stack layout on mobile */
+
+/* Main grid layout - side by side on large screens */
+[style*="display:grid;grid-template-columns:1fr 340px;"] {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Tablet - reduce right column width */
+@media (max-width: 992px) {
+    [style*="display:grid;grid-template-columns:1fr 340px;"] {
+        grid-template-columns: 1fr 280px;
+        gap: 1.25rem;
+    }
+}
+
+/* Mobile - stack vertically */
+@media (max-width: 768px) {
+    [style*="display:grid;grid-template-columns:1fr 340px;"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem;
+    }
+    
+    /* Remove sticky positioning on mobile */
+    .lib-card[style*="position:sticky;"] {
+        position: relative !important;
+        top: 0 !important;
+    }
+    
+    /* Make add author card full width on mobile */
+    .lib-card:last-child {
+        width: 100% !important;
+    }
+    
+    /* Adjust hero section */
+    .lib-hero {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.3rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .8rem !important;
+    }
+    
+    /* Table adjustments */
+    .lib-table {
+        min-width: 500px;
+        font-size: .8rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .5rem .75rem;
+    }
+    
+    .author-bio {
+        max-width: 120px;
+    }
+    
+    .avatar-initials {
+        width: 32px;
+        height: 32px;
+        font-size: .7rem;
+    }
+}
+
+/* Mobile small screens */
+@media (max-width: 576px) {
+    /* Main container padding */
+    [style*="padding:1.5rem;"] {
+        padding: 0.75rem !important;
+    }
+    
+    /* Hero */
+    .lib-hero {
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.1rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .75rem !important;
+    }
+    
+    /* Card headers */
+    .lib-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .5rem;
+        padding: 1rem 1.25rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .9rem;
+    }
+    
+    .lib-card-header span {
+        font-size: .75rem !important;
+    }
+    
+    .lib-card-body {
+        padding: 1rem;
+    }
+    
+    /* Table */
+    .lib-table {
+        min-width: 450px;
+        font-size: .75rem;
+    }
+    
+    .lib-table th {
+        font-size: .65rem;
+        padding: .4rem .6rem;
+    }
+    
+    .lib-table td {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 120px;
+    }
+    
+    .author-bio {
+        max-width: 80px;
+    }
+    
+    .avatar-initials {
+        width: 28px;
+        height: 28px;
+        font-size: .6rem;
+        border-radius: 8px;
+    }
+    
+    .badge {
+        font-size: .6rem;
+        padding: .15rem .5rem;
+    }
+    
+    /* Form fields on mobile */
+    .form-control {
+        font-size: 14px;
+        padding: .5rem .75rem;
+    }
+    
+    .form-label {
+        font-size: .75rem;
+    }
+    
+    /* Buttons on mobile */
+    .btn-lib {
+        font-size: .75rem;
+        padding: .4rem .75rem;
+    }
+    
+    .lib-table td:last-child .btn-lib {
+        padding: .25rem .6rem;
+        font-size: .7rem;
+    }
+    
+    /* Modal on mobile */
+    .modal-box {
+        margin: 1rem;
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+    
+    .modal-title {
+        font-size: 1rem;
+    }
+    
+    /* Pagination on mobile */
+    nav[role="navigation"] {
+        font-size: .75rem;
+    }
+    
+    nav[role="navigation"] .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    nav[role="navigation"] .page-link {
+        padding: .3rem .5rem;
+        font-size: .7rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.5rem !important;
+    }
+    
+    .lib-hero {
+        padding: .75rem 1rem;
+        border-radius: 14px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1rem !important;
+    }
+    
+    .lib-table {
+        min-width: 350px;
+        font-size: .7rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .3rem .5rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 80px;
+    }
+    
+    .lib-card-header {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-body {
+        padding: .75rem;
+    }
+    
+    .author-bio {
+        max-width: 60px;
+    }
+    
+    .avatar-initials {
+        width: 24px;
+        height: 24px;
+        font-size: .5rem;
+        border-radius: 6px;
+    }
+    
+    .modal-box {
+        padding: 1rem;
+        margin: .5rem;
+    }
+    
+    .modal-title {
+        font-size: .9rem;
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow-x:auto;"] {
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .btn-lib,
+    .lib-table td .btn-lib,
+    button.btn-lib {
+        min-height: 36px;
+        min-width: 36px;
+    }
+    
+    .lib-card-header .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .lib-table td:last-child button {
+        padding: .3rem .7rem;
+    }
+    
+    /* Make add author form full width */
+    .lib-card:last-child .lib-card-body {
+        padding: 1rem;
+    }
+}
     </style>
 @endsection
 

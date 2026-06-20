@@ -177,6 +177,385 @@
             text-align: center;
             flex: 1;
         }
+
+        /* Reports - Stack layout on mobile */
+
+/* Hero section */
+.lib-hero {
+    padding: 2rem 2.5rem;
+}
+
+/* Report grid - 2 columns on large screens */
+.report-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Charts containers */
+.lib-card .lib-card-body {
+    padding: 1.5rem;
+}
+
+.lib-card .lib-card-body canvas {
+    max-height: 200px;
+    width: 100% !important;
+}
+
+/* Fines summary chips */
+.fine-summary-chip {
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+}
+
+[style*="display:flex;gap:1rem;flex-wrap:wrap;"] {
+    gap: 1rem;
+}
+
+/* Tables responsive */
+.lib-table {
+    min-width: 500px;
+}
+
+.lib-table th,
+.lib-table td {
+    padding: .75rem 1rem;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .report-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .65rem .85rem;
+        font-size: .8rem;
+    }
+    
+    .fine-summary-chip {
+        padding: 1rem;
+    }
+    
+    .fine-summary-chip div:first-child {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Tablet - stack vertically */
+@media (max-width: 768px) {
+    .report-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .lib-hero {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.3rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .8rem !important;
+    }
+    
+    .lib-card-header {
+        padding: 1rem 1.25rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .9rem;
+    }
+    
+    .lib-card-body {
+        padding: 1rem;
+    }
+    
+    .lib-table {
+        min-width: 600px;
+        font-size: .8rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .5rem .75rem;
+    }
+    
+    /* Fines summary - wrap nicely */
+    [style*="display:flex;gap:1rem;flex-wrap:wrap;"] {
+        gap: .75rem;
+    }
+    
+    .fine-summary-chip {
+        padding: .85rem 1rem;
+        min-width: 80px;
+        flex: 1 1 calc(33% - .75rem);
+    }
+    
+    .fine-summary-chip div:first-child {
+        font-size: 1.1rem !important;
+    }
+    
+    .fine-summary-chip div:last-child {
+        font-size: .7rem !important;
+    }
+    
+    /* Overdue books and popular books sections */
+    [style*="overflow-x:auto;max-height:380px;overflow-y:auto;"] {
+        max-height: 300px;
+    }
+}
+
+/* Mobile landscape */
+@media (max-width: 576px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.75rem !important;
+    }
+    
+    .lib-hero {
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.1rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .75rem !important;
+    }
+    
+    .lib-card-header {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .85rem;
+    }
+    
+    .lib-card-body {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-body canvas {
+        max-height: 160px !important;
+    }
+    
+    .lib-table {
+        min-width: 520px;
+        font-size: .75rem;
+    }
+    
+    .lib-table th {
+        font-size: .65rem;
+        padding: .4rem .6rem;
+    }
+    
+    .lib-table td {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 40px;
+    }
+    
+    .lib-table td:nth-child(2) {
+        min-width: 100px;
+        max-width: 120px;
+    }
+    
+    .lib-table td:nth-child(3) {
+        min-width: 80px;
+    }
+    
+    .badge {
+        font-size: .6rem;
+        padding: .15rem .5rem;
+    }
+    
+    /* Fines summary chips on mobile */
+    [style*="display:flex;gap:1rem;flex-wrap:wrap;"] {
+        gap: .5rem;
+    }
+    
+    .fine-summary-chip {
+        padding: .65rem .5rem;
+        min-width: 60px;
+        flex: 1 1 calc(33% - .5rem);
+        border-radius: 10px;
+    }
+    
+    .fine-summary-chip div:first-child {
+        font-size: .95rem !important;
+    }
+    
+    .fine-summary-chip div:last-child {
+        font-size: .65rem !important;
+    }
+    
+    /* Overdue and popular sections */
+    [style*="overflow-x:auto;max-height:380px;overflow-y:auto;"] {
+        max-height: 250px;
+    }
+    
+    /* Chart legend on mobile */
+    .chartjs-legend {
+        font-size: .7rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.5rem !important;
+    }
+    
+    .lib-hero {
+        padding: .75rem 1rem;
+        border-radius: 14px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1rem !important;
+    }
+    
+    .lib-card-header {
+        padding: .6rem .75rem;
+    }
+    
+    .lib-card-body {
+        padding: .6rem .75rem;
+    }
+    
+    .lib-card-body canvas {
+        max-height: 130px !important;
+    }
+    
+    .lib-table {
+        min-width: 450px;
+        font-size: .7rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .3rem .5rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 30px;
+    }
+    
+    .lib-table td:nth-child(2) {
+        min-width: 80px;
+        max-width: 90px;
+    }
+    
+    .lib-table td:nth-child(3) {
+        min-width: 60px;
+    }
+    
+    .lib-table td:nth-child(4) {
+        min-width: 50px;
+    }
+    
+    .fine-summary-chip {
+        padding: .5rem .3rem;
+        min-width: 50px;
+        flex: 1 1 calc(33% - .3rem);
+        border-radius: 8px;
+    }
+    
+    .fine-summary-chip div:first-child {
+        font-size: .8rem !important;
+    }
+    
+    .fine-summary-chip div:last-child {
+        font-size: .6rem !important;
+    }
+    
+    [style*="overflow-x:auto;max-height:380px;overflow-y:auto;"] {
+        max-height: 200px;
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow-x:auto;"] {
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+    }
+    
+    [style*="overflow-x:auto;max-height:380px;overflow-y:auto;"] {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    /* Chart containers */
+    .lib-card .lib-card-body {
+        overflow: hidden;
+    }
+    
+    /* Ensure charts resize properly */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* Smooth transitions */
+.lib-card,
+.lib-hero,
+.fine-summary-chip {
+    transition: all 0.2s ease;
+}
+
+/* Empty state on mobile */
+@media (max-width: 576px) {
+    .empty-state {
+        padding: 1.5rem .5rem;
+    }
+    
+    .empty-state i {
+        font-size: 2rem !important;
+    }
+    
+    .empty-state div {
+        font-size: .85rem !important;
+    }
+}
+
+/* Chart.js legend positioning on mobile */
+@media (max-width: 576px) {
+    #categoryChart {
+        max-height: 180px !important;
+    }
+    
+    /* Doughnut chart legend - make it horizontal on mobile */
+    .chartjs-legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: .3rem;
+        padding-top: .5rem;
+    }
+    
+    .chartjs-legend li {
+        font-size: .65rem !important;
+        padding: .1rem .4rem !important;
+    }
+}
     </style>
 @endsection
 

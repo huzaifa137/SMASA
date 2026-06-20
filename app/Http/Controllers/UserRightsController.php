@@ -13,6 +13,8 @@ use App\Models\Teacher;
 use App\Models\TeacherSchoolRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserRightsController extends Controller
 {
@@ -490,6 +492,87 @@ class UserRightsController extends Controller
             'roleIdsWithUrp',
             'teachers'
         ));
+    }
+
+    /**
+     * Create the founding (or any subsequent) teacher account for a school,
+     * as a true system admin — no LoggedSchool session required.
+     *
+     * This exists because of a chicken-and-egg lockout: a brand-new school
+     * has zero teacher records, school login (UserController::
+     * authenticateSchool) requires an EXISTING teacher row to authenticate
+     * against, and PermissionHelper's bootstrap allowance only ever kicks
+     * in for a teacher who is already logged in. Nobody could ever reach
+     * "Add Teacher" for such a school because that screen requires a
+     * LoggedSchool session (Helper::requireSchool()), and setting one via
+     * SchoolController::selectSchool() strips the admin's isSystemAdmin()
+     * bypass without granting the bootstrap allowance in its place (which
+     * needs LoggedTeacher too). This endpoint lets a system admin create
+     * (and optionally immediately assign a role to) a teacher for any
+     * school directly, entirely outside the session-based access checks.
+     */
+    public function adminCreateTeacher(Request $request, School $school)
+    {
+        abort_unless(PermissionHelper::isSystemAdmin(), 403, 'System administrators only.');
+
+        $validated = $request->validate([
+            'surname' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'othername' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255|unique:teachers,email',
+            'phonenumber' => 'required|string|max:20|unique:teachers,phonenumber',
+            'gender' => 'nullable|in:male,female',
+            'password' => 'nullable|string|min:6|confirmed',
+            'school_role_id' => 'nullable|integer|exists:school_roles,id',
+        ]);
+
+        $role = null;
+        if (!empty($validated['school_role_id'])) {
+            // Confirm the role actually belongs to this school before assigning it.
+            $role = SchoolRole::where('school_id', $school->id)->findOrFail($validated['school_role_id']);
+        }
+
+        // If the admin didn't type a password, generate one and hand it
+        // back in the response so they can share it with the teacher.
+        $passwordSupplied = $request->filled('password');
+        $plainPassword = $passwordSupplied ? $validated['password'] : Str::random(10);
+
+        $teacher = Teacher::create([
+            'school_id' => $school->id,
+            'surname' => $validated['surname'],
+            'firstname' => $validated['firstname'],
+            'othername' => $validated['othername'] ?? null,
+            'email' => $validated['email'],
+            'teacher_role' =>3,
+            'phonenumber' => $validated['phonenumber'],
+            'gender' => $validated['gender'] ?? null,
+            'password' => Hash::make($plainPassword),
+            'must_change_password' => true,
+            'account_status' => 'active',
+        ]);
+
+        if ($role) {
+            TeacherSchoolRole::updateOrCreate(
+                ['teacher_id' => $teacher->id, 'school_id' => $school->id],
+                ['school_role_id' => $role->id]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Teacher account created for {$teacher->firstname} {$teacher->surname}."
+                . ($role ? " Assigned role: {$role->name}." : ' No role assigned yet — use Staff Assignments below to give them one.'),
+            'teacher' => [
+                'id' => $teacher->id,
+                'firstname' => $teacher->firstname,
+                'surname' => $teacher->surname,
+                'email' => $teacher->email,
+                'phonenumber' => $teacher->phonenumber,
+                'school_role_id' => $role?->id,
+                'role_name' => $role?->name,
+            ],
+            'temporary_password' => $passwordSupplied ? null : $plainPassword,
+        ]);
     }
 
     public function adminStoreRole(Request $request, School $school)

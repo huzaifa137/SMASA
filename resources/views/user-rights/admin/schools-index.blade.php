@@ -194,6 +194,10 @@
             border-color: #fecaca;
         }
 
+        .school-card.no-staff {
+            border-color: #bfdbfe;
+        }
+
         .school-card-risk-ribbon {
             background: linear-gradient(90deg, #fef2f2, #fff7ed);
             color: #b91c1c;
@@ -204,6 +208,12 @@
             display: flex;
             align-items: center;
             gap: .4rem;
+        }
+
+        .school-card-risk-ribbon.no-staff-ribbon {
+            background: linear-gradient(90deg, #eff6ff, #f5f3ff);
+            color: #1e3a8a;
+            border-bottom: 1px solid #bfdbfe;
         }
 
         .school-card-body {
@@ -428,8 +438,13 @@
         @if($loop->first)
         <div class="school-grid">
         @endif
-            <div class="school-card {{ $school->at_risk ? 'at-risk' : '' }}" style="animation-delay:{{ $i * 0.04 }}s;">
-                @if($school->at_risk)
+            <div class="school-card {{ $school->teachers_count == 0 ? 'no-staff' : ($school->at_risk ? 'at-risk' : '') }}" style="animation-delay:{{ $i * 0.04 }}s;">
+                @if($school->teachers_count == 0)
+                    <div class="school-card-risk-ribbon no-staff-ribbon">
+                        <i class="fa fa-user-slash"></i>
+                        No staff — nobody can log in
+                    </div>
+                @elseif($school->at_risk)
                     <div class="school-card-risk-ribbon">
                         <i class="fa fa-triangle-exclamation"></i>
                         No role grants User Rights access

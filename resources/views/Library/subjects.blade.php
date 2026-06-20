@@ -329,6 +329,321 @@
         font-size: .9rem;
         flex-shrink: 0;
     }
+
+    /* Subjects - Stack layout on mobile */
+
+/* Main grid layout - side by side on large screens */
+[style*="display:grid;grid-template-columns:1fr 340px;"] {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Hero section */
+.lib-hero {
+    padding: 2rem 2.5rem;
+}
+
+/* Subject table responsive */
+.lib-table {
+    min-width: 600px;
+}
+
+.lib-table th,
+.lib-table td {
+    padding: .75rem 1rem;
+}
+
+.subject-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+/* Tablet - reduce right column */
+@media (max-width: 992px) {
+    [style*="display:grid;grid-template-columns:1fr 340px;"] {
+        grid-template-columns: 1fr 280px;
+        gap: 1.25rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .65rem .85rem;
+        font-size: .8rem;
+    }
+}
+
+/* Tablet - stack vertically */
+@media (max-width: 768px) {
+    [style*="display:grid;grid-template-columns:1fr 340px;"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem;
+    }
+    
+    /* Remove sticky positioning */
+    .lib-card[style*="position:sticky;"] {
+        position: relative !important;
+        top: 0 !important;
+    }
+    
+    /* Make add subject card full width */
+    .lib-card:last-child {
+        width: 100% !important;
+    }
+    
+    .lib-hero {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.3rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .8rem !important;
+    }
+    
+    .lib-table {
+        min-width: 500px;
+        font-size: .8rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .5rem .75rem;
+    }
+    
+    .lib-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .5rem;
+        padding: 1rem 1.25rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .9rem;
+    }
+    
+    .lib-card-header span {
+        font-size: .75rem !important;
+    }
+    
+    .lib-card-body {
+        padding: 1rem;
+    }
+    
+    .subject-icon {
+        width: 32px;
+        height: 32px;
+        font-size: .8rem;
+    }
+}
+
+/* Mobile landscape */
+@media (max-width: 576px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.75rem !important;
+    }
+    
+    .lib-hero {
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.1rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .75rem !important;
+    }
+    
+    .lib-card-header {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .85rem;
+    }
+    
+    .lib-card-body {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-table {
+        min-width: 450px;
+        font-size: .75rem;
+    }
+    
+    .lib-table th {
+        font-size: .65rem;
+        padding: .4rem .6rem;
+    }
+    
+    .lib-table td {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 120px;
+    }
+    
+    .lib-table td:nth-child(2) {
+        max-width: 100px;
+    }
+    
+    .badge {
+        font-size: .6rem;
+        padding: .15rem .5rem;
+    }
+    
+    .subject-icon {
+        width: 28px;
+        height: 28px;
+        font-size: .7rem;
+        border-radius: 8px;
+    }
+    
+    /* Form fields */
+    .form-control {
+        font-size: 14px;
+        padding: .5rem .75rem;
+    }
+    
+    .form-label {
+        font-size: .75rem;
+    }
+    
+    /* Buttons */
+    .btn-lib {
+        font-size: .75rem;
+        padding: .4rem .75rem;
+    }
+    
+    .lib-table td:last-child .btn-lib {
+        padding: .25rem .6rem;
+        font-size: .7rem;
+    }
+    
+    /* Modal */
+    .modal-box {
+        margin: 1rem;
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+    
+    .modal-title {
+        font-size: 1rem;
+    }
+    
+    /* Pagination */
+    nav[role="navigation"] {
+        font-size: .75rem;
+    }
+    
+    nav[role="navigation"] .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    nav[role="navigation"] .page-link {
+        padding: .3rem .5rem;
+        font-size: .7rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.5rem !important;
+    }
+    
+    .lib-hero {
+        padding: .75rem 1rem;
+        border-radius: 14px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1rem !important;
+    }
+    
+    .lib-table {
+        min-width: 350px;
+        font-size: .7rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .3rem .5rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 80px;
+    }
+    
+    .lib-card-header {
+        padding: .6rem .75rem;
+    }
+    
+    .lib-card-body {
+        padding: .6rem .75rem;
+    }
+    
+    .subject-icon {
+        width: 24px;
+        height: 24px;
+        font-size: .6rem;
+        border-radius: 6px;
+    }
+    
+    .modal-box {
+        padding: 1rem;
+        margin: .5rem;
+    }
+    
+    .modal-title {
+        font-size: .9rem;
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow-x:auto;"] {
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .btn-lib,
+    .lib-table td .btn-lib,
+    button.btn-lib {
+        min-height: 36px;
+        min-width: 36px;
+    }
+    
+    .lib-card-header .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .lib-table td:last-child button {
+        padding: .3rem .7rem;
+    }
+}
+
+/* Smooth transitions */
+.lib-card,
+.lib-hero,
+.btn-lib,
+.subject-icon {
+    transition: all 0.2s ease;
+}
 </style>
 @endsection
 

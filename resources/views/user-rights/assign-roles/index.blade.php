@@ -188,6 +188,464 @@
             gap: 16px;
             /* Increase to 20px, 24px, etc. */
         }
+
+        /* Assign Roles to Staff - Stack layout on mobile */
+
+/* Hero section */
+.urp-hero {
+    padding: 2rem 2rem 2.8rem;
+}
+
+.urp-hero h2 {
+    font-size: 1.7rem;
+}
+
+.urp-hero p {
+    opacity: .8;
+}
+
+/* Teacher cards */
+.teacher-card {
+    padding: .9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.teacher-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.teacher-name {
+    font-size: .92rem;
+}
+
+.teacher-sub {
+    font-size: .76rem;
+}
+
+/* Role select */
+.role-select {
+    font-size: .82rem;
+    padding: .35rem .65rem;
+    min-width: 160px;
+}
+
+/* Badges */
+.assigned-badge,
+.no-role-badge {
+    font-size: .72rem;
+    padding: .2rem .65rem;
+}
+
+/* Filter bar */
+.filter-bar {
+    padding: .9rem 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.stats-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.stat-pill {
+    padding: .35rem .85rem;
+    font-size: .8rem;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .urp-hero {
+        padding: 1.5rem 1.5rem 2.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.4rem;
+    }
+    
+    .urp-hero p {
+        font-size: .9rem;
+    }
+    
+    .urp-hero .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    
+    .urp-hero .d-flex > div:last-child {
+        width: 100%;
+    }
+    
+    /* Filter bar - stack */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .filter-bar .stats-container {
+        justify-content: center;
+    }
+    
+    .filter-bar .d-flex {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .filter-bar .d-flex select,
+    .filter-bar .d-flex input {
+        width: 100%;
+        min-width: auto !important;
+    }
+    
+    /* Teacher cards - 2 per row on tablet */
+    .teacher-card {
+        flex-wrap: wrap;
+        padding: 0.85rem 1rem;
+        gap: 0.75rem;
+    }
+    
+    .teacher-card .flex-grow-1 {
+        flex: 1 1 100%;
+        order: 1;
+    }
+    
+    .teacher-card .d-none.d-sm-block {
+        order: 2;
+    }
+    
+    .teacher-card .role-select {
+        order: 3;
+        flex: 1 1 100%;
+        min-width: auto;
+    }
+    
+    .teacher-card .btn-save-role {
+        order: 4;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .urp-hero {
+        padding: 1.25rem 1.25rem 2rem;
+        border-radius: 12px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.2rem;
+    }
+    
+    .urp-hero p {
+        font-size: .82rem;
+        margin-top: 0.2rem !important;
+    }
+    
+    .filter-bar {
+        padding: 0.75rem 1rem;
+    }
+    
+    .filter-bar .stats-container {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+    
+    .stat-pill {
+        font-size: 0.72rem;
+        padding: 0.25rem 0.6rem;
+    }
+    
+    .stat-pill i {
+        font-size: 0.7rem;
+    }
+    
+    .filter-bar .d-flex select,
+    .filter-bar .d-flex input {
+        font-size: 14px;
+        padding: 0.4rem 0.6rem;
+        min-height: 40px;
+    }
+    
+    .teacher-card {
+        padding: 0.7rem 0.85rem;
+        gap: 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .teacher-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 0.85rem;
+    }
+    
+    .teacher-name {
+        font-size: 0.85rem;
+    }
+    
+    .teacher-sub {
+        font-size: 0.7rem;
+    }
+    
+    .teacher-card .d-none.d-sm-block {
+        display: block !important;
+        width: 100%;
+        order: 2;
+    }
+    
+    .teacher-card .role-select {
+        order: 3;
+        flex: 1 1 100%;
+        min-width: auto;
+        font-size: 0.8rem;
+        padding: 0.3rem 0.5rem;
+        min-height: 40px;
+    }
+    
+    .teacher-card .btn-save-role {
+        order: 4;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        min-height: 36px;
+        min-width: 80px;
+        justify-content: center;
+    }
+    
+    .assigned-badge,
+    .no-role-badge {
+        font-size: 0.68rem;
+        padding: 0.15rem 0.5rem;
+    }
+}
+
+/* Mobile small screens */
+@media (max-width: 576px) {
+    .urp-hero {
+        padding: 1rem 1rem 1.75rem;
+        border-radius: 10px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1rem;
+    }
+    
+    .urp-hero p {
+        font-size: 0.75rem;
+    }
+    
+    .filter-bar {
+        padding: 0.6rem 0.75rem;
+    }
+    
+    .filter-bar .stats-container {
+        gap: 0.4rem;
+        justify-content: flex-start;
+        width: 100%;
+    }
+    
+    .stat-pill {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+    }
+    
+    .stat-pill i {
+        font-size: 0.6rem;
+    }
+    
+    .filter-bar .d-flex {
+        gap: 0.4rem;
+    }
+    
+    .filter-bar .d-flex select,
+    .filter-bar .d-flex input {
+        font-size: 13px;
+        padding: 0.3rem 0.5rem;
+        min-height: 36px;
+        border-radius: 6px;
+    }
+    
+    .teacher-card {
+        padding: 0.6rem 0.7rem;
+        gap: 0.4rem;
+        border-radius: 8px;
+        border-width: 1.5px;
+    }
+    
+    .teacher-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.7rem;
+    }
+    
+    .teacher-name {
+        font-size: 0.8rem;
+    }
+    
+    .teacher-sub {
+        font-size: 0.65rem;
+    }
+    
+    .teacher-card .d-none.d-sm-block {
+        font-size: 0.7rem;
+        width: 100%;
+    }
+    
+    .assigned-badge,
+    .no-role-badge {
+        font-size: 0.62rem;
+        padding: 0.1rem 0.4rem;
+    }
+    
+    .teacher-card .role-select {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.4rem;
+        min-height: 36px;
+        border-radius: 6px;
+        border-width: 1.5px;
+    }
+    
+    .teacher-card .btn-save-role {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        min-height: 32px;
+        min-width: 70px;
+        border-radius: 6px;
+    }
+    
+    .teacher-card .btn-save-role i {
+        font-size: 0.65rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .urp-hero {
+        padding: 0.75rem 0.75rem 1.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 0.9rem;
+    }
+    
+    .stat-pill {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.4rem;
+    }
+    
+    .teacher-card {
+        padding: 0.5rem 0.6rem;
+        gap: 0.3rem;
+    }
+    
+    .teacher-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.6rem;
+    }
+    
+    .teacher-name {
+        font-size: 0.72rem;
+    }
+    
+    .teacher-sub {
+        font-size: 0.6rem;
+    }
+    
+    .teacher-card .role-select {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.35rem;
+        min-height: 32px;
+    }
+    
+    .teacher-card .btn-save-role {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
+        min-height: 28px;
+        min-width: 60px;
+    }
+    
+    .filter-bar .d-flex select,
+    .filter-bar .d-flex input {
+        font-size: 12px;
+        padding: 0.25rem 0.4rem;
+        min-height: 32px;
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow:"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .teacher-card,
+    .role-select,
+    .btn-save-role,
+    .stat-pill,
+    .filter-bar select,
+    .filter-bar input {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .teacher-card:active {
+        transform: scale(0.99);
+    }
+    
+    .role-select {
+        min-height: 40px;
+    }
+    
+    .btn-save-role {
+        min-height: 36px;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        min-height: 40px;
+    }
+}
+
+/* Smooth transitions */
+.teacher-card,
+.btn-save-role,
+.role-select,
+.stat-pill {
+    transition: all 0.2s ease;
+}
+
+/* Empty state on mobile */
+@media (max-width: 576px) {
+    .text-center.py-5 {
+        padding: 2rem 1rem !important;
+    }
+    
+    .text-center.py-5 i {
+        font-size: 2.5rem !important;
+    }
+    
+    .text-center.py-5 h5 {
+        font-size: 0.9rem;
+    }
+}
     </style>
 @endsection
 

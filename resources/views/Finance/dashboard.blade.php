@@ -463,6 +463,542 @@
     transition: var(--transition);
     cursor: pointer;  /* Add this line */
 }
+
+/* Finance Dashboard - Stack layout on mobile */
+
+/* Hero section */
+.fin-hero {
+    padding: 2.5rem 2rem 4rem;
+    margin-top: 1.5rem;
+}
+
+.fin-hero h1 {
+    font-size: 1.8rem;
+}
+
+.hero-badge {
+    font-size: 0.75rem;
+    padding: 0.28rem 0.75rem;
+}
+
+.hero-stat {
+    font-size: 0.82rem;
+}
+
+/* KPI Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.kpi {
+    padding: 1.4rem 1.5rem;
+    cursor: pointer;
+}
+
+.kpi-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+    margin-bottom: 0.9rem;
+}
+
+.kpi-val {
+    font-size: 1.6rem;
+}
+
+.kpi-val small {
+    font-size: 0.85rem;
+}
+
+.kpi-lbl {
+    font-size: 0.78rem;
+}
+
+.kpi-foot {
+    font-size: 0.74rem;
+}
+
+/* Quick Actions */
+.qa-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.7rem;
+}
+
+.qa {
+    padding: 1.1rem 0.7rem;
+}
+
+.qa-ico {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+}
+
+.qa span {
+    font-size: 0.72rem;
+}
+
+/* Net Balance Banner */
+.fin-balance {
+    padding: 1rem 1.4rem;
+    gap: 1.5rem;
+    margin-bottom: 1.2rem;
+}
+
+.fin-balance div:first-child div:first-child {
+    font-size: 0.75rem;
+}
+
+.fin-balance div:first-child div:last-child {
+    font-size: 1.5rem;
+}
+
+/* Charts */
+.fc-hd {
+    padding: 1.1rem 1.4rem;
+}
+
+.fc-hd h3 {
+    font-size: 0.95rem;
+}
+
+.fc-bd {
+    padding: 1.4rem;
+}
+
+/* Row layouts */
+.row[style*="display:flex;"] {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row[style*="display:flex;"] .col-lg-8,
+.row[style*="display:flex;"] .col-lg-7,
+.row[style*="display:flex;"] .col-lg-5,
+.row[style*="display:flex;"] .col-lg-4 {
+    flex: 1 1 100%;
+    max-width: 100%;
+}
+
+/* Tablet - reduce to 2 columns */
+@media (max-width: 992px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .qa-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .fin-hero {
+        padding: 2rem 1.5rem 3rem;
+    }
+    
+    .fin-hero h1 {
+        font-size: 1.5rem;
+    }
+    
+    .fin-hero [style*="display:flex;gap:2rem;"] {
+        gap: 1.5rem;
+    }
+}
+
+/* Tablet - stack columns */
+@media (max-width: 768px) {
+    .fin-hero {
+        padding: 1.5rem 1.25rem 2.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+    }
+    
+    .fin-hero h1 {
+        font-size: 1.3rem;
+    }
+    
+    .fin-hero p {
+        font-size: 0.85rem;
+    }
+    
+    .fin-hero [style*="display:flex;gap:2rem;"] {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+    }
+    
+    .fin-hero [style*="position:relative;z-index:1;margin-top:1.2rem;"] {
+        margin-top: 0.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .hero-stat {
+        font-size: 0.78rem;
+    }
+    
+    /* KPI cards */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .kpi {
+        padding: 1rem 1.2rem;
+    }
+    
+    .kpi-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    .kpi-val {
+        font-size: 1.3rem;
+    }
+    
+    .kpi-val small {
+        font-size: 0.75rem;
+    }
+    
+    .kpi-lbl {
+        font-size: 0.72rem;
+    }
+    
+    .kpi-foot {
+        font-size: 0.68rem;
+    }
+    
+    /* Quick Actions */
+    .qa-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .qa {
+        padding: 0.8rem 0.4rem;
+    }
+    
+    .qa-ico {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+    
+    .qa span {
+        font-size: 0.65rem;
+    }
+    
+    /* Net Balance */
+    .fin-balance {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .fin-balance > div:last-child {
+        margin-left: 0 !important;
+        text-align: left !important;
+    }
+    
+    .fin-balance div:first-child div:last-child {
+        font-size: 1.25rem;
+    }
+    
+    /* Charts container */
+    .row[style*="display:flex;"] {
+        flex-direction: column;
+    }
+    
+    .row[style*="display:flex;"] .col-lg-8,
+    .row[style*="display:flex;"] .col-lg-7,
+    .row[style*="display:flex;"] .col-lg-5,
+    .row[style*="display:flex;"] .col-lg-4 {
+        padding: 0 10px 15px !important;
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+    
+    /* Card headers on mobile */
+    .fc-hd {
+        padding: 0.8rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .fc-hd h3 {
+        font-size: 0.85rem;
+    }
+    
+    .fc-bd {
+        padding: 0.8rem 1rem;
+    }
+    
+    /* Charts */
+    #monthlyChart {
+        height: 160px !important;
+    }
+    
+    #feeStatusChart {
+        width: 110px !important;
+        height: 110px !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .fin-hero {
+        padding: 1rem 1rem 2rem;
+        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    }
+    
+    .fin-hero h1 {
+        font-size: 1.1rem;
+    }
+    
+    .fin-hero p {
+        font-size: 0.78rem;
+        margin-top: 0.2rem;
+    }
+    
+    .hero-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.6rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hero-stat {
+        font-size: 0.72rem;
+    }
+    
+    /* KPI - single column */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+    
+    .kpi {
+        padding: 0.8rem 1rem;
+    }
+    
+    .kpi-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+    
+    .kpi-val {
+        font-size: 1.1rem;
+    }
+    
+    .kpi-val small {
+        font-size: 0.7rem;
+    }
+    
+    .kpi-lbl {
+        font-size: 0.68rem;
+    }
+    
+    .kpi-foot {
+        font-size: 0.65rem;
+    }
+    
+    /* Quick Actions - 2 columns */
+    .qa-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+    
+    .qa {
+        padding: 0.6rem 0.3rem;
+        border-radius: var(--radius-sm);
+    }
+    
+    .qa-ico {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+    
+    .qa span {
+        font-size: 0.6rem;
+    }
+    
+    /* Net Balance */
+    .fin-balance div:first-child div:last-child {
+        font-size: 1.1rem;
+    }
+    
+    /* Charts */
+    #monthlyChart {
+        height: 140px !important;
+    }
+    
+    #feeStatusChart {
+        width: 90px !important;
+        height: 90px !important;
+    }
+    
+    /* Transactions */
+    .txn {
+        padding: 0.5rem 0;
+        gap: 0.6rem;
+    }
+    
+    .txn-ico {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+    
+    .txn-name {
+        font-size: 0.78rem;
+    }
+    
+    .txn-meta {
+        font-size: 0.65rem;
+    }
+    
+    .txn-amt {
+        font-size: 0.78rem;
+    }
+    
+    /* Expense breakdown */
+    [style*="padding:0.65rem 0;"] {
+        padding: 0.5rem 0 !important;
+    }
+    
+    [style*="font-size:0.82rem;"] {
+        font-size: 0.75rem !important;
+    }
+    
+    [style*="font-size:0.78rem;"] {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Bar tracks */
+    .bar-track {
+        height: 5px;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .fin-hero {
+        padding: 0.8rem 0.8rem 1.5rem;
+    }
+    
+    .fin-hero h1 {
+        font-size: 1rem;
+    }
+    
+    .kpi-val {
+        font-size: 1rem;
+    }
+    
+    .qa-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .qa {
+        padding: 0.5rem 0.2rem;
+    }
+    
+    .qa-ico {
+        width: 28px;
+        height: 28px;
+        font-size: 0.65rem;
+    }
+    
+    .qa span {
+        font-size: 0.55rem;
+    }
+    
+    #monthlyChart {
+        height: 120px !important;
+    }
+    
+    #feeStatusChart {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .fc-hd h3 {
+        font-size: 0.78rem;
+    }
+    
+    .txn-amt {
+        font-size: 0.7rem;
+    }
+}
+
+/* Fix scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow:"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .kpi,
+    .qa,
+    .alert-pill,
+    .btn-lib {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .kpi:active,
+    .qa:active {
+        transform: scale(0.97);
+    }
+    
+    /* Make sure all clickable elements have adequate touch targets */
+    .sec-link,
+    .alert-pill {
+        padding: 0.4rem 0.6rem;
+        min-height: 36px;
+    }
+}
+
+/* Smooth transitions */
+.kpi,
+.qa,
+.fin-balance,
+.fc,
+.btn-lib {
+    transition: all 0.2s ease;
+}
+
+/* Fix chart container on mobile */
+@media (max-width: 576px) {
+    .fc-bd canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    .fc-bd div[style*="position:relative;width:130px;height:130px;"] {
+        width: 100px !important;
+        height: 100px !important;
+        margin: 0 auto 0.2rem !important;
+    }
+    
+    .fc-bd div[style*="position:relative;width:130px;height:130px;"] div div:first-child {
+        font-size: 1.1rem !important;
+    }
+    
+    .fc-bd div[style*="position:relative;width:130px;height:130px;"] div div:last-child {
+        font-size: 0.55rem !important;
+    }
+}
     </style>
 @endsection
 

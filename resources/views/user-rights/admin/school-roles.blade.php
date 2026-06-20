@@ -356,6 +356,18 @@
         </div>
     @endif
 
+    @if($teachers->isEmpty())
+        <div class="risk-banner" id="zeroStaffBanner" style="background:#eff6ff;border-color:#bfdbfe;border-left-color:var(--urp-primary);color:#1e3a8a;">
+            <i class="fa fa-user-slash fa-lg"></i>
+            <div>
+                <strong>This school has no teacher accounts yet — nobody can log in.</strong>
+                School login requires an existing teacher record, so this school is completely locked out
+                until a first account is created. Click <strong>Add Staff</strong> in Staff Assignments below
+                to create one (you can assign a role to them in the same step).
+            </div>
+        </div>
+    @endif
+
     <div class="row g-3">
         {{-- CREATE FORM --}}
         <div class="col-lg-4">
@@ -442,11 +454,20 @@
 
             {{-- STAFF ASSIGNMENTS --}}
             <div class="card border-0 shadow-sm" style="border-radius:var(--radius);">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center" style="border-radius:var(--radius) var(--radius) 0 0;">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-radius:var(--radius) var(--radius) 0 0;">
                     <h6 class="mb-0 font-weight-700" style="color:var(--urp-dark);">
                         <i class="fa fa-users-cog mr-2"></i>Staff Assignments
                     </h6>
-                    <input type="text" id="searchTeacher" class="form-control form-control-sm w-auto" placeholder="Search staff..." style="font-family:inherit;max-width:180px;">
+                    <div class="d-flex align-items-center">
+    <input type="text" id="searchTeacher"
+        class="form-control form-control-sm w-auto mr-3"
+        placeholder="Search staff..."
+        style="font-family:inherit;max-width:180px;">
+
+    <button type="button" id="btnOpenAddTeacher" class="btn btn-sm btn-primary">
+        <i class="fa fa-user-plus mr-1"></i>Add Staff
+    </button>
+</div>
                 </div>
                 <div class="card-body p-3" id="teacherList">
                     @forelse($teachers as $i => $teacher)
@@ -501,9 +522,75 @@
                     <div class="empty-state">
                         <i class="fa fa-users"></i>
                         No staff records for this school yet.
+                        <br><span style="font-size:.85rem;">Click <strong>Add Staff</strong> above to create the first teacher account — they can then be assigned a role below.</span>
                     </div>
                     @endforelse
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ADD STAFF MODAL --}}
+<div class="modal fade" id="addTeacherModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius:var(--radius);border:none;">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--urp-dark),var(--urp-accent));border-radius:var(--radius) var(--radius) 0 0;">
+                <h5 class="modal-title text-white"><i class="fa fa-user-plus mr-2"></i>Add Staff to {{ $school->name }}</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Surname <span class="text-danger">*</span></label>
+                        <input type="text" id="atSurname" class="form-control" placeholder="Surname">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Firstname <span class="text-danger">*</span></label>
+                        <input type="text" id="atFirstname" class="form-control" placeholder="Firstname">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Othername</label>
+                        <input type="text" id="atOthername" class="form-control" placeholder="Other name (optional)">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Gender</label>
+                        <select id="atGender" class="form-control">
+                            <option value="">— Select —</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Email <span class="text-danger">*</span></label>
+                        <input type="email" id="atEmail" class="form-control" placeholder="name@example.com">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" id="atPhone" class="form-control" placeholder="Used to log in">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Password <span class="text-muted">(optional — leave blank to auto-generate)</span></label>
+                        <input type="password" id="atPassword" class="form-control" placeholder="Leave blank to auto-generate" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-600 text-sm">Confirm Password</label>
+                        <input type="password" id="atPasswordConfirm" class="form-control" placeholder="Re-enter password" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-12 form-group mb-0">
+                        <label class="font-weight-600 text-sm">Assign Role <span class="text-muted">(optional — can be done later)</span></label>
+                        <select id="atRole" class="form-control">
+                            <option value="">— No role yet —</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->id }}">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="btnSaveTeacher" class="btn btn-primary"><i class="fa fa-save mr-1"></i>Create Teacher</button>
             </div>
         </div>
     </div>
@@ -937,8 +1024,60 @@ document.getElementById('btnSavePerm').addEventListener('click', function () {
 // STAFF ASSIGNMENTS
 // ════════════════════════════════════════════
 
-document.querySelectorAll('.teacher-role-select').forEach(sel => {
-    const teacherId = sel.dataset.teacherId;
+function handleSaveRoleClick() {
+    const teacherId = this.dataset.teacherId;
+    const sel = document.querySelector(`.teacher-role-select[data-teacher-id="${teacherId}"]`);
+    const roleId = sel.value;
+    const card = document.querySelector(`.teacher-card[data-teacher-id="${teacherId}"]`);
+    const badge = card.querySelector('.role-badge-display');
+
+    this.className = 'save-btn saving btn-save-role';
+    this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    fetch('{{ route("urp.admin.teachers.assign-role") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+        body: JSON.stringify({ teacher_id: teacherId, school_role_id: roleId || null })
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (!ok || !data.success) {
+            this.className = 'save-btn error btn-save-role';
+            this.innerHTML = '<i class="fa fa-times"></i> Error';
+            Swal.fire('Error', (data && data.message) || 'Something went wrong.', 'error');
+            return;
+        }
+
+        this.className = 'save-btn saved btn-save-role';
+        this.innerHTML = '<i class="fa fa-check-circle"></i> Saved';
+
+        const roleName = roleId ? sel.options[sel.selectedIndex].text : '';
+        if (roleId) {
+            badge.className = 'assigned-badge role-badge-display';
+            badge.innerHTML = `<i class="fa fa-crown"></i>${roleName}`;
+        } else {
+            badge.className = 'no-role-badge role-badge-display';
+            badge.innerHTML = 'No Role';
+        }
+
+        card.dataset.roleId = roleId;
+
+        setTimeout(() => {
+            this.style.display = 'none';
+            this.className = 'save-btn pending btn-save-role';
+            this.innerHTML = '<i class="fa fa-check"></i> Apply';
+        }, 2000);
+
+        Swal.fire({ icon: 'success', text: data.message, timer: 2200, showConfirmButton: false, toast: true, position: 'top-end' });
+    })
+    .catch(() => {
+        this.className = 'save-btn error btn-save-role';
+        this.innerHTML = '<i class="fa fa-times"></i> Error';
+    });
+}
+
+function wireTeacherRoleSelect(teacherId) {
+    const sel = document.querySelector(`.teacher-role-select[data-teacher-id="${teacherId}"]`);
     const saveBtn = document.querySelector(`.btn-save-role[data-teacher-id="${teacherId}"]`);
     const original = sel.value;
 
@@ -951,59 +1090,154 @@ document.querySelectorAll('.teacher-role-select').forEach(sel => {
             saveBtn.style.display = 'none';
         }
     });
+
+    saveBtn.addEventListener('click', handleSaveRoleClick);
+}
+
+document.querySelectorAll('.teacher-role-select').forEach(sel => wireTeacherRoleSelect(sel.dataset.teacherId));
+
+// ════════════════════════════════════════════
+// ADD STAFF (CREATE TEACHER)
+// ════════════════════════════════════════════
+
+const allRoles = @json($roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values());
+const teacherCardColors = ['#4f46e5','#7c3aed','#059669','#d97706','#dc2626','#0ea5e9','#0891b2'];
+let teacherCardCount = {{ $teachers->count() }};
+
+document.getElementById('btnOpenAddTeacher').addEventListener('click', function () {
+    ['atSurname','atFirstname','atOthername','atEmail','atPhone','atPassword','atPasswordConfirm'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.classList.remove('is-invalid');
+    });
+    document.getElementById('atGender').value = '';
+    document.getElementById('atRole').value = '';
+    $('#addTeacherModal').modal('show');
 });
 
-document.querySelectorAll('.btn-save-role').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const teacherId = this.dataset.teacherId;
-        const sel = document.querySelector(`.teacher-role-select[data-teacher-id="${teacherId}"]`);
-        const roleId = sel.value;
-        const card = document.querySelector(`.teacher-card[data-teacher-id="${teacherId}"]`);
-        const badge = card.querySelector('.role-badge-display');
+function roleOptionsHtml(selectedId) {
+    return allRoles.map(r => `<option value="${r.id}" ${selectedId == r.id ? 'selected' : ''}>${escHtml(r.name)}</option>`).join('');
+}
 
-        this.className = 'save-btn saving btn-save-role';
-        this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+function buildTeacherCard(teacher, delay = 0) {
+    const color = teacherCardColors[teacherCardCount % teacherCardColors.length];
+    teacherCardCount++;
+    const initials = (teacher.firstname.charAt(0) + teacher.surname.charAt(0)).toUpperCase();
+    const roleBadge = teacher.role_name
+        ? `<span class="assigned-badge role-badge-display"><i class="fa fa-crown"></i>${escHtml(teacher.role_name)}</span>`
+        : `<span class="no-role-badge role-badge-display">No Role</span>`;
 
-        fetch('{{ route("urp.admin.teachers.assign-role") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
-            body: JSON.stringify({ teacher_id: teacherId, school_role_id: roleId || null })
-        })
-        .then(r => r.json().then(data => ({ ok: r.ok, data })))
-        .then(({ ok, data }) => {
-            if (!ok || !data.success) {
-                this.className = 'save-btn error btn-save-role';
-                this.innerHTML = '<i class="fa fa-times"></i> Error';
-                Swal.fire('Error', (data && data.message) || 'Something went wrong.', 'error');
-                return;
+    return `
+    <div class="teacher-card mb-2" data-teacher-id="${teacher.id}" data-role-id="${teacher.school_role_id || ''}"
+         data-name="${escHtml((teacher.firstname + ' ' + teacher.surname).toLowerCase())}" style="animation-delay:${delay}s;">
+        <div class="teacher-avatar" style="background:${color};">${initials}</div>
+        <div class="flex-grow-1">
+            <div class="teacher-name">${escHtml(teacher.firstname)} ${escHtml(teacher.surname)}</div>
+            <div class="teacher-sub">${teacher.email ? escHtml(teacher.email) + ' &bull; ' : ''}${escHtml(teacher.phonenumber || 'No phone')}</div>
+        </div>
+        <div class="d-none d-sm-block">${roleBadge}</div>
+        <select class="role-select teacher-role-select" data-teacher-id="${teacher.id}">
+            <option value="">— Remove Role —</option>
+            ${roleOptionsHtml(teacher.school_role_id)}
+        </select>
+        <button class="save-btn pending btn-save-role" data-teacher-id="${teacher.id}" style="display:none;"><i class="fa fa-check"></i> Apply</button>
+    </div>`;
+}
+
+document.getElementById('btnSaveTeacher').addEventListener('click', function () {
+    const payload = {
+        surname: document.getElementById('atSurname').value.trim(),
+        firstname: document.getElementById('atFirstname').value.trim(),
+        othername: document.getElementById('atOthername').value.trim(),
+        gender: document.getElementById('atGender').value,
+        email: document.getElementById('atEmail').value.trim(),
+        phonenumber: document.getElementById('atPhone').value.trim(),
+        password: document.getElementById('atPassword').value,
+        password_confirmation: document.getElementById('atPasswordConfirm').value,
+        school_role_id: document.getElementById('atRole').value || null,
+    };
+
+    ['atSurname','atFirstname','atEmail','atPhone'].forEach(id => document.getElementById(id).classList.remove('is-invalid'));
+
+    let missing = [];
+    if (!payload.surname) missing.push('atSurname');
+    if (!payload.firstname) missing.push('atFirstname');
+    if (!payload.email) missing.push('atEmail');
+    if (!payload.phonenumber) missing.push('atPhone');
+
+    if (missing.length) {
+        missing.forEach(id => document.getElementById(id).classList.add('is-invalid'));
+        Swal.fire('Required', 'Surname, firstname, email and phone number are required.', 'warning');
+        return;
+    }
+
+    if (payload.password && payload.password !== payload.password_confirmation) {
+        document.getElementById('atPasswordConfirm').classList.add('is-invalid');
+        Swal.fire('Password Mismatch', 'Password and confirmation do not match.', 'warning');
+        return;
+    }
+
+    this.disabled = true;
+    this.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i>Creating...';
+
+    fetch(`/user-rights/admin-schools/${schoolId}/teachers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (!ok || !data.success) {
+            Swal.fire('Error', (data && data.message) || 'Could not create teacher.', 'error');
+            return;
+        }
+
+        const list = document.getElementById('teacherList');
+        const empty = list.querySelector('.empty-state');
+        if (empty) empty.remove();
+        list.insertAdjacentHTML('beforeend', buildTeacherCard(data.teacher));
+        wireTeacherRoleSelect(data.teacher.id);
+
+        const zeroBanner = document.getElementById('zeroStaffBanner');
+        if (zeroBanner) zeroBanner.remove();
+
+        // Update stat pills
+        const pills = document.querySelectorAll('.filter-bar .stat-pill');
+        if (pills[3]) pills[3].innerHTML = `<i class="fa fa-users"></i>${teacherCardCount} Total Staff`;
+        if (data.teacher.role_name) {
+            if (pills[1]) {
+                const n = (parseInt(pills[1].textContent) || 0) + 1;
+                pills[1].className = 'stat-pill green';
+                pills[1].innerHTML = `<i class="fa fa-user-check"></i>${n} Assigned`;
             }
-
-            this.className = 'save-btn saved btn-save-role';
-            this.innerHTML = '<i class="fa fa-check-circle"></i> Saved';
-
-            const roleName = roleId ? sel.options[sel.selectedIndex].text : '';
-            if (roleId) {
-                badge.className = 'assigned-badge role-badge-display';
-                badge.innerHTML = `<i class="fa fa-crown"></i>${roleName}`;
-            } else {
-                badge.className = 'no-role-badge role-badge-display';
-                badge.innerHTML = 'No Role';
+        } else {
+            if (pills[2]) {
+                const n = (parseInt(pills[2].textContent) || 0) + 1;
+                pills[2].className = 'stat-pill yellow';
+                pills[2].innerHTML = `<i class="fa fa-user-clock"></i>${n} No Role`;
             }
+        }
 
-            card.dataset.roleId = roleId;
+        $('#addTeacherModal').modal('hide');
 
-            setTimeout(() => {
-                this.style.display = 'none';
-                this.className = 'save-btn pending btn-save-role';
-                this.innerHTML = '<i class="fa fa-check"></i> Apply';
-            }, 2000);
-
-            Swal.fire({ icon: 'success', text: data.message, timer: 2200, showConfirmButton: false, toast: true, position: 'top-end' });
-        })
-        .catch(() => {
-            this.className = 'save-btn error btn-save-role';
-            this.innerHTML = '<i class="fa fa-times"></i> Error';
-        });
+        if (data.temporary_password) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Teacher Created!',
+                html: `${data.message}<br><br>
+                    <strong>Temporary password:</strong>
+                    <code style="font-size:1.1rem;">${data.temporary_password}</code><br>
+                    <small class="text-muted">Share this with them directly — they'll be asked to set a new password on first login.</small>`,
+                confirmButtonText: 'Got it'
+            });
+        } else {
+            Swal.fire({ icon: 'success', title: 'Done!', text: data.message, timer: 2500, showConfirmButton: false });
+        }
+    })
+    .catch(() => Swal.fire('Error', 'Could not create teacher.', 'error'))
+    .finally(() => {
+        this.disabled = false;
+        this.innerHTML = '<i class="fa fa-save mr-1"></i>Create Teacher';
     });
 });
 

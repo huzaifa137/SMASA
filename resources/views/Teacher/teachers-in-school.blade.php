@@ -230,6 +230,31 @@ $controller = new Controller();
                 height: 60px;
             }
         }
+
+/* Alternative - keeps buttons inline but centered */
+.card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.card-header .d-flex {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+@media (max-width: 576px) {
+    .card-header .d-flex a,
+    .card-header .d-flex .btn {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+    
+    .card-header .d-flex a i,
+    .card-header .d-flex .btn i {
+        margin-right: 4px !important;
+    }
+}
     </style>
 @endsection
 

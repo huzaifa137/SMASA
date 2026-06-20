@@ -28,75 +28,129 @@ use App\Helpers\PermissionHelper;
         ════════════════════════════════════════════════════ --}}
         @if (Session('LoggedAdmin') && Session('LoggedSchool'))
 
+            {{-- ── Resolve school status once ── --}}
+            @php
+                $__schoolStatus = \App\Http\Controllers\Helper::currentSchoolStatus();
+                // 10 = Active | 1 = Pending Activation | null = unknown (treat as pending)
+            @endphp
+
+            {{-- ══════════════════════════════════════════════════════
+                 STATUS: PENDING ACTIVATION
+                 School exists but is not yet active — show only a
+                 "pending" notice. No modules accessible until active.
+            ═══════════════════════════════════════════════════════ --}}
+            @if($__schoolStatus !== 10)
+
+                <li class="slide px-3 py-3">
+                    <div style="background:#fff7ed;border:1px dashed #f97316;border-radius:12px;padding:1rem 1rem;font-size:.8rem;color:#92400e;line-height:1.55;">
+                        <div style="font-size:1.3rem;text-align:center;margin-bottom:.5rem;">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                        <div style="font-weight:700;font-size:.85rem;text-align:center;margin-bottom:.4rem;">
+                            Pending Activation
+                        </div>
+                        Your school account is awaiting activation by the system administrator. Full access will be granted once your account is active.
+                    </div>
+                </li>
+
+            {{-- ══════════════════════════════════════════════════════
+                 STATUS: ACTIVE (school_status = 10)
+                 Show only what the logged-in user's role permits.
+            ═══════════════════════════════════════════════════════ --}}
+            @else
+
+            {{-- Current Role Tag --}}
+            @php $roleName = PermissionHelper::currentRoleName(); @endphp
+            @if($roleName !== 'System Administrator')
+                <li class="slide px-3 pb-1" style="pointer-events:none;">
+                    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
+                        Role
+                    </div>
+                    <div style="background:#eef2ff;color:#4f46e5;border-radius:8px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;">
+                        <i class="fa fa-crown mr-1"></i>{{ $roleName }}
+                    </div>
+                </li>
+            @endif
+
+            {{-- Dashboard — always visible --}}
             <li class="slide">
-                <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
+                <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
                     <i class="fa fa-home fa-2x mr-3"></i>Dashboard
                 </a>
             </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('school.allSchools') }}">
-                    <i class="fa fa-school fa-2x mr-3"></i>Schools
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('all.my-classes') }}">
-                    <i class="fa fa-chalkboard-teacher fa-2x mr-3"></i>Classes
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('school.teachers') }}">
-                    <i class="fa fa-user-tie fa-2x mr-3"></i>Teachers
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('students.individual.search') }}">
-                    <i class="fa fa-user-graduate fa-2x mr-3"></i>Students
-                </a>
-            </li>
 
-            {{-- ID Cards --}}
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-id-card fa-2x mr-3"></i>
-                    <span>ID Cards</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    @if(PermissionHelper::canModule('card_scan'))
-                        @if(PermissionHelper::canFeature('view_hub'))
-                        <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+            {{-- Classes --}}
+            @if(PermissionHelper::canModule('classes'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('all.my-classes') }}">
+                        <i class="fa fa-chalkboard-teacher fa-2x mr-3"></i>Classes
+                    </a>
+                </li>
+            @endif
+
+            {{-- Teachers --}}
+            @if(PermissionHelper::canModule('teachers'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('school.teachers') }}">
+                        <i class="fa fa-user-tie fa-2x mr-3"></i>Teachers
+                    </a>
+                </li>
+            @endif
+
+            {{-- Students --}}
+            @if(PermissionHelper::canModule('students'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('students.individual.search') }}">
+                        <i class="fa fa-user-graduate fa-2x mr-3"></i>Students
+                    </a>
+                </li>
+            @endif
+
+              {{-- ID Cards --}}
+            @if(PermissionHelper::canModule('card_scan') || PermissionHelper::canModule('student_id_cards') || PermissionHelper::canModule('teacher_id_cards'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-id-card fa-2x mr-3"></i>
+                        <span>ID Cards</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canModule('card_scan'))
+                            @if(PermissionHelper::canFeature('view_hub'))
+                            <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('manage_arrival_attendance'))
+                            <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_arrival_reports'))
+                            <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
+                            @endif
                         @endif
-                        @if(PermissionHelper::canFeature('manage_arrival_attendance'))
-                        <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                        @if(PermissionHelper::canModule('student_id_cards'))
+                            @if(PermissionHelper::canFeature('view_cards'))
+                            <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('generate_cards'))
+                            <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('verify_cards'))
+                            <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
+                            @endif
                         @endif
-                        @if(PermissionHelper::canFeature('view_arrival_reports'))
-                        <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
+                        @if(PermissionHelper::canModule('teacher_id_cards'))
+                            @if(PermissionHelper::canFeature('view_teacher_cards'))
+                            <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('generate_teacher_cards'))
+                            <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('verify_teacher_cards'))
+                            <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
+                            @endif
                         @endif
-                    @endif
-                    @if(PermissionHelper::canModule('student_id_cards'))
-                        @if(PermissionHelper::canFeature('view_cards'))
-                        <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('generate_cards'))
-                        <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('verify_cards'))
-                        <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
-                        @endif
-                    @endif
-                    @if(PermissionHelper::canModule('teacher_id_cards'))
-                        @if(PermissionHelper::canFeature('view_teacher_cards'))
-                        <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('generate_teacher_cards'))
-                        <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('verify_teacher_cards'))
-                        <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
-                        @endif
-                    @endif
-                </ul>
-            </li>
+                    </ul>
+                </li>
+            @endif
 
             {{-- Library --}}
             @if(PermissionHelper::canModule('library'))
@@ -336,9 +390,11 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
-            {{-- ═══════════════════════════════════════════════════
-            SECTION B: SYSTEM ADMIN ONLY (no school selected)
-            ════════════════════════════════════════════════════ --}}
+            @endif {{-- End of ACTIVE school status --}}
+
+        {{-- ═══════════════════════════════════════════════════
+        SECTION B: SYSTEM ADMIN ONLY (no school selected)
+        ════════════════════════════════════════════════════ --}}
         @elseif(Session('LoggedAdmin'))
 
             <li class="slide">
@@ -362,25 +418,26 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
-                <li class="slide has-sub">
-                    <a class="side-menu__item" href="#" data-toggle="submenu">
-                        <i class="fas fa-database fa-2x mr-3"></i>
-                        <span>Master Data</span>
-                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                    </a>
-                    <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_master_codes'))
-                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_master_data'))
-                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
-                        @endif
-                    </ul>
-                </li>
-            {{-- ═══════════════════════════════════════════════════
-            SECTION C: SCHOOL (TEACHER) LOGIN
-            All items are permission-guarded via PermissionHelper
-            ════════════════════════════════════════════════════ --}}
+            <li class="slide has-sub">
+                <a class="side-menu__item" href="#" data-toggle="submenu">
+                    <i class="fas fa-database fa-2x mr-3"></i>
+                    <span>Master Data</span>
+                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                </a>
+                <ul class="sub-menu">
+                    @if(PermissionHelper::canFeature('view_master_codes'))
+                        <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
+                    @endif
+                    @if(PermissionHelper::canFeature('view_master_data'))
+                        <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
+                    @endif
+                </ul>
+            </li>
+
+        {{-- ═══════════════════════════════════════════════════
+        SECTION C: SCHOOL (TEACHER) LOGIN
+        All items are permission-guarded via PermissionHelper
+        ════════════════════════════════════════════════════ --}}
         @elseif(Session('LoggedSchool'))
 
             {{-- ── Resolve school status once ── --}}
@@ -761,7 +818,7 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
-            @endif {{-- end @else (active school) --}}
+            @endif {{-- End of ACTIVE school status --}}
 
         @endif
         {{-- ── END SECTIONS ── --}}

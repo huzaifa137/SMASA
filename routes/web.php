@@ -89,41 +89,41 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     });
 
     Route::controller(MasterDataController::class)
-    ->middleware(['module:master_data'])
-    ->middleware(['AdminAuth'])
-    ->group(function () {
-        Route::group(['prefix' => 'master-data'], function () {
-            Route::get('master-code-to-data', 'masterCodeToData')->name('master-code-to-data');
+        ->middleware(['module:master_data'])
+        ->middleware(['AdminAuth'])
+        ->group(function () {
+            Route::group(['prefix' => 'master-data'], function () {
+                Route::get('master-code-to-data', 'masterCodeToData')->name('master-code-to-data');
 
-            Route::get('/load-data', 'loadData')->name('load.data');
-            Route::get('master-table', 'master_table')->name('master-table');
-            Route::get('master-code', 'master_code')->name('master-code');
-            Route::get('requisition-documents', 'requisitionDocuments');
-            Route::get('travel-requisition-documents', 'travelRequisitionDocuments');
-            Route::get('supplier-prequalification-criteria', 'supplierPrequalificationEvaluationCriteria');
-            Route::post('store-prequalification-criteria', 'storePrequalificationCriteria')->name('store-prequalification-criteria');
+                Route::get('/load-data', 'loadData')->name('load.data');
+                Route::get('master-table', 'master_table')->name('master-table');
+                Route::get('master-code', 'master_code')->name('master-code');
+                Route::get('requisition-documents', 'requisitionDocuments');
+                Route::get('travel-requisition-documents', 'travelRequisitionDocuments');
+                Route::get('supplier-prequalification-criteria', 'supplierPrequalificationEvaluationCriteria');
+                Route::post('store-prequalification-criteria', 'storePrequalificationCriteria')->name('store-prequalification-criteria');
 
-            Route::get('edit-record/{id}', 'editRecord');
-            Route::get('add-record', 'addRecord')->name('add-record');
-            Route::get('add-code', 'addMasterCode')->name('add-code');
-            Route::get('edit-code/{id}', 'editMasterCode');
-            Route::get('master-code-list/{id}', 'masterCodeList')->name('master-code-list');
-            Route::get('master-code-list', 'masterCodeList');
-            Route::get('edit-supplier-document/{id}', 'editSupplierDocument');
-            Route::post('/store-requisition-document', 'storeRequisitionDocument')->name('master-data/store-requisition-document');
+                Route::get('edit-record/{id}', 'editRecord');
+                Route::get('add-record', 'addRecord')->name('add-record');
+                Route::get('add-code', 'addMasterCode')->name('add-code');
+                Route::get('edit-code/{id}', 'editMasterCode');
+                Route::get('master-code-list/{id}', 'masterCodeList')->name('master-code-list');
+                Route::get('master-code-list', 'masterCodeList');
+                Route::get('edit-supplier-document/{id}', 'editSupplierDocument');
+                Route::post('/store-requisition-document', 'storeRequisitionDocument')->name('master-data/store-requisition-document');
+            });
+
+            Route::post('store-travel-requisition-document', 'storeTravelRequisitionDocument')->name('store-travel-requisition-document');
+            Route::post('update-supplier-document', 'updateSupplierDocument')->name('update-supplier-document');
+            Route::post('update-master-record', 'updateMasterrecord')->name('update-master-record');
+            Route::post('update-master-code', 'updateMasterCode')->name('update-master-code');
+            Route::post('send-master-code', 'sendMasterCode')->name('send-master-code');
+            Route::post('add-new-record', 'addNewRecord')->name('add-new-record');
+
+            Route::get('delete-supplier-document/{id}', 'deleteSupplierDocument');
+            Route::get('delete-record/{id}', 'deleteRecord');
+            Route::get('delete-code/{id}', 'deleteCode');
         });
-
-        Route::post('store-travel-requisition-document', 'storeTravelRequisitionDocument')->name('store-travel-requisition-document');
-        Route::post('update-supplier-document', 'updateSupplierDocument')->name('update-supplier-document');
-        Route::post('update-master-record', 'updateMasterrecord')->name('update-master-record');
-        Route::post('update-master-code', 'updateMasterCode')->name('update-master-code');
-        Route::post('send-master-code', 'sendMasterCode')->name('send-master-code');
-        Route::post('add-new-record', 'addNewRecord')->name('add-new-record');
-
-        Route::get('delete-supplier-document/{id}', 'deleteSupplierDocument');
-        Route::get('delete-record/{id}', 'deleteRecord');
-        Route::get('delete-code/{id}', 'deleteCode');
-    });
 
     Route::controller(StudentController::class)->group(function () {
         Route::group(['prefix' => '/users'], function () {
@@ -200,32 +200,37 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         });
 
-    Route::controller(TeacherController::class)->middleware(['module:classes'])->group(function () {
-        Route::get('add-teachers', 'addTeachers')->name('school.add-teachers');
-        Route::get('/teachers', 'allTeachers')->name('teachers.all');
-        Route::get('/school-teachers', 'schoolTeachers')->name('school.teachers');
-        Route::post('/teacher/update-role/{id}', 'updateTeacherRole')->name('teacher.update.role');
-        Route::get('/individual-school-teachers/{id}', 'individualSchoolTeachers')->name('individual.school.teachers');
-        Route::get('/teacher-profile/{id}', 'teacherProfile')->name('teacher.profile');
-        Route::get('/update-teacher-profile/{id}', 'updateteacherProfile')->name('update.teacher.profile');
-        Route::get('/teacher/profile/{id}/data', 'getTeacherData')->name('teacher.data');
-        Route::post('/store-teachers', 'storeTeacher')->name('teachers.store');
-        Route::post('/teachers/update/{teacher}', 'storeUpdatedTeacherProfile')->name('teachers.update');
+    // Routes with module:classes middleware
+    Route::controller(TeacherController::class)
+        ->middleware(['module:classes'])
+        ->group(function () {
+            Route::get('add-teachers', 'addTeachers')->name('school.add-teachers');
+            Route::get('/teachers', 'allTeachers')->name('teachers.all');
+            Route::get('/school-teachers', 'schoolTeachers')->name('school.teachers');
+            Route::post('/teacher/update-role/{id}', 'updateTeacherRole')->name('teacher.update.role');
+            Route::get('/individual-school-teachers/{id}', 'individualSchoolTeachers')->name('individual.school.teachers');
+            Route::get('/teacher-profile/{id}', 'teacherProfile')->name('teacher.profile');
+            Route::get('/update-teacher-profile/{id}', 'updateteacherProfile')->name('update.teacher.profile');
+            Route::get('/teacher/profile/{id}/data', 'getTeacherData')->name('teacher.data');
+            Route::post('/store-teachers', 'storeTeacher')->name('teachers.store');
+            Route::post('/teachers/update/{teacher}', 'storeUpdatedTeacherProfile')->name('teachers.update');
+            Route::delete('/teachers/{id}', 'destroyTeacher')->name('teachers.destroy');
 
-        // Add this route for updating teacher password
-        Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
+            // Teacher Bulk Import
+            Route::get('/teachers/bulk-import', 'bulkImportTeacherForm')->name('teachers.bulk.import.form');
+            Route::post('/teachers/bulk-import', 'bulkImportTeachers')->name('teachers.bulk.import');
+            Route::get('/teachers/download-template', 'downloadTeacherTemplate')->name('teachers.download.template');
 
-        Route::delete('/teachers/{id}', 'destroyTeacher')->name('teachers.destroy');
+            // Teacher Account Status
+            Route::post('/teacher/{id}/status', 'updateTeacherStatus')->name('teacher.update.status');
+            Route::get('/teacher/{id}/status', 'getTeacherStatus')->name('teacher.get.status');
+        });
 
-        // Teacher Bulk Import
-        Route::get('/teachers/bulk-import', 'bulkImportTeacherForm')->name('teachers.bulk.import.form');
-        Route::post('/teachers/bulk-import', 'bulkImportTeachers')->name('teachers.bulk.import');
-        Route::get('/teachers/download-template', 'downloadTeacherTemplate')->name('teachers.download.template');
-
-        // Teacher Account Status
-        Route::post('/teacher/{id}/status', 'updateTeacherStatus')->name('teacher.update.status');
-        Route::get('/teacher/{id}/status', 'getTeacherStatus')->name('teacher.get.status');
-    });
+    // Password update route without module:classes middleware
+    Route::controller(TeacherController::class)
+        ->group(function () {
+            Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
+        });
 
     Route::controller(ClassandSubjectController::class)->middleware(['module:classes'])->group(function () {
 
@@ -862,6 +867,7 @@ Route::group([
     // Wildcard school routes LAST
     Route::get('/{school}', [UserRightsController::class, 'adminSchoolRoles'])->name('school.roles');
     Route::post('/{school}/roles', [UserRightsController::class, 'adminStoreRole'])->name('roles.store');
+    Route::post('/{school}/teachers', [UserRightsController::class, 'adminCreateTeacher'])->name('teachers.store');
 });
 
 

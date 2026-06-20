@@ -112,6 +112,21 @@ $controller = new Controller();
                                         </select>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label" for="password">Password <span class="text-muted">(optional — leave blank to auto-generate)</span></label>
+                                        <input type="password" id="password" name="password" class="form-control"
+                                            placeholder="Leave blank to auto-generate a temporary password" autocomplete="new-password">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label" for="password_confirmation">Confirm Password</label>
+                                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control"
+                                            placeholder="Re-enter password" autocomplete="new-password">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mt-4 text-left">
@@ -165,6 +180,18 @@ $controller = new Controller();
                     return;
                 }
 
+                const pwd = $form.find('[name="password"]').val();
+                const pwdConfirm = $form.find('[name="password_confirmation"]').val();
+                if (pwd && pwd !== pwdConfirm) {
+                    $form.find('[name="password_confirmation"]').addClass('is-invalid');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Password Mismatch',
+                        text: 'Password and confirmation do not match.'
+                    });
+                    return;
+                }
+
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You are about to submit the teacher data.",
@@ -212,7 +239,19 @@ $controller = new Controller();
                                 }
                             });
                         } else {
-                            Swal.fire('Submitted!', response.message, 'success');
+                            if (response.temporary_password) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Teacher Added!',
+                                    html: `${response.message}<br><br>
+                                        <strong>Temporary password:</strong>
+                                        <code style="font-size:1.1rem;">${response.temporary_password}</code><br>
+                                        <small class="text-muted">Share this with the teacher — they'll be asked to set a new password on first login.</small>`,
+                                    confirmButtonText: 'Got it'
+                                });
+                            } else {
+                                Swal.fire('Submitted!', response.message, 'success');
+                            }
                             $form[0].reset();
                         }
                     },

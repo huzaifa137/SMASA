@@ -285,6 +285,419 @@
         input:checked+.slider:before {
             transform: translateX(20px);
         }
+
+        /* Library Settings - Stack layout on mobile */
+
+        /* Hero section */
+        .lib-hero {
+            padding: 2rem 2.5rem;
+        }
+
+        /* Settings grid - 2 columns on large screens */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            font-size: .85rem;
+        }
+
+        .form-hint {
+            font-size: .75rem;
+        }
+
+        .form-control {
+            padding: .65rem .9rem;
+            font-size: .875rem;
+        }
+
+        /* Toggle rows */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .85rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            font-size: .875rem;
+        }
+
+        .toggle-hint {
+            font-size: .75rem;
+        }
+
+        /* Switch */
+        .switch {
+            width: 44px;
+            height: 24px;
+        }
+
+        .slider:before {
+            width: 18px;
+            height: 18px;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Tablet */
+        @media (max-width: 992px) {
+            .settings-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .lib-hero {
+                padding: 1.25rem 1.5rem;
+            }
+
+            .lib-hero [style*="font-size:1.6rem;"] {
+                font-size: 1.3rem !important;
+            }
+
+            .lib-hero [style*="font-size:.875rem;"] {
+                font-size: .8rem !important;
+            }
+
+            .lib-card-header {
+                padding: 1rem 1.25rem;
+            }
+
+            .lib-card-header h3 {
+                font-size: .9rem;
+            }
+
+            .lib-card-body {
+                padding: 1rem;
+            }
+
+            /* Two column form fields on tablet */
+            [style*="display:grid;grid-template-columns:1fr 1fr;gap:1rem;"] {
+                grid-template-columns: 1fr 1fr;
+                gap: .75rem;
+            }
+        }
+
+        /* Tablet - stack vertically */
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .lib-hero {
+                padding: 1rem 1.25rem;
+                border-radius: 18px;
+            }
+
+            .lib-hero [style*="font-size:1.6rem;"] {
+                font-size: 1.1rem !important;
+            }
+
+            .lib-hero [style*="font-size:.875rem;"] {
+                font-size: .75rem !important;
+            }
+
+            .lib-card-header {
+                padding: .75rem 1rem;
+            }
+
+            .lib-card-header h3 {
+                font-size: .85rem;
+            }
+
+            .lib-card-body {
+                padding: .75rem 1rem;
+            }
+
+            /* Form fields stack on mobile */
+            [style*="display:grid;grid-template-columns:1fr 1fr;gap:1rem;"] {
+                grid-template-columns: 1fr;
+                gap: .5rem;
+            }
+
+            .form-group {
+                margin-bottom: .75rem;
+            }
+
+            .form-label {
+                font-size: .8rem;
+            }
+
+            .form-control {
+                font-size: 14px;
+                padding: .5rem .75rem;
+            }
+
+            /* Toggle rows on mobile */
+            .toggle-row {
+                padding: .65rem 0;
+            }
+
+            .toggle-label {
+                font-size: .8rem;
+            }
+
+            .toggle-hint {
+                font-size: .7rem;
+            }
+
+            /* Switch on mobile - slightly smaller */
+            .switch {
+                width: 40px;
+                height: 22px;
+            }
+
+            .slider:before {
+                width: 16px;
+                height: 16px;
+                left: 3px;
+                bottom: 3px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(18px);
+            }
+
+            /* Buttons on mobile */
+            [style*="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;"] {
+                flex-direction: column;
+                gap: .75rem !important;
+            }
+
+            [style*="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;"] .btn-lib {
+                width: 100%;
+                justify-content: center;
+                padding: .6rem !important;
+            }
+
+            [style*="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;"] .btn-lib i {
+                margin-right: .5rem;
+            }
+        }
+
+        /* Mobile landscape */
+        @media (max-width: 576px) {
+            [style*="padding:1.5rem;"] {
+                padding: 0.75rem !important;
+            }
+
+            .lib-hero {
+                padding: .75rem 1rem;
+                border-radius: 14px;
+            }
+
+            .lib-hero [style*="font-size:1.6rem;"] {
+                font-size: 1rem !important;
+            }
+
+            .lib-hero [style*="font-size:.875rem;"] {
+                font-size: .7rem !important;
+            }
+
+            .lib-card-header {
+                padding: .6rem .75rem;
+            }
+
+            .lib-card-header h3 {
+                font-size: .8rem;
+            }
+
+            .lib-card-body {
+                padding: .6rem .75rem;
+            }
+
+            .section-title {
+                font-size: .6rem;
+                margin-bottom: .75rem;
+            }
+
+            .form-group {
+                margin-bottom: .6rem;
+            }
+
+            .form-label {
+                font-size: .75rem;
+                margin-bottom: .25rem;
+            }
+
+            .form-control {
+                font-size: 13px;
+                padding: .4rem .6rem;
+                border-radius: 8px;
+            }
+
+            .form-hint {
+                font-size: .65rem;
+                margin-top: .2rem;
+            }
+
+            /* Toggle rows on small screens */
+            .toggle-row {
+                padding: .5rem 0;
+                flex-wrap: wrap;
+                gap: .5rem;
+            }
+
+            .toggle-row>div {
+                flex: 1;
+                min-width: 150px;
+            }
+
+            .toggle-label {
+                font-size: .75rem;
+            }
+
+            .toggle-hint {
+                font-size: .65rem;
+            }
+
+            .switch {
+                width: 36px;
+                height: 20px;
+            }
+
+            .slider:before {
+                width: 14px;
+                height: 14px;
+                left: 3px;
+                bottom: 3px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(16px);
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 400px) {
+            [style*="padding:1.5rem;"] {
+                padding: 0.5rem !important;
+            }
+
+            .lib-hero {
+                padding: .5rem .75rem;
+                border-radius: 12px;
+            }
+
+            .lib-hero [style*="font-size:1.6rem;"] {
+                font-size: .9rem !important;
+            }
+
+            .lib-card-header {
+                padding: .5rem .6rem;
+            }
+
+            .lib-card-header h3 {
+                font-size: .75rem;
+            }
+
+            .lib-card-body {
+                padding: .5rem .6rem;
+            }
+
+            .form-label {
+                font-size: .7rem;
+            }
+
+            .form-control {
+                font-size: 12px;
+                padding: .35rem .5rem;
+            }
+
+            .toggle-row>div {
+                min-width: 120px;
+            }
+
+            .toggle-label {
+                font-size: .7rem;
+            }
+
+            .toggle-hint {
+                font-size: .6rem;
+            }
+
+            .switch {
+                width: 32px;
+                height: 18px;
+            }
+
+            .slider:before {
+                width: 12px;
+                height: 12px;
+                left: 3px;
+                bottom: 3px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(14px);
+            }
+        }
+
+        /* Improve touch targets on mobile */
+        @media (max-width: 576px) {
+            .btn-lib {
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+                min-height: 40px;
+            }
+
+            .switch {
+                cursor: pointer;
+            }
+
+            .slider {
+                cursor: pointer;
+            }
+
+            /* Make form inputs easier to tap */
+            .form-control {
+                min-height: 40px;
+            }
+
+            /* Checkboxes easier to tap */
+            input[type="checkbox"] {
+                min-width: 20px;
+                min-height: 20px;
+            }
+        }
+
+        /* Smooth transitions */
+        .lib-card,
+        .lib-hero,
+        .btn-lib,
+        .toggle-row {
+            transition: all 0.2s ease;
+        }
+
+        /* Fix for button group on mobile */
+        @media (max-width: 576px) {
+
+            #cancelBtn,
+            #submitBtn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            #cancelBtn i,
+            #submitBtn i {
+                margin-right: .5rem;
+            }
+        }
     </style>
 @endsection
 
@@ -403,7 +816,7 @@
             </div>
 
             <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;">
-                <a href="{{ route('library.dashboard') }}" class="btn-lib btn-outline-lib" id="cancelBtn">
+                <a href="{{ route('library.dashboard') }}" class="btn-lib btn-primary" id="cancelBtn">
                     <i class="fas fa-times"></i> Cancel
                 </a>
                 <button type="submit" class="btn-lib btn-primary-lib" style="padding:.65rem 1.75rem;font-size:.9rem;"
@@ -414,8 +827,8 @@
         </form>
     </div>
     </div>
-                </div>
-            </div>
+    </div>
+    </div>
 @endsection
 
 @section('js')

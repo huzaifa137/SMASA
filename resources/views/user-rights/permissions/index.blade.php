@@ -325,6 +325,577 @@
     width: 1px;
     background: #e2e8f0;
 }
+
+/* Module Permissions - Stack layout on mobile */
+
+/* Hero section */
+.urp-hero {
+    padding: 2rem 2rem 2.8rem;
+}
+
+.urp-hero h2 {
+    font-size: 1.7rem;
+}
+
+.urp-hero p {
+    opacity: .8;
+}
+
+/* Role tabs */
+#roleTabs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#roleTabs .role-tab {
+    margin-right: 0.6rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.role-tab .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+}
+
+/* Module cards */
+.module-card {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.module-header {
+    padding: 0.9rem 1.1rem;
+}
+
+.module-icon-wrap {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+}
+
+.module-name {
+    font-size: 0.92rem;
+}
+
+.module-features-wrap {
+    padding: 0.75rem 1.1rem 1rem;
+}
+
+.feature-row {
+    padding: 0.4rem 0;
+}
+
+.feature-name {
+    font-size: 0.82rem;
+}
+
+/* Toggle switch */
+.tog-wrap {
+    width: 42px;
+    height: 22px;
+}
+
+.tog-slider::before {
+    height: 16px;
+    width: 16px;
+}
+
+input:checked+.tog-slider::before {
+    transform: translateX(20px);
+}
+
+/* Action buttons */
+#btnEnableAll,
+#btnDisableAll,
+#btnSaveAll {
+    border-radius: 8px;
+    font-size: 0.8rem;
+    padding: 0.5rem 1.1rem;
+    gap: 0.4rem;
+}
+
+#btnSaveAll::before {
+    display: none;
+}
+
+/* Tablet - hero */
+@media (max-width: 992px) {
+    .urp-hero {
+        padding: 1.5rem 1.5rem 2.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.4rem;
+    }
+    
+    .urp-hero p {
+        font-size: 0.9rem;
+    }
+    
+    .urp-hero .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    
+    .urp-hero .d-flex > div:last-child {
+        width: 100%;
+    }
+    
+    /* Module cards - 2 columns */
+    #moduleGrid .col-md-6.col-lg-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    
+    /* Role tabs scrollable */
+    #roleTabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+        gap: 0.4rem;
+    }
+    
+    #roleTabs .role-tab {
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.8rem;
+    }
+    
+    #roleTabs .text-muted {
+        flex-shrink: 0;
+    }
+}
+
+/* Tablet - stack */
+@media (max-width: 768px) {
+    .urp-hero {
+        padding: 1.25rem 1.25rem 2rem;
+        border-radius: 12px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1.2rem;
+    }
+    
+    .urp-hero p {
+        font-size: 0.82rem;
+        margin-top: 0.2rem !important;
+    }
+    
+    /* Role tabs */
+    #roleTabs {
+        gap: 0.3rem;
+    }
+    
+    #roleTabs .role-tab {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 8px;
+    }
+    
+    #roleTabs .role-tab .avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+    
+    /* Active role header - stack */
+    .d-flex.justify-content-between.align-items-center.mb-3 {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mb-3 > div:last-child {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    #btnEnableAll,
+    #btnDisableAll,
+    #btnSaveAll {
+        flex: 1;
+        min-width: 80px;
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.7rem;
+    }
+    
+    /* Module cards - single column */
+    #moduleGrid .col-md-6.col-lg-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .module-header {
+        padding: 0.7rem 0.9rem;
+    }
+    
+    .module-icon-wrap {
+        width: 34px;
+        height: 34px;
+        font-size: 0.9rem;
+    }
+    
+    .module-name {
+        font-size: 0.85rem;
+    }
+    
+    .module-features-wrap {
+        padding: 0.6rem 0.9rem 0.8rem;
+    }
+    
+    .feature-row {
+        padding: 0.3rem 0;
+    }
+    
+    .feature-name {
+        font-size: 0.78rem;
+    }
+    
+    .tog-wrap {
+        width: 38px;
+        height: 20px;
+    }
+    
+    .tog-slider::before {
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+    }
+    
+    input:checked+.tog-slider::before {
+        transform: translateX(18px);
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .urp-hero {
+        padding: 1rem 1rem 1.75rem;
+        border-radius: 10px;
+    }
+    
+    .urp-hero h2 {
+        font-size: 1rem;
+    }
+    
+    .urp-hero p {
+        font-size: 0.75rem;
+    }
+    
+    .card {
+        border-radius: 10px !important;
+    }
+    
+    .card.p-3 {
+        padding: 0.75rem !important;
+    }
+    
+    .card.p-3 .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+    }
+    
+    #roleTabs {
+        gap: 0.25rem;
+        padding-bottom: 0.3rem;
+    }
+    
+    #roleTabs .role-tab {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        border-width: 1.5px;
+    }
+    
+    #roleTabs .role-tab .avatar {
+        width: 20px;
+        height: 20px;
+        font-size: 0.6rem;
+    }
+    
+    #roleTabs .text-muted {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Active role header */
+    .d-flex.justify-content-between.align-items-center.mb-3 > div:first-child {
+        width: 100%;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mb-3 > div:first-child #activeRoleName {
+        font-size: 0.95rem;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mb-3 > div:first-child .text-muted {
+        font-size: 0.7rem !important;
+        display: block;
+        margin-left: 0 !important;
+        margin-top: 0.1rem;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mb-3 > div:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    
+    #btnEnableAll,
+    #btnDisableAll,
+    #btnSaveAll {
+        flex: 1 1 calc(50% - 0.4rem);
+        min-width: 60px;
+        font-size: 0.7rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+    }
+    
+    #btnEnableAll i,
+    #btnDisableAll i,
+    #btnSaveAll i {
+        font-size: 0.65rem;
+    }
+    
+    #btnEnableAll {
+        order: 1;
+    }
+    
+    #btnDisableAll {
+        order: 2;
+    }
+    
+    #btnSaveAll {
+        order: 3;
+        flex: 1 1 100%;
+        margin-left: 0 !important;
+    }
+    
+    #btnSaveAll::before {
+        display: none;
+    }
+    
+    /* Module cards */
+    .module-card {
+        border-radius: 10px;
+        border-width: 1.5px;
+    }
+    
+    .module-header {
+        padding: 0.6rem 0.75rem;
+    }
+    
+    .module-icon-wrap {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+        border-radius: 8px;
+    }
+    
+    .module-name {
+        font-size: 0.8rem;
+    }
+    
+    .module-features-wrap {
+        padding: 0.5rem 0.75rem 0.65rem;
+    }
+    
+    .feature-row {
+        padding: 0.25rem 0;
+    }
+    
+    .feature-name {
+        font-size: 0.72rem;
+    }
+    
+    .tog-wrap {
+        width: 34px;
+        height: 18px;
+    }
+    
+    .tog-slider::before {
+        height: 12px;
+        width: 12px;
+        left: 3px;
+        bottom: 3px;
+    }
+    
+    input:checked+.tog-slider::before {
+        transform: translateX(16px);
+    }
+    
+    /* Status indicator */
+    .perm-status {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.5rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .urp-hero {
+        padding: 0.75rem 0.75rem 1.5rem;
+    }
+    
+    .urp-hero h2 {
+        font-size: 0.9rem;
+    }
+    
+    #roleTabs .role-tab {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.4rem;
+    }
+    
+    #roleTabs .role-tab .avatar {
+        width: 18px;
+        height: 18px;
+        font-size: 0.55rem;
+    }
+    
+    #btnEnableAll,
+    #btnDisableAll,
+    #btnSaveAll {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.4rem;
+        min-width: 50px;
+    }
+    
+    .module-header {
+        padding: 0.5rem 0.6rem;
+    }
+    
+    .module-icon-wrap {
+        width: 26px;
+        height: 26px;
+        font-size: 0.7rem;
+    }
+    
+    .module-name {
+        font-size: 0.72rem;
+    }
+    
+    .module-features-wrap {
+        padding: 0.4rem 0.6rem 0.5rem;
+    }
+    
+    .feature-name {
+        font-size: 0.65rem;
+    }
+    
+    .tog-wrap {
+        width: 30px;
+        height: 16px;
+    }
+    
+    .tog-slider::before {
+        height: 10px;
+        width: 10px;
+        left: 3px;
+        bottom: 3px;
+    }
+    
+    input:checked+.tog-slider::before {
+        transform: translateX(14px);
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    #roleTabs {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    
+    #roleTabs::-webkit-scrollbar {
+        height: 3px;
+    }
+    
+    #roleTabs::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 99px;
+    }
+    
+    #roleTabs::-webkit-scrollbar-thumb {
+        background: var(--urp-primary);
+        border-radius: 99px;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .role-tab,
+    .module-header,
+    .feature-row,
+    .tog-wrap,
+    #btnEnableAll,
+    #btnDisableAll,
+    #btnSaveAll {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .role-tab:active {
+        transform: scale(0.96);
+    }
+    
+    .module-header:active {
+        transform: scale(0.99);
+    }
+    
+    .tog-wrap {
+        min-height: 18px;
+        min-width: 30px;
+    }
+    
+    #btnEnableAll,
+    #btnDisableAll,
+    #btnSaveAll {
+        min-height: 36px;
+    }
+}
+
+/* Smooth transitions */
+.role-tab,
+.module-card,
+.module-header,
+.feature-row,
+.btn {
+    transition: all 0.2s ease;
+}
+
+/* No roles message on mobile */
+@media (max-width: 576px) {
+    .card.p-5 {
+        padding: 2rem 1rem !important;
+    }
+    
+    .card.p-5 i {
+        font-size: 2.5rem !important;
+    }
+    
+    .card.p-5 h5 {
+        font-size: 1rem;
+    }
+    
+    .card.p-5 p {
+        font-size: 0.82rem;
+    }
+    
+    .card.p-5 .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
     </style>
 @endsection
 

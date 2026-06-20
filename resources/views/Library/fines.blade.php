@@ -345,6 +345,477 @@
             padding: 1.25rem;
             text-align: center;
         }
+
+        /* Fines - Stack layout on mobile */
+
+/* Hero section */
+.lib-hero {
+    padding: 2rem 2.5rem;
+}
+
+/* Summary grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-card {
+    border-radius: 14px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+/* Fines table responsive */
+.lib-table {
+    min-width: 700px;
+}
+
+.lib-table th,
+.lib-table td {
+    padding: .75rem 1rem;
+}
+
+/* Filter bar */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: center;
+}
+
+.filter-bar .form-control {
+    width: auto;
+    min-width: 140px;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .lib-table th,
+    .lib-table td {
+        padding: .65rem .85rem;
+        font-size: .8rem;
+    }
+    
+    .filter-bar .form-control {
+        min-width: 120px;
+        font-size: .8rem;
+    }
+    
+    .summary-grid {
+        gap: .75rem;
+    }
+    
+    .summary-card {
+        padding: 1rem;
+    }
+    
+    .summary-card div:first-child {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* Tablet - stack vertically */
+@media (max-width: 768px) {
+    .lib-hero {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.3rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .8rem !important;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+    }
+    
+    .summary-card {
+        padding: 1rem;
+    }
+    
+    .summary-card div:first-child {
+        font-size: 1.25rem !important;
+    }
+    
+    .lib-table {
+        min-width: 650px;
+        font-size: .8rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .5rem .75rem;
+    }
+    
+    .lib-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: 1rem 1.25rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .9rem;
+    }
+    
+    .lib-card-header form {
+        width: 100%;
+    }
+    
+    .lib-card-body {
+        padding: 1rem;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+    
+    .filter-bar .form-control {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .filter-bar .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Mobile landscape */
+@media (max-width: 576px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.75rem !important;
+    }
+    
+    .lib-hero {
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1.1rem !important;
+    }
+    
+    .lib-hero [style*="font-size:.875rem;"] {
+        font-size: .75rem !important;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+    }
+    
+    .summary-card {
+        padding: .75rem .5rem;
+        border-radius: 10px;
+    }
+    
+    .summary-card div:first-child {
+        font-size: 1rem !important;
+    }
+    
+    .summary-card div:last-child {
+        font-size: .7rem !important;
+    }
+    
+    .lib-card-header {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-card-header h3 {
+        font-size: .85rem;
+    }
+    
+    .lib-card-body {
+        padding: .75rem 1rem;
+    }
+    
+    .lib-table {
+        min-width: 580px;
+        font-size: .75rem;
+    }
+    
+    .lib-table th {
+        font-size: .65rem;
+        padding: .4rem .6rem;
+    }
+    
+    .lib-table td {
+        padding: .4rem .6rem;
+        font-size: .75rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 100px;
+    }
+    
+    .lib-table td:nth-child(2) {
+        min-width: 100px;
+        max-width: 120px;
+    }
+    
+    .lib-table td:nth-child(3) {
+        min-width: 70px;
+    }
+    
+    .lib-table td:nth-child(4) {
+        min-width: 70px;
+    }
+    
+    .lib-table td:nth-child(5) {
+        min-width: 70px;
+    }
+    
+    .lib-table td:nth-child(6) {
+        min-width: 70px;
+    }
+    
+    .badge {
+        font-size: .6rem;
+        padding: .15rem .5rem;
+    }
+    
+    /* Action buttons in table */
+    .lib-table td:last-child {
+        min-width: 100px;
+    }
+    
+    .lib-table td:last-child .btn-lib {
+        padding: .2rem .5rem;
+        font-size: .65rem;
+        min-height: 28px;
+        min-width: 28px;
+        margin-bottom: .2rem;
+    }
+    
+    .lib-table td:last-child .btn-lib i {
+        font-size: .65rem;
+    }
+    
+    .lib-table td:last-child .btn-lib[title="Waive"] {
+        padding: .2rem .4rem;
+    }
+    
+    .lib-table td:last-child div[style*="display:flex"] {
+        flex-wrap: wrap;
+        gap: .3rem !important;
+    }
+    
+    /* Form elements */
+    .form-control {
+        font-size: 14px;
+        padding: .5rem .75rem;
+    }
+    
+    .form-label {
+        font-size: .75rem;
+    }
+    
+    /* Buttons */
+    .btn-lib {
+        font-size: .75rem;
+        padding: .4rem .75rem;
+    }
+    
+    /* Modal */
+    .modal-box {
+        margin: 1rem;
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+    
+    .modal-title {
+        font-size: 1rem;
+    }
+    
+    /* Pagination */
+    nav[role="navigation"] {
+        font-size: .75rem;
+    }
+    
+    nav[role="navigation"] .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    nav[role="navigation"] .page-link {
+        padding: .3rem .5rem;
+        font-size: .7rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    [style*="padding:1.5rem;"] {
+        padding: 0.5rem !important;
+    }
+    
+    .lib-hero {
+        padding: .75rem 1rem;
+        border-radius: 14px;
+    }
+    
+    .lib-hero [style*="font-size:1.6rem;"] {
+        font-size: 1rem !important;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .4rem;
+    }
+    
+    .summary-card {
+        padding: .5rem .3rem;
+        border-radius: 8px;
+    }
+    
+    .summary-card div:first-child {
+        font-size: .85rem !important;
+    }
+    
+    .summary-card div:last-child {
+        font-size: .6rem !important;
+    }
+    
+    .lib-table {
+        min-width: 480px;
+        font-size: .7rem;
+    }
+    
+    .lib-table th,
+    .lib-table td {
+        padding: .3rem .5rem;
+    }
+    
+    .lib-table td:first-child {
+        min-width: 80px;
+    }
+    
+    .lib-table td:nth-child(2) {
+        min-width: 70px;
+        max-width: 80px;
+    }
+    
+    .lib-table td:nth-child(3) {
+        min-width: 60px;
+    }
+    
+    .lib-table td:nth-child(4) {
+        min-width: 60px;
+    }
+    
+    .lib-table td:nth-child(5) {
+        min-width: 55px;
+    }
+    
+    .lib-table td:nth-child(6) {
+        min-width: 60px;
+    }
+    
+    .lib-card-header {
+        padding: .6rem .75rem;
+    }
+    
+    .lib-card-body {
+        padding: .6rem .75rem;
+    }
+    
+    .lib-table td:last-child {
+        min-width: 80px;
+    }
+    
+    .lib-table td:last-child .btn-lib {
+        padding: .15rem .35rem;
+        font-size: .55rem;
+        min-height: 22px;
+        min-width: 22px;
+    }
+    
+    .lib-table td:last-child .btn-lib i {
+        font-size: .55rem;
+    }
+    
+    .modal-box {
+        padding: .75rem;
+        margin: .5rem;
+    }
+    
+    .modal-title {
+        font-size: .85rem;
+    }
+}
+
+/* Fix horizontal scroll on mobile */
+@media (max-width: 768px) {
+    [style*="overflow-x:auto;"] {
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 576px) {
+    .btn-lib,
+    .lib-table td .btn-lib,
+    button.btn-lib {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .lib-card-header .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .lib-table td:last-child button {
+        min-height: 32px;
+        min-width: 32px;
+    }
+    
+    .lib-table td:last-child div[style*="display:flex"] {
+        justify-content: flex-start;
+    }
+    
+    /* Make filter buttons full width */
+    .filter-bar .btn-lib {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Select dropdowns on mobile */
+    select.form-control {
+        font-size: 16px;
+    }
+    
+    /* Summary cards on smallest screens */
+    .summary-grid {
+        gap: .4rem;
+    }
+}
+
+/* Smooth transitions */
+.lib-card,
+.lib-hero,
+.btn-lib,
+.summary-card {
+    transition: all 0.2s ease;
+}
+
+/* Paid date text on mobile */
+@media (max-width: 576px) {
+    .lib-table td:last-child span[style*="font-size:.75rem;"] {
+        font-size: .65rem !important;
+    }
+}
     </style>
 @endsection
 

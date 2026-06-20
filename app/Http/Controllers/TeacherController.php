@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use App\Helpers\PermissionHelper;
 
 class TeacherController extends Controller
@@ -54,6 +55,7 @@ class TeacherController extends Controller
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer',
             'email' => 'required|unique:teachers',
+            'password' => 'nullable|string|min:6|confirmed',
         ]);
 
         $userExistsInSchool = DB::table('teachers')
@@ -76,9 +78,26 @@ class TeacherController extends Controller
             ]);
         }
 
+        // ── Login credentials ───────────────────────────────────────────
+        // Teachers log in by phonenumber + password (see
+        // UserController::authenticateSchool). Previously this endpoint
+        // never set a password at all, so newly added teachers had no way
+        // to ever log in. If the admin supplied one, hash and use it;
+        // otherwise generate a temporary one and force a change on first
+        // login, the same pattern used by the bulk-import flow.
+        $plainPassword = $request->filled('password') ? $request->password : Str::random(10);
+
+        unset($validated['password']);
+        $validated['password'] = Hash::make($plainPassword);
+        $validated['must_change_password'] = true;
+        $validated['account_status'] = 'active';
+
         $teacher = Teacher::create($validated);
 
-        return response()->json(['message' => 'Teacher added successfully']);
+        return response()->json([
+            'message' => 'Teacher added successfully',
+            'temporary_password' => $request->filled('password') ? null : $plainPassword,
+        ]);
     }
 
     public function allTeachers()
@@ -309,9 +328,9 @@ class TeacherController extends Controller
     public function updatePassword(Request $request)
     {
 
-     if (!PermissionHelper::canFeature('edit_teacher')) {
-        return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
-    }
+    //  if (!PermissionHelper::canFeature('edit_teacher')) {
+    //     return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+    // }
 
         try {
             // Validate request

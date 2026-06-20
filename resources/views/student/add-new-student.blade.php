@@ -221,6 +221,50 @@ use App\Http\Controllers\Helper;
             }
         </style>
 
+<style>
+    /* Simple fix for button alignment */
+    .card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .card-header .d-flex {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+        .card-header .d-flex a,
+        .card-header .d-flex .btn {
+            font-size: 13px;
+            padding: 6px 14px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .card-header {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+        
+        .card-header h4 {
+            text-align: center;
+        }
+        
+        .card-header .d-flex {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .card-header .d-flex a,
+        .card-header .d-flex .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
         <div class="row">
             <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                 <div class="card bg-primary">

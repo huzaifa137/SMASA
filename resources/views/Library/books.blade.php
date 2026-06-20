@@ -501,7 +501,8 @@
                     @endif
                     {{-- Export --}}
                     @if(PermissionHelper::canFeature('library_reports'))
-                        <a href="{{ route('library.books.export') }}" class="btn-lib btn-amber-lib">
+                    <a href="javascript:void();" class="btn-lib btn-amber-lib">
+                        <!-- <a href="{{ route('library.books.export') }}" class="btn-lib btn-amber-lib"> -->
                             <i class="fas fa-file-export"></i> Export
                         </a>
                     @endif

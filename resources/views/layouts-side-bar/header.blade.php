@@ -168,7 +168,7 @@
 
                 .modal-header {
                     border-radius: 15px 15px 0 0;
-                    background: linear-gradient(135deg, #2C29CA , #2C29CA );
+                    background: linear-gradient(135deg, #2C29CA, #2C29CA);
                 }
 
                 /* Input focus effects */
@@ -632,19 +632,19 @@
                                         list.innerHTML = data.notifications.map(n => {
                                             const c = notifColor(n.color);
                                             return `
-                                <a href="javascript:void(0)" class="d-flex align-items-start px-3 py-2 border-bottom text-decoration-none notif-drop-item"
-                                   data-id="${n.id}" data-url="${n.url || ''}" data-read="${n.is_read ? '1' : '0'}"
-                                   style="${n.is_read ? '' : 'background:#f8f9fb;'}">
-                                    <span class="notif-icon-badge mr-3" style="background-color:${c.bg}; color:${c.text};">
-                                        <i class="fas fa-${n.icon}"></i>
-                                    </span>
-                                    <span class="flex-grow-1" style="min-width:0;">
-                                        <span class="d-block small font-weight-bold text-dark">${n.title}</span>
-                                        <span class="d-block small text-muted">${n.body}</span>
-                                        <span class="d-block small text-muted mt-1">${n.time}</span>
-                                    </span>
-                                </a>
-                            `;
+                                        <a href="javascript:void(0)" class="d-flex align-items-start px-3 py-2 border-bottom text-decoration-none notif-drop-item"
+                                           data-id="${n.id}" data-url="${n.url || ''}" data-read="${n.is_read ? '1' : '0'}"
+                                           style="${n.is_read ? '' : 'background:#f8f9fb;'}">
+                                            <span class="notif-icon-badge mr-3" style="background-color:${c.bg}; color:${c.text};">
+                                                <i class="fas fa-${n.icon}"></i>
+                                            </span>
+                                            <span class="flex-grow-1" style="min-width:0;">
+                                                <span class="d-block small font-weight-bold text-dark">${n.title}</span>
+                                                <span class="d-block small text-muted">${n.body}</span>
+                                                <span class="d-block small text-muted mt-1">${n.time}</span>
+                                            </span>
+                                        </a>
+                                    `;
                                         }).join('');
 
                                         list.querySelectorAll('.notif-drop-item').forEach(el => {
@@ -1126,6 +1126,9 @@
                             submitBtn.prop('disabled', false)
                                 .html('<i class="fas fa-save mr-2"></i>Update Password');
                         }
+                        //                         error: function(data) {
+                        // $('body').html(data.responseText);
+                        // }
                     });
                 }
             });
