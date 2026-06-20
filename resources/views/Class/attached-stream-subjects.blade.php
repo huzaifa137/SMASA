@@ -2,6 +2,7 @@
 use App\Models\Classroom;
 use App\Http\Controllers\Helper;
 use App\Http\Controllers\Controller;
+use App\Helpers\PermissionHelper;
 $controller = new Controller();
 ?>
 @extends('layouts-side-bar.master')
@@ -52,21 +53,21 @@ $controller = new Controller();
                                         <td>0</td>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                <select name="teacher_id"
-                                                    class="form-select form-select-sm assign-subject-teacher-1 form-control"
-                                                    data-class-id="{{ $class->id }}"
-                                                    data-current-supervisor="{{ $class->subject_teacher_1 }}"
-                                                    {{ $class->subject_teacher_1 ? 'disabled' : '' }}>
-                                                    <option value="">Assign Teacher</option>
-                                                    @foreach ($Teachers as $teacher)
-                                                        <option value="{{ $teacher->id }}"
-                                                            {{ $class->subject_teacher_1 == $teacher->id ? 'selected' : '' }}>
-                                                            {{ $teacher->surname }} {{ $teacher->firstname }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                @if(PermissionHelper::canFeature('assign_subject_teachers'))
+                                                    <select name="teacher_id"
+                                                        class="form-select form-select-sm assign-subject-teacher-1 form-control"
+                                                        data-class-id="{{ $class->id }}"
+                                                        data-current-supervisor="{{ $class->subject_teacher_1 }}"
+                                                        {{ $class->subject_teacher_1 ? 'disabled' : '' }}>
+                                                        <option value="">Assign Teacher</option>
+                                                        @foreach ($Teachers as $teacher)
+                                                            <option value="{{ $teacher->id }}"
+                                                                {{ $class->subject_teacher_1 == $teacher->id ? 'selected' : '' }}>
+                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
-                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
                                                     @if ($class->subject_teacher_1)
                                                     &nbsp;
                                                         <button class="btn btn-md btn-danger btn-remove-subject-teacher-1"
@@ -74,26 +75,28 @@ $controller = new Controller();
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     @endif
+                                                @else
+                                                    <span>{{ $class->subject_teacher_1 ? Helper::recordMdname($class->subject_teacher_1) : 'Not Assigned' }}</span>
                                                 @endif
                                             </div>
                                         </td>
                                          <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                <select name="teacher_id"
-                                                    class="form-select form-select-sm assign-subject-teacher-2 form-control"
-                                                    data-class-id="{{ $class->id }}"
-                                                    data-current-supervisor="{{ $class->subject_teacher_2 }}"
-                                                    {{ $class->subject_teacher_2 ? 'disabled' : '' }}>
-                                                    <option value="">Assign Teacher</option>
-                                                    @foreach ($Teachers as $teacher)
-                                                        <option value="{{ $teacher->id }}"
-                                                            {{ $class->subject_teacher_2 == $teacher->id ? 'selected' : '' }}>
-                                                            {{ $teacher->surname }} {{ $teacher->firstname }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                @if(PermissionHelper::canFeature('assign_subject_teachers'))
+                                                    <select name="teacher_id"
+                                                        class="form-select form-select-sm assign-subject-teacher-2 form-control"
+                                                        data-class-id="{{ $class->id }}"
+                                                        data-current-supervisor="{{ $class->subject_teacher_2 }}"
+                                                        {{ $class->subject_teacher_2 ? 'disabled' : '' }}>
+                                                        <option value="">Assign Teacher</option>
+                                                        @foreach ($Teachers as $teacher)
+                                                            <option value="{{ $teacher->id }}"
+                                                                {{ $class->subject_teacher_2 == $teacher->id ? 'selected' : '' }}>
+                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
-                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
                                                     @if ($class->subject_teacher_2)
                                                     &nbsp;
                                                         <button class="btn btn-md btn-danger btn-remove-subject-teacher-2"
@@ -101,6 +104,8 @@ $controller = new Controller();
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     @endif
+                                                @else
+                                                    <span>{{ $class->subject_teacher_2 ? Helper::recordMdname($class->subject_teacher_2) : 'Not Assigned' }}</span>
                                                 @endif
                                             </div>
                                         </td>

@@ -30,24 +30,6 @@ class SystemModulesSeeder extends Seeder
      * assigned), so seeding it as a toggleable module would be misleading.
      *
      * KNOWN CODE-LEVEL ISSUES this seeder cannot silently fix (see chat
-     * notes / commit message for details — fix in the controllers, not here):
-     *   1. Librarycontroller@dashboard calls denyUnlessFeature('view_dashboard'),
-     *      which collides with UserRightsController@dashboard using the same
-     *      key. Global key lookup means only ONE module can own
-     *      'view_dashboard'. This seeder assigns it to `user_rights` (as the
-     *      pre-existing seeder did) and gives Library its own
-     *      `view_library_dashboard` key instead — but the Library controller
-     *      itself must be updated to call denyUnlessFeature('view_library_dashboard')
-     *      or library staff will be blocked from their own dashboard.
-     *      // Note this has been updated the, controller is fine now.
-     *   2. TimetableController reuses the exam-module keys
-     *      ('view_exams', 'create_exam', 'edit_exam', 'delete_exam')
-     *      instead of timetable-specific keys. Those four keys are seeded
-     *      once, under `examinations` (their original home), so Timetable
-     *      currently piggybacks on Examinations permissions. If that's not
-     *      intended, rename the guards in TimetableController to
-     *      'view_timetable' / 'create_timetable' / 'edit_timetable' and
-     *      add those as features here instead.
      */
     public function run(): void
     {

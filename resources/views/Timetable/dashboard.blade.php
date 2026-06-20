@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @extends('layouts-side-bar.master')
 
@@ -1138,18 +1139,22 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
                     <div class="d-flex gap-3 justify-content-lg-end" style="gap: 1rem;">
+                        @if(PermissionHelper::canFeature('create_timetable'))
                         <a href="{{ route('timetable.create') }}" class="btn-primary-premium"
                             style="background: white; color: var(--brand); border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                             <i class="fas fa-plus-circle"></i> New Timetable
                         </a>
+                        @endif
                         <a href="{{ route('timetable.periods.index') }}" class="btn-outline-premium"
                             style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                             <i class="fas fa-clock"></i> Periods
                         </a>
+                        @if(PermissionHelper::canFeature('view_teacher_schedule'))
                         <a href="{{ route('timetable.teacher') }}" class="btn-outline-premium"
                             style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                             <i class="fas fa-chalkboard-user"></i> My Schedule
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1219,9 +1224,11 @@ use App\Http\Controllers\Helper;
                                 <a href="{{ route('timetable.view', $tt->id) }}" class="btn-icon btn-icon-view" title="View">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                @if(PermissionHelper::canFeature('edit_timetable'))
                                 <a href="{{ route('timetable.edit', $tt->id) }}" class="btn-icon btn-icon-edit" title="Edit">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
+                                @endif
                             </div>
                         </div>
                     @empty
@@ -1259,6 +1266,7 @@ use App\Http\Controllers\Helper;
                                     <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Draft
                                 </span>
                                 <div class="tt-actions">
+                                    @if(PermissionHelper::canFeature('edit_timetable'))
                                     <a href="{{ route('timetable.edit', $tt->id) }}" class="btn-icon btn-icon-edit" title="Edit">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
@@ -1266,9 +1274,12 @@ use App\Http\Controllers\Helper;
                                         title="Activate">
                                         <i class="fas fa-check-circle"></i>
                                     </button>
+                                    @endif
+                                    @if(PermissionHelper::canFeature('delete_timetable'))
                                     <button onclick="confirmDelete({{ $tt->id }})" class="btn-icon btn-icon-delete" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

@@ -1,5 +1,5 @@
 {{-- resources/views/CardScan/logs.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php use App\Http\Controllers\Helper; use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -380,10 +380,12 @@
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
                 <span class="hero-badge"><i class="fas fa-calendar-day me-1"></i> {{ $date }}</span>
+                @if(PermissionHelper::canFeature('view_hub'))
                 <a href="{{ route('card-scan.hub') }}" class="btn btn-outline"
                     style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
                     <i class="fas fa-qrcode"></i> Back to Hub
                 </a>
+                @endif
             </div>
         </div>
 

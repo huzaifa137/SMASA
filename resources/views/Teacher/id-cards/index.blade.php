@@ -1,5 +1,8 @@
 {{-- resources/views/teacher/id-cards/index.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -540,18 +543,24 @@
                 <p class="hero-title"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Identity Cards</p>
                 <p class="hero-sub">Manage, generate and print professional ID cards for all staff members</p>
                 <div class="hero-actions">
-                    <a href="{{ route('teacher-id-cards.create') }}" class="btn btn-teal">
-                        <i class="fas fa-plus"></i> Generate Cards
-                    </a>
-                    <a href="{{ route('teacher-id-cards.print.bulk') }}" class="btn btn-ghost"
-                        style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);"
-                        target="_blank">
-                        <i class="fas fa-print"></i> Print All Active
-                    </a>
-                    <a href="{{ route('teacher-id-cards.scanner') }}" class="btn btn-ghost"
-                        style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);">
-                        <i class="fas fa-qrcode"></i> QR Scanner
-                    </a>
+                    @if(PermissionHelper::canFeature('generate_teacher_cards'))
+                        <a href="{{ route('teacher-id-cards.create') }}" class="btn btn-teal">
+                            <i class="fas fa-plus"></i> Generate Cards
+                        </a>
+                    @endif
+                    @if(PermissionHelper::canFeature('print_teacher_cards'))
+                        <a href="{{ route('teacher-id-cards.print.bulk') }}" class="btn btn-ghost"
+                            style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);"
+                            target="_blank">
+                            <i class="fas fa-print"></i> Print All Active
+                        </a>
+                    @endif
+                    @if(PermissionHelper::canFeature('verify_teacher_cards'))
+                        <a href="{{ route('teacher-id-cards.scanner') }}" class="btn btn-ghost"
+                            style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);">
+                            <i class="fas fa-qrcode"></i> QR Scanner
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -651,20 +660,22 @@
                                     </td>
                                     <td data-label="Actions">
                                         <div class="action-btns">
-                                            <button class="btn btn-ghost btn-sm" onclick="openPreview({{ $card->id }})"
-                                                title="Preview">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <a href="{{ route('teacher-id-cards.print', $card->id) }}" class="btn btn-teal btn-sm"
-                                                title="Download PDF" target="_blank">
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                            @if($card->status === 'active')
+                                            @if(PermissionHelper::canFeature('print_teacher_cards'))
+                                                <button class="btn btn-ghost btn-sm" onclick="openPreview({{ $card->id }})"
+                                                    title="Preview">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="{{ route('teacher-id-cards.print', $card->id) }}" class="btn btn-teal btn-sm"
+                                                    title="Download PDF" target="_blank">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            @endif
+                                            @if($card->status === 'active' && PermissionHelper::canFeature('revoke_teacher_cards'))
                                                 <button class="btn btn-danger btn-sm" onclick="revokeCard({{ $card->id }})"
                                                     title="Revoke">
                                                     <i class="fas fa-ban"></i>
                                                 </button>
-                                            @elseif($card->status === 'revoked')
+                                            @elseif($card->status === 'revoked' && PermissionHelper::canFeature('reactivate_teacher_cards'))
                                                 <button class="btn btn-ghost btn-sm" style="color:var(--g);border-color:var(--gl);"
                                                     onclick="reactivateCard({{ $card->id }})" title="Reactivate">
                                                     <i class="fas fa-redo"></i>
@@ -684,9 +695,11 @@
                 <div class="empty-state">
                     <i class="fas fa-id-card-alt"></i>
                     <p>No teacher ID cards generated yet.</p>
-                    <a href="{{ route('teacher-id-cards.create') }}" class="btn btn-teal" style="margin-top:1rem;">
-                        <i class="fas fa-plus"></i> Generate Now
-                    </a>
+                    @if(PermissionHelper::canFeature('generate_teacher_cards'))
+                        <a href="{{ route('teacher-id-cards.create') }}" class="btn btn-teal" style="margin-top:1rem;">
+                            <i class="fas fa-plus"></i> Generate Now
+                        </a>
+                    @endif
                 </div>
             @endif
         </div>

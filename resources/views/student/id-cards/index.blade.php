@@ -1,5 +1,8 @@
 {{-- resources/views/student/id-cards/index.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -536,18 +539,24 @@ th {
             <h2 class="hero-title"><i class="fas fa-id-card me-2"></i> Student ID Card Management</h2>
             <p class="hero-sub">Generate, print and manage professional student identity cards with QR verification.</p>
             <div class="hero-actions">
-                <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5);"
-                    onclick="openGenerateModal()">
-                    <i class="fas fa-magic"></i> Generate Class Cards
-                </button>
-                <a href="{{ route('id-cards.scanner') }}" class="btn btn-outline"
-                    style="color:#fff;border-color:rgba(255,255,255,.5);">
-                    <i class="fas fa-qrcode"></i> QR Scanner
-                </a>
-                <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5);"
-                    onclick="openBulkPrintModal()">
-                    <i class="fas fa-print"></i> Bulk Print
-                </button>
+                @if(PermissionHelper::canFeature('generate_cards'))
+                    <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5);"
+                        onclick="openGenerateModal()">
+                        <i class="fas fa-magic"></i> Generate Class Cards
+                    </button>
+                @endif
+                @if(PermissionHelper::canFeature('verify_cards'))
+                    <a href="{{ route('id-cards.scanner') }}" class="btn btn-outline"
+                        style="color:#fff;border-color:rgba(255,255,255,.5);">
+                        <i class="fas fa-qrcode"></i> QR Scanner
+                    </a>
+                @endif
+                @if(PermissionHelper::canFeature('print_cards'))
+                    <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5);"
+                        onclick="openBulkPrintModal()">
+                        <i class="fas fa-print"></i> Bulk Print
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -674,21 +683,19 @@ th {
                                     </td>
                                     <td>
                                         <div style="display:flex;gap:.35rem;">
-                                            <button class="btn-icon btn-view" onclick="previewCard({{ $card->id }})"
-                                                title="Preview Card">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <!-- <a href="{{ route('id-cards.print', $card->id) }}" class="btn-icon btn-print"
-                                                title="Download PDF" target="_blank">
-                                                <i class="fas fa-print"></i>
-                                            </a> -->
+                                            @if(PermissionHelper::canFeature('print_cards'))
+                                                <button class="btn-icon btn-view" onclick="previewCard({{ $card->id }})"
+                                                    title="Preview Card">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
 
-                                            <a href="javascript:void();" class="btn-icon btn-print"
-                                                title="Download PDF" target="_blank">
-                                                <i class="fas fa-print"></i>
-                                            </a>
-                                            
-                                            @if($card->status === 'active')
+                                                <a href="javascript:void();" class="btn-icon btn-print"
+                                                    title="Download PDF" target="_blank">
+                                                    <i class="fas fa-print"></i>
+                                                </a>
+                                            @endif
+
+                                            @if($card->status === 'active' && PermissionHelper::canFeature('revoke_cards'))
                                                 <button class="btn-icon btn-revoke"
                                                     onclick="revokeCard({{ $card->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
                                                     title="Revoke Card">

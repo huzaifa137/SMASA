@@ -1,5 +1,5 @@
 {{-- resources/views/CardScan/hub.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php use App\Http\Controllers\Helper; use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -568,14 +568,18 @@
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
                 <span class="hero-badge"><i class="fas fa-chart-bar me-1"></i> {{ $todayTotal }} scans today</span>
+                @if(PermissionHelper::canFeature('view_scan_logs'))
                 <a href="{{ route('card-scan.logs') }}" class="btn btn-outline"
                     style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
                     <i class="fas fa-history"></i> View Logs
                 </a>
+                @endif
+                @if(PermissionHelper::canFeature('manage_arrival_attendance'))
                 <a href="{{ route('card-scan.arrival') }}" class="btn btn-outline"
                     style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
                     <i class="fas fa-school"></i> Arrival Attendance
                 </a>
+                @endif
             </div>
         </div>
 
@@ -613,6 +617,7 @@
                 </div>
 
                 {{-- Camera Scanner --}}
+                @if(PermissionHelper::canFeature('scan_cards'))
                 <div class="panel" style="margin-bottom:1rem;position:relative">
                     <div class="panel-title"><i class="fas fa-camera"></i> Camera Scanner</div>
                     <div class="scanner-wrap">
@@ -643,6 +648,7 @@
                         </button>
                     </div>
                 </div>
+                @endif
             </div>
 
             {{-- RIGHT: Result + Recent --}}

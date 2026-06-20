@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -471,10 +472,12 @@
                    style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                     <i class="fas fa-chart-line"></i> Dashboard
                 </a>
-                <a href="{{ route('attendance.students.report') }}" class="btn-glass btn-glass-white"
-                   style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.9); color: #333; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
+                @if(PermissionHelper::canFeature('attendance_reports'))
+                    <a href="{{ route('attendance.students.report') }}" class="btn-glass btn-glass-white"
+                       style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.9); color: #333; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                @endif
             </div>
         </div>
     </div>

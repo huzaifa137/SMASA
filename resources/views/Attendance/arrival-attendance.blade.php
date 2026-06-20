@@ -1,5 +1,8 @@
 {{-- resources/views/Attendance/arrival-attendance.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -569,14 +572,18 @@
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
                 <span class="hero-badge"><i class="fas fa-calendar me-1"></i>
                     {{ \Carbon\Carbon::parse($date)->format('d M Y') }}</span>
-                <a href="{{ route('card-scan.hub') }}" class="btn btn-outline"
-                    style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
-                    <i class="fas fa-qrcode"></i> Scan Hub
-                </a>
-                <a href="{{ route('card-scan.arrival.report') }}" class="btn btn-outline"
-                    style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
+                @if(PermissionHelper::canFeature('view_hub'))
+                    <a href="{{ route('card-scan.hub') }}" class="btn btn-outline"
+                        style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                        <i class="fas fa-qrcode"></i> Scan Hub
+                    </a>
+                @endif
+                @if(PermissionHelper::canFeature('view_arrival_reports'))
+                    <a href="{{ route('card-scan.arrival.report') }}" class="btn btn-outline"
+                        style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                @endif
                 <!-- <button class="btn btn-success btn-sm" onclick="openAddModal()">
                     <i class="fas fa-plus"></i> Add Manually
                 </button> -->

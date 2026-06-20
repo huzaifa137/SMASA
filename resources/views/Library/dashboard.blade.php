@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
     <link
@@ -453,24 +454,38 @@
                 <h3><i class="fas fa-bolt" style="color:var(--lib-amber);"></i> Quick Actions</h3>
             </div>
             <div class="lib-card-body" style="display:flex;flex-wrap:wrap;gap:.75rem;">
-                <a href="{{ route('library.books.create') }}" class="btn-lib btn-primary-lib"><i class="fas fa-plus"></i>
-                    Add Book</a>
-                <a href="{{ route('library.borrowings') }}" class="btn-lib"
-                    style="background:var(--lib-violet-l);color:var(--lib-violet);"><i
-                        class="fas fa-hand-holding-heart"></i> Issue Book</a>
-                <a href="{{ route('library.members') }}" class="btn-lib"
-                    style="background:var(--lib-amber-l);color:var(--lib-amber);"><i class="fas fa-user-plus"></i> Add
-                    Member</a>
-                <a href="{{ route('library.fines') }}" class="btn-lib"
-                    style="background:var(--lib-rose-l);color:var(--lib-rose);"><i class="fas fa-coins"></i> Manage
-                    Fines</a>
-                <a href="{{ route('library.reports') }}" class="btn-lib"
-                    style="background:var(--lib-green-l);color:var(--lib-green);"><i class="fas fa-chart-bar"></i>
-                    Reports</a>
-                <a href="{{ route('library.catalogue') }}" class="btn-lib btn-outline-lib"><i class="fas fa-search"></i>
-                    Book Catalogue</a>
-                <a href="{{ route('library.settings') }}" class="btn-lib btn-outline-lib"><i class="fas fa-cog"></i>
-                    Settings</a>
+                @if(PermissionHelper::canFeature('add_book'))
+                    <a href="{{ route('library.books.create') }}" class="btn-lib btn-primary-lib"><i class="fas fa-plus"></i>
+                        Add Book</a>
+                @endif
+                @if(PermissionHelper::canFeature('manage_borrowing'))
+                    <a href="{{ route('library.borrowings') }}" class="btn-lib"
+                        style="background:var(--lib-violet-l);color:var(--lib-violet);"><i
+                            class="fas fa-hand-holding-heart"></i> Issue Book</a>
+                @endif
+                @if(PermissionHelper::canFeature('manage_members'))
+                    <a href="{{ route('library.members') }}" class="btn-lib"
+                        style="background:var(--lib-amber-l);color:var(--lib-amber);"><i class="fas fa-user-plus"></i> Add
+                        Member</a>
+                @endif
+                @if(PermissionHelper::canFeature('manage_borrowing'))
+                    <a href="{{ route('library.fines') }}" class="btn-lib"
+                        style="background:var(--lib-rose-l);color:var(--lib-rose);"><i class="fas fa-coins"></i> Manage
+                        Fines</a>
+                @endif
+                @if(PermissionHelper::canFeature('library_reports'))
+                    <a href="{{ route('library.reports') }}" class="btn-lib"
+                        style="background:var(--lib-green-l);color:var(--lib-green);"><i class="fas fa-chart-bar"></i>
+                        Reports</a>
+                @endif
+                @if(PermissionHelper::canFeature('view_books'))
+                    <a href="{{ route('library.catalogue') }}" class="btn-lib btn-outline-lib"><i class="fas fa-search"></i>
+                        Book Catalogue</a>
+                @endif
+                @if(PermissionHelper::canFeature('manage_settings'))
+                    <a href="{{ route('library.settings') }}" class="btn-lib btn-outline-lib"><i class="fas fa-cog"></i>
+                        Settings</a>
+                @endif
             </div>
         </div>
 
@@ -518,7 +533,9 @@
                 <div class="lib-card">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-fire" style="color:var(--lib-amber);"></i> Most Borrowed Books</h3>
-                        <a href="{{ route('library.reports') }}" class="btn-lib btn-sm-lib btn-outline-lib">View All</a>
+                        @if(PermissionHelper::canFeature('library_reports'))
+                            <a href="{{ route('library.reports') }}" class="btn-lib btn-sm-lib btn-outline-lib">View All</a>
+                        @endif
                     </div>
                     <div class="lib-card-body">
                         @forelse($popularBooks as $i => $book)
@@ -544,7 +561,9 @@
                 <div class="lib-card">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-history" style="color:var(--lib-teal);"></i> Recent Borrowings</h3>
-                        <a href="{{ route('library.borrowings') }}" class="btn-lib btn-sm-lib btn-outline-lib">View All</a>
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
+                            <a href="{{ route('library.borrowings') }}" class="btn-lib btn-sm-lib btn-outline-lib">View All</a>
+                        @endif
                     </div>
                     <div style="overflow-x:auto;">
                         <table class="lib-table">

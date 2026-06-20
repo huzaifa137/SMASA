@@ -2,6 +2,7 @@
 use App\Models\Classroom;
 use App\Http\Controllers\Helper;
 use App\Http\Controllers\Controller;
+use App\Helpers\PermissionHelper;
 $controller = new Controller();
 ?>
 @extends('layouts-side-bar.master')
@@ -52,19 +53,23 @@ $controller = new Controller();
                                             <td>0</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <select name="teacher_id"
-                                                        class="form-select form-select-sm assign-supervisor form-control"
-                                                        data-class-id="{{ $class->id }}"
-                                                        data-current-supervisor="{{ $class->class_supervisor }}"
-                                                        {{ $class->class_supervisor ? 'disabled' : '' }}>
-                                                        <option value="">Select Supervisor</option>
-                                                        @foreach ($Teachers as $teacher)
-                                                            <option value="{{ $teacher->id }}"
-                                                                {{ $class->class_supervisor == $teacher->id ? 'selected' : '' }}>
-                                                                {{ $teacher->surname }} {{ $teacher->firstname }} (You)
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    @if(PermissionHelper::canFeature('assign_class_teacher'))
+                                                        <select name="teacher_id"
+                                                            class="form-select form-select-sm assign-supervisor form-control"
+                                                            data-class-id="{{ $class->id }}"
+                                                            data-current-supervisor="{{ $class->class_supervisor }}"
+                                                            {{ $class->class_supervisor ? 'disabled' : '' }}>
+                                                            <option value="">Select Supervisor</option>
+                                                            @foreach ($Teachers as $teacher)
+                                                                <option value="{{ $teacher->id }}"
+                                                                    {{ $class->class_supervisor == $teacher->id ? 'selected' : '' }}>
+                                                                    {{ $teacher->surname }} {{ $teacher->firstname }} (You)
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <span>{{ $class->class_supervisor ? Helper::recordMdname($class->class_supervisor) : 'Not Assigned' }}</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -110,31 +115,39 @@ $controller = new Controller();
                                             <td class="text-center">0</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2 justify-content-center">
-                                                    <select name="teacher_id"
-                                                        class="form-select form-select-sm assign-class-teacher form-control"
-                                                        data-class-id="{{ $stream->id }}"
-                                                        data-current-supervisor="{{ $stream->class_teacher }}"
-                                                        {{ $stream->class_teacher ? 'disabled' : '' }}>
-                                                        <option value="">Select Class Teacher</option>
-                                                        @foreach ($Teachers as $teacher)
-                                                            <option value="{{ $teacher->id }}"
-                                                                {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
-                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    @if(PermissionHelper::canFeature('assign_class_teacher'))
+                                                        <select name="teacher_id"
+                                                            class="form-select form-select-sm assign-class-teacher form-control"
+                                                            data-class-id="{{ $stream->id }}"
+                                                            data-current-supervisor="{{ $stream->class_teacher }}"
+                                                            {{ $stream->class_teacher ? 'disabled' : '' }}>
+                                                            <option value="">Select Class Teacher</option>
+                                                            @foreach ($Teachers as $teacher)
+                                                                <option value="{{ $teacher->id }}"
+                                                                    {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
+                                                                    {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <span>{{ $stream->class_teacher ? Helper::recordMdname($stream->class_teacher) : 'Not Assigned' }}</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
-                                                    class="btn btn-sm btn-dark mb-1">
-                                                    <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
-                                                </a>
+                                                @if(PermissionHelper::canFeature('view_classes'))
+                                                    <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
+                                                        class="btn btn-sm btn-dark mb-1">
+                                                        <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
+                                                    </a>
+                                                @endif
 
-                                                <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}" class="btn btn-sm btn-info btn-edit-stream mb-1"
-                                                    data-stream-id="{{ $stream->id }}">
-                                                    <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
-                                                </a>
+                                                @if(PermissionHelper::canFeature('edit_class'))
+                                                    <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}" class="btn btn-sm btn-info btn-edit-stream mb-1"
+                                                        data-stream-id="{{ $stream->id }}">
+                                                        <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -180,20 +193,23 @@ $controller = new Controller();
         <td>
             <div class="d-flex align-items-center gap-2">
                 @if($class->subject_teacher_1)
-                    <select name="teacher_id"
-                        class="form-select form-select-sm assign-subject-teacher-1 form-control"
-                        data-class-id="{{ $class->id }}"
-                        data-current-supervisor="{{ $class->subject_teacher_1 }}"
-                        disabled>
-                        <option value="">Assign Teacher</option>
-                        @foreach ($Teachers as $teacher)
-                            <option value="{{ $teacher->id }}"
-                                {{ $class->subject_teacher_1 == $teacher->id ? 'selected' : '' }}>
-                                {{ $teacher->surname }} {{ $teacher->firstname }}
-                            </option>
-                        @endforeach
-                    </select>
-
+                    @if(PermissionHelper::canFeature('assign_subject_teachers'))
+                        <select name="teacher_id"
+                            class="form-select form-select-sm assign-subject-teacher-1 form-control"
+                            data-class-id="{{ $class->id }}"
+                            data-current-supervisor="{{ $class->subject_teacher_1 }}"
+                            disabled>
+                            <option value="">Assign Teacher</option>
+                            @foreach ($Teachers as $teacher)
+                                <option value="{{ $teacher->id }}"
+                                    {{ $class->subject_teacher_1 == $teacher->id ? 'selected' : '' }}>
+                                    {{ $teacher->surname }} {{ $teacher->firstname }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        <span>{{ Helper::recordMdname($class->subject_teacher_1) }}</span>
+                    @endif
                 @else
                     <span class="text-muted">No Teacher Assigned</span>
                 @endif
@@ -202,20 +218,23 @@ $controller = new Controller();
         <td>
             <div class="d-flex align-items-center gap-2">
                 @if($class->subject_teacher_2)
-                    <select name="teacher_id"
-                        class="form-select form-select-sm assign-subject-teacher-2 form-control"
-                        data-class-id="{{ $class->id }}"
-                        data-current-supervisor="{{ $class->subject_teacher_2 }}"
-                        disabled>
-                        <option value="">Assign Teacher</option>
-                        @foreach ($Teachers as $teacher)
-                            <option value="{{ $teacher->id }}"
-                                {{ $class->subject_teacher_2 == $teacher->id ? 'selected' : '' }}>
-                                {{ $teacher->surname }} {{ $teacher->firstname }}
-                            </option>
-                        @endforeach
-                    </select>
-
+                    @if(PermissionHelper::canFeature('assign_subject_teachers'))
+                        <select name="teacher_id"
+                            class="form-select form-select-sm assign-subject-teacher-2 form-control"
+                            data-class-id="{{ $class->id }}"
+                            data-current-supervisor="{{ $class->subject_teacher_2 }}"
+                            disabled>
+                            <option value="">Assign Teacher</option>
+                            @foreach ($Teachers as $teacher)
+                                <option value="{{ $teacher->id }}"
+                                    {{ $class->subject_teacher_2 == $teacher->id ? 'selected' : '' }}>
+                                    {{ $teacher->surname }} {{ $teacher->firstname }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        <span>{{ Helper::recordMdname($class->subject_teacher_2) }}</span>
+                    @endif
                 @else
                     <span class="text-muted">No Teacher Assigned</span>
                 @endif

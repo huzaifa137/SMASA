@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @extends('layouts-side-bar.master')
 @section('content')
@@ -43,7 +44,9 @@ use App\Http\Controllers\Helper;
                                         <th>{{ trans('common.admission_number') }}.</th>
                                         <th>{{ trans('common.class') }}</th>
                                         <th>{{ trans('common.stream') }}</th>
-                                        <th>{{ trans('common.action') }}</th>
+                                        @if(PermissionHelper::canFeature('edit_student'))
+                                            <th>{{ trans('common.action') }}</th>
+                                        @endif
                                     </tr>
                                 </thead>
 
@@ -56,12 +59,14 @@ use App\Http\Controllers\Helper;
                                             <td>{{ $student->admission_number }}</td>
                                             <td>{{ Helper::recordMdname($student->senior) }}</td>
                                             <td>{{ Helper::recordMdname($student->stream) }}</td>
-                                            <td>
-                                                <a href="javascript:void(0)" data-id="{{ $student->id }}"
-                                                    class="btn btn-outline-primary btn-sm btn-edit-student">
-                                                    <i class="fa fa-edit mr-1"></i> Edit
-                                                </a>
-                                            </td>
+                                            @if(PermissionHelper::canFeature('edit_student'))
+                                                <td>
+                                                    <a href="javascript:void(0)" data-id="{{ $student->id }}"
+                                                        class="btn btn-outline-primary btn-sm btn-edit-student">
+                                                        <i class="fa fa-edit mr-1"></i> Edit
+                                                    </a>
+                                                </td>
+                                            @endif
                                         </tr>
                                     @empty
                                         <tr>

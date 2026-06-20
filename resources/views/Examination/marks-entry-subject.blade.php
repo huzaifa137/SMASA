@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @extends('layouts-side-bar.master')
 
@@ -450,7 +451,7 @@ use App\Http\Controllers\Helper;
         </div>
 
         {{-- Floating Save Button --}}
-        @if (in_array($exam->status, ['active', 'marks_entry']))
+        @if (in_array($exam->status, ['active', 'marks_entry']) && PermissionHelper::canFeature('edit_exam'))
             <button type="button" id="saveMarksBtn" class="save-fab">
                 <i class="fas fa-save me-2"></i> Save All Marks
             </button>

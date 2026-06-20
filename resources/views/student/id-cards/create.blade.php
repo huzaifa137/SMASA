@@ -1,5 +1,8 @@
 {{-- resources/views/student/id-cards/create.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -454,6 +457,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        const CAN_REACTIVATE_CARDS = @json(PermissionHelper::canFeature('reactivate_cards'));
 
         function showToast(msg, type = 'info') {
             const el = document.getElementById('toast');
@@ -644,9 +648,11 @@
                                             </button>`;
                                 } else if (s.card_status === 'revoked') {
                                     statusHtml = '<span style="background: var(--rl); color: var(--r); padding: .2rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 600;"><i class="fas fa-ban"></i> Revoked</span>';
-                                    buttonHtml = `<button class="btn btn-sm" style="background:var(--a);color:#fff;padding:.25rem .6rem;font-size:.7rem;" onclick="reactivateCard(${s.card_id}, '${escapeHtml(s.firstname).replace(/'/g, "\\'")} ${escapeHtml(s.lastname).replace(/'/g, "\\'")}')">
+                                    buttonHtml = CAN_REACTIVATE_CARDS
+                                        ? `<button class="btn btn-sm" style="background:var(--a);color:#fff;padding:.25rem .6rem;font-size:.7rem;" onclick="reactivateCard(${s.card_id}, '${escapeHtml(s.firstname).replace(/'/g, "\\'")} ${escapeHtml(s.lastname).replace(/'/g, "\\'")}')">
                                                 <i class="fas fa-sync-alt"></i> Reactivate Card
-                                            </button>`;
+                                            </button>`
+                                        : '';
                                 } else if (s.card_status === 'expired') {
                                     statusHtml = '<span style="background: var(--al); color: var(--a); padding: .2rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 600;"><i class="fas fa-clock"></i> Expired</span>';
                                     buttonHtml = `<button class="btn btn-sm btn-primary" style="padding:.25rem .6rem;font-size:.7rem;" onclick="generateSingle(${s.id}, '${escapeHtml(s.firstname).replace(/'/g, "\\'")} ${escapeHtml(s.lastname).replace(/'/g, "\\'")}')">

@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @extends('layouts-side-bar.master')
 
@@ -558,9 +559,11 @@ use App\Http\Controllers\Helper;
                 <i class="fas fa-chart-line"></i>
                 7-Day Student Trend
             </div>
-            <a href="{{ route('attendance.students.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
-                Full Report <i class="fas fa-arrow-right ms-1"></i>
-            </a>
+            @if(PermissionHelper::canFeature('attendance_reports'))
+                <a href="{{ route('attendance.students.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
+                    Full Report <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            @endif
         </div>
         @php
             $maxTotal = $weeklyStudentTrend->max('total') ?: 1;
@@ -601,9 +604,11 @@ use App\Http\Controllers\Helper;
                 <i class="fas fa-chalkboard"></i>
                 Teacher Status Today
             </div>
-            <a href="{{ route('attendance.teachers.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
-                Report <i class="fas fa-arrow-right ms-1"></i>
-            </a>
+            @if(PermissionHelper::canFeature('attendance_reports'))
+                <a href="{{ route('attendance.teachers.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
+                    Report <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            @endif
         </div>
         @php
             $tp = $teacherStats->present ?? 0;
@@ -747,6 +752,7 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>
 
+                                @if(PermissionHelper::canFeature('attendance_reports'))
                                 <a href="{{ route('attendance.students.report') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--success-muted); color: var(--success);">
                         <i class="fas fa-chart-simple"></i>
@@ -757,6 +763,7 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>
+                                @endif
 
                 <a href="{{ route('attendance.teachers') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--purple-muted); color: var(--purple);">
@@ -769,6 +776,7 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>
 
+                @if(PermissionHelper::canFeature('attendance_reports'))
                 <a href="{{ route('attendance.teachers.report') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--warning-muted); color: var(--warning);">
                         <i class="fas fa-chart-line"></i>
@@ -779,9 +787,10 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
                 </a>
+                @endif
 
                 {{-- My Classes (Teacher) --}}
-                @if(!empty($myClasses) && $myClasses->isNotEmpty())
+                @if(!empty($myClasses) && $myClasses->isNotEmpty() && PermissionHelper::canFeature('mark_attendance'))
                 <hr class="my-3" style="border-color: #E2E8F0;">
                 <div class="section-header mb-3" style="border-bottom: none; margin-bottom: 0.5rem;">
                     <i class="fas fa-book-open"></i>

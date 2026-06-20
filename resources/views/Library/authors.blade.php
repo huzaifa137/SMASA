@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
@@ -356,7 +357,9 @@
                                     <th>Nationality</th>
                                     <th>Bio</th>
                                     <th>Books</th>
-                                    <th>Actions</th>
+                                    @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                        <th>Actions</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -380,20 +383,24 @@
                                         <td><span class="badge"
                                                 style="background:var(--lib-blue-l);color:var(--lib-blue);">{{ $author->books_count }}</span>
                                         </td>
-                                        <td>
-                                            <button
-                                                onclick="openEditAuthor({{ $author->id }},'{{ addslashes($author->name) }}','{{ addslashes($author->bio) }}','{{ addslashes($author->nationality) }}')"
-                                                class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i
-                                                    class="fas fa-edit"></i></button>
-                                            @if($author->books_count == 0)
-                                                <button type="button" 
-                                                    onclick="confirmDelete({{ $author->id }})" 
-                                                    class="btn-lib btn-danger-lib"
-                                                    style="padding:.35rem .75rem;">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            @endif
-                                        </td>
+                                        @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                            <td>
+                                                @if(PermissionHelper::canFeature('edit_book'))
+                                                    <button
+                                                        onclick="openEditAuthor({{ $author->id }},'{{ addslashes($author->name) }}','{{ addslashes($author->bio) }}','{{ addslashes($author->nationality) }}')"
+                                                        class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i
+                                                            class="fas fa-edit"></i></button>
+                                                @endif
+                                                @if($author->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                                    <button type="button" 
+                                                        onclick="confirmDelete({{ $author->id }})" 
+                                                        class="btn-lib btn-danger-lib"
+                                                        style="padding:.35rem .75rem;">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -406,31 +413,33 @@
             </div>
 
             {{-- Add Author --}}
-            <div class="lib-card" style="position:sticky;top:1.5rem;">
-                <div class="lib-card-header">
-                    <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Author</h3>
+            @if(PermissionHelper::canFeature('add_book'))
+                <div class="lib-card" style="position:sticky;top:1.5rem;">
+                    <div class="lib-card-header">
+                        <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Author</h3>
+                    </div>
+                    <div class="lib-card-body">
+                        <form method="POST" action="{{ route('library.authors.store') }}" id="addAuthorForm">
+                            @csrf
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. John Steinbeck" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nationality</label>
+                                <input type="text" name="nationality" class="form-control" placeholder="e.g. American">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bio</label>
+                                <textarea name="bio" class="form-control" rows="3" placeholder="Short biography..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
+                                <i class="fas fa-plus"></i> Add Author
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="lib-card-body">
-                    <form method="POST" action="{{ route('library.authors.store') }}" id="addAuthorForm">
-                        @csrf
-                        <div class="form-group">
-                            <label class="form-label">Full Name *</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. John Steinbeck" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nationality</label>
-                            <input type="text" name="nationality" class="form-control" placeholder="e.g. American">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Bio</label>
-                            <textarea name="bio" class="form-control" rows="3" placeholder="Short biography..."></textarea>
-                        </div>
-                        <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
-                            <i class="fas fa-plus"></i> Add Author
-                        </button>
-                    </form>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 

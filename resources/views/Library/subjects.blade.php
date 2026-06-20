@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -350,7 +351,7 @@
             <div style="overflow-x:auto;">
                 @if($subjects->count())
                 <table class="lib-table">
-                    <thead><tr><th>Subject</th><th>Description</th><th>Books</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Subject</th><th>Description</th><th>Books</th><th>Status</th>@if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))<th>Actions</th>@endif</tr></thead>
                     <tbody>
                         @foreach($subjects as $subject)
                         @php
@@ -421,12 +422,16 @@ $c = $colors[$loop->index % count($colors)];
                             <td style="color:var(--text-2);max-width:200px;">{{ Str::limit($subject->description, 60) ?? '—' }}</td>
                             <td><span class="badge" style="background:var(--lib-blue-l);color:var(--lib-blue);">{{ $subject->books_count }}</span></td>
                             <td><span class="badge {{ $subject->is_active ? 'badge-active' : 'badge-inactive' }}">{{ $subject->is_active ? 'Active' : 'Inactive' }}</span></td>
-                            <td>
-                                <button onclick="openEditSubject({{ $subject->id }},'{{ addslashes($subject->name) }}','{{ addslashes($subject->description) }}',{{ $subject->is_active ? 'true' : 'false' }})" class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i class="fas fa-edit"></i></button>
-                                @if($subject->books_count == 0)
-                                <button type="button" onclick="confirmDelete({{ $subject->id }})" class="btn-lib btn-danger-lib" style="padding:.35rem .75rem;"><i class="fas fa-trash"></i></button>
-                                @endif
-                            </td>
+                            @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                <td>
+                                    @if(PermissionHelper::canFeature('edit_book'))
+                                        <button onclick="openEditSubject({{ $subject->id }},'{{ addslashes($subject->name) }}','{{ addslashes($subject->description) }}',{{ $subject->is_active ? 'true' : 'false' }})" class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i class="fas fa-edit"></i></button>
+                                    @endif
+                                    @if($subject->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                    <button type="button" onclick="confirmDelete({{ $subject->id }})" class="btn-lib btn-danger-lib" style="padding:.35rem .75rem;"><i class="fas fa-trash"></i></button>
+                                    @endif
+                                </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>
@@ -439,27 +444,29 @@ $c = $colors[$loop->index % count($colors)];
         </div>
 
         {{-- Add Subject --}}
-        <div class="lib-card" style="position:sticky;top:1.5rem;">
-            <div class="lib-card-header">
-                <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Subject</h3>
+        @if(PermissionHelper::canFeature('add_book'))
+            <div class="lib-card" style="position:sticky;top:1.5rem;">
+                <div class="lib-card-header">
+                    <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Subject</h3>
+                </div>
+                <div class="lib-card-body">
+                    <form method="POST" action="{{ route('library.subjects.store') }}" id="addSubjectForm">
+                        @csrf
+                        <div class="form-group">
+                            <label class="form-label">Subject Name *</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required id="subjectName">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Optional description..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
+                            <i class="fas fa-plus"></i> Add Subject
+                        </button>
+                    </form>
+                </div>
             </div>
-            <div class="lib-card-body">
-                <form method="POST" action="{{ route('library.subjects.store') }}" id="addSubjectForm">
-                    @csrf
-                    <div class="form-group">
-                        <label class="form-label">Subject Name *</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required id="subjectName">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Optional description..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
-                        <i class="fas fa-plus"></i> Add Subject
-                    </button>
-                </form>
-            </div>
-        </div>
+        @endif
     </div>
 </div>
 

@@ -1,4 +1,4 @@
-<?php use App\Http\Controllers\Helper; ?>
+<?php use App\Http\Controllers\Helper; use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -125,10 +125,12 @@
         </div>
         <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                @if(PermissionHelper::canFeature('view_timetable'))
                 <a href="{{ route('timetable.dashboard') }}" class="btn"
                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-arrow-left"></i> Dashboard
                 </a>
+                @endif
                 <button onclick="window.print()" class="btn"
                         style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-print"></i> Print

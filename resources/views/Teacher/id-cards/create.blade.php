@@ -1,5 +1,8 @@
 {{-- resources/views/teacher/id-cards/create.blade.php --}}
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -495,6 +498,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const CSRF = '{{ csrf_token() }}';
+        const CAN_REACTIVATE_TEACHER_CARDS = @json(PermissionHelper::canFeature('reactivate_teacher_cards'));
 
         // ── Bulk generate ──────────────────────────────────────────────────────
         function generateBulk() {
@@ -551,7 +555,9 @@
                     actionBtn = `<button class="btn-mini btn-view" onclick="openPreviewById(${t.card_id})"><i class="fas fa-eye"></i> View</button>`;
                 } else if (t.button_type === 'reactivate') {
                     badge = `<span class="badge-sm badge-revoked">Revoked</span>`;
-                    actionBtn = `<button class="btn-mini btn-react" onclick="reactivateCard(${t.card_id})"><i class="fas fa-redo"></i> Reactivate</button>`;
+                    actionBtn = CAN_REACTIVATE_TEACHER_CARDS
+                        ? `<button class="btn-mini btn-react" onclick="reactivateCard(${t.card_id})"><i class="fas fa-redo"></i> Reactivate</button>`
+                        : '';
                 } else if (t.button_type === 'expired') {
                     badge = `<span class="badge-sm badge-expired">Expired</span>`;
                     actionBtn = `<button class="btn-mini btn-gen" onclick="generateSingle(${t.id})"><i class="fas fa-redo"></i> Renew</button>`;

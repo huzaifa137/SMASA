@@ -1,4 +1,7 @@
-<?php use App\Http\Controllers\Helper; ?>
+<?php
+use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
+?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -975,18 +978,22 @@
             <p>Browse students by class and stream</p>
         </div>
         <div style="position:relative;z-index:1;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="{{ route('students.bulk.import.form') }}"
-                style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
-                onmouseover="this.style.background='rgba(255,255,255,.3)'"
-                onmouseout="this.style.background='rgba(255,255,255,.18)'">
-                <i class="fas fa-file-import"></i> Bulk Import
-            </a>
-            <a href="{{ route('students.add.new.student') }}"
-                style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
-                onmouseover="this.style.background='rgba(255,255,255,.3)'"
-                onmouseout="this.style.background='rgba(255,255,255,.18)'">
-                <i class="fas fa-user-plus"></i> Add Student
-            </a>
+            @if(PermissionHelper::canFeature('import_students'))
+                <a href="{{ route('students.bulk.import.form') }}"
+                    style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                    onmouseout="this.style.background='rgba(255,255,255,.18)'">
+                    <i class="fas fa-file-import"></i> Bulk Import
+                </a>
+            @endif
+            @if(PermissionHelper::canFeature('add_student'))
+                <a href="{{ route('students.add.new.student') }}"
+                    style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                    onmouseout="this.style.background='rgba(255,255,255,.18)'">
+                    <i class="fas fa-user-plus"></i> Add Student
+                </a>
+            @endif
         </div>
     </div>
 @endsection
@@ -1137,52 +1144,64 @@
                                             <td>
                                                 <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
                                                     <!-- View Student Details Button -->
-                                                    <button class="btn-icon btn-view" onclick="viewStudent({{ $student->id }})"
-                                                        title="View Details">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
+                                                    @if(PermissionHelper::canFeature('view_student_details'))
+                                                        <button class="btn-icon btn-view" onclick="viewStudent({{ $student->id }})"
+                                                            title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    @endif
 
                                                     <!-- ID Card Action Button based on status -->
-                                                    @if($cardStatus === 'active')
-                                                        <button class="btn-icon" style="background: var(--g); color: #fff;"
-                                                            onclick="viewCard({{ $cardId }})" title="View ID Card">
-                                                            <i class="fas fa-id-card"></i>
-                                                        </button>
-                                                        <!-- <button class="btn-icon btn-print" onclick="printCard({{ $cardId }})"
-                                                                                                            title="Print ID Card">
-                                                                                                            <i class="fas fa-print"></i>
-                                                                                                        </button> -->
-                                                    @elseif($cardStatus === 'revoked')
-                                                        <button class="btn-icon" style="background: var(--a); color: #fff;"
-                                                            onclick="reactivateCard({{ $cardId }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
-                                                            title="Reactivate Card">
-                                                            <i class="fas fa-sync-alt"></i>
-                                                        </button>
-                                                    @elseif($cardStatus === 'expired')
-                                                        <button class="btn-icon btn-primary"
-                                                            onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
-                                                            title="Generate New Card">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    @else
-                                                        <button class="btn-icon btn-primary"
-                                                            onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
-                                                            title="Generate ID Card">
-                                                            <i class="fas fa-magic"></i>
-                                                        </button>
+                                                    @if(PermissionHelper::canModule('student_id_cards'))
+                                                        @if($cardStatus === 'active')
+                                                            @if(PermissionHelper::canFeature('view_cards'))
+                                                                <button class="btn-icon" style="background: var(--g); color: #fff;"
+                                                                    onclick="viewCard({{ $cardId }})" title="View ID Card">
+                                                                    <i class="fas fa-id-card"></i>
+                                                                </button>
+                                                            @endif
+                                                        @elseif($cardStatus === 'revoked')
+                                                            @if(PermissionHelper::canFeature('reactivate_cards'))
+                                                                <button class="btn-icon" style="background: var(--a); color: #fff;"
+                                                                    onclick="reactivateCard({{ $cardId }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                                    title="Reactivate Card">
+                                                                    <i class="fas fa-sync-alt"></i>
+                                                                </button>
+                                                            @endif
+                                                        @elseif($cardStatus === 'expired')
+                                                            @if(PermissionHelper::canFeature('generate_cards'))
+                                                                <button class="btn-icon btn-primary"
+                                                                    onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                                    title="Generate New Card">
+                                                                    <i class="fas fa-plus"></i>
+                                                                </button>
+                                                            @endif
+                                                        @else
+                                                            @if(PermissionHelper::canFeature('generate_cards'))
+                                                                <button class="btn-icon btn-primary"
+                                                                    onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                                    title="Generate ID Card">
+                                                                    <i class="fas fa-magic"></i>
+                                                                </button>
+                                                            @endif
+                                                        @endif
                                                     @endif
 
                                                     <!-- Edit & Delete buttons (existing) -->
                                                     @if(Helper::isAssignedClassTeacher($senior, $stream) || Helper::isTechSateAdminOrSchoolAdminsAlone())
-                                                        <button class="btn-icon btn-edit" onclick="editStudent({{ $student->id }})"
-                                                            title="Edit Student">
-                                                            <i class="fas fa-pen"></i>
-                                                        </button>
-                                                        <button class="btn-icon btn-del"
-                                                            onclick="deleteStudent({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
-                                                            title="Delete Student">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
+                                                        @if(PermissionHelper::canFeature('edit_student'))
+                                                            <button class="btn-icon btn-edit" onclick="editStudent({{ $student->id }})"
+                                                                title="Edit Student">
+                                                                <i class="fas fa-pen"></i>
+                                                            </button>
+                                                        @endif
+                                                        @if(PermissionHelper::canFeature('delete_student'))
+                                                            <button class="btn-icon btn-del"
+                                                                onclick="deleteStudent({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
+                                                                title="Delete Student">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </td>

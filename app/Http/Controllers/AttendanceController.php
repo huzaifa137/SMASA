@@ -372,7 +372,7 @@ class AttendanceController extends Controller
                         'stream_id' => $request->stream_id,
                         'attendance_date' => $request->attendance_date,
                         'class_subject_id' => $request->class_subject_id ?: null,
-                        'session' => $request->session ?? 'morning',
+                        'session' => 'morning',
                     ],
                     [
                         'status' => $row['status'],

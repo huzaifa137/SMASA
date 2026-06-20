@@ -1,4 +1,5 @@
 {{-- resources/views/user-rights/permissions/index.blade.php --}}
+<?php use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -377,6 +378,7 @@
                     <span class="text-muted ml-2" style="font-size:.85rem;">— configure module access below</span>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
+                    @if(PermissionHelper::canFeature('assign_permissions'))
                     <button id="btnEnableAll" class="btn btn-sm btn-outline-success">
                         <i class="fa fa-check-double mr-1"></i>Enable All Modules
                     </button> &nbsp;&nbsp;
@@ -387,6 +389,7 @@
                         <span class="save-text"><i class="fa fa-save mr-1"></i>Save Permissions</span>
                         <span class="saving-spinner"><i class="fa fa-spinner fa-spin mr-1"></i>Saving...</span>
                     </button>
+                    @endif
                 </div>
             </div>
 
@@ -552,14 +555,14 @@
         }
 
         // ── ENABLE ALL ──
-        document.getElementById('btnEnableAll').addEventListener('click', () => {
+        document.getElementById('btnEnableAll')?.addEventListener('click', () => {
             document.querySelectorAll('.module-toggle').forEach(cb => { cb.checked = true; });
             document.querySelectorAll('.feature-toggle').forEach(cb => { cb.checked = true; cb.disabled = false; });
             updateModuleCardStates();
         });
 
         // ── DISABLE ALL ──
-        document.getElementById('btnDisableAll').addEventListener('click', () => {
+        document.getElementById('btnDisableAll')?.addEventListener('click', () => {
             Swal.fire({
                 title: 'Disable all modules?',
                 text: 'This will remove all module & feature access for this role.',
@@ -575,7 +578,7 @@
         });
 
         // ── SAVE ALL PERMISSIONS ──
-        document.getElementById('btnSaveAll').addEventListener('click', function () {
+        document.getElementById('btnSaveAll')?.addEventListener('click', function () {
             if (!activeRoleId) { Swal.fire('No role selected', '', 'warning'); return; }
             const btn = this;
             btn.classList.add('is-saving');

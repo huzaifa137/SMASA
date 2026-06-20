@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 @section('css')
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -504,10 +505,12 @@
                   onchange="window.location.href='{{ route('attendance.teachers') }}?date='+this.value"
                   class="date-picker-glass"
                   style="padding: 0.6rem 1rem; font-size: 1rem; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: #FFF; cursor: pointer;">
-               <a href="{{ route('attendance.teachers.report') }}" class="btn-glass"
-                  style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
-               <i class="fas fa-chart-bar"></i> Report
-               </a>
+               @if(PermissionHelper::canFeature('attendance_reports'))
+                  <a href="{{ route('attendance.teachers.report') }}" class="btn-glass"
+                     style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
+                  <i class="fas fa-chart-bar"></i> Report
+                  </a>
+               @endif
                <a href="{{ route('attendance.dashboard') }}" class="btn-glass"
                   style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.9); color: #2C29CA; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; font-weight: 600;">
                <i class="fas fa-arrow-left"></i> Dashboard

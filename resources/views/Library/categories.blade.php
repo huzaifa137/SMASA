@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
@@ -395,7 +396,9 @@
                                     <th>Description</th>
                                     <th>Books</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                        <th>Actions</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -417,21 +420,25 @@
                                                 {{ $cat->is_active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <button
-                                                onclick="openEditModal({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ addslashes($cat->description) }}', '{{ $cat->color }}', {{ $cat->is_active ? 'true' : 'false' }})"
-                                                class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            @if($cat->books_count == 0)
-                                                <button type="button" 
-                                                    onclick="confirmDelete({{ $cat->id }})" 
-                                                    class="btn-lib btn-danger-lib"
-                                                    style="padding:.35rem .75rem;">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            @endif
-                                        </td>
+                                        @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                            <td>
+                                                @if(PermissionHelper::canFeature('edit_book'))
+                                                    <button
+                                                        onclick="openEditModal({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ addslashes($cat->description) }}', '{{ $cat->color }}', {{ $cat->is_active ? 'true' : 'false' }})"
+                                                        class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                @endif
+                                                @if($cat->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                                    <button type="button" 
+                                                        onclick="confirmDelete({{ $cat->id }})" 
+                                                        class="btn-lib btn-danger-lib"
+                                                        style="padding:.35rem .75rem;">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -444,25 +451,26 @@
             </div>
 
             {{-- Add Category Panel --}}
-            <div class="lib-card" style="position:sticky;top:1.5rem;">
-                <div class="lib-card-header">
-                    <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Category</h3>
-                </div>
-                <div class="lib-card-body">
-                    <form method="POST" action="{{ route('library.categories.store') }}" id="addCategoryForm">
-                        @csrf
-                        <div class="form-group">
-                            <label class="form-label">Category Name *</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Science Fiction" required id="categoryName">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" rows="2" placeholder="Optional description..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Colour Label</label>
-                            <input type="hidden" name="color" id="colorInput" value="#0ea5a0">
-                            <div class="color-grid" id="colorGrid">
+            @if(PermissionHelper::canFeature('add_book'))
+                <div class="lib-card" style="position:sticky;top:1.5rem;">
+                    <div class="lib-card-header">
+                        <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Category</h3>
+                    </div>
+                    <div class="lib-card-body">
+                        <form method="POST" action="{{ route('library.categories.store') }}" id="addCategoryForm">
+                            @csrf
+                            <div class="form-group">
+                                <label class="form-label">Category Name *</label>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. Science Fiction" required id="categoryName">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="2" placeholder="Optional description..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Colour Label</label>
+                                <input type="hidden" name="color" id="colorInput" value="#0ea5a0">
+                                <div class="color-grid" id="colorGrid">
     @foreach([
         '#0ea5a0', // Teal
         '#7c3aed', // Violet
@@ -502,13 +510,14 @@
         </span>
     @endforeach
 </div>
-                        </div>
-                        <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
-                            <i class="fas fa-plus"></i> Add Category
-                        </button>
-                    </form>
+                            </div>
+                            <button type="submit" class="btn-lib btn-primary-lib" style="width:100%;justify-content:center;" id="submitAddBtn">
+                                <i class="fas fa-plus"></i> Add Category
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
     </div>

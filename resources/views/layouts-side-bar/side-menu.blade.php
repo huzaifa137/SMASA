@@ -54,25 +54,6 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
-            {{-- Master Data --}}
-            @if(PermissionHelper::canModule('master_data'))
-                <li class="slide has-sub">
-                    <a class="side-menu__item" href="#" data-toggle="submenu">
-                        <i class="fas fa-database fa-2x mr-3"></i>
-                        <span>Master Data</span>
-                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                    </a>
-                    <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_master_data'))
-                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Data</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_master_codes'))
-                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Codes</a></li>
-                        @endif
-                    </ul>
-                </li>
-            @endif
-
             {{-- ID Cards --}}
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
@@ -82,19 +63,37 @@ use App\Helpers\PermissionHelper;
                 </a>
                 <ul class="sub-menu">
                     @if(PermissionHelper::canModule('card_scan'))
+                        @if(PermissionHelper::canFeature('view_hub'))
                         <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_arrival_attendance'))
                         <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_arrival_reports'))
                         <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
+                        @endif
                     @endif
                     @if(PermissionHelper::canModule('student_id_cards'))
+                        @if(PermissionHelper::canFeature('view_cards'))
                         <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('generate_cards'))
                         <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('verify_cards'))
                         <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
+                        @endif
                     @endif
                     @if(PermissionHelper::canModule('teacher_id_cards'))
+                        @if(PermissionHelper::canFeature('view_teacher_cards'))
                         <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('generate_teacher_cards'))
                         <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('verify_teacher_cards'))
                         <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
+                        @endif
                     @endif
                 </ul>
             </li>
@@ -108,19 +107,45 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_library_dashboard'))
                         <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_members'))
                         <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.reservations') }}"><i class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book Requests</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('library_reports'))
                         <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_settings'))
                         <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -134,18 +159,42 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_finance'))
                         <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fees'))
                         <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee Structure</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fees'))
                         <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee Allocations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('record_payment'))
                         <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee Payment</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('record_payment'))
                         <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_expenses'))
                         <li><a href="{{ route('finance.expenses.index') }}"><i class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_expenses'))
                         <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense Categories</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_payroll'))
                         <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_payroll'))
                         <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary Structures</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.outstanding-fees') }}"><i class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -159,11 +208,21 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_attendance'))
                         <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('mark_attendance'))
                         <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('attendance_reports'))
                         <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('mark_attendance'))
                         <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('attendance_reports'))
                         <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -177,9 +236,15 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_timetable'))
                         <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_timetable'))
                         <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_timetable'))
                         <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -200,9 +265,13 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_exams'))
                         <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_exam'))
                         <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
-                        @if ($pendingMarksCount > 0)
+                        @endif
+                        @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
                             <li>
                                 <a href="{{ route('examination.marks-entry-portal') }}">
                                     <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
@@ -229,9 +298,15 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_my_notifications'))
                         <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My Notifications</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_notifications'))
                         <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage Notifications</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_notification'))
                         <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -245,10 +320,18 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_dashboard'))
                         <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_roles'))
                         <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_permissions'))
                         <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module Permissions</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_roles'))
                         <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -279,6 +362,21 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-database fa-2x mr-3"></i>
+                        <span>Master Data</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_master_codes'))
+                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_master_data'))
+                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
+                        @endif
+                    </ul>
+                </li>
             {{-- ═══════════════════════════════════════════════════
             SECTION C: SCHOOL (TEACHER) LOGIN
             All items are permission-guarded via PermissionHelper
@@ -336,25 +434,6 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
-            {{-- Master Data --}}
-            @if(PermissionHelper::canModule('master_data'))
-                <li class="slide has-sub">
-                    <a class="side-menu__item" href="#" data-toggle="submenu">
-                        <i class="fas fa-database fa-2x mr-3"></i>
-                        <span>Master Data</span>
-                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                    </a>
-                    <ul class="sub-menu">
-                        @if(PermissionHelper::canFeature('view_master_data'))
-                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Data</a></li>
-                        @endif
-                        @if(PermissionHelper::canFeature('view_master_codes'))
-                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Codes</a></li>
-                        @endif
-                    </ul>
-                </li>
-            @endif
-
             {{-- Classes --}}
             @if(PermissionHelper::canModule('classes'))
                 <li class="slide">
@@ -392,19 +471,37 @@ use App\Helpers\PermissionHelper;
                     </a>
                     <ul class="sub-menu">
                         @if(PermissionHelper::canModule('card_scan'))
+                            @if(PermissionHelper::canFeature('view_hub'))
                             <li><a href="{{ route('card-scan.hub') }}"><i class="fas fa-barcode mr-2"></i>QR Scanner</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('manage_arrival_attendance'))
                             <li><a href="{{ url('/card-scan/arrival') }}"><i class="fas fa-user-check mr-2"></i>School Arrival</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_arrival_reports'))
                             <li><a href="{{ url('/card-scan/arrival/report') }}"><i class="fas fa-chart-line mr-2"></i>Arrival Report</a></li>
+                            @endif
                         @endif
                         @if(PermissionHelper::canModule('student_id_cards'))
+                            @if(PermissionHelper::canFeature('view_cards'))
                             <li><a href="{{ route('id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Student ID Cards</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('generate_cards'))
                             <li><a href="{{ route('id-cards.create') }}"><i class="fas fa-user-plus mr-2"></i>Create Student ID</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('verify_cards'))
                             <li><a href="{{ route('id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Student QR Verifier</a></li>
+                            @endif
                         @endif
                         @if(PermissionHelper::canModule('teacher_id_cards'))
+                            @if(PermissionHelper::canFeature('view_teacher_cards'))
                             <li><a href="{{ route('teacher-id-cards.index') }}"><i class="fas fa-id-badge mr-2"></i>Teacher ID Cards</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('generate_teacher_cards'))
                             <li><a href="{{ route('teacher-id-cards.create') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Create Teacher ID</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('verify_teacher_cards'))
                             <li><a href="{{ route('teacher-id-cards.scanner') }}"><i class="fas fa-qrcode mr-2"></i>Teacher QR Verifier</a></li>
+                            @endif
                         @endif
                     </ul>
                 </li>
@@ -419,19 +516,45 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_library_dashboard'))
                         <li><a href="{{ route('library.dashboard') }}"><i class="fas fa-chart-bar mr-2"></i>Library Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.catalogue') }}"><i class="fas fa-book-reader mr-2"></i>Catalogue</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.authors') }}"><i class="fas fa-user-edit mr-2"></i>Authors</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.categories') }}"><i class="fas fa-tags mr-2"></i>Categories</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.subjects') }}"><i class="fas fa-book mr-2"></i>Subjects</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_books'))
                         <li><a href="{{ route('library.books') }}"><i class="fas fa-book-open mr-2"></i>Books</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_members'))
                         <li><a href="{{ route('library.members') }}"><i class="fas fa-users mr-2"></i>Members</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.borrowings') }}"><i class="fas fa-exchange-alt mr-2"></i>Borrowings</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.reservations') }}"><i class="fas fa-calendar-check mr-2"></i>Reservations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.book-requests') }}"><i class="fas fa-file-signature mr-2"></i>Book Requests</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_borrowing'))
                         <li><a href="{{ route('library.fines') }}"><i class="fas fa-money-bill-wave mr-2"></i>Fines</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('library_reports'))
                         <li><a href="{{ route('library.reports') }}"><i class="fas fa-chart-line mr-2"></i>Reports</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_settings'))
                         <li><a href="{{ route('library.settings') }}"><i class="fas fa-cog mr-2"></i>Settings</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -445,18 +568,42 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_finance'))
                         <li><a href="{{ route('finance.dashboard') }}"><i class="fas fa-sack-dollar mr-2"></i>Finance Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fees'))
                         <li><a href="{{ route('finance.fee-structures.index') }}"><i class="fas fa-money-check-alt mr-2"></i>Fee Structure</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_fees'))
                         <li><a href="{{ route('finance.fee-allocations') }}"><i class="fas fa-layer-group mr-2"></i>Fee Allocations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('record_payment'))
                         <li><a href="{{ route('finance.payments.create') }}"><i class="fas fa-hand-holding-usd mr-2"></i>Fee Payment</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('record_payment'))
                         <li><a href="{{ route('finance.payments.index') }}"><i class="fas fa-receipt mr-2"></i>Payments</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_expenses'))
                         <li><a href="{{ route('finance.expenses.index') }}"><i class="fas fa-money-bill-transfer mr-2"></i>Expenses</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_expenses'))
                         <li><a href="{{ route('finance.expense-categories.index') }}"><i class="fas fa-tags mr-2"></i>Expense Categories</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_payroll'))
                         <li><a href="{{ route('finance.payroll.index') }}"><i class="fas fa-chart-line mr-2"></i>Payroll</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('manage_payroll'))
                         <li><a href="{{ route('finance.salary-structures') }}"><i class="fas fa-clipboard-list mr-2"></i>Salary Structures</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.budgets.index') }}"><i class="fas fa-scale-balanced mr-2"></i>Budget</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.reports') }}"><i class="fas fa-file-chart-column mr-2"></i>Reports</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('financial_reports'))
                         <li><a href="{{ route('finance.outstanding-fees') }}"><i class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -470,11 +617,21 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_attendance'))
                         <li><a href="{{ route('attendance.dashboard') }}"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('mark_attendance'))
                         <li><a href="{{ route('attendance.students') }}"><i class="fas fa-user-graduate mr-2"></i>Student Check-In</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('attendance_reports'))
                         <li><a href="{{ route('attendance.students.report') }}"><i class="fas fa-file-alt mr-2"></i>Student Report</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('mark_attendance'))
                         <li><a href="{{ route('attendance.teachers') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Check-In</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('attendance_reports'))
                         <li><a href="{{ route('attendance.teachers.report') }}"><i class="fas fa-file-signature mr-2"></i>Teachers Report</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -488,9 +645,15 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_timetable'))
                         <li><a href="{{ route('timetable.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_timetable'))
                         <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_timetable'))
                         <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create Timetable</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -511,9 +674,13 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_exams'))
                         <li><a href="{{ route('examination.index') }}"><i class="fas fa-list mr-2"></i>All Examinations</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_exam'))
                         <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create Examination</a></li>
-                        @if ($pendingMarksCount > 0)
+                        @endif
+                        @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
                             <li>
                                 <a href="{{ route('examination.marks-entry-portal') }}">
                                     <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
@@ -540,9 +707,15 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_my_notifications'))
                         <li><a href="{{ route('notifications.my') }}"><i class="fas fa-envelope-open-text mr-2"></i>My Notifications</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_notifications'))
                         <li><a href="{{ route('notifications.index') }}"><i class="fas fa-cogs mr-2"></i>Manage Notifications</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('create_notification'))
                         <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -558,10 +731,18 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                     </a>
                     <ul class="sub-menu">
+                        @if(PermissionHelper::canFeature('view_dashboard'))
                         <li><a href="{{ route('urp.dashboard') }}"><i class="fas fa-tachometer-alt mr-2"></i>Overview</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_roles'))
                         <li><a href="{{ route('urp.roles.index') }}"><i class="fas fa-user-tag mr-2"></i>Manage Roles</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_permissions'))
                         <li><a href="{{ route('urp.permissions.index') }}"><i class="fas fa-sliders-h mr-2"></i>Module Permissions</a></li>
+                        @endif
+                        @if(PermissionHelper::canFeature('view_roles'))
                         <li><a href="{{ route('urp.assign.index') }}"><i class="fas fa-users-cog mr-2"></i>Assign to Staff</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif

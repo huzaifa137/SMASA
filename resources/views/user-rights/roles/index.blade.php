@@ -1,4 +1,5 @@
 {{-- resources/views/user-rights/roles/index.blade.php --}}
+<?php use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -36,6 +37,14 @@
 }
 .empty-state { text-align:center; padding:3rem; color:#9ca3af; }
 .empty-state i { font-size:3rem; margin-bottom:1rem; display:block; opacity:.35; }
+
+.role-action-buttons > * {
+    margin-right: 10px;
+}
+
+.role-action-buttons > *:last-child {
+    margin-right: 0;
+}
 </style>
 @endsection
 
@@ -55,6 +64,7 @@
 
     <div class="row g-3">
         {{-- CREATE FORM --}}
+        @if(PermissionHelper::canFeature('create_role'))
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm sticky-top" style="border-radius:var(--radius);top:80px;">
                 <div class="card-header bg-white border-bottom" style="border-radius:var(--radius) var(--radius) 0 0;">
@@ -85,6 +95,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- ROLES LIST --}}
         <div class="col-lg-8">
@@ -106,23 +117,34 @@
                         <span class="staff-badge">
                             <i class="fa fa-users mr-1"></i>{{ $role->teachers_count }}
                         </span>
-                        <div class="d-flex gap-1">
-                            <a href="{{ route('urp.permissions.index') }}?role={{ $role->id }}"
-                               class="btn btn-sm btn-outline-primary" title="Set permissions for this role">
-                                <i class="fa fa-shield-alt"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-secondary btn-edit-role"
-                                    data-id="{{ $role->id }}" data-name="{{ $role->name }}" data-desc="{{ $role->description }}"
-                                    title="Edit role">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete-role"
-                                    data-id="{{ $role->id }}" data-name="{{ $role->name }}"
-                                    data-count="{{ $role->teachers_count }}"
-                                    title="Delete role">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </div>
+                       <div class="d-flex role-action-buttons">
+    @if(PermissionHelper::canFeature('view_permissions'))
+    <a href="{{ route('urp.permissions.index') }}?role={{ $role->id }}"
+       class="btn btn-sm btn-outline-primary" title="Set permissions for this role">
+        <i class="fa fa-shield-alt"></i>
+    </a>
+    @endif
+
+    @if(PermissionHelper::canFeature('edit_role'))
+    <button class="btn btn-sm btn-outline-secondary btn-edit-role"
+            data-id="{{ $role->id }}"
+            data-name="{{ $role->name }}"
+            data-desc="{{ $role->description }}"
+            title="Edit role">
+        <i class="fa fa-edit"></i>
+    </button>
+    @endif
+
+    @if(PermissionHelper::canFeature('delete_role'))
+    <button class="btn btn-sm btn-outline-danger btn-delete-role"
+            data-id="{{ $role->id }}"
+            data-name="{{ $role->name }}"
+            data-count="{{ $role->teachers_count }}"
+            title="Delete role">
+        <i class="fa fa-trash"></i>
+    </button>
+    @endif
+</div>
                     </div>
                     @empty
                     <div class="empty-state">

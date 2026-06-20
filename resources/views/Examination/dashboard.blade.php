@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @extends('layouts-side-bar.master')
 
@@ -1720,11 +1721,13 @@ use App\Http\Controllers\Helper;
                 </div>
 
                 <div class="d-flex gap-2">
+                    @if(PermissionHelper::canFeature('create_exam'))
                     <a href="{{ route('examination.create') }}"
                         class="btn btn-white text-primary fw-bold d-inline-flex align-items-center"
                         style="border-radius: .5rem; text-decoration: none; z-index: 10; position: relative;">
                         <i class="fas fa-plus-circle me-2"></i> &nbsp; New Examination
                     </a>
+                    @endif
                 </div>
 
             </div>
@@ -2554,17 +2557,21 @@ use App\Http\Controllers\Helper;
                                                                 onclick="showExamDetails({{ $exam->id }})" title="View Details">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
+                                                            @if(PermissionHelper::canFeature('edit_exam'))
                                                             <button class="btn-action btn-action-edit"
                                                                 onclick="editExam({{ $exam->id }})"
                                                                 title="Edit / Change Status">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
+                                                            @endif
+                                                            @if(PermissionHelper::canFeature('delete_exam'))
                                                             <button class="btn-action action-delete"
                                                                 onclick="deleteExam({{ $exam->id }})"
                                                                 style="background:#EF4444;color:#fff;border:none;"
                                                                 title="Delete">
                                                                 <i class="fas fa-trash-alt"></i>
                                                             </button>
+                                                            @endif
                                                             @if (in_array($exam->status, ['active', 'marks_entry']))
                                                                 <button class="btn-action btn-action-marks"
                                                                     onclick="window.location.href='/examinations/{{ $exam->id }}/marks'"
@@ -2602,9 +2609,9 @@ use App\Http\Controllers\Helper;
 
                                                                 // If the exam is fully done and this IS the results_released node,
                                                                 // clicking the trophy opens the results/pass-slips modal instead.
-                                                                if ($exam->status === 'results_released' && $stage['key'] === 'results_released') {
+                                                                if ($exam->status === 'results_released' && $stage['key'] === 'results_released' && \App\Helpers\PermissionHelper::canFeature('generate_reports')) {
                                                                     $clickAction = "viewExamResults({$exam->id})";
-                                                                } elseif ($state === 'active' || $isNextStage) {
+                                                                } elseif (($state === 'active' || $isNextStage) && \App\Helpers\PermissionHelper::canFeature('publish_results')) {
                                                                     $clickAction = "openStageTransition({$exam->id}, '{$exam->status}', '{$stage['key']}')";
                                                                 }
                                                             @endphp
@@ -2648,10 +2655,12 @@ use App\Http\Controllers\Helper;
                                                     <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
                                                     <h4>No Examinations Found</h4>
                                                     <p>Get started by creating your first examination</p>
+                                                    @if(PermissionHelper::canFeature('create_exam'))
                                                     <a href="{{ route('examination.create') }}" class="btn-primary-grad"
                                                         style="display:inline-flex;text-decoration:none;">
                                                         <i class="fas fa-plus-circle me-2"></i> Create New Examination
                                                     </a>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -2757,6 +2766,7 @@ use App\Http\Controllers\Helper;
                                         </div>
 
                                         <div class="released-exam-footer">
+                                            @if(PermissionHelper::canFeature('generate_reports'))
                                             <div class="d-flex gap-2 w-100">
                                                 <button class="btn-view-results"
                                                     onclick="event.stopPropagation(); viewExamResults({{ $exam->id }})">
@@ -2767,6 +2777,7 @@ use App\Http\Controllers\Helper;
                                                     <i class="fas fa-download me-1"></i> Report
                                                 </button>
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -3408,9 +3419,11 @@ use App\Http\Controllers\Helper;
                             <i class="fas fa-bolt me-2"></i>Quick Actions
                         </div>
                         <div class="d-grid gap-2">
+                            @if(PermissionHelper::canFeature('create_exam'))
                             <a href="{{ route('examination.create') }}" class="btn-primary-grad w-100 mb-2">
                                 <i class="fas fa-plus-circle"></i> Create New Examination
                             </a>
+                            @endif
                             <button class="btn-outline-purple w-100 mb-2" onclick="window.location.reload()">
                                 <i class="fas fa-sync-alt me-2"></i> Refresh Dashboard
                             </button>

@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\Helper;
 use App\Http\Controllers\Controller;
+use App\Helpers\PermissionHelper;
 $controller = new Controller();
 ?>
 @extends('layouts-side-bar.master')
@@ -240,18 +241,20 @@ $controller = new Controller();
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title text-primary">Teachers</h3>
                         <div class="d-flex gap-2 flex-wrap">
-                            <a href="{{ route('teachers.bulk.import.form') }}" class="btn btn-sm btn-success"
-                                style="color:#FFF;">
-                                <i class="fas fa-file-import me-1"></i> Bulk Import
-                            </a> &nbsp; &nbsp;
-                            <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
-                                <span
-                                    class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
-                                    style="width: 20px; height: 20px; color:#5351e4;">
-                                    <i class="fas fa-plus" style="font-size: 12px;"></i>
-                                </span>
-                                Add Teacher
-                            </a>
+                            @if(PermissionHelper::canFeature('add_teacher'))
+                                <a href="{{ route('teachers.bulk.import.form') }}" class="btn btn-sm btn-success"
+                                    style="color:#FFF;">
+                                    <i class="fas fa-file-import me-1"></i> Bulk Import
+                                </a> &nbsp; &nbsp;
+                                <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
+                                    <span
+                                        class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
+                                        style="width: 20px; height: 20px; color:#5351e4;">
+                                        <i class="fas fa-plus" style="font-size: 12px;"></i>
+                                    </span>
+                                    Add Teacher
+                                </a>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -266,7 +269,7 @@ $controller = new Controller();
                                         <th>Phone Number</th>
                                         <th>Role</th>
                                         <th class="text-center">Status</th>
-                                        @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                        @if(PermissionHelper::canFeature('edit_teacher') || PermissionHelper::canFeature('delete_teacher'))
                                             <th class="text-center">Action</th>
                                         @endif
                                     </tr>
@@ -284,26 +287,30 @@ $controller = new Controller();
                                             <td>{{ $teacher->phonenumber }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <select class="form-select form-control role-select text-white"
-                                                        data-teacher-id="{{ $teacher->id }}"
-                                                        style="width:220px; background:#5351e4; color:#FFF;">
-                                                        <option value="" style="color:#000;">Select Role</option>
-                                                        @foreach($schoolRoles as $role)
-                                                            <option value="{{ $role->id }}" {{ $teacher->teacher_role == $role->id ? 'selected' : '' }}>
-                                                                {{ $role->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button class="btn btn-sm btn-primary update-role-btn ms-2"
-                                                        data-teacher-id="{{ $teacher->id }}">
-                                                        <i class="fas fa-save"></i>
-                                                    </button>
-                                                    <div class="role-update-spinner" id="spinner-{{ $teacher->id }}"
-                                                        style="display:none;">
-                                                        <div class="spinner-border spinner-border-sm text-primary"
-                                                            role="status">
+                                                    @if(PermissionHelper::canFeature('edit_teacher'))
+                                                        <select class="form-select form-control role-select text-white"
+                                                            data-teacher-id="{{ $teacher->id }}"
+                                                            style="width:220px; background:#5351e4; color:#FFF;">
+                                                            <option value="" style="color:#000;">Select Role</option>
+                                                            @foreach($schoolRoles as $role)
+                                                                <option value="{{ $role->id }}" {{ $teacher->teacher_role == $role->id ? 'selected' : '' }}>
+                                                                    {{ $role->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button class="btn btn-sm btn-primary update-role-btn ms-2"
+                                                            data-teacher-id="{{ $teacher->id }}">
+                                                            <i class="fas fa-save"></i>
+                                                        </button>
+                                                        <div class="role-update-spinner" id="spinner-{{ $teacher->id }}"
+                                                            style="display:none;">
+                                                            <div class="spinner-border spinner-border-sm text-primary"
+                                                                role="status">
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    @else
+                                                        <span>{{ optional($schoolRoles->firstWhere('id', $teacher->teacher_role))->name ?? 'No Role' }}</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td class="text-center">
@@ -319,7 +326,7 @@ $controller = new Controller();
                                                 <span class="badge {{ $sc['badge'] }} status-badge-{{ $teacher->id }}">
                                                     <i class="fas {{ $sc['icon'] }} me-1"></i>{{ $sc['label'] }}
                                                 </span>
-                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                @if(PermissionHelper::canFeature('manage_teacher_status'))
                                                     <br>
                                                     <button class="btn btn-xs btn-outline-secondary mt-1 btn-manage-status"
                                                         data-id="{{ $teacher->id }}"
@@ -329,16 +336,20 @@ $controller = new Controller();
                                                     </button>
                                                 @endif
                                             </td>
-                                            @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                            @if(PermissionHelper::canFeature('edit_teacher') || PermissionHelper::canFeature('delete_teacher'))
                                                 <td class="text-center">
-                                                    <button class="btn btn-sm btn-warning btn-edit-teacher" title="Edit"
-                                                        data-id="{{ $teacher->id }}">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
-                                                        data-id="{{ $teacher->id }}">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                    @if(PermissionHelper::canFeature('edit_teacher'))
+                                                        <button class="btn btn-sm btn-warning btn-edit-teacher" title="Edit"
+                                                            data-id="{{ $teacher->id }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    @endif
+                                                    @if(PermissionHelper::canFeature('delete_teacher'))
+                                                        <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
+                                                            data-id="{{ $teacher->id }}">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endif
                                                 </td>
                                             @endif
                                         </tr>
@@ -352,10 +363,12 @@ $controller = new Controller();
                                                     <h5 class="text-muted">No Teachers Found</h5>
                                                     <p class="text-muted mb-3">Start by adding your first teacher to the school
                                                     </p>
-                                                    <a href="{{ route('school.add-teachers') }}"
-                                                        class="btn btn-sm btn-primary rounded-pill">
-                                                        <i class="fas fa-plus me-1"></i> Add Teacher
-                                                    </a>
+                                                    @if(PermissionHelper::canFeature('add_teacher'))
+                                                        <a href="{{ route('school.add-teachers') }}"
+                                                            class="btn btn-sm btn-primary rounded-pill">
+                                                            <i class="fas fa-plus me-1"></i> Add Teacher
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>

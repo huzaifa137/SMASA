@@ -2,6 +2,7 @@
 use App\Models\Classroom;
 use App\Http\Controllers\Helper;
 use App\Http\Controllers\Controller;
+use App\Helpers\PermissionHelper;
 $controller = new Controller();
 ?>
 @extends('layouts-side-bar.master')
@@ -63,21 +64,21 @@ $controller = new Controller();
                                             <td class="text-center">{{ $totalClassStreamStudent }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2 justify-content-center">
-                                                    <select name="teacher_id"
-                                                        class="form-select form-select-sm assign-class-teacher form-control"
-                                                        data-class-id="{{ $stream->id }}"
-                                                        data-current-supervisor="{{ $stream->class_teacher }}"
-                                                        {{ $stream->class_teacher ? 'disabled' : '' }}>
-                                                        <option value="">Select Class Teacher</option>
-                                                        @foreach ($Teachers as $teacher)
-                                                            <option value="{{ $teacher->id }}"
-                                                                {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
-                                                                {{ $teacher->surname }} {{ $teacher->firstname }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    @if(PermissionHelper::canFeature('assign_class_teacher'))
+                                                        <select name="teacher_id"
+                                                            class="form-select form-select-sm assign-class-teacher form-control"
+                                                            data-class-id="{{ $stream->id }}"
+                                                            data-current-supervisor="{{ $stream->class_teacher }}"
+                                                            {{ $stream->class_teacher ? 'disabled' : '' }}>
+                                                            <option value="">Select Class Teacher</option>
+                                                            @foreach ($Teachers as $teacher)
+                                                                <option value="{{ $teacher->id }}"
+                                                                    {{ $stream->class_teacher == $teacher->id ? 'selected' : '' }}>
+                                                                    {{ $teacher->surname }} {{ $teacher->firstname }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
 
-                                                    @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
                                                         @if ($stream->class_teacher)
                                                             &nbsp;
                                                             <button class="btn btn-md btn-danger btn-remove-supervisor"
@@ -85,22 +86,28 @@ $controller = new Controller();
                                                                 <i class="fas fa-trash-alt"></i>
                                                             </button>
                                                         @endif
+                                                    @else
+                                                        <span>{{ $stream->class_teacher ? Helper::recordMdname($stream->class_teacher) : 'Not Assigned' }}</span>
                                                     @endif
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
-                                                    class="btn btn-sm btn-dark mb-1">
-                                                    <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
-                                                </a>
+                                                @if(PermissionHelper::canFeature('view_classes'))
+                                                    <a href="{{ route('class.stream.subjects', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
+                                                        class="btn btn-sm btn-dark mb-1">
+                                                        <i class="fas fa-graduation-cap me-2"></i> Manage Subjects
+                                                    </a>
+                                                @endif
 
-                                                <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
-                                                    class="btn btn-sm btn-info btn-edit-stream mb-1"
-                                                    data-stream-id="{{ $stream->id }}">
-                                                    <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
-                                                </a>
+                                                @if(PermissionHelper::canFeature('edit_class'))
+                                                    <a href="{{ route('school.edit-class-subject', ['classId' => $stream->class_id, 'streamId' => $stream->stream_id]) }}"
+                                                        class="btn btn-sm btn-info btn-edit-stream mb-1"
+                                                        data-stream-id="{{ $stream->id }}">
+                                                        <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
+                                                    </a>
+                                                @endif
 
-                                                @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                                                @if(PermissionHelper::canFeature('manage_streams'))
                                                     <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
                                                         data-stream-id="{{ $stream->id }}">
                                                         <i class="fas fa-trash-alt me-2"></i> Delete Stream

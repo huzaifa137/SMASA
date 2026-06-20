@@ -1,4 +1,4 @@
-<?php use App\Http\Controllers\Helper; ?>
+<?php use App\Http\Controllers\Helper; use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -151,10 +151,12 @@
                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-arrow-left"></i> Dashboard
                 </a>
+                @if(PermissionHelper::canFeature('edit_timetable'))
                 <a href="{{ route('timetable.edit', $timetable->id) }}" class="btn"
                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
                     <i class="fas fa-pen"></i> Edit Timetable
                 </a>
+                @endif
             </div>
         </div>
     </div>
@@ -177,12 +179,14 @@
         {{ ucfirst($timetable->status) }}
     </span>
 
+    @if(PermissionHelper::canFeature('edit_timetable'))
     <a href="{{ route('timetable.edit', $timetable->id) }}"
        class="edit-btn"
        style="margin-left:10px; margin-right:10px;">
 
         <i class="fas fa-pen"></i> Edit Timetable
     </a>
+    @endif
 
     <button class="print-btn"
             style="margin-left:10px;"

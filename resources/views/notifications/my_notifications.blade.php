@@ -1,5 +1,9 @@
 @extends('layouts-side-bar.master')
 
+@php
+    use App\Helpers\PermissionHelper;
+@endphp
+
 @section('css')
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@400;500;600;700&display=swap"
@@ -362,7 +366,7 @@
                             <strong>{{ $lastNotification }}</strong> latest
                         </div>
                     </div>
-                    @if($unreadCount > 0)
+                    @if($unreadCount > 0 && PermissionHelper::canFeature('mark_all_read'))
                         <div style="position: relative; z-index: 1; margin-top: 1.2rem;">
                             <button class="alert-pill"
                                 style="background: rgba(62,146,204,0.25); color: var(--sky); border: 1px solid rgba(62,146,204,0.4);"
@@ -423,7 +427,7 @@
                                     @endphp
                                     <div class="txn notification-item {{ !$item->is_read ? 'unread' : '' }}"
                                         data-id="{{ $item->notification->id }}" data-read="{{ $item->is_read ? '1' : '0' }}"
-                                        onclick="markRead(this)">
+                                        @if(PermissionHelper::canFeature('mark_notification_read')) onclick="markRead(this)" @endif>
                                         <div class="txn-ico" style="background:{{ $bgColor }}; color:{{ $textColor }};">
                                             <i class="fas fa-{{ $icon }}"></i>
                                         </div>

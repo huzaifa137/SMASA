@@ -8,6 +8,7 @@
     use App\Http\Controllers\MasterDataController;
     use App\Http\Controllers\Controller;
     use App\Http\Controllers\Helper;
+    use App\Helpers\PermissionHelper;
     $controller = new Controller();
     $user_id = Helper::user_id();
     
@@ -63,9 +64,11 @@
                         <section id="Approved_suppliers">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <h3 class="heading text-primary" style="margin: 0;">Master Data</h3>
+                                @if(PermissionHelper::canFeature('create_master_data'))
                                 <a href="{{ url('master-data/add-record') }}" class="btn btn-primary btn-sm"
                                     style="display: inline-block;">Add a
                                     record</a>
+                                @endif
                             </div>
 
                             <table class="table table-bordered table-striped" id="table">
@@ -90,16 +93,20 @@
                                             <td>{{ Helper::date_fm($item->md_date_added) }}</td>
                                             <td class="text-center" style="width: 160px;">
 
+                                                @if(PermissionHelper::canFeature('edit_master_data'))
                                                 <a href="{{ url('master-data/edit-record/' . $item->md_id) }}"
                                                     class="btn btn-sm btn-primary edit-record-btn"
                                                     data-url="{{ url('master-data/edit-record/' . $item->md_id) }}">
                                                     Edit
                                                 </a>
+                                                @endif
 
+                                                @if(PermissionHelper::canFeature('delete_master_data'))
                                                 <a href="{{ url('delete-record/' . $item->md_id) }}"
                                                     class="btn btn-sm btn-danger delete-record-btn">
                                                     Delete
                                                 </a>
+                                                @endif
 
                                             </td>
                                         </tr>

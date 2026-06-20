@@ -1,5 +1,9 @@
 @extends('layouts-side-bar.master')
 
+@php
+    use App\Helpers\PermissionHelper;
+@endphp
+
 @section('title', 'Notifications')
 
 @section('css')
@@ -426,9 +430,11 @@
                 <h4><i class="fas fa-bell me-2"></i> Notifications</h4>
                 <small>Manage and broadcast notifications to staff & students</small>
             </div>
+            @if(PermissionHelper::canFeature('create_notification'))
             <a href="{{ route('notifications.create') }}" class="btn-lib btn-primary-lib">
                 <i class="fas fa-paper-plane me-1"></i> Send Notification
             </a>
+            @endif
         </div>
 
         @if(session('success'))
@@ -526,10 +532,12 @@
         class="btn-lib btn-sm-lib btn-outline-lib">
         <i class="fas fa-eye"></i>
     </a>
+    @if(PermissionHelper::canFeature('delete_notification'))
     <button class="btn-lib btn-sm-lib btn-danger-lib"
         onclick="deleteNotification({{ $notif->id }})">
         <i class="fas fa-trash"></i>
     </button>
+    @endif
 </td>
                                 </tr>
                             @empty
@@ -537,7 +545,9 @@
                                     <td colspan="7" class="text-center py-5 text-muted">
                                         <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
                                         No notifications sent yet.
+                                        @if(PermissionHelper::canFeature('create_notification'))
                                         <a href="{{ route('notifications.create') }}">Send your first one</a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse

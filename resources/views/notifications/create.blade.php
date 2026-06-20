@@ -1,5 +1,9 @@
 @extends('layouts-side-bar.master')
 
+@php
+    use App\Helpers\PermissionHelper;
+@endphp
+
 @section('title', 'Send Notification')
 
 @section('css')
@@ -508,9 +512,15 @@
 
                 <div class="lib-card-footer">
                     <a href="{{ route('notifications.index') }}" class="btn-lib btn-outline-lib">Cancel</a>
+                    @if(PermissionHelper::canFeature('send_notification'))
                     <button type="submit" class="btn-lib btn-primary-lib" id="sendBtn">
                         <i class="fas fa-paper-plane me-1"></i> Send Notification
                     </button>
+                    @else
+                    <button type="button" class="btn-lib btn-primary-lib" disabled title="You don't have permission to send notifications">
+                        <i class="fas fa-lock me-1"></i> Send Notification
+                    </button>
+                    @endif
                 </div>
             </div>
         </form>

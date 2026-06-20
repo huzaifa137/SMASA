@@ -586,10 +586,12 @@
                     <strong>{{ $unassigned }} staff {{ $unassigned > 1 ? 'members have' : 'member has' }} no role
                         assigned</strong>
                     and cannot access any module.
+                    @if(PermissionHelper::canFeature('view_roles'))
                     <a href="{{ route('urp.assign.index') }}" class="font-weight-bold ml-2"
                         style="color:#92400e;text-decoration:underline;">
                         Assign now &rarr;
                     </a>
+                    @endif
                 </div>
             </div>
         @endif
@@ -605,10 +607,12 @@
                             <div class="panel-label">Access Roles</div>
                             <div class="panel-title">{{ $totalRoles }} Defined Roles</div>
                         </div>
+                        @if(PermissionHelper::canFeature('view_roles'))
                         <a href="{{ route('urp.roles.index') }}" class="btn btn-sm btn-outline-primary"
                             style="font-size:.73rem;border-color:#c7d2fe;color:var(--indigo);">
                             <i class="fa fa-plus mr-1"></i>Manage
                         </a>
+                        @endif
                     </div>
                     <div class="urp-panel-body">
                         @forelse($roles as $role)
@@ -624,19 +628,23 @@
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="ri-chip">{{ $role->teachers_count }} staff</span>
+                                    @if(PermissionHelper::canFeature('view_permissions'))
                                     <a href="{{ route('urp.permissions.index') }}?role={{ $role->id }}"
                                         class="btn btn-xs btn-outline-secondary" title="Set Permissions"
                                         style="border-color:#dde3f7;">
                                         <i class="fa fa-shield-alt" style="font-size:.65rem;color:var(--indigo);"></i>
                                     </a>
+                                    @endif
                                 </div>
                             </div>
                         @empty
                             <div class="text-center py-5 text-muted">
                                 <i class="fa fa-user-tag fa-2x d-block mb-2" style="opacity:.2;color:var(--indigo);"></i>
                                 No roles yet.
+                                @if(PermissionHelper::canFeature('create_role'))
                                 <br><a href="{{ route('urp.roles.index') }}" class="btn btn-sm btn-primary mt-2">Create First
                                     Role</a>
+                                @endif
                             </div>
                         @endforelse
                     </div>
@@ -651,10 +659,12 @@
                             <div class="panel-label">System Modules</div>
                             <div class="panel-title">{{ $modules->count() }} modules available</div>
                         </div>
+                        @if(PermissionHelper::canFeature('view_permissions'))
                         <a href="{{ route('urp.permissions.index') }}" class="btn btn-sm btn-outline-primary"
                             style="font-size:.73rem;border-color:#c7d2fe;color:var(--indigo);">
                             <i class="fa fa-sliders-h mr-1"></i>Permissions
                         </a>
+                        @endif
                     </div>
                     <div class="urp-panel-body">
                         <div class="mod-wrap">
@@ -686,6 +696,7 @@
                     </div>
                     <div class="urp-panel-body">
                         <div class="action-row">
+                            @if(PermissionHelper::canFeature('view_roles'))
                             <a href="{{ route('urp.roles.index') }}" class="action-card ac-blue">
                                 <div class="ac-icon" style="background:#eef2ff;color:var(--indigo);">
                                     <i class="fa fa-user-tag"></i>
@@ -693,6 +704,8 @@
                                 <div class="ac-title">Manage Roles</div>
                                 <div class="ac-sub">Create and edit custom roles like Bursar or Secretary</div>
                             </a>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_permissions'))
                             <a href="{{ route('urp.permissions.index') }}" class="action-card ac-teal">
                                 <div class="ac-icon" style="background:#f0fdf4;color:var(--teal);">
                                     <i class="fa fa-sliders-h"></i>
@@ -700,6 +713,8 @@
                                 <div class="ac-title">Permissions</div>
                                 <div class="ac-sub">Toggle module &amp; feature access per role</div>
                             </a>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_roles'))
                             <a href="{{ route('urp.assign.index') }}" class="action-card ac-orange">
                                 <div class="ac-icon" style="background:#fff7ed;color:var(--amber);">
                                     <i class="fa fa-users-cog"></i>
@@ -707,6 +722,7 @@
                                 <div class="ac-title">Assign Roles</div>
                                 <div class="ac-sub">Link each staff member to their role</div>
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>

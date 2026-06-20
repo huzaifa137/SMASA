@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+<?php use App\Helpers\PermissionHelper; ?>
 
 @section('css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
@@ -492,18 +493,24 @@
                 <h3><i class="fas fa-list" style="color:var(--lib-blue);"></i> All Books</h3>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
                     {{-- Import --}}
-                    <button onclick="document.getElementById('importModal').classList.add('active')"
-                        class="btn-lib btn-violet-lib">
-                        <i class="fas fa-file-import"></i> Import
-                    </button>
+                    @if(PermissionHelper::canFeature('add_book'))
+                        <button onclick="document.getElementById('importModal').classList.add('active')"
+                            class="btn-lib btn-violet-lib">
+                            <i class="fas fa-file-import"></i> Import
+                        </button>
+                    @endif
                     {{-- Export --}}
-                    <a href="{{ route('library.books.export') }}" class="btn-lib btn-amber-lib">
-                        <i class="fas fa-file-export"></i> Export
-                    </a>
+                    @if(PermissionHelper::canFeature('library_reports'))
+                        <a href="{{ route('library.books.export') }}" class="btn-lib btn-amber-lib">
+                            <i class="fas fa-file-export"></i> Export
+                        </a>
+                    @endif
                     {{-- Add Book --}}
-                    <a href="{{ route('library.books.create') }}" class="btn-lib btn-primary-lib">
-                        <i class="fas fa-plus"></i> Add Book
-                    </a>
+                    @if(PermissionHelper::canFeature('add_book'))
+                        <a href="{{ route('library.books.create') }}" class="btn-lib btn-primary-lib">
+                            <i class="fas fa-plus"></i> Add Book
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -518,7 +525,9 @@
                                 <th>Subject</th>
                                 <th>Copies</th>
                                 <th>Availability</th>
-                                <th>Actions</th>
+                                @if(PermissionHelper::canFeature('view_books') || PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                    <th>Actions</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -578,25 +587,33 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
-                                            <a href="{{ route('library.books.show', $book->id) }}" class="btn-lib btn-outline-lib"
-                                                style="padding:.3rem .65rem;" title="View"><i class="fas fa-eye"></i></a>
-                                            <a href="{{ route('library.books.edit', $book->id) }}" class="btn-lib btn-outline-lib"
-                                                style="padding:.3rem .65rem;" title="Edit"><i class="fas fa-edit"></i></a>
-                                            @if($book->has_ebook)
-                                                <a href="{{ route('library.books.ebook', $book->id) }}" class="btn-lib btn-violet-lib"
-                                                    style="padding:.3rem .65rem;" title="Download eBook"><i
-                                                        class="fas fa-download"></i></a>
-                                            @endif
-                                            <form method="POST" action="{{ route('library.books.destroy', $book->id) }}"
-                                                style="display:inline;" onsubmit="return confirm('Delete " {{ addslashes($book->title) }}"? This cannot be undone.')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn-lib btn-danger-lib" style="padding:.3rem .65rem;"
-                                                    title="Delete"><i class="fas fa-trash"></i></button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    @if(PermissionHelper::canFeature('view_books') || PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                        <td>
+                                            <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
+                                                @if(PermissionHelper::canFeature('view_books'))
+                                                    <a href="{{ route('library.books.show', $book->id) }}" class="btn-lib btn-outline-lib"
+                                                        style="padding:.3rem .65rem;" title="View"><i class="fas fa-eye"></i></a>
+                                                @endif
+                                                @if(PermissionHelper::canFeature('edit_book'))
+                                                    <a href="{{ route('library.books.edit', $book->id) }}" class="btn-lib btn-outline-lib"
+                                                        style="padding:.3rem .65rem;" title="Edit"><i class="fas fa-edit"></i></a>
+                                                @endif
+                                                @if($book->has_ebook && PermissionHelper::canFeature('library_reports'))
+                                                    <a href="{{ route('library.books.ebook', $book->id) }}" class="btn-lib btn-violet-lib"
+                                                        style="padding:.3rem .65rem;" title="Download eBook"><i
+                                                            class="fas fa-download"></i></a>
+                                                @endif
+                                                @if(PermissionHelper::canFeature('delete_book'))
+                                                    <form method="POST" action="{{ route('library.books.destroy', $book->id) }}"
+                                                        style="display:inline;" onsubmit="return confirm('Delete " {{ addslashes($book->title) }}"? This cannot be undone.')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn-lib btn-danger-lib" style="padding:.3rem .65rem;"
+                                                            title="Delete"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -610,8 +627,11 @@
                             <div style="margin-top:.75rem;"><a href="{{ route('library.books') }}"
                                     class="btn-lib btn-outline-lib">Clear Filters</a></div>
                         @else
-                            No books yet. <a href="{{ route('library.books.create') }}"
-                                style="color:var(--lib-blue);font-weight:600;">Add your first book</a> or import a CSV.
+                            No books yet.
+                            @if(PermissionHelper::canFeature('add_book'))
+                                <a href="{{ route('library.books.create') }}"
+                                    style="color:var(--lib-blue);font-weight:600;">Add your first book</a> or import a CSV.
+                            @endif
                         @endif
                     </div>
                 @endif

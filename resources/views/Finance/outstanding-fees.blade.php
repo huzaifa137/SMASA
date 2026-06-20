@@ -2,6 +2,7 @@
 @extends('layouts-side-bar.master')
 <?php
 use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper;
 ?>
 @section('css')
     <link
@@ -574,7 +575,9 @@ use App\Http\Controllers\Helper;
                         <th>Amount Paid</th>
                         <th>Outstanding Balance</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        @if(PermissionHelper::canFeature('record_payment'))
+                            <th>Action</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -621,12 +624,14 @@ use App\Http\Controllers\Helper;
                                     <span class="badge-fin badge-red"><i class="fas fa-times-circle"></i> Unpaid</span>
                                 @endif
                             </td>
-                            <td>
-                                <a href="{{ route('finance.payments.create') }}?student_id={{ $alloc->student_id }}"
-                                    class="btn-fin btn-sm btn-primary-fin" style="padding:.4rem .8rem;font-size:.75rem;">
-                                    <i class="fas fa-plus"></i> Record Payment
-                                </a>
-                            </td>
+                            @if(PermissionHelper::canFeature('record_payment'))
+                                <td>
+                                    <a href="{{ route('finance.payments.create') }}?student_id={{ $alloc->student_id }}"
+                                        class="btn-fin btn-sm btn-primary-fin" style="padding:.4rem .8rem;font-size:.75rem;">
+                                        <i class="fas fa-plus"></i> Record Payment
+                                    </a>
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>

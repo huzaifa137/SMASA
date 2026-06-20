@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Classroom;
+use App\Helpers\PermissionHelper;
 
 class LibraryController extends Controller
 {

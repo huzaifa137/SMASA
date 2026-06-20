@@ -329,8 +329,12 @@ class MasterDataController extends Controller
             return DataTables::of($mc_code)
                 ->addColumn('action', function ($item) {
                     $links = [];
-                    $links[] = '<a class="dropdown-item" href="' . url('master-data/edit-record/' . $item->md_id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
-                    $links[] = '<a onclick="return confirm(\'Are sure you want to delete ' . $item->md_name . '?\'); " class="dropdown-item" href="' . url('delete-record/' . $item->md_id) . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
+                    if (PermissionHelper::canFeature('edit_master_data')) {
+                        $links[] = '<a class="dropdown-item" href="' . url('master-data/edit-record/' . $item->md_id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
+                    }
+                    if (PermissionHelper::canFeature('delete_master_data')) {
+                        $links[] = '<a onclick="return confirm(\'Are sure you want to delete ' . $item->md_name . '?\'); " class="dropdown-item" href="' . url('delete-record/' . $item->md_id) . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
+                    }
 
                     return $this->dropDown($links);
                 })
@@ -344,17 +348,21 @@ class MasterDataController extends Controller
             ->with('code_totals', $code_totals);
     }
 
-    public function dropDown($links)
-    {
-        return '<div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Actions
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        ' . implode(' ', $links) . '
-                    </div>
-                </div>';
-    }
+public function dropDown($links)
+{
+    return '<div class="dropdown">
+                <button class="btn custom-action-btn dropdown-toggle" type="button"
+                        id="dropdownMenuButton"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false">
+                    Actions
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    ' . implode(' ', $links) . '
+                </div>
+            </div>';
+}
 
     public function editSupplierDocument($id)
     {

@@ -2432,7 +2432,7 @@
             entire school — 340 students, 28 teachers — runs from one dashboard. The attendance module alone saves us
             two hours every morning.</div>
           <div class="tcard-author">
-            <div class="tcard-av"><img src="/testimonial/3.png" alt="Headteacher"
+            <div class="tcard-av"><img src="/testimonial/3.jpg" alt="Headteacher"
                 onerror="this.parentElement.style.background='rgba(201,168,76,0.2)'"></div>
             <div>
               <div class="tcard-name">Ustadh Mahmoud Ssentamu</div>
@@ -2446,7 +2446,7 @@
             SMASA handles both curricula perfectly — separate grading rubrics, separate report cards. Our parents love
             getting results via SMS.</div>
           <div class="tcard-author">
-            <div class="tcard-av"><img src="/testimonial/1.png" alt="Principal"
+            <div class="tcard-av"><img src="/testimonial/1.jpg" alt="Principal"
                 onerror="this.parentElement.style.background='rgba(14,165,160,0.2)'"></div>
             <div>
               <div class="tcard-name">Hajjah Fatuma Nakirye</div>
@@ -2460,7 +2460,7 @@
             it syncs when the connection comes back. TechSate's support team is always reachable — even on weekends
             during exam season.</div>
           <div class="tcard-author">
-            <div class="tcard-av"><img src="/testimonial/2.png" alt="School Admin"
+            <div class="tcard-av"><img src="/testimonial/2.jpg" alt="School Admin"
                 onerror="this.parentElement.style.background='rgba(139,92,246,0.2)'"></div>
             <div>
               <div class="tcard-name">Mr. Robert Wasswa</div>
@@ -2474,7 +2474,7 @@
             are visible instantly, receipts are generated automatically, and the termly financial report saves our
             bursar an entire week's work.</div>
           <div class="tcard-author">
-            <div class="tcard-av"><img src="/testimonial/4.png" alt="Bursar"
+            <div class="tcard-av"><img src="/testimonial/4.jpg" alt="Bursar"
                 onerror="this.parentElement.style.background='rgba(201,168,76,0.2)'"></div>
             <div>
               <div class="tcard-name">Sister Amina Nalwoga</div>

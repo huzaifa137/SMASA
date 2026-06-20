@@ -6,6 +6,7 @@
     use App\Models\User;
     use App\Models\Teacher;
     use App\Models\Student;
+    use App\Helpers\PermissionHelper;
 
     $sender = null;
     if ($notification->triggered_by) {
@@ -494,9 +495,11 @@
                 <a href="{{ route('notifications.index') }}" class="btn-lib btn-outline-lib">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
+                @if(PermissionHelper::canFeature('delete_notification'))
                 <button class="btn-lib btn-danger-lib" onclick="deleteNotification({{ $notification->id }})">
                     <i class="fas fa-trash me-1"></i> Delete
                 </button>
+                @endif
             </div>
         </div>
 

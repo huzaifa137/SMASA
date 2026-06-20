@@ -876,7 +876,7 @@ Route::middleware(['AdminAuth'])->group(function () {
         ->name('notifications.')
         ->controller(NotificationController::class)
         ->middleware(['module:notifications'])
-        ->middleware(['schoolAuth'])
+        // ->middleware(['schoolAuth'])
         ->group(function () {
 
             // Admin panel — manage & broadcast

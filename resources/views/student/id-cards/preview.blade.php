@@ -1,4 +1,5 @@
 {{-- resources/views/student/id-cards/preview.blade.php --}}
+<?php use App\Helpers\PermissionHelper; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -601,7 +602,7 @@
         <a href="javascript:void();" class="btn btn-primary" target="_blank">
             <i class="fas fa-print"></i> Print / Download PDF
         </a>
-        @if($card->status === 'active')
+        @if($card->status === 'active' && PermissionHelper::canFeature('revoke_cards'))
             <button class="btn btn-danger" onclick="revokeCard({{ $card->id }})">
                 <i class="fas fa-ban"></i> Revoke Card
             </button>
