@@ -547,6 +547,18 @@
         .page-body { padding: 0 14px; }
         .hero-title { font-size: 1.4rem; }
     }
+    
+    @media(max-width:576px){
+    .hero-bar {
+        margin-top: 6.5em;
+    }
+}
+
+@media(max-width:480px){
+    .hero-bar {
+        margin-top: 7em;
+    }
+}
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

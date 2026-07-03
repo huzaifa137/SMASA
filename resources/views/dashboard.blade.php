@@ -18,9 +18,6 @@
 @endsection
 @section('content')
     <!-- Row -->
-    
-    
-
 
     </div>
     </div><!-- end app-content-->

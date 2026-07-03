@@ -86,6 +86,8 @@ Idaad (O Level) showing School Name, then followed with 1st class, 2nd , 3rd and
 </div>
 @endif
 
+Remove-Item storage\framework\views\*.php -Force
+
 class="btn text-white" style="background-color: #5351e4;"
 
 error: function(data) {

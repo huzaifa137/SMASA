@@ -519,10 +519,10 @@ class UserRightsController extends Controller
             'surname' => 'required|string|max:255',
             'firstname' => 'required|string|max:255',
             'othername' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255|unique:teachers,email',
-            'phonenumber' => 'required|string|max:20|unique:teachers,phonenumber',
+            'email' => 'required|email|max:255',
+            'phonenumber' => 'required|string|max:20',
             'gender' => 'nullable|in:male,female',
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => 'nullable|string|min:4|confirmed',
             'school_role_id' => 'nullable|integer|exists:school_roles,id',
         ]);
 

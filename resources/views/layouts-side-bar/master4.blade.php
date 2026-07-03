@@ -30,9 +30,9 @@
 					@include('layouts-side-bar.footer')
 				</div><!-- End Page -->
 				@include('layouts-side-bar.footer-scripts1')
-				@auth
+				@if(session('LoggedAdmin') || session('LoggedTeacher'))
 <script src="{{ asset('js/push-init.js') }}"></script>
-@endauth
+@endif
 </body>
 
 </html>

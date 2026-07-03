@@ -13,6 +13,15 @@
     @include('layouts.head')
 </head>
 
+
+<style>
+    @media (max-width: 768px) {
+    .app-content {  /* or whatever the real wrapper class is */
+        padding-top: var(--app-header-h, 0px);
+    }
+}
+</style>
+
 <body class="light-mode">
     <!---Global-loader-->
     <div id="global-loader">
@@ -31,9 +40,9 @@
                 </div><!-- End Page -->
                 @include('layouts.footer-scripts')
 
-                @auth
+                @if(session('LoggedAdmin') || session('LoggedTeacher'))
                     <script src="{{ asset('js/push-init.js') }}"></script>
-                @endauth
+                @endif
 </body>
 
 </html>

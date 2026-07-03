@@ -1,7 +1,11 @@
 <!-- Title -->
 <title>SMASA</title>
 <!--Favicon -->
+<link rel="manifest" href="{{ URL::asset('manifest.json') }}">
+<meta name="theme-color" content="#0d6efd">
 <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
 <!-- Bootstrap css -->
 <link href="{{URL::asset('assets/plugins/bootstrap/css/bootstrap.css')}}" rel="stylesheet" />
 <!-- Style css -->

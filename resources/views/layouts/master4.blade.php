@@ -32,9 +32,9 @@
 				</div><!-- End Page -->
 				@include('layouts.footer-scripts1')
 
-				@auth
+				@if(session('LoggedAdmin') || session('LoggedTeacher'))
 <script src="{{ asset('js/push-init.js') }}"></script>
-@endauth
+@endif
 
 </body>
 

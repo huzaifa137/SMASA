@@ -333,6 +333,45 @@ class NotificationController extends Controller
     }
 
     /**
+     * POST /notifications/push/unsubscribe
+     * Removes a push subscription (browser-side unsubscribe already done by caller).
+     */
+    public function deletePushSubscription(Request $request)
+    {
+        $subscriber = $this->resolvePushSubscriber();
+
+        if (!$subscriber) {
+            return response()->json(['error' => 'Unauthenticated user.'], 401);
+        }
+
+        if (!$request->endpoint) {
+            return response()->json(['error' => 'Missing endpoint.'], 422);
+        }
+
+        try {
+            $subscriber->deletePushSubscription($request->endpoint);
+
+            Log::info('Push subscription removed', [
+                'model' => class_basename($subscriber),
+                'id'    => $subscriber->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Push subscription removed.',
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to delete push subscription', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to remove push subscription.',
+            ], 500);
+        }
+    }
+
+    /**
      * Resolve the currently authenticated push notification subscriber.
      */
     private function resolvePushSubscriber()

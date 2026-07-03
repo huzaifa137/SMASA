@@ -18,9 +18,9 @@
     @yield('content')
     @include('layouts.custom-footer-scripts')
 
-    @auth
+    @if(session('LoggedAdmin') || session('LoggedTeacher'))
 <script src="{{ asset('js/push-init.js') }}"></script>
-@endauth
+@endif
 </body>
 
 </html>

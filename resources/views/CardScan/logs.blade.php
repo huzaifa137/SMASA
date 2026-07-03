@@ -216,17 +216,17 @@
             font-size: .83rem
         }
 
-        table.log-table thead th {
-            background: #f8fafc;
-            color: var(--t2);
-            font-size: .72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            padding: .65rem 1rem;
-            border-bottom: 1px solid var(--brd);
-            white-space: nowrap;
-        }
+table.log-table thead th {
+    background: #2d2aca !important;
+    color: #FFF;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--brd);
+    white-space: nowrap;
+}
 
         table.log-table tbody td {
             padding: .7rem 1rem;

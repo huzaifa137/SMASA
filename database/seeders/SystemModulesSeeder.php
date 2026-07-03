@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 class SystemModulesSeeder extends Seeder
 {
     /**
+     * php artisan db:seed --class=SystemModulesSeeder
      * IMPORTANT: This list mirrors the REAL guards in the codebase:
      *   - route middleware  ->middleware(['module:xxx'])               in routes/web.php
      *   - PermissionHelper::canModule() / canFeature()                  in the sidebar
@@ -193,6 +194,7 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "manage_expenses", "name" => "Manage Expenses", "sort_order" => 4],
                     ["key" => "manage_payroll", "name" => "Manage Payroll", "sort_order" => 5],
                     ["key" => "financial_reports", "name" => "Financial Reports", "sort_order" => 6],
+                    ["key" => "manage_ledger", "name" => "Manage Chart of Accounts (Ledgers)", "sort_order" => 7],
                 ],
             ],
 

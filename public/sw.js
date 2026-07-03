@@ -3,8 +3,8 @@ self.addEventListener('push', function (event) {
     const title = data.title || 'SMASA Notification';
     const options = {
         body: data.body || '',
-        icon: data.icon || '/favicon.ico',
-        badge: '/favicon.ico',
+        icon: data.icon || 'https://smasa-academics.com/assets/images/brand/logo.png',
+        badge: data.badge || 'https://smasa-academics.com/assets/images/brand/uplogolight.png',
         vibrate: [200, 100, 200],
         data: { url: data.url || '/' },
     };

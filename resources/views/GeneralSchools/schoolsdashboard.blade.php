@@ -196,11 +196,11 @@
             ->where('examination_marks.school_id', $schoolId)
             ->whereNotNull('marks_obtained')
             ->selectRaw('
-                    subjects.subject as subject_name,
-                    AVG(marks_obtained) as avg_score,
-                    COUNT(*) as total_marks,
-                    SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
-                ')
+                            subjects.subject as subject_name,
+                            AVG(marks_obtained) as avg_score,
+                            COUNT(*) as total_marks,
+                            SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
+                        ')
             ->groupBy('subjects.ID', 'subjects.subject')
             ->orderByDesc('avg_score')
             ->limit(6)
@@ -1261,7 +1261,8 @@
                                 </div>
                                 <div style="text-align:right;">
                                     <div style="font-size:1rem;font-weight:700;color:var(--danger);">
-                                        {{ $teacherTotalRecords - $teacherPresentRecords }}</div>
+                                        {{ $teacherTotalRecords - $teacherPresentRecords }}
+                                    </div>
                                     <div style="font-size:0.7rem;color:var(--text-muted);">Absent Records</div>
                                 </div>
                             </div>
@@ -1389,7 +1390,7 @@
                                     <div class="progress-track">
                                         <div class="progress-fill"
                                             style="width:{{ $subject['avg_score'] }}%;
-                                                   background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
+                                                               background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
                                         </div>
                                     </div>
                                 </div>
@@ -1619,8 +1620,10 @@
                                 </span>
                             </div>
                             <div class="gender-bar" style="height:12px;">
-                                <div class="gender-male" style="width:{{ round(($maleStudents / $totalStudents) * 100) }}%;"></div>
-                                <div class="gender-female" style="width:{{ round(($femaleStudents / $totalStudents) * 100) }}%;">
+                                <div class="gender-male" style="width:{{ round(($maleStudents / $totalStudents) * 100) }}%;">
+                                </div>
+                                <div class="gender-female"
+                                    style="width:{{ round(($femaleStudents / $totalStudents) * 100) }}%;">
                                 </div>
                             </div>
                         @else

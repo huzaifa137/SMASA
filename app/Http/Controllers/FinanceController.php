@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Budget;
 use App\Models\BudgetItem;
+use App\Models\ChartOfAccount;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\FeePayment;
@@ -533,7 +534,7 @@ class FinanceController extends Controller
                 $allocation?->syncBalance();
             }
 
-            // Log transaction
+            // Log transaction — posted to the Tuition Fees Income ledger account
             FinanceTransaction::log(
                 $schoolId,
                 'income',
@@ -544,7 +545,8 @@ class FinanceController extends Controller
                 $validated['payment_date'],
                 $validated['academic_year'],
                 $validated['term'],
-                session('LoggedUser')
+                session('LoggedUser'),
+                ChartOfAccount::findOrCreateDefault($schoolId, ChartOfAccount::CODE_TUITION_INCOME)->id
             );
 
             DB::commit();
@@ -676,6 +678,13 @@ class FinanceController extends Controller
                 'approved_at' => now(),
             ]));
 
+            $category = ExpenseCategory::find($validated['category_id']);
+            $expenseAccount = ChartOfAccount::findOrCreateForExpenseCategory(
+                $schoolId,
+                $validated['category_id'],
+                $category->name ?? 'Uncategorized Expense'
+            );
+
             FinanceTransaction::log(
                 $schoolId,
                 'expense',
@@ -686,7 +695,8 @@ class FinanceController extends Controller
                 $validated['expense_date'],
                 $validated['academic_year'],
                 $validated['term'] ?? null,
-                session('LoggedUser')
+                session('LoggedUser'),
+                $expenseAccount->id
             );
 
             DB::commit();
@@ -925,7 +935,8 @@ class FinanceController extends Controller
         $period->update(['status' => 'paid']);
         $period->slips()->update(['status' => 'paid', 'paid_date' => now()->toDateString()]);
 
-        // Log each slip as a transaction
+        // Log each slip as a transaction — posted to the Salaries & Wages account
+        $salariesAccount = ChartOfAccount::findOrCreateDefault($schoolId, ChartOfAccount::CODE_SALARIES_EXPENSE);
         foreach ($period->slips as $slip) {
             FinanceTransaction::log(
                 $schoolId,
@@ -937,7 +948,8 @@ class FinanceController extends Controller
                 now()->toDateString(),
                 $period->academic_year,
                 $period->term,
-                session('LoggedUser')
+                session('LoggedUser'),
+                $salariesAccount->id
             );
         }
 

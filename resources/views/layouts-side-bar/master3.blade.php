@@ -15,9 +15,9 @@
 <body class="h-100vh light-mode">
 	@yield('content')
 	@include('layouts-side-bar.custom-footer-scripts')
-	@auth
+	@if(session('LoggedAdmin') || session('LoggedTeacher'))
 <script src="{{ asset('js/push-init.js') }}"></script>
-@endauth
+@endif
 </body>
 
 </html>

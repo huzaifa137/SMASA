@@ -107,17 +107,17 @@
             border-collapse: collapse;
         }
 
-        .period-table th {
-            padding: 0.9rem 1.5rem;
-            text-align: left;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            background: #f8fafc;
-            border-bottom: 1px solid var(--border);
-        }
+.period-table th {
+    padding: 0.9rem 1.5rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FFF;
+    background: #2d2aca;
+    border-bottom: 1px solid var(--border);
+}
 
         .period-table td {
             padding: 1rem 1.5rem;

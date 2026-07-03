@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMASA Push Notification Test</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; background:#f5f5f5; }
+  h2 { color: #2c3e50; }
+  .card { background:#fff; border-radius:10px; padding:20px; margin:16px 0; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f0f0f0; }
+  .row:last-child { border:none; }
+  .label { color:#666; font-size:14px; }
+  .val { font-weight:bold; font-size:14px; }
+  .ok  { color:#27ae60; }
+  .err { color:#e74c3c; }
+  .warn{ color:#f39c12; }
+  button { background:#3498db; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-size:16px; cursor:pointer; width:100%; margin-top:8px; }
+  button:hover { background:#2980b9; }
+  button:disabled { background:#bdc3c7; cursor:not-allowed; }
+  #log { background:#1e1e1e; color:#0f0; font-family:monospace; font-size:12px; padding:12px; border-radius:8px; max-height:300px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; }
+</style>
+</head>
+<body>
+
+<h2>🔔 SMASA Push Notification Tester</h2>
+<p style="color:#666;font-size:13px">This page checks every step of the push setup and shows you exactly where it breaks.</p>
+
+<div class="card" id="status-card">
+  <h3 style="margin-top:0">Browser Checks</h3>
+  <div class="row"><span class="label">Service Worker support</span><span class="val" id="sw-support">checking...</span></div>
+  <div class="row"><span class="label">PushManager support</span><span class="val" id="pm-support">checking...</span></div>
+  <div class="row"><span class="label">Notification permission</span><span class="val" id="notif-perm">checking...</span></div>
+  <div class="row"><span class="label">VAPID key loaded</span><span class="val" id="vapid-check">checking...</span></div>
+  <div class="row"><span class="label">Service worker registered</span><span class="val" id="sw-reg">checking...</span></div>
+  <div class="row"><span class="label">Push subscription exists</span><span class="val" id="sub-exists">checking...</span></div>
+  <div class="row"><span class="label">Total subs in DB</span><span class="val" id="db-subs">checking...</span></div>
+</div>
+
+<div class="card">
+  <button id="btn-subscribe" onclick="doSubscribe()">Request Permission &amp; Subscribe</button>
+  <button id="btn-unsub" onclick="doUnsubscribe()" style="background:#e74c3c;margin-top:8px">Unsubscribe (reset &amp; retry)</button>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Log</h3>
+  <div id="log">Initialising...\n</div>
+</div>
+
+<script>
+var VAPID_KEY = null;
+
+function log(msg, cls) {
+  var el = document.getElementById('log');
+  var ts = new Date().toLocaleTimeString();
+  el.textContent += '[' + ts + '] ' + msg + '\n';
+  el.scrollTop = el.scrollHeight;
+  console.log('[PushTest]', msg);
+}
+
+function set(id, text, cls) {
+  var el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'val ' + (cls || '');
+}
+
+function urlBase64ToUint8Array(b64) {
+  var padding = '='.repeat((4 - b64.length % 4) % 4);
+  var base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var raw = atob(base64);
+  var arr = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+function arrayBufferToBase64(buf) {
+  var bytes = new Uint8Array(buf);
+  var binary = '';
+  for (var i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+// ── run checks ────────────────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  // 1. SW support
+  if ('serviceWorker' in navigator) {
+    set('sw-support', 'YES ✓', 'ok');
+    log('Service Worker: supported');
+  } else {
+    set('sw-support', 'NO ✗', 'err');
+    log('Service Worker: NOT supported — push cannot work in this browser');
+  }
+
+  // 2. PushManager support
+  if ('PushManager' in window) {
+    set('pm-support', 'YES ✓', 'ok');
+    log('PushManager: supported');
+  } else {
+    set('pm-support', 'NO ✗', 'err');
+    log('PushManager: NOT supported — push cannot work in this browser');
+  }
+
+  // 3. Notification permission
+  var perm = Notification.permission;
+  if (perm === 'granted')       set('notif-perm', 'granted ✓', 'ok');
+  else if (perm === 'denied')   set('notif-perm', 'DENIED ✗ — must reset in browser settings', 'err');
+  else                          set('notif-perm', 'default (will ask)', 'warn');
+  log('Notification.permission: ' + perm);
+
+  // 4. VAPID key — fetch from /push-diag
+  log('Fetching /push-diag to check VAPID + DB state...');
+  fetch('/push-diag', { credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      log('push-diag response: ' + JSON.stringify(d, null, 2));
+      if (d.vapid_public_key_set) {
+        set('vapid-check', 'YES ✓', 'ok');
+        log('VAPID public key: loaded from config');
+      } else {
+        set('vapid-check', 'MISSING ✗', 'err');
+        log('VAPID public key: NOT in config — check .env');
+      }
+      set('db-subs', d.all_push_subs_total + ' row(s) in push_subscriptions', 
+          d.all_push_subs_total > 0 ? 'ok' : 'warn');
+    })
+    .catch(function(err) {
+      log('push-diag fetch failed (are you logged in?): ' + err.message);
+      set('vapid-check', 'Could not check (login required?)', 'warn');
+      set('db-subs', 'Could not check', 'warn');
+    });
+
+  // 5. VAPID key from meta tag
+  var vapidMeta = document.querySelector('meta[name="vapid-public-key"]');
+  if (vapidMeta && vapidMeta.content) {
+    VAPID_KEY = vapidMeta.content;
+    log('vapid-public-key meta found: ' + VAPID_KEY.substring(0,20) + '...');
+  } else {
+    // Try getting it from push-diag instead, or just read the hardcoded key
+    log('vapid-public-key meta NOT on this page — will load from push-diag');
+    fetch('/push-diag', { credentials:'same-origin' })
+      .then(r=>r.json()).then(d => {
+        // We can't get the actual key value from diag easily, but we can note it's set
+        if (d.vapid_public_key_set) log('VAPID key confirmed set in config');
+      }).catch(()=>{});
+  }
+
+  // 6. Check SW registration + existing subscription
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      set('sw-reg', 'registered ✓ scope=' + reg.scope, 'ok');
+      log('SW registered at scope: ' + reg.scope);
+
+      return reg.pushManager.getSubscription().then(function(sub) {
+        if (sub) {
+          set('sub-exists', 'YES ✓ — endpoint: ' + sub.endpoint.substring(0,50) + '...', 'ok');
+          log('Existing push subscription found: ' + sub.endpoint);
+        } else {
+          set('sub-exists', 'NONE — click Subscribe button below', 'warn');
+          log('No existing push subscription');
+        }
+      });
+    }).catch(function(err) {
+      set('sw-reg', 'FAILED: ' + err.message, 'err');
+      log('SW registration FAILED: ' + err.message);
+    });
+  }
+});
+
+// ── subscribe ─────────────────────────────────────────────────────────────────
+function doSubscribe() {
+  document.getElementById('btn-subscribe').disabled = true;
+  log('--- Starting subscribe flow ---');
+
+  if (!VAPID_KEY) {
+    // Try to get it from the page meta
+    var m = document.querySelector('meta[name="vapid-public-key"]');
+    if (m) VAPID_KEY = m.content;
+  }
+
+  if (!VAPID_KEY) {
+    log('ERROR: No VAPID key available on this page. Navigate to a dashboard page first, or add the meta tag here.');
+    document.getElementById('btn-subscribe').disabled = false;
+    return;
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    log('ERROR: Browser does not support push notifications');
+    document.getElementById('btn-subscribe').disabled = false;
+    return;
+  }
+
+  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+    log('SW ready');
+    return Notification.requestPermission().then(function(perm) {
+      log('Permission result: ' + perm);
+      set('notif-perm', perm === 'granted' ? 'granted ✓' : perm, perm === 'granted' ? 'ok' : 'err');
+
+      if (perm !== 'granted') {
+        log('Permission NOT granted. On Android: tap the bell icon in address bar. On desktop: click the lock icon → Notifications → Allow.');
+        document.getElementById('btn-subscribe').disabled = false;
+        return;
+      }
+
+      log('Calling pushManager.subscribe()...');
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+      }).then(function(sub) {
+        log('Push subscription created!');
+        log('Endpoint: ' + sub.endpoint);
+        set('sub-exists', 'Created ✓', 'ok');
+        return saveToServer(sub);
+      }).catch(function(err) {
+        log('pushManager.subscribe() FAILED: ' + err.name + ': ' + err.message);
+        document.getElementById('btn-subscribe').disabled = false;
+      });
+    });
+  }).catch(function(err) {
+    log('SW register FAILED: ' + err.message);
+    document.getElementById('btn-subscribe').disabled = false;
+  });
+}
+
+function saveToServer(subscription) {
+  var key   = subscription.getKey('p256dh');
+  var token = subscription.getKey('auth');
+  var enc   = (PushManager.supportedContentEncodings || ['aesgcm'])[0];
+
+  var payload = {
+    endpoint:        subscription.endpoint,
+    key:             key   ? arrayBufferToBase64(key)   : null,
+    token:           token ? arrayBufferToBase64(token) : null,
+    contentEncoding: enc,
+  };
+
+  // Try to get CSRF from multiple places
+  var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content;
+  if (!csrf) {
+    log('WARNING: No csrf-token meta on this page. Getting one from server...');
+    // CSRF token not on this static page — fetch diag to get one
+    // For now, just try without it (will get 419 if CSRF enabled)
+    log('Attempting without CSRF first — expect a 419 if this fails');
+  }
+
+  log('Posting to /notifications/push/subscribe...');
+  log('Payload: ' + JSON.stringify({
+    endpoint: payload.endpoint.substring(0,60)+'...',
+    key: payload.key ? payload.key.substring(0,20)+'...' : null,
+    token: payload.token ? payload.token.substring(0,20)+'...' : null,
+    contentEncoding: payload.contentEncoding
+  }));
+
+  var headers = { 'Content-Type': 'application/json' };
+  if (csrf) headers['X-CSRF-TOKEN'] = csrf;
+
+  return fetch('/notifications/push/subscribe', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(payload),
+    credentials: 'same-origin',
+  }).then(function(res) {
+    log('Server HTTP status: ' + res.status);
+    return res.text().then(function(body) {
+      log('Server response: ' + body);
+      if (res.ok) {
+        log('✓ SUCCESS! Subscription saved. Check push_subscriptions table.');
+        set('db-subs', 'Should now have 1 row — refresh push-diag to confirm', 'ok');
+      } else if (res.status === 419) {
+        log('Got 419 CSRF error — this page has no csrf-token meta. Use the dashboard page instead.');
+      } else {
+        log('Server returned error ' + res.status + '. See response above.');
+      }
+      document.getElementById('btn-subscribe').disabled = false;
+    });
+  }).catch(function(err) {
+    log('Network error: ' + err.message);
+    document.getElementById('btn-subscribe').disabled = false;
+  });
+}
+
+// ── unsubscribe ───────────────────────────────────────────────────────────────
+function doUnsubscribe() {
+  log('--- Unsubscribing ---');
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    var promises = regs.map(function(reg) {
+      return reg.pushManager.getSubscription().then(function(sub) {
+        if (sub) return sub.unsubscribe();
+      }).then(function() {
+        return reg.unregister();
+      });
+    });
+    return Promise.all(promises);
+  }).then(function() {
+    log('Unsubscribed and SW unregistered. Now click "Request Permission & Subscribe".');
+    set('sub-exists', 'Unsubscribed — click Subscribe', 'warn');
+    set('sw-reg', 'Unregistered', 'warn');
+  });
+}
+</script>
+</body>
+</html>

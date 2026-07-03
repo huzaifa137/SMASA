@@ -19,6 +19,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TeacherPasswordResetController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\StudentIdCardController;
 use App\Http\Controllers\TeacherIdCardController;
 use App\Http\Controllers\LibraryController;
@@ -704,6 +705,35 @@ Route::prefix('finance')
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
     });
 
+// ─── FINANCE MODULE: LEDGERS ──────────────────────────────────────────────
+
+Route::prefix('finance/ledger')
+    ->name('finance.ledger.')
+    ->controller(LedgerController::class)
+    ->middleware(['module:finance'])
+    ->middleware(['SchoolAuth'])
+    ->group(function () {
+
+        // ── Chart of Accounts ─────────────────────────────────────────────
+        Route::prefix('accounts')->name('accounts.')->group(function () {
+            Route::get('/', 'chartOfAccounts')->name('index');
+            Route::post('/', 'storeAccount')->name('store');
+            Route::put('/{id}', 'updateAccount')->name('update');
+            Route::delete('/{id}', 'destroyAccount')->name('destroy');
+            Route::post('/seed-defaults', 'seedDefaultAccounts')->name('seed-defaults');
+        });
+
+        // ── General Ledger ──────────────────────────────────────────────────
+        Route::get('/general', 'generalLedger')->name('general');
+
+        // ── Student Fee Ledger ──────────────────────────────────────────────
+        Route::get('/student-fees', 'studentFeeLedgerSearch')->name('student-fees');
+        Route::get('/student-fees/{studentId}', 'studentFeeLedgerDetail')->name('student-fees.detail');
+
+        // ── Trial Balance / Income & Expenditure ────────────────────────────
+        Route::get('/trial-balance', 'trialBalance')->name('trial-balance');
+    });
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -878,31 +908,130 @@ Route::group([
 
 Route::middleware(['AdminAuth'])->group(function () {
 
+    // ── Push subscription + AJAX endpoints ──────────────────────────
+    // These must be reachable by ALL logged-in users (admin or teacher),
+    // regardless of whether their role has the 'notifications' module
+    // enabled. Putting them inside module:notifications would 403 anyone
+    // without that module, leaving push_subscriptions forever empty.
     Route::prefix('notifications')
         ->name('notifications.')
         ->controller(NotificationController::class)
-        ->middleware(['module:notifications'])
-        // ->middleware(['schoolAuth'])
         ->group(function () {
-
-            // Admin panel — manage & broadcast
-            Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create');
-            Route::post('/store', 'store')->name('store');
-
-            // My notifications page (must be ABOVE /{id})
-            Route::get('/my', 'myNotifications')->name('my');
-
-            // AJAX endpoints (must be ABOVE /{id})
+            Route::post('/push/subscribe', 'savePushSubscription')->name('push.subscribe');
+            Route::post('/push/unsubscribe', 'deletePushSubscription')->name('push.unsubscribe');
             Route::get('/ajax/unread-count', 'unreadCount')->name('ajax.unread');
             Route::get('/ajax/dropdown', 'dropdown')->name('ajax.dropdown');
             Route::post('/read-all', 'markAllRead')->name('read-all');
             Route::post('/{id}/read', 'markRead')->name('mark-read');
-            Route::post('/push/subscribe', 'savePushSubscription')->name('push.subscribe');
+        });
 
-            // Wildcard routes LAST
+    // ── Module-gated admin routes ────────────────────────────────────
+    Route::prefix('notifications')
+        ->name('notifications.')
+        ->controller(NotificationController::class)
+        ->middleware(['module:notifications'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/my', 'myNotifications')->name('my');
             Route::get('/{id}', 'show')->name('show');
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
 });
+
+// ── Temporary push diagnostics — REMOVE after confirming push works ──────────
+Route::middleware(['AdminAuth'])->get('/push-diag', function () {
+    $adminId   = session('LoggedAdmin');
+    $teacherId = session('LoggedTeacher');
+    $schoolId  = session('LoggedSchool');
+
+    $subscriber = null;
+    $subscriberType = null;
+    if ($adminId) {
+        $subscriber = \App\Models\User::find($adminId);
+        $subscriberType = 'User (admin)';
+    } elseif ($teacherId) {
+        $subscriber = \App\Models\Teacher::find($teacherId);
+        $subscriberType = 'Teacher';
+    }
+
+    $hasTrait = $subscriber
+        ? in_array(\NotificationChannels\WebPush\HasPushSubscriptions::class, class_uses_recursive($subscriber))
+        : false;
+
+    $subCount = ($subscriber && $hasTrait)
+        ? $subscriber->pushSubscriptions()->count()
+        : 0;
+
+    $allSubs = \Illuminate\Support\Facades\DB::table('push_subscriptions')->get();
+
+    return response()->json([
+        'session'               => [
+            'LoggedAdmin'   => $adminId,
+            'LoggedTeacher' => $teacherId,
+            'LoggedSchool'  => $schoolId,
+        ],
+        'subscriber_type'       => $subscriberType,
+        'subscriber_id'         => $subscriber?->id ?? null,
+        'subscriber_found'      => !is_null($subscriber),
+        'has_push_trait'        => $hasTrait,
+        'this_user_subs'        => $subCount,
+        'all_push_subs_total'   => $allSubs->count(),
+        'all_push_subs'         => $allSubs,
+        'vapid_public_key_set'  => !empty(config('webpush.vapid.public_key')),
+        'vapid_private_key_set' => !empty(config('webpush.vapid.private_key')),
+        'vapid_subject'         => config('webpush.vapid.subject'),
+    ], 200, [], JSON_PRETTY_PRINT);
+})->name('push.diag');
+
+Route::middleware(['AdminAuth'])->get('/push-test', function () {
+    return view('push_test');
+})->name('push.test');
+
+// ── Temporary push send test — REMOVE after confirming push works ───────────
+Route::middleware(['AdminAuth'])->post('/push-send-test', function (\Illuminate\Http\Request $request) {
+    $adminId   = session('LoggedAdmin');
+    $teacherId = session('LoggedTeacher');
+
+    $subscriber = null;
+    if ($adminId) {
+        $subscriber = \App\Models\User::find($adminId);
+    } elseif ($teacherId) {
+        $subscriber = \App\Models\Teacher::find($teacherId);
+    }
+
+    if (!$subscriber) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No logged-in admin/teacher found in session.',
+        ], 422);
+    }
+
+    $subCount = $subscriber->pushSubscriptions()->count();
+    if ($subCount === 0) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This user has no push subscriptions yet. Click "Request Permission & Subscribe" first.',
+        ], 422);
+    }
+
+    try {
+        $subscriber->notify(new \App\Notifications\SmasaPushNotification(
+            'SMASA Test Notification',
+            'If you can see this, push delivery is fully working! 🎉',
+            url('/dashboard')
+        ));
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Notify call threw an exception: ' . $e->getMessage(),
+        ], 500);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Test push dispatched to ' . $subCount . ' subscription(s). Check your device.',
+    ]);
+})->name('push.send-test');

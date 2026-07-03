@@ -53,12 +53,13 @@ class NotificationService
         }
 
         // ── Fire Web Push to all User accounts that are recipients ──
-        // ── Fire Web Push to all User accounts that are recipients ──
+        // Note: $notification->icon is a UI icon keyword (e.g. "bell", "graduation-cap")
+        // used for the in-app dropdown, NOT an image URL — do not forward it to the
+        // push payload. Let SmasaPushNotification fall back to the real logo image.
         self::dispatchPush($recipients, [
             'title' => $notification->title,
             'body' => $notification->body,
             'url' => $notification->url,
-            'icon' => $notification->icon ?? '/favicon.ico',
         ]);
 
         return $notification;
@@ -76,7 +77,6 @@ private static function dispatchPush(array $recipients, array $payload): void
             title: $payload['title'],
             body: $payload['body'],
             url: $payload['url'] ?? null,
-            icon: $payload['icon'] ?? '/favicon.ico',
         );
 
         $adminIds = collect($recipients)->where('type', 'admin')->pluck('id')->unique()->values();

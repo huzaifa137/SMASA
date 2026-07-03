@@ -115,16 +115,19 @@ $controller = new Controller();
 
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="form-label" for="password">Password <span class="text-muted">(optional — leave blank to auto-generate)</span></label>
+                                        <label class="form-label" for="password">Password <span class="text-muted">(optional
+                                                — leave blank to auto-generate)</span></label>
                                         <input type="password" id="password" name="password" class="form-control"
-                                            placeholder="Leave blank to auto-generate a temporary password" autocomplete="new-password">
+                                            placeholder="Leave blank to auto-generate a temporary password"
+                                            autocomplete="new-password">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
                                         <label class="form-label" for="password_confirmation">Confirm Password</label>
-                                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control"
-                                            placeholder="Re-enter password" autocomplete="new-password">
+                                        <input type="password" id="password_confirmation" name="password_confirmation"
+                                            class="form-control" placeholder="Re-enter password"
+                                            autocomplete="new-password">
                                     </div>
                                 </div>
                             </div>
@@ -244,9 +247,9 @@ $controller = new Controller();
                                     icon: 'success',
                                     title: 'Teacher Added!',
                                     html: `${response.message}<br><br>
-                                        <strong>Temporary password:</strong>
-                                        <code style="font-size:1.1rem;">${response.temporary_password}</code><br>
-                                        <small class="text-muted">Share this with the teacher — they'll be asked to set a new password on first login.</small>`,
+                                            <strong>Temporary password:</strong>
+                                            <code style="font-size:1.1rem;">${response.temporary_password}</code><br>
+                                            <small class="text-muted">Share this with the teacher — they'll be asked to set a new password on first login.</small>`,
                                     confirmButtonText: 'Got it'
                                 });
                             } else {
