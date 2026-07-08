@@ -158,7 +158,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/edit-student-profile', 'editStudentProfile');
             });
         });
-
+        
+        Route::get('/students/streams', 'getStreamsForClass')->name('students.streams.ajax');
         Route::get('/select-current-school', 'selectCurrentSchool')->name('select.current.school');
     });
 

@@ -846,41 +846,69 @@ class StudentController extends Controller
         return view('student.student-search', compact(['classRecord']));
     }
 
-    public function searchAjax(Request $request)
-    {
-        $criteria = $request->input('criteria');
+   // Fetch distinct streams for a given class (for the cascading dropdown)
+public function getStreamsForClass(Request $request)
+{
+    $class = $request->input('class');
 
-        switch ($criteria) {
-            case 'admission_number':
-                $students = Student::where('admission_number', $request->admission_number)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
-                break;
-            case 'name':
-                $students = Student::where('firstname', 'like', '%' . $request->firstname . '%')
-                    ->where('lastname', 'like', '%' . $request->lastname . '%')
-                    ->where('senior', $request->senior)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
-                break;
-            case 'phone':
-                $students = Student::where('primary_contact', $request->phone)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
-                break;
-            case 'student_id':
-                $students = Student::where('id', $request->student_id)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
-                break;
-            default:
-                return response()->json(['message' => 'Invalid criteria'], 400);
-        }
+    $streams = Student::where('senior', $class)
+        ->where('school_id', Session('LoggedSchool'))
+        ->whereNotNull('stream')
+        ->distinct()
+        ->pluck('stream');
 
-        $html = view('student.partials.results', compact('students'))->render();
+    return response()->json(['streams' => $streams]);
+}
 
-        return response()->json(['html' => $html]);
+public function searchAjax(Request $request)
+{
+    $criteria = $request->input('criteria');
+
+    switch ($criteria) {
+        case 'admission_number':
+            $students = Student::where('admission_number', $request->admission_number)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
+            break;
+
+        case 'name':
+            $students = Student::query()
+                ->when($request->filled('firstname'), function ($q) use ($request) {
+                    $q->where('firstname', 'like', '%' . $request->firstname . '%');
+                })
+                ->when($request->filled('lastname'), function ($q) use ($request) {
+                    $q->where('lastname', 'like', '%' . $request->lastname . '%');
+                })
+                ->when($request->filled('senior'), function ($q) use ($request) {
+                    $q->where('senior', $request->senior);
+                })
+                ->when($request->filled('stream'), function ($q) use ($request) {
+                    $q->where('stream', $request->stream);
+                })
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
+            break;
+
+        case 'phone':
+            $students = Student::where('primary_contact', $request->phone)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
+            break;
+
+        case 'student_id':
+            $students = Student::where('id', $request->student_id)
+                ->where('school_id', Session('LoggedSchool'))
+                ->get();
+            break;
+
+        default:
+            return response()->json(['message' => 'Invalid criteria'], 400);
     }
+
+    $html = view('student.partials.results', compact('students'))->render();
+
+    return response()->json(['html' => $html]);
+}
 
     public function updateProfiles()
     {
