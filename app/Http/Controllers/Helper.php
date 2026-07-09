@@ -436,6 +436,161 @@ class Helper extends Controller
             ->value('firstname') ?? 'No Record Found';
     }
 
+    /**
+     * Full "Surname Firstname" for a teacher, used on report cards.
+     * Returns null (not a placeholder string) when there's no teacher,
+     * so callers can decide their own fallback (e.g. '—').
+     */
+    public static function teacherFullName($teacherId): ?string
+    {
+        if (empty($teacherId)) {
+            return null;
+        }
+
+        $teacher = DB::table('teachers')->where('id', $teacherId)->first();
+
+        if (!$teacher) {
+            return null;
+        }
+
+        return trim(($teacher->surname ?? '') . ' ' . ($teacher->firstname ?? '')) ?: null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Early Years Grading Helpers (Nursery / Kindergarten / Pre-Primary)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Master-code IDs that represent early-years categories
+     * (NURSERY_BABY_CLASS, NURSERY_MIDDLE_CLASS, NURSERY_TOP_CLASS).
+     */
+    public static function earlyYearsMasterCodes(): array
+    {
+        return config('constants.early_years.master_codes', [35, 36, 37]);
+    }
+
+    /**
+     * The 3 system comment presets: marks (1-3), label, remark.
+     */
+    public static function earlyYearsPresets(): array
+    {
+        return config('constants.early_years.presets', []);
+    }
+
+    public static function earlyYearsMaxMark(): int
+    {
+        return (int) config('constants.early_years.max_mark', 3);
+    }
+
+    /**
+     * True if a given subject (master_datas.md_id) belongs to one of the
+     * early-years categories, meaning it's graded 1-3 with system
+     * comments rather than a numeric mark out of the exam's total_marks.
+     */
+    public static function isEarlyYearsSubject($subjectId): bool
+    {
+        if (empty($subjectId)) {
+            return false;
+        }
+
+        $masterCodeId = DB::table('master_datas')
+            ->where('md_id', (string) $subjectId)
+            ->value('md_master_code_id');
+
+        return in_array((int) $masterCodeId, self::earlyYearsMasterCodes(), true);
+    }
+
+    /**
+     * Find the preset (marks/label/remark) matching a given 1-3 mark.
+     */
+    public static function earlyYearsPresetForMark($marks): ?array
+    {
+        foreach (self::earlyYearsPresets() as $preset) {
+            if ((int) $preset['marks'] === (int) $marks) {
+                return $preset;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Overall remark for an early-years subject average (0-3 scale).
+     * Rounds to the nearest preset (1/2/3) rather than requiring an
+     * exact match, since the average of several subjects rarely lands
+     * on a whole number.
+     */
+    public static function earlyYearsRemarkForAverage(float $average): string
+    {
+        $presets = self::earlyYearsPresets();
+        if (empty($presets)) {
+            return '—';
+        }
+
+        $nearestMarks = max(1, min(3, (int) round($average)));
+
+        foreach ($presets as $preset) {
+            if ((int) $preset['marks'] === $nearestMarks) {
+                return $preset['remark'];
+            }
+        }
+
+        return $presets[array_key_last($presets)]['remark'];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passlip Customisation Persistence (per class)
+    |--------------------------------------------------------------------------
+    | Lets one or more classes (e.g. Baby Class + Middle Class, or a whole
+    | Nursery section) share a saved show/hide profile for their report
+    | cards, instead of it resetting to defaults every time the page reloads.
+    */
+
+    /**
+     * Saved toggle/accent settings for a class, or [] if none saved yet
+     * (callers should merge this with hard defaults).
+     */
+    public static function getPassslipSettings($schoolId, $classId): array
+    {
+        if (empty($classId) || empty($schoolId)) {
+            return [];
+        }
+
+        $row = DB::table('passslip_settings')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->first();
+
+        if (!$row) {
+            return [];
+        }
+
+        $decoded = json_decode($row->settings, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Save the same settings JSON against one or more classes.
+     * Idempotent — safe to call repeatedly (updateOrInsert per class).
+     */
+    public static function savePassslipSettings($schoolId, array $classIds, array $settings): void
+    {
+        foreach ($classIds as $classId) {
+            if (empty($classId)) {
+                continue;
+            }
+
+            DB::table('passslip_settings')->updateOrInsert(
+                ['school_id' => $schoolId, 'class_id' => $classId],
+                ['settings' => json_encode($settings), 'updated_at' => now(), 'created_at' => now()]
+            );
+        }
+    }
+
     public static function category_name($user = '')
     {
         $user = (int) $user;

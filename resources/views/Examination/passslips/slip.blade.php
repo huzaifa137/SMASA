@@ -27,33 +27,13 @@
             $accent = '#f0a500';
         }
 
-        // Helper: treat '1' / 'true' / missing (default true) as ON
-        $on = fn(string $key, bool $default = true): bool =>
+        // Helper: treat '1' / 'true' / missing (falls back to saved
+        // per-class settings, then to $default) as ON. Query-string always
+        // wins so the live customisation preview keeps working instantly.
+        $on = fn(string $key, bool $default = true, array $saved = []): bool =>
             request()->has($key)
             ? in_array(request($key), ['1', 'true', 1, true], true)
-            : $default;
-
-        $cfg = [
-            'border' => $on('show_border'),
-            'watermark' => $on('show_watermark'),
-            'logo' => $on('show_logo'),
-            'arabic' => $on('show_arabic'),
-            'motto' => $on('show_motto'),
-            'contact' => $on('show_contact'),
-            'photo' => $on('show_photo'),
-            'minichart' => $on('show_minichart'),
-            'qr' => $on('show_qr'),
-            'rank' => $on('show_rank'),
-            'dev' => $on('show_dev'),
-            'grade_pill' => $on('show_grade_pill'),
-            'teacher_col' => $on('show_teacher_col'),
-            'totals_row' => $on('show_totals_row'),
-            'perf_chart' => $on('show_perf_chart'),
-            'remarks' => $on('show_remarks'),
-            'signatures' => $on('show_signatures'),
-            'footer_timestamp' => $on('show_footer_timestamp'),
-            'confidential' => $on('show_confidential'),
-        ];
+            : ($saved[$key] ?? $default);
 
         // Derive a slightly darker shade of accent for outlines / borders
         // We do this purely in PHP by parsing the hex and darkening by ~15 %.
@@ -250,21 +230,27 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: .65rem 1.1rem .5rem;
+            padding: 1rem 1.1rem .9rem;
             border-bottom: 3px solid var(--accent);
+            gap: 1rem;
         }
 
         .sch-logo-area {
             display: flex;
             align-items: center;
             gap: .7rem;
+            flex-shrink: 0;
+        }
+
+        .sch-logo-area.sch-logo-area-right {
+            justify-content: flex-end;
         }
 
         .sch-logo-box {
-            width: 80px;
-            height: 80px;
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
-            border: 2.5px solid var(--accent);
+            border: 3px solid var(--accent);
             overflow: hidden;
             flex-shrink: 0;
             display: flex;
@@ -280,41 +266,48 @@
         }
 
         .sch-logo-box i {
-            font-size: 1.6rem;
+            font-size: 2.6rem;
             color: var(--accent);
         }
 
-        .sch-right {
-            text-align: right;
+        .sch-center {
+            flex: 1;
+            text-align: center;
+            padding: 0 .5rem;
+            min-width: 0;
         }
 
         .sch-name {
-            font-size: 22px;
+            font-size: 36px;
             font-weight: 900;
-            letter-spacing: .04em;
+            letter-spacing: .03em;
             color: #111;
             text-transform: uppercase;
-            line-height: 1.15;
+            line-height: 1.2;
         }
 
         .sch-arabic-name {
-            font-size: 18px;
+            font-size: 26px;
             font-weight: 600;
             direction: rtl;
-            margin-top: 2px;
-        }
-
-        .sch-details {
-            font-size: 12px;
-            color: #444;
             margin-top: 4px;
         }
 
+        .sch-details {
+            font-size: 16px;
+            color: #333;
+            margin-top: 7px;
+            font-weight: 500;
+            line-height: 1.5;
+            font-weight: bold;
+        }
+
         .sch-motto {
-            font-size: 11px;
+            font-size: 14px;
             font-style: italic;
-            color: #666;
-            margin-top: 3px;
+            color: black;
+            margin-top: 5px;
+            font-weight: bold;
         }
 
         /* ════════════════════════════════════════════════════════════════
@@ -579,20 +572,21 @@
             width: 100%;
             border-collapse: collapse;
             font-size: .75rem;
-            border: 1.5px solid #c8c8c8;
+            border: 2.5px solid #333;
             margin-top: .5rem;
         }
 
         .marks-tbl th {
             background: #1a1a1a;
             color: #fff;
-            padding: .38rem .55rem;
+            padding: .55rem .7rem;
             text-align: center;
             font-size: .67rem;
             text-transform: uppercase;
             letter-spacing: .05em;
             font-weight: 700;
-            border-right: 1px solid #333;
+            border-right: 1.5px solid #555;
+            border-bottom: 2px solid #333;
         }
 
         .marks-tbl th:last-child {
@@ -604,8 +598,8 @@
         }
 
         .marks-tbl td {
-            padding: .32rem .55rem;
-            border: 1px solid #ddd;
+            padding: .5rem .7rem;
+            border: 1.5px solid #888;
             vertical-align: middle;
         }
 
@@ -696,7 +690,66 @@
             background: #f0f0f0;
             font-weight: 800;
             font-size: .77rem;
-            border-top: 2px solid #b0b0b0;
+            border-top: 3px solid #333;
+        }
+
+        /* Multi-exam header: exam group cell (row 1) + MARKS/GRADE sub-cells (row 2) */
+        .marks-tbl th.exam-grp-th {
+            border-bottom: 2px solid #555;
+        }
+
+        .marks-tbl th.sub-th {
+            background: #2d2d2d;
+            font-size: .6rem;
+            padding: .4rem .5rem;
+            width: 40px;
+        }
+
+        .division-row td {
+            background: #fafafa;
+            font-weight: 800;
+            font-size: .72rem;
+            border-top: 2px solid #333;
+            text-align: center;
+            letter-spacing: .03em;
+        }
+
+        .division-row td.division-label {
+            text-align: right;
+            color: #666;
+            font-size: .68rem;
+            padding-right: .8rem;
+            background: #fff;
+            font-weight: 600;
+        }
+
+        .div-pill {
+            display: inline-block;
+            padding: .12rem .5rem;
+            border-radius: 3px;
+            font-weight: 800;
+        }
+
+        .div-1,
+        .div-2 {
+            background: #d4f5e2;
+            color: #1a7a4a;
+        }
+
+        .div-3,
+        .div-4 {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .div-ungraded {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+
+        .div-x {
+            background: #eeecff;
+            color: #5351e4;
         }
 
         /* ════════════════════════════════════════════════════════════════
@@ -751,27 +804,29 @@
 
         .remark-block {
             margin-bottom: .4rem;
+            font-weight: 800;
         }
 
         .remark-teacher {
             font-size: .74rem;
-            font-weight: 700;
+            font-weight: bold;
             color: #111;
         }
 
         .remark-text {
             font-size: .72rem;
-            color: #444;
+            color: #000;
             line-height: 1.45;
             margin-top: .15rem;
+            font-weight: Bold;
         }
 
         .sig-dashes {
-            border-top: 1px dashed #bbb;
+            border-top: 1.5px dashed #444;
             margin: .55rem 0 .15rem;
             padding-top: .2rem;
             font-size: .6rem;
-            color: #aaa;
+            color: #000;
             text-transform: uppercase;
         }
 
@@ -799,10 +854,10 @@
         .sig-slot {
             width: 100%;
             text-align: center;
-            border-bottom: 1px solid #999;
+            border-bottom: 1.5px solid #333;
             padding-bottom: .15rem;
             font-size: .6rem;
-            color: #999;
+            color: #333;
             text-transform: uppercase;
             letter-spacing: .03em;
             margin-bottom: .4rem;
@@ -901,6 +956,26 @@
                 margin: 0;
                 box-shadow: none;
                 page-break-after: always;
+                page-break-inside: avoid;
+                width: 100%;
+                min-height: calc(297mm - 1cm);
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .slip-footer {
+                margin-top: auto;
+            }
+
+            .marks-tbl tr {
+                page-break-inside: avoid;
+            }
+
+            .bottom-section,
+            .stu-row,
+            .sch-header {
+                page-break-inside: avoid;
             }
 
             .slip.has-border {
@@ -940,6 +1015,38 @@
                 print-color-adjust: exact;
                 color-adjust: exact;
             }
+        }
+
+        .slip::before,
+        .slip::after,
+        .title-band,
+        .grp-row td,
+        .g-pill,
+        .g-A,
+        .g-B,
+        .g-C,
+        .g-D,
+        .g-P,
+        .g-F,
+        .marks-tbl thead,
+        .sch-header,
+        .sum-bar,
+        .slip-footer,
+        .status-promoted,
+        .status-repeat,
+        .status-fail,
+        .watermark,
+        .watermark-text,
+        .watermark img,
+        .stu-qr-box,
+        .stu-qr-box img,
+        .sig-dashes,
+        .sig-slot,
+        .remarks-col,
+        .sig-col-right {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
         }
     </style>
 </head>
@@ -995,11 +1102,20 @@
                     'growthData' => $growthData,
                     'previousSubjectMarks' => $previousSubjectMarks ?? [],
                     'qrText' => $qrText ?? '',
+                    'isEarlyYears' => $isEarlyYears ?? false,
+                    'earlyYearsAverage' => $earlyYearsAverage ?? null,
+                    'earlyYearsMaxMark' => $earlyYearsMaxMark ?? 3,
+                    'useAvg' => $useAvg ?? false,
+                    'examSummary' => $examSummary ?? [],
+                    'avgSummary' => $avgSummary ?? null,
                 ]
             ];
         } else {
             $renderSlips = $slips;
         }
+
+        $multiExam = $multiExam ?? false;
+        $examsList = $examsList ?? collect([$exam]);
 
         /* ── Helpers ─────────────────────────────────────────────────── */
         $ord = function ($n) {
@@ -1045,9 +1161,69 @@
                 $classTotalN = $slipData['classTotal'];
                 $growth = $slipData['growthData'];
                 $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
+                $useAvgSlip = $slipData['useAvg'] ?? false;
+                $examSummarySlip = collect($slipData['examSummary'] ?? []);
+                $avgSummarySlip = $slipData['avgSummary'] ?? null;
 
-                $passed = $pct >= $exam->pass_mark;
-                $statusLabel = $s->status ?? ($passed ? 'Promoted' : 'Repeat');
+                $divClass = function ($div) {
+                    if (!$div || $div === '—')
+                        return 'div-x';
+                    $d = strtolower($div);
+                    if (str_contains($d, 'ungraded'))
+                        return 'div-ungraded';
+                    if (str_contains($d, '1'))
+                        return 'div-1';
+                    if (str_contains($d, '2'))
+                        return 'div-2';
+                    if (str_contains($d, '3'))
+                        return 'div-3';
+                    if (str_contains($d, '4'))
+                        return 'div-4';
+                    return 'div-x';
+                };
+
+                $isEarlyYears = $slipData['isEarlyYears'] ?? false;
+                $earlyYearsAvg = $slipData['earlyYearsAverage'] ?? null;
+                $earlyYearsMax = $slipData['earlyYearsMaxMark'] ?? 3;
+
+                // ── Per-class saved customisation ───────────────────────────
+                // Each student's class can carry its own saved show/hide
+                // profile (e.g. Baby Class vs S.4). Query-string params
+                // (from the live preview toggles) still override these.
+                $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $s->senior ?? null);
+
+                $cfg = [
+                    'border' => $on('show_border', true, $savedCfg),
+                    'watermark' => $on('show_watermark', true, $savedCfg),
+                    'logo' => $on('show_logo', true, $savedCfg),
+                    'arabic' => $on('show_arabic', true, $savedCfg),
+                    'motto' => $on('show_motto', true, $savedCfg),
+                    'contact' => $on('show_contact', true, $savedCfg),
+                    'photo' => $on('show_photo', true, $savedCfg),
+                    'minichart' => $on('show_minichart', true, $savedCfg),
+                    'qr' => $on('show_qr', true, $savedCfg),
+                    'rank' => $on('show_rank', true, $savedCfg),
+                    'dev' => $on('show_dev', true, $savedCfg),
+                    'grade_pill' => $on('show_grade_pill', true, $savedCfg),
+                    'teacher_col' => $on('show_teacher_col', true, $savedCfg),
+                    'totals_row' => $on('show_totals_row', true, $savedCfg),
+                    'perf_chart' => $on('show_perf_chart', true, $savedCfg),
+                    'remarks' => $on('show_remarks', true, $savedCfg),
+                    'signatures' => $on('show_signatures', true, $savedCfg),
+                    'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
+                    'confidential' => $on('show_confidential', true, $savedCfg),
+                    // New toggles
+                    'total_score' => $on('show_total_score', true, $savedCfg),
+                    'average' => $on('show_average', true, $savedCfg),
+                    'result' => $on('show_result', true, $savedCfg),
+                    'score_col' => $on('show_score_col', true, $savedCfg),
+                    'comment_col' => $on('show_comment_col', true, $savedCfg),
+                ];
+
+                // Early years classes aren't scored Pass/Fail against the
+                // exam's normal pass_mark — they're Fair/Good/Excellent.
+                $passed = $isEarlyYears ? true : ($pct >= $exam->pass_mark);
+                $statusLabel = $s->status ?? ($isEarlyYears ? $oRemark : ($passed ? 'Promoted' : 'Repeat'));
 
                 /* Resolve student photo */
                 $photo = null;
@@ -1131,10 +1307,11 @@
                 |──────────────────────────────────────────────────────────────
                 */
                 // Count visible columns for colspan calculations
-                $visibleCols = 2 // Subject + Marks (always visible)
+                $visibleCols = 1 // Subject (always visible)
+                    + ($cfg['score_col'] ? 1 : 0)
                     + ($cfg['dev'] ? 1 : 0)
-                    + ($cfg['grade_pill'] ? 1 : 0)
-                    + 1 // Comment (always visible)
+                    + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['comment_col'] ? 1 : 0)
                     + ($cfg['teacher_col'] ? 1 : 0);
             @endphp
 
@@ -1155,7 +1332,6 @@
                 {{-- ══ SCHOOL HEADER ══════════════════════════════════════════ --}}
                 <div class="sch-header">
                     <div class="sch-logo-area">
-                        {{-- Logo in header --}}
                         <div class="sch-logo-box">
                             @if($cfg['logo'] && $schoolLogoUrl)
                                 <img src="{{ $schoolLogoUrl }}" alt="logo">
@@ -1165,7 +1341,7 @@
                         </div>
                     </div>
 
-                    <div class="sch-right">
+                    <div class="sch-center">
                         <div class="sch-name">{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
@@ -1175,14 +1351,24 @@
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
                             <div class="sch-details">
                                 @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
-                                @if($schoolEmail)<span> | {{ $schoolEmail }}</span>@endif
-                                @if($schoolLocation)<span> | {{ $schoolLocation }}</span>@endif
+                                @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
+                                @if($schoolLocation)<span> {{ $schoolLocation }}</span>@endif
                             </div>
                         @endif
 
                         @if($cfg['motto'] && $schoolMotto)
                             <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
+                    </div>
+
+                    <div class="sch-logo-area sch-logo-area-right">
+                        <div class="sch-logo-box">
+                            @if($cfg['logo'] && $schoolLogoUrl)
+                                <img src="{{ $schoolLogoUrl }}" alt="logo">
+                            @else
+                                <i class="fas fa-school"></i>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -1218,22 +1404,31 @@
                             <strong>NAME:</strong>
                             {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
                         </div>
-                        <div class="stu-field"><strong>ADMNO:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}</div>
+                        <div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}</div>
                         <div class="stu-field">
                             <strong>CLASS:</strong>
                             {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
                         </div>
                         <div class="stu-field" style="margin-top:.2rem;">
                             <strong>STATUS:</strong>
-                            <span
-                                class="status-pill {{ str_contains(strtolower($statusLabel), 'promot') ? 'status-promoted' : (str_contains(strtolower($statusLabel), 'fail') ? 'status-fail' : 'status-repeat') }}">
+                            <span @php
+                                $statusLower = strtolower($statusLabel);
+                                if ($isEarlyYears) {
+                                    $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
+                                } else {
+                                    $statusClass = str_contains($statusLower, 'promot')
+                                        ? 'status-promoted'
+                                        : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
+                                }
+                            @endphp class="status-pill {{ $statusClass }}">
                                 {{ ucfirst($statusLabel) }}
                             </span>
                         </div>
+                        <div class="stu-field"><strong>LIN:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}</div>
                         @if($cfg['rank'] && is_numeric($rank))
                             <div class="stu-field" style="margin-top:.2rem;">
                                 <strong>POSITION:</strong>
-                                <span style="font-weight:800;color:var(--accent);">
+                                <span style="font-weight:800;color:#888;">
                                     {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
                                         {{ $classTotalN }}</span>
                                 </span>
@@ -1262,89 +1457,205 @@
 
                 </div>
 
-                {{-- ══ SUMMARY BAR ═══════════════════════════════════════════════ --}}
-                <div class="sum-bar">
-                    <div class="sum-cell">
-                        <div class="sum-lbl">Total Marks</div>
-                        <div class="sum-val">
-                            {{ number_format($totObt, 0) }}<span
-                                style="font-size:.65rem;color:#aaa;font-weight:500;">/{{ $totMax }}</span>
-                        </div>
-                        @if($termDelta !== null)
-                            <div class="sum-sub">
-                                @if($termDelta > 0)
-                                    <span
-                                        class="delta-inline di-up">{{ number_format(abs($totObt - ($totObt - $termDelta / 100 * $totMax)), 0) }}
-                                        ↑</span>
-                                @elseif($termDelta < 0)
-                                    <span
-                                        class="delta-inline di-dn">{{ number_format(abs($totObt - ($totObt - $termDelta / 100 * $totMax)), 0) }}
-                                        ↓</span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
 
-                    <div class="sum-cell">
-                        <div class="sum-lbl">Average Score</div>
-                        <div class="sum-val"
-                            style="color:{{ $pct >= 75 ? '#1a7a4a' : ($pct >= $exam->pass_mark ? '#856404' : '#c0392b') }}">
-                            {{ $pct }}%
-                        </div>
-                        @if($termDelta !== null)
-                            <div class="sum-sub">
-                                @if($termDelta > 0) <span class="delta-inline di-up">{{ $termDelta }} ↑</span>
-                                @elseif($termDelta < 0) <span class="delta-inline di-dn">{{ $termDelta }} ↓</span>
-                                @else <span style="font-size:.68rem;color:#aaa">—</span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="sum-cell" style="flex:.7">
-                        <div class="sum-lbl">Grade</div>
-                        <div class="sum-val" style="font-size:1.3rem;">{{ $oGrade }}</div>
-                    </div>
-
-                    <div class="sum-cell">
-                        <div class="sum-lbl">Result</div>
-                        <div class="sum-val"
-                            style="color:{{ $passed ? '#1a7a4a' : '#c0392b' }};font-size:.9rem;margin-top:.15rem;">
-                            {{ $passed ? 'PASS' : 'FAIL' }}
-                        </div>
-                    </div>
-                </div>
 
                 {{-- ══ MARKS TABLE ════════════════════════════════════════════════ --}}
                 <div class="marks-wrap">
-                    <table class="marks-tbl">
-                        <thead>
-                            <tr>
-                                <th class="tl" style="min-width:110px;">SUBJECTS</th>
-                                <th style="width:48px;">MARKS</th>
-                                @if($cfg['dev'])
-                                    <th style="width:38px;">DEV.</th>
-                                @endif
-                                @if($cfg['grade_pill'])
-                                    <th style="width:38px;">GRADE</th>
-                                @endif
-                                <th class="tl">COMMENT</th>
-                                @if($cfg['teacher_col'])
-                                    <th class="tl" style="min-width:100px;">TEACHER</th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php $rn = 0; @endphp
-
-                            @if($useGroups)
-                                @foreach($grouped as $grpName => $grpSubjs)
-                                    @if($grpName)
-                                        <tr class="grp-row">
-                                            <td colspan="{{ $visibleCols }}">{{ strtoupper($grpName) }}</td>
-                                        </tr>
+                    @if($multiExam)
+                        {{-- ── MULTI-EXAM TABLE (BOT | MID | EOT …) ── --}}
+                        @php
+                            $examLabels = [
+                                'Beginning-of-Term' => 'BOT',
+                                'Mid-Term' => 'MOT',
+                                'End-of-Term' => 'EOT',
+                                'Continuous Assessment' => 'CA',
+                            ];
+                            // Aggregate/Division columns only make sense for the
+                            // graded (non-early-years) point-based scale.
+                            $showAggDiv = !$isEarlyYears;
+                        @endphp
+                        <table class="marks-tbl">
+                            <thead>
+                                <tr>
+                                    <th class="tl" rowspan="2" style="min-width:100px;">SUBJECTS</th>
+                                    @foreach($examsList as $ex)
+                                        <th class="exam-grp-th" colspan="2">
+                                            {{ $examLabels[$ex->exam_type] ?? strtoupper($ex->term ?? $ex->exam_name) }}
+                                        </th>
+                                    @endforeach
+                                    @if($cfg['grade_pill'])
+                                        <th rowspan="2" style="width:38px;">GRADE</th>
                                     @endif
-                                    @foreach($grpSubjs as $sm)
+                                    @if($cfg['teacher_col'])
+                                        <th class="tl" rowspan="2" style="min-width:100px;">TEACHER</th>
+                                    @endif
+                                </tr>
+                                <tr>
+                                    @foreach($examsList as $ex)
+                                        <th class="sub-th">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
+                                        <th class="sub-th">GRADE</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($subjMarks as $sm)
+                                    <tr>
+                                        <td style="font-weight:500;">{{ $sm->subject_name }}</td>
+                                        @foreach($examsList as $ex)
+                                            @php $ed = $sm->exams[$ex->id] ?? null; @endphp
+                                            <td class="score-td">
+                                                {{ $ed && $ed['marks_obtained'] !== null ? $ed['marks_obtained'] : '—' }}
+                                            </td>
+                                            <td class="num-td">
+                                                @if($ed && $ed['grade'] && $ed['grade'] !== '—')
+                                                    <span class="g-pill {{ $gc($ed['grade']) }}">{{ $ed['grade'] }}</span>
+                                                @else
+                                                    <span style="color:#bbb;">—</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        @if($cfg['grade_pill'])
+                                            <td class="num-td">
+                                                <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
+                                            </td>
+                                        @endif
+                                        @if($cfg['teacher_col'])
+                                            <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                        @endif
+                                    </tr>
+                                @endforeach
+
+                                {{-- TOTAL / AGGREGATE ROW --}}
+                                @if($cfg['totals_row'])
+                                    <tr class="totals-row">
+                                        <td
+                                            style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
+                                            {{ $showAggDiv ? 'TOTAL / AGG' : 'TOTAL / ' . ($useAvgSlip ? 'AVERAGE' : 'COMBINED') }}
+                                        </td>
+                                        @foreach($examsList as $ex)
+                                            @php $esum = $examSummarySlip->get($ex->id); @endphp
+                                            @if($showAggDiv)
+                                                <td class="score-td">{{ $esum['total_marks'] ?? '—' }}</td>
+                                                <td class="num-td">{{ $esum['aggregate'] ?? '—' }}</td>
+                                            @else
+                                                @php
+                                                    $examPctSum = $subjMarks->sum(fn($sm) => $sm->exams[$ex->id]['percentage'] ?? 0);
+                                                    $examPctCnt = $subjMarks->filter(fn($sm) => ($sm->exams[$ex->id]['percentage'] ?? null) !== null)->count();
+                                                    $examAvgPct = $examPctCnt > 0 ? round($examPctSum / $examPctCnt, 1) : null;
+                                                @endphp
+                                                <td class="score-td" colspan="2">{{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}</td>
+                                            @endif
+                                        @endforeach
+                                        @if($cfg['grade_pill'])
+                                            <td class="num-td"><span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span></td>
+                                        @endif
+                                        @if($cfg['teacher_col'])
+                                            <td></td>
+                                        @endif
+                                    </tr>
+                                @endif
+
+                                {{-- DIVISION ROW --}}
+                                @if($cfg['totals_row'] && $showAggDiv)
+                                    <tr class="division-row">
+                                        <td class="division-label">DIVISION</td>
+                                        @foreach($examsList as $ex)
+                                            @php $div = $examSummarySlip->get($ex->id)['division'] ?? '—'; @endphp
+                                            <td colspan="2">
+                                                <span class="div-pill {{ $divClass($div) }}">{{ strtoupper($div) }}</span>
+                                            </td>
+                                        @endforeach
+                                        @if($cfg['grade_pill'])
+                                            <td></td>
+                                        @endif
+                                        @if($cfg['teacher_col'])
+                                            <td></td>
+                                        @endif
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    @else
+                        <table class="marks-tbl">
+                            <thead>
+                                <tr>
+                                    <th class="tl" style="min-width:110px;">SUBJECTS</th>
+                                    @if($cfg['score_col'])
+                                        <th style="width:48px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
+                                    @endif
+                                    @if($cfg['dev'])
+                                        <th style="width:38px;">DEV.</th>
+                                    @endif
+                                    @if($cfg['grade_pill'] && !$isEarlyYears)
+                                        <th style="width:38px;">GRADE</th>
+                                    @endif
+                                    @if($cfg['comment_col'])
+                                        <th class="tl">COMMENT</th>
+                                    @endif
+                                    @if($cfg['teacher_col'])
+                                        <th class="tl" style="min-width:100px;">TEACHER</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $rn = 0; @endphp
+
+                                @if($useGroups)
+                                    @foreach($grouped as $grpName => $grpSubjs)
+                                        @if($grpName)
+                                            <tr class="grp-row">
+                                                <td colspan="{{ $visibleCols }}">{{ strtoupper($grpName) }}</td>
+                                            </tr>
+                                        @endif
+                                        @foreach($grpSubjs as $sm)
+                                            @php
+                                                $rn++;
+                                                $prevM = $prevSubj[$sm->subject_id] ?? null;
+                                                $delta = null;
+                                                if ($prevM && ($prevM->total_marks ?? 0) > 0) {
+                                                    $pPct = round(($prevM->marks_obtained / $prevM->total_marks) * 100, 1);
+                                                    $delta = round($sm->percentage - $pPct, 1);
+                                                }
+                                            @endphp
+                                            <tr>
+                                                <td style="font-weight:500;">{{ $sm->subject_name }}</td>
+                                                @if($cfg['score_col'])
+                                                    <td class="score-td">
+                                                        @if($isEarlyYears)
+                                                            {{ $sm->marks_obtained ?? '—' }}<span
+                                                                style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                        @else
+                                                            {{ $sm->percentage }}%
+                                                        @endif
+                                                    </td>
+                                                @endif
+                                                @if($cfg['dev'])
+                                                    <td class="num-td">
+                                                        @if($delta !== null)
+                                                            @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
+                                                            @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                            @else <span class="dev-eq">—</span>
+                                                            @endif
+                                                        @else <span class="dev-eq">—</span>
+                                                        @endif
+                                                    </td>
+                                                @endif
+                                                @if($cfg['grade_pill'] && !$isEarlyYears)
+                                                    <td class="num-td">
+                                                        <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
+                                                    </td>
+                                                @endif
+                                                @if($cfg['comment_col'])
+                                                    <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                                @endif
+                                                @if($cfg['teacher_col'])
+                                                    <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @else
+                                    @foreach($subjMarks as $sm)
                                         @php
                                             $rn++;
                                             $prevM = $prevSubj[$sm->subject_id] ?? null;
@@ -1356,7 +1667,16 @@
                                         @endphp
                                         <tr>
                                             <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                            <td class="score-td">{{ $sm->percentage }}%</td>
+                                            @if($cfg['score_col'])
+                                                <td class="score-td">
+                                                    @if($isEarlyYears)
+                                                        {{ $sm->marks_obtained ?? '—' }}<span
+                                                            style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                    @else
+                                                        {{ $sm->percentage }}%
+                                                    @endif
+                                                </td>
+                                            @endif
                                             @if($cfg['dev'])
                                                 <td class="num-td">
                                                     @if($delta !== null)
@@ -1368,90 +1688,69 @@
                                                     @endif
                                                 </td>
                                             @endif
-                                            @if($cfg['grade_pill'])
+                                            @if($cfg['grade_pill'] && !$isEarlyYears)
                                                 <td class="num-td">
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
                                             @endif
-                                            <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                            @if($cfg['comment_col'])
+                                                <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                            @endif
                                             @if($cfg['teacher_col'])
                                                 <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
                                         </tr>
                                     @endforeach
-                                @endforeach
-                            @else
-                                @foreach($subjMarks as $sm)
-                                    @php
-                                        $rn++;
-                                        $prevM = $prevSubj[$sm->subject_id] ?? null;
-                                        $delta = null;
-                                        if ($prevM && ($prevM->total_marks ?? 0) > 0) {
-                                            $pPct = round(($prevM->marks_obtained / $prevM->total_marks) * 100, 1);
-                                            $delta = round($sm->percentage - $pPct, 1);
-                                        }
-                                    @endphp
-                                    <tr>
-                                        <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                        <td class="score-td">{{ $sm->percentage }}%</td>
+                                @endif
+
+                                {{-- TOTALS ROW --}}
+                                @if($cfg['totals_row'])
+                                    @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0); @endphp
+                                    <tr class="totals-row">
+                                        <td
+                                            style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
+                                            TOTAL / AVERAGE
+                                        </td>
+                                        @if($cfg['score_col'])
+                                            <td class="score-td">
+                                                @if($isEarlyYears)
+                                                    {{ $earlyYearsAvg }}<span
+                                                        style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                @else
+                                                    {{ $pct }}%
+                                                @endif
+                                            </td>
+                                        @endif
                                         @if($cfg['dev'])
                                             <td class="num-td">
-                                                @if($delta !== null)
-                                                    @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                    @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                @if($termDelta !== null)
+                                                    @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
+                                                    @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
                                                     @else <span class="dev-eq">—</span>
                                                     @endif
                                                 @else <span class="dev-eq">—</span>
                                                 @endif
                                             </td>
                                         @endif
-                                        @if($cfg['grade_pill'])
+                                        @if($cfg['grade_pill'] && !$isEarlyYears)
                                             <td class="num-td">
-                                                <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
+                                                <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
                                             </td>
                                         @endif
-                                        <td>{{ $sm->grade_remark ?? '—' }}</td>
-                                        @if($cfg['teacher_col'])
-                                            <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                        @if($resultColspan > 0)
+                                            <td colspan="{{ $resultColspan }}">
+                                                <strong
+                                                    style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
+                                                    {{ strtoupper($oRemark) }}
+                                                </strong>
+                                            </td>
                                         @endif
                                     </tr>
-                                @endforeach
-                            @endif
+                                @endif
 
-                            {{-- TOTALS ROW --}}
-                            @if($cfg['totals_row'])
-                                <tr class="totals-row">
-                                    <td
-                                        style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
-                                        TOTAL / AVERAGE
-                                    </td>
-                                    <td class="score-td">{{ $pct }}%</td>
-                                    @if($cfg['dev'])
-                                        <td class="num-td">
-                                            @if($termDelta !== null)
-                                                @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
-                                                @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
-                                                @else <span class="dev-eq">—</span>
-                                                @endif
-                                            @else <span class="dev-eq">—</span>
-                                            @endif
-                                        </td>
-                                    @endif
-                                    @if($cfg['grade_pill'])
-                                        <td class="num-td">
-                                            <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
-                                        </td>
-                                    @endif
-                                    <td colspan="{{ 1 + ($cfg['teacher_col'] ? 1 : 0) }}">
-                                        <strong style="color:{{ $passed ? '#1a7a4a' : '#c0392b' }}">
-                                            {{ strtoupper($oRemark) }}
-                                        </strong>
-                                    </td>
-                                </tr>
-                            @endif
-
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    @endif
                 </div>
 
                 {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
@@ -1479,18 +1778,16 @@
                                 <div class="remark-block">
                                     <div class="remark-teacher">
                                         {{ $classTeacherName }}
-                                        — <span style="font-weight:400;color:#888;font-size:.7rem;">Class Teacher</span>
                                     </div>
                                     <div class="remark-text">{{ $ctRemark ?: 'No remarks recorded.' }}</div>
                                 </div>
 
-                                <div class="sig-dashes">House Teacher</div>
-                                <div style="height:18px;border-bottom:1px dashed #ccc;margin-bottom:.4rem;"></div>
+                                <div class="sig-dashes" style="font-weight:Bold;">House Teacher</div>
+                                <div style="height:18px;border-bottom:1.5px dashed #444;margin-bottom:.4rem;"></div>
 
                                 <div class="remark-block">
                                     <div class="remark-teacher">
                                         {{ $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher') }}
-                                        — <span style="font-weight:400;color:#888;font-size:.7rem;">Head Teacher</span>
                                     </div>
                                     <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
                                 </div>
@@ -1610,7 +1907,7 @@
                                 });
                             }
                         @endif
-                                })();
+                                            })();
             </script>
 
             {{-- QR Code --}}
@@ -1627,9 +1924,9 @@
                     'Exam: ' . $exam->exam_name,
                     'Term: ' . $exam->term,
                     'Year: ' . $exam->academic_year,
-                    'Average: ' . $pct . '%',
-                    'Grade: ' . $oGrade,
-                    'Result: ' . ($passed ? 'PASS' : 'FAIL'),
+                    'Average: ' . ($isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%'),
+                    'Grade: ' . ($isEarlyYears ? $oRemark : $oGrade),
+                    'Result: ' . ($isEarlyYears ? strtoupper($oRemark) : ($passed ? 'PASS' : 'FAIL')),
                     'School: ' . $schoolName,
                 ]))) }}`;
 

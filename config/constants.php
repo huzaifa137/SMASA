@@ -57,6 +57,30 @@ return [
         'ExaminationName' => 22,
 
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Early Years Grading (Nursery / Kindergarten / Pre-Primary)
+    |--------------------------------------------------------------------------
+    | These classes (Baby Class, Middle Class, Top Class in the current
+    | seed data) do not sit numeric exams. Instead, per subject, a teacher
+    | picks one of the 3 system comments below (or writes their own) and
+    | the student is scored 1-3 on that subject instead of out of the
+    | exam's normal total_marks.
+    |
+    | master_codes: 35 = NURSERY_BABY_CLASS, 36 = NURSERY_MIDDLE_CLASS,
+    | 37 = NURSERY_TOP_CLASS — any subject whose master_datas row hangs
+    | off one of these codes is treated as an early-years subject.
+    */
+    'early_years' => [
+        'master_codes' => [35, 36, 37],
+        'max_mark' => 3,
+        'presets' => [
+            ['marks' => 1, 'label' => "Works under Teacher's Guidance", 'remark' => 'Fair'],
+            ['marks' => 2, 'label' => 'Works with Minimum Supervision', 'remark' => 'Good'],
+            ['marks' => 3, 'label' => 'Works Independently', 'remark' => 'Excellent'],
+        ],
+    ],
 ];
 
 

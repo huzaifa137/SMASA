@@ -273,13 +273,22 @@ class ExaminationController extends Controller
             ->orderBy('min_mark', 'desc')
             ->get();
 
+        // Nursery / Kindergarten / Pre-Primary: comment-driven 1-3 scale
+        // instead of numeric marks against the exam's total_marks.
+        $isEarlyYears = Helper::isEarlyYearsSubject($classSubject->subject_id);
+        $earlyYearsPresets = Helper::earlyYearsPresets();
+        $earlyYearsMaxMark = Helper::earlyYearsMaxMark();
+
         return view('Examination.marks-entry-subject', compact(
             'exam',
             'classSubject',
             'students',
             'existingMarks',
             'gradingScale',
-            'classSubjectId'
+            'classSubjectId',
+            'isEarlyYears',
+            'earlyYearsPresets',
+            'earlyYearsMaxMark'
         ));
     }
 
@@ -325,6 +334,11 @@ class ExaminationController extends Controller
             ->orderBy('min_mark', 'desc')
             ->get();
 
+        // Nursery / Kindergarten / Pre-Primary use a 1-3 comment-driven
+        // scale instead of the exam's normal total_marks + grading_scales.
+        $isEarlyYears = Helper::isEarlyYearsSubject($request->subject_id);
+        $earlyYearsMaxMark = Helper::earlyYearsMaxMark();
+
         DB::beginTransaction();
         try {
             foreach ($request->marks as $entry) {
@@ -333,8 +347,20 @@ class ExaminationController extends Controller
                 $grade = null;
                 $remark = null;
                 $points = null;
+                $totalMarks = $exam->total_marks;
 
-                if ($marksObtained !== null) {
+                if ($isEarlyYears) {
+                    $totalMarks = $earlyYearsMaxMark;
+
+                    if ($marksObtained !== null) {
+                        // Clamp to the 1-3 scale regardless of what was posted.
+                        $marksObtained = max(1, min($earlyYearsMaxMark, (int) round($marksObtained)));
+                        $preset = Helper::earlyYearsPresetForMark($marksObtained);
+                        $remark = $preset['remark'] ?? null;
+                        // No letter grade / points for early years — the
+                        // remark (Fair/Good/Excellent) carries the meaning.
+                    }
+                } elseif ($marksObtained !== null) {
                     // ✅ Convert raw mark to percentage against THIS exam's total_marks
                     $percentage = $exam->total_marks > 0
                         ? round(($marksObtained / $exam->total_marks) * 100, 4)
@@ -362,7 +388,7 @@ class ExaminationController extends Controller
                         'stream_id' => $request->stream_id,
                         'school_id' => $schoolId,
                         'marks_obtained' => $marksObtained,
-                        'total_marks' => $exam->total_marks,
+                        'total_marks' => $totalMarks,
                         'grade' => $grade,
                         'grade_remark' => $remark,
                         'grade_points' => $points,
@@ -486,7 +512,14 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
-        $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam, $student);
+        [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
+        $multiExam = count($examIds) > 1;
+
+        if ($multiExam) {
+            $passslipData = $this->buildMultiExamPassslipData($examIds, $studentId, $schoolId, $avgExamIds, $student);
+        } else {
+            $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam, $student);
+        }
 
         // 🔥 KEY FIX: Extract individual variables from the array
         $qrText = $passslipData['qrText'] ?? '';
@@ -500,6 +533,13 @@ class ExaminationController extends Controller
         $classTotal = $passslipData['classTotal'] ?? 0;
         $growthData = $passslipData['growthData'] ?? [];
         $previousSubjectMarks = $passslipData['previousSubjectMarks'] ?? collect();
+        $isEarlyYears = $passslipData['isEarlyYears'] ?? false;
+        $earlyYearsAverage = $passslipData['earlyYearsAverage'] ?? null;
+        $earlyYearsMaxMark = $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark();
+        $examsList = $passslipData['examsList'] ?? collect([$exam]);
+        $useAvg = $passslipData['useAvg'] ?? false;
+        $examSummary = $passslipData['examSummary'] ?? [];
+        $avgSummary = $passslipData['avgSummary'] ?? null;
 
         $lang = request('lang', 'en');
         $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
@@ -517,8 +557,15 @@ class ExaminationController extends Controller
             'classRank',
             'classTotal',
             'growthData',
-            'previousSubjectMarks'
-        ) + ['mode' => 'single']);
+            'previousSubjectMarks',
+            'isEarlyYears',
+            'earlyYearsAverage',
+            'earlyYearsMaxMark',
+            'examsList',
+            'useAvg',
+            'examSummary',
+            'avgSummary'
+        ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
     /**
@@ -548,9 +595,18 @@ class ExaminationController extends Controller
             ->where('stream', $streamId)
             ->get();
 
+        [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
+        $multiExam = count($examIds) > 1;
+        $examsList = collect([$exam]);
+
         // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
-        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam) {
-            $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList) {
+            if ($multiExam) {
+                $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
+                $examsList = $passslipData['examsList'] ?? $examsList;
+            } else {
+                $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+            }
 
             return [
                 'student' => $student,
@@ -565,6 +621,12 @@ class ExaminationController extends Controller
                 'classTotal' => $passslipData['classTotal'] ?? 0,
                 'growthData' => $passslipData['growthData'] ?? [],
                 'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+                'isEarlyYears' => $passslipData['isEarlyYears'] ?? false,
+                'earlyYearsAverage' => $passslipData['earlyYearsAverage'] ?? null,
+                'earlyYearsMaxMark' => $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark(),
+                'useAvg' => $passslipData['useAvg'] ?? false,
+                'examSummary' => $passslipData['examSummary'] ?? [],
+                'avgSummary' => $passslipData['avgSummary'] ?? null,
             ];
         })
             // ✅ FIXED: Use sort() with comparison function instead of sortByDesc().thenBy()
@@ -578,10 +640,12 @@ class ExaminationController extends Controller
             })
             ->values(); // Reset array keys
 
+        $useAvg = $multiExam && count($avgExamIds) >= 2;
+
         $lang = request('lang', 'en');
         $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
 
-        return view($view, compact('exam', 'slips', 'classId', 'streamId') + ['mode' => 'class']);
+        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg') + ['mode' => 'class', 'multiExam' => $multiExam]);
     }
 
     // ─── METHOD 2: passslipAll ────────────────────────────────────────────────
@@ -601,6 +665,10 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->get();
 
+        [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
+        $multiExam = count($examIds) > 1;
+        $examsList = collect([$exam]);
+
         $allSlips = [];
 
         foreach ($examClasses as $ec) {
@@ -611,7 +679,12 @@ class ExaminationController extends Controller
                 ->get(); // ✅ Removed orderBy('lastname')
 
             foreach ($students as $student) {
-                $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+                if ($multiExam) {
+                    $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
+                    $examsList = $passslipData['examsList'] ?? $examsList;
+                } else {
+                    $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+                }
 
                 // 🔥 KEY FIX: Build complete slip structure explicitly
                 $allSlips[] = [
@@ -627,6 +700,12 @@ class ExaminationController extends Controller
                     'classTotal' => $passslipData['classTotal'] ?? 0,
                     'growthData' => $passslipData['growthData'] ?? [],
                     'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+                    'isEarlyYears' => $passslipData['isEarlyYears'] ?? false,
+                    'earlyYearsAverage' => $passslipData['earlyYearsAverage'] ?? null,
+                    'earlyYearsMaxMark' => $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark(),
+                    'useAvg' => $passslipData['useAvg'] ?? false,
+                    'examSummary' => $passslipData['examSummary'] ?? [],
+                    'avgSummary' => $passslipData['avgSummary'] ?? null,
                 ];
             }
         }
@@ -644,10 +723,12 @@ class ExaminationController extends Controller
             ->values() // Reset array keys
             ->toArray();
 
+        $useAvg = $multiExam && count($avgExamIds) >= 2;
+
         $lang = request('lang', 'en');
         $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
 
-        return view($view, compact('exam', 'allSlips') + ['mode' => 'all', 'slips' => $allSlips]);
+        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam]);
     }
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
@@ -712,7 +793,54 @@ class ExaminationController extends Controller
             })
             ->values();
 
-        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents'));
+        // Other examinations in the same academic year (e.g. BOT / MID / END)
+        // that can be combined onto one pass slip alongside this one.
+        $siblingExams = Examination::where('school_id', $schoolId)
+            ->where('academic_year', $exam->academic_year)
+            ->where('id', '!=', $exam->id)
+            ->orderBy('start_date')
+            ->get();
+
+        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents', 'siblingExams'));
+    }
+
+    /**
+     * Fetch the saved show/hide customisation for a single class, so the
+     * customisation panel can pre-populate its checkboxes instead of
+     * always resetting to "all on" after a page refresh.
+     */
+    public function getPassslipSettings(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $classId = $request->query('class_id');
+
+        $settings = Helper::getPassslipSettings($schoolId, $classId);
+
+        return response()->json(['success' => true, 'settings' => $settings]);
+    }
+
+    /**
+     * Save the current customisation panel state against one or more
+     * classes (e.g. Nursery + Kindergarten together), so it's remembered
+     * every time their passlips are (re)printed.
+     */
+    public function savePassslipSettings(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $request->validate([
+            'class_ids' => 'required|array|min:1',
+            'class_ids.*' => 'integer',
+            'settings' => 'required|array',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        Helper::savePassslipSettings($schoolId, $request->class_ids, $request->settings);
+
+        return response()->json(['success' => true, 'message' => 'Passlip customisation saved for the selected class(es).']);
     }
 
 
@@ -741,6 +869,9 @@ class ExaminationController extends Controller
                 'classTotal' => 0,
                 'previousMarks' => collect(),
                 'growthData' => [],
+                'isEarlyYears' => false,
+                'earlyYearsAverage' => null,
+                'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
             ];
         }
 
@@ -749,21 +880,23 @@ class ExaminationController extends Controller
         $classId = $firstMark->class_id;
         $streamId = $firstMark->stream_id;
 
-        // ── Enrich with subject names ──────────────────────────────────────────
-        $subjectMarks = $marks->map(function ($m) {
-            return (object) [
-                'subject_id' => $m->subject_id,
-                'subject_name' => Helper::recordMdname($m->subject_id),
-                'marks_obtained' => $m->marks_obtained,
-                'total_marks' => $m->total_marks,
-                'grade' => $m->grade,
-                'grade_remark' => $m->grade_remark,
-                'grade_points' => $m->grade_points,
-                'percentage' => $m->total_marks > 0
-                    ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
-                    : 0,
-            ];
-        })->sortBy('subject_name');
+        // ── Early years detection ───────────────────────────────────────────────
+        // Nursery / Kindergarten / Pre-Primary subjects are graded 1-3 with a
+        // system/teacher comment instead of a numeric mark against the exam's
+        // total_marks. If every subject on this report belongs to one of those
+        // categories, the whole passlip switches to that scale.
+        $isEarlyYears = $marks->isNotEmpty()
+            && $marks->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id));
+
+        // ── Teacher names (per subject) ─────────────────────────────────────────
+        // class_subjects.subject_teacher_1/2 holds the actual assigned teacher;
+        // ExaminationMark has no teacher_name column, so resolve it via a join
+        // rather than referencing a non-existent attribute.
+        $subjectTeachers = DB::table('class_subjects')
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('school_id', $schoolId)
+            ->pluck('subject_teacher_1', 'subject_id');
 
         // ── Aggregate ──────────────────────────────────────────────────────────
         $totalObtained = $marks->whereNotNull('marks_obtained')->sum('marks_obtained');
@@ -771,7 +904,7 @@ class ExaminationController extends Controller
         $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
 
         // ── Overall grade (by percentage) ─────────────────────────────────────
-// Fetch grading scale once before the map
+        // Fetch grading scale once before the map
         $gradingScale = DB::table('grading_scales')
             ->where(function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId)->orWhereNull('school_id');
@@ -780,16 +913,26 @@ class ExaminationController extends Controller
             ->orderBy('min_mark', 'desc')
             ->get();
 
-        $subjectMarks = $marks->map(function ($m) use ($gradingScale) {
-            // ✅ Always derive percentage from marks/total
+        $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
             $pct = $m->total_marks > 0
                 ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
                 : 0;
 
-            // ✅ Re-derive grade from percentage — fixes any wrongly-stored grades
-            $gradeRow = $gradingScale->first(function ($g) use ($pct) {
-                return $pct >= $g->min_mark && $pct <= $g->max_mark;
-            });
+            $grade = $m->grade;
+            $remark = $m->grade_remark;
+            $points = $m->grade_points;
+
+            if (!$isEarlyYears) {
+                // ✅ Re-derive grade from percentage — fixes any wrongly-stored grades
+                $gradeRow = $gradingScale->first(function ($g) use ($pct) {
+                    return $pct >= $g->min_mark && $pct <= $g->max_mark;
+                });
+                $grade = $gradeRow?->grade ?? $m->grade;
+                $remark = $gradeRow?->remark ?? $m->grade_remark;
+                $points = $gradeRow?->points ?? $m->grade_points;
+            }
+
+            $teacherId = $subjectTeachers[$m->subject_id] ?? null;
 
             return (object) [
                 'subject_id' => $m->subject_id,
@@ -797,12 +940,16 @@ class ExaminationController extends Controller
                 'subject_type' => $m->subject_type ?? null,
                 'marks_obtained' => $m->marks_obtained,
                 'total_marks' => $m->total_marks,
-                'grade' => $gradeRow?->grade ?? $m->grade,
-                'grade_remark' => $gradeRow?->remark ?? $m->grade_remark,
-                'grade_points' => $gradeRow?->points ?? $m->grade_points,
+                'grade' => $grade,
+                // COMMENT column: the teacher's own written comment takes
+                // priority; fall back to the auto grade remark only if no
+                // comment was entered (e.g. numeric-only classes).
+                'grade_remark' => $m->teacher_comment ?: ($remark ?? '—'),
+                'grade_points' => $points,
                 'percentage' => $pct,
                 'class_average' => $m->class_average ?? null,
-                'teacher_name' => $m->teacher_name ?? null,
+                'teacher_name' => Helper::teacherFullName($teacherId),
+                'teacher_comment' => $m->teacher_comment,
             ];
         })->sortBy('subject_name');
 
@@ -811,6 +958,22 @@ class ExaminationController extends Controller
         });
         $overallGrade = $overallGradeRow?->grade ?? '—';
         $overallRemark = $overallGradeRow?->remark ?? '—';
+
+        // ── Early years overrides ───────────────────────────────────────────────
+        // Replace the D1-F9 / Pass-Fail view of the world with the 1-3 /
+        // Fair-Good-Excellent scale these categories actually use.
+        $earlyYearsAverage = null;
+        if ($isEarlyYears) {
+            $scored = $marks->whereNotNull('marks_obtained');
+            $earlyYearsAverage = $scored->isNotEmpty()
+                ? round($scored->avg('marks_obtained'), 1)
+                : 0;
+
+            $overallGrade = '—';
+            $overallRemark = $scored->isNotEmpty()
+                ? Helper::earlyYearsRemarkForAverage($earlyYearsAverage)
+                : 'Pending';
+        }
 
         // ── Class rank ────────────────────────────────────────────────────────
         // Aggregate every student's total in same class-stream
@@ -902,8 +1065,8 @@ class ExaminationController extends Controller
             'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
             'EXAM: ' . $exam->exam_name,
             'TERM: ' . $exam->term . ' ' . $exam->academic_year,
-            'SCORE: ' . $percentage . '%',
-            'GRADE: ' . ($overallGradeRow?->grade ?? '—'),
+            'SCORE: ' . ($isEarlyYears ? $earlyYearsAverage . '/' . Helper::earlyYearsMaxMark() : $percentage . '%'),
+            'GRADE: ' . ($isEarlyYears ? $overallRemark : ($overallGradeRow?->grade ?? '—')),
         ]));
 
         return [
@@ -918,6 +1081,323 @@ class ExaminationController extends Controller
             'classTotal' => $classTotal,
             'growthData' => $growthData,
             'previousSubjectMarks' => $previousSubjectMarks,
+            'isEarlyYears' => $isEarlyYears,
+            'earlyYearsAverage' => $earlyYearsAverage,
+            'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+        ];
+    }
+
+    /**
+     * Read the "combine examinations" selection off the current request.
+     * exam_ids / avg_exam_ids arrive as comma-separated id lists (built by
+     * the customisation panel in index.blade.php). Returns:
+     *   [ $examIds (base exam + any extra exams, chronological),
+     *     $avgExamIds (subset of $examIds whose marks should be averaged) ]
+     */
+    private function resolveExamSelection($baseExamId): array
+    {
+        $extra = array_filter(explode(',', (string) request('exam_ids', '')), 'strlen');
+        $avg = array_filter(explode(',', (string) request('avg_exam_ids', '')), 'strlen');
+
+        $examIds = array_values(array_unique(array_merge(
+            [(int) $baseExamId],
+            array_map('intval', $extra)
+        )));
+
+        $avgExamIds = array_values(array_unique(array_map('intval', $avg)));
+        // Only keep avg ids that were actually selected on the slip
+        $avgExamIds = array_values(array_intersect($avgExamIds, $examIds));
+
+        return [$examIds, $avgExamIds];
+    }
+
+    /**
+     * Map an aggregate (sum of grade points across sat subjects) to a
+     * primary-section Division, per the standard PLE-style banding:
+     *
+     *   4–12   => Division 1
+     *   13–23  => Division 2
+     *   24–29  => Division 3
+     *   30–34  => Division 4
+     *   35+ or a failing (F9 / "Fail") grade in any subject => Ungraded
+     */
+    private function divisionForAggregate(?int $aggregate, bool $hasFail): string
+    {
+        if ($aggregate === null) {
+            return '—';
+        }
+        if ($hasFail || $aggregate >= 35) {
+            return 'Ungraded';
+        }
+        if ($aggregate <= 12) {
+            return 'Division 1';
+        }
+        if ($aggregate <= 23) {
+            return 'Division 2';
+        }
+        if ($aggregate <= 29) {
+            return 'Division 3';
+        }
+        if ($aggregate <= 34) {
+            return 'Division 4';
+        }
+        return 'Ungraded';
+    }
+
+    /**
+     * Build passslip data for a student across MULTIPLE examinations
+     * (e.g. BOT | MID | END), with an optional averaged column computed
+     * from a chosen subset of those examinations.
+     */
+    private function buildMultiExamPassslipData(array $examIds, $studentId, $schoolId, array $avgExamIds = [], $student = null): array
+    {
+
+        $exams = Examination::where('school_id', $schoolId)
+            ->whereIn('id', $examIds)
+            ->orderBy('start_date')
+            ->get()
+            ->keyBy('id');
+
+        // Preserve only ids that genuinely belong to this school, chronologically
+        $examIds = $exams->keys()->all();
+
+        $gradingScale = DB::table('grading_scales')
+            ->where(function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId)->orWhereNull('school_id');
+            })
+            ->orderByDesc('school_id')
+            ->orderBy('min_mark', 'desc')
+            ->get();
+
+        $scaleFor = function ($pct) use ($gradingScale) {
+            return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+        };
+        $gradeFor = function ($pct) use ($scaleFor) {
+            return $scaleFor($pct)?->grade ?? '—';
+        };
+
+        // Marks per exam, keyed by subject_id, plus figure out class/stream
+        $perExamSubjectMarks = [];
+        $allSubjectIds = collect();
+        $classId = null;
+        $streamId = null;
+
+        foreach ($examIds as $eid) {
+            $marks = ExaminationMark::where('examination_id', $eid)
+                ->where('student_id', $studentId)
+                ->where('school_id', $schoolId)
+                ->get()
+                ->keyBy('subject_id');
+
+            $perExamSubjectMarks[$eid] = $marks;
+            $allSubjectIds = $allSubjectIds->merge($marks->keys());
+
+            if ($marks->isNotEmpty() && !$classId) {
+                $first = $marks->first();
+                $classId = $first->class_id;
+                $streamId = $first->stream_id;
+            }
+        }
+        $allSubjectIds = $allSubjectIds->unique()->values();
+
+        if (!$student) {
+            $student = DB::table('students')->where('id', $studentId)->first();
+        }
+
+        if ($allSubjectIds->isEmpty()) {
+            return [
+                'subjectMarks' => collect(),
+                'totalObtained' => 0,
+                'totalMax' => 0,
+                'percentage' => 0,
+                'overallGrade' => '—',
+                'overallRemark' => '—',
+                'classRank' => '—',
+                'classTotal' => 0,
+                'growthData' => [],
+                'previousSubjectMarks' => collect(),
+                'isEarlyYears' => false,
+                'earlyYearsAverage' => null,
+                'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+                'multiExam' => true,
+                'examsList' => $exams->values(),
+                'avgExamIds' => $avgExamIds,
+                'useAvg' => false,
+                'examSummary' => [],
+                'avgSummary' => null,
+            ];
+        }
+
+        $subjectTeachers = DB::table('class_subjects')
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('school_id', $schoolId)
+            ->pluck('subject_teacher_1', 'subject_id');
+
+        $isEarlyYears = collect($perExamSubjectMarks)
+            ->flatMap(fn($c) => $c->values())
+            ->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id));
+
+        // Averaging only makes sense across 2+ chosen examinations
+        $useAvg = count($avgExamIds) >= 2;
+
+        $subjectRows = $allSubjectIds->map(function ($subjectId) use (
+            $examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg
+        ) {
+            $examData = [];
+            $avgPctSum = 0;
+            $avgPctCount = 0;
+            $lastPct = null;
+            $lastGrade = '—';
+
+            foreach ($examIds as $eid) {
+                $m = $perExamSubjectMarks[$eid][$subjectId] ?? null;
+                $obtained = $m->marks_obtained ?? null;
+                $total = $m->total_marks ?? null;
+                $pct = ($total && $total > 0 && $obtained !== null) ? round(($obtained / $total) * 100, 1) : null;
+                $scaleRow = $pct !== null ? $scaleFor($pct) : null;
+                $grade = $scaleRow?->grade ?? '—';
+                $points = $scaleRow?->points !== null ? (int) $scaleRow->points : null;
+                $remark = $scaleRow?->remark ?? null;
+
+                $examData[$eid] = [
+                    'marks_obtained' => $obtained,
+                    'total_marks' => $total,
+                    'percentage' => $pct,
+                    'grade' => $grade,
+                    'points' => $points,
+                    'remark' => $remark,
+                ];
+
+                if ($pct !== null) {
+                    $lastPct = $pct;
+                    $lastGrade = $grade;
+                    if (in_array($eid, $avgExamIds, true)) {
+                        $avgPctSum += $pct;
+                        $avgPctCount++;
+                    }
+                }
+            }
+
+            $avgPct = ($useAvg && $avgPctCount > 0) ? round($avgPctSum / $avgPctCount, 1) : null;
+            $avgScaleRow = $avgPct !== null ? $scaleFor($avgPct) : null;
+
+            return (object) [
+                'subject_id' => $subjectId,
+                'subject_name' => Helper::recordMdname($subjectId),
+                'exams' => $examData,
+                'avgPercentage' => $avgPct,
+                'grade' => $avgPct !== null ? $gradeFor($avgPct) : $lastGrade,
+                'avgPoints' => $avgScaleRow?->points !== null ? (int) $avgScaleRow->points : null,
+                'avgRemark' => $avgScaleRow?->remark ?? null,
+                'percentage' => $avgPct ?? ($lastPct ?? 0),
+                'teacher_name' => Helper::teacherFullName($subjectTeachers[$subjectId] ?? null),
+            ];
+        })->sortBy('subject_name')->values();
+
+        // ── Per-exam TOTAL / AGGREGATE / DIVISION summary ───────────────
+        // For each sitting (BOT / MID / EOT …): total raw marks, aggregate
+        // (sum of grade points across subjects sat), and the resulting
+        // Division for that sitting.
+        $examSummary = [];
+        foreach ($examIds as $eid) {
+            $marksSum = 0;
+            $ptsSum = 0;
+            $ptsCount = 0;
+            $hasFail = false;
+
+            foreach ($subjectRows as $sm) {
+                $ed = $sm->exams[$eid] ?? null;
+                if ($ed && $ed['percentage'] !== null) {
+                    $marksSum += $ed['marks_obtained'] ?? 0;
+                    $ptsSum += $ed['points'] ?? 0;
+                    $ptsCount++;
+                    if (($ed['remark'] ?? null) === 'Fail') {
+                        $hasFail = true;
+                    }
+                }
+            }
+
+            $examSummary[$eid] = [
+                'total_marks' => $ptsCount > 0 ? $marksSum : null,
+                'aggregate' => $ptsCount > 0 ? $ptsSum : null,
+                'division' => $ptsCount > 0 ? $this->divisionForAggregate($ptsSum, $hasFail) : '—',
+            ];
+        }
+
+        // ── Aggregate / Division for the averaged column (if enabled) ──
+        $avgSummary = null;
+        if ($useAvg) {
+            $avgPtsSum = 0;
+            $avgPtsCount = 0;
+            $avgHasFail = false;
+
+            foreach ($subjectRows as $sm) {
+                if ($sm->avgPercentage !== null) {
+                    $avgPtsSum += $sm->avgPoints ?? 0;
+                    $avgPtsCount++;
+                    if (($sm->avgRemark ?? null) === 'Fail') {
+                        $avgHasFail = true;
+                    }
+                }
+            }
+
+            $avgSummary = [
+                'aggregate' => $avgPtsCount > 0 ? $avgPtsSum : null,
+                'division' => $avgPtsCount > 0 ? $this->divisionForAggregate($avgPtsSum, $avgHasFail) : '—',
+            ];
+        }
+
+        // Overall totals: summed across the averaged exams if averaging is
+        // on, otherwise across every selected exam (simple combined total).
+        $sumExamIds = $useAvg ? $avgExamIds : $examIds;
+        $totalObtained = 0;
+        $totalMax = 0;
+        foreach ($sumExamIds as $eid) {
+            $marks = $perExamSubjectMarks[$eid] ?? collect();
+            $totalObtained += $marks->whereNotNull('marks_obtained')->sum('marks_obtained');
+            $totalMax += $marks->whereNotNull('marks_obtained')->sum('total_marks');
+        }
+        $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
+        $overallGrade = $gradeFor($percentage);
+        $overallRemarkRow = $gradingScale->first(fn($g) => $percentage >= $g->min_mark && $percentage <= $g->max_mark);
+        $overallRemark = $overallRemarkRow?->remark ?? '—';
+
+        // Class rank uses the same combined total, across all students
+        $classTotals = ExaminationMark::whereIn('examination_id', $sumExamIds)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
+            ->groupBy('student_id')
+            ->orderByDesc('grand_total')
+            ->get();
+
+        $classTotal = $classTotals->count();
+        $rank = $classTotals->search(fn($r) => $r->student_id == $studentId);
+        $classRank = $rank !== false ? ($rank + 1) : '—';
+
+        return [
+            'subjectMarks' => $subjectRows,
+            'totalObtained' => $totalObtained,
+            'totalMax' => $totalMax,
+            'percentage' => $percentage,
+            'overallGrade' => $overallGrade,
+            'overallRemark' => $overallRemark,
+            'classRank' => $classRank,
+            'classTotal' => $classTotal,
+            'growthData' => [],
+            'previousSubjectMarks' => collect(),
+            'isEarlyYears' => $isEarlyYears,
+            'earlyYearsAverage' => null,
+            'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+            'multiExam' => true,
+            'examsList' => $exams->values(),
+            'avgExamIds' => $avgExamIds,
+            'useAvg' => $useAvg,
+            'examSummary' => $examSummary,
+            'avgSummary' => $avgSummary,
         ];
     }
 

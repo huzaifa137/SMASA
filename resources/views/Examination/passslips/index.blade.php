@@ -806,6 +806,55 @@ function setLanguage(lang) {
                             </div>
                         </div>
 
+                        {{-- ── GROUP: Combine Examinations ── --}}
+                        <div class="cp-group-label"><i class="fas fa-layer-group"></i> Combine Examinations</div>
+                        <div class="small text-muted" style="font-size:.72rem;line-height:1.4;padding:0 .25rem .5rem;">
+                            Add other examinations from this academic year onto the same pass slip
+                            (e.g. BOT | MID | END), and choose which of them to average.
+                        </div>
+
+                        <div class="cp-check-row" style="opacity:.85;">
+                            <label><i class="fas fa-check-circle"></i>&nbsp; {{ $exam->exam_name }} ({{ $exam->term }}) — current</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_avg_base_{{ $exam->id }}" class="exam-avg-cb" value="{{ $exam->id }}" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        @if(isset($siblingExams) && $siblingExams->count() > 0)
+                            @foreach($siblingExams as $se)
+                                <div class="cp-check-row">
+                                    <label for="cb_exam_{{ $se->id }}">
+                                        <input type="checkbox" id="cb_exam_{{ $se->id }}" class="exam-combine-cb"
+                                               value="{{ $se->id }}" onchange="onExamComboChange(this)"
+                                               style="margin-right:.4rem;">
+                                        {{ $se->exam_name }} ({{ $se->term }})
+                                    </label>
+                                    <label class="cp-switch" title="Include in average">
+                                        <input type="checkbox" id="cb_avg_{{ $se->id }}" class="exam-avg-cb"
+                                               value="{{ $se->id }}" disabled onchange="updateSummary()">
+                                        <span class="cp-switch-slider"></span>
+                                    </label>
+                                </div>
+                            @endforeach
+
+                            <div class="cp-check-row">
+                                <label for="cb_show_multi_average"><i class="fas fa-percent"></i> Show AVERAGE column</label>
+                                <label class="cp-switch">
+                                    <input type="checkbox" id="cb_show_multi_average" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                    <span class="cp-switch-slider"></span>
+                                </label>
+                            </div>
+                            <div class="small text-muted" style="font-size:.68rem;padding:0 .25rem .5rem;">
+                                Tick "Include in average" (the small switch) for at least 2 examinations to
+                                show an averaged score. Leave it on 0–1 exam and no average will be printed.
+                            </div>
+                        @else
+                            <div class="small text-muted" style="font-size:.72rem;padding:0 .25rem .5rem;">
+                                No other examinations found for {{ $exam->academic_year }} yet.
+                            </div>
+                        @endif
+
                         {{-- ── GROUP: Appearance ── --}}
                         <div class="cp-group-label"><i class="fas fa-palette"></i> Appearance</div>
 
@@ -960,8 +1009,43 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
+                        {{-- ── GROUP: Summary Bar ── --}}
+                        <div class="cp-group-label"><i class="fas fa-square-poll-horizontal"></i> Summary Bar</div>
+
+                        <div class="cp-check-row">
+                            <label for="cb_show_total_score"><i class="fas fa-hashtag"></i> Total Score / Marks box</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_total_score" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="cp-check-row">
+                            <label for="cb_show_average"><i class="fas fa-percent"></i> Average box</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_average" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="cp-check-row">
+                            <label for="cb_show_result"><i class="fas fa-flag-checkered"></i> Result box</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_result" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
                         {{-- ── GROUP: Marks Table ── --}}
                         <div class="cp-group-label"><i class="fas fa-table"></i> Marks Table</div>
+
+                        <div class="cp-check-row">
+                            <label for="cb_show_score_col"><i class="fas fa-list-ol"></i> Score / Marks column</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_score_col" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
 
                         <div class="cp-check-row">
                             <label for="cb_show_dev"><i class="fas fa-arrows-alt-v"></i> Development (DEV ↑↓) column</label>
@@ -975,6 +1059,14 @@ function setLanguage(lang) {
                             <label for="cb_show_grade_pill"><i class="fas fa-tag"></i> Grade pills (A / B / C …)</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_grade_pill" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="cp-check-row">
+                            <label for="cb_show_comment_col"><i class="fas fa-comment-dots"></i> Comment column</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_comment_col" class="cp-toggle-cb" checked onchange="updateSummary()">
                                 <span class="cp-switch-slider"></span>
                             </label>
                         </div>
@@ -1040,6 +1132,136 @@ function setLanguage(lang) {
                                 <span class="cp-switch-slider"></span>
                             </label>
                         </div>
+
+                        {{-- Save as default for classes --}}
+                        {{-- Save as default for classes --}}
+<div class="cp-group-label"><i class="fas fa-save"></i> Save Customisation</div>
+<div class="px-1 pb-2">
+    <div class="text-muted mb-2" style="font-size:.72rem;">
+        <i class="fas fa-info-circle me-1"></i>
+        Click on classes below to select/unselect them. This setup will be saved and applied automatically every time their passlips are printed.
+    </div>
+    
+    {{-- Class Selection Chips --}}
+    <div id="cpClassSelector" class="mb-2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border-radius: 12px; min-height: 60px; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+        @foreach ($examClasses->unique('class_id') as $ec)
+            @php
+                $className = Helper::recordMdname($ec->class_id);
+                $classId = $ec->class_id;
+            @endphp
+            <div class="cp-class-chip" 
+                 data-class-id="{{ $classId }}"
+                 onclick="toggleClassChip(this)"
+                 style="
+                     padding: 0.5rem 1rem;
+                     border-radius: 20px;
+                     font-size: .8rem;
+                     font-weight: 600;
+                     cursor: pointer;
+                     transition: all 0.2s ease;
+                     background: #fff;
+                     border: 2px solid #e2e8f0;
+                     color: #475569;
+                     user-select: none;
+                     display: inline-flex;
+                     align-items: center;
+                     gap: 0.5rem;
+                     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                 "
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';"
+                 onmouseout="if(!this.classList.contains('selected')){this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)';}">
+                <span>{{ $className }}</span>
+                <span class="cp-chip-icon" style="font-size: .6rem; opacity: 0.5; transition: all 0.2s;">+</span>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- Hidden select to store selected classes --}}
+    <select id="cpClassSelect" name="selected_classes[]" style="display: none;" multiple>
+        @foreach ($examClasses->unique('class_id') as $ec)
+            <option value="{{ $ec->class_id }}">{{ Helper::recordMdname($ec->class_id) }}</option>
+        @endforeach
+    </select>
+
+    {{-- Selection controls --}}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span id="cpSelectedCount" style="font-size: .75rem; color: #94a3b8;">
+            <i class="fas fa-check-circle" style="color: #2f2ccb;"></i>
+            <span id="cpSelectedCountText">0</span> class(es) selected
+        </span>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="button" onclick="selectAllClasses()" 
+                    style="background: none; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.3rem 0.8rem; font-size: .7rem; color: #475569; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.borderColor='#2f2ccb'; this.style.color='#2f2ccb';"
+                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569';">
+                <i class="fas fa-check-double"></i> Select All
+            </button>
+            <button type="button" onclick="deselectAllClasses()"
+                    style="background: none; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.3rem 0.8rem; font-size: .7rem; color: #475569; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.borderColor='#dc2626'; this.style.color='#dc2626';"
+                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569';">
+                <i class="fas fa-times"></i> Clear All
+            </button>
+        </div>
+    </div>
+
+    <button type="button" class="cp-btn-sm w-100" onclick="savePassslipCustomisation()"
+        style="font-size:.75rem;padding:.5rem 1rem;background:linear-gradient(135deg, #1e1b4b, #2f2ccb);color:#fff;border:none;border-radius:10px;transition:all 0.2s;font-weight:600;"
+        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(47,44,203,0.3)';"
+        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        <i class="fas fa-save me-1"></i> Save for selected class(es)
+    </button>
+    <div id="cpSaveStatus" class="text-center mt-2" style="font-size:.72rem;"></div>
+</div>
+
+<style>
+    .cp-class-chip.selected {
+        background: linear-gradient(135deg, #2f2ccb 0%, #4338ca 100%) !important;
+        color: #fff !important;
+        border-color: #2f2ccb !important;
+        box-shadow: 0 4px 16px rgba(47, 44, 203, 0.25) !important;
+        transform: translateY(-2px);
+    }
+    
+    .cp-class-chip.selected .cp-chip-icon {
+        opacity: 1 !important;
+        color: #fff !important;
+    }
+    
+    .cp-class-chip.selected .cp-chip-icon::before {
+        content: "✓" !important;
+        font-weight: 700;
+    }
+    
+    .cp-class-chip .cp-chip-icon::before {
+        content: "+";
+        font-weight: 700;
+    }
+    
+    .cp-class-chip.selected .cp-chip-icon::before {
+        content: "✓";
+    }
+    
+    #cpClassSelector:focus-within {
+        border-color: #2f2ccb;
+        box-shadow: 0 0 0 3px rgba(47, 44, 203, 0.1);
+    }
+
+    .cp-class-chip {
+        animation: chipFadeIn 0.2s ease-out;
+    }
+
+    @keyframes chipFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
 
                         {{-- Reset link --}}
                         <div class="text-center mt-3">
@@ -1359,6 +1581,9 @@ function setLanguage(lang) {
     ───────────────────────────────────────────── */
     const DEFAULTS = {
         accent:              '#f0a500',
+        exam_ids:            '',
+        avg_exam_ids:        '{{ $exam->id }}',
+        show_multi_average:  true,
         show_border:         true,
         show_watermark:      true,
         show_logo:           true,
@@ -1369,8 +1594,13 @@ function setLanguage(lang) {
         show_minichart:      true,
         show_qr:             true,
         show_rank:           true,
+        show_total_score:    true,
+        show_average:        true,
+        show_result:         true,
+        show_score_col:      true,
         show_dev:            true,
         show_grade_pill:     true,
+        show_comment_col:    true,
         show_teacher_col:    true,
         show_totals_row:     true,
         show_perf_chart:     true,
@@ -1388,6 +1618,27 @@ function setLanguage(lang) {
             currentSettings[cb.id.replace('cb_', '')] = cb.checked;
         });
         currentSettings.accent = document.getElementById('cpColorPicker').value;
+
+        // Combine-examinations selection: extra exam ids + which ids to average
+        const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
+        const avgExamIds = Array.from(document.querySelectorAll('.exam-avg-cb:checked')).map(cb => cb.value);
+        currentSettings.exam_ids = extraExamIds.join(',');
+        currentSettings.avg_exam_ids = avgExamIds.join(',');
+    }
+
+    /* ── When an "extra examination" checkbox is toggled, enable/disable
+           its paired "include in average" switch and auto-check it ── */
+    function onExamComboChange(cb) {
+        const avgCb = document.getElementById('cb_avg_' + cb.value);
+        if (avgCb) {
+            avgCb.disabled = !cb.checked;
+            if (cb.checked) {
+                avgCb.checked = true;
+            } else {
+                avgCb.checked = false;
+            }
+        }
+        updateSummary();
     }
 
     /* ── Build query-string from currentSettings ── */
@@ -1477,9 +1728,116 @@ function injectIntoForm(formEl) {
         document.querySelectorAll('.cp-preset-dot').forEach(d => {
             d.classList.toggle('active', d.dataset.color === DEFAULTS.accent);
         });
+        // Combine-examinations: uncheck all extras, disable their averages
+        document.querySelectorAll('.exam-combine-cb').forEach(cb => { cb.checked = false; });
+        document.querySelectorAll('.exam-avg-cb').forEach(cb => {
+            if (!cb.id.startsWith('cb_avg_base_')) {
+                cb.checked = false;
+                cb.disabled = true;
+            }
+        });
         updateAllLinks();
         updateSummary();
     }
+
+    /* ── Persist current toggle state for one or more classes ──
+       (e.g. Nursery / Kindergarten sharing one saved profile) so it
+       survives a page refresh instead of resetting to defaults. */
+    function savePassslipCustomisation() {
+        const classSelect = document.getElementById('cpClassSelect');
+        const classIds = Array.from(classSelect.selectedOptions).map(o => parseInt(o.value, 10));
+        const statusEl = document.getElementById('cpSaveStatus');
+
+        if (classIds.length === 0) {
+            statusEl.style.color = '#c0392b';
+            statusEl.textContent = 'Select at least one class first.';
+            return;
+        }
+
+        readSettings();
+        statusEl.style.color = '#666';
+        statusEl.textContent = 'Saving…';
+
+        fetch('{{ route('examination.passslips.settings.save', $exam->id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                class_ids: classIds,
+                settings: currentSettings,
+            }),
+        })
+            .then(r => r.json())
+            .then(res => {
+                statusEl.style.color = res.success ? '#1a7a4a' : '#c0392b';
+                statusEl.textContent = res.success
+                    ? 'Saved for ' + classIds.length + ' class(es). ✓'
+                    : (res.message || 'Failed to save.');
+            })
+            .catch(() => {
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = 'Failed to save — check your connection.';
+            });
+    }
+
+    /* ── Load a class's saved settings into the panel for review ──
+       Fires when the teacher/admin picks a class in the "Save
+       Customisation" selector, so they can see what's already saved
+       (if anything) before adjusting and re-saving. */
+    function loadPassslipCustomisation() {
+        const classSelect = document.getElementById('cpClassSelect');
+        const firstSelected = classSelect.selectedOptions[0];
+        if (!firstSelected) return;
+
+        fetch('{{ route('examination.passslips.settings.get', $exam->id) }}?class_id=' + firstSelected.value, {
+            headers: { 'Accept': 'application/json' },
+        })
+            .then(r => r.json())
+            .then(res => {
+                if (!res.success || !res.settings || Object.keys(res.settings).length === 0) {
+                    return; // nothing saved yet for this class — leave panel as-is
+                }
+                const saved = res.settings;
+                if (saved.accent) {
+                    document.getElementById('cpColorPicker').value = saved.accent;
+                    document.getElementById('cpAccentPreview').style.background = saved.accent;
+                    document.querySelectorAll('.cp-preset-dot').forEach(d => {
+                        d.classList.toggle('active', d.dataset.color === saved.accent);
+                    });
+                }
+                document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
+                    const key = cb.id.replace('cb_', '');
+                    if (key in saved) cb.checked = !!saved[key];
+                });
+
+                // Restore combine-examinations selection
+                if (typeof saved.exam_ids === 'string') {
+                    const extraIds = saved.exam_ids.split(',').filter(Boolean);
+                    document.querySelectorAll('.exam-combine-cb').forEach(cb => {
+                        cb.checked = extraIds.includes(cb.value);
+                        const avgCb = document.getElementById('cb_avg_' + cb.value);
+                        if (avgCb) avgCb.disabled = !cb.checked;
+                    });
+                }
+                if (typeof saved.avg_exam_ids === 'string') {
+                    const avgIds = saved.avg_exam_ids.split(',').filter(Boolean);
+                    document.querySelectorAll('.exam-avg-cb').forEach(cb => {
+                        if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
+                    });
+                }
+
+                updateAllLinks();
+                updateSummary();
+            })
+            .catch(() => { /* silent — keep current panel state */ });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const classSelect = document.getElementById('cpClassSelect');
+        if (classSelect) classSelect.addEventListener('change', loadPassslipCustomisation);
+    });
 
     /* ── Summary badge (count enabled features) ── */
     function updateSummary() {
@@ -1578,6 +1936,113 @@ function injectIntoForm(formEl) {
         }
     });
 
+/* ─────────────────────────────────────────────
+   CLASS CHIP SELECTION
+   ───────────────────────────────────────────── */
+function toggleClassChip(element) {
+    element.classList.toggle('selected');
+    updateSelectedCount();
+    updateHiddenSelect();
+    
+    // Auto-save selected classes to localStorage
+    const selected = getSelectedClassIds();
+    localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
+}
+
+function getSelectedClassIds() {
+    const selected = [];
+    document.querySelectorAll('.cp-class-chip.selected').forEach(chip => {
+        selected.push(chip.dataset.classId);
+    });
+    return selected;
+}
+
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.cp-class-chip.selected').length;
+    const countText = document.getElementById('cpSelectedCountText');
+    if (countText) countText.textContent = count;
+}
+
+function updateHiddenSelect() {
+    const select = document.getElementById('cpClassSelect');
+    if (!select) return;
+    
+    // Clear all selections
+    Array.from(select.options).forEach(opt => opt.selected = false);
+    
+    // Select only the selected chips
+    document.querySelectorAll('.cp-class-chip.selected').forEach(chip => {
+        Array.from(select.options).forEach(opt => {
+            if (opt.value === chip.dataset.classId) {
+                opt.selected = true;
+            }
+        });
+    });
+}
+
+function selectAllClasses() {
+    document.querySelectorAll('.cp-class-chip').forEach(chip => {
+        chip.classList.add('selected');
+    });
+    updateSelectedCount();
+    updateHiddenSelect();
+    const selected = getSelectedClassIds();
+    localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
+}
+
+function deselectAllClasses() {
+    document.querySelectorAll('.cp-class-chip').forEach(chip => {
+        chip.classList.remove('selected');
+    });
+    updateSelectedCount();
+    updateHiddenSelect();
+    localStorage.setItem('cpSelectedClasses', JSON.stringify([]));
+}
+
+// ─────────────────────────────────────────────
+// MODIFIED savePassslipCustomisation
+// ─────────────────────────────────────────────
+const originalSavePassslip = savePassslipCustomisation;
+savePassslipCustomisation = function() {
+    const selectedClasses = getSelectedClassIds();
+    const statusEl = document.getElementById('cpSaveStatus');
+    
+    if (selectedClasses.length === 0) {
+        if (statusEl) {
+            statusEl.style.color = '#c0392b';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> Please select at least one class.';
+        }
+        return;
+    }
+
+    // Update the hidden select before saving
+    updateHiddenSelect();
+    
+    // Call the original save function
+    originalSavePassslip.call(this);
+};
+
+// ─────────────────────────────────────────────
+// INIT - Load saved selections on page load
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // Load saved selections from localStorage
+    const savedClasses = localStorage.getItem('cpSelectedClasses');
+    if (savedClasses) {
+        try {
+            const classIds = JSON.parse(savedClasses);
+            document.querySelectorAll('.cp-class-chip').forEach(chip => {
+                if (classIds.includes(chip.dataset.classId)) {
+                    chip.classList.add('selected');
+                }
+            });
+            updateSelectedCount();
+            updateHiddenSelect();
+        } catch(e) {
+            // Silently fail
+        }
+    }
+});
 </script>
 
 @endsection

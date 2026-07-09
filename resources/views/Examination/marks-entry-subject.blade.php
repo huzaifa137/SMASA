@@ -346,15 +346,29 @@ use App\Helpers\PermissionHelper;
         {{-- Marks Table --}}
         <div class="card marks-card mb-5">
             <div class="card-body p-0">
+                @if ($isEarlyYears)
+                    <div class="alert alert-info m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This class is graded on a <strong>1–{{ $earlyYearsMaxMark }} scale</strong> with a
+                        comment instead of numeric marks. Pick a system comment to auto-fill the score and
+                        remark, or write your own — the comment box always stays editable.
+                    </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table marks-table mb-0" id="marksTable">
                         <thead>
                             <tr>
                                 <th style="width:40px;">#</th>
                                 <th>Student</th>
-                                <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
-                                <th>Grade</th>
-                                <th>Remark</th>
+                                @if ($isEarlyYears)
+                                    <th style="width:70px;">Score <small class="fw-normal text-white">(/{{ $earlyYearsMaxMark }})</small></th>
+                                    <th style="min-width:230px;">System Comment</th>
+                                    <th>Remark</th>
+                                @else
+                                    <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
+                                    <th>Grade</th>
+                                    <th>Remark</th>
+                                @endif
                                 <th>Comment</th>
                                 <th>Status</th>
                             </tr>
@@ -366,6 +380,9 @@ use App\Helpers\PermissionHelper;
                                     $initials = strtoupper(
                                         substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1),
                                     );
+                                    $presetMatch = $isEarlyYears
+                                        ? collect($earlyYearsPresets)->firstWhere('marks', (int) ($mark?->marks_obtained ?? 0))
+                                        : null;
                                 @endphp
                                 <tr data-student-id="{{ $student->id }}">
                                     <td class="text-muted" style="font-size:.8rem;">{{ $key + 1 }}</td>
@@ -383,38 +400,72 @@ use App\Helpers\PermissionHelper;
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <input type="number" class="form-control marks-input"
-                                            name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
-                                            data-max="{{ $exam->total_marks }}" value="{{ $mark?->marks_obtained ?? '' }}"
-                                            min="0" max="{{ $exam->total_marks }}" step="0.5" placeholder="—">
-                                    </td>
-                                    @php
-                                        $g = $mark?->grade ?? '';
-                                        $gradeClass = '';
-                                        if (str_starts_with($g, 'D')) {
-                                            $gradeClass = 'grade-D';
-                                        } elseif (str_starts_with($g, 'C')) {
-                                            $gradeClass = 'grade-C';
-                                        } elseif (str_starts_with($g, 'P')) {
-                                            $gradeClass = 'grade-P';
-                                        } elseif (str_starts_with($g, 'F')) {
-                                            $gradeClass = 'grade-F';
-                                        }
-                                    @endphp
+                                    @if ($isEarlyYears)
+                                        <td>
+                                            <input type="number" class="form-control marks-input"
+                                                name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
+                                                data-max="{{ $earlyYearsMaxMark }}" data-early-years="1"
+                                                value="{{ $mark?->marks_obtained ?? '' }}"
+                                                min="1" max="{{ $earlyYearsMaxMark }}" step="1" placeholder="—"
+                                                style="width:60px;">
+                                        </td>
+                                        <td>
+                                            <select class="form-control preset-select" data-student="{{ $student->id }}">
+                                                <option value="">— Choose a system comment —</option>
+                                                @foreach ($earlyYearsPresets as $preset)
+                                                    <option value="{{ $preset['marks'] }}"
+                                                        data-label="{{ $preset['label'] }}"
+                                                        data-remark="{{ $preset['remark'] }}"
+                                                        @selected($presetMatch && $presetMatch['marks'] === $preset['marks'] && $mark?->teacher_comment === $preset['label'])>
+                                                        {{ $preset['label'] }} ({{ $preset['marks'] }} — {{ $preset['remark'] }})
+                                                    </option>
+                                                @endforeach
+                                                <option value="custom"
+                                                    @selected($mark && (!$presetMatch || $mark?->teacher_comment !== ($presetMatch['label'] ?? null)))>
+                                                    Write my own comment
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted remark-cell" style="font-size:.8rem;"
+                                                id="remark_{{ $student->id }}">
+                                                {{ $mark?->grade_remark ?? '—' }}
+                                            </span>
+                                        </td>
+                                    @else
+                                        <td>
+                                            <input type="number" class="form-control marks-input"
+                                                name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
+                                                data-max="{{ $exam->total_marks }}" value="{{ $mark?->marks_obtained ?? '' }}"
+                                                min="0" max="{{ $exam->total_marks }}" step="0.5" placeholder="—">
+                                        </td>
+                                        @php
+                                            $g = $mark?->grade ?? '';
+                                            $gradeClass = '';
+                                            if (str_starts_with($g, 'D')) {
+                                                $gradeClass = 'grade-D';
+                                            } elseif (str_starts_with($g, 'C')) {
+                                                $gradeClass = 'grade-C';
+                                            } elseif (str_starts_with($g, 'P')) {
+                                                $gradeClass = 'grade-P';
+                                            } elseif (str_starts_with($g, 'F')) {
+                                                $gradeClass = 'grade-F';
+                                            }
+                                        @endphp
 
-                                    <td>
-                                        <span class="grade-badge grade-cell {{ $gradeClass }}"
-                                            id="grade_{{ $student->id }}">
-                                            {{ $mark?->grade ?? '—' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="text-muted remark-cell" style="font-size:.8rem;"
-                                            id="remark_{{ $student->id }}">
-                                            {{ $mark?->grade_remark ?? '—' }}
-                                        </span>
-                                    </td>
+                                        <td>
+                                            <span class="grade-badge grade-cell {{ $gradeClass }}"
+                                                id="grade_{{ $student->id }}">
+                                                {{ $mark?->grade ?? '—' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted remark-cell" style="font-size:.8rem;"
+                                                id="remark_{{ $student->id }}">
+                                                {{ $mark?->grade_remark ?? '—' }}
+                                            </span>
+                                        </td>
+                                    @endif
                                     <td>
                                         <input type="text" class="form-control comment-input"
                                             name="comment[{{ $student->id }}]"
@@ -500,29 +551,30 @@ use App\Helpers\PermissionHelper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Grading scale from PHP → JS
+        // Grading scale + early-years presets from PHP → JS
         const gradingScale = @json($gradingScale);
+        const earlyYearsPresets = @json($earlyYearsPresets);
 
-// Pass total_marks from PHP into JS
-const examTotalMarks = {{ $exam->total_marks }};
+        // Pass total_marks from PHP into JS
+        const examTotalMarks = {{ $exam->total_marks }};
 
-// ✅ Convert to percentage FIRST, then match scale
-function getGrade(marks) {
-    if (marks === '' || marks === null || isNaN(marks)) return null;
-    marks = parseFloat(marks);
-    
-    // Convert raw mark to percentage
-    const percentage = examTotalMarks > 0 
-        ? (marks / examTotalMarks) * 100 
-        : 0;
-    
-    for (const g of gradingScale) {
-        if (percentage >= g.min_mark && percentage <= g.max_mark) {
-            return g;
+        // ✅ Convert to percentage FIRST, then match scale
+        function getGrade(marks) {
+            if (marks === '' || marks === null || isNaN(marks)) return null;
+            marks = parseFloat(marks);
+
+            // Convert raw mark to percentage
+            const percentage = examTotalMarks > 0
+                ? (marks / examTotalMarks) * 100
+                : 0;
+
+            for (const g of gradingScale) {
+                if (percentage >= g.min_mark && percentage <= g.max_mark) {
+                    return g;
+                }
+            }
+            return null;
         }
-    }
-    return null;
-}
 
         function gradeCssClass(grade) {
             if (!grade) return '';
@@ -533,39 +585,102 @@ function getGrade(marks) {
             return '';
         }
 
-        // Live grade preview on marks input
-        $(document).on('input', '.marks-input', function() {
+        // Look up an early-years preset by its score (1, 2, 3 ...)
+        function findEarlyYearsPreset(marks) {
+            const num = Math.round(parseFloat(marks));
+            return earlyYearsPresets.find(p => p.marks === num) || null;
+        }
+
+        // ===== System Comment (preset) dropdown =====
+        // Selecting a preset fills in the score, the remark, AND the Comment
+        // field (teacher_comment) — this was previously missing entirely,
+        // which is why nothing saved when a preset was chosen.
+        $(document).on('change', '.preset-select', function () {
+            const sid = $(this).data('student');
+            const val = $(this).val();
+            const $marksInput = $(`.marks-input[data-student="${sid}"]`);
+            const $remark = $(`#remark_${sid}`);
+            const $comment = $(`input[name="comment[${sid}]"]`);
+
+            if (val === '') {
+                // "— Choose a system comment —" re-selected: leave everything as-is
+                return;
+            }
+
+            if (val === 'custom') {
+                // Teacher wants to write their own comment/score manually
+                $marksInput.removeClass('valid invalid');
+                $remark.text('—');
+                $comment.val('').focus();
+                return;
+            }
+
+            const $opt = $(this).find('option:selected');
+            const label = $opt.data('label');
+            const remarkText = $opt.data('remark');
+
+            $marksInput.val(val).addClass('valid').removeClass('invalid');
+            $remark.text(remarkText);
+            $comment.val(label);
+        });
+
+        // ===== Live grade/remark preview on marks input =====
+        $(document).on('input', '.marks-input', function () {
             const val = $(this).val();
             const max = parseFloat($(this).data('max'));
             const sid = $(this).data('student');
-            const $grade = $(`#grade_${sid}`);
+            const isEarlyYears = $(this).data('early-years') == 1;
             const $remark = $(`#remark_${sid}`);
 
-            // Visual validity
+            // Empty field
             if (val === '') {
                 $(this).removeClass('valid invalid');
-                $grade.text('—').attr('class', 'grade-badge grade-cell');
                 $remark.text('—');
+                if (isEarlyYears) {
+                    $(`.preset-select[data-student="${sid}"]`).val('');
+                } else {
+                    $(`#grade_${sid}`).text('—').attr('class', 'grade-badge grade-cell');
+                }
                 return;
             }
+
             const num = parseFloat(val);
+
+            // Invalid / out of range
             if (isNaN(num) || num < 0 || num > max) {
                 $(this).removeClass('valid').addClass('invalid');
-                $grade.text('!').attr('class', 'grade-badge grade-cell grade-F');
                 $remark.text('Invalid');
+                if (!isEarlyYears) {
+                    $(`#grade_${sid}`).text('!').attr('class', 'grade-badge grade-cell grade-F');
+                }
                 return;
             }
 
             $(this).removeClass('invalid').addClass('valid');
 
-            const g = getGrade(num);
-            if (g) {
-                $grade.text(g.grade).attr('class', 'grade-badge grade-cell ' + gradeCssClass(g.grade));
-                $remark.text(g.remark);
+            if (isEarlyYears) {
+                // Early-years: match the typed score against the presets and
+                // keep the dropdown + remark in sync, instead of using the
+                // percentage grading scale (which doesn't apply here).
+                const preset = findEarlyYearsPreset(num);
+                const $select = $(`.preset-select[data-student="${sid}"]`);
+                if (preset) {
+                    $remark.text(preset.remark);
+                    $select.val(String(preset.marks));
+                } else {
+                    $remark.text('—');
+                    $select.val('custom');
+                }
+            } else {
+                const g = getGrade(num);
+                const $grade = $(`#grade_${sid}`);
+                if (g) {
+                    $grade.text(g.grade).attr('class', 'grade-badge grade-cell ' + gradeCssClass(g.grade));
+                    $remark.text(g.remark);
+                }
             }
         });
 
-        // Save marks
         // Save marks
         $('#saveMarksBtn').on('click', function() {
             // Validate all inputs first

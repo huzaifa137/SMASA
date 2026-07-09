@@ -389,8 +389,8 @@
                 }
 
                 .app-header .dropdown-menu {
-    position: absolute !important;
-}
+                    position: absolute !important;
+                }
             </style>
 
             <div class="dropdown side-nav">
@@ -626,6 +626,17 @@
                         </div>
                     </div>
 
+                    <!-- Refresh Button -->
+                    <div id="refreshPageBtn" style="margin-left: 8px;">
+                        <a href="javascript:void(0)"
+                            class="position-relative d-flex align-items-center justify-content-center"
+                            onclick="refreshCurrentPage()" title="Refresh Page"
+                            style="text-decoration:none; width:42px; height:42px;">
+                            <i id="refreshIcon" class="fas fa-spinner"
+                                style="font-size:1.35rem; color:#2C29CA; line-height:1;"></i>
+                        </a>
+                    </div>
+
                     <script>
                         (function () {
                             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -672,19 +683,19 @@
                                         list.innerHTML = data.notifications.map(n => {
                                             const c = notifColor(n.color);
                                             return `
-                                                <a href="javascript:void(0)" class="d-flex align-items-start px-3 py-2 border-bottom text-decoration-none notif-drop-item"
-                                                   data-id="${n.id}" data-url="${n.url || ''}" data-read="${n.is_read ? '1' : '0'}"
-                                                   style="${n.is_read ? '' : 'background:#f8f9fb;'}">
-                                                    <span class="notif-icon-badge mr-3" style="background-color:${c.bg}; color:${c.text};">
-                                                        <i class="fas fa-${n.icon}"></i>
-                                                    </span>
-                                                    <span class="flex-grow-1" style="min-width:0;">
-                                                        <span class="d-block small font-weight-bold text-dark">${n.title}</span>
-                                                        <span class="d-block small text-muted">${n.body}</span>
-                                                        <span class="d-block small text-muted mt-1">${n.time}</span>
-                                                    </span>
-                                                </a>
-                                            `;
+                                                        <a href="javascript:void(0)" class="d-flex align-items-start px-3 py-2 border-bottom text-decoration-none notif-drop-item"
+                                                           data-id="${n.id}" data-url="${n.url || ''}" data-read="${n.is_read ? '1' : '0'}"
+                                                           style="${n.is_read ? '' : 'background:#f8f9fb;'}">
+                                                            <span class="notif-icon-badge mr-3" style="background-color:${c.bg}; color:${c.text};">
+                                                                <i class="fas fa-${n.icon}"></i>
+                                                            </span>
+                                                            <span class="flex-grow-1" style="min-width:0;">
+                                                                <span class="d-block small font-weight-bold text-dark">${n.title}</span>
+                                                                <span class="d-block small text-muted">${n.body}</span>
+                                                                <span class="d-block small text-muted mt-1">${n.time}</span>
+                                                            </span>
+                                                        </a>
+                                                    `;
                                         }).join('');
 
                                         list.querySelectorAll('.notif-drop-item').forEach(el => {
@@ -1509,4 +1520,17 @@
         setTimeout(setHeaderHeightVar, 300);
         setTimeout(setHeaderHeightVar, 1000);
     })();
+
+
+    function refreshCurrentPage() {
+        const icon = document.getElementById('refreshIcon');
+
+        // Rotate the icon while refreshing
+        icon.classList.add('fa-spin');
+
+        // Small delay so the user sees the animation
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
+    }
 </script>
