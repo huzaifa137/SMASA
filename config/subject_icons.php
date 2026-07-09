@@ -8,7 +8,7 @@ return [
     'Social Development' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABK...',
     'Health Habits' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAA6...',
     'Music and Dance' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAA4...',
-    'Physical Education' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA6...',
+    'Physical Education' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA612...',
 
     'default' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...', // fallback icon
 ];
