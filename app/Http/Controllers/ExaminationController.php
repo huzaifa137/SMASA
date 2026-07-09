@@ -541,8 +541,17 @@ class ExaminationController extends Controller
         $examSummary = $passslipData['examSummary'] ?? [];
         $avgSummary = $passslipData['avgSummary'] ?? null;
 
+        // After getting student info, check if nursery
+        $isNursery = $this->isNurseryClass($student->senior);
+
         $lang = request('lang', 'en');
-        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+
+        // Use nursery layout if applicable
+        if ($isNursery) {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+        } else {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+        }
 
         return view($view, compact(
             'exam',
@@ -642,10 +651,18 @@ class ExaminationController extends Controller
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
-        $lang = request('lang', 'en');
-        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+        // Check if the class is nursery
+        $isNursery = $this->isNurseryClass($classId);
 
-        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg') + ['mode' => 'class', 'multiExam' => $multiExam]);
+        $lang = request('lang', 'en');
+
+        if ($isNursery) {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+        } else {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+        }
+
+        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
     }
 
     // ─── METHOD 2: passslipAll ────────────────────────────────────────────────
@@ -725,10 +742,24 @@ class ExaminationController extends Controller
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
-        $lang = request('lang', 'en');
-        $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+        // Check if ALL classes in this exam are nursery
+        $isNursery = true;
+        foreach ($examClasses as $ec) {
+            if (!$this->isNurseryClass($ec->class_id)) {
+                $isNursery = false;
+                break;
+            }
+        }
 
-        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam]);
+        $lang = request('lang', 'en');
+
+        if ($isNursery) {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+        } else {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+        }
+
+        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
     }
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
@@ -1241,9 +1272,7 @@ class ExaminationController extends Controller
         // Averaging only makes sense across 2+ chosen examinations
         $useAvg = count($avgExamIds) >= 2;
 
-        $subjectRows = $allSubjectIds->map(function ($subjectId) use (
-            $examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg
-        ) {
+        $subjectRows = $allSubjectIds->map(function ($subjectId) use ($examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg) {
             $examData = [];
             $avgPctSum = 0;
             $avgPctCount = 0;
@@ -1932,5 +1961,29 @@ class ExaminationController extends Controller
             'subject_breakdown' => $subjectBreakdown,
             'published_at' => $exam->published_at ? Carbon::parse($exam->published_at)->format('M d, Y') : Carbon::parse($exam->updated_at)->format('M d, Y')
         ]);
+    }
+
+    /**
+     * Check if a class is a nursery/early years class.
+     */
+    /**
+     * Check if a class is a nursery/early years class.
+     */
+    /**
+     * Check if a class is a nursery/early years class.
+     */
+    private function isNurseryClass($classId): bool
+    {
+        if (empty($classId)) {
+            return false;
+        }
+
+        // dd($classId);
+
+        // Direct check against known nursery class IDs
+        // These are the md_id values for Baby Class, Middle Class, Top Class
+        $nurseryClassIds = [279, 36, 37]; // Adjust these to match your actual IDs
+
+        return in_array((int) $classId, $nurseryClassIds, true);
     }
 }
