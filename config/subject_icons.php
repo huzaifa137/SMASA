@@ -1,14 +1,14 @@
 <?php
 
 return [
-    'English' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAAA2...', // your existing base64
-    'Reading' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAf...',
-    'Numbers' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEIAAAA+...',
-    'Writing' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAAA+...',
-    'Social Development' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABK...',
-    'Health Habits' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAA6...',
-    'Music and Dance' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAA4...',
-    'Physical Education' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA612...',
+    'English'             => 'images/subject-icons/english.png',
+    'Reading'             => 'images/subject-icons/reading.png',
+    'Numbers'             => 'images/subject-icons/numbers.png',
+    'Writing'             => 'images/subject-icons/writing.png',
+    'Social Development'  => 'images/subject-icons/social-development.png',
+    'Health Habits'       => 'images/subject-icons/health-habits.png',
+    'Music and Dance'     => 'images/subject-icons/music-and-dance.png',
+    'Physical Education'  => 'images/subject-icons/physical-education.png',
 
-    'default' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...', // fallback icon
+    'default'             => 'images/subject-icons/default.png',
 ];

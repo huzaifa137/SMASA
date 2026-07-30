@@ -352,9 +352,9 @@ class StudentController extends Controller
     public function generateStudentID(Request $request)
     {
 
-     if (!PermissionHelper::canFeature('view_student_details')) {
-        return response()->json(['message' => 'Unauthorized.'], 403);
-    }
+        if (!PermissionHelper::canFeature('view_student_details')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
 
         $schoolNumber = DB::table('schools')
             ->where('id', $request->school_id)
@@ -442,9 +442,9 @@ class StudentController extends Controller
     public function storeStudent(Request $request)
     {
 
-     if (!PermissionHelper::canFeature('add_student')) {
-        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to add students.'], 403);
-    }
+        if (!PermissionHelper::canFeature('add_student')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to add students.'], 403);
+        }
 
         if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
             return response()->json([
@@ -624,7 +624,7 @@ class StudentController extends Controller
     public function viewStudent($id)
     {
 
-    PermissionHelper::denyUnlessFeature('view_student_details');
+        PermissionHelper::denyUnlessFeature('view_student_details');
         $student = Student::findOrFail($id);
 
         $student->photo_url = null;
@@ -650,9 +650,9 @@ class StudentController extends Controller
     public function updateStudent(Request $request)
     {
 
-    if (!PermissionHelper::canFeature('edit_student')) {
-        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to edit students.'], 403);
-    }
+        if (!PermissionHelper::canFeature('edit_student')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to edit students.'], 403);
+        }
 
         $student = Student::findOrFail($request->student_id);
 
@@ -723,9 +723,9 @@ class StudentController extends Controller
     public function destroyStudent(Student $student)
     {
 
-    if (!PermissionHelper::canFeature('delete_student')) {
-        return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
-    }
+        if (!PermissionHelper::canFeature('delete_student')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
+        }
 
 
         try {
@@ -764,7 +764,7 @@ class StudentController extends Controller
     public function exportStudents($schoolId, $type)
     {
 
-    PermissionHelper::denyUnlessFeature('export_students');
+        PermissionHelper::denyUnlessFeature('export_students');
 
         $activeYear = Helper::active_year();
 
@@ -846,69 +846,69 @@ class StudentController extends Controller
         return view('student.student-search', compact(['classRecord']));
     }
 
-   // Fetch distinct streams for a given class (for the cascading dropdown)
-public function getStreamsForClass(Request $request)
-{
-    $class = $request->input('class');
+    // Fetch distinct streams for a given class (for the cascading dropdown)
+    public function getStreamsForClass(Request $request)
+    {
+        $class = $request->input('class');
 
-    $streams = Student::where('senior', $class)
-        ->where('school_id', Session('LoggedSchool'))
-        ->whereNotNull('stream')
-        ->distinct()
-        ->pluck('stream');
+        $streams = Student::where('senior', $class)
+            ->where('school_id', Session('LoggedSchool'))
+            ->whereNotNull('stream')
+            ->distinct()
+            ->pluck('stream');
 
-    return response()->json(['streams' => $streams]);
-}
-
-public function searchAjax(Request $request)
-{
-    $criteria = $request->input('criteria');
-
-    switch ($criteria) {
-        case 'admission_number':
-            $students = Student::where('admission_number', $request->admission_number)
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
-            break;
-
-        case 'name':
-            $students = Student::query()
-                ->when($request->filled('firstname'), function ($q) use ($request) {
-                    $q->where('firstname', 'like', '%' . $request->firstname . '%');
-                })
-                ->when($request->filled('lastname'), function ($q) use ($request) {
-                    $q->where('lastname', 'like', '%' . $request->lastname . '%');
-                })
-                ->when($request->filled('senior'), function ($q) use ($request) {
-                    $q->where('senior', $request->senior);
-                })
-                ->when($request->filled('stream'), function ($q) use ($request) {
-                    $q->where('stream', $request->stream);
-                })
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
-            break;
-
-        case 'phone':
-            $students = Student::where('primary_contact', $request->phone)
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
-            break;
-
-        case 'student_id':
-            $students = Student::where('id', $request->student_id)
-                ->where('school_id', Session('LoggedSchool'))
-                ->get();
-            break;
-
-        default:
-            return response()->json(['message' => 'Invalid criteria'], 400);
+        return response()->json(['streams' => $streams]);
     }
 
-    $html = view('student.partials.results', compact('students'))->render();
+    public function searchAjax(Request $request)
+    {
+        $criteria = $request->input('criteria');
 
-    return response()->json(['html' => $html]);
-}
+        switch ($criteria) {
+            case 'admission_number':
+                $students = Student::where('admission_number', $request->admission_number)
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
+                break;
+
+            case 'name':
+                $students = Student::query()
+                    ->when($request->filled('firstname'), function ($q) use ($request) {
+                        $q->where('firstname', 'like', '%' . $request->firstname . '%');
+                    })
+                    ->when($request->filled('lastname'), function ($q) use ($request) {
+                        $q->where('lastname', 'like', '%' . $request->lastname . '%');
+                    })
+                    ->when($request->filled('senior'), function ($q) use ($request) {
+                        $q->where('senior', $request->senior);
+                    })
+                    ->when($request->filled('stream'), function ($q) use ($request) {
+                        $q->where('stream', $request->stream);
+                    })
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
+                break;
+
+            case 'phone':
+                $students = Student::where('primary_contact', $request->phone)
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
+                break;
+
+            case 'student_id':
+                $students = Student::where('id', $request->student_id)
+                    ->where('school_id', Session('LoggedSchool'))
+                    ->get();
+                break;
+
+            default:
+                return response()->json(['message' => 'Invalid criteria'], 400);
+        }
+
+        $html = view('student.partials.results', compact('students'))->render();
+
+        return response()->json(['html' => $html]);
+    }
 
     public function updateProfiles()
     {
@@ -1084,6 +1084,56 @@ public function searchAjax(Request $request)
         return response()->json($streams);
     }
 
+    public function searchStudentInformation(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('view_students');
+        $schoolId = Helper::requireSchool();
+        $activeYear = Helper::active_year();
+
+        $senior = $request->query('senior');
+        $stream = $request->query('stream');
+        $q = trim((string) $request->query('q', ''));
+        $page = (int) $request->query('page', 1);
+
+        $studentsQuery = Student::where('school_id', $schoolId)
+            ->where('senior', $senior)
+            ->where('stream', $stream);
+
+        if ($q !== '') {
+            $studentsQuery->where(function ($query) use ($q) {
+                $query->where('firstname', 'like', "%{$q}%")
+                    ->orWhere('lastname', 'like', "%{$q}%")
+                    ->orWhere('admission_number', 'like', "%{$q}%")
+                    ->orWhereRaw("CONCAT(firstname, ' ', lastname) LIKE ?", ["%{$q}%"]);
+            });
+        }
+
+        $students = $studentsQuery->orderByDesc('id')
+            ->paginate(10, ['*'], "page_{$senior}_{$stream}", $page);
+
+        foreach ($students as $student) {
+            $card = StudentIdCard::where('student_id', $student->id)
+                ->where('school_id', $schoolId)
+                ->where('academic_year', $activeYear)
+                ->first();
+
+            $student->card_info = [
+                'status' => $card->status ?? null,
+                'card_id' => $card->id ?? null,
+                'card_number' => $card->card_number ?? null,
+                'button_type' => $card
+                    ? ($card->status === 'active' ? 'active' : ($card->status === 'revoked' ? 'reactivate' : 'expired'))
+                    : 'generate',
+            ];
+        }
+
+        return response()->json([
+            'rows' => view('student.partials.student-rows', compact('students', 'senior', 'stream'))->render(),
+            'pagination' => view('student.partials.student-pagination', compact('students'))->render(),
+            'total' => $students->total(),
+        ]);
+    }
+
     public function searchStudentsByClassStream(Request $request)
     {
 
@@ -1105,9 +1155,9 @@ public function searchAjax(Request $request)
     public function moveStudent(Request $request)
     {
 
-    if (!PermissionHelper::canFeature('edit_student')) {
-        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to move students.'], 403);
-    }
+        if (!PermissionHelper::canFeature('edit_student')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to move students.'], 403);
+        }
 
         $validated = $request->validate([
             'student_ids' => 'required|array',
@@ -1139,27 +1189,27 @@ public function searchAjax(Request $request)
     }
 
 
-public function bulkImportStudentForm()
-{
-    PermissionHelper::denyUnlessFeature('import_students');
-    Helper::requireSchool();
+    public function bulkImportStudentForm()
+    {
+        PermissionHelper::denyUnlessFeature('import_students');
+        Helper::requireSchool();
 
-    $schoolId      = Helper::requireSchool();
-    $school        = School::findOrFail($schoolId);
-    $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
+        $schoolId = Helper::requireSchool();
+        $school = School::findOrFail($schoolId);
+        $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
 
-    $classrooms = Classroom::where('school_id', $schoolId)->get();
+        $classrooms = Classroom::where('school_id', $schoolId)->get();
 
-    return view(
-        'student.bulk-import-students',
-        compact(
-            'schoolId',
-            'school',
-            'classrooms',
-            'schoolProduct'
-        )
-    );
-}
+        return view(
+            'student.bulk-import-students',
+            compact(
+                'schoolId',
+                'school',
+                'classrooms',
+                'schoolProduct'
+            )
+        );
+    }
 
     public function downloadStudentTemplate(Request $request)
     {
@@ -1203,9 +1253,9 @@ public function bulkImportStudentForm()
     public function bulkImportStudents(Request $request)
     {
 
-    if (!PermissionHelper::canFeature('import_students')) {
-        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to import students.'], 403);
-    }
+        if (!PermissionHelper::canFeature('import_students')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to import students.'], 403);
+        }
 
 
         if (

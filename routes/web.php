@@ -181,6 +181,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/store-school-profile', 'storeSchoolProfile')->name('schools.store.profile');
             Route::post('/school/configure', 'configureSchoolOptions')->name('school.configure');
             Route::post('/schools/{id}/change-status', 'changeStatus');
+            Route::post('/schools/{id}/toggle-custom-subjects', 'toggleCustomSubjects')->name('school.toggle-custom-subjects');
 
             Route::get('admin-user', 'adminUser')->name('admin.user');
             Route::get('student-user', 'studentUser')->name('student.user');
@@ -233,6 +234,15 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->group(function () {
             Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
         });
+
+    Route::controller(\App\Http\Controllers\CustomSubjectController::class)->middleware(['module:classes'])->group(function () {
+        Route::get('/custom-subjects/switch', 'showSwitchPrompt')->name('school.custom-subjects.switch');
+        Route::post('/custom-subjects/switch', 'confirmSwitch')->name('school.custom-subjects.confirm');
+        Route::get('/custom-subjects', 'manage')->name('school.custom-subjects.manage');
+        Route::post('/custom-subjects', 'store')->name('school.custom-subjects.store');
+        Route::put('/custom-subjects/{subject}', 'update')->name('school.custom-subjects.update');
+        Route::delete('/custom-subjects/{subject}', 'destroy')->name('school.custom-subjects.destroy');
+    });
 
     Route::controller(ClassandSubjectController::class)->middleware(['module:classes'])->group(function () {
 
@@ -329,6 +339,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
                         Route::get('/streams/by-class', 'getStreamsByClass')->name('streams.by.class');
                         Route::get('/students/search', 'searchStudentsByClassStream')->name('students.search');
+                        Route::get('/students/search', 'searchStudentInformation')->name('students.search');
                         Route::post('/students/move', 'moveStudent')->name('students.move');
 
                         Route::get('students/generate-id', 'generateStudentID')->name('students.generate-id');

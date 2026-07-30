@@ -48,8 +48,8 @@ $controller = new Controller();
                                     <tr data-id="{{ $class->id }}">
                                         <td style="width:1px;">{{ $key + 1 }}</td>
                                         <td>{{ Helper::recordMdname($classInfo->class_id) }}</td>
-                                        <td>{{ $classInfo->stream_id }}</td>
-                                        <td>{{ Helper::recordMdname($class->subject_id) }}</td>
+                                        <td>{{ $classInfo->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $classInfo->stream_id }}</td>
+                                        <td>{{ $class->display_name }}</td>
                                         <td>0</td>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">

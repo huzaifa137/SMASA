@@ -46,32 +46,15 @@ class StudentBulkTemplate implements
             'firstname',
             'lastname',
             'gender',
-            'date_of_birth',
-            'primary_contact',
         ];
     }
 
     /**
-     * Sample rows shown to users.
+     * No sample rows — sheet is ready for real data entry.
      */
     public function array(): array
     {
-        return [
-            [
-                'John',
-                'Doe',
-                'Male',
-                '2005-01-15',
-                '0700000001'
-            ],
-            [
-                'Jane',
-                'Smith',
-                'Female',
-                '2006-03-22',
-                '0700000002'
-            ],
-        ];
+        return [];
     }
 
     /**
@@ -91,8 +74,6 @@ class StudentBulkTemplate implements
             'A' => 20,
             'B' => 20,
             'C' => 12,
-            'D' => 18,
-            'E' => 20,
         ];
     }
 
@@ -101,42 +82,8 @@ class StudentBulkTemplate implements
      */
     public function styles(Worksheet $sheet)
     {
-        // Insert metadata rows
-        $sheet->insertNewRowBefore(1, 2);
-
-        $sheet->setCellValue(
-            'A1',
-            'School: ' . $this->schoolName
-        );
-
-        $sheet->setCellValue(
-            'A2',
-            'Class: ' . $this->className .
-            ' | Stream: ' . $this->streamName .
-            ' | Category: ' . ($this->category ?: 'N/A') .
-            ' | Year: ' . $this->year
-        );
-
-        // Merge metadata rows
-        $sheet->mergeCells('A1:E1');
-        $sheet->mergeCells('A2:E2');
-
-        // Metadata styling
-        $sheet->getStyle('A1:E2')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => '333333'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => [
-                    'rgb' => 'E8F4FD',
-                ],
-            ],
-        ]);
-
         // Header row styling
-        $sheet->getStyle('A3:E3')->applyFromArray([
+        $sheet->getStyle('A1:C1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -145,16 +92,6 @@ class StudentBulkTemplate implements
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => [
                     'rgb' => '4A4AE8',
-                ],
-            ],
-        ]);
-
-        // Sample data styling
-        $sheet->getStyle('A4:E100')->applyFromArray([
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => [
-                    'rgb' => 'FAFAFA',
                 ],
             ],
         ]);

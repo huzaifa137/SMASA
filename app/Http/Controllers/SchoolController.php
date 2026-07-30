@@ -172,6 +172,35 @@ class SchoolController extends Controller
         ]);
     }
 
+    /**
+     * Super-admin only: unlock (or lock again) the option for a school to
+     * define its own subject names instead of using the shared master list.
+     * This does NOT switch the school over by itself — the school admin
+     * still has to visit their "Switch to custom subjects" screen and
+     * confirm. Toggling this off after a school has already switched has no
+     * effect on data already migrated; it only blocks re-opening the switch
+     * screen for a school that hasn't switched yet.
+     */
+    public function toggleCustomSubjects(Request $request, $id)
+    {
+        $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        $school = School::findOrFail($id);
+        $school->custom_subjects_enabled = $request->boolean('enabled');
+        $school->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $school->custom_subjects_enabled
+                ? 'Custom subjects option unlocked for ' . $school->name . '.'
+                : 'Custom subjects option locked for ' . $school->name . '.',
+            'custom_subjects_enabled' => $school->custom_subjects_enabled,
+            'custom_subjects_active' => $school->custom_subjects_active,
+        ]);
+    }
+
     public function termDates($school_Id, Request $request)
     {
 
@@ -228,10 +257,80 @@ class SchoolController extends Controller
             'registration_code' => 'required|string|max:50',
             'phone' => 'required|string|max:20',
             'population' => 'required|string',
+            'school_name_arabic' => 'nullable|string|max:255',
         ]);
 
+        // Update the school
         $school->update($validated);
 
+        // Refresh the school model to get updated values
+        $school->refresh();
+
+        // IMPORTANT: Log what we're trying to update
+        \Log::info('Updating house for school:', [
+            'school_id' => $school->id,
+            'registration_code' => $school->registration_code,
+            'school_name_arabic' => $validated['school_name_arabic'] ?? '',
+            'school_name' => $validated['name'],
+        ]);
+
+        // Update the corresponding house - use the registration_code from validated data
+        try {
+            // First, find the house by Number
+            $house = DB::table('houses')
+                ->where('Number', $school->registration_code)
+                ->first();
+
+            if ($house) {
+                // Update existing house
+                $houseUpdated = DB::table('houses')
+                    ->where('Number', $school->registration_code)
+                    ->update([
+                        'House' => $validated['name'],
+                        'House_AR' => $validated['school_name_arabic'] ?? '', // Use validated data
+                        'Phone' => $validated['phone'],
+                        'Email' => $validated['email'],
+                        'Location' => $validated['regional_level'] ?? 'Kampala',
+                        'updated_at' => now(),
+                    ]);
+
+                \Log::info('House updated successfully:', [
+                    'house_id' => $house->ID,
+                    'House_AR' => $validated['school_name_arabic'] ?? '',
+                    'rows_affected' => $houseUpdated,
+                ]);
+            } else {
+                // No house found - create a new one
+                \Log::warning('No house found for registration_code: ' . $school->registration_code);
+
+                DB::table('houses')->insert([
+                    'House' => $validated['name'],
+                    'House_AR' => $validated['school_name_arabic'] ?? '',
+                    'Number' => $school->registration_code,
+                    'Location' => $validated['regional_level'] ?? 'Kampala',
+                    'RegistrationDate' => now(),
+                    'Head' => 0,
+                    'ContactPerson' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                \Log::info('New house created for school:', [
+                    'registration_code' => $school->registration_code,
+                    'House_AR' => $validated['school_name_arabic'] ?? '',
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't stop the process
+            \Log::error('Failed to update house for school: ' . $school->id, [
+                'error' => $e->getMessage(),
+                'school_id' => $school->id,
+                'registration_code' => $school->registration_code,
+                'validated_data' => $validated,
+            ]);
+        }
+
+        // Track the update
         UpdateTracker::create([
             'item_id' => $request->school_id,
             'item_category' => 'School Information Updated',
@@ -242,6 +341,8 @@ class SchoolController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'School Information updated successfully.',
+            'school_name_arabic' => $validated['school_name_arabic'] ?? '',
+            'house_updated' => true,
         ]);
     }
 

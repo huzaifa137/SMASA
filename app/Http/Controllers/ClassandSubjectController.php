@@ -6,18 +6,40 @@ use App\Helpers\PermissionHelper;
 use App\Models\Classroom;
 use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
+use App\Models\CustomSubject;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\Stream;
 use App\Models\Classes;
 use App\Models\Teacher;
+use App\Http\Controllers\Helper;
 use DB;
 use Illuminate\Http\Request;
 
 class ClassandSubjectController extends Controller
 {
+    /**
+     * Sentinel stream_id used for classes created with "no streams". Using a
+     * real, consistent string (instead of NULL) means every existing query
+     * in the app that does ->where('stream_id', $x) across Attendance,
+     * Exams, Timetable, Finance, etc. keeps working unmodified for
+     * streamless classes — a Stream row simply exists with this id.
+     */
+    public const NO_STREAM_SENTINEL = 'NO_STREAM';
+
     public function createClass()
     {
         PermissionHelper::denyUnlessFeature('add_class');
+
+        $school = School::find(Helper::requireSchool());
+
+        // Schools that have switched to their own subject list get a
+        // simpler, dynamic form instead of the fixed master-data one below.
+        // Everything else in this method (and every other school) is
+        // completely unaffected.
+        if ($school && $school->usesCustomSubjects()) {
+            return $this->createClassCustom($school);
+        }
 
         $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
         $SecondaryClasses = collect();
@@ -135,24 +157,97 @@ class ClassandSubjectController extends Controller
             ));
         }
     }
+    /**
+     * Create-class screen for schools that define their own subjects.
+     * Classes still come from the same shared class taxonomy (Secondary /
+     * Primary Theology / Primary Secular class names don't change — only
+     * the subjects attached to them do), but subjects are pulled from this
+     * school's own custom_subjects instead of the shared master list.
+     */
+    private function createClassCustom(School $school)
+    {
+        $schoolProduct = Helper::recordMdname(Helper::schoolProducts());
+        $classTypeMap = [];
+        $SecondaryClasses = collect();
+        $PrimaryClasses = collect();
+
+        if ($schoolProduct === 'Idaad And Thanawi') {
+            $SecondaryClasses = Helper::MasterRecordMerge(
+                config('constants.options.O_LEVEL'),
+                config('constants.options.A_LEVEL')
+            );
+
+            $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
+            $aLevelIds = Helper::MasterRecords(config('constants.options.A_LEVEL'))->pluck('md_id')->toArray();
+
+            foreach ($SecondaryClasses as $class) {
+                $classTypeMap[$class->md_id] = in_array($class->md_id, $oLevelIds) ? 'O-Level' : (in_array($class->md_id, $aLevelIds) ? 'A-Level' : 'Unknown');
+            }
+        } elseif ($schoolProduct === 'Primary Theology') {
+            $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+            foreach ($PrimaryClasses as $class) {
+                $classTypeMap[$class->md_id] = 'Primary Theology';
+            }
+        } elseif ($schoolProduct === 'Primary Secular') {
+            $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+            foreach ($PrimaryClasses as $class) {
+                $classTypeMap[$class->md_id] = 'Primary Secular';
+            }
+        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
+            $theology = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+            $secular = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+            $PrimaryClasses = $theology->merge($secular);
+
+            $theologyIds = $theology->pluck('md_id')->toArray();
+            $secularIds = $secular->pluck('md_id')->toArray();
+
+            foreach ($PrimaryClasses as $class) {
+                $classTypeMap[$class->md_id] = in_array($class->md_id, $theologyIds) ? 'Primary Theology' : 'Primary Secular';
+            }
+        }
+
+        $customSubjectsByType = CustomSubject::forSchool($school->id)
+            ->active()
+            ->orderBy('subject_name')
+            ->get()
+            ->groupBy('class_type');
+
+        return view('Class.create-class-custom', compact(
+            'SecondaryClasses',
+            'PrimaryClasses',
+            'classTypeMap',
+            'customSubjectsByType'
+        ));
+    }
+
     public function storeClass(Request $request)
     {
         PermissionHelper::denyUnlessFeature('add_class');
 
         $request->validate([
             'class_id' => 'required',
-            'class_stream' => 'required',
+            'class_stream' => 'required_unless:no_stream,1',
+            'no_stream' => 'nullable|boolean',
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'required',
             'class_type' => 'required|in:O-Level,A-Level,Primary Theology,Primary Secular'
         ]);
+
+        // A class can be created without any streams. We still store a real
+        // Stream/ClassStreamAssignment row using a fixed sentinel id so that
+        // every other part of the system (attendance, exams, timetable,
+        // finance, etc.) that expects a stream_id keeps working unchanged.
+        $streamId = $request->boolean('no_stream') ? self::NO_STREAM_SENTINEL : $request->class_stream;
+
+        $school = School::find(Session('LoggedSchool'));
+        $usesCustomSubjects = $school && $school->usesCustomSubjects();
 
         $classRecord = Classroom::where('class_name', $request->class_id)
             ->where('school_id', Session('LoggedSchool'))
             ->first();
 
         $StreamRecord = Stream::where('class_id', $request->class_id)
-            ->where('stream_id', $request->class_stream)
+            ->where('stream_id', $streamId)
             ->where('school_id', Session('LoggedSchool'))
             ->first();
 
@@ -169,14 +264,14 @@ class ClassandSubjectController extends Controller
             $stream = new Stream;
             $stream->school_id = Session('LoggedSchool');
             $stream->class_id = $request->class_id;
-            $stream->stream_id = $request->class_stream;
+            $stream->stream_id = $streamId;
             $stream->added_by = Session('LoggedAdmin');
             $stream->date_added = now();
             $stream->save();
 
             $classStreamAssignment = ClassStreamAssignment::create([
                 'class_id' => $request->class_id,
-                'stream_id' => $request->class_stream,
+                'stream_id' => $streamId,
                 'school_id' => Session('LoggedSchool'),
                 'added_by' => Session('LoggedAdmin'),
                 'date_added' => now(),
@@ -195,13 +290,25 @@ class ClassandSubjectController extends Controller
                     $subjectType = 'primary_secular';
                 }
 
-                ClassSubject::create([
-                    'class_id' => $request->class_id,
-                    'stream_id' => $request->class_stream,
-                    'subject_id' => $subjectId,
-                    'subject_type' => $subjectType,
-                    'school_id' => Session('LoggedSchool'),
-                ]);
+                if ($usesCustomSubjects) {
+                    ClassSubject::create([
+                        'class_id' => $request->class_id,
+                        'stream_id' => $streamId,
+                        'custom_subject_id' => $subjectId,
+                        'subject_source' => 'custom',
+                        'subject_type' => $subjectType,
+                        'school_id' => Session('LoggedSchool'),
+                    ]);
+                } else {
+                    ClassSubject::create([
+                        'class_id' => $request->class_id,
+                        'stream_id' => $streamId,
+                        'subject_id' => $subjectId,
+                        'subject_source' => 'master',
+                        'subject_type' => $subjectType,
+                        'school_id' => Session('LoggedSchool'),
+                    ]);
+                }
             }
 
             return response()->json(['success' => true, 'message' => 'Class created successfully.']);
@@ -221,6 +328,9 @@ class ClassandSubjectController extends Controller
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'required'
         ]);
+
+        $school = School::find(session('LoggedSchool'));
+        $usesCustomSubjects = $school && $school->usesCustomSubjects();
 
         // Delete old subjects
         ClassSubject::where('class_id', $assignment->class_id)
@@ -245,13 +355,25 @@ class ClassandSubjectController extends Controller
 
         // Insert new subjects
         foreach ($request->subjects as $subjectId) {
-            ClassSubject::create([
-                'class_id' => $assignment->class_id,
-                'stream_id' => $assignment->stream_id,
-                'subject_id' => $subjectId,
-                'subject_type' => $subjectType,
-                'school_id' => session('LoggedSchool'),
-            ]);
+            if ($usesCustomSubjects) {
+                ClassSubject::create([
+                    'class_id' => $assignment->class_id,
+                    'stream_id' => $assignment->stream_id,
+                    'custom_subject_id' => $subjectId,
+                    'subject_source' => 'custom',
+                    'subject_type' => $subjectType,
+                    'school_id' => session('LoggedSchool'),
+                ]);
+            } else {
+                ClassSubject::create([
+                    'class_id' => $assignment->class_id,
+                    'stream_id' => $assignment->stream_id,
+                    'subject_id' => $subjectId,
+                    'subject_source' => 'master',
+                    'subject_type' => $subjectType,
+                    'school_id' => session('LoggedSchool'),
+                ]);
+            }
         }
 
         return response()->json([
@@ -583,6 +705,12 @@ class ClassandSubjectController extends Controller
     {
         PermissionHelper::denyUnlessFeature('edit_class');
 
+        $school = School::find(Helper::requireSchool());
+
+        if ($school && $school->usesCustomSubjects()) {
+            return $this->editClassSubjectsCustom($school, $classId, $streamId);
+        }
+
         $assignment = ClassStreamAssignment::with([
             'classSubjects' => function ($query) use ($classId, $streamId) {
                 $query->where('stream_id', $streamId)
@@ -676,6 +804,63 @@ class ClassandSubjectController extends Controller
             'primarySecularSubjects'
         ));
     }
+
+    /**
+     * Edit-subjects screen for schools running in custom-subjects mode.
+     */
+    private function editClassSubjectsCustom(School $school, $classId, $streamId)
+    {
+       
+        $assignment = ClassStreamAssignment::with([
+            'classSubjects' => function ($query) use ($classId, $streamId,$school) {
+                $query->where('stream_id', $streamId)
+                    ->where('class_id', $classId)
+                    ->where('school_id', $school->id);
+            }
+        ])
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->first();
+
+        if (!$assignment) {
+            return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
+        }
+
+        $assignedSubjectIds = $assignment->classSubjects
+            ->where('subject_source', 'custom')
+            ->pluck('custom_subject_id')
+            ->toArray();
+
+        $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
+        $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
+        $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+
+        if (in_array($classId, $oLevelIds)) {
+            $classType = 'idaad';
+        } elseif (in_array($classId, $primaryTheologyIds)) {
+            $classType = 'primary_theology';
+        } elseif (in_array($classId, $primarySecularIds)) {
+            $classType = 'primary_secular';
+        } else {
+            $classType = 'thanawi';
+        }
+
+        $customSubjects = CustomSubject::forSchool($school->id)
+            ->ofType($classType)
+            ->active()
+            ->orderBy('subject_name')
+            ->get();
+
+        return view('Class.edit-class-custom', compact(
+            'assignment',
+            'assignedSubjectIds',
+            'customSubjects',
+            'classType',
+            'classId',
+            'streamId'
+        ));
+    }
+
     public function getStreams($senior)
     {
         Helper::requireSchool();

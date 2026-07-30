@@ -33,8 +33,8 @@ $controller = new Controller();
                                     <div class="form-group">
                                         <label class="form-label">School Type</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_TYPE'), $school->school_type, 'school_type');
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_TYPE'), $school->school_type, 'school_type');
+                                                ?>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label" for="example-email">Email</label>
@@ -44,39 +44,38 @@ $controller = new Controller();
                                     <div class="form-group">
                                         <label class="form-label">Gender</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->gender, 'gender');
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->gender, 'gender');
+                                                ?>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Regional Level</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.REGIONAL_LEVEL'), $school->regional_level, 'regional_level');
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.REGIONAL_LEVEL'), $school->regional_level, 'regional_level');
+                                                ?>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">School Ownership</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_OWNERSHIP'), $school->school_ownership, 'school_ownership', 1);
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_OWNERSHIP'), $school->school_ownership, 'school_ownership', 1);
+                                                ?>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Boarding Status</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->boarding_status, 'boarding_status', 1);
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_GENDER'), $school->boarding_status, 'boarding_status', 1);
+                                                ?>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
                                         <label class="form-label">School Name</label>
-                                        <input class="form-control" type="text" name="name"
-                                            value="{{ $school->name }}">
+                                        <input class="form-control" type="text" name="name" value="{{ $school->name }}">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">School Products</label>
                                         <?php
-                                        echo Helper::DropMasterData(config('constants.options.SCHOOL_PRODUCTS'), $school->school_product, 'school_product', 1);
-                                        ?>
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_PRODUCTS'), $school->school_product, 'school_product', 1);
+                                                ?>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Registration Code</label>
@@ -85,15 +84,22 @@ $controller = new Controller();
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Contact Phone Number</label>
-                                        <input class="form-control" type="tel" name="phone"
-                                            value="{{ $school->phone }}">
+                                        <input class="form-control" type="tel" name="phone" value="{{ $school->phone }}">
                                     </div>
                                     <div class="form-group mb-0">
                                         <label class="form-label">Population</label>
                                         <?php
-                                        echo Helper::DropMasterDataAsc(config('constants.options.SCHOOL_POPULATION'), $school->population, 'population', 1);
-                                        ?>
+    echo Helper::DropMasterDataAsc(config('constants.options.SCHOOL_POPULATION'), $school->population, 'population', 1);
+                                                ?>
                                     </div>
+
+                                    <div class="form-group mt-3">
+                                        <label class="form-label">School Name Arabic</label>
+                                        <input type="text" name="school_name_arabic" class="form-control"
+                                            placeholder="School Name Arabic" dir="rtl" lang="ar"
+                                            value="{{ $school->school_name_arabic }}">
+                                    </div>
+
                                 </div>
                             </div>
                             <div class="mt-4 text-left">
@@ -117,18 +123,21 @@ $controller = new Controller();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $('#updateSchoolForm').on('submit', function(e) {
+        $(document).ready(function () {
+            $('#updateSchoolForm').on('submit', function (e) {
                 e.preventDefault();
 
                 let isValid = true;
                 let $form = $(this);
                 let $submitBtn = $form.find('button[type="submit"]');
 
+                // Remove existing invalid states
                 $form.find('.form-control, select').removeClass('is-invalid');
+                $form.find('.invalid-feedback').remove();
 
-                $form.find('input, select').each(function() {
-                    if (!$(this).val().trim()) {
+                // Check only fields with the 'required' attribute
+                $form.find('input[required], select[required]').each(function () {
+                    if (!$(this).val() || !$(this).val().trim()) {
                         $(this).addClass('is-invalid');
 
                         if ($(this).next('.invalid-feedback').length === 0) {
@@ -155,13 +164,26 @@ $controller = new Controller();
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, submit it!',
-                    cancelButtonText: 'Cancel'
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // Show loading spinner
+                        Swal.fire({
+                            title: 'Updating School...',
+                            html: 'Please wait while we update the school information.<br><br><div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"><span class="sr-only">Loading...</span></div>',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
 
                         $submitBtn.prop('disabled', true);
                         const originalBtnHtml = $submitBtn.html();
-                        $submitBtn.html('Updating...<i class="fas fa-spinner fa-spin"></i>');
+                        $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Updating...');
 
                         $.ajax({
                             url: '{{ route('update.school') }}',
@@ -170,25 +192,43 @@ $controller = new Controller();
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            success: function(response) {
+                            success: function (response) {
+                                Swal.close();
+
                                 Swal.fire({
                                     title: 'Success!',
                                     text: 'School has been updated successfully.',
                                     icon: 'success',
-                                    confirmButtonText: 'OK'
+                                    confirmButtonText: 'OK',
+                                    confirmButtonColor: '#3085d6',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        location
-                                    .reload(); // 🔥 reload page here
+                                        location.reload();
                                     }
                                 });
                             },
-                            error: function(data) {
-                                $('body').html(data.responseText);
+                            // error: function (xhr) {
+                            //     Swal.close();
+
+                            //     let errorMessage = 'An error occurred while updating the school.';
+                            //     if (xhr.responseJSON && xhr.responseJSON.message) {
+                            //         errorMessage = xhr.responseJSON.message;
+                            //     }
+
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Error',
+                            //         text: errorMessage,
+                            //         confirmButtonColor: '#d33'
+                            //     });
+                            // },
+                                                    error: function(data) {
+                            $('body').html(data.responseText);
                             },
-                            complete: function() {
-                                $submitBtn.prop('disabled', false).html(
-                                    originalBtnHtml);
+                            complete: function () {
+                                $submitBtn.prop('disabled', false).html(originalBtnHtml);
                             }
                         });
                     }

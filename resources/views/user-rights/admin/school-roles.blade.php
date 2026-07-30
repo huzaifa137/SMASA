@@ -298,6 +298,36 @@
     flex-wrap: wrap;
 }
 
+/* Password toggle button styles */
+.input-group .toggle-password-visibility {
+    border-left: none;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.input-group .toggle-password-visibility:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.input-group .toggle-password-visibility:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.input-group .toggle-password-visibility .fa-eye-slash {
+    display: none;
+}
+
+.input-group .toggle-password-visibility.showing .fa-eye {
+    display: none;
+}
+
+.input-group .toggle-password-visibility.showing .fa-eye-slash {
+    display: inline-block;
+}
+
     </style>
 @endsection
 
@@ -569,14 +599,33 @@
                         <label class="font-weight-600 text-sm">Phone Number <span class="text-danger">*</span></label>
                         <input type="tel" id="atPhone" class="form-control" placeholder="Used to log in">
                     </div>
+                    
+                    {{-- Password Field with Eye Icon --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-600 text-sm">Password <span class="text-muted">(optional — leave blank to auto-generate)</span></label>
-                        <input type="password" id="atPassword" class="form-control" placeholder="Leave blank to auto-generate" autocomplete="new-password">
+                        <div class="input-group">
+                            <input type="password" id="atPassword" class="form-control" placeholder="Leave blank to auto-generate" autocomplete="new-password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary toggle-password-visibility" type="button" data-target="atPassword" style="border-radius:0 8px 8px 0;">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                    
+                    {{-- Confirm Password Field with Eye Icon --}}
                     <div class="col-md-6 form-group">
                         <label class="font-weight-600 text-sm">Confirm Password</label>
-                        <input type="password" id="atPasswordConfirm" class="form-control" placeholder="Re-enter password" autocomplete="new-password">
+                        <div class="input-group">
+                            <input type="password" id="atPasswordConfirm" class="form-control" placeholder="Re-enter password" autocomplete="new-password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary toggle-password-visibility" type="button" data-target="atPasswordConfirm" style="border-radius:0 8px 8px 0;">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="col-md-12 form-group mb-0">
                         <label class="font-weight-600 text-sm">Assign Role <span class="text-muted">(optional — can be done later)</span></label>
                         <select id="atRole" class="form-control">
@@ -1247,6 +1296,44 @@ document.getElementById('searchTeacher').addEventListener('input', function () {
         const name = card.dataset.name || '';
         card.style.display = name.includes(q) ? 'flex' : 'none';
     });
+});
+
+// ════════════════════════════════════════════
+// PASSWORD VISIBILITY TOGGLE
+// ════════════════════════════════════════════
+
+document.addEventListener('click', function(e) {
+    const toggleBtn = e.target.closest('.toggle-password-visibility');
+    if (!toggleBtn) return;
+    
+    const targetId = toggleBtn.dataset.target;
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    
+    // Toggle password visibility
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggleBtn.classList.add('showing');
+        toggleBtn.querySelector('i').className = 'fa fa-eye-slash';
+    } else {
+        input.type = 'password';
+        toggleBtn.classList.remove('showing');
+        toggleBtn.querySelector('i').className = 'fa fa-eye';
+    }
+});
+
+// Also handle Enter key in password fields to toggle
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const target = e.target;
+        if (target.id === 'atPassword' || target.id === 'atPasswordConfirm') {
+            e.preventDefault();
+            const toggleBtn = document.querySelector(`.toggle-password-visibility[data-target="${target.id}"]`);
+            if (toggleBtn) {
+                toggleBtn.click();
+            }
+        }
+    }
 });
 </script>
 @endsection

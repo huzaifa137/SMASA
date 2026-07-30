@@ -28,10 +28,10 @@ use App\Http\Controllers\Helper;
                                 <label for="search_criteria">Select Search Criteria</label>
                                 <select id="search_criteria" class="form-control">
                                     <option value="" selected disabled>Select...</option>
-                                    <option value="admission_number">Admission Number</option>
+                                    <!-- <option value="admission_number">Admission Number</option> -->
                                     <option value="name">Name & Class</option>
-                                    <option value="phone">Phone Number</option>
-                                    <option value="student_id">Student ID</option>
+                                    <!-- <option value="phone">Phone Number</option> -->
+                                    <!-- <option value="student_id">Student ID</option> -->
                                 </select>
                             </div>
 
@@ -74,51 +74,51 @@ use App\Http\Controllers\Helper;
         $(document).ready(function () {
             const searchInputs = {
                 admission_number: `
-                            <div class="form-group">
-                                <label for="admission_number">Admission Number</label>
-                                <input type="text" name="admission_number" class="form-control" placeholder="Enter admission number">
-                            </div>
-                        `,
-name: `
-    <div class="form-group">
-        <label for="firstname">First Name</label>
-        <input type="text" name="firstname" class="form-control" placeholder="Enter first name">
-    </div>
-    <div class="form-group">
-        <label for="lastname">Last Name</label>
-        <input type="text" name="lastname" class="form-control" placeholder="Enter last name">
-    </div>
-    <div class="form-group">
-        <label for="senior">Class</label>
-        <select class="form-control select2" name="senior" id="senior">
-            <option value="">-- Select --</option>
-            @foreach ($classRecord as $class)
-                <option value="{{ $class->class_name }}">
-                    {{ Helper::recordMdname($class->class_name) }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    <div class="form-group" id="streamWrapper" style="display:none;">
-        <label for="stream">Stream</label>
-        <select class="form-control" name="stream" id="stream">
-            <option value="">-- All Streams --</option>
-        </select>
-    </div>
-`,
+                                <div class="form-group">
+                                    <label for="admission_number">Admission Number</label>
+                                    <input type="text" name="admission_number" class="form-control" placeholder="Enter admission number">
+                                </div>
+                            `,
+                name: `
+        <div class="form-group">
+            <label for="firstname">First Name</label>
+            <input type="text" name="firstname" class="form-control" placeholder="Enter first name">
+        </div>
+        <div class="form-group">
+            <label for="lastname">Last Name</label>
+            <input type="text" name="lastname" class="form-control" placeholder="Enter last name">
+        </div>
+        <div class="form-group">
+            <label for="senior">Class</label>
+            <select class="form-control select2" name="senior" id="senior">
+                <option value="">-- Select --</option>
+                @foreach ($classRecord as $class)
+                    <option value="{{ $class->class_name }}">
+                        {{ Helper::recordMdname($class->class_name) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group" id="streamWrapper" style="display:none;">
+            <label for="stream">Stream</label>
+            <select class="form-control" name="stream" id="stream">
+                <option value="">-- All Streams --</option>
+            </select>
+        </div>
+    `,
 
                 phone: `
-                            <div class="form-group">
-                                <label for="phone">Phone Number</label>
-                                <input type="text" name="phone" class="form-control" placeholder="Enter phone number">
-                            </div>
-                        `,
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="text" name="phone" class="form-control" placeholder="Enter phone number">
+                                </div>
+                            `,
                 student_id: `
-                            <div class="form-group">
-                                <label for="student_id">Student ID</label>
-                                <input type="number" name="student_id" class="form-control" placeholder="Enter student ID">
-                            </div>
-                        `
+                                <div class="form-group">
+                                    <label for="student_id">Student ID</label>
+                                    <input type="number" name="student_id" class="form-control" placeholder="Enter student ID">
+                                </div>
+                            `
             };
 
             $('#search_criteria').on('change', function () {
@@ -161,42 +161,42 @@ name: `
                 });
             });
         });
-        
+
         // When class changes, load its streams
-$(document).on('change', '#senior', function () {
-    const selectedClass = $(this).val();
-    const $streamWrapper = $('#streamWrapper');
-    const $streamSelect = $('#stream');
+        $(document).on('change', '#senior', function () {
+            const selectedClass = $(this).val();
+            const $streamWrapper = $('#streamWrapper');
+            const $streamSelect = $('#stream');
 
-    if (!selectedClass) {
-        $streamWrapper.hide();
-        $streamSelect.html('<option value="">-- All Streams --</option>');
-        return;
-    }
-
-    $.ajax({
-        url: '{{ route("students.streams.ajax") }}',
-        method: 'GET',
-        data: { class: selectedClass },
-        success: function (response) {
-            let options = '<option value="">-- All Streams --</option>';
-            response.streams.forEach(function (stream) {
-                options += `<option value="${stream}">${stream}</option>`;
-            });
-            $streamSelect.html(options);
-
-            // Only show the stream dropdown if there are actual streams for this class
-            if (response.streams.length > 0) {
-                $streamWrapper.show();
-            } else {
+            if (!selectedClass) {
                 $streamWrapper.hide();
+                $streamSelect.html('<option value="">-- All Streams --</option>');
+                return;
             }
-        },
-        error: function () {
-            $streamWrapper.hide();
-        }
-    });
-});
+
+            $.ajax({
+                url: '{{ route("students.streams.ajax") }}',
+                method: 'GET',
+                data: { class: selectedClass },
+                success: function (response) {
+                    let options = '<option value="">-- All Streams --</option>';
+                    response.streams.forEach(function (stream) {
+                        options += `<option value="${stream}">${stream}</option>`;
+                    });
+                    $streamSelect.html(options);
+
+                    // Only show the stream dropdown if there are actual streams for this class
+                    if (response.streams.length > 0) {
+                        $streamWrapper.show();
+                    } else {
+                        $streamWrapper.hide();
+                    }
+                },
+                error: function () {
+                    $streamWrapper.hide();
+                }
+            });
+        });
     </script>
 @endsection
 

@@ -872,7 +872,7 @@
                             <strong>NAME:</strong>
                             {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
                         </div>
-                        <div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}</div>
+                        <!--<div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}</div>-->
                         <div class="stu-field">
                             <strong>CLASS:</strong>
                             {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
@@ -889,39 +889,37 @@
                         <div class="nursery-dev-heading">Cognitive Development</div>
 
                         @foreach($cognitiveSubjects as $sm)
-
+                               
+                              
                                 @php
                                     $remark = $sm->grade_remark ?? '—';
                                     $badgeClass = getBadgeClass($remark);
                                     $displayRemark = $remark !== '—' ? $remark : '—';
-                                    $subject_remark_update = '—';
+                                    $subject_remark_update = '';
 
-                                    if ($remark === "Works  with  minimum  supervision") {
-                                        $subject_remark_update = "Good";
-                                    } elseif ($remark === "Works under Teacher's Guidance") {
-                                        $subject_remark_update = "Fair";
-                                    } elseif ($remark === "Works  independently") {
-                                        $subject_remark_update = "Excellent";
-                                    }
+                                   if ($remark === "Works with Minimum Supervision") {
+    $subject_remark_update = "Good";
+} elseif ($remark === "Works under Teacher's Guidance") {
+    $subject_remark_update = "Fair";
+} elseif ($remark === "Works Independently") {
+    $subject_remark_update = "Excellent";
+}
                                 @endphp
 
-
-                            @php
-                                $subjectImage = config('subject_icons.' . trim($sm->subject_name), config('subject_icons.default'));
-                            @endphp
-
-                            
+                     
                                 <div class="nursery-subject-row">
                                     <div class="nursery-icon-box">
                                         {{-- You can add your icon here using $sm->subject_name --}}
-                                        <img src="{{ $subjectImage }}" alt="{{ $sm->subject_name }}" style="width:40px;height:40px;">
+                                        <img src="/images/subject-icons/{{ trim($sm->subject_name) }}.png"
+                                             alt="{{ $sm->subject_name }}"
+                                             style="width:40px;height:40px;">
                                     </div>
                                     <div class="nursery-subject-body">
                                         <div class="nursery-subject-name-row">
                                             <span class="nursery-subject-name">{{ $sm->subject_name }}</span>
-                                            <span class="nursery-badge {{ $subject_remark_update }}">
-                                                {{ $subject_remark_update}}
-                                            </span>
+                                            <!--<span class="nursery-badge {{ $subject_remark_update }}">-->
+                                            <!--    {{ $subject_remark_update}}-->
+                                            <!--</span>-->
                                         </div>
                                         <div class="nursery-desc">{{ $displayRemark }}</div>
                                     </div>
@@ -940,27 +938,28 @@
                                 $displayRemark = $remark !== '—' ? $remark : '—';
 
 
-                                if ($remark === "Works  with  minimum  supervision") {
-                                    $subject_remark_update = "Good";
-                                } elseif ($remark === "Works under Teacher's Guidance") {
-                                    $subject_remark_update = "Fair";
-                                } elseif ($remark === "Works  independently") {
-                                    $subject_remark_update = "Excellent";
-                                }
+                               if ($remark === "Works with Minimum Supervision") {
+    $subject_remark_update = "Good";
+} elseif ($remark == "Works under Teacher's Guidance") {
+    $subject_remark_update = "Fair";
+} elseif ($remark == "Works Independently") {
+    $subject_remark_update = "Excellent";
+}
                             @endphp
-
+                            
 
                             <div class="nursery-subject-row">
                                 <div class="nursery-icon-box">
-                                    <img src="data:image/png;base64," alt="{{ $sm->subject_name }}"
-                                        style="width:40px;height:40px;">
+                                    <img src="/images/subject-icons/{{ trim($sm->subject_name) }}.png"
+                                             alt="{{ $sm->subject_name }}"
+                                             style="width:40px;height:40px;">
                                 </div>
                                 <div class="nursery-subject-body">
                                     <div class="nursery-subject-name-row">
                                         <span class="nursery-subject-name">{{ $sm->subject_name }}</span>
-                                        <span class="nursery-badge {{ $subject_remark_update }}">
-                                            {{ $subject_remark_update}}
-                                        </span>
+                                        <!--<span class="nursery-badge {{ $subject_remark_update }}">-->
+                                        <!--    {{ $subject_remark_update}}-->
+                                        <!--</span>-->
                                     </div>
                                     <div class="nursery-desc">{{ $displayRemark }}</div>
                                 </div>

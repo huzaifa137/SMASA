@@ -84,11 +84,15 @@ use App\Http\Controllers\Helper;
                                 @php
                                     $HouseID = \App\Models\House::where('ID', $school->ID)->value('Number');
                                     $schoolID = \App\Models\School::where('registration_code', $HouseID)->value('id');
+                                    $schoolNameArabic = \App\Models\School::where('registration_code', $HouseID)->value('school_name_arabic');
+                                    $customSubjectsEnabled = \App\Models\School::where('id', $schoolID)->value('custom_subjects_enabled');
+                                    $customSubjectsActive = \App\Models\School::where('id', $schoolID)->value('custom_subjects_active');
                                 @endphp
+
                                 <tr>
                                     <td class="fw-bold" style="width: 1px;">{{ $key + 1 }}</td>
                                     <td class="fw-bold" style="text-align: left;">{{ $school->House }}</td>
-                                    <td class="fw-bold" style="text-align: left;">{{ $school->House_AR }}</td>
+                                    <td class="fw-bold" style="text-align: left;">{{ $schoolNameArabic }}</td>
                                     <td class="fw-bold" style="text-align: left;">{{ $school->Number }}</td>
                                     <td>
                                         @php
@@ -125,6 +129,22 @@ use App\Http\Controllers\Helper;
                                                 style="margin-right:6px;">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+
+                                            @if ($customSubjectsActive)
+                                                <span class="btn btn-sm btn-outline-success disabled"
+                                                    title="This school has switched to its own subjects" style="margin-right:6px;">
+                                                    <i class="fas fa-book"></i> Custom
+                                                </span>
+                                            @else
+                                                <a href="javascript:void(0);"
+                                                    class="btn btn-sm {{ $customSubjectsEnabled ? 'btn-outline-warning' : 'btn-outline-dark' }} btn-toggle-custom-subjects"
+                                                    data-school-id="{{ $schoolID }}"
+                                                    data-enabled="{{ $customSubjectsEnabled ? '1' : '0' }}"
+                                                    title="{{ $customSubjectsEnabled ? 'Lock custom subjects option' : 'Unlock custom subjects option for this school' }}"
+                                                    style="margin-right:6px;">
+                                                    <i class="fas fa-book-open"></i>
+                                                </a>
+                                            @endif
 
                                             <a href="javascript:void(0);"
                                                 class="btn btn-sm btn-outline-danger btn-delete disabled"
@@ -346,6 +366,49 @@ use App\Http\Controllers\Helper;
         });
 
         $(document).ready(function () {
+            // Unlock / lock the "custom subjects" option for a school
+            $('.btn-toggle-custom-subjects').on('click', function () {
+                const schoolId = $(this).data('school-id');
+                const currentlyEnabled = $(this).data('enabled') == '1';
+                const nextState = !currentlyEnabled;
+
+                Swal.fire({
+                    title: nextState ? 'Unlock custom subjects?' : 'Lock custom subjects?',
+                    text: nextState ?
+                        "This lets the school switch to defining its own subject names instead of the shared list. It won't change anything until the school confirms the switch on their side." :
+                        "This will hide the switch option from the school again (only relevant if they haven't switched yet).",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, proceed'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/schools/${schoolId}/toggle-custom-subjects`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                enabled: nextState ? 1 : 0
+                            },
+                            success: function (response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Done!',
+                                    text: response.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                location.reload();
+                            },
+                            error: function () {
+                                Swal.fire('Error', 'Failed to update this school.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
             // Open modal with current school status
             $('.btn-change-school-status').on('click', function () {
                 const schoolId = $(this).data('id');

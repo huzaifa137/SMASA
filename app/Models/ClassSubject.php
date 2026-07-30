@@ -13,8 +13,12 @@ class ClassSubject extends Model
         'class_id',
         'stream_id',
         'subject_id',
+        'custom_subject_id',
+        'subject_source',
         'subject_type',
         'school_id',
+        'subject_teacher_1',
+        'subject_teacher_2',
     ];
 
 
@@ -33,5 +37,28 @@ public function classSubjectsByClassAndStream()
     public function subject()
     {
         return $this->belongsTo(Subject::class, 'subject_id'); // Assuming 'Subject' is your subject model
+    }
+
+    /**
+     * A school's own subject, only populated when subject_source = 'custom'.
+     */
+    public function customSubject()
+    {
+        return $this->belongsTo(CustomSubject::class, 'custom_subject_id');
+    }
+
+    /**
+     * Safe display name regardless of whether this row points at the shared
+     * master subject list (legacy schools) or a school's own custom subject.
+     * Callers that used to read master-data names directly can switch to
+     * this accessor without needing to know which mode a school is in.
+     */
+    public function getDisplayNameAttribute()
+    {
+        if ($this->subject_source === 'custom' && $this->customSubject) {
+            return $this->customSubject->subject_name;
+        }
+
+        return \App\Http\Controllers\Helper::recordMdname($this->subject_id);
     }
 }

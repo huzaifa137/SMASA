@@ -1982,7 +1982,7 @@ class ExaminationController extends Controller
 
         // Direct check against known nursery class IDs
         // These are the md_id values for Baby Class, Middle Class, Top Class
-        $nurseryClassIds = [279, 36, 37]; // Adjust these to match your actual IDs
+        $nurseryClassIds = [279, 280, 281,]; // Adjust these to match your actual IDs
 
         return in_array((int) $classId, $nurseryClassIds, true);
     }
