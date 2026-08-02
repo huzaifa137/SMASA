@@ -111,6 +111,11 @@ class SchoolController extends Controller
         // Create new school
         $school = School::create($validated);
 
+        // Give the school its own starter grading schemes (fully editable,
+        // deletable, and independent of every other school — see
+        // App\Services\GradingSchemeDefaults).
+        \App\Services\GradingSchemeDefaults::seedForSchool($school->id, Session('LoggedStudent'));
+
         // Create corresponding house
         DB::table('houses')->insert([
             'House' => $validated['name'],

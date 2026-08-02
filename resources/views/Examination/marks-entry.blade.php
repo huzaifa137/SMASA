@@ -246,7 +246,7 @@ use App\Http\Controllers\Helper;
         <div class="row g-4">
             @forelse ($assignedSubjects as $subject)
                 @php
-                    $subjectName = Helper::recordMdname($subject->subject_id);
+                    $subjectName = Helper::classSubjectName($subject);
                     $className = Helper::recordMdname($subject->class_id);
                 @endphp
 

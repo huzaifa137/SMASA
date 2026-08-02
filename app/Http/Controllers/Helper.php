@@ -238,6 +238,7 @@ class Helper extends Controller
     public static function maleClassStreamStudents($classId, $stream_id)
     {
         $maleClassStudents = DB::table('students')
+            ->where('school_id', Session('LoggedSchool'))
             ->where('senior', $classId)
             ->where('gender', 'Male')
             ->where('stream', $stream_id)
@@ -249,6 +250,7 @@ class Helper extends Controller
     public static function femaleClassStreamStudents($classId, $stream_id)
     {
         $femaleClassStudents = DB::table('students')
+            ->where('school_id', Session('LoggedSchool'))
             ->where('senior', $classId)
             ->where('gender', 'Female')
             ->where('stream', $stream_id)
@@ -751,6 +753,36 @@ class Helper extends Controller
             ->value('md_name');
 
         return $recordName;
+    }
+
+    /**
+     * Resolves the display name for a class_subjects row regardless of
+     * whether the school is still on the shared master subject list
+     * ('master') or has switched to its own subjects ('custom'). Accepts
+     * either a stdClass row from a raw DB::table('class_subjects') query
+     * or an Eloquent ClassSubject instance — anything with subject_id,
+     * custom_subject_id and subject_source properties.
+     *
+     * Use this anywhere a class_subjects row's subject name needs to be
+     * shown (exams, attendance, timetable, etc.) instead of calling
+     * recordMdname($row->subject_id) directly, since that only resolves
+     * subjects that still come from the shared master list.
+     */
+    public static function classSubjectName($row)
+    {
+        if (!$row) {
+            return '';
+        }
+
+        $source = $row->subject_source ?? 'master';
+
+        if ($source === 'custom' && !empty($row->custom_subject_id)) {
+            $name = DB::table('custom_subjects')->where('id', $row->custom_subject_id)->value('subject_name');
+
+            return $name ?? '';
+        }
+
+        return self::recordMdname($row->subject_id ?? null) ?? '';
     }
 
     public static function MasterRecordMerge($item1, $item2)

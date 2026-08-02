@@ -285,7 +285,7 @@ use App\Helpers\PermissionHelper;
                         <h3 class="text-white fw-bold mb-3"
                             style="font-size: 1.75rem; line-height: 1.2; word-break: break-word;">
                             {{ $exam->exam_name }} &rsaquo;
-                            <strong>{{ Helper::recordMdname($classSubject->subject_id) }}</strong>
+                            <strong>{{ Helper::classSubjectName($classSubject) }}</strong>
                         </h3>
                         <h5 style="color: color:rgba(255,255,255,.7);">Enter Marks</h5>
                     </div>

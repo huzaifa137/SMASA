@@ -22,6 +22,7 @@ class Examination extends Model
         'description',
         'total_marks',
         'pass_mark',
+        'grading_scheme_id',
         'status',
         'school_id',
         'created_by',
@@ -45,6 +46,35 @@ class Examination extends Model
     public function marks()
     {
         return $this->hasMany(ExaminationMark::class);
+    }
+
+    public function gradingScheme()
+    {
+        return $this->belongsTo(GradingScheme::class, 'grading_scheme_id');
+    }
+
+    /**
+     * Resolve the grade bands to use for this exam:
+     *   1. The scheme explicitly picked on the exam (preferred).
+     *   2. Falls back to the school's default scheme (for exams created
+     *      before grading schemes existed, or if none was picked).
+     *   3. Falls back to the global default scheme.
+     *
+     * Always returns bands ordered from highest min_mark to lowest, ready
+     * for a "first matching percentage" lookup.
+     */
+    public function resolvedGradingBands()
+    {
+        $scheme = $this->gradingScheme;
+
+        if (!$scheme) {
+            $scheme = GradingScheme::availableTo($this->school_id)
+                ->orderByRaw('school_id IS NULL') // school-specific first
+                ->orderByDesc('is_default')
+                ->first();
+        }
+
+        return $scheme ? $scheme->bands : collect();
     }
 
     // ─── Helpers ───────────────────────────────────────────────────────────────

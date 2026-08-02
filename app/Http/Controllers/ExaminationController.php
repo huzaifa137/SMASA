@@ -8,7 +8,10 @@ use App\Models\ExaminationMark;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
+use App\Models\Classroom;
+use App\Models\Teacher;
+use App\Models\Stream;
+use App\Models\ClassSubject;
 use Carbon\Carbon;
 
 class ExaminationController extends Controller
@@ -66,7 +69,28 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->get();
 
-        return view('Examination.create', compact('examCode', 'classStreams'));
+        // Schools pick from their own grading schemes + the global defaults.
+        // Eager-load bands so the create form can render each scheme's grade
+        // table client-side without extra requests.
+        $gradingSchemes = \App\Models\GradingScheme::availableTo($schoolId)
+            ->with('bands')
+            ->orderByRaw('school_id IS NULL') // school's own schemes first
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get();
+
+        $schoolExaminations = Examination::where('school_id', $schoolId)
+            ->count();
+
+        $schoolId = Helper::requireSchool();
+
+        $classRecord = Classroom::where('school_id', $schoolId)
+            ->orderBy('class_name', 'Asc')
+            ->get();
+
+        $schoolClasses = count($classRecord);
+        
+        return view('Examination.create', compact('examCode', 'classStreams', 'gradingSchemes', 'schoolExaminations', 'schoolClasses'));
     }
 
     // ─── Store new examination ─────────────────────────────────────────────────
@@ -83,6 +107,7 @@ class ExaminationController extends Controller
             'marks_entry_deadline' => 'required|date|after_or_equal:end_date',
             'total_marks' => 'required|integer|min:1|max:1000',
             'pass_mark' => 'required|integer|min:1',
+            'grading_scheme_id' => 'required|integer|exists:grading_schemes,id',
             'description' => 'nullable|string',
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
@@ -90,6 +115,19 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
         $examCode = $this->generateExamCode();
+
+        // Make sure the chosen scheme actually belongs to this school (or is a
+        // global default) — never trust the posted id blindly.
+        $schemeOk = \App\Models\GradingScheme::availableTo($schoolId)
+            ->where('id', $validated['grading_scheme_id'])
+            ->exists();
+
+        if (!$schemeOk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected grading scheme is not available to your school.',
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -104,6 +142,7 @@ class ExaminationController extends Controller
                 'marks_entry_deadline' => $validated['marks_entry_deadline'],
                 'total_marks' => $validated['total_marks'],
                 'pass_mark' => $validated['pass_mark'],
+                'grading_scheme_id' => $validated['grading_scheme_id'],
                 'description' => $validated['description'] ?? null,
                 'status' => 'draft',
                 'school_id' => $schoolId,
@@ -265,13 +304,9 @@ class ExaminationController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        $gradingScale = DB::table('grading_scales')
-            ->where(function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId)->orWhereNull('school_id');
-            })
-            ->orderByDesc('school_id') // school-specific first
-            ->orderBy('min_mark', 'desc')
-            ->get();
+        // Uses the grading scheme picked for THIS exam (falls back to the
+        // school's / global default scheme if none was picked yet).
+        $gradingScale = $exam->resolvedGradingBands();
 
         // Nursery / Kindergarten / Pre-Primary: comment-driven 1-3 scale
         // instead of numeric marks against the exam's total_marks.
@@ -325,14 +360,8 @@ class ExaminationController extends Controller
             return response()->json(['success' => false, 'message' => 'Marks entry is closed.'], 403);
         }
 
-        // Get grading scale
-        $gradingScale = DB::table('grading_scales')
-            ->where(function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId)->orWhereNull('school_id');
-            })
-            ->orderByDesc('school_id')
-            ->orderBy('min_mark', 'desc')
-            ->get();
+        // Get grading scale (school's chosen scheme for this exam)
+        $gradingScale = $exam->resolvedGradingBands();
 
         // Nursery / Kindergarten / Pre-Primary use a 1-3 comment-driven
         // scale instead of the exam's normal total_marks + grading_scales.
@@ -374,6 +403,16 @@ class ExaminationController extends Controller
                         $grade = $gradeRow->grade;
                         $remark = $gradeRow->remark;
                         $points = $gradeRow->points;
+                    } else {
+                        // Safety net: GradingScheme::validateBands() now
+                        // requires bands to cover the full 0-100% range, but
+                        // a scheme saved before that check existed could
+                        // still have a gap. Rather than silently leaving the
+                        // grade blank, flag it clearly so it's noticed and
+                        // fixed instead of showing up as an empty cell on a
+                        // report card.
+                        $grade = 'Ungraded';
+                        $remark = "No grade band covers {$percentage}% — check the exam's grading scheme.";
                     }
                 }
 
@@ -935,14 +974,8 @@ class ExaminationController extends Controller
         $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
 
         // ── Overall grade (by percentage) ─────────────────────────────────────
-        // Fetch grading scale once before the map
-        $gradingScale = DB::table('grading_scales')
-            ->where(function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId)->orWhereNull('school_id');
-            })
-            ->orderByDesc('school_id')
-            ->orderBy('min_mark', 'desc')
-            ->get();
+        // Fetch grading scale once before the map (this exam's chosen scheme)
+        $gradingScale = $exam->resolvedGradingBands();
 
         $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
             $pct = $m->total_marks > 0
@@ -1192,13 +1225,9 @@ class ExaminationController extends Controller
         // Preserve only ids that genuinely belong to this school, chronologically
         $examIds = $exams->keys()->all();
 
-        $gradingScale = DB::table('grading_scales')
-            ->where(function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId)->orWhereNull('school_id');
-            })
-            ->orderByDesc('school_id')
-            ->orderBy('min_mark', 'desc')
-            ->get();
+        // Multiple exams may theoretically use different schemes; the
+        // combined report uses the scheme of the most recent exam in the set.
+        $gradingScale = $exams->last()?->resolvedGradingBands() ?? collect();
 
         $scaleFor = function ($pct) use ($gradingScale) {
             return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
@@ -1565,7 +1594,7 @@ class ExaminationController extends Controller
 
                 $subjectProgress[] = (object) [
                     'subject_id' => $subject->subject_id,
-                    'subject_name' => Helper::recordMdname($subject->subject_id),
+                    'subject_name' => Helper::classSubjectName($subject),
                     'class_name' => Helper::recordMdname($subject->class_id),
                     'stream' => $subject->stream_id,
                     'total_students' => $studentCount,
@@ -1795,15 +1824,60 @@ class ExaminationController extends Controller
 
         $examination = Examination::findOrFail($id);
 
+        $schoolId = Session('LoggedSchool');
+
+        $gradingSchemes = \App\Models\GradingScheme::availableTo($schoolId)
+            ->with('bands')
+            ->orderByRaw('school_id IS NULL')
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
+                'is_global' => is_null($s->school_id),
+                'total_marks' => $s->total_marks,
+                'pass_mark' => $s->pass_mark,
+                'bands' => $s->bands->map(fn($b) => [
+                    'grade' => $b->grade,
+                    'min' => $b->min_mark,
+                    'max' => $b->max_mark,
+                    'remark' => $b->remark,
+                ]),
+            ]);
+
+        // All class-stream combinations available to this school, so the
+        // "Classes Involved" checklist can be rebuilt exactly like the create form.
+        $classStreams = DB::table('class_stream_assignments')
+            ->where('school_id', $schoolId)
+            ->get()
+            ->map(fn($cs) => [
+                'value' => $cs->class_id . '_' . $cs->stream_id,
+                'class_name' => \App\Http\Controllers\Helper::recordMdname($cs->class_id),
+                'stream_name' => $cs->stream_id ?: null,
+            ]);
+
+        // Which of those combinations are currently attached to this examination.
+        $selectedClassStreams = ExaminationClass::where('examination_id', $examination->id)
+            ->get()
+            ->map(fn($ec) => $ec->class_id . '_' . ($ec->stream_id ?? ''));
+
         return response()->json([
             'id' => $examination->id,
             'exam_name' => $examination->exam_name,
             'exam_code' => $examination->exam_code,
+            'exam_type' => $examination->exam_type,
+            'term' => $examination->term,
+            'academic_year' => $examination->academic_year,
             'start_date' => Carbon::parse($examination->start_date)->format('Y-m-d'),
             'end_date' => Carbon::parse($examination->end_date)->format('Y-m-d'),
             'marks_entry_deadline' => Carbon::parse($examination->marks_entry_deadline)->format('Y-m-d'),
             'total_marks' => $examination->total_marks,
             'pass_mark' => $examination->pass_mark,
+            'grading_scheme_id' => $examination->grading_scheme_id,
+            'grading_schemes' => $gradingSchemes,
+            'class_streams' => $classStreams,
+            'selected_class_streams' => $selectedClassStreams,
             'description' => $examination->description,
             'status' => $examination->status,
             'status_label' => ucfirst(str_replace('_', ' ', $examination->status)),
@@ -1821,17 +1895,30 @@ class ExaminationController extends Controller
         $examination = Examination::findOrFail($id);
 
         $validated = $request->validate([
+            // ✅ NEW: Examination Details (name, type, term) can now be edited too
+            'exam_name' => 'required|string|max:255',
+            'exam_type' => 'required|string|max:100',
+            'term' => 'required|string|max:50',
+
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'marks_entry_deadline' => 'nullable|date|after_or_equal:end_date',
 
             'total_marks' => 'nullable|integer|min:1',
             'pass_mark' => 'nullable|integer|min:1',
+            'grading_scheme_id' => 'nullable|integer|exists:grading_schemes,id',
 
             'description' => 'nullable|string',
 
+            // ✅ NEW: Classes Involved — at least one class-stream must remain selected
+            'class_streams' => 'required|array|min:1',
+            'class_streams.*' => 'string',
+
             // ✅ NEW: status validation (VERY IMPORTANT)
             'status' => 'required|in:draft,active,marks_entry,closed,results_released',
+        ], [
+            'class_streams.required' => 'At least one class must sit this examination.',
+            'class_streams.min' => 'At least one class must sit this examination.',
         ]);
 
         /**
@@ -1859,17 +1946,72 @@ class ExaminationController extends Controller
             }
         }
 
-        /**
-         * ✅ UPDATE
-         */
-        $examination->update($validated);
+        // Pull the class-stream selection out before mass-assigning the examination,
+        // since it isn't a column on the examinations table.
+        $classStreams = $validated['class_streams'];
+        unset($validated['class_streams']);
 
-        /**
-         * Optional: timestamp for results
-         */
-        if ($validated['status'] === 'results_released' && !$examination->published_at) {
-            $examination->published_at = now();
-            $examination->save();
+        DB::beginTransaction();
+        try {
+            /**
+             * ✅ UPDATE
+             */
+            $examination->update($validated);
+
+            /**
+             * ✅ Sync Classes Involved — add newly-checked class-streams and remove
+             * unchecked ones, leaving untouched rows alone (safer than wipe & re-insert).
+             */
+            $existing = ExaminationClass::where('examination_id', $examination->id)->get();
+
+            $submittedKeys = collect($classStreams)->map(function ($cs) {
+                [$classId, $streamId] = array_pad(explode('_', $cs, 2), 2, '');
+                return $classId . '_' . $streamId;
+            })->all();
+
+            foreach ($existing as $ec) {
+                $key = $ec->class_id . '_' . ($ec->stream_id ?? '');
+                if (!in_array($key, $submittedKeys)) {
+                    $ec->delete();
+                }
+            }
+
+            foreach ($classStreams as $cs) {
+                [$classId, $streamId] = array_pad(explode('_', $cs, 2), 2, null);
+                $streamId = $streamId ?: null;
+
+                $alreadyExists = ExaminationClass::where('examination_id', $examination->id)
+                    ->where('class_id', $classId)
+                    ->where(function ($q) use ($streamId) {
+                        $streamId ? $q->where('stream_id', $streamId) : $q->whereNull('stream_id');
+                    })
+                    ->exists();
+
+                if (!$alreadyExists) {
+                    ExaminationClass::create([
+                        'examination_id' => $examination->id,
+                        'class_id' => $classId,
+                        'stream_id' => $streamId,
+                        'school_id' => $examination->school_id,
+                    ]);
+                }
+            }
+
+            /**
+             * Optional: timestamp for results
+             */
+            if ($validated['status'] === 'results_released' && !$examination->published_at) {
+                $examination->published_at = now();
+                $examination->save();
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update examination: ' . $e->getMessage()
+            ], 500);
         }
 
         return response()->json([

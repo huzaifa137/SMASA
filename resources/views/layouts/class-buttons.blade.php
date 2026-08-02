@@ -77,6 +77,30 @@
                     @endif
                 </div>
             @endif
+
+            @if(PermissionHelper::canFeature('assign_class_teacher') || PermissionHelper::canFeature('assign_subject_teachers'))
+                <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <a href="{{ route('school.assign-teachers') }}"
+                        class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
+                            display: flex;
+                            padding: 12px 20px;
+                            text-decoration: none;
+                            background: linear-gradient(135deg, #a000ef, #8d51ab);
+                            color: #fff;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 15px;
+                            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+                            transition: all .3s ease;
+                            border: 1px solid rgba(255,255,255,.15);
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 28px rgba(59,130,246,.45)';"
+                        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(59,130,246,.35)';">
+                        <i class="fas fa-user-tie me-2"></i>&nbsp;
+                        <span>Assign Teachers</span>
+                    </a>
+                </div>
+            @endif
         @endif
 
     </div>

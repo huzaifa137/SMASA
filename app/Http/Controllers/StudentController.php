@@ -525,7 +525,7 @@ class StudentController extends Controller
                     'firstname' => $validated['firstname'],
                     'lastname' => $validated['lastname'],
                     'senior' => $request->input('senior'),
-                    'stream' => $request->input('stream', null), // optional
+                    'stream' => $request->input('stream') ?: \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL,
                     'admission_number' => $request->input('Admission_Number', null),
                     'gender' => $validated['gender'],
                     'school_id' => $validated['School'],

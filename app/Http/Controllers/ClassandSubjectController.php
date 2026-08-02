@@ -396,6 +396,53 @@ class ClassandSubjectController extends Controller
         return view('Class.manage-classes', compact('classRecord', 'Teachers'));
     }
 
+    /**
+     * One consolidated screen for assigning Class Supervisors, Class
+     * Teachers, and Subject Teachers, so a school admin can make several
+     * assignment changes and save them all in one action instead of one
+     * dropdown change (and one page reload) at a time.
+     *
+     * This intentionally reuses the exact same assign/remove endpoints and
+     * business rules already in place (assignSupervisor, assignClassTeacher,
+     * assignSubjectTeacher1/2 and their remove counterparts) — nothing about
+     * those routes or their validation changes. This screen just lets the
+     * browser fire the right sequence of calls to those existing endpoints
+     * on a single "Save" click.
+     */
+    public function teacherAssignments()
+    {
+        if (!PermissionHelper::canFeature('assign_class_teacher') && !PermissionHelper::canFeature('assign_subject_teachers')) {
+            abort(403, 'Unauthorized Access. Contact School Admin to Assign Teachers.');
+        }
+
+        $schoolId = Helper::requireSchool();
+
+        $classRecord = Classroom::where('school_id', $schoolId)->orderBy('class_name', 'Asc')->get();
+        $Teachers = Teacher::where('school_id', $schoolId)->orderBy('surname', 'Asc')->get();
+
+        $classesData = $classRecord->map(function ($classroom) use ($schoolId) {
+            $streams = Stream::where('class_id', $classroom->class_name)
+                ->where('school_id', $schoolId)
+                ->orderBy('stream_id', 'Asc')
+                ->get()
+                ->map(function ($stream) use ($schoolId) {
+                    $stream->subjects = ClassSubject::where('class_id', $stream->class_id)
+                        ->where('stream_id', $stream->stream_id)
+                        ->where('school_id', $schoolId)
+                        ->get();
+
+                    return $stream;
+                });
+
+            return [
+                'classroom' => $classroom,
+                'streams' => $streams,
+            ];
+        });
+
+        return view('Class.assign-teachers', compact('classesData', 'Teachers'));
+    }
+
     public function destroyClass($id)
     {
         PermissionHelper::denyUnlessFeature('delete_class');

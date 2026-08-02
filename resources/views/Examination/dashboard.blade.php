@@ -1691,47 +1691,245 @@ use App\Helpers\PermissionHelper;
                 padding-left: 0.75rem;
             }
         }
+
+          /* ── Dashboard Hero V2: Premium Dark Gradient with Glow ────────────── */
+.dashboard-hero-v2 {
+    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+    border-radius: 1.25rem;
+    padding: 0;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+}
+
+/* Animated particles background */
+.dashboard-hero-v2-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.08), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,.12), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,.06), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,.08), transparent);
+    background-size: 200px 200px;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: dashboardParticleMove 20s linear infinite;
+}
+
+@keyframes dashboardParticleMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-20px, -20px); }
+}
+
+/* Decorative glow elements */
+.dashboard-hero-v2::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.dashboard-hero-v2::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.dashboard-hero-v2-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-hero-v2-content {
+    flex: 1;
+    min-width: 200px;
+}
+
+.dashboard-hero-v2-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .7);
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: .4rem 1rem;
+    border-radius: 99px;
+    margin-bottom: .75rem;
+    backdrop-filter: blur(10px);
+    transition: all .3s ease;
+}
+
+.dashboard-hero-v2-badge:hover {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .15);
+    transform: translateY(-1px);
+}
+
+.dashboard-hero-v2-badge i {
+    color: #818CF8;
+    font-size: .6rem;
+}
+
+.dashboard-hero-v2-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 .25rem 0;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+}
+
+.dashboard-hero-v2-subtitle {
+    font-size: .9rem;
+    color: rgba(255, 255, 255, .6);
+    margin: 0;
+    line-height: 1.5;
+    max-width: 45ch;
+}
+
+.dashboard-hero-v2-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.btn-dashboard-v2-gradient {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .65rem 1.5rem;
+    background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: .85rem;
+    border: none;
+    border-radius: .6rem;
+    text-decoration: none;
+    transition: all .25s ease;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
+}
+
+.btn-dashboard-v2-gradient:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.btn-dashboard-v2-gradient:active {
+    transform: translateY(0) scale(1);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .dashboard-hero-v2-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.5rem 1.5rem;
+        gap: 1rem;
+    }
+
+    .dashboard-hero-v2-title {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-hero-v2-subtitle {
+        max-width: 100%;
+        font-size: .85rem;
+    }
+
+    .dashboard-hero-v2-actions {
+        width: 100%;
+    }
+
+    .btn-dashboard-v2-gradient {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-hero-v2-container {
+        padding: 1.25rem 1.25rem;
+    }
+
+    .dashboard-hero-v2-title {
+        font-size: 1.3rem;
+    }
+
+    .dashboard-hero-v2-subtitle {
+        font-size: .8rem;
+    }
+
+    .dashboard-hero-v2-badge {
+        font-size: .65rem;
+        padding: .3rem .8rem;
+    }
+}
     </style>
 @endsection
 
 @section('content')
     <div class="side-app">
 
-        {{-- ═══════════ HERO BANNER ════════════════════════════════════════════════ --}}
-        <div class="dashboard-hero mb-4" style="position: relative; z-index: 1;">
-            <div
-                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-
-                <div class="mb-2 mb-md-0">
-
-                    {{-- BIGGER BADGE --}}
-                    <span class="badge bg-white text-primary mb-3 d-inline-flex align-items-center"
-                        style="font-size: .95rem; padding: .6rem 1.2rem; border-radius: .6rem; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
-                        <i class="fas fa-tachometer-alt me-2"></i> &nbsp;
-                        Dashboard Overview
-                    </span>
-
-                    <h3 class="text-white mb-1 fw-bold">
-                        <i class="fas fa-graduation-cap me-2"></i> Examination Hub
-                    </h3>
-
-                    <p class="text-white mb-0 opacity-75" style="font-size:.9rem;">
-                        Central command center for managing all academic assessments
-                    </p>
-                </div>
-
-                <div class="d-flex gap-2">
-                    @if(PermissionHelper::canFeature('create_exam'))
-                    <a href="{{ route('examination.create') }}"
-                        class="btn btn-white text-primary fw-bold d-inline-flex align-items-center"
-                        style="border-radius: .5rem; text-decoration: none; z-index: 10; position: relative;">
-                        <i class="fas fa-plus-circle me-2"></i> &nbsp; New Examination
-                    </a>
-                    @endif
-                </div>
-
+     {{-- ═══════════ HERO BANNER — DASHBOARD ═══════════════════════════════════ --}}
+<div class="dashboard-hero-v2">
+    <div class="dashboard-hero-v2-particles"></div>
+    <div class="dashboard-hero-v2-container">
+        <div class="dashboard-hero-v2-content">
+            <div class="dashboard-hero-v2-badge">
+                <span>Dashboard Overview</span>
             </div>
+            <h2 class="dashboard-hero-v2-title">
+                Examination Hub
+            </h2>
+            <p class="dashboard-hero-v2-subtitle">
+                Central command center for managing all academic assessments
+                and tracking examination performance.
+            </p>
         </div>
+        <div class="dashboard-hero-v2-actions">
+            @if(PermissionHelper::canFeature('create_exam'))
+            <a href="{{ route('examination.create') }}" class="btn-dashboard-v2-gradient">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Examination</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            @endif
+        </div>
+    </div>
+</div>
+
 
         {{-- ═══════════ MAIN CONTENT AREA ════════════════════════════════════════ --}}
 
@@ -4098,6 +4296,27 @@ use App\Helpers\PermissionHelper;
 
         // ── Edit Examination Modal ──────────────────────────────────────────────
         // ── Edit Examination Modal ──────────────────────────────────────────────
+
+        // Classes Involved — toggle a single class-stream card in the edit modal.
+        // Defined globally since the card markup is injected by SweetAlert and
+        // uses an inline onclick handler.
+        function toggleEditClassStream(el) {
+            el.classList.toggle('selected');
+            el.querySelector('.edit-cs-checkbox').checked = el.classList.contains('selected');
+            updateEditClassCount();
+        }
+
+        function updateEditClassCount() {
+            const grid = document.getElementById('editClassStreamGrid');
+            if (!grid) return;
+            const n = grid.querySelectorAll('.edit-cs-item.selected').length;
+            const countBadge = document.getElementById('editSelectedCount');
+            if (countBadge) countBadge.textContent = n + ' selected';
+
+            const errorEl = document.getElementById('editClassStreamError');
+            if (errorEl) errorEl.style.display = n === 0 ? 'block' : 'none';
+        }
+
         function editExam(examId) {
             Swal.fire({
                 title: 'Loading Examination Data...',
@@ -4154,6 +4373,32 @@ use App\Helpers\PermissionHelper;
                                                                                                     ${s.label}
                                                                                                 </option>
                                                                                             `).join('');
+
+                    const gradingSchemes = exam.grading_schemes || [];
+                    const gradingSchemeOptionsHTML = gradingSchemes.map(s => `
+                                                                                                <option value="${s.id}" data-total-marks="${s.total_marks}" data-pass-mark="${s.pass_mark}" data-bands='${JSON.stringify(s.bands)}' ${String(exam.grading_scheme_id) === String(s.id) ? 'selected' : ''}>
+                                                                                                    ${s.name}${s.is_global ? ' (Global default)' : ''} — out of ${s.total_marks}, pass ${s.pass_mark}
+                                                                                                </option>
+                                                                                            `).join('');
+
+                    const classStreams = exam.class_streams || [];
+                    const selectedClassStreams = (exam.selected_class_streams || []).map(String);
+                    const classStreamItemsHTML = classStreams.length ? classStreams.map(cs => {
+                        const isSelected = selectedClassStreams.includes(String(cs.value));
+                        return `
+                                                                                                <div class="edit-cs-item ${isSelected ? 'selected' : ''}" data-value="${cs.value}" onclick="toggleEditClassStream(this)">
+                                                                                                    <div class="edit-cs-icon"><i class="fas fa-users"></i></div>
+                                                                                                    <div>
+                                                                                                        <div class="fw-semibold" style="line-height:1.2;">${cs.class_name || 'Unnamed Class'}</div>
+                                                                                                        <div class="text-muted" style="font-size:.75rem;">${cs.stream_name || 'No Stream'}</div>
+                                                                                                    </div>
+                                                                                                    <input type="checkbox" name="class_streams[]" value="${cs.value}" class="d-none edit-cs-checkbox" ${isSelected ? 'checked' : ''}>
+                                                                                                </div>`;
+                    }).join('') : `
+                                                                                                <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+                                                                                                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                                                                    No class-stream assignments found for this school.
+                                                                                                </div>`;
 
                     Swal.fire({
                         title: '',
@@ -4303,6 +4548,53 @@ use App\Helpers\PermissionHelper;
                                                                                                             font-weight: 600;
                                                                                                             margin-top: 6px;
                                                                                                         }
+                                                                                                        .edit-cs-grid {
+                                                                                                            display: grid;
+                                                                                                            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                                                                                                            gap: 8px;
+                                                                                                            max-height: 220px;
+                                                                                                            overflow-y: auto;
+                                                                                                            padding-right: 2px;
+                                                                                                        }
+                                                                                                        .edit-cs-item {
+                                                                                                            border: 1.5px solid #e2e8f0;
+                                                                                                            border-radius: 10px;
+                                                                                                            padding: 8px 10px;
+                                                                                                            cursor: pointer;
+                                                                                                            transition: all .18s;
+                                                                                                            display: flex;
+                                                                                                            align-items: center;
+                                                                                                            gap: 8px;
+                                                                                                            font-size: .8rem;
+                                                                                                            background: #fafbff;
+                                                                                                        }
+                                                                                                        .edit-cs-item:hover {
+                                                                                                            border-color: #5351e4;
+                                                                                                            background: #f5f4ff;
+                                                                                                        }
+                                                                                                        .edit-cs-item.selected {
+                                                                                                            border-color: #2C29CA;
+                                                                                                            background: #ede9ff;
+                                                                                                            color: #2C29CA;
+                                                                                                            font-weight: 600;
+                                                                                                        }
+                                                                                                        .edit-cs-item .edit-cs-icon {
+                                                                                                            width: 26px;
+                                                                                                            height: 26px;
+                                                                                                            border-radius: 7px;
+                                                                                                            background: #ede9ff;
+                                                                                                            display: flex;
+                                                                                                            align-items: center;
+                                                                                                            justify-content: center;
+                                                                                                            font-size: .7rem;
+                                                                                                            flex-shrink: 0;
+                                                                                                            color: #5351e4;
+                                                                                                            transition: background .18s;
+                                                                                                        }
+                                                                                                        .edit-cs-item.selected .edit-cs-icon {
+                                                                                                            background: #2C29CA;
+                                                                                                            color: #fff;
+                                                                                                        }
                                                                                                     </style>
 
                                                                                                     <div style="margin-top: 1rem;">
@@ -4317,6 +4609,42 @@ use App\Helpers\PermissionHelper;
 
                                                                                                         <form id="editExamForm" style="margin-top: 20px;">
                                                                                                             <input type="hidden" name="exam_id" value="${exam.id}">
+
+                                                                                                            <!-- Examination Details Section -->
+                                                                                                            <div class="edit-section">
+                                                                                                                <div class="edit-section-title">
+                                                                                                                    <i class="fas fa-file-alt"></i> Examination Details
+                                                                                                                </div>
+                                                                                                                <div class="edit-form-grid">
+                                                                                                                    <div class="edit-form-group full-width">
+                                                                                                                        <label class="edit-label">
+                                                                                                                            <span class="required">*</span> Examination Name
+                                                                                                                        </label>
+                                                                                                                        <input type="text" name="exam_name" value="${exam.exam_name || ''}" class="edit-input" placeholder="e.g. End of Term 1 Examinations 2025">
+                                                                                                                    </div>
+                                                                                                                    <div class="edit-form-group">
+                                                                                                                        <label class="edit-label">
+                                                                                                                            <span class="required">*</span> Examination Type
+                                                                                                                        </label>
+                                                                                                                        <select name="exam_type" class="edit-input">
+                                                                                                                            <option value="Beginning-of-Term" ${exam.exam_type === 'Beginning-of-Term' ? 'selected' : ''}>Beginning of Term</option>
+                                                                                                                            <option value="Mid-Term" ${exam.exam_type === 'Mid-Term' ? 'selected' : ''}>Mid Term</option>
+                                                                                                                            <option value="End-of-Term" ${exam.exam_type === 'End-of-Term' ? 'selected' : ''}>End of Term</option>
+                                                                                                                            <option value="Continuous Assessment" ${exam.exam_type === 'Continuous Assessment' ? 'selected' : ''}>Continuous Assessment</option>
+                                                                                                                        </select>
+                                                                                                                    </div>
+                                                                                                                    <div class="edit-form-group">
+                                                                                                                        <label class="edit-label">
+                                                                                                                            <span class="required">*</span> Term
+                                                                                                                        </label>
+                                                                                                                        <select name="term" class="edit-input">
+                                                                                                                            <option value="Term 1" ${exam.term === 'Term 1' ? 'selected' : ''}>Term 1</option>
+                                                                                                                            <option value="Term 2" ${exam.term === 'Term 2' ? 'selected' : ''}>Term 2</option>
+                                                                                                                            <option value="Term 3" ${exam.term === 'Term 3' ? 'selected' : ''}>Term 3</option>
+                                                                                                                        </select>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
 
                                                                                                             <!-- Dates Section -->
                                                                                                             <div class="edit-section">
@@ -4350,15 +4678,41 @@ use App\Helpers\PermissionHelper;
                                                                                                                 <div class="edit-section-title">
                                                                                                                     <i class="fas fa-percent"></i> Marks & Grading
                                                                                                                 </div>
+                                                                                                                <div class="edit-form-group full-width">
+                                                                                                                    <label class="edit-label">Grading Scheme</label>
+                                                                                                                    <select name="grading_scheme_id" id="editGradingSchemeSelect" class="edit-input">
+                                                                                                                        <option value="">-- Keep current / none --</option>
+                                                                                                                        ${gradingSchemeOptionsHTML}
+                                                                                                                    </select>
+                                                                                                                </div>
                                                                                                                 <div class="edit-form-grid">
                                                                                                                     <div class="edit-form-group">
                                                                                                                         <label class="edit-label">Total Marks</label>
-                                                                                                                        <input type="number" name="total_marks" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
+                                                                                                                        <input type="number" name="total_marks" id="editTotalMarksInput" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
                                                                                                                     </div>
                                                                                                                     <div class="edit-form-group">
                                                                                                                         <label class="edit-label">Pass Mark</label>
-                                                                                                                        <input type="number" name="pass_mark" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
+                                                                                                                        <input type="number" name="pass_mark" id="editPassMarkInput" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
                                                                                                                     </div>
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            <!-- Classes Involved Section -->
+                                                                                                            <div class="edit-section">
+                                                                                                                <div class="edit-section-title">
+                                                                                                                    <i class="fas fa-chalkboard-teacher"></i> Classes Involved
+                                                                                                                </div>
+                                                                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                                                                    <span id="editSelectedCount" class="badge bg-primary text-white" style="font-size:.7rem;">${selectedClassStreams.length} selected</span>
+                                                                                                                    <button type="button" id="editToggleAllClasses" class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.72rem;">
+                                                                                                                        <i class="fas fa-check-double me-1"></i> ${classStreams.length && selectedClassStreams.length === classStreams.length ? 'Deselect All' : 'Select All'}
+                                                                                                                    </button>
+                                                                                                                </div>
+                                                                                                                <div class="edit-cs-grid" id="editClassStreamGrid">
+                                                                                                                    ${classStreamItemsHTML}
+                                                                                                                </div>
+                                                                                                                <div id="editClassStreamError" class="text-danger mt-2" style="font-size:.75rem; display:none;">
+                                                                                                                    <i class="fas fa-exclamation-circle"></i> At least one class must sit this examination. Please select a class before saving.
                                                                                                                 </div>
                                                                                                             </div>
 
@@ -4450,10 +4804,76 @@ use App\Helpers\PermissionHelper;
                                                                                                         }
                                                                                                     `;
                             document.head.appendChild(style);
+
+                            // Auto-fill Total Marks / Pass Mark whenever a different Grading Scheme is chosen,
+                            // so the fields actually reflect the newly selected scheme instead of the old values.
+                            const schemeSelect = document.getElementById('editGradingSchemeSelect');
+                            const totalMarksInput = document.getElementById('editTotalMarksInput');
+                            const passMarkInput = document.getElementById('editPassMarkInput');
+
+                            if (schemeSelect) {
+                                schemeSelect.addEventListener('change', function () {
+                                    const opt = this.options[this.selectedIndex];
+                                    const totalMarks = opt ? opt.getAttribute('data-total-marks') : null;
+                                    const passMark = opt ? opt.getAttribute('data-pass-mark') : null;
+
+                                    if (totalMarks) totalMarksInput.value = totalMarks;
+                                    if (passMark) passMarkInput.value = passMark;
+                                });
+                            }
+
+                            // Classes Involved — "Select All / Deselect All" toggle
+                            const toggleAllBtn = document.getElementById('editToggleAllClasses');
+                            if (toggleAllBtn) {
+                                toggleAllBtn.addEventListener('click', function () {
+                                    const items = document.querySelectorAll('#editClassStreamGrid .edit-cs-item');
+                                    const allCurrentlySelected = document.querySelectorAll('#editClassStreamGrid .edit-cs-item.selected').length === items.length && items.length > 0;
+                                    const makeSelected = !allCurrentlySelected;
+
+                                    items.forEach(el => {
+                                        el.classList.toggle('selected', makeSelected);
+                                        el.querySelector('.edit-cs-checkbox').checked = makeSelected;
+                                    });
+
+                                    this.innerHTML = makeSelected
+                                        ? '<i class="fas fa-times me-1"></i> Deselect All'
+                                        : '<i class="fas fa-check-double me-1"></i> Select All';
+
+                                    updateEditClassCount();
+                                });
+                            }
                         },
                         preConfirm: () => {
                             const formData = new FormData(document.getElementById('editExamForm'));
                             const data = Object.fromEntries(formData.entries());
+
+                            // FormData collapses repeated keys (all the checked class_streams[]
+                            // boxes) down to the last one, so collect them explicitly instead.
+                            data.class_streams = Array.from(
+                                document.querySelectorAll('#editClassStreamGrid .edit-cs-checkbox:checked')
+                            ).map(cb => cb.value);
+                            delete data['class_streams[]'];
+
+                            // Validate examination details
+                            if (!data.exam_name || !data.exam_name.trim()) {
+                                Swal.showValidationMessage('Examination name is required');
+                                return false;
+                            }
+                            if (!data.exam_type) {
+                                Swal.showValidationMessage('Examination type is required');
+                                return false;
+                            }
+                            if (!data.term) {
+                                Swal.showValidationMessage('Term is required');
+                                return false;
+                            }
+
+                            // Validate Classes Involved — at least one class must remain selected
+                            if (data.class_streams.length === 0) {
+                                updateEditClassCount();
+                                Swal.showValidationMessage('At least one class must sit this examination. Please select a class before saving.');
+                                return false;
+                            }
 
                             // Validate dates
                             if (!data.start_date) {

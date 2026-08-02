@@ -12,6 +12,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\GradingSchemeController;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -249,6 +250,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('create-class', 'createClass')->name('school.create-class');
         Route::get('all-my-classes', 'allMyClasses')->name('all.my-classes');
         Route::get('manage-classes', 'manageClasses')->name('manage.classes');
+        Route::get('assign-teachers', 'teacherAssignments')->name('school.assign-teachers');
         Route::get('/subjects-by-class/{classId}', 'getSubjectsByClass');
         Route::get('manage-class-streams/{id}', 'manageClassStreams')->name('manage.class.streams');
         Route::get('/class-stream-subjects/{classId}/{streamId}', 'attachedStreamSubjects')->name('class.stream.subjects');
@@ -555,6 +557,20 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examination}/edit-details', 'editDetails')->name('edit-details');
             Route::post('/{examination}/update-details', 'updateDetails')->name('update-details');
 
+        });
+
+    // Grading Schemes (per-school customizable grade bands + scale)
+    Route::prefix('examinations/grading-schemes')
+        ->name('examination.grading-schemes.')
+        ->controller(GradingSchemeController::class)
+        ->middleware(['module:examinations'])
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::post('/{id}/update', 'update')->name('update');
+            Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
+            Route::delete('/{id}', 'destroy')->name('destroy');
         });
 });
 

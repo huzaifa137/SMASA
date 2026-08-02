@@ -143,31 +143,327 @@ use App\Http\Controllers\Helper;
         button {
             padding: 0.5rem 1rem;
         }
+
+        /* ── Hero V2: Premium Dark Gradient with Glow ──────────────── */
+.exam-hero-v2 {
+    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+    border-radius: 1.25rem;
+    padding: 0;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+}
+
+/* Animated particles background */
+.exam-hero-v2-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.08), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,.12), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,.06), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,.08), transparent);
+    background-size: 200px 200px;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: particleMove 20s linear infinite;
+}
+
+@keyframes particleMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-20px, -20px); }
+}
+
+/* Decorative glow elements */
+.exam-hero-v2::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.exam-hero-v2::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.exam-hero-v2-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    padding: 2.5rem 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.exam-hero-v2-content {
+    flex: 1;
+    min-width: 250px;
+}
+
+.exam-hero-v2-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .7);
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: .4rem 1rem;
+    border-radius: 99px;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(10px);
+}
+
+.exam-hero-v2-badge i {
+    color: #818CF8;
+    font-size: .6rem;
+}
+
+.exam-hero-v2-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 .5rem 0;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+}
+
+.exam-hero-v2-subtitle {
+    font-size: .95rem;
+    color: rgba(255, 255, 255, .6);
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+    max-width: 50ch;
+}
+
+.exam-hero-v2-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.exam-hero-v2-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.exam-hero-v2-stat-number {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.exam-hero-v2-stat-label {
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: rgba(255, 255, 255, .4);
+}
+
+.exam-hero-v2-stat-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(255, 255, 255, .1);
+}
+
+.exam-hero-v2-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.exam-hero-v2-action-divider {
+    width: 1px;
+    height: 35px;
+    background: rgba(255, 255, 255, .1);
+}
+
+.btn-exam-v2-glass {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .7rem 1.3rem;
+    background: rgba(255, 255, 255, .06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .8);
+    font-weight: 600;
+    font-size: .85rem;
+    border-radius: .6rem;
+    text-decoration: none;
+    transition: all .25s ease;
+}
+
+.btn-exam-v2-glass:hover {
+    background: rgba(255, 255, 255, .12);
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, .15);
+}
+
+.btn-exam-v2-gradient {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .7rem 1.6rem;
+    background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: .85rem;
+    border: none;
+    border-radius: .6rem;
+    text-decoration: none;
+    transition: all .25s ease;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
+}
+
+.btn-exam-v2-gradient:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.btn-exam-v2-gradient:active {
+    transform: translateY(0) scale(1);
+}
+
+/* ── Responsive V2 ──────────────────────────────────────────── */
+@media (max-width: 992px) {
+    .exam-hero-v2-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 2rem 1.75rem;
+    }
+
+    .exam-hero-v2-title {
+        font-size: 1.8rem;
+    }
+
+    .exam-hero-v2-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .exam-hero-v2-action-divider {
+        width: 100%;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.93);
+    }
+
+    .btn-exam-v2-glass,
+    .btn-exam-v2-gradient {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .exam-hero-v2-subtitle br {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .exam-hero-v2-container {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .exam-hero-v2-title {
+        font-size: 1.5rem;
+    }
+
+    .exam-hero-v2-stats {
+        gap: .75rem;
+    }
+
+    .exam-hero-v2-stat-number {
+        font-size: 1.1rem;
+    }
+}
     </style>
 @endsection
 
 @section('content')
     <div class="side-app">
 
-        {{-- Hero Banner --}}
-        <div class="exam-hero mb-4" style="position: relative; z-index: 1;">
-            <div
-                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                <div class="mb-2 mb-md-0">
-                    <h3 class="text-white mb-1 fw-bold">
-                        <i class="fas fa-file-alt me-2"></i> Create Examination
-                    </h3>
-                    <p class="text-white mb-0 opacity-75" style="font-size:.9rem;">
-                        Define a new examination, assign classes, and set entry deadlines.
-                    </p>
+{{-- Hero Banner - Option 2: Premium Dark Gradient with Glow --}}
+<div class="exam-hero-v2">
+    <div class="exam-hero-v2-particles"></div>
+    <div class="exam-hero-v2-container">
+        <div class="exam-hero-v2-content">
+            <div class="exam-hero-v2-badge">
+                <i class="fas fa-sparkles"></i>
+                <span>New Examination</span>
+            </div>
+            <h2 class="exam-hero-v2-title">
+                Create Your Next<br>Examination
+            </h2>
+            <p class="exam-hero-v2-subtitle">
+                Streamline your examination setup with intelligent defaults,<br>
+                real-time validation, and seamless class assignment.
+            </p>
+
+            <div class="exam-hero-v2-stats">
+                <div class="exam-hero-v2-stat">
+                    <div class="exam-hero-v2-stat-number text-center">{{ $schoolExaminations }}</div>
+                    <div class="exam-hero-v2-stat-label">Total Exams</div>
                 </div>
-                <a href="{{ route('examination.index') }}"
-                    class="btn btn-white text-primary btn-sm fw-bold d-inline-flex align-items-center"
-                    style="border-radius: .5rem; text-decoration: none; z-index: 10; position: relative;">
-                    <i class="fas fa-list me-1" style="pointer-events: none;"></i> &nbsp; Go to All Examinations
-                </a>
+                <div class="exam-hero-v2-stat-divider"></div>
+                <div class="exam-hero-v2-stat">
+                    <div class="exam-hero-v2-stat-number text-center">{{ count($gradingSchemes); }}</div>
+                    <div class="exam-hero-v2-stat-label">Grading Schemes</div>
+                </div>
+                <div class="exam-hero-v2-stat-divider "></div>
+                <div class="exam-hero-v2-stat">
+                    <div class="exam-hero-v2-stat-number text-center">{{ $schoolClasses }}</div>
+                    <div class="exam-hero-v2-stat-label">Active Classes</div>
+                </div>
             </div>
         </div>
+        <div class="exam-hero-v2-actions">
+            <a href="{{ route('examination.index') }}" class="btn-exam-v2-glass">
+                <i class="fas fa-arrow-left"></i>
+                <span>All Examinations</span>
+            </a>
+            <div class="exam-hero-v2-action-divider"></div>
+            <a href="{{ url('examinations/grading-schemes') }}" class="btn-exam-v2-gradient">
+                <i class="fas fa-layer-group"></i>
+                <span>Grading Schemes</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
 
         <form id="createExamForm">
             @csrf
@@ -268,41 +564,102 @@ use App\Http\Controllers\Helper;
                         </div>
                     </div>
 
-                    {{-- Marks & Grading --}}
-                    <div class="card form-card">
-                        <div class="card-body p-4">
-                            <div class="section-header">
-                                <span class="step-badge">3</span>
-                                <i class="fas fa-percent"></i> Marks &amp; Grading
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Total Marks <span
-                                            class="text-danger">*</span></label>
-                                    <input type="number" name="total_marks" class="form-control" value="100" min="1"
-                                        max="1000">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Pass Mark <span
-                                            class="text-danger">*</span></label>
-                                    <input type="number" name="pass_mark" class="form-control" value="50" min="1">
-                                </div>
-                            </div>
-                            <div class="mt-3 p-3 rounded"
-                                style="background:#f8f7ff; border:1px solid #ede9ff; font-size:.82rem;">
-                                <strong><i class="fas fa-table me-1 text-primary"></i> Grading Scale (100% Scale)</strong><br>
-                                <div class="d-flex flex-wrap gap-2 mt-2">
-                                    @foreach([['D1', '80–100', 'Distinction'], ['D2', '75–79', 'Distinction'], ['C3', '70–74', 'Credit'], ['C4', '65–69', 'Credit'], ['C5', '60–64', 'Credit'], ['C6', '55–59', 'Credit'], ['P7', '45–54', 'Pass'], ['P8', '40–44', 'Pass'], ['F9', '0–39', 'Fail']] as $g)
-                                        <span class="badge text-white mb-1"
-                                            style="background:{{ in_array($g[0], ['D1', 'D2']) ? '#1a7a4a' : (in_array($g[0], ['C3', 'C4', 'C5', 'C6']) ? '#2C29CA' : ($g[0] == 'F9' ? '#c0392b' : '#f39c12')) }}; font-size:.72rem; padding:.35rem .6rem;margin-right:5px;">
-                                            {{ $g[0] }}: {{ $g[1] }} &mdash; {{ $g[2] }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                 {{-- Marks & Grading --}}
+<div class="card form-card">
+    <div class="card-body p-4">
+        <!-- Keep existing section-header with flex for full screen -->
+        <div class="section-header d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex align-items-center">
+                <span class="step-badge">3</span> &nbsp;
+                <i class="fas fa-percent ms-1"></i> &nbsp; Marks &amp; Grading
+            </div>
+            <a href="{{ route('examination.grading-schemes.index') }}" target="_blank"
+                class="btn btn-sm btn-outline-primary mt-2 mt-sm-0" 
+                style="border-radius:.5rem; font-size:.75rem;">
+                <i class="fas fa-cog me-1"></i> Manage grading schemes
+            </a>
+        </div>
 
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Grading Scheme <span class="text-danger">*</span></label>
+            <select name="grading_scheme_id" id="gradingSchemeSelect" class="form-control">
+                <option value="">-- Select a grading scheme --</option>
+              @forelse ($gradingSchemes as $scheme)
+@php
+$bandsData = $scheme->bands->map(fn($b) => [
+    'grade' => $b->grade,
+    'min' => $b->min_mark,
+    'max' => $b->max_mark,
+    'remark' => $b->remark
+])->toArray();
+$bandsJson = json_encode($bandsData);
+@endphp
+<option value="{{ $scheme->id }}"
+    data-total-marks="{{ $scheme->total_marks }}"
+    data-pass-mark="{{ $scheme->pass_mark }}"
+    data-bands="{{ $bandsJson }}"
+    {{ old('grading_scheme_id') == $scheme->id || (!old('grading_scheme_id') && $scheme->is_default) ? 'selected' : '' }}>
+    {{ $scheme->name }}{{ $scheme->school_id ? '' : ' (Global default)' }}
+    — out of {{ $scheme->total_marks }}, pass {{ $scheme->pass_mark }}
+</option>
+@empty
+<option value="" disabled>No grading schemes available — create one first.</option>
+@endforelse
+            </select>
+            @if ($gradingSchemes->isEmpty())
+                <div class="text-danger mt-1" style="font-size:.78rem;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    No grading schemes yet. <a href="{{ route('examination.grading-schemes.index') }}">Create one</a> before scheduling an exam.
+                </div>
+            @endif
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Total Marks <span
+                        class="text-danger">*</span></label>
+                <input type="number" name="total_marks" id="totalMarksInput" class="form-control"
+                    value="100" min="1" max="1000">
+                <div class="form-text" style="font-size:.75rem;">Auto-filled from the scheme above; adjust if this exam differs.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Pass Mark <span
+                        class="text-danger">*</span></label>
+                <input type="number" name="pass_mark" id="passMarkInput" class="form-control"
+                    value="50" min="1">
+            </div>
+        </div>
+
+        <div class="mt-3 p-3 rounded"
+            style="background:#f8f7ff; border:1px solid #ede9ff; font-size:.82rem;">
+            <strong><i class="fas fa-table me-1 text-primary"></i> Grading Scale Preview</strong><br>
+            <div class="d-flex flex-wrap gap-2 mt-2" id="gradingBandsPreview">
+                <span class="text-muted" style="font-size:.78rem;">Select a grading scheme to preview its grade bands.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Responsive section header - only affects small screens */
+@media (max-width: 575.98px) {
+    .section-header.d-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+    }
+    
+    .section-header.d-flex .d-flex.align-items-center {
+        justify-content: center;
+    }
+    
+    .section-header.d-flex .btn {
+        width: 100% !important;
+        text-align: center;
+        justify-content: center;
+    }
+}
+</style>
                 </div>
 
                 {{-- ── Right Column — Classes ────────────────────────────────────── --}}
@@ -360,20 +717,29 @@ use App\Http\Controllers\Helper;
 
             <div class="row mt-5 mt-md-3 mb-5">
                 <div class="col-12">
-                    <div class="card form-card">
-                        <div
-                            class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-
-                            <div class="text-muted" style="font-size:.83rem;">
-                                <i class="fas fa-shield-alt text-success me-1"></i>
-                                Examination will be saved as <strong>Draft</strong>. Activate it when ready. 
+                    <div class="card form-card" style="border-left: 4px solid #2C29CA;">
+                        <div class="card-body p-3">
+                            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="status-pill bg-light text-dark border border-2 border-primary px-3 py-1">
+                                            <i class="fas fa-circle text-warning me-1" style="font-size: .5rem;"></i>
+                                            DRAFT
+                                        </span>
+                                    </div>
+                                    <div class="text-muted d-flex align-items-center gap-2" style="font-size:.85rem;">
+                                       &nbsp; <i class="fas fa-shield-alt text-success"></i>
+                                        <span>Auto-saved as draft. <strong>Activate</strong> when ready to publish.</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="submit"
+                                        class="btn text-white submit-btn px-4 py-2 d-inline-flex align-items-center justify-content-center"
+                                        style="border-radius: 50px;">
+                                        <i class="fas fa-save me-2"></i> &nbsp;Create Examination
+                                    </button>
+                                </div>
                             </div>
-                            &nbsp; &nbsp;
-                            <button type="submit"
-                                class="btn text-white submit-btn d-inline-flex align-items-center w-100 w-md-auto justify-content-center mt-2 mt-md-0">
-                                <i class="fas fa-save me-2"></i> &nbsp;Create Examination
-                            </button>
-
                         </div>
                     </div>
                 </div>
@@ -413,6 +779,44 @@ use App\Http\Controllers\Helper;
             updateCount();
         });
 
+        // ── Grading scheme: auto-fill total marks / pass mark + bands preview ────
+        function gradeColor(grade) {
+            if (/^[AD]1|^[AD]2|^A\b/i.test(grade)) return '#1a7a4a';
+            if (/^F|FAIL/i.test(grade)) return '#c0392b';
+            if (/^[CB]/i.test(grade)) return '#2C29CA';
+            return '#f39c12';
+        }
+
+        function renderGradingPreview(bands) {
+            const $preview = $('#gradingBandsPreview');
+            if (!bands || !bands.length) {
+                $preview.html('<span class="text-muted" style="font-size:.78rem;">This scheme has no grade bands defined yet.</span>');
+                return;
+            }
+            const sorted = [...bands].sort((a, b) => b.min - a.min);
+            const html = sorted.map(b => `
+                <span class="badge text-white mb-1" style="background:${gradeColor(b.grade)}; font-size:.72rem; padding:.35rem .6rem; margin-right:5px;">
+                    ${b.grade}: ${b.min}\u2013${b.max}${b.remark ? ' \u2014 ' + b.remark : ''}
+                </span>`).join('');
+            $preview.html(html);
+        }
+
+        function applySelectedScheme() {
+            const $opt = $('#gradingSchemeSelect option:selected');
+            const totalMarks = $opt.data('total-marks');
+            const passMark = $opt.data('pass-mark');
+            const bands = $opt.data('bands');
+
+            if (totalMarks) $('#totalMarksInput').val(totalMarks);
+            if (passMark) $('#passMarkInput').val(passMark);
+            renderGradingPreview(bands);
+        }
+
+        $('#gradingSchemeSelect').on('change', applySelectedScheme);
+        $(document).ready(function () {
+            if ($('#gradingSchemeSelect').val()) applySelectedScheme();
+        });
+
         // ── Form submit ────────────────────────────────────────────────────────
         $('#createExamForm').on('submit', function (e) {
             e.preventDefault();
@@ -421,7 +825,7 @@ use App\Http\Controllers\Helper;
 
             // Basic validation
             let errors = [];
-            ['exam_name', 'exam_type', 'term', 'academic_year', 'start_date', 'end_date', 'marks_entry_deadline', 'total_marks', 'pass_mark']
+            ['exam_name', 'exam_type', 'term', 'academic_year', 'start_date', 'end_date', 'marks_entry_deadline', 'grading_scheme_id', 'total_marks', 'pass_mark']
                 .forEach(name => {
                     const $el = $form.find(`[name="${name}"]`);
                     if (!$el.val() || !$el.val().trim()) {

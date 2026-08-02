@@ -14,14 +14,25 @@ class GradingScale extends Model
 
     // Allow mass assignment for these attributes
     protected $fillable = [
+        'grading_scheme_id',
         'min_mark',
         'max_mark',
         'grade',
+        'remark',
         'points',
+        'sort_order',
+        'school_id', // kept for backward compatibility with pre-scheme rows
     ];
 
-    // Optionally, cast points to integer if needed
     protected $casts = [
-        'points' => 'integer',
+        'points'    => 'float',
+        'min_mark'  => 'float',
+        'max_mark'  => 'float',
+        'sort_order' => 'integer',
     ];
+
+    public function scheme()
+    {
+        return $this->belongsTo(GradingScheme::class, 'grading_scheme_id');
+    }
 }
