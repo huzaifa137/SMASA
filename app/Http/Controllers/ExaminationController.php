@@ -240,10 +240,13 @@ class ExaminationController extends Controller
         $markCounts = \App\Models\ExaminationMark::where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->whereNotNull('marks_obtained')
-            ->selectRaw('subject_id, class_id, stream_id, COUNT(*) as entered_count')
-            ->groupBy('subject_id', 'class_id', 'stream_id')
+            ->selectRaw('subject_id, custom_subject_id, class_id, stream_id, COUNT(*) as entered_count')
+            ->groupBy('subject_id', 'custom_subject_id', 'class_id', 'stream_id')
             ->get()
-            ->keyBy(fn($r) => $r->subject_id . '_' . $r->class_id . '_' . $r->stream_id);
+            // Two different custom subjects both have subject_id = null, so
+            // that alone can't tell them apart — custom_subject_id has to be
+            // part of the key too, or their progress counts would collide.
+            ->keyBy(fn($r) => $r->subject_id . '_' . $r->custom_subject_id . '_' . $r->class_id . '_' . $r->stream_id);
 
         // Student counts per class-stream
         $studentCounts = \Illuminate\Support\Facades\DB::table('students')
@@ -295,12 +298,25 @@ class ExaminationController extends Controller
             ->orderBy('firstname')
             ->get();
 
+        // Identify this subject the same way regardless of whether it's a
+        // master subject, a pure custom subject, or a master subject that
+        // was carried over when the school switched to custom subjects
+        // (class_subjects.subject_id is deliberately kept in that case —
+        // see CustomSubjectController::confirmSwitch — so subject_id stays
+        // the identity whenever it's present; only a genuinely null
+        // subject_id means "look this one up by custom_subject_id").
+        $isCustomSubject = is_null($classSubject->subject_id);
+
         // Existing marks
         $existingMarks = ExaminationMark::where('examination_id', $examId)
-            ->where('subject_id', $classSubject->subject_id)
             ->where('class_id', $classSubject->class_id)
             ->where('stream_id', $classSubject->stream_id)
             ->where('school_id', $schoolId)
+            ->when($isCustomSubject, function ($q) use ($classSubject) {
+                $q->whereNull('subject_id')->where('custom_subject_id', $classSubject->custom_subject_id);
+            }, function ($q) use ($classSubject) {
+                $q->where('subject_id', $classSubject->subject_id);
+            })
             ->get()
             ->keyBy('student_id');
 
@@ -308,11 +324,35 @@ class ExaminationController extends Controller
         // school's / global default scheme if none was picked yet).
         $gradingScale = $exam->resolvedGradingBands();
 
-        // Nursery / Kindergarten / Pre-Primary: comment-driven 1-3 scale
-        // instead of numeric marks against the exam's total_marks.
-        $isEarlyYears = Helper::isEarlyYearsSubject($classSubject->subject_id);
-        $earlyYearsPresets = Helper::earlyYearsPresets();
-        $earlyYearsMaxMark = Helper::earlyYearsMaxMark();
+        // Subjects that have an Assessment Scale attached (via
+        // class_subjects.assessment_scale_id) are graded on that scale's
+        // score range with a comment-driven system, instead of numeric
+        // marks against the exam's total_marks. This generalises the old
+        // hardcoded Nursery-only "Early Years 1-3" behaviour into a
+        // school-configurable scale that can apply to any subject/class.
+        $assessmentScale = $classSubject->assessment_scale_id
+            ? \App\Models\AssessmentScale::with('presets')->find($classSubject->assessment_scale_id)
+            : null;
+
+        $isEarlyYears = (bool) $assessmentScale; // kept for the view's existing conditionals
+        $earlyYearsPresets = $assessmentScale
+            ? $assessmentScale->presets->map(fn($p) => [
+                'id' => $p->id,
+                'marks' => $p->min_score ?? $p->score, // value written into the score field when this preset is picked
+                'min' => $p->min_score ?? $p->score,
+                'max' => $p->max_score ?? $p->score,
+                'range_label' => $p->rangeLabel(),
+                'label' => $p->label,
+                'remark' => $p->remark,
+            ])->toArray()
+            : [];
+        $earlyYearsMaxMark = $assessmentScale ? (float) $assessmentScale->max_score : Helper::earlyYearsMaxMark();
+
+        // If the scale is linked to a Grading Scheme, resolve its bands too
+        // so the view can show a Grade column alongside the comment.
+        $scaleGradingBands = ($assessmentScale && $assessmentScale->usesLinkedGrading())
+            ? $assessmentScale->gradingScheme->bands
+            : collect();
 
         return view('Examination.marks-entry-subject', compact(
             'exam',
@@ -323,7 +363,10 @@ class ExaminationController extends Controller
             'classSubjectId',
             'isEarlyYears',
             'earlyYearsPresets',
-            'earlyYearsMaxMark'
+            'earlyYearsMaxMark',
+            'assessmentScale',
+            'scaleGradingBands',
+            'isCustomSubject'
         ));
     }
 
@@ -342,7 +385,13 @@ class ExaminationController extends Controller
             'marks.*.student_id' => 'required|integer',
             'marks.*.marks' => 'nullable|string', // Changed from numeric to string to allow empty values
             'marks.*.comment' => 'nullable|string|max:255',
-            'subject_id' => 'required|integer',
+            // A subject is identified by subject_id (master subjects, and
+            // custom-since-switch subjects that still carry their original
+            // master subject_id — see CustomSubjectController::confirmSwitch)
+            // OR by custom_subject_id (a pure custom subject that never had
+            // a subject_id). Exactly one of the two must be present.
+            'subject_id' => 'nullable|integer|required_without:custom_subject_id',
+            'custom_subject_id' => 'nullable|integer|required_without:subject_id',
             'class_id' => 'required|integer',
             'stream_id' => 'nullable|string|max:10',
         ]);
@@ -363,10 +412,27 @@ class ExaminationController extends Controller
         // Get grading scale (school's chosen scheme for this exam)
         $gradingScale = $exam->resolvedGradingBands();
 
-        // Nursery / Kindergarten / Pre-Primary use a 1-3 comment-driven
-        // scale instead of the exam's normal total_marks + grading_scales.
-        $isEarlyYears = Helper::isEarlyYearsSubject($request->subject_id);
-        $earlyYearsMaxMark = Helper::earlyYearsMaxMark();
+        // Subjects with an Assessment Scale attached (class_subjects.
+        // assessment_scale_id) use that scale's own score range and
+        // comment presets instead of the exam's normal total_marks +
+        // grading_scales. This generalises the old hardcoded Nursery-only
+        // "Early Years 1-3" behaviour into a school-configurable scale.
+        $classSubjectRow = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $request->class_id)
+            ->where('stream_id', (string) $request->stream_id)
+            ->when($request->filled('subject_id'), function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            }, function ($q) use ($request) {
+                $q->whereNull('subject_id')->where('custom_subject_id', $request->custom_subject_id);
+            })
+            ->first();
+
+        $assessmentScale = ($classSubjectRow && $classSubjectRow->assessment_scale_id)
+            ? \App\Models\AssessmentScale::with('presets')->find($classSubjectRow->assessment_scale_id)
+            : null;
+
+        $isEarlyYears = (bool) $assessmentScale;
 
         DB::beginTransaction();
         try {
@@ -379,15 +445,42 @@ class ExaminationController extends Controller
                 $totalMarks = $exam->total_marks;
 
                 if ($isEarlyYears) {
-                    $totalMarks = $earlyYearsMaxMark;
+                    $totalMarks = $assessmentScale->max_score;
 
                     if ($marksObtained !== null) {
-                        // Clamp to the 1-3 scale regardless of what was posted.
-                        $marksObtained = max(1, min($earlyYearsMaxMark, (int) round($marksObtained)));
-                        $preset = Helper::earlyYearsPresetForMark($marksObtained);
-                        $remark = $preset['remark'] ?? null;
-                        // No letter grade / points for early years — the
-                        // remark (Fair/Good/Excellent) carries the meaning.
+                        // Clamp/round according to this scale's own rules
+                        // (free entry if allow_custom_score is on).
+                        $marksObtained = $assessmentScale->allow_custom_score
+                            ? $assessmentScale->normalizeScore($marksObtained)
+                            : max((float) $assessmentScale->min_score, min((float) $assessmentScale->max_score, round($marksObtained)));
+
+                        $preset = $assessmentScale->presetForScore($marksObtained);
+                        $remark = $preset->remark ?? null;
+
+                        if ($assessmentScale->usesLinkedGrading()) {
+                            // Optional letter grade: score as a % of this
+                            // scale's own max_score, looked up against the
+                            // linked Grading Scheme's bands.
+                            $percentage = $assessmentScale->max_score > 0
+                                ? round(($marksObtained / $assessmentScale->max_score) * 100, 4)
+                                : 0;
+
+                            $linkedBand = $assessmentScale->gradingScheme->bands->first(
+                                fn($g) => $percentage >= $g->min_mark && $percentage <= $g->max_mark
+                            );
+
+                            if ($linkedBand) {
+                                $grade = $linkedBand->grade;
+                                $points = $linkedBand->points;
+                                // Keep the scale's own preset remark if one
+                                // matched; otherwise fall back to the band's.
+                                $remark = $remark ?? $linkedBand->remark;
+                            }
+                        }
+                        // Otherwise (grade_mode = none): no letter grade —
+                        // the remark (Fair/Good/Excellent, or whatever the
+                        // school configured) carries the meaning, exactly
+                        // like the original Early Years behaviour.
                     }
                 } elseif ($marksObtained !== null) {
                     // ✅ Convert raw mark to percentage against THIS exam's total_marks
@@ -421,6 +514,7 @@ class ExaminationController extends Controller
                         'examination_id' => $examId,
                         'student_id' => $entry['student_id'],
                         'subject_id' => $request->subject_id,
+                        'custom_subject_id' => $request->custom_subject_id,
                     ],
                     [
                         'class_id' => $request->class_id,
@@ -950,13 +1044,24 @@ class ExaminationController extends Controller
         $classId = $firstMark->class_id;
         $streamId = $firstMark->stream_id;
 
-        // ── Early years detection ───────────────────────────────────────────────
-        // Nursery / Kindergarten / Pre-Primary subjects are graded 1-3 with a
-        // system/teacher comment instead of a numeric mark against the exam's
-        // total_marks. If every subject on this report belongs to one of those
-        // categories, the whole passlip switches to that scale.
+        // ── Comment-scale detection ───────────────────────────────────────────
+        // Subjects with an Assessment Scale attached (e.g. Nursery's
+        // "Early Years 1-3" scale, or any other school-defined comment
+        // scale) are graded on that scale instead of a numeric mark
+        // against the exam's total_marks. If every subject on this report
+        // uses one of those scales, the whole passlip switches to that
+        // presentation.
         $isEarlyYears = $marks->isNotEmpty()
-            && $marks->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id));
+            && $marks->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id, $m->class_id, $m->stream_id));
+
+        // The actual scale in use (assumes a homogeneous scale across the
+        // report's subjects, matching the historic Early Years assumption).
+        // Falls back to the legacy config-based scale for rows that predate
+        // AssessmentScale (e.g. not yet covered by the backfill migration).
+        $reportAssessmentScale = $isEarlyYears
+            ? Helper::assessmentScaleForClassSubject($classId, $streamId, $firstMark->subject_id, $schoolId)
+            : null;
+        $reportMaxMark = $reportAssessmentScale ? (float) $reportAssessmentScale->max_score : Helper::earlyYearsMaxMark();
 
         // ── Teacher names (per subject) ─────────────────────────────────────────
         // class_subjects.subject_teacher_1/2 holds the actual assigned teacher;
@@ -1035,7 +1140,9 @@ class ExaminationController extends Controller
 
             $overallGrade = '—';
             $overallRemark = $scored->isNotEmpty()
-                ? Helper::earlyYearsRemarkForAverage($earlyYearsAverage)
+                ? ($reportAssessmentScale
+                    ? $reportAssessmentScale->remarkForAverage($earlyYearsAverage)
+                    : Helper::earlyYearsRemarkForAverage($earlyYearsAverage))
                 : 'Pending';
         }
 
@@ -1129,7 +1236,7 @@ class ExaminationController extends Controller
             'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
             'EXAM: ' . $exam->exam_name,
             'TERM: ' . $exam->term . ' ' . $exam->academic_year,
-            'SCORE: ' . ($isEarlyYears ? $earlyYearsAverage . '/' . Helper::earlyYearsMaxMark() : $percentage . '%'),
+            'SCORE: ' . ($isEarlyYears ? $earlyYearsAverage . '/' . $reportMaxMark : $percentage . '%'),
             'GRADE: ' . ($isEarlyYears ? $overallRemark : ($overallGradeRow?->grade ?? '—')),
         ]));
 
@@ -1147,7 +1254,7 @@ class ExaminationController extends Controller
             'previousSubjectMarks' => $previousSubjectMarks,
             'isEarlyYears' => $isEarlyYears,
             'earlyYearsAverage' => $earlyYearsAverage,
-            'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+            'earlyYearsMaxMark' => $reportMaxMark,
         ];
     }
 
@@ -1296,7 +1403,12 @@ class ExaminationController extends Controller
 
         $isEarlyYears = collect($perExamSubjectMarks)
             ->flatMap(fn($c) => $c->values())
-            ->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id));
+            ->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id, $m->class_id ?? $classId, $m->stream_id ?? $streamId));
+
+        $combinedAssessmentScale = ($isEarlyYears && $allSubjectIds->isNotEmpty())
+            ? Helper::assessmentScaleForClassSubject($classId, $streamId, $allSubjectIds->first(), $schoolId)
+            : null;
+        $combinedMaxMark = $combinedAssessmentScale ? (float) $combinedAssessmentScale->max_score : Helper::earlyYearsMaxMark();
 
         // Averaging only makes sense across 2+ chosen examinations
         $useAvg = count($avgExamIds) >= 2;
@@ -1449,7 +1561,7 @@ class ExaminationController extends Controller
             'previousSubjectMarks' => collect(),
             'isEarlyYears' => $isEarlyYears,
             'earlyYearsAverage' => null,
-            'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+            'earlyYearsMaxMark' => $combinedMaxMark,
             'multiExam' => true,
             'examsList' => $exams->values(),
             'avgExamIds' => $avgExamIds,

@@ -432,20 +432,19 @@ use App\Http\Controllers\Helper;
                 Streamline your examination setup with intelligent defaults,<br>
                 real-time validation, and seamless class assignment.
             </p>
-
             <div class="exam-hero-v2-stats">
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number text-center">{{ $schoolExaminations }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ 67 }}</div>
                     <div class="exam-hero-v2-stat-label">Total Exams</div>
                 </div>
                 <div class="exam-hero-v2-stat-divider"></div>
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number text-center">{{ count($gradingSchemes); }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ count($gradingSchemes); }}</div>
                     <div class="exam-hero-v2-stat-label">Grading Schemes</div>
                 </div>
-                <div class="exam-hero-v2-stat-divider "></div>
+                <div class="exam-hero-v2-stat-divider"></div>
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number text-center">{{ $schoolClasses }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ 12 }}</div>
                     <div class="exam-hero-v2-stat-label">Active Classes</div>
                 </div>
             </div>
@@ -456,9 +455,9 @@ use App\Http\Controllers\Helper;
                 <span>All Examinations</span>
             </a>
             <div class="exam-hero-v2-action-divider"></div>
-            <a href="{{ url('examinations/grading-schemes') }}" class="btn-exam-v2-gradient">
-                <i class="fas fa-layer-group"></i>
-                <span>Grading Schemes</span>
+            <a href="{{ route('examination.index') }}" class="btn-exam-v2-gradient">
+                <i class="fas fa-table"></i>
+                <span>Manage Exams</span>
                 <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -567,17 +566,21 @@ use App\Http\Controllers\Helper;
                  {{-- Marks & Grading --}}
 <div class="card form-card">
     <div class="card-body p-4">
-        <!-- Keep existing section-header with flex for full screen -->
-        <div class="section-header d-flex justify-content-between align-items-center flex-wrap">
-            <div class="d-flex align-items-center">
-                <span class="step-badge">3</span> &nbsp;
-                <i class="fas fa-percent ms-1"></i> &nbsp; Marks &amp; Grading
+        <div class="section-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="step-badge">3</span>
+                <i class="fas fa-percent"></i> Marks &amp; Grading
             </div>
-            <a href="{{ route('examination.grading-schemes.index') }}" target="_blank"
-                class="btn btn-sm btn-outline-primary mt-2 mt-sm-0" 
-                style="border-radius:.5rem; font-size:.75rem;">
-                <i class="fas fa-cog me-1"></i> Manage grading schemes
-            </a>
+            <span>
+                <a href="{{ route('examination.grading-schemes.index') }}" target="_blank"
+                    class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
+                    <i class="fas fa-cog me-1"></i> Manage grading schemes
+                </a>
+                <a href="{{ route('examination.assessment-scales.index') }}" target="_blank"
+                    class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
+                    <i class="fas fa-comment-dots me-1"></i> Manage assessment scales
+                </a>
+            </span>
         </div>
 
         <div class="mb-3">
@@ -640,26 +643,6 @@ $bandsJson = json_encode($bandsData);
     </div>
 </div>
 
-<style>
-    /* Responsive section header - only affects small screens */
-@media (max-width: 575.98px) {
-    .section-header.d-flex {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 0.5rem !important;
-    }
-    
-    .section-header.d-flex .d-flex.align-items-center {
-        justify-content: center;
-    }
-    
-    .section-header.d-flex .btn {
-        width: 100% !important;
-        text-align: center;
-        justify-content: center;
-    }
-}
-</style>
                 </div>
 
                 {{-- ── Right Column — Classes ────────────────────────────────────── --}}

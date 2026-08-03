@@ -745,7 +745,13 @@ class ClassandSubjectController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->get();
 
-        return view('Class.attached-stream-subjects', compact('assignment', 'classSubjects', 'groupedSubjects', 'Teachers', 'classId', 'streamId'));
+        // Active assessment scales this school has defined (e.g. Early
+        // Years 1-3), offered as an "Assessment Type" option per subject.
+        $assessmentScales = \App\Models\AssessmentScale::availableTo(Session('LoggedSchool'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'min_score', 'max_score']);
+
+        return view('Class.attached-stream-subjects', compact('assignment', 'classSubjects', 'groupedSubjects', 'Teachers', 'classId', 'streamId', 'assessmentScales'));
     }
 
     public function editClassSubjects($classId, $streamId)

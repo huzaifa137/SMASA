@@ -840,7 +840,19 @@ use App\Helpers\PermissionHelper;
                             @endif
                             @if(PermissionHelper::canFeature('create_exam'))
                                 <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
-                                        Examination</a></li>
+                                        Examination</a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('examination.grading-schemes.index') }}">
+                                        <i class="fas fa-sort-amount-up mr-2"></i>
+                                        Grading Scales
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('examination.assessment-scales.index') }}">
+                                        <i class="fas fa-ruler-combined mr-2"></i>Assessment Scales
+                                    </a>
+                                </li>
                             @endif
                             @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
                                 <li>

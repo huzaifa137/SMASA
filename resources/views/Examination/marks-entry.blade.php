@@ -272,7 +272,7 @@ use App\Http\Controllers\Helper;
                         </div>
 
                         @php
-                            $key = $subject->subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
+                            $key = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
                             $studentKey = $subject->class_id . '_' . $subject->stream_id;
                             $enteredCount = $markCounts[$key]->entered_count ?? 0;
                             $totalStudents = $studentCounts[$studentKey]->total ?? 0;

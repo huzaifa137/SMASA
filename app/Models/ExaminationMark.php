@@ -10,6 +10,7 @@ class ExaminationMark extends Model
         'examination_id',
         'student_id',
         'subject_id',
+        'custom_subject_id',
         'class_id',
         'stream_id',
         'school_id',

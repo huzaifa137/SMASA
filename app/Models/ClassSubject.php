@@ -19,6 +19,7 @@ class ClassSubject extends Model
         'school_id',
         'subject_teacher_1',
         'subject_teacher_2',
+        'assessment_scale_id',
     ];
 
 
@@ -45,6 +46,16 @@ public function classSubjectsByClassAndStream()
     public function customSubject()
     {
         return $this->belongsTo(CustomSubject::class, 'custom_subject_id');
+    }
+
+    /**
+     * The comment/mark scale this subject is graded on for this specific
+     * class + stream, if any. Null (the default) means normal numeric
+     * marks against the exam's total_marks.
+     */
+    public function assessmentScale()
+    {
+        return $this->belongsTo(AssessmentScale::class, 'assessment_scale_id');
     }
 
     /**

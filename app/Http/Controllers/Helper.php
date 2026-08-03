@@ -460,13 +460,46 @@ class Helper extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | Early Years Grading Helpers (Nursery / Kindergarten / Pre-Primary)
+    | Assessment Scale Helpers (generalised comment/mark scales, e.g. the
+    | Nursery / Kindergarten "Early Years 1-3" scale, but school-configurable
+    | and usable for any class + subject combination — see
+    | App\Models\AssessmentScale and AssessmentScaleController.
     |--------------------------------------------------------------------------
     */
 
     /**
+     * The assessment scale (if any) attached to a specific class+stream+
+     * subject combination, via class_subjects.assessment_scale_id. This is
+     * the source of truth for "does this subject use comment-driven
+     * scoring instead of numeric marks against the exam's total_marks?".
+     */
+    public static function assessmentScaleForClassSubject($classId, $streamId, $subjectId, $schoolId = null): ?\App\Models\AssessmentScale
+    {
+        if (empty($classId) || empty($subjectId)) {
+            return null;
+        }
+
+        $schoolId = $schoolId ?? Session('LoggedSchool');
+
+        $scaleId = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', (string) $streamId)
+            ->where('subject_id', $subjectId)
+            ->whereNotNull('assessment_scale_id')
+            ->value('assessment_scale_id');
+
+        if (!$scaleId) {
+            return null;
+        }
+
+        return \App\Models\AssessmentScale::with('presets')->find($scaleId);
+    }
+
+    /**
      * Master-code IDs that represent early-years categories
      * (NURSERY_BABY_CLASS, NURSERY_MIDDLE_CLASS, NURSERY_TOP_CLASS).
+     * Kept only as the legacy fallback described below.
      */
     public static function earlyYearsMasterCodes(): array
     {
@@ -474,7 +507,9 @@ class Helper extends Controller
     }
 
     /**
-     * The 3 system comment presets: marks (1-3), label, remark.
+     * The 3 legacy system comment presets: marks (1-3), label, remark.
+     * Used only as a fallback when no AssessmentScale is attached yet
+     * (e.g. a fresh install before migrations have run the backfill).
      */
     public static function earlyYearsPresets(): array
     {
@@ -487,16 +522,29 @@ class Helper extends Controller
     }
 
     /**
-     * True if a given subject (master_datas.md_id) belongs to one of the
-     * early-years categories, meaning it's graded 1-3 with system
-     * comments rather than a numeric mark out of the exam's total_marks.
+     * True if a given subject, in a given class+stream, is graded on a
+     * comment-driven scale (any AssessmentScale with grade_mode = 'none')
+     * rather than a numeric mark out of the exam's total_marks.
+     *
+     * $classId/$streamId are optional for backward compatibility with old
+     * call sites that only had a subject id — in that case this falls
+     * back to the legacy master-code check. Passing class context is
+     * always preferred since it reflects the school's own configuration.
      */
-    public static function isEarlyYearsSubject($subjectId): bool
+    public static function isEarlyYearsSubject($subjectId, $classId = null, $streamId = null): bool
     {
         if (empty($subjectId)) {
             return false;
         }
 
+        if ($classId) {
+            $scale = self::assessmentScaleForClassSubject($classId, $streamId, $subjectId);
+            if ($scale) {
+                return $scale->grade_mode === 'none';
+            }
+        }
+
+        // Legacy fallback: master-code based detection.
         $masterCodeId = DB::table('master_datas')
             ->where('md_id', (string) $subjectId)
             ->value('md_master_code_id');
@@ -505,7 +553,9 @@ class Helper extends Controller
     }
 
     /**
-     * Find the preset (marks/label/remark) matching a given 1-3 mark.
+     * Find the preset (marks/label/remark) matching a given mark, from
+     * the legacy config-based presets. Prefer
+     * AssessmentScale::presetForScore() when a scale object is available.
      */
     public static function earlyYearsPresetForMark($marks): ?array
     {
@@ -519,10 +569,9 @@ class Helper extends Controller
     }
 
     /**
-     * Overall remark for an early-years subject average (0-3 scale).
-     * Rounds to the nearest preset (1/2/3) rather than requiring an
-     * exact match, since the average of several subjects rarely lands
-     * on a whole number.
+     * Overall remark for an early-years subject average (0-3 scale), from
+     * the legacy config-based presets. Prefer
+     * AssessmentScale::remarkForAverage() when a scale object is available.
      */
     public static function earlyYearsRemarkForAverage(float $average): string
     {
@@ -1060,12 +1109,19 @@ class Helper extends Controller
                     ->where('stream', $subject->stream_id)
                     ->count();
 
-                // Count marks entered for this subject
+                // Count marks entered for this subject. subject_id is null
+                // for a pure custom subject (no master subject_id), so an
+                // ordinary where('subject_id', null) would never match
+                // anything — whereNull is required for that case.
                 $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
-                    ->where('subject_id', $subject->subject_id)
                     ->where('class_id', $subject->class_id)
                     ->where('stream_id', $subject->stream_id)
                     ->where('school_id', $schoolId)
+                    ->when(is_null($subject->subject_id), function ($q) use ($subject) {
+                        $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                    }, function ($q) use ($subject) {
+                        $q->where('subject_id', $subject->subject_id);
+                    })
                     ->whereNotNull('marks_obtained')
                     ->count();
 
@@ -1079,7 +1135,7 @@ class Helper extends Controller
 
                 $subjectProgress[] = (object) [
                     'subject_id' => $subject->subject_id,
-                    'subject_name' => Helper::recordMdname($subject->subject_id),
+                    'subject_name' => Helper::classSubjectName($subject),
                     'class_name' => Helper::recordMdname($subject->class_id),
                     'stream' => $subject->stream_id,
                     'total_students' => $studentCount,

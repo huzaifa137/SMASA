@@ -246,6 +246,245 @@ use App\Helpers\PermissionHelper;
             font-size: .72rem;
             box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
         }
+
+        /* ── Hero Section: Dark Gradient (matching Assessment Scales) ── */
+.exam-hero {
+    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+    border-radius: 1.25rem;
+    padding: 2rem 2.5rem 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+}
+
+/* Animated particles background */
+.exam-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.08), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,.12), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,.06), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.1), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,.08), transparent);
+    background-size: 200px 200px;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: examParticleMove 20s linear infinite;
+}
+
+@keyframes examParticleMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-20px, -20px); }
+}
+
+/* Decorative glow - top right */
+.exam-hero::after {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Ensure content stays above background */
+.exam-hero .row {
+    position: relative;
+    z-index: 1;
+}
+
+/* Status pill - updated for dark background */
+.status-pill {
+    padding: .4rem 1.2rem;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 700;
+    display: inline-block;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.status-marks_entry {
+    background: rgba(255, 243, 205, 0.9);
+    color: #856404;
+}
+
+.status-active {
+    background: rgba(212, 245, 226, 0.9);
+    color: #1a7a4a;
+}
+
+.status-closed {
+    background: rgba(253, 232, 232, 0.9);
+    color: #c0392b;
+}
+
+/* Exam meta pills - dark theme */
+.exam-meta-pill {
+    background: rgba(255, 255, 255, .08);
+    border-radius: .75rem;
+    padding: .6rem 1rem;
+    font-size: .9rem;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.exam-meta-pill i {
+    font-size: 1rem;
+    opacity: 0.9;
+    color: #818CF8;
+}
+
+.exam-meta-pill:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Progress bar - dark theme */
+.progress-bar-wrap {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #818CF8, #ffffff);
+    border-radius: 99px;
+    transition: width .5s ease;
+}
+
+/* Back button - dark theme */
+.btn-back-exam {
+    border-radius: 1rem;
+    padding: 0.7rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    transition: all 0.25s ease;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-back-exam:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    color: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Title text - dark theme */
+.exam-hero h3 {
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.exam-hero h3 strong {
+    color: #818CF8;
+}
+
+.exam-hero .text-white-50 {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Progress text */
+.progress-text {
+    font-size: .8rem;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+}
+
+.progress-text i {
+    color: #34D399;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .exam-hero {
+        padding: 1.5rem 1.5rem 2rem;
+        border-radius: 1rem;
+    }
+    
+    .exam-hero h3 {
+        font-size: 1.25rem;
+    }
+    
+    .exam-hero .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    
+    .exam-hero .d-flex .btn-back-exam {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .exam-meta-pill {
+        font-size: .8rem;
+        padding: .5rem .8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .exam-hero {
+        padding: 1rem 1rem 1.5rem;
+        border-radius: 0.85rem;
+    }
+    
+    .exam-hero h3 {
+        font-size: 1.1rem;
+    }
+    
+    .exam-hero h3 strong {
+        display: block;
+        margin-top: 4px;
+    }
+    
+    .status-pill {
+        font-size: .7rem;
+        padding: .3rem .8rem;
+    }
+    
+    .exam-meta-pill {
+        font-size: .75rem;
+        padding: .4rem .7rem;
+    }
+    
+    .exam-meta-pill i {
+        font-size: .8rem;
+    }
+    
+    .progress-text {
+        font-size: .7rem;
+    }
+}
     </style>
 @endsection
 
@@ -339,7 +578,6 @@ use App\Helpers\PermissionHelper;
                         </span>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -349,9 +587,16 @@ use App\Helpers\PermissionHelper;
                 @if ($isEarlyYears)
                     <div class="alert alert-info m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
                         <i class="fas fa-info-circle me-1"></i>
-                        This class is graded on a <strong>1–{{ $earlyYearsMaxMark }} scale</strong> with a
-                        comment instead of numeric marks. Pick a system comment to auto-fill the score and
+                        This subject uses the <strong>{{ $assessmentScale->name }}</strong> scale
+                        ({{ rtrim(rtrim(number_format($assessmentScale->min_score, 2), '0'), '.') }}–{{ rtrim(rtrim(number_format($earlyYearsMaxMark, 2), '0'), '.') }})
+                        with a comment instead of numeric marks. Pick a system comment to auto-fill the score and
                         remark, or write your own — the comment box always stays editable.
+                        @if ($assessmentScale->allow_custom_score)
+                            You may also type a score outside the usual range if needed.
+                        @endif
+                        @if ($assessmentScale->usesLinkedGrading())
+                            A letter grade is also shown, based on the <strong>{{ $assessmentScale->gradingScheme->name ?? 'linked' }}</strong> grading scheme.
+                        @endif
                     </div>
                 @endif
                 <div class="table-responsive">
@@ -361,8 +606,11 @@ use App\Helpers\PermissionHelper;
                                 <th style="width:40px;">#</th>
                                 <th>Student</th>
                                 @if ($isEarlyYears)
-                                    <th style="width:70px;">Score <small class="fw-normal text-white">(/{{ $earlyYearsMaxMark }})</small></th>
+                                    <th style="width:70px;">Score <small class="fw-normal text-white">({{ rtrim(rtrim(number_format($assessmentScale->min_score, 2), '0'), '.') }}–{{ rtrim(rtrim(number_format($earlyYearsMaxMark, 2), '0'), '.') }}{{ $assessmentScale->allow_custom_score ? '+' : '' }})</small></th>
                                     <th style="min-width:230px;">System Comment</th>
+                                    @if ($assessmentScale->usesLinkedGrading())
+                                        <th>Grade</th>
+                                    @endif
                                     <th>Remark</th>
                                 @else
                                     <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
@@ -380,8 +628,8 @@ use App\Helpers\PermissionHelper;
                                     $initials = strtoupper(
                                         substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1),
                                     );
-                                    $presetMatch = $isEarlyYears
-                                        ? collect($earlyYearsPresets)->firstWhere('marks', (int) ($mark?->marks_obtained ?? 0))
+                                    $presetMatch = ($isEarlyYears && $mark?->marks_obtained !== null)
+                                        ? $assessmentScale->presetForScore($mark->marks_obtained)
                                         : null;
                                 @endphp
                                 <tr data-student-id="{{ $student->id }}">
@@ -404,10 +652,15 @@ use App\Helpers\PermissionHelper;
                                         <td>
                                             <input type="number" class="form-control marks-input"
                                                 name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
-                                                data-max="{{ $earlyYearsMaxMark }}" data-early-years="1"
+                                                data-min="{{ $assessmentScale->min_score }}"
+                                                data-max="{{ $earlyYearsMaxMark }}"
+                                                data-allow-custom="{{ $assessmentScale->allow_custom_score ? 1 : 0 }}"
+                                                data-early-years="1"
                                                 value="{{ $mark?->marks_obtained ?? '' }}"
-                                                min="1" max="{{ $earlyYearsMaxMark }}" step="1" placeholder="—"
-                                                style="width:60px;">
+                                                min="{{ $assessmentScale->allow_custom_score ? 0 : $assessmentScale->min_score }}"
+                                                max="{{ $assessmentScale->allow_custom_score ? '' : $earlyYearsMaxMark }}"
+                                                step="0.01" placeholder="—"
+                                                style="width:70px;">
                                         </td>
                                         <td>
                                             <select class="form-control preset-select" data-student="{{ $student->id }}">
@@ -416,16 +669,23 @@ use App\Helpers\PermissionHelper;
                                                     <option value="{{ $preset['marks'] }}"
                                                         data-label="{{ $preset['label'] }}"
                                                         data-remark="{{ $preset['remark'] }}"
-                                                        @selected($presetMatch && $presetMatch['marks'] === $preset['marks'] && $mark?->teacher_comment === $preset['label'])>
-                                                        {{ $preset['label'] }} ({{ $preset['marks'] }} — {{ $preset['remark'] }})
+                                                        @selected($presetMatch && $presetMatch->id === $preset['id'] && $mark?->teacher_comment === $preset['label'])>
+                                                        {{ $preset['label'] }} ({{ $preset['range_label'] }} — {{ $preset['remark'] }})
                                                     </option>
                                                 @endforeach
                                                 <option value="custom"
-                                                    @selected($mark && (!$presetMatch || $mark?->teacher_comment !== ($presetMatch['label'] ?? null)))>
+                                                    @selected($mark && (!$presetMatch || $mark?->teacher_comment !== ($presetMatch->label ?? null)))>
                                                     Write my own comment
                                                 </option>
                                             </select>
                                         </td>
+                                        @if ($assessmentScale->usesLinkedGrading())
+                                            <td>
+                                                <span class="grade-badge grade-cell" id="grade_{{ $student->id }}">
+                                                    {{ $mark?->grade ?? '—' }}
+                                                </span>
+                                            </td>
+                                        @endif
                                         <td>
                                             <span class="text-muted remark-cell" style="font-size:.8rem;"
                                                 id="remark_{{ $student->id }}">
@@ -551,12 +811,14 @@ use App\Helpers\PermissionHelper;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Grading scale + early-years presets from PHP → JS
+        // Grading scale + assessment-scale presets from PHP → JS
         const gradingScale = @json($gradingScale);
-        const earlyYearsPresets = @json($earlyYearsPresets);
+        const earlyYearsPresets = @json($earlyYearsPresets); // [{id, marks, min, max, range_label, label, remark}, ...] — 'marks'/'min' are the band's lower bound
+        const scaleGradingBands = @json($scaleGradingBands ?? []); // only populated when the scale links a grading scheme
 
         // Pass total_marks from PHP into JS
         const examTotalMarks = {{ $exam->total_marks }};
+        const scaleMaxScore = {{ $isEarlyYears ? $earlyYearsMaxMark : 'null' }};
 
         // ✅ Convert to percentage FIRST, then match scale
         function getGrade(marks) {
@@ -576,6 +838,22 @@ use App\Helpers\PermissionHelper;
             return null;
         }
 
+        // Same idea, but against the assessment scale's own max_score and
+        // its linked grading scheme's bands (only used when a scale is
+        // attached AND it links a grading scheme).
+        function getScaleGrade(score) {
+            if (score === '' || score === null || isNaN(score) || !scaleMaxScore) return null;
+            score = parseFloat(score);
+            const percentage = scaleMaxScore > 0 ? (score / scaleMaxScore) * 100 : 0;
+
+            for (const g of scaleGradingBands) {
+                if (percentage >= g.min_mark && percentage <= g.max_mark) {
+                    return g;
+                }
+            }
+            return null;
+        }
+
         function gradeCssClass(grade) {
             if (!grade) return '';
             if (grade.startsWith('D')) return 'grade-D';
@@ -585,10 +863,13 @@ use App\Helpers\PermissionHelper;
             return '';
         }
 
-        // Look up an early-years preset by its score (1, 2, 3 ...)
+        // Look up an assessment-scale preset by score, matching against its
+        // min-max band (works for both single-value presets and true
+        // ranges like 1-39).
         function findEarlyYearsPreset(marks) {
-            const num = Math.round(parseFloat(marks));
-            return earlyYearsPresets.find(p => p.marks === num) || null;
+            const num = parseFloat(marks);
+            if (isNaN(num)) return null;
+            return earlyYearsPresets.find(p => num >= parseFloat(p.min) && num <= parseFloat(p.max)) || null;
         }
 
         // ===== System Comment (preset) dropdown =====
@@ -608,10 +889,19 @@ use App\Helpers\PermissionHelper;
             }
 
             if (val === 'custom') {
-                // Teacher wants to write their own comment/score manually
+                // Teacher explicitly asked to write their own comment. Only
+                // clear the box if it's empty or still holds a previously
+                // auto-filled preset label — never wipe text the teacher
+                // actually typed themselves, and never force a blank box
+                // just because the score no longer matches a preset (that
+                // defeats the whole point of presets: saving typing time).
+                const currentText = $comment.val();
+                const wasAutoFilled = !currentText || earlyYearsPresets.some(p => p.label === currentText);
+                if (wasAutoFilled) {
+                    $comment.val('');
+                }
+                $comment.focus();
                 $marksInput.removeClass('valid invalid');
-                $remark.text('—');
-                $comment.val('').focus();
                 return;
             }
 
@@ -627,7 +917,9 @@ use App\Helpers\PermissionHelper;
         // ===== Live grade/remark preview on marks input =====
         $(document).on('input', '.marks-input', function () {
             const val = $(this).val();
+            const min = parseFloat($(this).data('min'));
             const max = parseFloat($(this).data('max'));
+            const allowCustom = $(this).data('allow-custom') == 1;
             const sid = $(this).data('student');
             const isEarlyYears = $(this).data('early-years') == 1;
             const $remark = $(`#remark_${sid}`);
@@ -638,6 +930,7 @@ use App\Helpers\PermissionHelper;
                 $remark.text('—');
                 if (isEarlyYears) {
                     $(`.preset-select[data-student="${sid}"]`).val('');
+                    $(`#grade_${sid}`).text('—');
                 } else {
                     $(`#grade_${sid}`).text('—').attr('class', 'grade-badge grade-cell');
                 }
@@ -646,8 +939,13 @@ use App\Helpers\PermissionHelper;
 
             const num = parseFloat(val);
 
-            // Invalid / out of range
-            if (isNaN(num) || num < 0 || num > max) {
+            // Invalid / out of range. A scale that allows custom scores only
+            // rejects negative numbers; otherwise it's clamped to min/max.
+            const outOfRange = isEarlyYears
+                ? (allowCustom ? num < 0 : (num < min || num > max))
+                : (num < 0 || num > max);
+
+            if (isNaN(num) || outOfRange) {
                 $(this).removeClass('valid').addClass('invalid');
                 $remark.text('Invalid');
                 if (!isEarlyYears) {
@@ -659,17 +957,32 @@ use App\Helpers\PermissionHelper;
             $(this).removeClass('invalid').addClass('valid');
 
             if (isEarlyYears) {
-                // Early-years: match the typed score against the presets and
-                // keep the dropdown + remark in sync, instead of using the
-                // percentage grading scale (which doesn't apply here).
+                // With ranges, a teacher normally types a raw score (e.g.
+                // 23) rather than picking an exact preset value from the
+                // dropdown, so the matching System Comment needs to
+                // auto-fill here too — not just on dropdown selection.
+                // Never overwrite text the teacher actually typed
+                // themselves though: only fill in when the comment box is
+                // empty or still holds a previous auto-filled label.
                 const preset = findEarlyYearsPreset(num);
+                $remark.text(preset ? preset.remark : '—');
+
                 const $select = $(`.preset-select[data-student="${sid}"]`);
-                if (preset) {
-                    $remark.text(preset.remark);
-                    $select.val(String(preset.marks));
-                } else {
-                    $remark.text('—');
-                    $select.val('custom');
+                const $comment = $(`input[name="comment[${sid}]"]`);
+                const currentText = $comment.val();
+                const wasAutoFilled = !currentText || earlyYearsPresets.some(p => p.label === currentText);
+
+                if (preset && wasAutoFilled) {
+                    $select.val(preset.marks);
+                    $comment.val(preset.label);
+                } else if (!preset && wasAutoFilled) {
+                    $select.val('');
+                    $comment.val('');
+                }
+
+                if (scaleGradingBands.length) {
+                    const g = getScaleGrade(num);
+                    $(`#grade_${sid}`).text(g ? g.grade : '—');
                 }
             } else {
                 const g = getGrade(num);
@@ -687,11 +1000,17 @@ use App\Helpers\PermissionHelper;
             let hasError = false;
             $('.marks-input').each(function() {
                 const val = $(this).val();
+                const min = parseFloat($(this).data('min'));
                 const max = parseFloat($(this).data('max'));
+                const allowCustom = $(this).data('allow-custom') == 1;
+                const isEarlyYears = $(this).data('early-years') == 1;
+
+                const outOfRange = isEarlyYears
+                    ? (allowCustom ? parseFloat(val) < 0 : (parseFloat(val) < min || parseFloat(val) > max))
+                    : (parseFloat(val) < 0 || parseFloat(val) > max);
 
                 // Only validate if the field has a value
-                if (val !== '' && (isNaN(parseFloat(val)) || parseFloat(val) < 0 || parseFloat(val) >
-                    max)) {
+                if (val !== '' && (isNaN(parseFloat(val)) || outOfRange)) {
                     $(this).addClass('invalid');
                     hasError = true;
                 } else {
@@ -749,8 +1068,9 @@ use App\Helpers\PermissionHelper;
                     data: JSON.stringify({
                         _token: '{{ csrf_token() }}',
                         marks: marksData,
-                        subject_id: {{ $classSubject->subject_id }},
-                        class_id: {{ $classSubject->class_id }},
+                        subject_id: @json($classSubject->subject_id),
+                        custom_subject_id: @json($classSubject->custom_subject_id),
+                        class_id: @json($classSubject->class_id),
                         stream_id: @json($classSubject->stream_id),
                     }),
                     success: function(res) {

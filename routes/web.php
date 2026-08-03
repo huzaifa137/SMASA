@@ -13,6 +13,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\GradingSchemeController;
+use App\Http\Controllers\AssessmentScaleController;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -571,6 +572,29 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{id}/update', 'update')->name('update');
             Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
             Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+    // Assessment Scales (per-school customizable comment/mark scales for
+    // subjects graded outside the normal numeric-marks system, e.g.
+    // Nursery's "Early Years 1-3" scale — generalises what used to be
+    // hardcoded in config('constants.early_years'))
+    Route::prefix('examinations/assessment-scales')
+        ->name('examination.assessment-scales.')
+        ->controller(AssessmentScaleController::class)
+        ->middleware(['module:examinations'])
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::post('/{id}/update', 'update')->name('update');
+            Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+
+            Route::get('/class-subjects/{classId}/{streamId}', 'classSubjects')->name('class-subjects');
+            Route::post('/assign', 'assignToClassSubject')->name('assign');
+
+            Route::get('/{id}/assign', 'assignPage')->name('assign-page');
+            Route::post('/{id}/assign-bulk', 'assignBulk')->name('assign-bulk');
         });
 });
 
