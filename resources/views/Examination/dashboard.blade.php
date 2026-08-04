@@ -2026,9 +2026,12 @@ use App\Helpers\PermissionHelper;
 
                                                 <div class="mec-class-action" onclick="event.stopPropagation()">
                                                     @if ($class->is_released)
-                                                        <span class="mec-badge mec-badge-released" title="Released {{ optional($class->released_at)->format('M d, Y H:i') }}{{ $class->released_by_name ? ' by ' . $class->released_by_name : '' }}">
+                                                        <a href="{{ route('examination.passslips.index', $exam->id) }}"
+                                                            class="mec-badge mec-badge-released mec-badge-link"
+                                                            title="Released {{ optional($class->released_at)->format('M d, Y H:i') }}{{ $class->released_by_name ? ' by ' . $class->released_by_name : '' }} — click to view pass slips">
                                                             <i class="fas fa-check-circle me-1"></i> Released
-                                                        </span>
+                                                            <i class="fas fa-arrow-right ms-1" style="font-size:.65em;"></i>
+                                                        </a>
                                                         @if (!in_array($exam->status, ['closed', 'results_released']))
                                                             <button type="button" class="mec-btn mec-btn-undo" onclick="mecRelease({{ $exam->id }}, {{ $class->examination_class_id }}, 'unrelease', this)">Undo</button>
                                                         @endif
@@ -2108,6 +2111,20 @@ use App\Helpers\PermissionHelper;
                             .mec-btn-undo { background: #f5f5fa; color: #8a8aa3; margin-left: 0.5rem; }
                             .mec-badge { font-size: 0.76rem; font-weight: 700; padding: 0.4rem 0.75rem; border-radius: 99px; white-space: nowrap; }
                             .mec-badge-released { background: #e8fff3; color: #10B981; }
+
+                            .mec-badge-link {
+                                text-decoration: none;
+                                cursor: pointer;
+                                transition: all 0.15s ease;
+                                border: 1px solid transparent;
+                            }
+
+                            .mec-badge-link:hover {
+                                background: #d1f7e6;
+                                color: #0d9c6c;
+                                border-color: #10B981;
+                                text-decoration: none;
+                            }
                             .mec-badge-waiting { background: #f5f5fa; color: #9695ab; }
 
                             .mec-subject-list { display: none; border-top: 1px solid #f2f2f8; background: #fbfbfe; }

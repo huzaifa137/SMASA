@@ -649,6 +649,45 @@ class ExaminationController extends Controller
     /**
      * Single student passslip (printable view).
      */
+    /**
+     * The customisation panel on the pass slips index page only ever
+     * affects the CURRENT page load's in-memory toggle state — it resets
+     * to hard defaults on every refresh unless someone manually reopens
+     * the "Save Customisation" panel and re-selects the class first. The
+     * actual slip templates (slip.blade.php etc.) read every setting
+     * straight from request() with no knowledge of what's saved in the
+     * passslip_settings table at all, so a saved profile was never
+     * really being applied — only ever what happened to be in the URL.
+     *
+     * This closes that gap at the one place that matters: right before
+     * a slip is rendered, merge that class's saved settings into the
+     * request as fallbacks. An explicit query param (e.g. a one-off
+     * preview tweak from the panel) still wins — only keys the request
+     * doesn't already carry get filled in from the saved profile.
+     */
+    private function applySavedPassslipSettings($schoolId, $classId): void
+    {
+        if (empty($classId)) {
+            return;
+        }
+
+        $saved = Helper::getPassslipSettings($schoolId, $classId);
+        if (empty($saved)) {
+            return;
+        }
+
+        $toMerge = [];
+        foreach ($saved as $key => $value) {
+            if (!request()->has($key)) {
+                $toMerge[$key] = is_bool($value) ? ($value ? '1' : '0') : $value;
+            }
+        }
+
+        if ($toMerge) {
+            request()->merge($toMerge);
+        }
+    }
+
     public function passslipStudent($examId, $studentId)
     {
 
@@ -668,6 +707,8 @@ class ExaminationController extends Controller
         if (!$this->classIsReleased($exam, $student->senior, $student->stream, $schoolId)) {
             abort(403, 'Results for this class have not been released yet.');
         }
+
+        $this->applySavedPassslipSettings($schoolId, $student->senior);
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
         $multiExam = count($examIds) > 1;
@@ -758,6 +799,8 @@ class ExaminationController extends Controller
             abort(403, 'Results for this class have not been released yet.');
         }
 
+        $this->applySavedPassslipSettings($schoolId, $classId);
+
         // ✅ Removed orderBy('lastname') - we'll sort by performance instead
         $students = DB::table('students')
             ->where('school_id', $schoolId)
@@ -844,6 +887,10 @@ class ExaminationController extends Controller
             ->get()
             ->filter(fn($ec) => $this->classIsReleased($exam, $ec->class_id, $ec->stream_id, $schoolId))
             ->values();
+
+        if ($examClasses->isNotEmpty()) {
+            $this->applySavedPassslipSettings($schoolId, $examClasses->first()->class_id);
+        }
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
         $multiExam = count($examIds) > 1;

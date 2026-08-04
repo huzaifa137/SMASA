@@ -1643,28 +1643,25 @@ function setLanguage(lang) {
 
     /* ── Build query-string from currentSettings ── */
 function buildQS() {
-    readSettings();
+    // Deliberately NOT including currentSettings here anymore. Those
+    // toggles reflect whichever class was last loaded into the panel —
+    // broadcasting them into every student/class link meant printing P1
+    // would silently use whatever was loaded for Baby Class, etc. Each
+    // print now resolves its OWN class's saved settings server-side
+    // (applySavedPassslipSettings); lang is the only setting that's
+    // genuinely a page-wide preference rather than per-class.
     const p = new URLSearchParams();
-    for (const [k, v] of Object.entries(currentSettings)) {
-        p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
-    }
-    // Preserve the current language
     const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
     p.set('lang', currentLang);
     return p.toString();
 }
 
 function injectIntoForm(formEl) {
-    readSettings();
+    // Same reasoning as buildQS() above: don't force the panel's
+    // currently-loaded toggle state onto whichever class tile was
+    // clicked. Leave settings out entirely so the server resolves that
+    // specific class's own saved profile.
     formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
-    for (const [k, v] of Object.entries(currentSettings)) {
-        const inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = k;
-        inp.value = typeof v === 'boolean' ? (v ? '1' : '0') : v;
-        inp.classList.add('cp-injected');
-        formEl.appendChild(inp);
-    }
     // Add lang
     const langInp = document.createElement('input');
     langInp.type = 'hidden';
@@ -1943,6 +1940,7 @@ function toggleClassChip(element) {
     element.classList.toggle('selected');
     updateSelectedCount();
     updateHiddenSelect();
+    loadPassslipCustomisation();
     
     // Auto-save selected classes to localStorage
     const selected = getSelectedClassIds();
@@ -1986,6 +1984,7 @@ function selectAllClasses() {
     });
     updateSelectedCount();
     updateHiddenSelect();
+    loadPassslipCustomisation();
     const selected = getSelectedClassIds();
     localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
 }
@@ -2038,6 +2037,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             updateSelectedCount();
             updateHiddenSelect();
+            loadPassslipCustomisation();
         } catch(e) {
             // Silently fail
         }
