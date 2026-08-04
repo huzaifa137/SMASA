@@ -410,6 +410,49 @@ use App\Http\Controllers\Helper;
         font-size: 1.1rem;
     }
 }
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 700;
+    font-size: .85rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #2C29CA;
+    margin-bottom: 1.2rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid #ede9ff;
+    flex-wrap: wrap;              /* NEW: allow the row to wrap as a whole on small screens */
+    row-gap: .75rem;              /* NEW: spacing when it wraps to a new line */
+}
+
+.section-header.d-flex.justify-content-between {
+    justify-content: space-between;
+}
+
+/* NEW: make the button group itself a flex row instead of relying on inline wrapping */
+.section-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .section-header.d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .section-header .header-actions {
+        width: 100%;
+        flex-direction: column;   /* stack buttons one under another, full width */
+    }
+    .section-header .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
     </style>
 @endsection
 
@@ -566,22 +609,22 @@ use App\Http\Controllers\Helper;
                  {{-- Marks & Grading --}}
 <div class="card form-card">
     <div class="card-body p-4">
-        <div class="section-header d-flex justify-content-between align-items-center">
-            <div>
-                <span class="step-badge">3</span>
-                <i class="fas fa-percent"></i> Marks &amp; Grading
-            </div>
-            <span>
-                <a href="{{ route('examination.grading-schemes.index') }}" target="_blank"
-                    class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
-                    <i class="fas fa-cog me-1"></i> Manage grading schemes
-                </a>
-                <a href="{{ route('examination.assessment-scales.index') }}" target="_blank"
-                    class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
-                    <i class="fas fa-comment-dots me-1"></i> Manage assessment scales
-                </a>
-            </span>
-        </div>
+<div class="section-header d-flex justify-content-between align-items-center">
+    <div>
+        <span class="step-badge">3</span>
+        <i class="fas fa-percent"></i> Marks &amp; Grading
+    </div>
+    <span class="header-actions">
+        <a href="{{ route('examination.grading-schemes.index') }}" 
+            class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
+            <i class="fas fa-cog me-1"></i> Manage grading schemes
+        </a>
+        <a href="{{ route('examination.assessment-scales.index') }}" 
+            class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.75rem;">
+            <i class="fas fa-comment-dots me-1"></i> Manage assessment scales
+        </a>
+    </span>
+</div>
 
         <div class="mb-3">
             <label class="form-label fw-semibold">Grading Scheme <span class="text-danger">*</span></label>

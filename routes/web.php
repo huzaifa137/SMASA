@@ -540,6 +540,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/marks', 'marksEntry')->name('marks.entry');
             Route::get('/{examId}/marks/{classSubjectId}/students', 'marksEntrySubject')->name('marks.subject');
             Route::post('/{examId}/marks/save', 'saveMarks')->name('marks.save');
+            Route::post('/{examId}/classes/{examClassId}/release', 'releaseClassResults')->name('classes.release');
 
             // Pass Slips
             Route::get('/{id}/passslips', 'passslipIndex')->name('passslips.index');

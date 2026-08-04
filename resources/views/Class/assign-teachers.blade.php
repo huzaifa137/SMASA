@@ -51,113 +51,114 @@ use App\Helpers\PermissionHelper;
                 margin: 0 auto;
             }
 
-            /* Premium Header Section */
-            .dashboard-header {
-                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-                border-radius: var(--radius-2xl);
-                padding: 32px 36px;
-                margin-bottom: 28px;
-                position: relative;
-                overflow: hidden;
-                box-shadow: var(--shadow-xl);
-            }
+          /* Premium Teacher Assignment Center Header */
+.dashboard-header {
+    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+    border-radius: var(--radius-2xl);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+}
 
-            .dashboard-header::before {
-                content: '';
-                position: absolute;
-                top: -50%;
-                right: -20%;
-                width: 500px;
-                height: 500px;
-                background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-                border-radius: 50%;
-            }
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
 
-            .dashboard-header::after {
-                content: '';
-                position: absolute;
-                bottom: -30%;
-                left: -10%;
-                width: 400px;
-                height: 400px;
-                background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
-                border-radius: 50%;
-            }
+.dashboard-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
 
-            .header-content {
-                position: relative;
-                z-index: 1;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
-                gap: 24px;
-            }
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+}
 
-            .header-title-section h2 {
-                color: white;
-                font-weight: 800;
-                margin: 0;
-                font-size: 28px;
-                letter-spacing: -0.5px;
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
+.header-title-section h2 {
+    color: white;
+    font-weight: 800;
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
 
-            .header-title-section h2 .icon-circle {
-                width: 48px;
-                height: 48px;
-                border-radius: var(--radius-lg);
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.1));
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+.header-title-section h2 .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, .1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-            .header-subtitle {
-                color: rgba(255, 255, 255, 0.7);
-                margin-top: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 20px;
-            }
+.header-subtitle {
+    color: rgba(255, 255, 255, .7);
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
 
-            .header-stats {
-                display: flex;
-                gap: 16px;
-                flex-wrap: wrap;
-            }
+.header-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
 
-            .stat-card {
-                background: rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: var(--radius-lg);
-                padding: 16px 24px;
-                color: white;
-                min-width: 140px;
-            }
+.stat-card {
+    background: rgba(255, 255, 255, .08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: var(--radius-lg);
+    padding: 16px 24px;
+    color: white;
+    min-width: 140px;
+}
 
-            .stat-value {
-                font-size: 28px;
-                font-weight: 800;
-                letter-spacing: -1px;
-            }
+.stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
 
-            .stat-label {
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: rgba(255, 255, 255, 0.6);
-                margin-top: 4px;
-                font-weight: 600;
-            }
-
+.stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, .6);
+    margin-top: 4px;
+    font-weight: 600;
+}
             /* Floating Action Bar */
             .floating-action-bar {
                 position: sticky;
@@ -899,8 +900,8 @@ use App\Helpers\PermissionHelper;
                                                         <?php    $classroom = $data['classroom']; ?>
                                                         <div class="class-card-premium"
                                                             data-class-name="{{ strtolower(Helper::recordMdname($classroom->class_name)) }}">
-                                                            <div class="class-card-header-premium" data-toggle="collapse"
-                                                                data-target="#classBody{{ $classroom->id }}">
+                                                            <div class="class-card-header-premium"
+    data-target="#classBody{{ $classroom->id }}">
                                                                 <div class="class-identity">
                                                                     <div class="class-avatar">
                                                                         {{ substr(Helper::recordMdname($classroom->class_name), 0, 1) }}

@@ -1896,6 +1896,41 @@ use App\Helpers\PermissionHelper;
         padding: .3rem .8rem;
     }
 }
+
+.mec-class-row {
+    background: #2C29CA;
+    color: #fff !important;
+}
+
+.mec-class-name {
+    color: #fff !important;
+}
+
+.mec-class-sub {
+    color: #fff !important;
+}
+
+.mec-chevron {
+    color: #fff !important;
+}
+
+.mec-progress-pct {
+    color: #fff !important;
+}
+
+.mec-class-row .mec-progress-bar-bg {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.mec-badge-waiting {
+    background: rgba(255, 255, 255, 0.18);
+    color: #FFF;
+}
+
+.mec-btn-undo {
+    background: rgba(255, 255, 255, 0.18);
+    color: #FFF;
+}
     </style>
 @endsection
 
@@ -1936,8 +1971,250 @@ use App\Helpers\PermissionHelper;
         <div class="row g-3 mb-4">
 
             <div class="col-lg-12">
-                {{-- ═══════════ PENDING MARKS ENTRY SECTION ═══════════════════════════════════ --}}
-                @if (isset($pendingMarksProgress) && count($pendingMarksProgress) > 0)
+                {{-- ═══════════ MARKS ENTRY & RELEASE — ADMIN COMMAND CENTER ═══════════════════
+                     Visible to anyone who can publish_results. Shows every class in every
+                     in-progress exam, broken down by subject and by which teacher owns it —
+                     not just "my own subjects" — so an admin can see who's still behind, and
+                     release a class's results the moment IT is complete, independent of the
+                     rest of the exam. Regular teachers keep seeing their own personal pending
+                     list underneath (or on its own, if they can't publish results). ══════ --}}
+                @if ($canPublishResults ?? false)
+                    @if (count($adminMarksOverview ?? []) > 0)
+                        <div class="mec-panel">
+                            <div class="mec-header">
+                                <div class="mec-header-text">
+                                    <h5><i class="fas fa-layer-group me-2"></i>Marks Entry &amp; Release</h5>
+                                    <p>Track every class's progress across all teachers, and release results
+                                        class-by-class as soon as each one is complete.</p>
+                                </div>
+                                <span class="mec-count-badge">{{ collect($adminMarksOverview)->sum(fn($e) => count($e->classes)) }} classes in progress</span>
+                            </div>
+
+                            @foreach ($adminMarksOverview as $examBlock)
+                                @php $exam = $examBlock->exam; @endphp
+                                <div class="mec-exam-block">
+                                    <div class="mec-exam-title">
+                                        <div>
+                                            <i class="fas fa-file-alt me-1"></i>
+                                            <strong>{{ $exam->exam_name }}</strong>
+                                            <span class="mec-exam-code">{{ $exam->exam_code }}</span>
+                                        </div>
+                                        <span class="mec-exam-status status-{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
+                                    </div>
+
+                                    @if (count($examBlock->classes) === 0)
+                                        <div class="mec-empty">No classes assigned to this examination yet.</div>
+                                    @endif
+
+                                    @foreach ($examBlock->classes as $class)
+                                        <div class="mec-class-card" data-exam-class-id="{{ $class->examination_class_id }}">
+                                            <div class="mec-class-row" onclick="mecToggleClass(this)">
+                                                <div class="mec-class-main">
+                                                    <i class="fas fa-chevron-right mec-chevron"></i>
+                                                    <div>
+                                                        <div class="mec-class-name">{{ $class->class_label }}</div>
+                                                        <div class="mec-class-sub">{{ $class->student_count }} student{{ $class->student_count == 1 ? '' : 's' }} &middot; {{ $class->completed_subjects }}/{{ $class->total_subjects }} subjects complete</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mec-class-progress">
+                                                    <div class="mec-progress-bar-bg">
+                                                        <div class="mec-progress-bar-fill {{ $class->class_progress >= 100 ? 'complete' : '' }}" style="width: {{ $class->class_progress }}%"></div>
+                                                    </div>
+                                                    <span class="mec-progress-pct">{{ $class->class_progress }}%</span>
+                                                </div>
+
+                                                <div class="mec-class-action" onclick="event.stopPropagation()">
+                                                    @if ($class->is_released)
+                                                        <span class="mec-badge mec-badge-released" title="Released {{ optional($class->released_at)->format('M d, Y H:i') }}{{ $class->released_by_name ? ' by ' . $class->released_by_name : '' }}">
+                                                            <i class="fas fa-check-circle me-1"></i> Released
+                                                        </span>
+                                                        @if (!in_array($exam->status, ['closed', 'results_released']))
+                                                            <button type="button" class="mec-btn mec-btn-undo" onclick="mecRelease({{ $exam->id }}, {{ $class->examination_class_id }}, 'unrelease', this)">Undo</button>
+                                                        @endif
+                                                    @elseif ($class->ready_to_release)
+                                                        <button type="button" class="mec-btn mec-btn-release" onclick="mecRelease({{ $exam->id }}, {{ $class->examination_class_id }}, 'release', this)">
+                                                            <i class="fas fa-paper-plane me-1"></i> Release Results
+                                                        </button>
+                                                    @else
+                                                        <span class="mec-badge mec-badge-waiting">
+                                                            <i class="fas fa-spinner fa-spin me-1 text-primary"></i> In Progress
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="mec-subject-list">
+                                                @forelse ($class->subjects as $subject)
+                                                    <div class="mec-subject-row">
+                                                        <div class="mec-subject-name">{{ $subject->subject_name }}</div>
+                                                        <div class="mec-subject-teacher {{ $subject->has_teacher ? '' : 'unassigned' }}">
+                                                            <i class="fas fa-chalkboard-teacher me-1"></i> {{ $subject->teacher_names }}
+                                                        </div>
+                                                        <div class="mec-subject-progress">
+                                                            <div class="mec-progress-bar-bg small">
+                                                                <div class="mec-progress-bar-fill {{ $subject->progress >= 100 ? 'complete' : '' }}" style="width: {{ $subject->progress }}%"></div>
+                                                            </div>
+                                                            <span class="mec-subject-count">{{ $subject->entered_marks }}/{{ $subject->total_students }}</span>
+                                                        </div>
+                                                    </div>
+                                                @empty
+                                                    <div class="mec-empty">No subjects assigned to this class yet.</div>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <style>
+                            .mec-panel { background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 10px rgba(44,41,202,0.06); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #eef0fb; }
+                            .mec-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+                            .mec-header-text h5 { color: #2C29CA; font-weight: 700; margin-bottom: 0.15rem; }
+                            .mec-header-text p { color: #7c7c93; font-size: 0.85rem; margin: 0; }
+                            .mec-count-badge { background: #f0efff; color: #2C29CA; font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.85rem; border-radius: 99px; white-space: nowrap; height: fit-content; }
+
+                            .mec-exam-block { border-top: 1px solid #f0f0f5; padding-top: 1rem; margin-top: 1rem; }
+                            .mec-exam-block:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+                            .mec-exam-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+                            .mec-exam-code { color: #a3a3b8; font-size: 0.78rem; margin-left: 0.4rem; }
+                            .mec-exam-status { font-size: 0.7rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.03em; }
+                            .mec-exam-status.status-marks_entry { background: #fff8e1; color: #b98600; }
+                            .mec-exam-status.status-closed { background: #ffe8e8; color: #c0392b; }
+                            .mec-exam-status.status-results_released { background: #e8f0ff; color: #2C29CA; }
+
+                            .mec-class-card { border: 1px solid #eef0fb; border-radius: 0.6rem; margin-bottom: 0.6rem; overflow: hidden; transition: box-shadow 0.2s; }
+                            .mec-class-card:hover { box-shadow: 0 2px 8px rgba(44,41,202,0.07); }
+                            .mec-class-row { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem; cursor: pointer; flex-wrap: wrap; }
+                            .mec-class-main { display: flex; align-items: center; gap: 0.75rem; flex: 1 1 220px; min-width: 0; }
+                            .mec-chevron { color: #b0adec; font-size: 0.75rem; transition: transform 0.2s; flex-shrink: 0; }
+                            .mec-class-card.open .mec-chevron { transform: rotate(90deg); }
+                            .mec-class-name { font-weight: 700; color: #2b2b3d; font-size: 0.92rem; }
+                            .mec-class-sub { color: #9695ab; font-size: 0.76rem; margin-top: 0.1rem; }
+
+                            .mec-class-progress { display: flex; align-items: center; gap: 0.6rem; flex: 1 1 160px; max-width: 220px; }
+                            .mec-progress-bar-bg { background: #f0f0f5; height: 7px; border-radius: 4px; overflow: hidden; flex: 1; }
+                            .mec-progress-bar-bg.small { height: 5px; }
+                            .mec-progress-bar-fill { background: linear-gradient(90deg, #F59E0B, #ffc107); height: 100%; border-radius: 4px; transition: width 0.4s; }
+                            .mec-progress-bar-fill.complete { background: linear-gradient(90deg, #10B981, #28a745); }
+                            .mec-progress-pct { font-size: 0.76rem; font-weight: 700; color: #6d6d85; width: 34px; text-align: right; flex-shrink: 0; }
+
+                            .mec-class-action { flex-shrink: 0; }
+                            .mec-btn { border: none; border-radius: 0.4rem; font-size: 0.78rem; font-weight: 700; padding: 0.45rem 0.9rem; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+                            .mec-btn:hover { opacity: 0.88; }
+                            .mec-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+                            .mec-btn-release { background: linear-gradient(135deg, #2C29CA, #5351e4); color: #fff; }
+                            .mec-btn-undo { background: #f5f5fa; color: #8a8aa3; margin-left: 0.5rem; }
+                            .mec-badge { font-size: 0.76rem; font-weight: 700; padding: 0.4rem 0.75rem; border-radius: 99px; white-space: nowrap; }
+                            .mec-badge-released { background: #e8fff3; color: #10B981; }
+                            .mec-badge-waiting { background: #f5f5fa; color: #9695ab; }
+
+                            .mec-subject-list { display: none; border-top: 1px solid #f2f2f8; background: #fbfbfe; }
+                            .mec-class-card.open .mec-subject-list { display: block; }
+                            .mec-subject-row { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 1.1rem 0.6rem 2.7rem; flex-wrap: wrap; border-bottom: 1px dashed #eeeef5; }
+                            .mec-subject-row:last-child { border-bottom: none; }
+                            .mec-subject-name { flex: 1 1 160px; font-weight: 600; font-size: 0.83rem; color: #46465c; }
+                            .mec-subject-teacher { flex: 1 1 160px; font-size: 0.78rem; color: #9695ab; }
+                            .mec-subject-teacher.unassigned { color: #d9534f; }
+                            .mec-subject-progress { display: flex; align-items: center; gap: 0.5rem; flex: 1 1 140px; max-width: 180px; }
+                            .mec-subject-count { font-size: 0.74rem; font-weight: 700; color: #9695ab; width: 44px; text-align: right; flex-shrink: 0; }
+
+                            .mec-empty { color: #b0b0c0; font-size: 0.82rem; padding: 0.75rem 1.1rem; font-style: italic; }
+
+                            @media (max-width: 640px) {
+                                .mec-class-row { align-items: flex-start; }
+                                .mec-class-progress { max-width: none; width: 100%; order: 3; }
+                                .mec-class-action { order: 2; }
+                            }
+                        </style>
+
+<script>
+    function mecToggleClass(rowEl) {
+        rowEl.closest('.mec-class-card').classList.toggle('open');
+    }
+
+    function mecRelease(examId, examClassId, action, btnEl) {
+        if (action === 'release') {
+            Swal.fire({
+                title: 'Release Results?',
+                text: 'Release results for this class now? Pass slips will become available for it immediately, even while other classes are still entering marks.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, release!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processRelease(examId, examClassId, action, btnEl);
+                }
+            });
+            return;
+        }
+
+        if (action === 'unrelease') {
+            Swal.fire({
+                title: 'Undo Release?',
+                text: 'Undo release for this class? Its pass slips will no longer be available until it is released again.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, undo release!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processRelease(examId, examClassId, action, btnEl);
+                }
+            });
+            return;
+        }
+    }
+
+    function processRelease(examId, examClassId, action, btnEl) {
+        btnEl.disabled = true;
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+
+        fetch(`/examinations/${examId}/classes/${examClassId}/release`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ action: action }),
+        })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (ok && data.success) {
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: data.message || 'Something went wrong.',
+                    });
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = originalHtml;
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Network error — please try again.',
+                });
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalHtml;
+            });
+    }
+</script>
+                    @endif
+                @elseif (isset($pendingMarksProgress) && count($pendingMarksProgress) > 0)
                     <div class="pending-marks-section">
                         <div class="pending-header">
                             <h5>
@@ -2596,7 +2873,7 @@ use App\Helpers\PermissionHelper;
 
                 <div class="card form-card">
                     <div class="card-body p-0">
-                        <div class="section-header mb-2" style="margin: 0; padding: 1.5rem 1.5rem 0 1.5rem;">
+                        <div class="section-header mb-2" style="margin: 0; padding: 1.5rem 1.5rem 1rem 1.5rem;">
                             <span class="step-badge mb-1">2</span>
                             <i class="fas fa-table me-2"></i>All Examinations
                         </div>
@@ -2890,9 +3167,9 @@ use App\Helpers\PermissionHelper;
                 </div>
 
                 {{-- Released Examinations Section (Section 6) --}}
-                <div class="card form-card mt-3">
+                <div class="card form-card">
                     <div class="card-body p-0">
-                        <div class="section-header mb-2" style="margin: 0; padding: 1.5rem 1.5rem 0 1.5rem;">
+                        <div class="section-header" style="margin: 0; padding: 1rem 1rem 1rem 1rem;">
                             <span class="step-badge">6</span>
                             <i class="fas fa-trophy me-2"></i>Released Examinations
                             <span class="badge bg-primary text-white ms-2" style="background: #3532d0 !important;">
@@ -2969,7 +3246,7 @@ use App\Helpers\PermissionHelper;
                                                 <button class="btn-view-results"
                                                     onclick="event.stopPropagation(); viewExamResults({{ $exam->id }})">
                                                     <i class="fas fa-chart-bar me-1"></i> View Results
-                                                </button>
+                                                </button> &nbsp;
                                                 <button class="btn-download-report"
                                                     onclick="event.stopPropagation(); downloadResultsReport({{ $exam->id }})">
                                                     <i class="fas fa-download me-1"></i> Report

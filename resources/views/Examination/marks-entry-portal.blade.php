@@ -1422,6 +1422,63 @@ use App\Http\Controllers\Helper;
             color: white;
         }
 
+        /* ── Filter tabs (All / Pending / Completed) ───────────────────────── */
+        .pending-filter-tabs {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 0.5rem;
+            padding: 0.2rem;
+            gap: 0.2rem;
+        }
+
+        .pending-filter-btn {
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .pending-filter-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .pending-filter-btn.active {
+            background: #fff;
+            color: #2C29CA;
+        }
+
+        .pending-exam-card.is-hidden {
+            display: none;
+        }
+
+        /* ── Per-subject percentage badge ───────────────────────────────────── */
+        .subject-percent {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.1rem 0.45rem;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .pending-percent {
+            background: rgba(255, 193, 7, 0.15);
+            color: #b45309;
+        }
+
+        .completed-percent {
+            background: rgba(40, 167, 69, 0.15);
+            color: #15803d;
+        }
+
+        .subject-list-title-done {
+            color: #28a745;
+        }
+
         @media (max-width: 768px) {
             .pending-grid {
                 grid-template-columns: 1fr;
@@ -1430,6 +1487,10 @@ use App\Http\Controllers\Helper;
 
             .pending-exam-card {
                 margin-bottom: 0;
+            }
+
+            .pending-header {
+                align-items: flex-start !important;
             }
         }
     </style>
@@ -1447,28 +1508,41 @@ use App\Http\Controllers\Helper;
                 {{-- ═══════════ PENDING MARKS ENTRY SECTION ═══════════════════════════════════ --}}
                 @if (isset($pendingMarksProgress) && count($pendingMarksProgress) > 0)
                     <div class="pending-marks-section">
-                        <div class="pending-header">
-                            <h5>
+                        <div class="pending-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h5 class="mb-0">
                                 <i class="fas fa-clock me-2"></i>
-                                Pending Marks Entry <span
-                                    class="badge bg-warning text-dark ms-2">{{ count($pendingMarksProgress) }}</span>
+                                My Marks Entry
+                                <span class="badge bg-warning text-dark ms-2">{{ count($pendingMarksProgress) }}
+                                    exam{{ count($pendingMarksProgress) > 1 ? 's' : '' }}</span>
                             </h5>
+                            <div class="pending-filter-tabs" role="tablist">
+                                <button type="button" class="pending-filter-btn active" data-filter="all">All</button>
+                                <button type="button" class="pending-filter-btn" data-filter="pending">Pending</button>
+                                <button type="button" class="pending-filter-btn" data-filter="done">Completed</button>
+                            </div>
                         </div>
+
                         <div class="pending-grid">
                             @foreach ($pendingMarksProgress as $progress)
                                 @php
                                     $exam = $progress->exam;
-                                    $urgencyClass = $progress->urgency;
-                                    $urgencyIcon =
-                                        $progress->urgency == 'urgent'
-                                            ? 'fa-exclamation-triangle'
-                                            : ($progress->urgency == 'primary'
-                                                ? 'fa-hourglass-half'
-                                                : 'fa-clock');
+
+                                    $deadline = \Carbon\Carbon::parse($exam->marks_entry_deadline)->startOfDay();
+                                    $today = now()->startOfDay();
+                                    $daysLeft = $today->diffInDays($deadline, false);
+
+                                    $urgencyClass = $daysLeft <= 0 ? 'urgent' : ($daysLeft <= 2 ? 'warning' : 'normal');
+                                    $urgencyIcon = $daysLeft <= 0 ? 'fa-exclamation-triangle' : 'fa-clock';
+
+                                    $pendingSubjects = collect($progress->subject_progress)->where('progress', '<', 100)->values();
+                                    $completedSubjects = collect($progress->subject_progress)->where('progress', 100)->values();
+
+                                    $cardFilterState = $progress->total_subjects > 0 && $pendingSubjects->isEmpty() ? 'done' : 'pending';
                                 @endphp
-                                <div class="pending-exam-card" data-exam-id="{{ $exam->id }}">
+                                <div class="pending-exam-card" data-exam-id="{{ $exam->id }}"
+                                    data-filter-state="{{ $cardFilterState }}">
                                     <div class="pending-exam-header">
-                                        <div class="d-flex justify-content-between align-items-start">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
                                             <div>
                                                 <div class="pending-exam-title">
                                                     <i class="fas fa-file-alt"></i>
@@ -1478,279 +1552,137 @@ use App\Http\Controllers\Helper;
                                                     <i class="fas fa-code me-1"></i> {{ $exam->exam_code }}
                                                 </div>
                                             </div>
-                                            @php
-                                                $deadline = \Carbon\Carbon::parse(
-                                                    $exam->marks_entry_deadline,
-                                                )->startOfDay();
-                                                $today = now()->startOfDay();
-                                                $daysLeft = $today->diffInDays($deadline, false);
-
-                                                // urgency (override backend if needed)
-                                                $urgencyClass =
-                                                    $daysLeft <= 0
-                                                        ? 'urgent'
-                                                        : ($daysLeft <= 2
-                                                            ? 'text-primary'
-                                                            : 'normal');
-                                                $urgencyIcon =
-                                                    $daysLeft <= 0
-                                                        ? 'fa-exclamation-triangle'
-                                                        : ($daysLeft <= 2
-                                                            ? 'fa-clock'
-                                                            : 'fa-clock');
-                                            @endphp
-
                                             <div class="pending-deadline {{ $urgencyClass }}">
                                                 <i class="fas {{ $urgencyIcon }}"></i>
-
-                                                @if ($daysLeft > 2)
-                                                    {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
-                                                @elseif ($daysLeft > 0)
-                                                    <span class="text-primary fw-bold">
-                                                        {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
-                                                    </span>
+                                                @if ($progress->is_deadline_passed)
+                                                    <span class="fw-bold">Deadline passed</span>
                                                 @elseif ($daysLeft === 0)
-                                                    <span class="text-danger fw-bold">Due today</span>
+                                                    <span class="fw-bold">Due today</span>
                                                 @else
-                                                    <span class="text-danger fw-bold">Deadline passed</span>
+                                                    {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
                                                 @endif
                                             </div>
                                         </div>
-                                    </div>
-                                <div class="pending-progress-section">
-                                    @forelse ($pendingMarksProgress as $progress)
-                                        <div class="exam-progress-container mb-4">
-                                            <div class="overall-progress">
-                                                <div class="progress-label d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <i class="fas fa-chalkboard-teacher me-1"></i>
-                                                        <strong>{{ $progress->exam->exam_name }}</strong>
 
-                                                        @php
-                                                            $daysLeft = (int) ceil($progress->days_left);
-                                                        @endphp
-
-                                                        <span class="ms-2 badge text-white
-                                                            @if ($progress->is_deadline_passed) bg-secondary
-                                                            @elseif($progress->urgency == 'urgent') bg-danger
-                                                            @elseif($progress->urgency == 'warning') bg-warning
-                                                            @else bg-info @endif">
-
-                                                            @if ($progress->is_deadline_passed)
-                                                                Deadline passed
-                                                            @else
-                                                                @if($daysLeft <= 0)
-                                                                    Due today
-                                                                @else
-                                                                    {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
-                                                                @endif
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <span>{{ $progress->submitted_subjects }}/{{ $progress->total_subjects }} subjects</span>
-                                                </div>
-                                                <div class="progress-bar-bg">
-                                                    <div class="progress-bar-fill-orange" style="width: {{ $progress->overall_progress }}%"></div>
-                                                </div>
+                                        <div class="overall-progress mt-3">
+                                            <div class="progress-label">
+                                                <span>
+                                                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                                                    {{ $progress->submitted_subjects }}/{{ $progress->total_subjects }}
+                                                    subject{{ $progress->total_subjects == 1 ? '' : 's' }} complete
+                                                </span>
+                                                <span>{{ $progress->overall_progress }}%</span>
                                             </div>
+                                            <div class="progress-bar-bg">
+                                                <div class="progress-bar-fill-orange"
+                                                    style="width: {{ $progress->overall_progress }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                            @if (count($progress->subject_progress) > 0)
-                                                <div class="subject-list mt-3">
-                                                    <!-- Subjects to complete (only show if not all completed or deadline not passed) -->
-                                                    @if ($progress->overall_progress < 100 || !$progress->is_deadline_passed)
-                                                        <div class="subject-list-title">
-                                                            <i class="fas fa-book-open me-1"></i>
-                                                            @if ($progress->is_deadline_passed)
-                                                                Subjects with pending marks
-                                                            @else
-                                                                Subjects to complete
-                                                            @endif
-                                                        </div>
+                                    <div class="pending-progress-section">
+                                        @if ($progress->total_subjects === 0)
+                                            <div class="alert alert-info mb-0" role="alert">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No subjects assigned to you for this examination.
+                                            </div>
+                                        @else
+                                            @if ($pendingSubjects->isNotEmpty())
+                                                <div class="subject-list">
+                                                    <div class="subject-list-title">
+                                                        <i class="fas fa-book-open me-1"></i>
+                                                        Subjects to complete ({{ $pendingSubjects->count() }})
+                                                    </div>
 
-                                                        @foreach ($progress->subject_progress as $subject)
-                                                            @if ($subject->progress < 100)
-                                                                @php
-                                                                    $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
-                                                                @endphp
-                                                                <div class="subject-item pending-subject"
-                                                                    @if (!$progress->is_deadline_passed)
-                                                                        onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                        style="cursor: {{ $cursorStyle }};"
-                                                                    @else
-                                                                        style="cursor: {{ $cursorStyle }}; opacity: 0.8;"
-                                                                    @endif>
-                                                                    <div class="subject-name">
-                                                                        {{ $subject->subject_name }}
+                                                    @foreach ($pendingSubjects as $subject)
+                                                        <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
+                                                            class="subject-item pending-subject d-block text-decoration-none"
+                                                            @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div class="subject-name">{{ $subject->subject_name }}</div>
+                                                                <span class="subject-percent pending-percent">{{ $subject->progress }}%</span>
+                                                            </div>
+                                                            <div class="subject-meta">
+                                                                <span>
+                                                                    <i class="fas fa-users me-1"></i>
+                                                                    {{ $subject->class_name }}
+                                                                    @if ($subject->stream_name)
+                                                                        • {{ $subject->stream_name }}
+                                                                    @endif
+                                                                </span>
+                                                                <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
+                                                                    <div class="subject-progress-bar flex-grow-1">
+                                                                        <div class="subject-progress-fill"
+                                                                            style="width: {{ $subject->progress }}%"></div>
                                                                     </div>
-                                                                    <div class="subject-meta">
-                                                                        <span>
-                                                                            <i class="fas fa-users me-1"></i>
-                                                                            {{ $subject->class_name }} @if ($subject->stream) • {{ $subject->stream }} @endif
-                                                                        </span>
-                                                                        <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                            <div class="subject-progress-bar flex-grow-1">
-                                                                                <div class="subject-progress-fill" style="width: {{ $subject->progress }}%"></div>
-                                                                            </div>
-                                                                            <span class="subject-stats">
-                                                                                {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        @endforeach
-                                                    @endif
-
-                                                    <!-- Completed subjects (always show if deadline not passed) -->
-                                                    @php
-                                                        $completedSubjects = array_filter($progress->subject_progress, function($subject) {
-                                                            return $subject->progress == 100;
-                                                        });
-                                                    @endphp
-
-                                                    @if (count($completedSubjects) > 0 && (!$progress->is_deadline_passed || $progress->has_pending_marks))
-                                                        <div class="subject-list-title mt-3" style="color: #28a745;">
-                                                            <i class="fas fa-check-circle me-1"></i>
-                                                            @if ($progress->is_deadline_passed)
-                                                                Completed subjects
-                                                            @else
-                                                                Completed subjects (click to review)
-                                                            @endif
-                                                        </div>
-
-                                                        @foreach ($completedSubjects as $subject)
-                                                            @php
-                                                                $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
-                                                            @endphp
-                                                            <div class="subject-item completed-subject"
-                                                                @if (!$progress->is_deadline_passed)
-                                                                    onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                    style="cursor: {{ $cursorStyle }};"
-                                                                @else
-                                                                    style="cursor: {{ $cursorStyle }}; opacity: 0.8;"
-                                                                @endif>
-                                                                <div class="subject-name">
-                                                                    {{ $subject->subject_name }}
-                                                                </div>
-                                                                <div class="subject-meta">
-                                                                    <span>
-                                                                        <i class="fas fa-users me-1"></i>
-                                                                        {{ $subject->class_name }} @if ($subject->stream) • {{ $subject->stream }} @endif
+                                                                    <span class="subject-stats">
+                                                                        {{ $subject->entered_marks }}/{{ $subject->total_students }}
                                                                     </span>
-                                                                    <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                        <div class="subject-progress-bar flex-grow-1">
-                                                                            <div class="subject-progress-fill" style="width: 100%; background-color: #28a745;"></div>
-                                                                        </div>
-                                                                        <span class="subject-stats" style="color: #28a745;">
-                                                                            {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                        </span>
-                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        @endforeach
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <div class="alert alert-info mt-3" role="alert">
-                                                    <i class="fas fa-info-circle me-2"></i>
-                                                    No subjects assigned for this examination.
+                                                        </a>
+                                                    @endforeach
                                                 </div>
                                             @endif
-                                        </div>
-                                    @empty
-                                        <div class="alert alert-success" role="alert">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            All examinations have been completed or have no pending marks entry.
-                                        </div>
-                                    @endforelse
-                                </div>
 
-                                    <style>
-                                        /* Add these styles to your existing CSS */
-                                        .exam-progress-container {
-                                            background: white;
-                                            border-radius: 0.5rem;
-                                            padding: 1.25rem;
-                                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-                                            margin-bottom: 1.5rem;
-                                        }
+                                            @if ($completedSubjects->isNotEmpty())
+                                                <div class="subject-list mt-2">
+                                                    <div class="subject-list-title subject-list-title-done">
+                                                        <i class="fas fa-check-circle me-1"></i>
+                                                        Completed ({{ $completedSubjects->count() }})
+                                                        @if (!$progress->is_deadline_passed)
+                                                            <span class="fw-normal text-muted">— click to review</span>
+                                                        @endif
+                                                    </div>
 
-                                        .pending-subject {
-                                            background-color: rgba(255, 193, 7, 0.05);
-                                            border-left: 3px solid #ffc107;
-                                            transition: all 0.2s ease;
-                                        }
-
-                                        .pending-subject:hover:not([style*="not-allowed"]) {
-                                            background-color: rgba(255, 193, 7, 0.1);
-                                        }
-
-                                        .completed-subject {
-                                            background-color: rgba(40, 167, 69, 0.05);
-                                            border-left: 3px solid #28a745;
-                                            transition: all 0.2s ease;
-                                        }
-
-                                        .completed-subject:hover:not([style*="not-allowed"]) {
-                                            background-color: rgba(40, 167, 69, 0.1);
-                                        }
-
-                                        .subject-progress-fill {
-                                            background-color: #ffc107;
-                                            height: 6px;
-                                            border-radius: 3px;
-                                        }
-
-                                        .subject-list-title {
-                                            font-weight: 600;
-                                            margin-bottom: 0.5rem;
-                                            padding-bottom: 0.25rem;
-                                            border-bottom: 1px solid #eee;
-                                            display: flex;
-                                            align-items: center;
-                                            gap: 0.5rem;
-                                        }
-
-                                        .subject-item {
-                                            transition: all 0.2s ease;
-                                            border-radius: 0.35rem;
-                                            padding: 0.75rem;
-                                            margin-bottom: 0.5rem;
-                                        }
-
-                                        .progress-bar-bg {
-                                            background-color: #f0f0f0;
-                                            height: 6px;
-                                            border-radius: 3px;
-                                            margin-top: 0.5rem;
-                                            overflow: hidden;
-                                        }
-
-                                        .progress-bar-fill-orange {
-                                            background-color: #ffc107;
-                                            height: 100%;
-                                            border-radius: 3px;
-                                        }
-
-                                        .overall-progress {
-                                            margin-bottom: 1rem;
-                                        }
-
-                                        .progress-label {
-                                            margin-bottom: 0.5rem;
-                                            font-size: 0.9rem;
-                                        }
-                                    </style>
+                                                    @foreach ($completedSubjects as $subject)
+                                                        <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
+                                                            class="subject-item completed-subject d-block text-decoration-none"
+                                                            @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div class="subject-name">{{ $subject->subject_name }}</div>
+                                                                <span class="subject-percent completed-percent">100%</span>
+                                                            </div>
+                                                            <div class="subject-meta">
+                                                                <span>
+                                                                    <i class="fas fa-users me-1"></i>
+                                                                    {{ $subject->class_name }}
+                                                                    @if ($subject->stream_name)
+                                                                        • {{ $subject->stream_name }}
+                                                                    @endif
+                                                                </span>
+                                                                <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
+                                                                    <div class="subject-progress-bar flex-grow-1">
+                                                                        <div class="subject-progress-fill" style="width: 100%; background: #28a745;"></div>
+                                                                    </div>
+                                                                    <span class="subject-stats" style="color: #28a745;">
+                                                                        {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </div>
 
                                     <div class="pending-footer">
-                                        <a href="{{ route('examination.marks.entry', $exam->id) }}"
-                                            class="btn-continue-marks">
+                                        <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
                                             <i class="fas fa-pen-alt"></i>
                                             Continue Entering Marks
                                         </a>
                                     </div>
                                 </div>
                             @endforeach
+                        </div>
+                    </div>
+                @elseif (isset($pendingMarksProgress))
+                    <div class="pending-marks-section">
+                        <div class="pending-empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <h6>Nothing pending</h6>
+                            <p class="mb-0">You have no open examinations awaiting marks entry right now.</p>
                         </div>
                     </div>
                 @endif
@@ -2790,6 +2722,27 @@ use App\Http\Controllers\Helper;
                     });
                 });
         }
+
+        // ── Pending Marks Entry: All / Pending / Completed filter ──────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.pending-filter-btn');
+            const examCards = document.querySelectorAll('.pending-exam-card');
+
+            filterButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filter = btn.getAttribute('data-filter');
+
+                    examCards.forEach(function(card) {
+                        const state = card.getAttribute('data-filter-state');
+                        const show = filter === 'all' || filter === state;
+                        card.classList.toggle('is-hidden', !show);
+                    });
+                });
+            });
+        });
     </script>
 @endsection
 

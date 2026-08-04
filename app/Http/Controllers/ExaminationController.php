@@ -627,6 +627,26 @@ class ExaminationController extends Controller
     }
 
     /**
+     * Is this class+stream's results release eligible for printing right
+     * now? True once the exam itself is closed/results_released (the old
+     * all-or-nothing behaviour), OR once that specific class was released
+     * individually ahead of the rest of the exam.
+     */
+    private function classIsReleased(Examination $exam, $classId, $streamId, $schoolId): bool
+    {
+        if (in_array($exam->status, ['closed', 'results_released'])) {
+            return true;
+        }
+
+        return ExaminationClass::where('examination_id', $exam->id)
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->whereNotNull('results_released_at')
+            ->exists();
+    }
+
+    /**
      * Single student passslip (printable view).
      */
     public function passslipStudent($examId, $studentId)
@@ -644,6 +664,10 @@ class ExaminationController extends Controller
             ->where('id', $studentId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
+
+        if (!$this->classIsReleased($exam, $student->senior, $student->stream, $schoolId)) {
+            abort(403, 'Results for this class have not been released yet.');
+        }
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
         $multiExam = count($examIds) > 1;
@@ -730,6 +754,10 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
+        if (!$this->classIsReleased($exam, $classId, $streamId, $schoolId)) {
+            abort(403, 'Results for this class have not been released yet.');
+        }
+
         // ✅ Removed orderBy('lastname') - we'll sort by performance instead
         $students = DB::table('students')
             ->where('school_id', $schoolId)
@@ -813,7 +841,9 @@ class ExaminationController extends Controller
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
-            ->get();
+            ->get()
+            ->filter(fn($ec) => $this->classIsReleased($exam, $ec->class_id, $ec->stream_id, $schoolId))
+            ->values();
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
         $multiExam = count($examIds) > 1;
@@ -908,17 +938,27 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
-        // Only allow for closed / results_released
-        if (!in_array($exam->status, ['closed', 'results_released'])) {
-            return redirect()->route('examination.index')
-                ->with('error', 'Pass slips are only available after the examination is closed.');
-        }
-
         // All class-stream combos in this exam
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->get();
+
+        $examFullyReleased = in_array($exam->status, ['closed', 'results_released']);
+        $anyClassReleased = $examClasses->contains(fn($ec) => !is_null($ec->results_released_at));
+
+        // Once the exam itself is closed/released every class is fair
+        // game as before; otherwise only individually-released classes
+        // are visible here, so a class that's still entering marks never
+        // shows up alongside one that's ready.
+        if (!$examFullyReleased) {
+            if (!$anyClassReleased) {
+                return redirect()->route('examination.index')
+                    ->with('error', 'Pass slips will be available once the examination is closed, or as soon as a class\'s results are released individually.');
+            }
+
+            $examClasses = $examClasses->filter(fn($ec) => !is_null($ec->results_released_at))->values();
+        }
 
         // Get all students for these classes WITH THEIR TOTALS for sorting
         $allStudents = collect();
@@ -1620,6 +1660,9 @@ class ExaminationController extends Controller
 
         $pendingMarksProgress = $this->getMarksEntryProgress();
 
+        $canPublishResults = PermissionHelper::canFeature('publish_results');
+        $adminMarksOverview = $canPublishResults ? $this->getAdminMarksOverview() : [];
+
         // Calendar data
         $calendarExams = $examinations->map(function ($exam) {
             return [
@@ -1641,25 +1684,30 @@ class ExaminationController extends Controller
             'timelineExams',
             'calendarExams',
             'pendingMarksProgress',
-            'releasedExams' // Add this
+            'releasedExams', // Add this
+            'canPublishResults',
+            'adminMarksOverview'
         ));
     }
 
-    public function getMarksEntryProgress()
+     public function getMarksEntryProgress()
     {
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
 
-        // Get all examinations with marks_entry status
+        // Get all examinations for which marks entry is currently open.
+        // 'active' is included alongside 'marks_entry' so this matches the
+        // access check in marksEntrySubject() — otherwise an exam a teacher
+        // can actually enter marks for could be silently missing here.
         $examsWithMarksEntry = Examination::where('school_id', $schoolId)
-            ->where('status', 'marks_entry')
+            ->whereIn('status', ['marks_entry', 'active'])
             ->orderBy('marks_entry_deadline', 'asc')
             ->get();
 
         $examProgress = [];
 
         foreach ($examsWithMarksEntry as $exam) {
-            // Get all class-subject combinations for this exam where teacher is assigned
+            // Get all class-stream combinations included in this exam
             $examClasses = ExaminationClass::where('examination_id', $exam->id)
                 ->where('school_id', $schoolId)
                 ->get();
@@ -1674,6 +1722,14 @@ class ExaminationController extends Controller
                 ->whereIn('class_id', $examClasses->pluck('class_id'))
                 ->get();
 
+            // Keep only class-streams that are actually part of this exam
+            // (a teacher might be assigned to a stream of the class that
+            // this exam doesn't cover).
+            $validPairs = $examClasses->map(fn($ec) => $ec->class_id . '_' . $ec->stream_id)->toArray();
+            $teacherSubjects = $teacherSubjects->filter(function ($s) use ($validPairs) {
+                return in_array($s->class_id . '_' . $s->stream_id, $validPairs);
+            })->values();
+
             $totalSubjects = $teacherSubjects->count();
             $submittedSubjects = 0;
             $subjectProgress = [];
@@ -1687,12 +1743,23 @@ class ExaminationController extends Controller
                     ->where('stream', $subject->stream_id)
                     ->count();
 
+                // A class_subjects row identifies its subject either via
+                // subject_id (master subject) or custom_subject_id (custom
+                // subject, where subject_id is null). Two different custom
+                // subjects both have subject_id = null, so matching on
+                // subject_id alone would merge their mark counts together.
+                $isCustomSubject = is_null($subject->subject_id);
+
                 // Count marks entered for this subject
                 $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
-                    ->where('subject_id', $subject->subject_id)
                     ->where('class_id', $subject->class_id)
                     ->where('stream_id', $subject->stream_id)
                     ->where('school_id', $schoolId)
+                    ->when($isCustomSubject, function ($q) use ($subject) {
+                        $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                    }, function ($q) use ($subject) {
+                        $q->where('subject_id', $subject->subject_id);
+                    })
                     ->whereNotNull('marks_obtained')
                     ->count();
 
@@ -1709,8 +1776,10 @@ class ExaminationController extends Controller
                     'subject_name' => Helper::classSubjectName($subject),
                     'class_name' => Helper::recordMdname($subject->class_id),
                     'stream' => $subject->stream_id,
+                    'stream_name' => Helper::recordMdname($subject->stream_id),
                     'total_students' => $studentCount,
                     'entered_marks' => $enteredMarks,
+                    'remaining_marks' => max(0, $studentCount - $enteredMarks),
                     'progress' => $progressPercent,
                     'class_subject_id' => $subject->id
                 ];
@@ -1746,6 +1815,219 @@ class ExaminationController extends Controller
         }
 
         return $examProgress;
+    }
+
+    /**
+     * Admin-facing counterpart to getMarksEntryProgress(): that method only
+     * shows the CURRENTLY LOGGED-IN teacher their own subjects. This shows
+     * whoever can publish_results every class in every marks_entry/closed
+     * exam, broken down by subject AND by which teacher owns it, so an
+     * admin can see who's still behind — and, the moment a class's marks
+     * are fully in, release results for just that class while every other
+     * class carries on entering marks independently.
+     */
+    public function getAdminMarksOverview()
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $exams = Examination::where('school_id', $schoolId)
+            ->whereIn('status', ['marks_entry', 'closed'])
+            ->orderBy('marks_entry_deadline', 'asc')
+            ->get();
+
+        $overview = [];
+
+        foreach ($exams as $exam) {
+            $examClasses = ExaminationClass::where('examination_id', $exam->id)
+                ->where('school_id', $schoolId)
+                ->get();
+
+            $classRows = [];
+
+            foreach ($examClasses as $ec) {
+                $classSubjects = DB::table('class_subjects')
+                    ->where('school_id', $schoolId)
+                    ->where('class_id', $ec->class_id)
+                    ->where('stream_id', (string) $ec->stream_id)
+                    ->get();
+
+                $studentCount = DB::table('students')
+                    ->where('school_id', $schoolId)
+                    ->where('senior', $ec->class_id)
+                    ->where('stream', $ec->stream_id)
+                    ->count();
+
+                $subjectRows = [];
+                $completedSubjects = 0;
+
+                foreach ($classSubjects as $subject) {
+                    $isCustomSubject = is_null($subject->subject_id);
+
+                    $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
+                        ->where('class_id', $subject->class_id)
+                        ->where('stream_id', $subject->stream_id)
+                        ->where('school_id', $schoolId)
+                        ->when($isCustomSubject, function ($q) use ($subject) {
+                            $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                        }, function ($q) use ($subject) {
+                            $q->where('subject_id', $subject->subject_id);
+                        })
+                        ->whereNotNull('marks_obtained')
+                        ->count();
+
+                    $progress = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
+                    if ($progress >= 100) {
+                        $completedSubjects++;
+                    }
+
+                    $teacherNames = collect([$subject->subject_teacher_1 ?? null, $subject->subject_teacher_2 ?? null])
+                        ->filter()
+                        ->map(fn($id) => Helper::teacherFullName($id))
+                        ->filter()
+                        ->values();
+
+                    $subjectRows[] = (object) [
+                        'class_subject_id' => $subject->id,
+                        'subject_name' => Helper::classSubjectName($subject),
+                        'teacher_names' => $teacherNames->isNotEmpty() ? $teacherNames->implode(', ') : 'Unassigned',
+                        'has_teacher' => $teacherNames->isNotEmpty(),
+                        'entered_marks' => $enteredMarks,
+                        'total_students' => $studentCount,
+                        'progress' => $progress,
+                    ];
+                }
+
+                $totalSubjects = count($subjectRows);
+                $classProgress = $totalSubjects > 0 ? round(($completedSubjects / $totalSubjects) * 100) : 0;
+                // Every subject fully entered, and there IS at least one
+                // subject/student to enter — an empty class isn't "ready".
+                $readyToRelease = $totalSubjects > 0 && $studentCount > 0 && $completedSubjects === $totalSubjects;
+
+                $classRows[] = (object) [
+                    'examination_class_id' => $ec->id,
+                    'class_id' => $ec->class_id,
+                    'stream_id' => $ec->stream_id,
+                    'class_label' => Helper::recordMdname($ec->class_id) . ($ec->stream_id && $ec->stream_id !== 'NO_STREAM' ? ' - ' . $ec->stream_id : ''),
+                    'student_count' => $studentCount,
+                    'total_subjects' => $totalSubjects,
+                    'completed_subjects' => $completedSubjects,
+                    'class_progress' => $classProgress,
+                    'subjects' => $subjectRows,
+                    'is_released' => $ec->isReleased(),
+                    'released_at' => $ec->results_released_at,
+                    'released_by_name' => $ec->released_by ? Helper::teacherFullName($ec->released_by) : null,
+                    'ready_to_release' => $readyToRelease,
+                ];
+            }
+
+            $overview[] = (object) [
+                'exam' => $exam,
+                'classes' => $classRows,
+            ];
+        }
+
+        return $overview;
+    }
+
+    /**
+     * Release (or, before the deadline, un-release) one class+stream's
+     * results independently of the rest of the exam. Re-validates
+     * completeness server-side rather than trusting the button state the
+     * admin clicked, since marks could have changed between page load and
+     * click.
+     */
+    public function releaseClassResults(Request $request, $examId, $examClassId)
+    {
+        if (!PermissionHelper::canFeature('publish_results')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. You do not have permission to publish results.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+        $ec = ExaminationClass::where('id', $examClassId)
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $action = $request->input('action', 'release');
+
+        if ($action === 'unrelease') {
+            $ec->results_released_at = null;
+            $ec->released_by = null;
+            $ec->save();
+
+            return response()->json(['success' => true, 'message' => 'Release undone for this class. It will no longer show as released.']);
+        }
+
+        $classSubjects = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $ec->class_id)
+            ->where('stream_id', (string) $ec->stream_id)
+            ->get();
+
+        $studentCount = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $ec->class_id)
+            ->where('stream', $ec->stream_id)
+            ->count();
+
+        if ($classSubjects->isEmpty() || $studentCount === 0) {
+            return response()->json(['success' => false, 'message' => 'This class has no subjects or no students to grade.'], 422);
+        }
+
+        foreach ($classSubjects as $subject) {
+            $isCustomSubject = is_null($subject->subject_id);
+
+            $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
+                ->where('class_id', $subject->class_id)
+                ->where('stream_id', $subject->stream_id)
+                ->where('school_id', $schoolId)
+                ->when($isCustomSubject, function ($q) use ($subject) {
+                    $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                }, function ($q) use ($subject) {
+                    $q->where('subject_id', $subject->subject_id);
+                })
+                ->whereNotNull('marks_obtained')
+                ->count();
+
+            if ($enteredMarks < $studentCount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => Helper::classSubjectName($subject) . ' still has marks pending (' . $enteredMarks . '/' . $studentCount . ') — every subject needs to be complete before this class can be released.',
+                ], 422);
+            }
+        }
+
+        $ec->results_released_at = now();
+        $ec->released_by = Session('LoggedAdmin') ?? Session('LoggedTeacher');
+        $ec->save();
+
+        $classStudentIds = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $ec->class_id)
+            ->where('stream', $ec->stream_id)
+            ->pluck('id');
+
+        $classLabel = Helper::recordMdname($ec->class_id) . ($ec->stream_id && $ec->stream_id !== 'NO_STREAM' ? ' - ' . $ec->stream_id : '');
+
+        \App\Services\NotificationService::send([
+            'title' => 'Exam Results Published',
+            'body' => "Results for {$exam->exam_name} ({$classLabel}) have been released. Check your portal for details.",
+            'type' => \App\Models\SmasaNotification::TYPE_EXAM,
+            'module' => 'examination',
+            'school_id' => $schoolId,
+            'triggered_by' => Session('LoggedAdmin') ?? Session('LoggedTeacher'),
+        ], $classStudentIds->map(fn($id) => [
+            'type' => 'student',
+            'id' => $id,
+            'school_id' => $schoolId,
+        ])->toArray());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Results released for this class. Pass slips are now available for it, independent of the rest of the exam.',
+        ]);
     }
 
     public function marksEntryPortal(Request $request)
