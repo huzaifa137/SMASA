@@ -5397,26 +5397,11 @@ use App\Helpers\PermissionHelper;
 
         // Download results report function
         function downloadResultsReport(examId) {
-            Swal.fire({
-                title: 'Generating Report',
-                html: '<div class="spinner-border text-primary" role="status"></div>',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-            });
-
-            // Using existing pass slip all route for bulk download
-            window.location.href = `/examinations/${examId}/passslips/all`;
-
-            setTimeout(() => {
-                Swal.close();
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Report Ready',
-                    text: 'Pass slips are being generated',
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
-            }, 1500);
+            // Sends the user to the Reports & Summaries module, scoped to
+            // this exam's class performance summary (defaults to the
+            // first class — the report page itself lets them switch
+            // class/stream/subject from there).
+            window.location.href = `/examinations/reports/${examId}/class-summary`;
         }
 
         /**

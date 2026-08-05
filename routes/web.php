@@ -12,6 +12,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\ExaminationReportController;
 use App\Http\Controllers\GradingSchemeController;
 use App\Http\Controllers\AssessmentScaleController;
 use App\Http\Controllers\UserRightsAndPreviledges;
@@ -573,6 +574,25 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{id}/update', 'update')->name('update');
             Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
             Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+    // Reports & Summaries (subject x student matrices, single-subject deep
+    // dives, and grade-distribution / performance analysis across an exam)
+    Route::prefix('examinations/reports')
+        ->name('examination.reports.')
+        ->controller(ExaminationReportController::class)
+        ->middleware(['module:examinations'])
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+
+            Route::get('/{examId}/class-summary', 'classSummary')->name('class-summary');
+            Route::get('/{examId}/class-summary/pdf', 'classSummaryPdf')->name('class-summary.pdf');
+
+            Route::get('/{examId}/subject-report', 'subjectReport')->name('subject-report');
+            Route::get('/{examId}/subject-report/pdf', 'subjectReportPdf')->name('subject-report.pdf');
+
+            Route::get('/{examId}/grade-analysis', 'gradeAnalysis')->name('grade-analysis');
         });
 
     // Assessment Scales (per-school customizable comment/mark scales for

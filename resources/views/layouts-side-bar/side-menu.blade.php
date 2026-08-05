@@ -383,6 +383,9 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if(PermissionHelper::canFeature('generate_reports'))
+                                <li><a href="{{ route('examination.reports.index') }}"><i class="fas fa-chart-column mr-2"></i>Reports &amp; Summaries</a></li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -859,6 +862,13 @@ use App\Helpers\PermissionHelper;
                                     <a href="{{ route('examination.marks-entry-portal') }}">
                                         <i class="fas fa-pen-to-square mr-2"></i>Marks Entry &nbsp; &nbsp;
                                         <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                    </a>
+                                </li>
+                            @endif
+                            @if(PermissionHelper::canFeature('generate_reports'))
+                                <li>
+                                    <a href="{{ route('examination.reports.index') }}">
+                                        <i class="fas fa-chart-column mr-2"></i>Reports &amp; Summaries
                                     </a>
                                 </li>
                             @endif
