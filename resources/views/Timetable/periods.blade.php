@@ -1,4 +1,5 @@
-<?php use App\Http\Controllers\Helper; use App\Helpers\PermissionHelper; ?>
+<?php use App\Http\Controllers\Helper;
+use App\Helpers\PermissionHelper; ?>
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -107,17 +108,17 @@
             border-collapse: collapse;
         }
 
-.period-table th {
-    padding: 0.9rem 1.5rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #FFF;
-    background: #2d2aca;
-    border-bottom: 1px solid var(--border);
-}
+        .period-table th {
+            padding: 0.9rem 1.5rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #FFF;
+            background: #2d2aca;
+            border-bottom: 1px solid var(--border);
+        }
 
         .period-table td {
             padding: 1rem 1.5rem;
@@ -417,68 +418,343 @@
 @endsection
 
 @section('page-header')
-<div class="glass-header mt-5">
-    <div class="row align-items-center" style="position:relative;z-index:1;">
-        <div class="col-lg-8">
-            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                <i class="fas fa-clock me-3"></i> Period Management
-            </h1>
-            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                Define your school's daily periods, breaks, and assembly slots
-            </p>
-        </div>
-<div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-
-        @if(PermissionHelper::canFeature('edit_timetable'))
-        <button class="btn-glass" onclick="openModal()"
-                style="
-                    background: rgba(255,255,255,0.2);
-                    border: 1px solid rgba(255,255,255,0.3);
-                    color: white;
-                    border-radius: 8px;
-                    padding: 0.6rem 1.5rem;
-                    font-size: 1rem;
-                    font-weight: 600;
-                    cursor: pointer;
+<div class="rpt-hero-card" style="margin-bottom: 1.5rem;margin-top: 2.5rem;">
+    <div class="rpt-hero-main" style="margin-bottom: 0.75rem; padding-bottom: 0.75rem;">
+        <div class="rpt-hero-top">
+            <div class="rpt-hero-left">
+                <div class="rpt-hero-icon-wrapper">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="rpt-hero-info">
+                    <div class="rpt-hero-badges" style="margin-bottom: 0.5rem;">
+                        <span class="rpt-hero-badge" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); padding: 0.4rem 1rem; border-radius: 99px; font-size: 0.75rem; color: #FFF; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-calendar-alt me-1"></i> Timetable Configuration
+                        </span>
+                    </div>
+                    <h4 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 0.25rem;">
+                        <i class="fas fa-clock me-3" style="color: rgba(255,255,255,0.6);"></i> Period Management
+                    </h4>
+                    <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin: 0;">
+                        Define your school's daily periods, breaks, and assembly slots
+                    </p>
+                </div>
+            </div>
+            <div class="rpt-hero-actions">
+                @if(PermissionHelper::canFeature('edit_timetable'))
+                <button onclick="openModal()" class="rpt-hero-btn-primary" style="
                     display: inline-flex;
                     align-items: center;
+                    justify-content: center;
                     gap: 0.5rem;
-                    transition: all 0.3s ease;
+                    padding: 0.6rem 1.25rem;
+                    background: #ffffff;
+                    color: #070189;
+                    border-radius: 10px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-align: center;
                     white-space: nowrap;
-                ">
-            <i class="fas fa-plus"></i>
-            Add Period
-        </button>
-        @endif
-
-        <a href="{{ route('timetable.dashboard') }}" class="btn"
-           style="
-                background: rgba(255,255,255,0.2);
-                border: 1px solid rgba(255,255,255,0.3);
-                color: white;
-                border-radius: 8px;
-                padding: 0.6rem 1.5rem;
-                font-size: 1rem;
-                font-weight: 600;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                transition: all 0.3s ease;
-                white-space: nowrap;
-           ">
-            <i class="fas fa-arrow-left"></i>
-            Back to Timetable
-        </a>
-
+                "
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 14px rgba(255,255,255,0.25)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <i class="fas fa-plus-circle"></i> Add Period
+                </button>
+                @endif
+                <a href="{{ route('timetable.dashboard') }}" class="rpt-hero-btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Timetable
+                </a>
+            </div>
+        </div>
     </div>
-
-</div>
+    <div class="rpt-hero-meta">
+        <div class="rpt-meta-items">
+            <div class="rpt-meta-item rpt-meta-highlight text-white">
+                <i class="fas fa-calendar-alt text-white"></i>
+                <span>Timetable Configuration</span>
+            </div>
+            <div class="rpt-meta-item text-white">
+                <i class="fas fa-clock text-white"></i>
+                <span>Period Management</span>
+            </div>
+            <div class="rpt-meta-item text-white">
+                <i class="fas fa-cog text-white"></i>
+                <span>Define daily periods</span>
+            </div>
+            <div class="rpt-meta-item" style="color: rgb(255, 255, 255);">
+                <i class="fas fa-layer-group text-white"></i>
+                <span>{{ $periods->count() }} Periods Configured</span>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
+
+<style>
+    /* RPT Hero Card Styles - if not already in your CSS */
+.rpt-hero-card {
+    background: linear-gradient(135deg, #000000 0%, #070189 100%);
+    border-radius: 20px;
+    padding: 1.75rem 2.25rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(7, 1, 137, 0.3);
+}
+
+.rpt-hero-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rpt-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.rpt-hero-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+
+.rpt-hero-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    margin-top: 0.25rem;
+}
+
+.rpt-hero-info {
+    flex: 1;
+}
+
+.rpt-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.rpt-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    color: #FFF;
+}
+
+.rpt-hero-info h4 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.rpt-hero-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.rpt-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rpt-hero-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    background: #ffffff;
+    color: #070189;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.rpt-hero-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(255, 255, 255, 0.25);
+    color: #070189;
+    text-decoration: none;
+}
+
+.rpt-hero-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.rpt-hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    text-decoration: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.rpt-hero-meta {
+    padding-top: 0.25rem;
+}
+
+.rpt-meta-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem 0.75rem;
+    width: 100%;
+}
+
+.rpt-meta-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.rpt-meta-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.rpt-meta-item i {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.rpt-meta-highlight {
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.rpt-meta-highlight i {
+    color: #818cf8;
+}
+
+@media (max-width: 768px) {
+    .rpt-hero-card {
+        padding: 1.25rem;
+    }
+    
+    .rpt-hero-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .rpt-hero-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .rpt-hero-info h4 {
+        font-size: 1.2rem;
+    }
+    
+    .rpt-hero-info p {
+        font-size: 0.85rem;
+    }
+    
+    .rpt-meta-items {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .rpt-hero-badges {
+        flex-wrap: wrap;
+    }
+    
+    .rpt-hero-actions {
+        width: 100%;
+    }
+    
+    .rpt-hero-btn-primary,
+    .rpt-hero-btn-secondary {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .rpt-hero-left {
+        width: 100%;
+    }
+    
+    .rpt-hero-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+    
+    .rpt-meta-items {
+        grid-template-columns: 1fr;
+    }
+    
+    .rpt-hero-badge {
+        font-size: 0.65rem !important;
+        padding: 0.3rem 0.7rem !important;
+    }
+    
+    .rpt-hero-actions {
+        flex-direction: column;
+    }
+    
+    .rpt-hero-btn-primary,
+    .rpt-hero-btn-secondary {
+        width: 100%;
+    }
+}
+</style>
 
 @section('content')
     <div class="container-fluid px-0">
@@ -494,9 +770,9 @@
                         per action.</p>
                 </div>
                 @if(PermissionHelper::canFeature('edit_timetable'))
-                <button class="btn-primary-sm" onclick="openModal()">
-                    <i class="fas fa-plus"></i> Add New Period
-                </button>
+                    <button class="btn-primary-sm" onclick="openModal()">
+                        <i class="fas fa-plus"></i> Add New Period
+                    </button>
                 @endif
             </div>
 
@@ -506,7 +782,7 @@
                     <h5>No Periods Yet</h5>
                     <p>Add your school's daily periods to start building timetables.</p>
                     @if(PermissionHelper::canFeature('edit_timetable'))
-                    <button class="btn-primary-sm" onclick="openModal()"><i class="fas fa-plus"></i> Add First Period</button>
+                        <button class="btn-primary-sm" onclick="openModal()"><i class="fas fa-plus"></i> Add First Period</button>
                     @endif
                 </div>
             @else
@@ -565,16 +841,16 @@
                                     <td>
                                         <div class="action-btns">
                                             @if(PermissionHelper::canFeature('edit_timetable'))
-                                            <button class="btn-icon btn-edit-icon"
-                                                onclick="editPeriod({{ $period->id }}, '{{ addslashes($period->name) }}', '{{ $period->type }}', '{{ $period->start_time }}', '{{ $period->end_time }}', {{ $period->sort_order }}, {{ $period->is_active ? 1 : 0 }})">
-                                                <i class="fas fa-pen"></i>
-                                            </button>
+                                                <button class="btn-icon btn-edit-icon"
+                                                    onclick="editPeriod({{ $period->id }}, '{{ addslashes($period->name) }}', '{{ $period->type }}', '{{ $period->start_time }}', '{{ $period->end_time }}', {{ $period->sort_order }}, {{ $period->is_active ? 1 : 0 }})">
+                                                    <i class="fas fa-pen"></i>
+                                                </button>
                                             @endif
                                             @if(PermissionHelper::canFeature('delete_timetable'))
-                                            <button class="btn-icon btn-del-icon"
-                                                onclick="deletePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                                <button class="btn-icon btn-del-icon"
+                                                    onclick="deletePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             @endif
                                         </div>
                                     </td>
@@ -660,142 +936,142 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
-        const csrfToken = '{{ csrf_token() }}';
-        const storeUrl = '{{ route('timetable.periods.store') }}';
-        const updateUrl = (id) => `/timetable/periods/${id}`;
-        const deleteUrl = (id) => `/timetable/periods/${id}`;
+<script>
+    const csrfToken = '{{ csrf_token() }}';
+    const storeUrl = '{{ route('timetable.periods.store') }}';
+    const updateUrl = (id) => `/timetable/periods/${id}`;
+    const deleteUrl = (id) => `/timetable/periods/${id}`;
 
-        function openModal() {
-            document.getElementById('editingId').value = '';
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-clock me-2" style="color:var(--brand);"></i> Add New Period';
-            document.getElementById('fName').value = '';
-            document.getElementById('fType').value = 'lesson';
-            document.getElementById('fStart').value = '';
-            document.getElementById('fEnd').value = '';
-            document.getElementById('fSort').value = '{{ $periods->count() + 1 }}';
-            document.getElementById('activeGroup').style.display = 'none';
-            document.getElementById('periodModal').classList.add('open');
-        }
+    function openModal() {
+        document.getElementById('editingId').value = '';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-clock me-2" style="color:var(--brand);"></i> Add New Period';
+        document.getElementById('fName').value = '';
+        document.getElementById('fType').value = 'lesson';
+        document.getElementById('fStart').value = '';
+        document.getElementById('fEnd').value = '';
+        document.getElementById('fSort').value = '{{ $periods->count() + 1 }}';
+        document.getElementById('activeGroup').style.display = 'none';
+        document.getElementById('periodModal').classList.add('open');
+    }
 
-        function editPeriod(id, name, type, start, end, sort, isActive) {
-            document.getElementById('editingId').value = id;
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen me-2" style="color:var(--brand);"></i> Edit Period';
-            document.getElementById('fName').value = name;
-            document.getElementById('fType').value = type;
-            document.getElementById('fStart').value = start.substring(0, 5);
-            document.getElementById('fEnd').value = end.substring(0, 5);
-            document.getElementById('fSort').value = sort;
-            document.getElementById('fActive').value = isActive;
-            document.getElementById('activeGroup').style.display = 'block';
-            document.getElementById('periodModal').classList.add('open');
-        }
+    function editPeriod(id, name, type, start, end, sort, isActive) {
+        document.getElementById('editingId').value = id;
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen me-2" style="color:var(--brand);"></i> Edit Period';
+        document.getElementById('fName').value = name;
+        document.getElementById('fType').value = type;
+        document.getElementById('fStart').value = start.substring(0, 5);
+        document.getElementById('fEnd').value = end.substring(0, 5);
+        document.getElementById('fSort').value = sort;
+        document.getElementById('fActive').value = isActive;
+        document.getElementById('activeGroup').style.display = 'block';
+        document.getElementById('periodModal').classList.add('open');
+    }
 
-        function closeModal() {
-            document.getElementById('periodModal').classList.remove('open');
-        }
+    function closeModal() {
+        document.getElementById('periodModal').classList.remove('open');
+    }
 
-        async function savePeriod() {
-            const id = document.getElementById('editingId').value;
-            const name = document.getElementById('fName').value.trim();
-            const type = document.getElementById('fType').value;
-            const start = document.getElementById('fStart').value;
-            const end = document.getElementById('fEnd').value;
-            const sort = document.getElementById('fSort').value;
-            const isActive = document.getElementById('fActive').value;
+    async function savePeriod() {
+        const id = document.getElementById('editingId').value;
+        const name = document.getElementById('fName').value.trim();
+        const type = document.getElementById('fType').value;
+        const start = document.getElementById('fStart').value;
+        const end = document.getElementById('fEnd').value;
+        const sort = document.getElementById('fSort').value;
+        const isActive = document.getElementById('fActive').value;
 
-            if (!name || !start || !end) { showToast('Please fill all required fields.', 'error'); return; }
-            if (start >= end) { showToast('End time must be after start time.', 'error'); return; }
+        if (!name || !start || !end) { showToast('Please fill all required fields.', 'error'); return; }
+        if (start >= end) { showToast('End time must be after start time.', 'error'); return; }
 
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            const isEdit = !!id;
-            const url = isEdit ? updateUrl(id) : storeUrl;
-            const method = isEdit ? 'PUT' : 'POST';
+        const isEdit = !!id;
+        const url = isEdit ? updateUrl(id) : storeUrl;
+        const method = isEdit ? 'PUT' : 'POST';
 
-            try {
-                const res = await fetch(url, {
-                    method, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ name, type, start_time: start, end_time: end, sort_order: parseInt(sort), is_active: isEdit ? parseInt(isActive) : 1 })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => location.reload(), 700);
-                } else {
-                    showToast(data.message || 'Save failed.', 'error');
-                }
-            } catch (e) { showToast('Connection error.', 'error'); }
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Period';
-        }
-
-async function deletePeriod(id, name) {
-
-    const result = await Swal.fire({
-        title: 'Delete Period?',
-        text: `Delete "${name}"?\nThis cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280'
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-        const res = await fetch(deleteUrl(id), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json'
+        try {
+            const res = await fetch(url, {
+                method, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ name, type, start_time: start, end_time: end, sort_order: parseInt(sort), is_active: isEdit ? parseInt(isActive) : 1 })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                closeModal();
+                setTimeout(() => location.reload(), 700);
+            } else {
+                showToast(data.message || 'Save failed.', 'error');
             }
+        } catch (e) { showToast('Connection error.', 'error'); }
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Period';
+    }
+
+    async function deletePeriod(id, name) {
+
+        const result = await Swal.fire({
+            title: 'Delete Period?',
+            text: `Delete "${name}"?\nThis cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280'
         });
 
-        const data = await res.json();
+        if (!result.isConfirmed) return;
 
-        if (data.success) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: 'Period deleted successfully.',
-                timer: 1200,
-                showConfirmButton: false
+        try {
+            const res = await fetch(deleteUrl(id), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json'
+                }
             });
 
-            setTimeout(() => location.reload(), 600);
-        } else {
+            const data = await res.json();
+
+            if (data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Period deleted successfully.',
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => location.reload(), 600);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: data.message || 'Cannot delete.'
+                });
+            }
+
+        } catch (e) {
             Swal.fire({
                 icon: 'error',
-                title: 'Failed',
-                text: data.message || 'Cannot delete.'
+                title: 'Connection Error',
+                text: 'Please try again.'
             });
         }
-
-    } catch (e) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Connection Error',
-            text: 'Please try again.'
-        });
     }
-}
 
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.className = `toast-notif show ${type}`;
-            clearTimeout(window._toastT);
-            window._toastT = setTimeout(() => t.classList.remove('show'), 3000);
-        }
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = `toast-notif show ${type}`;
+        clearTimeout(window._toastT);
+        window._toastT = setTimeout(() => t.classList.remove('show'), 3000);
+    }
 
-        // Close modal on overlay click
-        document.getElementById('periodModal').addEventListener('click', function (e) {
-            if (e.target === this) closeModal();
-        });
+    // Close modal on overlay click
+    document.getElementById('periodModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
 
-        // ESC to close
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-    </script>
+    // ESC to close
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>

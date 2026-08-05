@@ -77,6 +77,8 @@
     .ptime  { font-size:0.65rem; color:var(--text-muted); }
     .period-label.break-lbl .plabel { color:#059669; }
     .period-label.lunch-lbl .plabel { color:#d97706; }
+    .period-label.today-lbl { background:rgba(245,158,11,0.12); }
+    .period-label.today-lbl .plabel { color:#d97706; }
 
     .slot-cell {
         border-right:1px solid var(--border); padding:5px; min-height:75px;
@@ -104,37 +106,244 @@
         body { background:white!important; }
         .tt-container { box-shadow:none!important; border:none!important; }
     }
+
+    /* RPT Hero Card Styles */
+.rpt-hero-card {
+    background: linear-gradient(135deg, #000000 0%, #070189 100%);
+    border-radius: 20px;
+    padding: 1.75rem 2.25rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(7, 1, 137, 0.3);
+}
+
+.rpt-hero-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rpt-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.rpt-hero-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+
+.rpt-hero-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    margin-top: 0.25rem;
+}
+
+.rpt-hero-info {
+    flex: 1;
+}
+
+.rpt-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.rpt-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    color: #FFF;
+}
+
+.rpt-hero-info h4 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.rpt-hero-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.rpt-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rpt-hero-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.rpt-hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    text-decoration: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.rpt-hero-meta {
+    padding-top: 0.25rem;
+}
+
+.rpt-meta-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem 0.75rem;
+    width: 100%;
+}
+
+.rpt-meta-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.rpt-meta-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.rpt-meta-item i {
+    font-size: 0.7rem;
+}
+
+.rpt-meta-highlight {
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 768px) {
+    .rpt-hero-card { padding: 1.25rem; }
+    .rpt-hero-top { flex-direction: column; align-items: flex-start; }
+    .rpt-hero-left { flex-direction: column; align-items: flex-start; }
+    .rpt-hero-info h4 { font-size: 1.2rem; }
+    .rpt-hero-info p { font-size: 0.85rem; }
+    .rpt-meta-items { grid-template-columns: 1fr 1fr; }
+    .rpt-hero-badges { flex-wrap: wrap; }
+    .rpt-hero-actions { width: 100%; }
+    .rpt-hero-btn-secondary { flex: 1; justify-content: center; font-size: 0.75rem; padding: 0.5rem 0.8rem; }
+}
+
+@media (max-width: 480px) {
+    .rpt-hero-left { width: 100%; }
+    .rpt-hero-icon-wrapper { width: 48px; height: 48px; font-size: 1.2rem; }
+    .rpt-meta-items { grid-template-columns: 1fr; }
+    .rpt-hero-badge { font-size: 0.65rem !important; padding: 0.3rem 0.7rem !important; }
+    .rpt-hero-actions { flex-direction: column; }
+    .rpt-hero-btn-secondary { width: 100%; }
+}
 </style>
 @endsection
 
 @section('page-header')
-<div class="glass-header">
-    <div class="row align-items-center" style="position:relative;z-index:1;">
-        <div class="col-lg-8">
-            <div class="mb-4">
-                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
-                    <i class="fas fa-calendar-alt me-2"></i> My Schedule
-                </span>
+<div class="rpt-hero-card" style="margin-bottom: 1.5rem;margin-top: 2.5rem;">
+    <div class="rpt-hero-main" style="margin-bottom: 0.75rem; padding-bottom: 0.75rem;">
+        <div class="rpt-hero-top">
+            <div class="rpt-hero-left">
+                <div class="rpt-hero-icon-wrapper">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="rpt-hero-info">
+                    <div class="rpt-hero-badges" style="margin-bottom: 0.5rem;">
+                        <span class="rpt-hero-badge" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); padding: 0.4rem 1rem; border-radius: 99px; font-size: 0.75rem; color: #FFF; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-calendar-alt me-1" style="color: #818CF8 !important;"></i> 
+                            <span style="color: #ffffff !important;">My Schedule</span>
+                        </span>
+                    </div>
+                    <h4 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 0.25rem;">
+                        <i class="fas fa-calendar-week me-3" style="color: rgba(255,255,255,0.6);"></i> My Schedule
+                    </h4>
+                    <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin: 0;">
+                        Your personal teaching timetable for active sessions
+                    </p>
+                </div>
             </div>
-            <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                <i class="fas fa-calendar-week me-3"></i> My Schedule
-            </h1>
-            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                Your personal teaching timetable for active sessions
-            </p>
-        </div>
-        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <div class="rpt-hero-actions">
                 @if(PermissionHelper::canFeature('view_timetable'))
-                <a href="{{ route('timetable.dashboard') }}" class="btn"
-                   style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                <a href="{{ route('timetable.dashboard') }}" class="rpt-hero-btn-secondary">
                     <i class="fas fa-arrow-left"></i> Dashboard
                 </a>
                 @endif
-                <button onclick="window.print()" class="btn"
-                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; white-space: nowrap;">
+                <button onclick="toggleOrientation()" class="rpt-hero-btn-secondary" id="orientationToggle">
+                    <i class="fas fa-exchange-alt"></i> <span id="orientationLabel">Swap to Days Vertical</span>
+                </button>
+                <button onclick="window.print()" class="rpt-hero-btn-secondary">
                     <i class="fas fa-print"></i> Print
                 </button>
+            </div>
+        </div>
+    </div>
+    <div class="rpt-hero-meta">
+        <div class="rpt-meta-items">
+            <div class="rpt-meta-item rpt-meta-highlight">
+                <i class="fas fa-calendar-alt" style="color: #818CF8 !important;"></i>
+                <span style="color: #ffffff !important;">My Schedule</span>
+            </div>
+            <div class="rpt-meta-item">
+                <i class="fas fa-calendar-week" style="color: #818CF8 !important;"></i>
+                <span style="color: #ffffff !important;">Personal Timetable</span>
+            </div>
+            <div class="rpt-meta-item">
+                <i class="fas fa-user-tie" style="color: #818CF8 !important;"></i>
+                <span style="color: #ffffff !important;">Your Teaching Sessions</span>
+            </div>
+            <div class="rpt-meta-item" style="color: rgba(255,255,255,0.65);">
+                <i class="fas fa-clock" style="color: #818CF8 !important;"></i>
+                <span style="color: #ffffff !important;">Active Sessions</span>
             </div>
         </div>
     </div>
@@ -220,7 +429,7 @@
 
 <!-- Full Weekly Grid -->
 <div class="tt-wrapper">
-    <div class="tt-container">
+    <div class="tt-container" id="gridPeriodsVertical">
         <div class="tt-head">
             <div class="tt-head-cell"><i class="fas fa-clock me-1"></i> Period</div>
             @foreach($days as $dayNum => $dayName)
@@ -268,9 +477,74 @@
         </div>
         @endforeach
     </div>
+
+    {{-- Transposed: days down the left, periods across the top. Same data. --}}
+    <div class="tt-container" id="gridDaysVertical" style="display:none;">
+        <div class="tt-head" style="grid-template-columns:120px repeat({{ count($periods) }},1fr);">
+            <div class="tt-head-cell"><i class="fas fa-calendar-day me-1"></i> Day</div>
+            @foreach($periods as $period)
+                <div class="tt-head-cell">{{ $period->name }}</div>
+            @endforeach
+        </div>
+
+        @foreach($days as $dayNum => $dayName)
+        <div class="tt-row" style="grid-template-columns:120px repeat({{ count($periods) }},1fr);">
+            <div class="period-label {{ $dayNum == $todayNum ? 'today-lbl' : '' }}">
+                <div class="plabel">{{ $dayName }}</div>
+                @if($dayNum == $todayNum)
+                <div class="ptime">Today</div>
+                @endif
+            </div>
+
+            @foreach($periods as $period)
+            @php
+                $isLesson  = $period->type === 'lesson';
+                $key  = $dayNum . '_' . $period->id;
+                $slot = $slots[$key] ?? null;
+            @endphp
+            <div class="slot-cell {{ $dayNum == $todayNum ? 'today-cell' : '' }} {{ !$isLesson ? 'is-break' : '' }}">
+                @if($slot && $slot->subject_id)
+                <div class="my-slot-chip" style="background:{{ $slot->color ?? '#5351e4' }};">
+                    <div class="my-slot-subj">{{ $slot->subject_name }}</div>
+                    <div class="my-slot-class">{{ $slot->class_name }} — {{ $slot->stream_name }}</div>
+                    @if($slot->room)
+                    <div class="my-slot-room"><i class="fas fa-map-marker-alt" style="font-size:0.5rem;"></i> {{ $slot->room }}</div>
+                    @endif
+                </div>
+                @elseif(!$isLesson)
+                <div class="empty-slot" style="font-size:0.68rem;color:var(--text-muted);">{{ ucfirst($period->type) }}</div>
+                @else
+                <div class="empty-slot">—</div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+        @endforeach
+    </div>
 </div>
  </div>
 </div>
  </div>
 </div>
+
+<script>
+    function toggleOrientation() {
+        const periodsGrid = document.getElementById('gridPeriodsVertical');
+        const daysGrid = document.getElementById('gridDaysVertical');
+        const label = document.getElementById('orientationLabel');
+        const isPeriodsVertical = periodsGrid.style.display !== 'none';
+
+        periodsGrid.style.display = isPeriodsVertical ? 'none' : 'block';
+        daysGrid.style.display = isPeriodsVertical ? 'block' : 'none';
+        label.textContent = isPeriodsVertical ? 'Swap to Periods Vertical' : 'Swap to Days Vertical';
+
+        localStorage.setItem('ttOrientation', isPeriodsVertical ? 'days_vertical' : 'periods_vertical');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (localStorage.getItem('ttOrientation') === 'days_vertical') {
+            toggleOrientation();
+        }
+    });
+</script>
 @endsection

@@ -242,7 +242,7 @@ class TimetableController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
         // All subjects for this class-stream
         $classSubjects = ClassSubject::where('school_id', $schoolId)
@@ -456,7 +456,7 @@ class TimetableController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
         $slots = TimetableSlot::where('timetable_id', $id)
             ->with(['period', 'teacher'])
@@ -493,7 +493,7 @@ class TimetableController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
         // Get all active timetable slots for this teacher
         $slots = TimetableSlot::where('teacher_id', $teacherId)
@@ -520,6 +520,152 @@ class TimetableController extends Controller
             'slots',
             'weeklyHours'
         ));
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  GENERAL / MASTER SCHOOL TIMETABLE
+    //  Combines every active per-class timetable into one dynamic
+    //  view: pick which classes to include, which day to look at,
+    //  and whether classes or periods run down the left column.
+    // ══════════════════════════════════════════════════════════════
+
+    public function master(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('view_timetable');
+
+        $schoolId = session('LoggedSchool');
+
+        $activeTimetables = Timetable::where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->get()
+            ->map(function ($tt) {
+                $tt->class_name = Helper::recordMdname($tt->class_id);
+                $tt->stream_name = Helper::recordMdname($tt->stream_id);
+                $tt->label = $tt->class_name . ($tt->stream_name && $tt->stream_name !== 'NO_STREAM' ? ' - ' . $tt->stream_name : '');
+                return $tt;
+            })
+            ->sortBy('label')
+            ->values();
+
+        $periods = TimetablePeriod::where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+
+        if ($activeTimetables->isEmpty()) {
+            return view('Timetable.master', [
+                'activeTimetables' => $activeTimetables,
+                'selectedTimetables' => collect(),
+                'selectedIds' => [],
+                'periods' => $periods,
+                'days' => $days,
+                'day' => 1,
+                'orientation' => 'periods_vertical',
+                'slots' => collect(),
+            ]);
+        }
+
+        // Default to every active class the first time this is opened;
+        // once the user picks a subset, respect exactly that.
+        $selectedIds = $request->query('timetables', $activeTimetables->pluck('id')->all());
+        if (!is_array($selectedIds)) {
+            $selectedIds = [$selectedIds];
+        }
+        $selectedIds = array_map('intval', $selectedIds);
+
+        $selectedTimetables = $activeTimetables->whereIn('id', $selectedIds)->values();
+
+        $day = (int) $request->query('day', now()->dayOfWeekIso);
+        if ($day < 1 || $day > 7) {
+            $day = 1;
+        }
+
+        $orientation = $request->query('orientation', 'periods_vertical');
+        if (!in_array($orientation, ['periods_vertical', 'classes_vertical'])) {
+            $orientation = 'periods_vertical';
+        }
+
+        $slots = TimetableSlot::whereIn('timetable_id', $selectedTimetables->pluck('id'))
+            ->where('day_of_week', $day)
+            ->get()
+            ->keyBy(fn($s) => $s->timetable_id . '_' . $s->period_id);
+
+        return view('Timetable.master', compact(
+            'activeTimetables',
+            'selectedTimetables',
+            'selectedIds',
+            'periods',
+            'days',
+            'day',
+            'orientation',
+            'slots'
+        ));
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  TEACHER TEACHING-DAYS SUMMARY
+    //  Every teacher's weekly load at a glance: which days they
+    //  teach, how many periods, and a per-day breakdown — useful for
+    //  spotting overload, gaps, or a teacher with nothing scheduled.
+    // ══════════════════════════════════════════════════════════════
+
+    public function teachersSummary(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('view_timetable');
+
+        $schoolId = session('LoggedSchool');
+
+        $activeTimetableIds = Timetable::where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->pluck('id');
+
+        $lessonPeriodIds = TimetablePeriod::where('school_id', $schoolId)
+            ->where('type', 'lesson')
+            ->pluck('id');
+
+        $days = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+
+        $slots = TimetableSlot::whereIn('timetable_id', $activeTimetableIds)
+            ->whereNotNull('teacher_id')
+            ->whereIn('period_id', $lessonPeriodIds)
+            ->with(['timetable', 'period'])
+            ->get()
+            ->map(function ($slot) {
+                $slot->class_name = Helper::recordMdname($slot->timetable->class_id);
+                $slot->stream_name = Helper::recordMdname($slot->timetable->stream_id);
+                $slot->subject_name = Helper::recordMdname($slot->subject_id);
+                return $slot;
+            });
+
+        $teachers = Teacher::where('school_id', $schoolId)->orderBy('surname')->get();
+
+        $summary = $teachers->map(function ($teacher) use ($slots, $days) {
+            $mySlots = $slots->where('teacher_id', $teacher->id);
+
+            $byDay = collect($days)->mapWithKeys(function ($label, $dayNum) use ($mySlots) {
+                return [$dayNum => $mySlots->where('day_of_week', $dayNum)->sortBy('period.sort_order')->values()];
+            });
+
+            return (object) [
+                'teacher' => $teacher,
+                'total_periods' => $mySlots->count(),
+                'teaching_days' => $byDay->filter(fn($s) => $s->count() > 0)->keys()->values(),
+                'free_days' => $byDay->filter(fn($s) => $s->count() === 0)->keys()->values(),
+                'by_day' => $byDay,
+                'classes_count' => $mySlots->pluck('timetable_id')->unique()->count(),
+                'subjects_count' => $mySlots->pluck('subject_id')->unique()->count(),
+            ];
+        })
+            ->filter(fn($s) => $s->total_periods > 0)
+            ->sortByDesc('total_periods')
+            ->values();
+
+        $schoolAverage = $summary->isNotEmpty() ? round($summary->avg('total_periods'), 1) : 0;
+        $unscheduledCount = $teachers->count() - $summary->count();
+
+        return view('Timetable.teachers-summary', compact('summary', 'days', 'schoolAverage', 'unscheduledCount'));
     }
 
     // ══════════════════════════════════════════════════════════════

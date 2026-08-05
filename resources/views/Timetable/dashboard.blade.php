@@ -14,6 +14,7 @@ use App\Helpers\PermissionHelper;
             --brand-light: #2C29CA;
             --brand-dark: #2C29CA;
             --brand-muted: rgba(83, 81, 228, 0.08);
+            --brand-gradient: linear-gradient(135deg, #5351e4, #2C29CA);
             --success: #10b981;
             --success-muted: rgba(16, 185, 129, 0.1);
             --warning: #f59e0b;
@@ -35,42 +36,7 @@ use App\Helpers\PermissionHelper;
             background: #f1f5f9;
         }
 
-        /* Modern Glass Header */
-        .glass-header {
-            background: linear-gradient(135deg, rgba(83, 81, 228, 0.98) 0%, rgba(44, 41, 202, 0.95) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 40px -12px rgba(83, 81, 228, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .glass-header::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -10%;
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(108, 63, 197, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        /* Stats Row */
+        /* Stats Row - Enhanced with gradient backgrounds */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -89,10 +55,39 @@ use App\Helpers\PermissionHelper;
             overflow: hidden;
         }
 
+        .stat-card-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--brand-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card-premium:hover::before {
+            opacity: 1;
+        }
+
         .stat-card-premium:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 24px rgba(83, 81, 228, 0.1);
             border-color: rgba(83, 81, 228, 0.15);
+        }
+
+        .stat-card-premium:nth-child(1)::before {
+            background: linear-gradient(135deg, #5351e4, #2C29CA);
+        }
+        .stat-card-premium:nth-child(2)::before {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .stat-card-premium:nth-child(3)::before {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .stat-card-premium:nth-child(4)::before {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
         }
 
         .stat-icon-wrapper {
@@ -125,7 +120,7 @@ use App\Helpers\PermissionHelper;
             gap: 1.5rem;
         }
 
-        /* Cards */
+        /* Cards - Enhanced with colored headers */
         .data-card {
             background: white;
             border-radius: 24px;
@@ -133,6 +128,12 @@ use App\Helpers\PermissionHelper;
             border: 1px solid rgba(83, 81, 228, 0.08);
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
         }
 
         .card-header-modern {
@@ -144,6 +145,29 @@ use App\Helpers\PermissionHelper;
             flex-wrap: wrap;
             gap: 1rem;
             background: var(--bg-surface);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header-modern::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--brand-gradient);
+            opacity: 0.5;
+        }
+
+        .card-header-modern.success::after {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .card-header-modern.warning::after {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .card-header-modern.info::after {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
         }
 
         .card-title {
@@ -163,20 +187,45 @@ use App\Helpers\PermissionHelper;
             padding: 0.2rem 0.7rem;
             font-size: 0.7rem;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        /* Timetable Item */
+        .data-card:hover .count-badge {
+            background: var(--brand);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Timetable Item - Enhanced with hover colors */
         .tt-item {
             display: flex;
             align-items: center;
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-light);
             gap: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tt-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--brand-gradient);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tt-item:hover::before {
+            transform: scaleY(1);
         }
 
         .tt-item:hover {
-            background: var(--bg-surface);
+            background: linear-gradient(90deg, var(--brand-muted), transparent);
+            transform: translateX(3px);
         }
 
         .tt-item:last-child {
@@ -187,7 +236,7 @@ use App\Helpers\PermissionHelper;
             width: 48px;
             height: 48px;
             border-radius: 16px;
-            background: linear-gradient(135deg, var(--brand), var(--brand-light));
+            background: var(--brand-gradient);
             color: white;
             font-size: 1rem;
             font-weight: 700;
@@ -196,10 +245,16 @@ use App\Helpers\PermissionHelper;
             justify-content: center;
             flex-shrink: 0;
             box-shadow: 0 4px 10px rgba(83, 81, 228, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .tt-item:hover .tt-badge {
+            transform: scale(1.05) rotate(3deg);
+            box-shadow: 0 6px 14px rgba(83, 81, 228, 0.25);
         }
 
         .tt-badge-draft {
-            background: linear-gradient(135deg, var(--warning), #d97706);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
         }
 
         .tt-info {
@@ -222,6 +277,14 @@ use App\Helpers\PermissionHelper;
             flex-wrap: wrap;
         }
 
+        .tt-meta span {
+            transition: color 0.3s ease;
+        }
+
+        .tt-item:hover .tt-meta span {
+            color: var(--text-secondary);
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -230,6 +293,11 @@ use App\Helpers\PermissionHelper;
             border-radius: 99px;
             font-size: 0.65rem;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tt-item:hover .status-badge {
+            transform: scale(1.05);
         }
 
         .status-active {
@@ -254,8 +322,12 @@ use App\Helpers\PermissionHelper;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             text-decoration: none;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px) scale(1.1);
         }
 
         .btn-icon-view {
@@ -266,6 +338,7 @@ use App\Helpers\PermissionHelper;
         .btn-icon-view:hover {
             background: var(--info);
             color: white;
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
         }
 
         .btn-icon-edit {
@@ -276,6 +349,7 @@ use App\Helpers\PermissionHelper;
         .btn-icon-edit:hover {
             background: var(--brand);
             color: white;
+            box-shadow: 0 4px 8px rgba(83, 81, 228, 0.3);
         }
 
         .btn-icon-activate {
@@ -286,6 +360,7 @@ use App\Helpers\PermissionHelper;
         .btn-icon-activate:hover {
             background: var(--success);
             color: white;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
         }
 
         .btn-icon-delete {
@@ -296,20 +371,38 @@ use App\Helpers\PermissionHelper;
         .btn-icon-delete:hover {
             background: var(--danger);
             color: white;
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
         }
 
-        /* Today's Schedule */
+        /* Today's Schedule - Enhanced with colored time slots */
         .today-slot {
             display: flex;
             align-items: center;
             gap: 1rem;
             padding: 0.9rem 1.5rem;
             border-bottom: 1px solid var(--border-light);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .today-slot::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--brand-gradient);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .today-slot:hover::after {
+            transform: scaleY(1);
         }
 
         .today-slot:hover {
-            background: var(--bg-surface);
+            background: linear-gradient(90deg, transparent, var(--brand-muted));
         }
 
         .slot-time {
@@ -317,6 +410,11 @@ use App\Helpers\PermissionHelper;
             font-size: 0.75rem;
             font-weight: 700;
             color: var(--brand);
+            transition: color 0.3s ease;
+        }
+
+        .today-slot:hover .slot-time {
+            color: var(--brand-light);
         }
 
         .slot-color {
@@ -324,6 +422,11 @@ use App\Helpers\PermissionHelper;
             height: 40px;
             border-radius: 4px;
             flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .today-slot:hover .slot-color {
+            transform: scaleX(1.5);
         }
 
         .slot-info {
@@ -348,24 +451,47 @@ use App\Helpers\PermissionHelper;
             margin-top: 0.15rem;
         }
 
-        /* Period Item */
+        /* Period Item - Enhanced with colored indicators */
         .period-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0.75rem 1.5rem;
             border-bottom: 1px solid var(--border-light);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .period-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--brand-gradient);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .period-item:hover::before {
+            transform: scaleY(1);
         }
 
         .period-item:hover {
-            background: var(--bg-surface);
+            background: linear-gradient(90deg, var(--info-muted), transparent);
+            transform: translateX(3px);
         }
 
         .period-name {
             font-size: 0.85rem;
             font-weight: 600;
             color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .period-item:hover .period-name {
+            color: var(--brand);
         }
 
         .period-type {
@@ -375,61 +501,34 @@ use App\Helpers\PermissionHelper;
             border-radius: 99px;
             padding: 0.2rem 0.6rem;
             margin-left: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .period-item:hover .period-type {
+            background: var(--brand-muted);
+            color: var(--brand);
         }
 
         .period-time {
             font-size: 0.7rem;
             color: var(--text-muted);
+            transition: color 0.3s ease;
         }
 
-        /* Buttons */
-        .btn-primary-premium {
-            background: linear-gradient(135deg, var(--brand), var(--brand-light));
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 0.6rem 1.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary-premium:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(83, 81, 228, 0.3);
-            color: white;
-        }
-
-        .btn-outline-premium {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 14px;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-outline-premium:hover {
-            background: white;
-            color: var(--brand);
-            border-color: white;
+        .period-item:hover .period-time {
+            color: var(--text-secondary);
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem 1.5rem;
             color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .empty-state:hover {
+            background: linear-gradient(135deg, var(--brand-muted), transparent);
+            transform: scale(1.01);
         }
 
         .empty-state i {
@@ -437,6 +536,13 @@ use App\Helpers\PermissionHelper;
             opacity: 0.3;
             margin-bottom: 0.75rem;
             display: block;
+            transition: all 0.3s ease;
+        }
+
+        .empty-state:hover i {
+            opacity: 0.5;
+            color: var(--brand);
+            transform: scale(1.1);
         }
 
         /* Responsive */
@@ -450,106 +556,6 @@ use App\Helpers\PermissionHelper;
             }
         }
 
-        @media (max-width: 768px) {
-            .glass-header {
-                padding: 1.25rem;
-            }
-
-            .tt-item {
-                flex-wrap: wrap;
-            }
-
-            .tt-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-
-        /* Responsive Header Section */
-        @media (max-width: 768px) {
-            .glass-header {
-                padding: 1.25rem !important;
-                border-radius: 24px !important;
-            }
-
-            .glass-header .row {
-                flex-direction: column !important;
-            }
-
-            .glass-header .col-lg-7,
-            .glass-header .col-lg-5 {
-                width: 100% !important;
-                text-align: center !important;
-            }
-
-            .glass-header .col-lg-7 {
-                margin-bottom: 1.5rem !important;
-            }
-
-            .glass-header h1 {
-                font-size: 1.5rem !important;
-            }
-
-            .glass-header h1 i {
-                display: block !important;
-                margin-bottom: 0.5rem !important;
-            }
-
-            .glass-header .badge {
-                font-size: 0.85rem !important;
-                padding: 0.4rem 0.8rem !important;
-            }
-
-            /* Button group styling */
-            .glass-header .d-flex {
-                flex-wrap: wrap !important;
-                justify-content: center !important;
-                gap: 0.75rem !important;
-            }
-
-            .glass-header .btn-primary-premium,
-            .glass-header .btn-outline-premium {
-                font-size: 0.85rem !important;
-                padding: 0.5rem 1rem !important;
-                white-space: nowrap !important;
-            }
-        }
-
-        /* Extra small devices */
-        @media (max-width: 576px) {
-            .glass-header {
-                padding: 1rem !important;
-            }
-
-            .glass-header .badge {
-                font-size: 0.75rem !important;
-                padding: 0.3rem 0.7rem !important;
-            }
-
-            .glass-header h1 {
-                font-size: 1.3rem !important;
-            }
-
-            .glass-header p {
-                font-size: 0.85rem !important;
-            }
-
-            /* Stack buttons vertically on very small screens */
-            .glass-header .d-flex {
-                flex-direction: column !important;
-                width: 100% !important;
-            }
-
-            .glass-header .btn-primary-premium,
-            .glass-header .btn-outline-premium {
-                width: 100% !important;
-                justify-content: center !important;
-                white-space: normal !important;
-                text-align: center !important;
-            }
-        }
-
-        /* Additional responsive improvements for existing styles */
         @media (max-width: 768px) {
             .stats-row {
                 grid-template-columns: repeat(2, 1fr) !important;
@@ -653,9 +659,12 @@ use App\Helpers\PermissionHelper;
             .period-time {
                 font-size: 0.65rem !important;
             }
+
+            .side-app {
+                padding: 1rem !important;
+            }
         }
 
-        /* For very small phones (up to 400px) */
         @media (max-width: 480px) {
             .stats-row {
                 grid-template-columns: 1fr !important;
@@ -680,439 +689,256 @@ use App\Helpers\PermissionHelper;
             }
         }
 
-        /* Ensure the side-app padding is responsive */
-        @media (max-width: 768px) {
-            .side-app {
-                padding: 1rem !important;
-            }
-        }
-
-
-        /* Enhanced hover effects for all cards */
-        .stat-card-premium {
-            background: white;
+        /* RPT Hero Card Styles */
+        .rpt-hero-card {
+            background: linear-gradient(135deg, #000000 0%, #070189 100%);
             border-radius: 20px;
-            padding: 1.25rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(83, 81, 228, 0.08);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
+            padding: 1.75rem 2.25rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px rgba(7, 1, 137, 0.3);
         }
 
-        /* Gradient border effect on hover */
-        .stat-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 20px;
-            padding: 2px;
-            background: linear-gradient(135deg, var(--brand), var(--purple), var(--info));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            pointer-events: none;
-        }
-
-        .stat-card-premium:hover::before {
-            opacity: 1;
-        }
-
-        .stat-card-premium:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 30px -12px rgba(83, 81, 228, 0.2);
-            border-color: rgba(83, 81, 228, 0.2);
-        }
-
-        /* Icon animation on hover */
-        .stat-card-premium:hover .stat-icon-wrapper {
-            transform: scale(1.1) rotate(5deg);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-icon-wrapper {
-            transition: transform 0.3s ease;
-        }
-
-        /* Data cards hover effects */
-        .data-card {
-            background: white;
-            border-radius: 24px;
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(83, 81, 228, 0.08);
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .data-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px -8px rgba(83, 81, 228, 0.15);
-            border-color: rgba(83, 81, 228, 0.15);
-        }
-
-        /* Shimmer effect on data card header */
-        .data-card:hover .card-header-modern {
-            background: linear-gradient(135deg, var(--bg-surface), rgba(83, 81, 228, 0.05));
-        }
-
-        /* Timetable items hover effect */
-        .tt-item {
+        .rpt-hero-main {
             display: flex;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-light);
-            gap: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* Left accent bar on hover */
-        .tt-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(135deg, var(--brand), var(--purple));
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .tt-item:hover::before {
-            transform: scaleY(1);
-        }
-
-        .tt-item:hover {
-            background: linear-gradient(90deg, var(--brand-muted), transparent);
-            transform: translateX(5px);
-        }
-
-        /* Badge scale effect on hover */
-        .tt-item:hover .tt-badge {
-            transform: scale(1.05) rotate(3deg);
-            box-shadow: 0 6px 12px rgba(83, 81, 228, 0.25);
-        }
-
-        .tt-badge {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* Today's schedule items hover effect */
-        .today-slot {
+        .rpt-hero-top {
             display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.9rem 1.5rem;
-            border-bottom: 1px solid var(--border-light);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .today-slot::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(135deg, var(--brand), var(--success));
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .today-slot:hover::after {
-            transform: scaleY(1);
-        }
-
-        .today-slot:hover {
-            background: linear-gradient(90deg, transparent, rgba(83, 81, 228, 0.03));
-            transform: translateX(-3px);
-        }
-
-        /* Color bar animation on hover */
-        .today-slot:hover .slot-color {
-            transform: scaleX(1.5);
-            transition: transform 0.3s ease;
-        }
-
-        .slot-color {
-            transition: transform 0.3s ease;
-        }
-
-        /* Period items hover effect */
-        .period-item {
-            display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0.75rem 1.5rem;
-            border-bottom: 1px solid var(--border-light);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
-        .period-item:hover {
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.05), transparent);
-            transform: translateX(5px);
+        .rpt-hero-left {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
         }
 
-        /* Period name highlight on hover */
-        .period-item:hover .period-name {
-            color: var(--brand);
-            transform: translateX(3px);
+        .rpt-hero-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        .period-name {
-            transition: all 0.3s ease;
-            display: inline-block;
+        .rpt-hero-info h4 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.15rem;
         }
 
-        /* Button icon hover effects */
-        .btn-icon {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .btn-icon:hover {
-            transform: translateY(-2px) scale(1.1);
-        }
-
-        /* View button specific */
-        .btn-icon-view:hover {
-            background: var(--info);
-            color: white;
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-        }
-
-        /* Edit button specific */
-        .btn-icon-edit:hover {
-            background: var(--brand);
-            color: white;
-            box-shadow: 0 4px 8px rgba(83, 81, 228, 0.3);
-        }
-
-        /* Activate button specific */
-        .btn-icon-activate:hover {
-            background: var(--success);
-            color: white;
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-        }
-
-        /* Delete button specific */
-        .btn-icon-delete:hover {
-            background: var(--danger);
-            color: white;
-            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Empty state hover effect */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1.5rem;
-            color: var(--text-muted);
-            transition: all 0.3s ease;
-        }
-
-        .empty-state:hover {
-            background: linear-gradient(135deg, rgba(83, 81, 228, 0.02), transparent);
-            transform: scale(1.01);
-        }
-
-        .empty-state i {
-            transition: all 0.3s ease;
-        }
-
-        .empty-state:hover i {
-            transform: scale(1.1);
-            color: var(--brand);
-            opacity: 0.5;
-        }
-
-        /* Status badge hover effect */
-        .status-badge {
-            transition: all 0.3s ease;
-        }
-
-        .tt-item:hover .status-badge {
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Meta information hover effect */
-        .tt-meta span {
-            transition: all 0.2s ease;
-        }
-
-        .tt-item:hover .tt-meta span {
-            color: var(--text-primary);
-        }
-
-        /* Count badge hover */
-        .count-badge {
-            transition: all 0.3s ease;
-        }
-
-        .data-card:hover .count-badge {
-            transform: scale(1.05);
-            background: var(--brand);
-            color: white;
-        }
-
-        /* Card header icons on hover */
-        .card-header-modern i {
-            transition: all 0.3s ease;
-        }
-
-        .data-card:hover .card-header-modern i {
-            transform: scale(1.1);
-            animation: pulse 1s ease infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
-        }
-
-        /* Premium button hover effect */
-        .btn-primary-premium {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn-primary-premium:hover::before {
-            left: 100%;
-        }
-
-        /* Outline button hover effect */
-        .btn-outline-premium {
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline-premium:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-        }
-
-        /* Responsive adjustments for hover effects */
-        @media (max-width: 768px) {
-            .stat-card-premium:hover {
-                transform: translateY(-3px);
-            }
-
-            .tt-item:hover {
-                transform: translateX(3px);
-            }
-
-            .data-card:hover {
-                transform: translateY(-2px);
-            }
-        }
-
-        /* Fix for Glass Header alignment and text display */
-        .glass-header .row {
-            width: 100%;
+        .rpt-hero-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
             margin: 0;
         }
 
-        .glass-header [class*="col-"] {
-            padding: 0;
-        }
-
-        /* Fix for badge and text wrapping */
-        .glass-header .badge {
-            white-space: nowrap;
-            display: inline-flex !important;
-            align-items: center;
+        .rpt-hero-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 0.5rem;
+            width: 100%;
         }
 
-        /* Fix for heading text and icon alignment */
-        .glass-header h1 {
-            display: flex;
+        .rpt-hero-btn-primary {
+            display: inline-flex;
             align-items: center;
-            flex-wrap: wrap;
-            word-break: keep-all;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            background: #ffffff;
+            color: #070189;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            text-align: center;
         }
 
-        .glass-header h1 i {
-            flex-shrink: 0;
+        .rpt-hero-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(255, 255, 255, 0.25);
+            color: #070189;
+            text-decoration: none;
         }
 
-        /* Fix for description text */
-        .glass-header p {
-            word-wrap: break-word;
-            line-height: 1.5;
-        }
-
-        /* Fix for button container */
-        .glass-header .d-flex {
-            flex-wrap: wrap;
+        .rpt-hero-btn-secondary {
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            text-align: center;
         }
 
-        /* Fix for buttons on different screen sizes */
-        .glass-header .btn-primary-premium,
-        .glass-header .btn-outline-premium {
-            white-space: nowrap;
-            flex-shrink: 0;
+        .rpt-hero-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            text-decoration: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
-        /* Responsive fixes for medium screens */
-        @media (max-width: 992px) {
-            .glass-header .badge {
-                white-space: normal;
-                word-break: keep-all;
-            }
+        .rpt-hero-meta {
+            padding-top: 0.25rem;
+        }
 
-            .glass-header .btn-primary-premium,
-            .glass-header .btn-outline-premium {
-                white-space: normal;
-                word-break: keep-all;
-                min-width: auto;
+        .rpt-meta-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem 0.75rem;
+            width: 100%;
+        }
+
+        .rpt-meta-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.78rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .rpt-meta-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .rpt-meta-item i {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .rpt-meta-highlight {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .rpt-meta-highlight i {
+            color: #818cf8;
+        }
+
+        @media (max-width: 768px) {
+            .rpt-hero-card {
+                padding: 1.25rem;
+            }
+            
+            .rpt-hero-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .rpt-hero-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .rpt-meta-items {
+                grid-template-columns: 1fr 1fr;
             }
         }
 
-        /* Fix for extra small screens */
-        @media (max-width: 576px) {
-            .glass-header .badge {
-                width: auto;
-                display: inline-flex !important;
+        @media (max-width: 480px) {
+            .rpt-hero-left {
+                flex-direction: column;
+                text-align: center;
+                width: 100%;
             }
-
-            .glass-header h1 {
-                font-size: 1.3rem !important;
+            
+            .rpt-hero-info h4 {
+                font-size: 1.2rem;
+            }
+            
+            .rpt-hero-info p {
+                font-size: 0.8rem;
+            }
+            
+            .rpt-hero-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .rpt-meta-items {
+                grid-template-columns: 1fr;
+            }
+            
+            .rpt-hero-btn-primary,
+            .rpt-hero-btn-secondary {
+                width: 100%;
                 justify-content: center;
-                text-align: center;
             }
+        }
 
-            .glass-header p {
-                text-align: center;
-            }
+        /* Additional color enhancements */
+        .bg-gradient-brand {
+            background: var(--brand-gradient);
+        }
+
+        .text-gradient-brand {
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* View Full Weekly Schedule button enhancement */
+        .btn-weekly-schedule {
+            background: var(--brand-gradient) !important;
+            color: white !important;
+            border: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-weekly-schedule:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 14px rgba(83, 81, 228, 0.3) !important;
+            color: white !important;
+        }
+
+        /* Manage button enhancement */
+        .btn-manage {
+            background: var(--brand-gradient) !important;
+            color: white !important;
+            border: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-manage:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 10px rgba(83, 81, 228, 0.3) !important;
+            color: white !important;
         }
     </style>
 @endsection
@@ -1120,90 +946,218 @@ use App\Helpers\PermissionHelper;
 @section('content')
     <div class="side-app" style="padding: 1.5rem;">
 
-        {{-- Modern Glass Header --}}
-        <div class="glass-header">
-            <div class="row align-items-center">
-                <div class="col-lg-7">
-                    <div class="mb-4">
-                        <span class="badge"
-                            style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); padding: 0.5rem 1rem; border-radius: 99px; font-size: 1rem; color: #FFF; display: inline-block;">
-                            <i class="fas fa-calendar-alt me-2"></i> Academic Scheduling
-                        </span>
+        {{-- New Dark Gradient Header --}}
+        <div class="rpt-hero-card">
+            <div class="rpt-hero-main">
+                <div class="rpt-hero-top">
+                    <div class="rpt-hero-left">
+                        <div class="rpt-hero-icon-wrapper">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <div class="rpt-hero-info">
+                            <h4>Timetable Manager</h4>
+                            <p>Create, manage, and publish class timetables for your school</p>
+                        </div>
                     </div>
-                    <h1 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">
-                        <i class="fas fa-calendar-week me-3"></i> Timetable Manager
-                    </h1>
-                    <p style="font-size: 0.95rem; color: rgba(255,255,255,0.85); margin-bottom: 0;">
-                        Create, manage, and publish class timetables for your school
-                    </p>
                 </div>
-                <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                    <div class="d-flex gap-3 justify-content-lg-end" style="gap: 1rem;">
-                        @if(PermissionHelper::canFeature('create_timetable'))
-                        <a href="{{ route('timetable.create') }}" class="btn-primary-premium"
-                            style="background: white; color: var(--brand); border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
-                            <i class="fas fa-plus-circle"></i> New Timetable
-                        </a>
-                        @endif
-                        <a href="{{ route('timetable.periods.index') }}" class="btn-outline-premium"
-                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
-                            <i class="fas fa-clock"></i> Periods
-                        </a>
-                        @if(PermissionHelper::canFeature('view_teacher_schedule'))
-                        <a href="{{ route('timetable.teacher') }}" class="btn-outline-premium"
-                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
-                            <i class="fas fa-chalkboard-user"></i> My Schedule
-                        </a>
-                        @endif
+                <div class="rpt-hero-actions">
+                    @if(PermissionHelper::canFeature('create_timetable'))
+                    <a href="{{ route('timetable.create') }}" class="rpt-hero-btn-primary">
+                        <i class="fas fa-plus-circle"></i> New Timetable
+                    </a>
+                    @endif
+                    <a href="{{ route('timetable.periods.index') }}" class="rpt-hero-btn-secondary">
+                        <i class="fas fa-clock"></i> Periods
+                    </a>
+                    <a href="{{ route('timetable.master') }}" class="rpt-hero-btn-secondary">
+                        <i class="fas fa-th-large"></i> General
+                    </a>
+                    <a href="{{ route('timetable.teachers-summary') }}" class="rpt-hero-btn-secondary">
+                        <i class="fas fa-chalkboard-teacher"></i> Teachers
+                    </a>
+                    @if(PermissionHelper::canFeature('view_teacher_schedule'))
+                    <a href="{{ route('timetable.teacher') }}" class="rpt-hero-btn-secondary">
+                        <i class="fas fa-chalkboard-user"></i> My Schedule
+                    </a>
+                    @endif
+                </div>
+            </div>
+            <div class="rpt-hero-meta">
+                <div class="rpt-meta-items">
+                    <div class="rpt-meta-item rpt-meta-highlight">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Academic Scheduling</span>
+                    </div>
+                    <div class="rpt-meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ $allTimetables->count() }} Total Timetables</span>
+                    </div>
+                    <div class="rpt-meta-item" style="color: rgba(16, 185, 129, 0.9);">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ $activeTimetables->count() }} Active</span>
+                    </div>
+                    <div class="rpt-meta-item" style="color: rgba(245, 158, 11, 0.9);">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>{{ $draftTimetables->count() }} Draft</span>
+                    </div>
+                    <div class="rpt-meta-item" style="color: rgba(59, 130, 246, 0.9);">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>{{ $periods->count() }} Periods</span>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Stats Row --}}
-        <div class="stats-row">
-            <div class="stat-card-premium">
-                <div class="stat-icon-wrapper" style="background: var(--brand-muted);">
-                    <i class="fas fa-calendar-alt" style="color: var(--brand); font-size: 1.2rem;"></i>
-                </div>
-                <div class="stat-value" style="color: var(--text-primary);">{{ $allTimetables->count() }}</div>
-                <div class="stat-label">Total Timetables</div>
-            </div>
-            <div class="stat-card-premium">
-                <div class="stat-icon-wrapper" style="background: var(--success-muted);">
-                    <i class="fas fa-check-circle" style="color: var(--success); font-size: 1.2rem;"></i>
-                </div>
-                <div class="stat-value" style="color: var(--success);">{{ $activeTimetables->count() }}</div>
-                <div class="stat-label">Active Timetables</div>
-            </div>
-            <div class="stat-card-premium">
-                <div class="stat-icon-wrapper" style="background: var(--warning-muted);">
-                    <i class="fas fa-pen-fancy" style="color: var(--warning); font-size: 1.2rem;"></i>
-                </div>
-                <div class="stat-value" style="color: var(--warning);">{{ $draftTimetables->count() }}</div>
-                <div class="stat-label">In Draft</div>
-            </div>
-            <div class="stat-card-premium">
-                <div class="stat-icon-wrapper" style="background: var(--info-muted);">
-                    <i class="fas fa-hourglass-half" style="color: var(--info); font-size: 1.2rem;"></i>
-                </div>
-                <div class="stat-value" style="color: var(--info);">{{ $periods->count() }}</div>
-                <div class="stat-label">Period Definitions</div>
-            </div>
+<div class="stats-row">
+    <div class="stat-card-premium" style="background: linear-gradient(135deg, #f8f9ff, #eef2ff); border-color: rgba(83, 81, 228, 0.15);">
+        <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #5351e4, #2C29CA);">
+            <i class="fas fa-calendar-alt" style="color: white; font-size: 1.2rem;"></i>
         </div>
+        <div class="stat-value" style="color: #2C29CA;">{{ $allTimetables->count() }}</div>
+        <div class="stat-label" style="color: #4a4a8a; font-weight: 600;">Total Timetables</div>
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #5351e4, #2C29CA);"></div>
+    </div>
+    <div class="stat-card-premium" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: rgba(16, 185, 129, 0.15);">
+        <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="fas fa-check-circle" style="color: white; font-size: 1.2rem;"></i>
+        </div>
+        <div class="stat-value" style="color: #059669;">{{ $activeTimetables->count() }}</div>
+        <div class="stat-label" style="color: #065f46; font-weight: 600;">Active Timetables</div>
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #10b981, #059669);"></div>
+    </div>
+    <div class="stat-card-premium" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: rgba(245, 158, 11, 0.15);">
+        <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="fas fa-pen-fancy" style="color: white; font-size: 1.2rem;"></i>
+        </div>
+        <div class="stat-value" style="color: #d97706;">{{ $draftTimetables->count() }}</div>
+        <div class="stat-label" style="color: #92400e; font-weight: 600;">In Draft</div>
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #f59e0b, #d97706);"></div>
+    </div>
+    <div class="stat-card-premium" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: rgba(59, 130, 246, 0.15);">
+        <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <i class="fas fa-hourglass-half" style="color: white; font-size: 1.2rem;"></i>
+        </div>
+        <div class="stat-value" style="color: #2563eb;">{{ $periods->count() }}</div>
+        <div class="stat-label" style="color: #1e40af; font-weight: 600;">Period Definitions</div>
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #3b82f6, #2563eb);"></div>
+    </div>
+</div>
 
         <div class="content-grid">
             {{-- Left Column: Timetables --}}
             <div>
                 {{-- Active Timetables --}}
                 <div class="data-card">
-                    <div class="card-header-modern">
-                        <div class="card-title">
-                            <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                            Active Timetables
-                        </div>
-                        <span class="count-badge">{{ $activeTimetables->count() }}</span>
-                    </div>
+                    <div class="card-header-modern success" style="background: #2C29CA; border-bottom: none;">
+    <div class="card-title" style="color: #ffffff;">
+        <i class="fas fa-check-circle" style="color: #ffffff;"></i>
+        Active Timetables
+    </div>
+    <span class="count-badge" style="background: rgba(255, 255, 255, 0.2); color: #ffffff;">{{ $activeTimetables->count() }}</span>
+</div>
+
+<style>
+    /* Update the card-header-modern styles */
+.card-header-modern {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--bg-surface);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Remove the after pseudo-element for colored headers since we're using inline styles */
+.card-header-modern::after {
+    display: none;
+}
+
+/* Or keep it for non-colored headers */
+.card-header-modern:not([style*="background"])::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--brand-gradient);
+    opacity: 0.5;
+}
+
+/* Update count-badge for dark backgrounds */
+.count-badge {
+    background: var(--brand-muted);
+    color: var(--brand);
+    border-radius: 99px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Card title for dark backgrounds */
+.card-header-modern[style*="background"] .card-title {
+    color: #ffffff !important;
+}
+
+.card-header-modern[style*="background"] .card-title i {
+    color: #ffffff !important;
+}
+
+.card-header-modern[style*="background"] .count-badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.stat-card-premium {
+    background: white;
+    border-radius: 20px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(83, 81, 228, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card-premium:hover .stat-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+</style>
                     @forelse($activeTimetables as $tt)
                         <div class="tt-item">
                             <div class="tt-badge">
@@ -1242,7 +1196,7 @@ use App\Helpers\PermissionHelper;
                 {{-- Draft Timetables --}}
                 @if($draftTimetables->isNotEmpty())
                     <div class="data-card">
-                        <div class="card-header-modern">
+                        <div class="card-header-modern warning">
                             <div class="card-title">
                                 <i class="fas fa-pen-fancy" style="color: var(--warning);"></i>
                                 Draft Timetables
@@ -1291,23 +1245,23 @@ use App\Helpers\PermissionHelper;
             <div>
                 {{-- Today's Schedule --}}
                 <div class="data-card">
-                    <div class="card-header-modern">
-                        <div class="card-title">
-                            <i class="fas fa-calendar-day" style="color: var(--brand);"></i>
-                            Today's Schedule
-                        </div>
-                        <span style="font-size: 0.7rem; color: var(--text-muted);">
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            {{ \Carbon\Carbon::today()->format('l, F j, Y') }}
-                        </span>
-                    </div>
+                    <div class="card-header-modern" style="background: #2C29CA; border-bottom: none;">
+    <div class="card-title" style="color: #ffffff;">
+        <i class="fas fa-calendar-day" style="color: #ffffff;"></i>
+        Today's Schedule
+    </div>
+    <span style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.8);">
+        <i class="fas fa-calendar-alt me-1"></i>
+        {{ \Carbon\Carbon::today()->format('l, F j, Y') }}
+    </span>
+</div>
                     <div>
                         @forelse($todaySchedule as $slot)
                             <div class="today-slot">
                                 <div class="slot-time">
                                     {{ $slot->period ? \Carbon\Carbon::parse($slot->period->start_time)->format('h:i A') : '—' }}
                                 </div>
-                                <div class="slot-color" style="background: {{ $slot->color ?? $brand }}"></div>
+                                <div class="slot-color" style="background: {{ $slot->color ?? '#5351e4' }}"></div>
                                 <div class="slot-info">
                                     <div class="slot-subject">{{ $slot->subject_name }}</div>
                                     <div class="slot-class">
@@ -1328,8 +1282,7 @@ use App\Helpers\PermissionHelper;
                         @endforelse
                     </div>
                     <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-light);">
-                        <a href="{{ route('timetable.teacher') }}" class="btn btn-sm w-100"
-                            style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-weight: 600;">
+                        <a href="{{ route('timetable.teacher') }}" class="btn btn-sm w-100 btn-weekly-schedule">
                             <i class="fas fa-calendar-week me-2"></i> View Full Weekly Schedule
                         </a>
                     </div>
@@ -1337,16 +1290,15 @@ use App\Helpers\PermissionHelper;
 
                 {{-- Period Definitions --}}
                 <div class="data-card">
-                    <div class="card-header-modern">
-                        <div class="card-title">
-                            <i class="fas fa-hourglass-half" style="color: var(--info);"></i>
-                            Period Definitions
-                        </div>
-                        <a href="{{ route('timetable.periods.index') }}" class="btn"
-                            style="background: var(--brand-muted); color: var(--brand); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600;">
-                            <i class="fas fa-cog me-1"></i> Manage
-                        </a>
-                    </div>
+                    <div class="card-header-modern info" style="background: #2C29CA; border-bottom: none;">
+    <div class="card-title" style="color: #ffffff;">
+        <i class="fas fa-hourglass-half" style="color: #ffffff;"></i>
+        Period Definitions
+    </div>
+    <a href="{{ route('timetable.periods.index') }}" class="btn btn-sm" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none;">
+        <i class="fas fa-cog me-1"></i> Manage
+    </a>
+</div>
                     <div>
                         @foreach($periods as $period)
                             <div class="period-item">
@@ -1367,7 +1319,7 @@ use App\Helpers\PermissionHelper;
                             <div class="empty-state">
                                 <i class="fas fa-clock"></i>
                                 <p>No periods defined. <a href="{{ route('timetable.periods.index') }}"
-                                        style="color: var(--brand);">Add periods</a> first.</p>
+                                        style="color: var(--brand); font-weight: 600;">Add periods</a> first.</p>
                             </div>
                         @endif
                     </div>
@@ -1375,12 +1327,10 @@ use App\Helpers\PermissionHelper;
             </div>
         </div>
     </div>
-
     </div>
-    </div>
+        </div>
     </div>
 @endsection
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -1421,7 +1371,6 @@ use App\Helpers\PermissionHelper;
                             window.location.reload();
                         });
                     } else {
-                        // Show conflict details if present
                         let detail = data.message || 'Could not activate.';
                         if (data.conflicts && data.conflicts.length) {
                             detail += '<br><br><ul style="text-align:left; font-size:0.85rem;">';

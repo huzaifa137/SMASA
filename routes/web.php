@@ -659,6 +659,12 @@ Route::prefix('timetable')
 
         // Teacher Personal Timetable
         Route::get('/my-schedule', 'teacherTimetable')->name('teacher');
+
+        // General / Master School Timetable (combines active class timetables)
+        Route::get('/master', 'master')->name('master');
+
+        // Teacher Teaching-Days Summary
+        Route::get('/teachers-summary', 'teachersSummary')->name('teachers-summary');
     });
 
 // ─── ATTENDANCE ──────────────────────────────────────────────────────

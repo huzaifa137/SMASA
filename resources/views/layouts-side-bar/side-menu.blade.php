@@ -344,6 +344,12 @@ use App\Helpers\PermissionHelper;
                             @if(PermissionHelper::canFeature('view_timetable'))
                                 <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
                             @endif
+                            @if(PermissionHelper::canFeature('view_timetable'))
+                                <li><a href="{{ route('timetable.master') }}"><i class="fas fa-th-large mr-2"></i>General Timetable</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_timetable'))
+                                <li><a href="{{ route('timetable.teachers-summary') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Teaching Days</a></li>
+                            @endif
                             @if(PermissionHelper::canFeature('create_timetable'))
                                 <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
                                         Timetable</a></li>
@@ -813,6 +819,12 @@ use App\Helpers\PermissionHelper;
                             @endif
                             @if(PermissionHelper::canFeature('view_timetable'))
                                 <li><a href="{{ route('timetable.periods.index') }}"><i class="fas fa-clock mr-2"></i>Periods</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_timetable'))
+                                <li><a href="{{ route('timetable.master') }}"><i class="fas fa-th-large mr-2"></i>General Timetable</a></li>
+                            @endif
+                            @if(PermissionHelper::canFeature('view_timetable'))
+                                <li><a href="{{ route('timetable.teachers-summary') }}"><i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Teaching Days</a></li>
                             @endif
                             @if(PermissionHelper::canFeature('create_timetable'))
                                 <li><a href="{{ route('timetable.create') }}"><i class="fas fa-calendar-plus mr-2"></i>Create
