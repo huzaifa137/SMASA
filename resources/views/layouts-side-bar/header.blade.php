@@ -1498,9 +1498,14 @@
 </script>
 <script>
     (function () {
-        // Target the first-level flex row, not the whole header
-        // (avoids counting hidden dropdown-menu panels in the height)
-        const header = document.querySelector('.app-header .container-fluid > .d-flex');
+        // Measure the whole fixed header box (including its own vertical
+        // padding), not just the inner flex row — otherwise the offset
+        // applied to .side-app undershoots by the header's own padding
+        // and content ends up peeking out from under the fixed header.
+        // Safe to measure the full box because dropdown-menu panels inside
+        // the header are forced to position:absolute (see rule above), so
+        // they never inflate this height even when open.
+        const header = document.querySelector('.app-header');
         if (!header) return;
 
         function setHeaderHeightVar() {

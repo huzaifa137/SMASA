@@ -17,7 +17,34 @@
 
 <style>
 	@media (max-width: 768px) {
-		.side-app {
+		/*
+		 * The base stylesheet (sidemenu.css) gives .app-content a hardcoded
+		 * margin-top: 50px to clear the fixed .app-header, assuming a fixed
+		 * 50px header height. On mobile our header wraps onto multiple lines
+		 * (school dropdown, notifications, badge, settings) and is taller
+		 * than 50px, so header.blade.php measures the real rendered height
+		 * and exposes it as --app-header-h, applied below as padding-top on
+		 * .side-app. Without resetting the old margin-top here, both offsets
+		 * stack and create a large empty gap above the page content.
+		 */
+		.app-content {
+			margin-top: 0 !important;
+		}
+
+		/*
+		 * IMPORTANT: scoped to the DIRECT child of .app-content, not a bare
+		 * ".side-app" selector. Many page views (73 of 153 at last count —
+		 * everything under Examination, Attendance, Exam, itemGrading, etc.)
+		 * mistakenly wrap their own @section('content') in an extra,
+		 * redundant <div class="side-app">, duplicating the one this master
+		 * layout already provides. A bare ".side-app" selector would apply
+		 * this dynamic header-height offset to BOTH the real outer wrapper
+		 * and any such nested duplicate, stacking the gap a second time.
+		 * Scoping to the direct child means only the genuine outer wrapper
+		 * gets the offset; a stray nested duplicate just falls back to the
+		 * small static padding in sidemenu.css, which is harmless.
+		 */
+		.app-content > .side-app {
 			padding-top: var(--app-header-h, 1px) !important;
 		}
 	}
