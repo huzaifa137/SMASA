@@ -490,15 +490,15 @@ use App\Helpers\PermissionHelper;
         <div class="stat-card danger">
             <div class="value">UGX {{ number_format($totalOutstanding, 0) }}</div>
             <div class="label">Total Outstanding</div>
-            <div class="sub">Total amount pending collection</div>
+            <div class="sub">For the current filters</div>
         </div>
         <div class="stat-card warning">
-            <div class="value">{{ $defaulters->total() }}</div>
-            <div class="label">Students with Outstanding</div>
-            <div class="sub">Have unpaid or partial balance</div>
+            <div class="value">{{ $matchingCount }}</div>
+            <div class="label">Students Matching Filters</div>
+            <div class="sub">Across all pages, not just this one</div>
         </div>
         <div class="stat-card">
-            <div class="value">{{ $defaulters->where('payment_status', 'unpaid')->count() }}</div>
+            <div class="value">{{ $fullyUnpaidCount }}</div>
             <div class="label">Fully Unpaid</div>
             <div class="sub">No payments made yet</div>
         </div>
@@ -507,8 +507,15 @@ use App\Helpers\PermissionHelper;
     {{-- Filters --}}
     <div class="fin-card">
         <div class="fin-card-header">
-            <h3><i class="fas fa-filter"></i> Filter Defaulters</h3>
+            <h3><i class="fas fa-filter"></i> Filter Students</h3>
             <div class="export-bar">
+                <button onclick="recalculateBalances()" class="btn-fin btn-outline-fin" id="recalcBtn">
+                    <i class="fas fa-sync-alt"></i> Recalculate Balances
+                </button>
+                <a href="{{ route('finance.outstanding-fees.pdf') }}?{{ http_build_query(request()->query()) }}"
+                   target="_blank" class="btn-fin btn-outline-fin">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
                 <button onclick="window.print()" class="btn-fin btn-outline-fin">
                     <i class="fas fa-print"></i> Print
                 </button>
@@ -517,7 +524,7 @@ use App\Helpers\PermissionHelper;
         <div class="filters">
             <div class="filter-group">
                 <label>Academic Year</label>
-                <select id="filterYear" onchange="applyFilters()">
+                <select id="filterYear">
                     <option value="{{ date('Y') }}" {{ $year == date('Y') ? 'selected' : '' }}>{{ date('Y') }}</option>
                     <option value="{{ date('Y') - 1 }}" {{ $year == date('Y') - 1 ? 'selected' : '' }}>{{ date('Y') - 1 }}</option>
                     <option value="{{ date('Y') - 2 }}" {{ $year == date('Y') - 2 ? 'selected' : '' }}>{{ date('Y') - 2 }}</option>
@@ -525,7 +532,7 @@ use App\Helpers\PermissionHelper;
             </div>
             <div class="filter-group">
                 <label>Term</label>
-                <select id="filterTerm" onchange="applyFilters()">
+                <select id="filterTerm">
                     <option value="">All Terms</option>
                     <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term 1</option>
                     <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term 2</option>
@@ -533,16 +540,70 @@ use App\Helpers\PermissionHelper;
                 </select>
             </div>
             <div class="filter-group">
-                <label>Status</label>
-                <select id="filterStatus" onchange="applyFilters()">
-                    <option value="">All Outstanding</option>
-                    <option value="unpaid">Fully Unpaid</option>
-                    <option value="partial">Partially Paid</option>
+                <label>Payment Status</label>
+                <select id="filterStatus">
+                    <option value="" {{ $status == '' ? 'selected' : '' }}>Unpaid + Partial (Defaulters)</option>
+                    <option value="unpaid" {{ $status == 'unpaid' ? 'selected' : '' }}>Fully Unpaid</option>
+                    <option value="partial" {{ $status == 'partial' ? 'selected' : '' }}>Partially Paid</option>
+                    <option value="paid" {{ $status == 'paid' ? 'selected' : '' }}>Fully Paid</option>
+                    <option value="overpaid" {{ $status == 'overpaid' ? 'selected' : '' }}>Overpaid</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Class</label>
+                <select id="filterClass" onchange="loadStreamsForFilter()">
+                    <option value="">All Classes</option>
+                    @foreach($classrooms as $c)
+                        <option value="{{ $c->class_name }}" {{ $class_id == $c->class_name ? 'selected' : '' }}>{{ Helper::item_md_name($c->class_name) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Stream</label>
+                <select id="filterStream">
+                    <option value="">All Streams</option>
+                    @foreach($streams as $s)
+                        <option value="{{ $s->stream_id }}" {{ $stream_id == $s->stream_id ? 'selected' : '' }}>{{ Helper::recordMdname($s->stream_id) ?? $s->stream_id }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Gender</label>
+                <select id="filterGender">
+                    <option value="">All</option>
+                    <option value="Male" {{ $gender == 'Male' ? 'selected' : '' }}>Male</option>
+                    <option value="Female" {{ $gender == 'Female' ? 'selected' : '' }}>Female</option>
+                    <option value="Other" {{ $gender == 'Other' ? 'selected' : '' }}>Other</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Fee Structure</label>
+                <select id="filterFeeStructure">
+                    <option value="">All Fee Structures</option>
+                    @foreach($feeStructures as $fs)
+                        <option value="{{ $fs->id }}" {{ $fee_structure_id == $fs->id ? 'selected' : '' }}>{{ $fs->name }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="filter-group">
                 <label>Min Balance (UGX)</label>
-                <input type="text" id="minBalance" placeholder="e.g., 500,000" step="100000">
+                <input type="text" id="minBalance" class="fmt-number" placeholder="e.g., 500,000" value="{{ $min_balance }}">
+            </div>
+            <div class="filter-group">
+                <label>Max Balance (UGX)</label>
+                <input type="text" id="maxBalance" class="fmt-number" placeholder="e.g., 2,000,000" value="{{ $max_balance }}">
+            </div>
+            <div class="filter-group">
+                <label>Min Amount Paid (UGX)</label>
+                <input type="text" id="minPaid" class="fmt-number" placeholder="e.g., 100,000" value="{{ $min_paid }}">
+            </div>
+            <div class="filter-group">
+                <label>Max Amount Paid (UGX)</label>
+                <input type="text" id="maxPaid" class="fmt-number" placeholder="e.g., 1,000,000" value="{{ $max_paid }}">
+            </div>
+            <div class="filter-group">
+                <label>Search Name / Adm #</label>
+                <input type="text" id="filterSearch" placeholder="e.g., John or ADM-0012" value="{{ $search }}">
             </div>
             <div class="filter-actions">
                 <button class="btn-fin btn-primary-fin" onclick="applyFilters()">
@@ -620,6 +681,10 @@ use App\Helpers\PermissionHelper;
                             <td>
                                 @if($alloc->payment_status == 'partial')
                                     <span class="badge-fin badge-amber"><i class="fas fa-hourglass-half"></i> Partial</span>
+                                @elseif($alloc->payment_status == 'paid')
+                                    <span class="badge-fin badge-green"><i class="fas fa-check-circle"></i> Paid</span>
+                                @elseif($alloc->payment_status == 'overpaid')
+                                    <span class="badge-fin badge-blue"><i class="fas fa-arrow-up"></i> Overpaid</span>
                                 @else
                                     <span class="badge-fin badge-red"><i class="fas fa-times-circle"></i> Unpaid</span>
                                 @endif
@@ -658,7 +723,7 @@ use App\Helpers\PermissionHelper;
         </div>
         @if($defaulters->hasPages())
             <div class="pagination-container">
-                {{ $defaulters->appends(['year' => $year, 'term' => $term])->links() }}
+                {{ $defaulters->appends(request()->query())->links() }}
             </div>
         @endif
     </div>
@@ -719,49 +784,106 @@ use App\Helpers\PermissionHelper;
             return value.toString().replace(/,/g, '');
         }
 
-        // Format min balance input
-        const minBalanceInput = document.getElementById('minBalance');
-        if (minBalanceInput) {
-            minBalanceInput.addEventListener('input', function (e) {
-                const rawValue = this.value;
-                const numericValue = parseFormattedNumber(rawValue);
-                if (numericValue !== '') {
-                    this.value = formatNumberWithCommas(numericValue);
-                } else {
-                    this.value = '';
-                }
+        // Format every "amount" filter input the same way (min/max balance, min/max paid)
+        document.querySelectorAll('.fmt-number').forEach(function (input) {
+            input.addEventListener('input', function () {
+                const numericValue = parseFormattedNumber(this.value);
+                this.value = numericValue !== '' ? formatNumberWithCommas(numericValue) : '';
             });
+            if (input.value) {
+                const raw = parseFormattedNumber(input.value);
+                if (raw !== '') input.value = formatNumberWithCommas(raw);
+            }
+            input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') applyFilters();
+            });
+        });
 
-            // Format initial value if exists
-            if (minBalanceInput.value && minBalanceInput.value !== '') {
-                const rawValue = parseFormattedNumber(minBalanceInput.value);
-                if (rawValue !== '') {
-                    minBalanceInput.value = formatNumberWithCommas(rawValue);
-                }
+        async function loadStreamsForFilter(preselect) {
+            const classId = document.getElementById('filterClass').value;
+            const streamSelect = document.getElementById('filterStream');
+            streamSelect.innerHTML = '<option value="">All Streams</option>';
+            if (!classId) return;
+
+            try {
+                const r = await fetch(`{{ route('finance.streams-by-class') }}?class_id=${classId}`);
+                const data = await r.json();
+                data.forEach(function (s) {
+                    const opt = document.createElement('option');
+                    opt.value = s.stream_id;
+                    opt.textContent = s.stream_name || s.stream_id;
+                    if (preselect && String(preselect) === String(s.stream_id)) opt.selected = true;
+                    streamSelect.appendChild(opt);
+                });
+            } catch (e) {
+                // silent — filter still usable without streams
             }
         }
 
         function applyFilters() {
-            let year = document.getElementById('filterYear').value;
-            let term = document.getElementById('filterTerm').value;
-            let status = document.getElementById('filterStatus').value;
-            let minBalanceRaw = document.getElementById('minBalance').value;
-            let minBalance = minBalanceRaw ? parseFormattedNumber(minBalanceRaw) : '';
+            const params = {
+                year: document.getElementById('filterYear').value,
+                term: document.getElementById('filterTerm').value,
+                status: document.getElementById('filterStatus').value,
+                class_id: document.getElementById('filterClass').value,
+                stream_id: document.getElementById('filterStream').value,
+                gender: document.getElementById('filterGender').value,
+                fee_structure_id: document.getElementById('filterFeeStructure').value,
+                min_balance: parseFormattedNumber(document.getElementById('minBalance').value),
+                max_balance: parseFormattedNumber(document.getElementById('maxBalance').value),
+                min_paid: parseFormattedNumber(document.getElementById('minPaid').value),
+                max_paid: parseFormattedNumber(document.getElementById('maxPaid').value),
+                search: document.getElementById('filterSearch').value,
+            };
 
-            let url = "{{ route('finance.outstanding-fees') }}?year=" + year;
-            if (term) url += "&term=" + term;
-            if (status) url += "&status=" + status;
-            if (minBalance) url += "&min_balance=" + minBalance;
+            const query = Object.entries(params)
+                .filter(([, v]) => v !== '' && v !== null && v !== undefined)
+                .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+                .join('&');
 
-            window.location.href = url;
+            window.location.href = "{{ route('finance.outstanding-fees') }}" + (query ? '?' + query : '');
         }
 
         function resetFilters() {
             window.location.href = "{{ route('finance.outstanding-fees') }}";
         }
 
-        document.getElementById('minBalance').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') applyFilters();
+        function recalculateBalances() {
+            const btn = document.getElementById('recalcBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recalculating...';
+
+            fetch("{{ route('finance.outstanding-fees.recalculate') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message + ' Reloading with fresh figures...');
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Something went wrong.');
+                        btn.disabled = false;
+                        btn.innerHTML = original;
+                    }
+                })
+                .catch(() => {
+                    alert('Network error — please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const preselectedStream = @json($stream_id);
+            if (document.getElementById('filterClass').value) {
+                loadStreamsForFilter(preselectedStream);
+            }
         });
     </script>
 

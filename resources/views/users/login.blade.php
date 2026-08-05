@@ -514,6 +514,10 @@
                 <i class="fas fa-home"></i> Back to Homepage
             </a>
         </form>
+
+        <a href="{{ route('parents.login') }}" class="btn btn-secondary" style="text-decoration: none; display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.85rem;">
+            <i class="fas fa-people-roof"></i> Parent / Guardian Login
+        </a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

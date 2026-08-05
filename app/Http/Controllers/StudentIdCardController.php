@@ -252,8 +252,8 @@ class StudentIdCardController extends Controller
         $qrSvg = $this->generateQrSvg($card->qr_code_data);
         $className = Helper::recordMdname($student->senior);
         $streamName = Helper::recordMdname($student->stream);
-        $photoUrl = $this->getStudentPhotoUrl($student);
-        $logoUrl = $this->getLogoUrl($profile);
+        $photoUrl = $this->getStudentPhotoBase64($student);
+        $logoUrl = $this->getLogoBase64($profile);
 
         $pdf = Pdf::loadView('student.id-cards.pdf-card', compact(
             'card',
@@ -267,7 +267,9 @@ class StudentIdCardController extends Controller
             'logoUrl'
         ))
             ->setPaper([0, 0, 241.89, 153.07]) // CR80 card size: 85.6mm x 54mm in pts
-            ->setOption('dpi', 150);
+            ->setOption('dpi', 150)
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
 
         return $pdf->download("ID_Card_{$student->firstname}_{$student->lastname}.pdf");
     }
@@ -303,7 +305,14 @@ class StudentIdCardController extends Controller
         $cards = $query->get();
         $school = School::find($schoolId);
         $profile = SchoolProfile::where('school_id', $schoolId)->first();
-        $logoUrl = $this->getLogoUrl($profile);
+        $logoUrl = $this->getLogoBase64($profile);
+
+        if ($cards->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No active ID cards found for the selected class/stream.',
+            ], 422);
+        }
 
         $cardsData = $cards->map(function ($card) {
             $student = $card->student;
@@ -313,12 +322,18 @@ class StudentIdCardController extends Controller
                 'qrSvg' => $this->generateQrSvg($card->qr_code_data),
                 'className' => Helper::recordMdname($student->senior),
                 'streamName' => Helper::recordMdname($student->stream),
-                'photoUrl' => $this->getStudentPhotoUrl($student),
+                'photoUrl' => $this->getStudentPhotoBase64($student),
             ];
         });
 
-        $pdf = Pdf::loadView('student.id-cards.pdf-bulk', compact('cardsData', 'school', 'profile', 'logoUrl'))
-            ->setPaper('a4');
+        // Chunk into rows of 2 so the layout uses plain HTML tables
+        // (grid/flex are not reliably supported by DomPDF — tables are).
+        $cardRows = $cardsData->chunk(2);
+
+        $pdf = Pdf::loadView('student.id-cards.pdf-bulk', compact('cardRows', 'school', 'profile', 'logoUrl', 'activeYear'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
 
         return $pdf->download("ID_Cards_Bulk_{$activeYear}.pdf");
     }
@@ -477,6 +492,70 @@ class StudentIdCardController extends Controller
         $path = 'uploads/school_logos/' . $profile->logo;
         if (file_exists(public_path($path))) {
             return asset($path);
+        }
+        return null;
+    }
+
+    // ──────────────────────────────────────────────
+    //  PDF-SAFE IMAGE HELPERS (base64 data URIs)
+    //
+    //  DomPDF is far more reliable rendering images that are
+    //  embedded directly as base64 data URIs than images it has
+    //  to fetch over HTTP at render time (slow, and silently
+    //  fails/blank if the server can't reach itself, DNS hiccups,
+    //  auth/firewall rules, etc). We only use these for the
+    //  PDF-generation routes (printCard / printBulk); the HTML
+    //  preview modal keeps using plain asset() URLs since the
+    //  browser renders it directly.
+    // ──────────────────────────────────────────────
+    private function imageFileToBase64(?string $absolutePath): ?string
+    {
+        if (!$absolutePath || !file_exists($absolutePath)) {
+            return null;
+        }
+
+        $mime = @mime_content_type($absolutePath) ?: null;
+        if (!$mime) {
+            $ext = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/png',
+            };
+        }
+
+        $data = @file_get_contents($absolutePath);
+        if ($data === false) {
+            return null;
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($data);
+    }
+
+    private function getStudentPhotoBase64(Student $student): ?string
+    {
+        if (!$student->student_photo) {
+            return null;
+        }
+        foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+            $path = public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+            if (file_exists($path)) {
+                return $this->imageFileToBase64($path);
+            }
+        }
+        return null;
+    }
+
+    private function getLogoBase64(?SchoolProfile $profile): ?string
+    {
+        if (!$profile || !$profile->logo) {
+            return null;
+        }
+        $path = public_path('uploads/school_logos/' . $profile->logo);
+        if (file_exists($path)) {
+            return $this->imageFileToBase64($path);
         }
         return null;
     }

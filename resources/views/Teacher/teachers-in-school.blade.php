@@ -270,7 +270,7 @@ $controller = new Controller();
                                 <a href="{{ route('teachers.bulk.import.form') }}" class="btn btn-sm btn-success"
                                     style="color:#FFF;">
                                     <i class="fas fa-file-import me-1"></i> Bulk Import
-                                </a> &nbsp; &nbsp;
+                                </a>
                                 <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
                                     <span
                                         class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"

@@ -32,12 +32,7 @@ class TeacherBulkTemplate implements
         return [
             'surname',
             'firstname',
-            'email',
             'phonenumber',
-            'gender',
-            'othername',
-            'national_id',
-            'address',
         ];
     }
 
@@ -50,22 +45,12 @@ class TeacherBulkTemplate implements
             [
                 'Mukasa',
                 'John',
-                'john.mukasa@school.com',
                 '0700000001',
-                'male',
-                '',
-                '',
-                '',
             ],
             [
                 'Nakato',
                 'Mary',
-                'mary.nakato@school.com',
                 '0700000002',
-                'female',
-                'Grace',
-                '',
-                '',
             ],
         ];
     }
@@ -86,12 +71,7 @@ class TeacherBulkTemplate implements
         return [
             'A' => 18,
             'B' => 18,
-            'C' => 30,
-            'D' => 18,
-            'E' => 12,
-            'F' => 18,
-            'G' => 18,
-            'H' => 25,
+            'C' => 18,
         ];
     }
 
@@ -100,39 +80,8 @@ class TeacherBulkTemplate implements
      */
     public function styles(Worksheet $sheet)
     {
-        // Insert information rows
-        $sheet->insertNewRowBefore(1, 2);
-
-        $sheet->setCellValue(
-            'A1',
-            'School: ' . $this->schoolName
-        );
-
-        $sheet->setCellValue(
-            'A2',
-            'Required: surname, firstname, email, phonenumber | Optional: gender, othername, national_id, address'
-        );
-
-        // Merge metadata rows
-        $sheet->mergeCells('A1:H1');
-        $sheet->mergeCells('A2:H2');
-
-        // Metadata styling
-        $sheet->getStyle('A1:H2')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => '333333'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => [
-                    'rgb' => 'FFF3CD',
-                ],
-            ],
-        ]);
-
         // Header row styling
-        $sheet->getStyle('A3:H3')->applyFromArray([
+        $sheet->getStyle('A1:C1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],

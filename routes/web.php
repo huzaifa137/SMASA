@@ -29,6 +29,7 @@ use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\CardScanController;
 use App\Http\Controllers\UserRightsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ParentPortalController;
 
 
 Route::get('/logout', function () {
@@ -165,6 +166,32 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/students/streams', 'getStreamsForClass')->name('students.streams.ajax');
         Route::get('/select-current-school', 'selectCurrentSchool')->name('select.current.school');
     });
+
+    // ─── PARENT / GUARDIAN PORTAL ───────────────────────────────────────
+    // Identity here is a phone number (matched against Student.primary_contact),
+    // not a school session — one login can surface children at more than
+    // one school, so this deliberately sits outside AdminAuth/SchoolAuth.
+    Route::controller(ParentPortalController::class)
+        ->prefix('parents')
+        ->name('parents.')
+        ->group(function () {
+            Route::get('/login', 'showLogin')->name('login');
+            Route::post('/login', 'login')->name('login.submit');
+            Route::get('/logout', 'logout')->name('logout');
+
+            Route::middleware(['ParentAuth'])->group(function () {
+                Route::get('/change-password', 'showChangePassword')->name('change-password');
+                Route::post('/change-password', 'changePassword')->name('change-password.submit');
+
+                Route::get('/dashboard', 'dashboard')->name('dashboard');
+
+                Route::get('/student/{id}', 'childOverview')->name('child');
+                Route::get('/student/{id}/results', 'results')->name('results');
+                Route::get('/student/{id}/results/{examId}', 'viewResult')->name('result.view');
+                Route::get('/student/{id}/attendance', 'attendance')->name('attendance');
+                Route::get('/student/{id}/finance', 'finance')->name('finance');
+            });
+        });
 
     Route::controller(SchoolController::class)
         // ->middleware(['module:school_management'])
@@ -784,6 +811,8 @@ Route::prefix('finance')
         // ── Reports ─────────────────────────────────────────────────────────
         Route::get('/reports', 'reports')->name('reports');
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
+        Route::get('/outstanding-fees/pdf', 'outstandingFeesPdf')->name('outstanding-fees.pdf');
+        Route::post('/outstanding-fees/recalculate', 'recalculateBalances')->name('outstanding-fees.recalculate');
     });
 
 // ─── FINANCE MODULE: LEDGERS ──────────────────────────────────────────────

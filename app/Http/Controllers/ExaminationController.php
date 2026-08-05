@@ -632,7 +632,7 @@ class ExaminationController extends Controller
      * all-or-nothing behaviour), OR once that specific class was released
      * individually ahead of the rest of the exam.
      */
-    private function classIsReleased(Examination $exam, $classId, $streamId, $schoolId): bool
+    public function classIsReleased(Examination $exam, $classId, $streamId, $schoolId): bool
     {
         if (in_array($exam->status, ['closed', 'results_released'])) {
             return true;
@@ -665,7 +665,7 @@ class ExaminationController extends Controller
      * preview tweak from the panel) still wins — only keys the request
      * doesn't already carry get filled in from the saved profile.
      */
-    private function applySavedPassslipSettings($schoolId, $classId): void
+    public function applySavedPassslipSettings($schoolId, $classId): void
     {
         if (empty($classId)) {
             return;
@@ -1100,7 +1100,7 @@ class ExaminationController extends Controller
     /**
      * Build all data needed for a single student's passslip.
      */
-    private function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
+    public function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
     {
         // This student's marks
         $marks = ExaminationMark::where('examination_id', $examId)
@@ -1352,7 +1352,7 @@ class ExaminationController extends Controller
      *   [ $examIds (base exam + any extra exams, chronological),
      *     $avgExamIds (subset of $examIds whose marks should be averaged) ]
      */
-    private function resolveExamSelection($baseExamId): array
+    public function resolveExamSelection($baseExamId): array
     {
         $extra = array_filter(explode(',', (string) request('exam_ids', '')), 'strlen');
         $avg = array_filter(explode(',', (string) request('avg_exam_ids', '')), 'strlen');
@@ -1407,7 +1407,7 @@ class ExaminationController extends Controller
      * (e.g. BOT | MID | END), with an optional averaged column computed
      * from a chosen subset of those examinations.
      */
-    private function buildMultiExamPassslipData(array $examIds, $studentId, $schoolId, array $avgExamIds = [], $student = null): array
+    public function buildMultiExamPassslipData(array $examIds, $studentId, $schoolId, array $avgExamIds = [], $student = null): array
     {
 
         $exams = Examination::where('school_id', $schoolId)
@@ -2555,7 +2555,7 @@ class ExaminationController extends Controller
     /**
      * Check if a class is a nursery/early years class.
      */
-    private function isNurseryClass($classId): bool
+    public function isNurseryClass($classId): bool
     {
         if (empty($classId)) {
             return false;

@@ -528,11 +528,20 @@ class FinanceController extends Controller
                 'confirmed_at' => now(),
             ]);
 
-            // Update allocation balance
-            if ($validated['allocation_id']) {
-                $allocation = StudentFeeAllocation::find($validated['allocation_id']);
-                $allocation?->syncBalance();
-            }
+            // Update allocation balance. allocation_id is only ever set when
+            // the form's allocation dropdown was used — payments recorded
+            // without picking one (e.g. a quick payment before an allocation
+            // dropdown loads) would otherwise never call syncBalance(),
+            // leaving that student's balance/"amount paid" permanently
+            // stale even though the payment itself was recorded fine.
+            $allocation = $validated['allocation_id']
+                ? StudentFeeAllocation::find($validated['allocation_id'])
+                : StudentFeeAllocation::where('school_id', $schoolId)
+                    ->where('student_id', $validated['student_id'])
+                    ->where('academic_year', $validated['academic_year'])
+                    ->where('term', $validated['term'])
+                    ->first();
+            $allocation?->syncBalance();
 
             // Log transaction — posted to the Tuition Fees Income ledger account
             FinanceTransaction::log(
@@ -592,9 +601,16 @@ class FinanceController extends Controller
         $schoolId = session('LoggedSchool');
         $payment = FeePayment::where('school_id', $schoolId)->findOrFail($id);
         $payment->update(['status' => 'reversed']);
-        if ($payment->allocation_id) {
-            StudentFeeAllocation::find($payment->allocation_id)?->syncBalance();
-        }
+
+        $allocation = $payment->allocation_id
+            ? StudentFeeAllocation::find($payment->allocation_id)
+            : StudentFeeAllocation::where('school_id', $schoolId)
+                ->where('student_id', $payment->student_id)
+                ->where('academic_year', $payment->academic_year)
+                ->where('term', $payment->term)
+                ->first();
+        $allocation?->syncBalance();
+
         return back()->with('success', 'Payment reversed successfully.');
     }
 
@@ -1189,30 +1205,147 @@ class FinanceController extends Controller
         ));
     }
 
-    public function outstandingFees()
+    public function outstandingFees(Request $request)
     {
 
         PermissionHelper::denyUnlessFeature('financial_reports');
 
         $schoolId = session('LoggedSchool');
-        $year = request('year', date('Y'));
-        $term = request('term', '');
+        $filters = $this->outstandingFeesFilters($request);
 
-        $defaulters = StudentFeeAllocation::where('school_id', $schoolId)
-            ->where('academic_year', $year)
-            ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->with('student', 'feeStructure')
-            ->when($term, fn($q) => $q->where('term', $term))
+        $query = $this->outstandingFeesQuery($schoolId, $filters);
+
+        $defaulters = $query->orderByDesc('balance')->paginate(30)->appends($request->query());
+
+        // Stats reflect the SAME filtered set, not just the current page.
+        $statsQuery = $this->outstandingFeesQuery($schoolId, $filters);
+        $totalOutstanding = (clone $statsQuery)->sum('balance');
+        $matchingCount = (clone $statsQuery)->count();
+        $fullyUnpaidCount = (clone $statsQuery)->where('payment_status', 'unpaid')->count();
+
+        $classrooms = Classroom::where('school_id', $schoolId)->orderBy('class_name')->get();
+        $feeStructures = FeeStructure::where('school_id', $schoolId)->orderBy('name')->get();
+        $streams = $filters['class_id']
+            ? Stream::where('school_id', $schoolId)->where('class_id', $filters['class_id'])->get()
+            : collect();
+
+        return view('Finance.outstanding-fees', array_merge(
+            compact('defaulters', 'totalOutstanding', 'matchingCount', 'fullyUnpaidCount', 'classrooms', 'feeStructures', 'streams'),
+            $filters
+        ));
+    }
+
+    /**
+     * PDF export — mirrors the on-screen filters exactly (whatever the
+     * user has filtered down to is what leaves the system), unpaginated.
+     */
+    public function outstandingFeesPdf(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('financial_reports');
+
+        $schoolId = session('LoggedSchool');
+        $filters = $this->outstandingFeesFilters($request);
+
+        $allocations = $this->outstandingFeesQuery($schoolId, $filters)
             ->orderByDesc('balance')
-            ->paginate(30);
+            ->get();
 
-        $totalOutstanding = StudentFeeAllocation::where('school_id', $schoolId)
-            ->where('academic_year', $year)
-            ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->when($term, fn($q) => $q->where('term', $term))
-            ->sum('balance');
+        $totalOutstanding = $allocations->sum('balance');
+        $school = \App\Models\School::find($schoolId);
 
-        return view('Finance.outstanding-fees', compact('defaulters', 'totalOutstanding', 'year', 'term'));
+        $pdf = Pdf::loadView('Finance.pdf.outstanding-fees', compact('allocations', 'totalOutstanding', 'filters', 'school'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('Outstanding-Fees-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * One-click fix for stale balances: storePayment()/reversePayment() now
+     * always resolve an allocation to sync going forward, but any payment
+     * recorded before that fix (or any other way balance/payment_status
+     * could have drifted from the payments actually on file) needs a
+     * one-time recompute. Safe to run any time — syncBalance() is
+     * idempotent.
+     */
+    public function recalculateBalances(Request $request)
+    {
+        if (!PermissionHelper::canFeature('manage_fees')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = session('LoggedSchool');
+
+        $count = 0;
+        StudentFeeAllocation::where('school_id', $schoolId)
+            ->chunkById(200, function ($allocations) use (&$count) {
+                foreach ($allocations as $allocation) {
+                    $allocation->syncBalance();
+                    $count++;
+                }
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Recalculated balances for {$count} fee allocation(s).",
+        ]);
+    }
+
+    /**
+     * Normalises every outstanding-fees filter from the request into one
+     * array, shared by the page, the PDF export, and the stats query so
+     * all three can never drift out of sync with each other.
+     */
+    private function outstandingFeesFilters(Request $request): array
+    {
+        return [
+            'year' => $request->query('year', date('Y')),
+            'term' => $request->query('term', ''),
+            'status' => $request->query('status', ''), // '' = unpaid+partial (defaulters), or unpaid|partial|paid|overpaid
+            'min_balance' => $request->query('min_balance', ''),
+            'max_balance' => $request->query('max_balance', ''),
+            'min_paid' => $request->query('min_paid', ''),
+            'max_paid' => $request->query('max_paid', ''),
+            'class_id' => $request->query('class_id', ''),
+            'stream_id' => $request->query('stream_id', ''),
+            'gender' => $request->query('gender', ''),
+            'fee_structure_id' => $request->query('fee_structure_id', ''),
+            'search' => $request->query('search', ''),
+        ];
+    }
+
+    private function outstandingFeesQuery($schoolId, array $filters)
+    {
+        // amount_paid isn't a stored column — it's (allocated - discount) -
+        // balance — so a min/max "paid" filter has to be expressed in SQL
+        // terms rather than compared against a PHP property.
+        $paidExpression = '(allocated_amount - discount_amount - balance)';
+
+        return StudentFeeAllocation::where('school_id', $schoolId)
+            ->where('academic_year', $filters['year'])
+            ->when($filters['term'], fn($q) => $q->where('term', $filters['term']))
+            ->when($filters['status'], fn($q) => $q->where('payment_status', $filters['status']))
+            ->when(!$filters['status'], fn($q) => $q->whereIn('payment_status', ['unpaid', 'partial']))
+            ->when($filters['min_balance'] !== '', fn($q) => $q->where('balance', '>=', (float) str_replace(',', '', $filters['min_balance'])))
+            ->when($filters['max_balance'] !== '', fn($q) => $q->where('balance', '<=', (float) str_replace(',', '', $filters['max_balance'])))
+            ->when($filters['min_paid'] !== '', fn($q) => $q->whereRaw("{$paidExpression} >= ?", [(float) str_replace(',', '', $filters['min_paid'])]))
+            ->when($filters['max_paid'] !== '', fn($q) => $q->whereRaw("{$paidExpression} <= ?", [(float) str_replace(',', '', $filters['max_paid'])]))
+            ->when($filters['fee_structure_id'], fn($q) => $q->where('fee_structure_id', $filters['fee_structure_id']))
+            ->when($filters['class_id'] || $filters['stream_id'] || $filters['gender'] || $filters['search'], function ($q) use ($filters) {
+                $q->whereHas('student', function ($sq) use ($filters) {
+                    $sq->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
+                        ->when($filters['stream_id'], fn($sq2) => $sq2->where('stream', $filters['stream_id']))
+                        ->when($filters['gender'], fn($sq2) => $sq2->where('gender', $filters['gender']))
+                        ->when($filters['search'], function ($sq2) use ($filters) {
+                            $needle = $filters['search'];
+                            $sq2->where(function ($sq3) use ($needle) {
+                                $sq3->where('firstname', 'like', "%{$needle}%")
+                                    ->orWhere('lastname', 'like', "%{$needle}%")
+                                    ->orWhere('admission_number', 'like', "%{$needle}%");
+                            });
+                        });
+                });
+            })
+            ->with('student', 'feeStructure');
     }
 
     public function getStreamsByClass(Request $request)

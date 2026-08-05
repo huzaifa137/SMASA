@@ -83,7 +83,7 @@
                                             ->where('school_id', $school->id)
                                             ->first();
                                         $school->profile = $schoolProfile;
-                                                                                                                                                                                                                                                                                                                                                                                            ?>
+                                                                                                                                                                                                                                                                                                                                                                                                                                ?>
 
                                                                             <div class="d-flex flex-column align-items-center flex-grow-1">
                                                                                 <div class="rounded-circle overflow-hidden"

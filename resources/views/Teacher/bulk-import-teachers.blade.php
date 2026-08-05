@@ -384,7 +384,7 @@
                 <div class="step">
                     <div class="step-num">Step 2</div>
                     <div class="step-title">Fill In Data</div>
-                    <div class="step-desc">Enter surname, firstname, email, phone — required for each teacher.</div>
+                    <div class="step-desc">Enter surname, firstname, phone — required for each teacher.</div>
                 </div>
                 <div class="step">
                     <div class="step-num">Step 3</div>
@@ -396,8 +396,7 @@
             <div class="card-box">
                 <div class="section-title">Download Import Template</div>
                 <div class="col-req mb-3">
-                    <strong>Required columns:</strong> surname, firstname, email, phonenumber<br>
-                    <strong>Optional columns:</strong> gender, othername, national_id, address<br>
+                    <strong>Required columns:</strong> surname, firstname, phonenumber<br>
                     <em>All imported teachers get a default password of <code>123456789</code> and are prompted to change it
                         on first login.</em>
                 </div>
@@ -421,7 +420,7 @@
                         <span id="import-spinner" class="spinner-border spinner-border-sm me-2" style="display:none"></span>
                         <i class="fas fa-upload me-1"></i> Import Teachers
                     </button>
-                    <span style="font-size:.82rem;color:var(--t2)">Existing teachers (same email in this school) are
+                    <span style="font-size:.82rem;color:var(--t2)">Existing teachers (same phonenumber in this school) are
                         skipped.</span>
                 </div>
 

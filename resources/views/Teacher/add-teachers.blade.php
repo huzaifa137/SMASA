@@ -27,7 +27,7 @@ $controller = new Controller();
                             <a href="{{ route('teachers.bulk.import.form') }}" class="btn"
                                 style="background-color: #059669; color:#FFF;">
                                 <i class="fas fa-file-import"></i> Bulk Import
-                            </a>
+                            </a>  &nbsp;
                             <a href="{{ route('school.teachers') }}" class="btn"
                                 style="background-color: #5351e4; color:#FFF;">
                                 <i class="fas fa-users"></i> All Teachers

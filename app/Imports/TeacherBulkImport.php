@@ -42,10 +42,6 @@ class TeacherBulkImport implements ToCollection, WithHeadingRow
                 ?? ''
             );
 
-            $email = strtolower(
-                trim($row['email'] ?? '')
-            );
-
             $phone = trim(
                 $row['phonenumber']
                 ?? $row['phone']
@@ -56,30 +52,23 @@ class TeacherBulkImport implements ToCollection, WithHeadingRow
             if (
                 empty($surname) ||
                 empty($firstname) ||
-                empty($email) ||
                 empty($phone)
             ) {
                 $this->errors[] =
-                    "Row {$rowNumber}: surname, firstname, email and phonenumber are required.";
-                continue;
-            }
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->errors[] =
-                    "Row {$rowNumber}: '{$email}' is not a valid email address.";
+                    "Row {$rowNumber}: surname, firstname and phonenumber are required.";
                 continue;
             }
 
             // Check if teacher already exists in this school
             $exists = DB::table('teachers')
-                ->where('email', $email)
+                ->where('phonenumber', $phone)
                 ->where('school_id', $this->schoolId)
                 ->exists();
 
             if ($exists) {
 
                 $this->errors[] =
-                    "Row {$rowNumber}: Teacher with email '{$email}' already exists in this school.";
+                    "Row {$rowNumber}: Teacher with phonenumber '{$phone}' already exists in this school.";
 
                 $this->skippedCount++;
 
@@ -92,28 +81,7 @@ class TeacherBulkImport implements ToCollection, WithHeadingRow
                     'school_id' => $this->schoolId,
                     'surname' => $surname,
                     'firstname' => $firstname,
-                    'email' => $email,
                     'phonenumber' => $phone,
-
-                    'gender' => strtolower(
-                        trim($row['gender'] ?? 'male')
-                    ),
-
-                    'othername' => trim(
-                        $row['othername']
-                        ?? $row['other_name']
-                        ?? ''
-                    ),
-
-                    'address' => trim(
-                        $row['address']
-                        ?? ''
-                    ),
-
-                    'national_id' => trim(
-                        $row['national_id']
-                        ?? ''
-                    ),
 
                     'password' => Hash::make('123456789'),
 
