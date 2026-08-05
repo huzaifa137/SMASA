@@ -354,9 +354,32 @@
                 }
 
                 @media (max-width: 576px) {
+                    /*
+                     * On mobile the icon row (notif bell, badge, settings) is
+                     * centered via justify-content:center, so the bell icon
+                     * often isn't anywhere near the screen's right edge. The
+                     * base rule above anchors the dropdown with "right: 0"
+                     * relative to the bell icon itself, which can push a
+                     * wide menu off the LEFT edge of the viewport once the
+                     * icon sits left-of-center. Fixing it relative to the
+                     * bell also means it silently drifts if the icon row
+                     * layout ever changes. Instead, on small screens we
+                     * detach the menu from the icon entirely and center it
+                     * in the viewport with position: fixed, positioned just
+                     * under the header using the same --app-header-h
+                     * variable the page layout uses to offset content.
+                     */
                     #notifBell .dropdown-menu {
-                        width: 75vw !important;
-                        max-width: 450px;
+                        position: fixed !important;
+                        top: calc(var(--app-header-h, 60px) + 8px) !important;
+                        left: 50% !important;
+                        right: auto !important;
+                        transform: translateX(-50%) !important;
+                        margin-top: 0 !important;
+                        width: calc(100vw - 24px) !important;
+                        max-width: 420px;
+                        max-height: calc(100vh - var(--app-header-h, 60px) - 24px);
+                        overflow-y: auto;
                     }
                 }
 
@@ -1019,8 +1042,15 @@
 
 <script>
 
-    // Ensure the dropdown never gets clipped on the right
+    // Ensure the dropdown never gets clipped on the right.
+    // On mobile (<=576px) this is handled entirely by CSS (fixed position,
+    // centered in the viewport) so we skip the inline right/left tweaks
+    // there — they'd only fight the centering, and CSS !important already
+    // wins over these non-!important inline styles anyway, but skipping
+    // keeps the intent obvious and avoids a pointless reflow on click.
     $('#notifBell').on('shown.bs.dropdown', function () {
+        if (window.innerWidth <= 576) return;
+
         const menu = $(this).find('.dropdown-menu');
         const rect = menu[0].getBoundingClientRect();
 

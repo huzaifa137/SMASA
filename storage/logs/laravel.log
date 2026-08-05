@@ -6530,3 +6530,11 @@
 [2026-08-06 01:47:05] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
 [2026-08-06 01:47:15] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
 [2026-08-06 01:47:15] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-06 01:54:15] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-06 01:54:15] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-06 01:54:31] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-06 01:54:31] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-06 01:54:55] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-06 01:54:55] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-06 01:58:13] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-06 01:58:13] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
