@@ -196,11 +196,11 @@
             ->where('examination_marks.school_id', $schoolId)
             ->whereNotNull('marks_obtained')
             ->selectRaw('
-                            subjects.subject as subject_name,
-                            AVG(marks_obtained) as avg_score,
-                            COUNT(*) as total_marks,
-                            SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
-                        ')
+                                    subjects.subject as subject_name,
+                                    AVG(marks_obtained) as avg_score,
+                                    COUNT(*) as total_marks,
+                                    SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
+                                ')
             ->groupBy('subjects.ID', 'subjects.subject')
             ->orderByDesc('avg_score')
             ->limit(6)
@@ -1031,6 +1031,53 @@
                 transform: translateY(0);
             }
         }
+
+        /* ── Responsive School Header ── */
+        @media (max-width: 768px) {
+            .school-info {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+            }
+
+            .school-title h1 {
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+            }
+
+            .school-meta {
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+            }
+
+            .school-actions {
+                justify-content: center !important;
+                width: 100% !important;
+                margin-top: 10px !important;
+            }
+
+            /* Move icon to top center */
+            .school-title h1 i.fa-school {
+                display: block !important;
+                width: 100% !important;
+                text-align: center !important;
+                font-size: 2.5rem !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Date on separate line */
+            .school-meta span:last-child {
+                display: block !important;
+                width: 100% !important;
+                text-align: center !important;
+                margin-top: 4px !important;
+            }
+
+            /* The three meta items stay in a row */
+            .school-meta span:not(:last-child) {
+                display: inline-flex !important;
+            }
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -1049,14 +1096,19 @@
                         </h1>
                     </div>
                     <div class="school-meta">
-                        @if($schoolCategory !== '—')
-                            <span><i class="fas fa-layer-group"></i> {{ $schoolCategory }}</span>
-                        @endif
-                        <span><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
-                        @if($currentTerm !== '—')
-                            <span><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
-                        @endif
-                        <span><i class="fas fa-clock"></i> {{ $currentDate->format('l, d M Y') }}</span>
+                        <div style="display:flex;flex-wrap:nowrap;gap:12px;justify-content:flex-start;overflow-x:auto;margin-top:1em;">
+                            @if($schoolCategory !== '—')
+                                <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
+                                    {{ $schoolCategory }}</span>
+                            @endif
+                            <span style="white-space:nowrap;"><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
+                            @if($currentTerm !== '—')
+                                <span style="white-space:nowrap;"><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
+                            @endif
+                        </div>
+                        <div>
+                            <span><i class="fas fa-clock"></i> {{ $currentDate->format('l, d M Y') }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="school-actions">
@@ -1390,7 +1442,7 @@
                                     <div class="progress-track">
                                         <div class="progress-fill"
                                             style="width:{{ $subject['avg_score'] }}%;
-                                                               background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
+                                                                           background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
                                         </div>
                                     </div>
                                 </div>

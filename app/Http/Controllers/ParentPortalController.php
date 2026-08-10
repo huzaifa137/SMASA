@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Examination;
 use App\Models\ExaminationClass;
+use App\Models\House;
 use App\Models\ParentAccount;
 use App\Models\Student;
 use App\Models\StudentAttendance;
@@ -29,31 +30,68 @@ class ParentPortalController extends Controller
             return redirect()->route('parents.dashboard');
         }
 
-        return view('parents.login');
+        // Same unified login screen used for School / Admin, just opened
+        // with the "Parent" tab pre-selected. The school dropdown is part
+        // of that shared markup, so it needs the same $schools list even
+        // though it stays hidden while the Parent tab is active.
+        $schools = House::whereNotIn('Number', function ($query) {
+            $query->select('registration_code')
+                ->from('schools')
+                ->where('school_status', 1);
+        })->get();
+
+        return view('users.login', [
+            'schools' => $schools,
+            'activeRole' => 'parent',
+        ]);
     }
 
     public function login(Request $request)
     {
-        $request->validate([
-            'phone' => 'required|string',
-            'password' => 'required|string',
-        ]);
+        // Same JSON auth-check contract used by School/Admin (UserController::checkUser
+        // / authenticateSchool): field-level errors keyed by the input's `name` so the
+        // shared login page can render them inline instead of a form submit + flash message.
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $request->all(),
+            [
+                'username' => 'required|string',
+                'password' => 'required|string',
+            ],
+            [
+                'username.required' => 'Parent phone number is required.',
+                'password.required' => 'Password is required.',
+            ]
+        );
 
-        $phone = trim($request->input('phone'));
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $phone = trim($request->input('username'));
 
         $account = ParentAccount::findOrProvisionByPhone($phone);
 
         if (!$account) {
-            return back()
-                ->withInput()
-                ->with('fail', 'We could not find a student record with that contact number. Please check with your school if you believe this is a mistake.');
+            return response()->json([
+                'errors' => [
+                    'username' => ['We could not find a student record with that contact number. Please check with your school if you believe this is a mistake.'],
+                ],
+            ], 422);
         }
 
         if (!$account->checkPassword($request->input('password'))) {
-            return back()->withInput()->with('fail', 'Incorrect password.');
+            return response()->json([
+                'errors' => [
+                    'password' => ['Incorrect password.'],
+                ],
+            ], 422);
         }
 
         $account->update(['last_login_at' => now()]);
+
+        $request->session()->regenerate();
 
         session([
             'ParentId' => $account->id,
@@ -61,13 +99,20 @@ class ParentPortalController extends Controller
         ]);
 
         if ($account->must_change_password) {
-            return redirect()->route('parents.change-password')
-                ->with('info', 'Welcome! Please set your own password to continue.');
+            return response()->json([
+                'status' => true,
+                'message' => 'Welcome! Please set your own password to continue.',
+                'redirect' => route('parents.change-password'),
+            ]);
         }
 
         $intended = session()->pull('url.intended');
 
-        return $intended ? redirect($intended) : redirect()->route('parents.dashboard');
+        return response()->json([
+            'status' => true,
+            'message' => 'Login successful',
+            'redirect' => $intended ?: route('parents.dashboard'),
+        ]);
     }
 
     public function logout()

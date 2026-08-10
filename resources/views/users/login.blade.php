@@ -311,6 +311,39 @@
             font-weight: 500;
         }
 
+        .pp-alert {
+            border-radius: 0.75rem;
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        .pp-alert-fail {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .pp-alert-info {
+            background: var(--orange-subtle);
+            color: var(--orange-dark);
+            border: 1px solid #d8d4ff;
+        }
+
+        .parent-helper-text {
+            display: none;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            line-height: 1.5;
+            margin: -0.75rem 0 1.5rem;
+        }
+
+        .parent-helper-text.visible {
+            display: block;
+        }
+
         button:disabled {
             opacity: 0.75;
             cursor: not-allowed;
@@ -439,20 +472,34 @@
             Please sign-in to your account
         </div>
 
+        @if (session('fail'))
+            <div class="pp-alert pp-alert-fail"><i class="fas fa-circle-exclamation me-1"></i> {{ session('fail') }}</div>
+        @endif
+        @if (session('info'))
+            <div class="pp-alert pp-alert-info"><i class="fas fa-circle-info me-1"></i> {{ session('info') }}</div>
+        @endif
+
         <div class="user-role-selector">
-            <button class="role-btn active" data-role="school">
+            <button class="role-btn {{ ($activeRole ?? 'school') === 'school' ? 'active' : '' }}" data-role="school">
                 <i class="fas fa-chalkboard-teacher"></i>
                 <span>School</span>
             </button>
-            <button class="role-btn" data-role="admin">
+            <button class="role-btn {{ ($activeRole ?? 'school') === 'admin' ? 'active' : '' }}" data-role="admin">
                 <i class="fas fa-user-cog"></i>
                 <span>Admin</span>
             </button>
+            <button class="role-btn {{ ($activeRole ?? 'school') === 'parent' ? 'active' : '' }}" data-role="parent">
+                <i class="fas fa-people-roof"></i>
+                <span>Parent</span>
+            </button>
         </div>
 
-        <form class="login-form" id="loginForm" action="{{ route('auth-user-check') }}" method="POST">
+        <form class="login-form" id="loginForm" method="POST"
+            action="{{ ($activeRole ?? 'school') === 'parent' ? route('parents.login.submit') : route('auth-user-check') }}"
+            data-users-action="{{ route('auth-user-check') }}"
+            data-parents-action="{{ route('parents.login.submit') }}">
             @csrf
-            <input type="hidden" name="role" id="login_role" value="student">
+            <input type="hidden" name="role" id="login_role" value="{{ $activeRole ?? 'school' }}">
 
             <!-- School Dropdown -->
             <div class="school-dropdown-container" id="schoolDropdownContainer">
@@ -475,9 +522,9 @@
             <div class="form-group">
                 <label for="username" class="form-label" id="usernameLabel">REGISTRATION NUMBER</label>
                 <div class="input-group">
-                    <i class="fas fa-id-card input-icon"></i>
+                    <i class="fas fa-id-card input-icon" id="usernameIcon"></i>
                     <input type="text" id="username" name="username" class="form-input"
-                        placeholder="Enter your student registration number">
+                        placeholder="Enter your student registration number" value="{{ old('username') }}">
                 </div>
                 <small class="error-text" id="username-error"></small>
             </div>
@@ -495,7 +542,7 @@
                 <small class="error-text" id="password-error"></small>
             </div>
 
-            <div class="form-options">
+            <div class="form-options" id="formOptions">
                 <label class="remember-me">
                     <input type="checkbox" name="remember" id="remember" value="1">
                     <span>Remember me</span>
@@ -503,6 +550,11 @@
                 <a href="{{route('forgot-password')}}" class="forgot-password" style="text-decoration: none;">Forgot
                     password ?</a>
             </div>
+
+            <p class="parent-helper-text" id="parentHelperText">
+                First time here? Use the phone number registered with your child's school and password
+                <strong>1234</strong> — you'll be asked to set your own right after.
+            </p>
 
             <button type="submit" class="btn btn-primary" id="loginBtn">
                 <i class="fas fa-arrow-right-to-bracket"></i> Sign in
@@ -514,10 +566,6 @@
                 <i class="fas fa-home"></i> Back to Homepage
             </a>
         </form>
-
-        <a href="{{ route('parents.login') }}" class="btn btn-secondary" style="text-decoration: none; display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-top:0.85rem;">
-            <i class="fas fa-people-roof"></i> Parent / Guardian Login
-        </a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -543,9 +591,15 @@
             const roleInput = document.getElementById('login_role');
             const usernameLabel = document.querySelector('label[for="username"]');
             const usernameInput = document.getElementById('username');
+            const usernameIcon = document.getElementById('usernameIcon');
             const passwordLabel = document.querySelector('label[for="password"]');
             const schoolDropdownContainer = document.getElementById('schoolDropdownContainer');
             const schoolSelect = document.getElementById('school_id');
+            const formOptions = document.getElementById('formOptions');
+            const parentHelperText = document.getElementById('parentHelperText');
+            const form = document.getElementById('loginForm');
+            const usersAction = form.getAttribute('data-users-action');
+            const parentsAction = form.getAttribute('data-parents-action');
 
             function updateFormForRole(role) {
                 if (role === 'school') {
@@ -555,28 +609,39 @@
                     schoolDropdownContainer.classList.remove('visible');
                     if (schoolSelect) schoolSelect.required = false;
                 }
+
+                formOptions.style.display = role === 'parent' ? 'none' : 'flex';
+                parentHelperText.classList.toggle('visible', role === 'parent');
+                form.action = role === 'parent' ? parentsAction : usersAction;
+
                 switch (role) {
-                    case 'student':
-                        usernameLabel.textContent = 'REGISTRATION NUMBER';
-                        usernameInput.placeholder = 'Enter your student registration number';
-                        passwordLabel.textContent = 'STUDENT PASSWORD';
-                        break;
                     case 'school':
+                        usernameInput.name = 'username';
                         usernameLabel.textContent = 'TEACHER PHONE NUMBER';
                         usernameInput.placeholder = 'Enter teacher phone number';
+                        usernameIcon.className = 'fas fa-id-card input-icon';
                         passwordLabel.textContent = 'TEACHER PASSWORD';
                         break;
                     case 'admin':
+                        usernameInput.name = 'username';
                         usernameLabel.textContent = 'ADMINISTRATOR ID / EMAIL';
                         usernameInput.placeholder = 'Enter your administrator credentials';
+                        usernameIcon.className = 'fas fa-id-card input-icon';
                         passwordLabel.textContent = 'ADMIN PASSWORD';
+                        break;
+                    case 'parent':
+                        usernameInput.name = 'username';
+                        usernameLabel.textContent = 'PARENT PHONE NUMBER';
+                        usernameInput.placeholder = "The number on file with your child's school";
+                        usernameIcon.className = 'fas fa-phone input-icon';
+                        passwordLabel.textContent = 'PASSWORD';
                         break;
                 }
             }
 
-            let activeRole = 'school';
-            roleInput.value = activeRole;
+            let activeRole = roleInput.value || 'school';
             updateFormForRole(activeRole);
+            roleButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-role') === activeRole));
 
             roleButtons.forEach(button => {
                 button.addEventListener('click', function () {
@@ -584,6 +649,7 @@
                     this.classList.add('active');
                     activeRole = this.getAttribute('data-role');
                     roleInput.value = activeRole;
+                    document.querySelectorAll('.error-text').forEach(el => el.textContent = '');
                     updateFormForRole(activeRole);
                 });
             });
@@ -601,20 +667,23 @@
                 });
             }
 
-            // AJAX form submission
-            const form = document.getElementById('loginForm');
+            // Form submission — Parent, School, and Admin all go through their
+            // respective JSON auth-check endpoints via fetch, so every role gets
+            // the same inline field-error behavior instead of a page redirect.
             const loginBtn = document.getElementById('loginBtn');
             const originalBtnHtml = loginBtn.innerHTML;
 
             form.addEventListener('submit', function (e) {
-                e.preventDefault();
                 document.querySelectorAll('.error-text').forEach(el => el.textContent = '');
 
                 if (activeRole === 'school' && schoolSelect && !schoolSelect.value) {
+                    e.preventDefault();
                     const errorEl = document.getElementById('school_id-error');
                     if (errorEl) errorEl.textContent = 'Please select a school';
                     return;
                 }
+
+                e.preventDefault();
 
                 loginBtn.disabled = true;
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
@@ -655,6 +724,16 @@
                         }
                     });
             });
+        });
+
+        // Same reasoning as the change-password page: if this page is
+        // restored from the browser's back/forward cache, force a real
+        // reload so an old "fail"/"info" flash message already consumed
+        // server-side doesn't get shown again.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
         });
     </script>
 </body>

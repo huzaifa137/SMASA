@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Helpers\PermissionHelper;
+use App\Http\Controllers\Helper;
+use App\Models\Student;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +21,34 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // ── Parent portal sidebar ───────────────────────────────────
+        // Every "parents.*" view (dashboard, results, attendance,
+        // finance, child-overview) shares the same sidebar shell, so the
+        // list of children this parent actually has access to is
+        // resolved once here instead of being re-queried in every
+        // controller action.
+        View::composer('parents.*', function ($view) {
+            if (!session('ParentId')) {
+                return;
+            }
+
+            $phone = session('ParentPhone');
+
+            $sidebarChildren = Student::where('primary_contact', $phone)
+                ->orderBy('firstname')
+                ->get()
+                ->map(function ($student) {
+                    $student->school_name = Helper::schoolNameBySchoolID($student->school_id);
+                    return $student;
+                })
+                ->groupBy('school_id');
+
+            $view->with([
+                'sidebarChildren' => $sidebarChildren,
+                'sidebarActiveStudentId' => request()->route('id'),
+            ]);
+        });
+
         // ── Blade Directives ────────────────────────────────────────
 
         /**

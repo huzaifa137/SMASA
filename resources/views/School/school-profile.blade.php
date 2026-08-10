@@ -420,45 +420,14 @@ $controller = new Controller();
             $('#updateSchoolForm').on('submit', function (e) {
                 e.preventDefault();
 
-                let isValid = true;
                 let $form = $(this);
                 let $submitBtn = $form.find('button[type="submit"]');
 
-
+                // All fields are optional - users can save whatever they have
+                // now and come back later to fill in the rest, so we no longer
+                // block submission on empty fields here.
                 $form.find('.form-control, select').removeClass('is-invalid');
                 $form.find('.invalid-feedback').remove();
-
-                $form.find('input, select, textarea').each(function () {
-                    if ($(this).attr('name') === 'logo') {
-                        return true;
-                    }
-
-                    if (!$(this).val().trim()) {
-                        $(this).addClass('is-invalid');
-                        $(this).after(
-                            '<div class="invalid-feedback">This field is required.</div>');
-                        isValid = false;
-                    }
-                });
-
-                if (!isValid) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Incomplete Form',
-                        text: 'Please fill in all required fields before submitting.'
-                    });
-                    return;
-                }
-
-
-                if (!isValid) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Incomplete Form',
-                        text: 'Please fill in all required fields before submitting.'
-                    });
-                    return;
-                }
 
                 Swal.fire({
                     title: 'Are you sure?',

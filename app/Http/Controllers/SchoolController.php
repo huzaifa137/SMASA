@@ -428,15 +428,18 @@ class SchoolController extends Controller
     public function storeSchoolProfile(Request $request)
     {
         $validated = $request->validate([
+            // school_id stays required - it's how we know which profile to update.
             'school_id' => 'required|integer|exists:schools,id',
-            'school_type' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'gender' => 'required|string|max:50',
-            'boarding_status' => 'required|string|max:100',
-            'name' => 'required|string|max:255',
-            'registration_code' => 'required|string|max:50',
-            'phone' => 'required|string|max:20',
-            'population' => 'required|string',
+            // Everything else is optional now, so users can save partial progress
+            // and come back later to fill in the rest.
+            'school_type' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'gender' => 'nullable|string|max:50',
+            'boarding_status' => 'nullable|string|max:100',
+            'name' => 'nullable|string|max:255',
+            'registration_code' => 'nullable|string|max:50',
+            'phone' => 'nullable|string|max:20',
+            'population' => 'nullable|string',
             'motto' => 'nullable|string|max:255',
             'vision' => 'nullable|string|max:255',
             'admission_prefix' => 'nullable|string|max:50',

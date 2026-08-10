@@ -1,7 +1,4 @@
 {{-- Expects: $student, $active ('overview'|'results'|'attendance'|'finance') --}}
-<div class="pp-crumbs">
-    <a href="{{ route('parents.dashboard') }}"><i class="fas fa-arrow-left me-1"></i>My Children</a>
-</div>
 
 <div class="pp-card" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
     <div style="width:52px;height:52px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;">

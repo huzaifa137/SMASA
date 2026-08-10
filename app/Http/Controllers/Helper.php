@@ -1231,12 +1231,16 @@ class Helper extends Controller
     /**
      * Return the Arabic school name stored in schools.school_name_arabic.
      */
-    public static function schoolNameArabic(int $schoolId): string
-    {
-        return DB::table('schools')
-            ->where('id', $schoolId)
-            ->value('school_name_arabic') ?? '';
+public static function schoolNameArabic(?int $schoolId): string
+{
+    if ($schoolId === null) {
+        return ''; // Return empty string if null
     }
+    
+    return DB::table('schools')
+        ->where('id', $schoolId)
+        ->value('school_name_arabic') ?? '';
+}
 
     public static function toArabicNumberDate($value)
     {

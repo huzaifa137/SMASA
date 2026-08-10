@@ -295,15 +295,15 @@ use App\Helpers\PermissionHelper;
             color: #fff;
         }
 
-        .btn-edit {
-            background: var(--al);
-            color: var(--a);
-        }
+.btn-edit {
+    background: #f39f40;
+    color: #fff;
+}
 
-        .btn-edit:hover {
-            background: var(--a);
-            color: #fff;
-        }
+.btn-edit:hover {
+    background: var(--a);
+    color: #fff;
+}
 
         .btn-del {
             background: var(--rl);

@@ -227,12 +227,14 @@ class UserController extends Controller
                 ->where('school_status', 1);
         })->get();
 
-        return view('users.login', compact('schools'));
+        $activeRole = 'school';
+
+        return view('users.login', compact('schools', 'activeRole'));
     }
 
     public function courseInformation(Request $request)
     {
-        return view('users.login');
+        return view('users.login', ['schools' => collect(), 'activeRole' => 'school']);
     }
 
     public function dashboardMasterDataDashboard()

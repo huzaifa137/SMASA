@@ -38,10 +38,11 @@ class AdminAuth
 
         // Prevent logged users from going back to auth pages
         if (
-            (session()->has('LoggedAdmin') || session()->has('LoggedSchool')) &&
+            (session()->has('LoggedAdmin') || session()->has('LoggedSchool') || session()->has('ParentId')) &&
             ($request->path() == 'users/login' ||
                 $request->path() == 'users/register' ||
                 $request->path() == '/' ||
+                $request->path() == 'users/home-page' ||
                 $request->routeIs('auth-user-check'))
         ) {
 
@@ -50,7 +51,11 @@ class AdminAuth
                 return redirect('/admin/dashboard');
             }
 
-            return redirect('/school/dashboard');
+            if (session()->has('LoggedSchool')) {
+                return redirect('/school/dashboard');
+            }
+
+            return redirect()->route('parents.dashboard');
         }
 
         $response = $next($request);
