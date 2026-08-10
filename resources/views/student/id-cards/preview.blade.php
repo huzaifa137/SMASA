@@ -595,11 +595,7 @@
 
     {{-- Action Buttons --}}
     <div class="action-row">
-        <!-- <a href="{{ route('id-cards.print', $card->id) }}" class="btn btn-primary" target="_blank">
-            <i class="fas fa-print"></i> Print / Download PDF
-        </a> -->
-
-        <a href="javascript:void();" class="btn btn-primary" target="_blank">
+        <a href="{{ route('id-cards.print', $card->id) }}" class="btn btn-primary" target="_blank">
             <i class="fas fa-print"></i> Print / Download PDF
         </a>
         @if($card->status === 'active' && PermissionHelper::canFeature('revoke_cards'))

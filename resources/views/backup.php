@@ -8,6 +8,14 @@ $teacher->save(); -->
 
 <!-- Remove-Item public/storage       -->
 <!-- php artisan storage:link         -->
+
+Another way to enable a symlinks easier #28a745
+
+1.Command
+[u529778701@in-mum-web1824 alhilalonlineacademy]$ ln -s ../storage/app/public public/storage 
+2.Confirm symlink enabled
+[u529778701@in-mum-web1824 alhilalonlineacademy]$ ls -la public/storage
+lrwxrwxrwx 1 u529778701 o1006492913 21 Aug  7 11:59 public/storage -> ../storage/app/public
                                       
 <!-- symlinks above are not working, by pass with this (claude AI) -->
 rm public/storage && ln -s /home/u453625278/domains/smasa-academics.com/public_html/storage/app/public public/storage

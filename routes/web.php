@@ -689,6 +689,7 @@ Route::prefix('timetable')
 
         // General / Master School Timetable (combines active class timetables)
         Route::get('/master', 'master')->name('master');
+        Route::get('/master/print', 'printMaster')->name('master.print');
 
         // Teacher Teaching-Days Summary
         Route::get('/teachers-summary', 'teachersSummary')->name('teachers-summary');
