@@ -643,6 +643,7 @@ use App\Helpers\PermissionHelper;
                 </thead>
                 <tbody>
                     @forelse($defaulters as $index => $alloc)
+                    
                         @php
                             $net = $alloc->allocated_amount - $alloc->discount_amount;
                             $paid = $net - $alloc->balance;
@@ -659,7 +660,7 @@ use App\Helpers\PermissionHelper;
                                     {{ $alloc->student->parent_name ?? '—' }}</div>
                             </td>
                             <td><span class="badge-fin badge-blue">{{ $alloc->student->admission_number ?? '—' }}</span></td>
-                            <td>{{ Helper::recordMdname($alloc->student->senior) ?? '—' }}</td>
+                            <td>{{ Helper::recordMdname(optional($alloc->student)->senior) ?? '—' }}</td>
                             <td>
                                 <div>{{ $alloc->feeStructure->name ?? '—' }}</div>
                                 <div style="font-size:.7rem;color:var(--text-3);">

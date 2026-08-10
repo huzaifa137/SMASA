@@ -275,7 +275,7 @@ use App\Helpers\PermissionHelper;
                                 <li><a href="{{ route('finance.outstanding-fees') }}"><i
                                             class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
                             @endif
-                            @if(PermissionHelper::canFeature('manage_ledger'))
+                            <!-- @if(PermissionHelper::canFeature('manage_ledger'))
                                 <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
                                         Accounts</a></li>
                             @endif
@@ -290,7 +290,7 @@ use App\Helpers\PermissionHelper;
                             @if(PermissionHelper::canFeature('financial_reports'))
                                 <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
                                         Balance</a></li>
-                            @endif
+                            @endif -->
                         </ul>
                     </li>
                 @endif
@@ -748,10 +748,14 @@ use App\Helpers\PermissionHelper;
                                 <li><a href="{{ route('finance.reports') }}"><i class="fas fa-chart-pie mr-2"></i></i>Reports</a></li>
                             @endif
                             @if(PermissionHelper::canFeature('financial_reports'))
-                                <li><a href="{{ route('finance.outstanding-fees') }}"><i
-                                            class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
+                              <li>
+    <a href="{{ route('finance.outstanding-fees') }}">
+        <i class="fas fa-money-bill-wave mr-2"></i>
+        Fees Collections
+    </a>
+</li>
                             @endif
-                            @if(PermissionHelper::canFeature('manage_ledger'))
+                            <!-- @if(PermissionHelper::canFeature('manage_ledger'))
                                 <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
                                         Accounts</a></li>
                             @endif
@@ -766,7 +770,7 @@ use App\Helpers\PermissionHelper;
                             @if(PermissionHelper::canFeature('financial_reports'))
                                 <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
                                         Balance</a></li>
-                            @endif
+                            @endif -->
                         </ul>
                     </li>
                 @endif
