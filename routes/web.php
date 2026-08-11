@@ -30,7 +30,7 @@ use App\Http\Controllers\CardScanController;
 use App\Http\Controllers\UserRightsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ParentPortalController;
-
+use App\Http\Controllers\StudentConsolidationController;
 
 Route::get('/logout', function () {
     session()->flush();
@@ -248,6 +248,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/store-teachers', 'storeTeacher')->name('teachers.store');
             Route::post('/teachers/update/{teacher}', 'storeUpdatedTeacherProfile')->name('teachers.update');
             Route::delete('/teachers/{id}', 'destroyTeacher')->name('teachers.destroy');
+            Route::post('/teachers/bulk-delete', 'bulkDestroyTeachers')->name('teachers.bulk.destroy');
 
             // Teacher Bulk Import
             Route::get('/teachers/bulk-import', 'bulkImportTeacherForm')->name('teachers.bulk.import.form');
@@ -378,6 +379,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                         Route::post('/update/{id}', 'updateStudent');
 
                         Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
+                        Route::post('/bulk-delete', 'bulkDestroyStudents')->name('students.bulk.destroy');
 
                         // Student Bulk Import
                         Route::get('/bulk-import', 'bulkImportStudentForm')->name('students.bulk.import.form');
@@ -1049,8 +1051,21 @@ Route::middleware(['AdminAuth'])->group(function () {
             Route::get('/{id}', 'show')->name('show');
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
-
 });
+
+// ── Student Consolidation (Theology / Secular duplicate cleanup) ──
+Route::controller(StudentConsolidationController::class)
+    ->prefix('students/consolidation')
+    ->middleware(['module:students'])
+    ->group(function () {
+        Route::group(['middleware' => ['AdminAuth']], function () {
+            Route::get('/', 'index')->name('students.consolidation');
+            Route::get('/search', 'search')->name('students.consolidation.search');
+            Route::post('/link', 'link')->name('students.consolidation.link');
+            Route::post('/unlink', 'unlink')->name('students.consolidation.unlink');
+            Route::post('/dismiss', 'dismiss')->name('students.consolidation.dismiss');
+        });
+    });
 
 // ── Temporary push diagnostics — REMOVE after confirming push works ──────────
 Route::middleware(['AdminAuth'])->get('/push-diag', function () {

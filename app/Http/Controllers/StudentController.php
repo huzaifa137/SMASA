@@ -17,6 +17,7 @@ use App\Models\Subject;
 use App\Models\User;
 use App\Models\StudentIdCard;
 use App\Services\GradingService;
+use App\Services\StudentDeletionService;
 use Illuminate\Support\Facades\Log;
 use DB;
 use Illuminate\Http\Request;
@@ -439,134 +440,150 @@ class StudentController extends Controller
         return response()->json(['student_id' => $newStudentID]);
     }
 
-    public function storeStudent(Request $request)
-    {
+  public function storeStudent(Request $request)
+{
 
-        if (!PermissionHelper::canFeature('add_student')) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to add students.'], 403);
-        }
+    if (!PermissionHelper::canFeature('add_student')) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to add students.'], 403);
+    }
 
-        if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized Access. Contact School Admnistrators to Add Students'
-            ], 403);
-        }
+    if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unauthorized Access. Contact School Admnistrators to Add Students'
+        ], 403);
+    }
 
-        // $validated = $request->validate([
-        //     'School' => 'required|integer|exists:houses,ID',
-        //     'Category' => 'required|string|max:10',
-        //     'Admission_Year' => 'required|integer',
-        //     'Student_ID' => 'required|string|max:25|unique:students,registration_number',
-        //     'firstname' => 'required|string|max:100',
-        //     'lastname' => 'required|string|max:100',
-        //     'gender' => 'required|string|in:Male,Female,Other',
-        //     'date_of_birth' => 'nullable|date',
-        //     'primary_contact' => 'nullable|string|max:20',
-        //     'other_contact' => 'nullable|string|max:20',
-        //     'student_photo' => 'nullable|image|mimes:jpg,png,gif',
-        // ]);
+    // $validated = $request->validate([
+    //     'School' => 'required|integer|exists:houses,ID',
+    //     'Category' => 'required|string|max:10',
+    //     'Admission_Year' => 'required|integer',
+    //     'Student_ID' => 'required|string|max:25|unique:students,registration_number',
+    //     'firstname' => 'required|string|max:100',
+    //     'lastname' => 'required|string|max:100',
+    //     'gender' => 'required|string|in:Male,Female,Other',
+    //     'date_of_birth' => 'nullable|date',
+    //     'primary_contact' => 'nullable|string|max:20',
+    //     'other_contact' => 'nullable|string|max:20',
+    //     'student_photo' => 'nullable|image|mimes:jpg,png,gif',
+    // ]);
 
 
-        $validated = $request->validate([
-            'School' => 'nullable',
-            'Category' => 'nullable',
-            'Admission_Year' => 'nullable',
-            'Student_ID' => 'nullable',
-            'firstname' => 'nullable',
-            'lastname' => 'nullable',
-            'gender' => 'nullable',
-            'date_of_birth' => 'nullable',
-            'primary_contact' => 'nullable',
-            'other_contact' => 'nullable',
-            'student_photo' => 'nullable',
-        ]);
+    $validated = $request->validate([
+        'School' => 'nullable',
+        'Category' => 'nullable',
+        'Admission_Year' => 'nullable',
+        'Student_ID' => 'nullable',
+        'firstname' => 'nullable',
+        'lastname' => 'nullable',
+        'gender' => 'nullable',
+        'date_of_birth' => 'nullable',
+        'primary_contact' => 'nullable',
+        'other_contact' => 'nullable',
+        'student_photo' => 'nullable',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
+    try {
 
-            $photoPath = null;
+        $photoPath = null;
 
-            if ($request->hasFile('student_photo')) {
-                $file = $request->file('student_photo');
+        if ($request->hasFile('student_photo')) {
+            $file = $request->file('student_photo');
 
-                $destinationPath = public_path('uploads/studentPhotos');
+            $destinationPath = public_path('uploads/studentPhotos');
 
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                $studentId = $validated['Student_ID'];
-
-                // delete old photo if exists
-                foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                    $oldFile = $destinationPath . '/' . $studentId . '.' . $ext;
-
-                    if (file_exists($oldFile)) {
-                        unlink($oldFile);
-                    }
-                }
-
-                $extension = strtolower($file->getClientOriginalExtension());
-
-                $filename = $studentId . '.' . $extension;
-
-                $file->move($destinationPath, $filename);
-
-                $photoPath = $studentId;
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
             }
 
-            // Create student record
-            $student = Student::create(array_merge(
-                $request->except('registration_number'),
-                [
-                    'registration_number' => $validated['Student_ID'],
-                    'firstname' => $validated['firstname'],
-                    'lastname' => $validated['lastname'],
-                    'senior' => $request->input('senior'),
-                    'stream' => $request->input('stream') ?: \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL,
-                    'admission_number' => $request->input('Admission_Number', null),
-                    'gender' => $validated['gender'],
-                    'school_id' => $validated['School'],
-                    'primary_contact' => $validated['primary_contact'] ?? null,
-                    'other_contact' => $validated['other_contact'] ?? null,
-                    'student_photo' => $photoPath,
-                    'date_of_admission' => $request->input('date_of_admission', null),
-                    'ple_score' => $request->input('ple_score', null),
-                    'uce_score' => $request->input('uce_score', null),
-                    'previous_school' => $request->input('previous_school', null),
-                    'primary_school_name' => $request->input('primary_school_name', null),
-                    'guardian_names' => $request->input('guardian_names', null),
-                    'relation' => $request->input('relation', null),
-                    'guardian_phone' => $request->input('guardian_phone', null),
-                    'guardian_email' => $request->input('guardian_email', null),
-                    'home_address' => $request->input('home_address', null),
-                    'date_of_birth' => $validated['date_of_birth'] ?? null,
-                    'place_of_birth' => $request->input('place_of_birth', null),
-                    'birth_certificate_entry_number' => $request->input('birth_certificate_entry_number', null),
-                    'nationality' => $request->input('StudentNationality', null),
-                    'medical_history' => $request->input('medical_history', null),
-                    'comments' => $request->input('comments', null),
-                    'added_by' => session('LoggedTeacher') ?? session('LoggedAdmin'), // assuming you want to track who added
-                ]
-            ));
+            $studentId = $validated['Student_ID'];
 
-            DB::commit();
+            // delete old photo if exists
+            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                $oldFile = $destinationPath . '/' . $studentId . '.' . $ext;
 
-            return response()->json([
-                'message' => 'Student added successfully!',
-                'student_id' => $student->id,
-            ]);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
+            }
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+            $extension = strtolower($file->getClientOriginalExtension());
 
-            return response()->json([
-                'error' => $e->getMessage(),
-            ], 500);
+            $filename = $studentId . '.' . $extension;
+
+            $file->move($destinationPath, $filename);
+
+            $photoPath = $studentId;
         }
+
+        // ▼▼▼ NEW BLOCK #1 ▼▼▼
+        // If this enrollment was linked (via the "Already enrolled under
+        // another program?" search on the Add Student form) to an existing
+        // physical student, validate that record belongs to the same
+        // school and isn't itself already linked to something else.
+        $linkedStudentId = $request->input('linked_student_id');
+        if ($linkedStudentId) {
+            $existing = Student::where('id', $linkedStudentId)
+                ->where('school_id', $validated['School'])
+                ->whereNull('linked_student_id')
+                ->first();
+            $linkedStudentId = $existing?->id;
+        }
+        // ▲▲▲ END NEW BLOCK #1 ▲▲▲
+
+        // Create student record
+        $student = Student::create(array_merge(
+            $request->except('registration_number'),
+            [
+                'registration_number' => $validated['Student_ID'],
+                'firstname' => $validated['firstname'],
+                'lastname' => $validated['lastname'],
+                'senior' => $request->input('senior'),
+                'stream' => $request->input('stream') ?: \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL,
+                'linked_student_id' => $linkedStudentId, // ◄── NEW LINE #2
+                'admission_number' => $request->input('Admission_Number', null),
+                'gender' => $validated['gender'],
+                'school_id' => $validated['School'],
+                'primary_contact' => $validated['primary_contact'] ?? null,
+                'other_contact' => $validated['other_contact'] ?? null,
+                'student_photo' => $photoPath,
+                'date_of_admission' => $request->input('date_of_admission', null),
+                'ple_score' => $request->input('ple_score', null),
+                'uce_score' => $request->input('uce_score', null),
+                'previous_school' => $request->input('previous_school', null),
+                'primary_school_name' => $request->input('primary_school_name', null),
+                'guardian_names' => $request->input('guardian_names', null),
+                'relation' => $request->input('relation', null),
+                'guardian_phone' => $request->input('guardian_phone', null),
+                'guardian_email' => $request->input('guardian_email', null),
+                'home_address' => $request->input('home_address', null),
+                'date_of_birth' => $validated['date_of_birth'] ?? null,
+                'place_of_birth' => $request->input('place_of_birth', null),
+                'birth_certificate_entry_number' => $request->input('birth_certificate_entry_number', null),
+                'nationality' => $request->input('StudentNationality', null),
+                'medical_history' => $request->input('medical_history', null),
+                'comments' => $request->input('comments', null),
+                'added_by' => session('LoggedTeacher') ?? session('LoggedAdmin'), // assuming you want to track who added
+            ]
+        ));
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Student added successfully!',
+            'student_id' => $student->id,
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function allStudents()
     {
@@ -720,45 +737,95 @@ class StudentController extends Controller
         ]);
     }
 
-    public function destroyStudent(Student $student)
+    public function destroyStudent(Student $student, StudentDeletionService $deletionService)
     {
-
         if (!PermissionHelper::canFeature('delete_student')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
         }
 
+        $result = $deletionService->deleteStudent($student);
 
-        try {
-            if ($student->student_photo) {
-                $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
 
-                foreach ($possibleExtensions as $ext) {
-                    $path = public_path(
-                        'uploads/studentPhotos/' .
-                        $student->student_photo .
-                        '.' .
-                        $ext
-                    );
+    /**
+     * Bulk-delete students, either by an explicit list of IDs (checkbox
+     * selection in the UI) or by a filter (senior/stream/search query) so
+     * an entire class/stream — or every result of a search — can be wiped
+     * without the client having to hold every single ID in memory.
+     *
+     * Every related record (marks, results, attendance, fees, id cards,
+     * library records, contact messages) is removed along with each
+     * student — see StudentDeletionService.
+     */
+    public function bulkDestroyStudents(Request $request, StudentDeletionService $deletionService)
+    {
+        if (!PermissionHelper::canFeature('delete_student')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
+        }
 
-                    if (file_exists($path)) {
-                        unlink($path);
-                        break; // stop after deleting the first found image
-                    }
-                }
+        $schoolId = Helper::requireSchool();
+
+        $validated = $request->validate([
+            'student_ids'   => 'nullable|array',
+            'student_ids.*' => 'integer|exists:students,id',
+            'senior'        => 'nullable|string',
+            'stream'        => 'nullable|string',
+            'q'             => 'nullable|string',
+        ]);
+
+        if (!empty($validated['student_ids'])) {
+            // Selection-based delete — scope strictly to this school so a
+            // stray/forged id from another school can never be touched.
+            $studentIds = Student::whereIn('id', $validated['student_ids'])
+                ->where('school_id', $schoolId)
+                ->pluck('id')
+                ->all();
+        } elseif (!empty($validated['senior']) || !empty($validated['stream']) || !empty($validated['q'])) {
+            // Filter-based delete — everything matching the current
+            // class/stream/search filter, e.g. "delete this whole stream".
+            $query = Student::where('school_id', $schoolId);
+
+            if (!empty($validated['senior'])) {
+                $query->where('senior', $validated['senior']);
+            }
+            if (!empty($validated['stream'])) {
+                $query->where('stream', $validated['stream']);
+            }
+            if (!empty($validated['q'])) {
+                $q = $validated['q'];
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('firstname', 'like', "%{$q}%")
+                        ->orWhere('lastname', 'like', "%{$q}%")
+                        ->orWhere('admission_number', 'like', "%{$q}%")
+                        ->orWhereRaw("CONCAT(firstname, ' ', lastname) LIKE ?", ["%{$q}%"]);
+                });
             }
 
-            $student->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Student deleted successfully!',
-            ]);
-        } catch (\Exception $e) {
+            $studentIds = $query->pluck('id')->all();
+        } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete student.',
-            ], 500);
+                'message' => 'Provide either student_ids or a filter (senior/stream/q) to delete.',
+            ], 422);
         }
+
+        if (empty($studentIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No matching students found to delete.',
+            ], 404);
+        }
+
+        $result = $deletionService->deleteStudents($studentIds);
+
+        return response()->json([
+            'success' => $result['failed'] === 0,
+            'message' => "{$result['deleted']} student(s) deleted." . ($result['failed'] ? " {$result['failed']} failed." : ''),
+            'deleted' => $result['deleted'],
+            'failed'  => $result['failed'],
+            'errors'  => $result['errors'],
+        ], $result['failed'] === 0 ? 200 : 207);
     }
 
     public function exportStudents($schoolId, $type)
@@ -1313,7 +1380,7 @@ class StudentController extends Controller
             'errors' => $importer->errors,
 
             'message' =>
-                $importer->importedCount .
+                $importer->importedCount . 
                 ' student(s) imported successfully.' .
                 (
                     count($importer->errors)

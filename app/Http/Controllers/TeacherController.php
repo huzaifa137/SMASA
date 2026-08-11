@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use App\Helpers\PermissionHelper;
+use App\Services\TeacherDeletionService;
 
 class TeacherController extends Controller
 {
@@ -302,27 +303,60 @@ class TeacherController extends Controller
         return view('teacher.teachers-in-school', compact('teachers', 'school_id'));
     }
 
-    public function destroyTeacher($id)
+    public function destroyTeacher($id, TeacherDeletionService $deletionService)
     {
-        if (!PermissionHelper::canFeature('delete_teacher')) {
-        return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
-    }
-
-
-        // --- THE INTENDED NEW CODE ---
         if (!PermissionHelper::canFeature('delete_teacher')) {
             return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
         }
 
         $teacher = Teacher::findOrFail($id);
 
-        if ($teacher->teacher_profile && File::exists(public_path($teacher->teacher_profile))) {
-            File::delete(public_path($teacher->teacher_profile));
+        $result = $deletionService->deleteTeacher($teacher);
+
+        return response()->json(['message' => $result['message']], $result['success'] ? 200 : 500);
+    }
+
+    /**
+     * Bulk-delete teachers by an explicit list of IDs. Own records
+     * (attendance, payroll, id card, school-role) are removed; anything
+     * they entered/took/received on behalf of a student (marks,
+     * attendance, fee payments) is preserved and just detached — see
+     * TeacherDeletionService.
+     */
+    public function bulkDestroyTeachers(Request $request, TeacherDeletionService $deletionService)
+    {
+        if (!PermissionHelper::canFeature('delete_teacher')) {
+            return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
         }
 
-        $teacher->delete();
+        $schoolId = Helper::requireSchool();
 
-        return response()->json(['message' => 'Teacher deleted successfully.']);
+        $validated = $request->validate([
+            'teacher_ids'   => 'required|array|min:1',
+            'teacher_ids.*' => 'integer|exists:teachers,id',
+        ]);
+
+        $teacherIds = Teacher::whereIn('id', $validated['teacher_ids'])
+            ->where('school_id', $schoolId)
+            ->pluck('id')
+            ->all();
+
+        if (empty($teacherIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No matching teachers found to delete.',
+            ], 404);
+        }
+
+        $result = $deletionService->deleteTeachers($teacherIds);
+
+        return response()->json([
+            'success' => $result['failed'] === 0,
+            'message' => "{$result['deleted']} teacher(s) deleted." . ($result['failed'] ? " {$result['failed']} failed." : ''),
+            'deleted' => $result['deleted'],
+            'failed'  => $result['failed'],
+            'errors'  => $result['errors'],
+        ], $result['failed'] === 0 ? 200 : 207);
     }
 
     public function updatePassword(Request $request)

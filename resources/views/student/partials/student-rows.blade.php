@@ -1,4 +1,4 @@
- <?php
+<?php
 use App\Http\Controllers\Helper;
 use App\Helpers\PermissionHelper;
 ?>
@@ -30,6 +30,13 @@ use App\Helpers\PermissionHelper;
                                             $cardId = $cardInfo['card_id'] ?? null;
                                         @endphp
                                         <tr id="row-{{ $student->id }}">
+                                            @if(PermissionHelper::canFeature('delete_student'))
+                                                <td>
+                                                    <input type="checkbox" class="student-select-checkbox"
+                                                        value="{{ $student->id }}"
+                                                        data-senior="{{ $senior }}" data-stream="{{ $stream }}">
+                                                </td>
+                                            @endif
                                             <td style="color:var(--t3);font-size:.8rem;font-weight:600;">
                                                 {{ $students->firstItem() + $key }}
                                             </td>

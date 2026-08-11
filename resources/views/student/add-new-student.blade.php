@@ -285,6 +285,30 @@ use App\Http\Controllers\Helper;
                         <form id="createStudentForm" method="POST" action="{{ route('students.store') }}">
                             @csrf
 
+                            <div class="consolidate-widget" style="background:#fff7ed;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;margin-bottom:18px;">
+                                <label style="font-weight:700;color:#92400e;font-size:.88rem;display:flex;align-items:center;gap:8px;">
+                                    <i class="fas fa-code-branch"></i> Is this student already enrolled here under another program (e.g. Theology or Secular)?
+                                </label>
+                                <p style="font-size:.78rem;color:#b45309;margin:2px 0 10px;">
+                                    Search and select their existing record so this new class enrollment is linked to them —
+                                    they'll be counted once on the School Dashboard instead of twice.
+                                </p>
+                                <div style="position:relative;max-width:480px;">
+                                    <input type="text" id="linkExistingSearch" class="form-control"
+                                        placeholder="Search by name or admission number… (leave blank if this is a brand-new student)"
+                                        autocomplete="off">
+                                    <div id="linkExistingResults"
+                                        style="display:none;position:absolute;z-index:20;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);max-height:220px;overflow-y:auto;">
+                                    </div>
+                                </div>
+                                <div id="linkExistingPicked" style="display:none;align-items:center;gap:10px;margin-top:10px;background:#dcfce7;color:#166534;border-radius:8px;padding:8px 12px;font-size:.85rem;font-weight:600;">
+                                    <i class="fas fa-user-check"></i>
+                                    <span id="linkExistingPickedText"></span>
+                                    <i class="fas fa-xmark" id="linkExistingClear" style="cursor:pointer;margin-left:auto;"></i>
+                                </div>
+                                <input type="hidden" name="linked_student_id" id="linked_student_id" value="">
+                            </div>
+
                             <div class="student-form-grid">
 
                                 <input type="hidden" name="School" id="School" value="{{ Helper::requireSchool() }}">
@@ -1016,6 +1040,54 @@ use App\Http\Controllers\Helper;
                         });
                     } else {
                         $streamSelect.html('<option value="">-- Select Stream --</option>');
+                    }
+                });
+
+                // ── Link to an existing student (consolidation) ──
+                let pickedLinkedStudent = null;
+                let linkSearchTimer = null;
+                const $linkSearch = $('#linkExistingSearch');
+                const $linkResults = $('#linkExistingResults');
+
+                $linkSearch.on('input', function () {
+                    clearTimeout(linkSearchTimer);
+                    const term = $(this).val().trim();
+                    if (term.length < 2) { $linkResults.hide().empty(); return; }
+                    linkSearchTimer = setTimeout(function () {
+                        $.get('{{ route('students.consolidation.search') }}', { term: term }, function (data) {
+                            $linkResults.empty();
+                            const results = (data && data.results) ? data.results : [];
+                            if (!results.length) { $linkResults.hide(); return; }
+                            results.forEach(function (s) {
+                                const $item = $('<div>')
+                                    .css({ padding: '8px 12px', cursor: 'pointer', fontSize: '.84rem', borderBottom: '1px solid #f1f5f9' })
+                                    .html('<div style="font-weight:600;color:#0f172a;">' + s.name + '</div>' +
+                                        '<div style="font-size:.74rem;color:#64748b;">' + (s.class || '') + ' · ' + (s.stream || '') + ' · ' + (s.gender || '') +
+                                        (s.already_linked ? ' · already linked to another record' : '') + '</div>')
+                                    .on('click', function () {
+                                        pickedLinkedStudent = s;
+                                        $('#linked_student_id').val(s.id);
+                                        $('#linkExistingPickedText').text('Linking this new enrollment to: ' + s.name);
+                                        $('#linkExistingPicked').css('display', 'flex');
+                                        $linkResults.hide();
+                                        $linkSearch.val('');
+                                    });
+                                $linkResults.append($item);
+                            });
+                            $linkResults.show();
+                        });
+                    }, 250);
+                });
+
+                $('#linkExistingClear').on('click', function () {
+                    pickedLinkedStudent = null;
+                    $('#linked_student_id').val('');
+                    $('#linkExistingPicked').hide();
+                });
+
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest('#linkExistingSearch, #linkExistingResults').length) {
+                        $linkResults.hide();
                     }
                 });
             });

@@ -15,6 +15,7 @@
         use App\Models\School;
         use App\Models\SchoolProfile;
         use App\Http\Controllers\Helper;
+        use App\Services\StudentConsolidationService;
         use Illuminate\Support\Facades\DB;
 
         $schoolId = Session('LoggedSchool');
@@ -29,12 +30,23 @@
         $currentTerm = Helper::schoolActiveTermName() ?: '—';
 
         // ── Core counts ──────────────────────────────────────────────────────────
-        $totalStudents = Student::where('school_id', $schoolId)->count();
+        // A student who is enrolled in BOTH a Theology class and a Secular class
+        // has two rows in `students` (one per class enrollment). School-wide
+        // totals must count that child once, so we only count rows that are the
+        // consolidated PRIMARY record (linked_student_id is null). Per-class
+        // rosters elsewhere are unaffected and still count every enrollment row.
+        $consolidation = new StudentConsolidationService();
+        $studentStats = $consolidation->stats($schoolId);
+
+        $totalStudents = $studentStats['unique_students'];
+        $multiProgramStudents = $studentStats['multi_program_students'];
+        $pendingConsolidationReview = $studentStats['pending_review'];
+
         $totalTeachers = Teacher::where('school_id', $schoolId)->count();
         $totalClasses = Classroom::where('school_id', $schoolId)->count();
 
-        $maleStudents = Student::where('school_id', $schoolId)->where('gender', 'Male')->count();
-        $femaleStudents = Student::where('school_id', $schoolId)->where('gender', 'Female')->count();
+        $maleStudents = Student::where('school_id', $schoolId)->where('gender', 'Male')->whereNull('linked_student_id')->count();
+        $femaleStudents = Student::where('school_id', $schoolId)->where('gender', 'Female')->whereNull('linked_student_id')->count();
 
         // ── Attendance Rate (student) – last 30 days ─────────────────────────────
         $last30 = now()->subDays(30)->toDateString();
@@ -478,6 +490,58 @@
             margin-top: -46px;
             position: relative;
             z-index: 2;
+        }
+
+        /* ── Consolidation banner ── */
+        .consolidation-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius-lg);
+            padding: 14px 20px;
+            margin-bottom: 18px;
+        }
+
+        .consolidation-banner .cb-text {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #92400e;
+            font-weight: 600;
+            font-size: 14.5px;
+        }
+
+        .consolidation-banner .cb-text i {
+            font-size: 20px;
+        }
+
+        .consolidation-banner .cb-sub {
+            display: block;
+            font-weight: 400;
+            font-size: 12.5px;
+            color: #b45309;
+            margin-top: 2px;
+        }
+
+        .consolidation-banner .cb-btn {
+            background: #92400e;
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13.5px;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .consolidation-banner .cb-btn:hover {
+            background: #78350f;
+            color: #fff;
         }
 
         /* ── Welcome Card ── */
@@ -1122,6 +1186,23 @@
 
         <div class="school-body">
 
+            {{-- ── Consolidation alert ── --}}
+            @if($pendingConsolidationReview > 0)
+                <div class="consolidation-banner">
+                    <div class="cb-text">
+                        <i class="fas fa-user-friends"></i>
+                        <span>
+                            {{ $pendingConsolidationReview }} student record(s) look like duplicate enrollments (e.g. the
+                            same child in both a Theology and a Secular class).
+                            <span class="cb-sub">Review and link them so Total Students stays accurate.</span>
+                        </span>
+                    </div>
+                    <a href="{{ route('students.consolidation') }}" class="cb-btn">
+                        <i class="fas fa-code-branch me-1"></i> Review Now
+                    </a>
+                </div>
+            @endif
+
             {{-- ── Welcome + countdown ── --}}
             <div class="welcome-card">
                 <div class="welcome-text">
@@ -1159,6 +1240,12 @@
                     </div>
                     <div class="kpi-value">{{ number_format($totalStudents) }}</div>
                     <div class="kpi-label">Total Students</div>
+                    @if($multiProgramStudents > 0)
+                        <div class="kpi-sub" style="margin-top:2px;">
+                            <i class="fas fa-code-branch" style="color:var(--brand);"></i>
+                            {{ $multiProgramStudents }} counted once (Theology &amp; Secular)
+                        </div>
+                    @endif
                     @if($totalStudents > 0)
                         <div class="gender-bar" style="margin-top:10px;">
                             @php

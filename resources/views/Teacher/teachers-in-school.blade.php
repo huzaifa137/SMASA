@@ -282,11 +282,30 @@ $controller = new Controller();
                             @endif
                         </div>
                     </div>
+                    @if(PermissionHelper::canFeature('delete_teacher'))
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" id="teacher-bulk-bar"
+                            style="display:none !important;background:#fef2f2;border-bottom:1px solid #fecaca;">
+                            <span style="font-size:.85rem;font-weight:600;color:#dc2626;">
+                                <span id="teacher-selected-count">0</span> selected
+                            </span>
+                            <button type="button" class="btn btn-sm btn-danger" id="btn-delete-selected-teachers">
+                                <i class="fas fa-trash"></i> Delete Selected
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-teacher-selection">
+                                Clear
+                            </button>
+                        </div>
+                    @endif
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped card-table table-vcenter text-nowrap mb-0" id="teachersTable">
                                 <thead>
                                     <tr>
+                                        @if(PermissionHelper::canFeature('delete_teacher'))
+                                            <th style="width:1px;">
+                                                <input type="checkbox" id="teacher-select-all">
+                                            </th>
+                                        @endif
                                         <th>#</th>
                                         <th class="text-center">Profile</th>
                                         <th>Surname</th>
@@ -302,6 +321,11 @@ $controller = new Controller();
                                 <tbody>
                                     @forelse ($teachers as $key => $teacher)
                                         <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
+                                            @if(PermissionHelper::canFeature('delete_teacher'))
+                                                <td style="width:1px;">
+                                                    <input type="checkbox" class="teacher-select-checkbox" value="{{ $teacher->id }}">
+                                                </td>
+                                            @endif
                                             <td style="width:1px;">{{ $key + 1 }}</td>
                                             <td class="text-center">
                                                 <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
@@ -380,7 +404,7 @@ $controller = new Controller();
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-5">
+                                            <td colspan="{{ PermissionHelper::canFeature('delete_teacher') ? 9 : 8 }}" class="text-center py-5">
                                                 <div class="text-center">
                                                     <div class="mb-3">
                                                         <i class="fas fa-users-slash fa-4x text-muted"></i>
@@ -664,6 +688,65 @@ $controller = new Controller();
                         }
                     });
                 }
+            });
+        });
+
+        // ─── Bulk delete teachers ─────────────────────────────────────────────────────
+
+        function refreshTeacherBulkBar() {
+            const checked = $('.teacher-select-checkbox:checked');
+            $('#teacher-selected-count').text(checked.length);
+            $('#teacher-bulk-bar').css('display', checked.length ? 'flex' : 'none');
+        }
+
+        $(document).on('change', '.teacher-select-checkbox', refreshTeacherBulkBar);
+
+        $(document).on('change', '#teacher-select-all', function () {
+            $('.teacher-select-checkbox').prop('checked', $(this).prop('checked'));
+            refreshTeacherBulkBar();
+        });
+
+        $(document).on('click', '#btn-clear-teacher-selection', function () {
+            $('.teacher-select-checkbox, #teacher-select-all').prop('checked', false);
+            refreshTeacherBulkBar();
+        });
+
+        $(document).on('click', '#btn-delete-selected-teachers', function () {
+            const ids = $('.teacher-select-checkbox:checked').map(function () { return $(this).val(); }).get();
+            if (!ids.length) return;
+
+            Swal.fire({
+                title: 'Delete Teachers?',
+                html: `This will permanently remove <strong>${ids.length}</strong> selected teacher(s) and their own records (attendance, payroll, salary structure, ID card). Marks, attendance and payments they entered for students are kept, just unassigned. This cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({ title: 'Deleting…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                $.ajax({
+                    url: '{{ route('teachers.bulk.destroy') }}',
+                    type: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { teacher_ids: ids },
+                    success: function (data) {
+                        Swal.fire({
+                            icon: data.success ? 'success' : 'warning',
+                            title: data.success ? 'Deleted!' : 'Partially Deleted',
+                            text: data.message,
+                            confirmButtonColor: '#2f2ccb'
+                        }).then(() => location.reload());
+                    },
+                    error: function (xhr) {
+                        Swal.fire('Error!', xhr.responseJSON?.message || 'Error deleting teachers.', 'error');
+                    }
+                });
             });
         });
 

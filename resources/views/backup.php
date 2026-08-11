@@ -28,6 +28,58 @@ storage:relink
 <!-- Note: The alias only works when you're inside your public_html directory since the rm public/storage path is relative. -->
 
 
+/* ── Pagination ── */
+        .pagination {
+            display: flex;
+            gap: .25rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pagination .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 .5rem;
+            border-radius: 8px;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--t2);
+            background: var(--surf);
+            border: 1px solid var(--brd);
+            text-decoration: none;
+            transition: all .15s;
+        }
+
+        .pagination .page-link:hover {
+            background: var(--bl);
+            color: var(--b);
+            border-color: rgba(47, 44, 203, .3);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--b);
+            color: #fff;
+            border-color: var(--b);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            opacity: .4;
+            pointer-events: none;
+        }
+
+@if($consolidated->total() > 3)
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;flex-wrap:wrap;gap:.5rem;">
+        <span style="font-size:.78rem;color:var(--t3);">
+            Showing {{ $consolidated->firstItem() }}–{{ $consolidated->lastItem() }} of {{ $consolidated->total() }}
+        </span>
+        {{ $consolidated->onEachSide(1)->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+
+
 use App\Http\Controllers\Helper;
 
 <!-- USE FULL QUERIES IN THIS PROJECT -->

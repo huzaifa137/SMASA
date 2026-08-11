@@ -1062,9 +1062,35 @@ use App\Helpers\PermissionHelper;
                                 </div>
                             </div>
 
+                            @if(\App\Helpers\PermissionHelper::canFeature('delete_student'))
+                                <div class="bulk-action-bar" data-senior="{{ $senior }}" data-stream="{{ $stream }}" style="display:none;align-items:center;gap:.75rem;margin-bottom:.6rem;padding:.5rem .75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                                    <span style="font-size:.8rem;font-weight:600;color:#dc2626;">
+                                        <span class="selected-count">0</span> selected
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-danger btn-delete-selected-students">
+                                        <i class="fas fa-trash"></i> Delete Selected
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-clear-student-selection">
+                                        Clear
+                                    </button>
+                                    <span style="margin-left:auto;font-size:.75rem;color:#94a3b8;">|</span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-entire-stream"
+                                        title="Delete every student in this class/stream, including ones not shown on this page">
+                                        <i class="fas fa-layer-group"></i> Delete Entire Stream ({{ $students->total() }})
+                                    </button>
+                                </div>
+                            @endif
+
                             <table class="std-table">
                                 <thead>
                                     <tr>
+                                        @if(\App\Helpers\PermissionHelper::canFeature('delete_student'))
+                                            <th width="3%">
+                                                <input type="checkbox" class="select-all-checkbox"
+                                                    data-senior="{{ $senior }}" data-stream="{{ $stream }}"
+                                                    title="Select all on this page">
+                                            </th>
+                                        @endif
                                         <th width="4%">#</th>
                                         <th width="7%">Photo</th>
                                         <th>First Name</th>
@@ -1513,6 +1539,145 @@ use App\Helpers\PermissionHelper;
                     .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.', confirmButtonColor: '#2f2ccb' }));
             });
         }
+
+        // ── BULK DELETE STUDENTS ────────────────────────────────────────────
+        // NOTE: senior/stream are free-text fields set by whoever enrolled the
+        // student (e.g. "O'Level", "Int'l Bacc") — they can contain quotes,
+        // hyphens, anything. Never interpolate them into an inline
+        // onclick=".." JS string (a stray apostrophe breaks that
+        // specific handler and it silently does nothing) or into an element
+        // id split by '-' (a hyphen in the name breaks the split). Always
+        // read them back out of data-* attributes, which Blade escapes
+        // safely for HTML and which JS reads verbatim via .dataset.
+
+        function streamCheckboxes(senior, stream) {
+            return Array.from(document.querySelectorAll(
+                `.student-select-checkbox[data-senior="${CSS.escape(senior)}"][data-stream="${CSS.escape(stream)}"]`
+            ));
+        }
+
+        function refreshBulkBar(bar) {
+            const senior = bar.dataset.senior;
+            const stream = bar.dataset.stream;
+            const checked = streamCheckboxes(senior, stream).filter(cb => cb.checked);
+
+            bar.style.display = checked.length ? 'flex' : 'none';
+            const countEl = bar.querySelector('.selected-count');
+            if (countEl) countEl.textContent = checked.length;
+        }
+
+        function onStudentCheckboxChange() {
+            document.querySelectorAll('.bulk-action-bar').forEach(refreshBulkBar);
+        }
+
+        // Select-all checkbox in a stream's table header.
+        document.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('select-all-checkbox')) return;
+            const senior = e.target.dataset.senior;
+            const stream = e.target.dataset.stream;
+            streamCheckboxes(senior, stream).forEach(cb => cb.checked = e.target.checked);
+            onStudentCheckboxChange();
+        });
+
+        // Individual row checkboxes.
+        document.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('student-select-checkbox')) return;
+            onStudentCheckboxChange();
+        });
+
+        function clearStudentSelection(bar) {
+            const senior = bar.dataset.senior;
+            const stream = bar.dataset.stream;
+            streamCheckboxes(senior, stream).forEach(cb => cb.checked = false);
+
+            const selectAll = document.querySelector(
+                `.select-all-checkbox[data-senior="${CSS.escape(senior)}"][data-stream="${CSS.escape(stream)}"]`
+            );
+            if (selectAll) selectAll.checked = false;
+
+            refreshBulkBar(bar);
+        }
+
+        function runBulkStudentDelete(payload, confirmHtml) {
+            Swal.fire({
+                title: 'Delete Students?',
+                html: confirmHtml,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({ title: 'Deleting…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                fetch(`{{ route('students.bulk.destroy') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success || data.deleted > 0) {
+                            Swal.fire({
+                                icon: data.success ? 'success' : 'warning',
+                                title: data.success ? 'Deleted!' : 'Partially Deleted',
+                                text: data.message,
+                                confirmButtonColor: '#2f2ccb'
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Nothing was deleted.', confirmButtonColor: '#2f2ccb' });
+                        }
+                    })
+                    .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong.', confirmButtonColor: '#2f2ccb' }));
+            });
+        }
+
+        // Delete only the checked rows (current page's selection).
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-delete-selected-students');
+            if (!btn) return;
+            const bar = btn.closest('.bulk-action-bar');
+            const senior = bar.dataset.senior;
+            const stream = bar.dataset.stream;
+            const ids = streamCheckboxes(senior, stream).filter(cb => cb.checked).map(cb => cb.value);
+            if (!ids.length) return;
+
+            runBulkStudentDelete(
+                { student_ids: ids },
+                `This will permanently remove <strong>${ids.length}</strong> selected student(s) — along with their marks, results, attendance, fee records and ID cards. This cannot be undone.`
+            );
+        });
+
+        // Delete every student in this class/stream, including ones not
+        // currently loaded on this page — avoids paging through hundreds
+        // of students just to select them all by hand.
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-delete-entire-stream');
+            if (!btn) return;
+            const bar = btn.closest('.bulk-action-bar');
+            const senior = bar.dataset.senior;
+            const stream = bar.dataset.stream;
+
+            runBulkStudentDelete(
+                { senior: senior, stream: stream },
+                `This will permanently remove <strong>every student</strong> in this class/stream — along with all their marks, results, attendance, fee records and ID cards. This cannot be undone.`
+            );
+        });
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-clear-student-selection');
+            if (!btn) return;
+            clearStudentSelection(btn.closest('.bulk-action-bar'));
+        });
 
         // ── ID CARD FUNCTIONS ───────────────────────────────────────────────────
 
