@@ -7,6 +7,7 @@ use App\Models\DynamicFormValue;
 use App\Models\House;
 use App\Models\MasterData;
 use App\Models\School;
+use App\Models\SchoolProduct;
 use App\Models\SchoolProfile;
 use App\Models\TermDate;
 use App\Models\UpdateTracker;
@@ -110,6 +111,17 @@ class SchoolController extends Controller
 
         // Create new school
         $school = School::create($validated);
+
+        // Record its starting School Product in the school_products table
+        // too (not just the legacy schools.school_product column), so it's
+        // ready to have a second category merged in later via
+        // SchoolProductMergeService without any extra migration step.
+        SchoolProduct::create([
+            'school_id' => $school->id,
+            'product_md_id' => $validated['school_product'],
+            'is_primary' => true,
+            'added_by' => Session('LoggedAdmin'),
+        ]);
 
         // Give the school its own starter grading schemes (fully editable,
         // deletable, and independent of every other school — see

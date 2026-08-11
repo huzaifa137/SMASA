@@ -92,20 +92,29 @@
                                         <label class="form-label">Class</label>
                                         <select class="form-control select2" id="class_id" name="class_id">
                                             <option value="">-- Select --</option>
+                                            {{-- A school with merged School Product categories (see
+                                                 "Manage School Products") has BOTH of these populated at
+                                                 once, so both group of classes show together here instead
+                                                 of only whichever one used to come first. --}}
                                             @if(isset($SecondaryClasses) && $SecondaryClasses->isNotEmpty())
-                                                @foreach ($SecondaryClasses as $class)
-                                                    <option value="{{ $class->md_id }}"
-                                                        data-type="{{ $classTypeMap[$class->md_id] ?? 'Unknown' }}">
-                                                        {{ $class->md_name }}
-                                                    </option>
-                                                @endforeach
-                                            @elseif(isset($PrimaryClasses) && $PrimaryClasses->isNotEmpty())
-                                                @foreach ($PrimaryClasses as $class)
-                                                    <option value="{{ $class->md_id }}"
-                                                        data-type="{{ $classTypeMap[$class->md_id] }}">
-                                                        {{ $class->md_name }}
-                                                    </option>
-                                                @endforeach
+                                                <optgroup label="Secondary">
+                                                    @foreach ($SecondaryClasses as $class)
+                                                        <option value="{{ $class->md_id }}"
+                                                            data-type="{{ $classTypeMap[$class->md_id] ?? 'Unknown' }}">
+                                                            {{ $class->md_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endif
+                                            @if(isset($PrimaryClasses) && $PrimaryClasses->isNotEmpty())
+                                                <optgroup label="Primary">
+                                                    @foreach ($PrimaryClasses as $class)
+                                                        <option value="{{ $class->md_id }}"
+                                                            data-type="{{ $classTypeMap[$class->md_id] ?? 'Unknown' }}">
+                                                            {{ $class->md_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
                                             @endif
                                         </select>
                                     </div>

@@ -8788,3 +8788,76 @@
 [2026-08-11 23:59:50] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
 [2026-08-11 23:59:54] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
 [2026-08-11 23:59:54] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-12 00:33:34] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:33:34] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-12 00:33:48] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:33:48] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-12 00:34:42] local.INFO: Push subscription request received {"admin_session":true,"teacher_session":false,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:34:42] local.INFO: Push subscription saved successfully {"model":"User","id":1} 
+[2026-08-12 00:34:51] local.INFO: Push subscription request received {"admin_session":true,"teacher_session":false,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:34:51] local.INFO: Push subscription saved successfully {"model":"User","id":1} 
+[2026-08-12 00:41:25] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:41:25] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-12 00:41:37] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:41:37] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 
+[2026-08-12 00:42:58] local.ERROR: View [School.manage-school-products] not found. {"exception":"[object] (InvalidArgumentException(code: 0): View [School.manage-school-products] not found. at C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/View/FileViewFinder.php:139)
+[stacktrace]
+#0 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/View/FileViewFinder.php(79): Illuminate/View/FileViewFinder->findInPaths('School.manage-s...', Array)
+#1 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/View/Factory.php(151): Illuminate/View/FileViewFinder->find('School.manage-s...')
+#2 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(1062): Illuminate/View/Factory->make('School.manage-s...', Array, Array)
+#3 C:/Users/USER/Desktop/SMASA/app/Http/Controllers/SchoolProductController.php(25): view('School.manage-s...', Array)
+#4 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App/Http/Controllers/SchoolProductController->manage()
+#5 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(44): Illuminate/Routing/Controller->callAction('manage', Array)
+#6 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate/Routing/ControllerDispatcher->dispatch(Object(Illuminate/Routing/Route), Object(App/Http/Controllers/SchoolProductController), 'manage')
+#7 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate/Routing/Route->runController()
+#8 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate/Routing/Route->run()
+#9 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#10 C:/Users/USER/Desktop/SMASA/app/Http/Middleware/CheckModuleAccess.php(32): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App/Http/Middleware/CheckModuleAccess->handle(Object(Illuminate/Http/Request), Object(Closure), 'classes')
+#12 C:/Users/USER/Desktop/SMASA/vendor/mcamara/laravel-localization/src/Mcamara/LaravelLocalization/Middleware/LaravelLocalizationRedirectFilter.php(45): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#13 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Mcamara/LaravelLocalization/Middleware/LaravelLocalizationRedirectFilter->handle(Object(Illuminate/Http/Request), Object(Closure))
+#14 C:/Users/USER/Desktop/SMASA/vendor/mcamara/laravel-localization/src/Mcamara/LaravelLocalization/Middleware/LaravelLocalizationRoutes.php(30): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Mcamara/LaravelLocalization/Middleware/LaravelLocalizationRoutes->handle(Object(Illuminate/Http/Request), Object(Closure))
+#16 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#17 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#18 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(88): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#19 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#20 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#21 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#22 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#23 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#24 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#27 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(75): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#28 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#29 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#30 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#31 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#32 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#33 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#34 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#35 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#36 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#37 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#38 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#39 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#42 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#43 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#47 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#48 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#49 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#50 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#51 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#52 C:/Users/USER/Desktop/SMASA/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#53 C:/Users/USER/Desktop/SMASA/public/index.php(58): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#54 C:/Users/USER/Desktop/SMASA/server.php(25): require_once('C://Users//USER//D...')
+#55 {main}
+"} 
+[2026-08-12 00:44:50] local.INFO: Push subscription request received {"admin_session":false,"teacher_session":true,"endpoint":true,"public_key":true,"auth_token":true} 
+[2026-08-12 00:44:51] local.INFO: Push subscription saved successfully {"model":"Teacher","id":6} 

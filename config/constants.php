@@ -81,6 +81,50 @@ return [
             ['marks' => 3, 'label' => 'Works Independently', 'remark' => 'Excellent'],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | School Products <-> Class Types
+    |--------------------------------------------------------------------------
+    | A "School Product" (master code SCHOOL_PRODUCTS) is what a school is
+    | sold/enrolled under. Two of the four existing products are already
+    | fixed bundles of more than one underlying class type ("Idaad And
+    | Thanawi" = O-Level + A-Level, "Both Primary Theology and Secular" =
+    | Primary Theology + Primary Secular). The School Products merge
+    | feature (see App\Services\SchoolProductMergeService) generalises
+    | this: a school can now hold ANY combination of the products below
+    | at once, and every class type that any of its products maps to is
+    | unioned together wherever classes/subjects are listed.
+    |
+    | Keys here MUST exactly match the md_name of a SCHOOL_PRODUCTS
+    | master_datas row - this mirrors how the rest of the codebase
+    | already compares products (Helper::recordMdname() against these
+    | same literal strings in ClassandSubjectController/StudentController).
+    */
+    'product_class_types' => [
+        'Idaad And Thanawi' => ['O-Level', 'A-Level'],
+        'Primary Theology' => ['Primary Theology'],
+        'Primary Secular' => ['Primary Secular'],
+        'Both Primary Theology and Secular' => ['Primary Theology', 'Primary Secular'],
+    ],
+
+    // Which config('constants.options.*') master-code holds the class list
+    // for each class type.
+    'class_type_master_codes' => [
+        'O-Level' => 'O_LEVEL',
+        'A-Level' => 'A_LEVEL',
+        'Primary Theology' => 'PRIMARY_THEOLOGY_CLASSES',
+        'Primary Secular' => 'PRIMARY_SECULAR_CLASSES',
+    ],
+
+    // The custom_subjects.class_type / class_subjects.subject_type value
+    // each class type is stored under (matches CustomSubjectController::CLASS_TYPES).
+    'class_type_subject_types' => [
+        'O-Level' => 'idaad',
+        'A-Level' => 'thanawi',
+        'Primary Theology' => 'primary_theology',
+        'Primary Secular' => 'primary_secular',
+    ],
 ];
 
 

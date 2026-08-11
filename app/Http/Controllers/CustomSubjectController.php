@@ -41,11 +41,41 @@ class CustomSubjectController extends Controller
             ->get()
             ->groupBy('class_type');
 
+        // Only show the tab(s) for the category/categories this school has
+        // actually opted into (School Products), instead of every class
+        // type that exists in the system. A school with merged categories
+        // sees a tab per merged category; everyone else sees just their one.
+        $classTypes = self::classTypesForSchool($school);
+
         return view('Class.manage-custom-subjects', [
             'school'     => $school,
             'subjects'   => $subjects,
-            'classTypes' => self::CLASS_TYPES,
+            'classTypes' => $classTypes,
         ]);
+    }
+
+    /**
+     * This school's CLASS_TYPES entries, filtered down to only the
+     * category/categories it currently belongs to (Helper::schoolClassTypes()
+     * unions every merged School Product). Falls back to the full list only
+     * if the school somehow has no resolvable product at all, so the page
+     * never ends up completely empty.
+     */
+    public static function classTypesForSchool(School $school): array
+    {
+        $subjectTypeMap = config('constants.class_type_subject_types');
+        $schoolClassTypes = Helper::schoolClassTypes($school->id);
+
+        $allowedSubjectTypes = [];
+        foreach ($schoolClassTypes as $classType) {
+            if (isset($subjectTypeMap[$classType])) {
+                $allowedSubjectTypes[] = $subjectTypeMap[$classType];
+            }
+        }
+
+        $filtered = array_intersect_key(self::CLASS_TYPES, array_flip($allowedSubjectTypes));
+
+        return $filtered ?: self::CLASS_TYPES;
     }
 
     public function store(Request $request)
@@ -56,8 +86,10 @@ class CustomSubjectController extends Controller
             return response()->json(['success' => false, 'message' => 'Custom subjects are not enabled for your school.'], 403);
         }
 
+        $allowedClassTypes = array_keys(self::classTypesForSchool($school));
+
         $request->validate([
-            'class_type'   => 'required|in:' . implode(',', array_keys(self::CLASS_TYPES)),
+            'class_type'   => 'required|in:' . implode(',', $allowedClassTypes),
             'subject_name' => 'required|string|max:255',
             'subject_code' => 'nullable|string|max:50',
         ]);

@@ -306,15 +306,22 @@ class StudentController extends Controller
         $primaryTheologyClasses = collect();
         $primarySecularClasses = collect();
 
-        if ($schoolProduct === 'Idaad And Thanawi') {
+        // Union of every class type across every School Product this
+        // school currently belongs to, so a school with merged categories
+        // (see SchoolProductMergeService) can enroll a student into a
+        // class from any of them here too, not just its original one.
+        $classTypes = Helper::schoolClassTypes($schoolId);
+
+        if (in_array('A-Level', $classTypes, true)) {
             $aLevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
+        }
+        if (in_array('O-Level', $classTypes, true)) {
             $oLevel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
-        } elseif ($schoolProduct === 'Primary Theology') {
+        }
+        if (in_array('Primary Theology', $classTypes, true)) {
             $primaryTheologyClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
-        } elseif ($schoolProduct === 'Primary Secular') {
-            $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
-        } elseif ($schoolProduct === 'Both Primary Theology and Secular') {
-            $primaryTheologyClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
+        }
+        if (in_array('Primary Secular', $classTypes, true)) {
             $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
         }
 

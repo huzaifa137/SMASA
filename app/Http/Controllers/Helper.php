@@ -298,6 +298,71 @@ class Helper extends Controller
         return $school_product;
     }
 
+    /**
+     * All School Product md_ids the given (or currently logged-in) school
+     * currently belongs to - one for a normal school, more than one for a
+     * school with merged categories. Falls back to the legacy single
+     * schools.school_product value if the school_products pivot table
+     * somehow has no rows for this school yet.
+     */
+    public static function schoolProductIds($schoolId = null)
+    {
+        $schoolId = $schoolId ?? self::requireSchool();
+
+        $ids = DB::table('school_products')
+            ->where('school_id', $schoolId)
+            ->pluck('product_md_id')
+            ->all();
+
+        if (!empty($ids)) {
+            return array_map('intval', $ids);
+        }
+
+        $legacy = DB::table('schools')->where('id', $schoolId)->value('school_product');
+
+        return $legacy ? [(int) $legacy] : [];
+    }
+
+    /**
+     * Display names of every product the school belongs to, e.g.
+     * ['Idaad And Thanawi', 'Primary Theology'] for a merged school.
+     */
+    public static function schoolProductNames($schoolId = null)
+    {
+        $ids = self::schoolProductIds($schoolId);
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        return DB::table('master_datas')
+            ->whereIn('md_id', $ids)
+            ->pluck('md_name')
+            ->all();
+    }
+
+    /**
+     * The full set of class types (e.g. ['O-Level', 'A-Level', 'Primary
+     * Theology']) covered by everything this school is currently enrolled
+     * in, deduplicated across however many products have been merged in.
+     * This is the single source of truth create-class, add-student, and
+     * custom-subjects should all read from instead of switching on a
+     * single school_product string.
+     */
+    public static function schoolClassTypes($schoolId = null)
+    {
+        $map = config('constants.product_class_types');
+        $classTypes = [];
+
+        foreach (self::schoolProductNames($schoolId) as $productName) {
+            foreach ($map[$productName] ?? [] as $classType) {
+                $classTypes[$classType] = true;
+            }
+        }
+
+        return array_keys($classTypes);
+    }
+
     public static function schoolIDFromHouseRegistrationCode($house_id)
     {
         // using registration code

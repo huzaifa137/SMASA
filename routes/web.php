@@ -7,6 +7,7 @@ use App\Http\Controllers\ItebController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SchoolProductController;
 use App\Http\Controllers\SchoolsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -273,6 +274,15 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/custom-subjects', 'store')->name('school.custom-subjects.store');
         Route::put('/custom-subjects/{subject}', 'update')->name('school.custom-subjects.update');
         Route::delete('/custom-subjects/{subject}', 'destroy')->name('school.custom-subjects.destroy');
+    });
+
+    // School Products merge/split (a school belonging to more than one
+    // School Product category at once).
+    Route::controller(SchoolProductController::class)->middleware(['module:classes'])->group(function () {
+        Route::get('/school-products', 'manage')->name('school.products.manage');
+        Route::post('/school-products/merge', 'merge')->name('school.products.merge');
+        Route::post('/school-products/split/preview', 'previewSplit')->name('school.products.split.preview');
+        Route::post('/school-products/split', 'split')->name('school.products.split');
     });
 
     Route::controller(ClassandSubjectController::class)->middleware(['module:classes'])->group(function () {
