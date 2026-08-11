@@ -78,6 +78,30 @@
                 </div>
             @endif
 
+            @if ($customSubjectsSchool)
+                <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <a href="{{ route('school.products.manage') }}"
+                        class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
+                            display: flex;
+                            padding: 12px 20px;
+                            text-decoration: none;
+                            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+                            color: #fff;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 15px;
+                            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+                            transition: all .3s ease;
+                            border: 1px solid rgba(255,255,255,.15);
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 28px rgba(14,165,233,.45)';"
+                        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(14,165,233,.35)';">
+                        <i class="fas fa-layer-group me-2"></i>&nbsp;
+                        <span>Manage School Products</span>
+                    </a>
+                </div>
+            @endif
+
             @if(PermissionHelper::canFeature('assign_class_teacher') || PermissionHelper::canFeature('assign_subject_teachers'))
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
                     <a href="{{ route('school.assign-teachers') }}"

@@ -535,7 +535,7 @@ class UserRightsController extends Controller
         // If the admin didn't type a password, generate one and hand it
         // back in the response so they can share it with the teacher.
         $passwordSupplied = $request->filled('password');
-        $plainPassword = $passwordSupplied ? $validated['password'] : Str::random(10);
+        $plainPassword = $passwordSupplied ? $validated['password'] : 123456789;
 
         $teacher = Teacher::create([
             'school_id' => $school->id,

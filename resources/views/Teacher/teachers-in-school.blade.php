@@ -231,30 +231,31 @@ $controller = new Controller();
             }
         }
 
-/* Alternative - keeps buttons inline but centered */
-.card-header {
-    flex-wrap: wrap;
-    gap: 10px;
-}
+        /* Alternative - keeps buttons inline but centered */
+        .card-header {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
 
-.card-header .d-flex {
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-}
+        .card-header .d-flex {
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
 
-@media (max-width: 576px) {
-    .card-header .d-flex a,
-    .card-header .d-flex .btn {
-        font-size: 13px;
-        padding: 6px 12px;
-    }
-    
-    .card-header .d-flex a i,
-    .card-header .d-flex .btn i {
-        margin-right: 4px !important;
-    }
-}
+        @media (max-width: 576px) {
+
+            .card-header .d-flex a,
+            .card-header .d-flex .btn {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+
+            .card-header .d-flex a i,
+            .card-header .d-flex .btn i {
+                margin-right: 4px !important;
+            }
+        }
     </style>
 @endsection
 
@@ -282,20 +283,77 @@ $controller = new Controller();
                             @endif
                         </div>
                     </div>
-                    @if(PermissionHelper::canFeature('delete_teacher'))
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" id="teacher-bulk-bar"
-                            style="display:none !important;background:#fef2f2;border-bottom:1px solid #fecaca;">
-                            <span style="font-size:.85rem;font-weight:600;color:#dc2626;">
-                                <span id="teacher-selected-count">0</span> selected
-                            </span>
-                            <button type="button" class="btn btn-sm btn-danger" id="btn-delete-selected-teachers">
-                                <i class="fas fa-trash"></i> Delete Selected
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-teacher-selection">
-                                Clear
-                            </button>
-                        </div>
+
+                    @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
+                        @if(PermissionHelper::canFeature('delete_teacher'))
+                            <div id="teacher-bulk-bar" class="teacher-bulk-bar" style="display:none;">
+
+                                <div class="teacher-bulk-content">
+
+                                    <span class="teacher-selected-text">
+                                        <span id="teacher-selected-count">0</span> selected
+                                    </span>
+
+                                    <button type="button" class="btn btn-sm btn-danger" id="btn-delete-selected-teachers">
+                                        <i class="fas fa-trash me-1"></i>
+                                        Delete Selected
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-teacher-selection">
+                                        Clear
+                                    </button>
+
+                                </div>
+                            </div>
+                        @endif
                     @endif
+
+                    <style>
+                        /* Full-width teacher bulk selection bar */
+                        .teacher-bulk-bar {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box;
+                            background: #fef2f2;
+                            border-bottom: 1px solid #fecaca;
+                        }
+
+                        /* Keep the contents nicely spaced */
+                        .teacher-bulk-content {
+                            width: 100%;
+                            min-height: 58px;
+                            box-sizing: border-box;
+
+                            display: flex;
+                            align-items: center;
+                            gap: 14px;
+
+                            padding: 12px 20px;
+                        }
+
+                        /* Selected count */
+                        .teacher-selected-text {
+                            font-size: .85rem;
+                            font-weight: 600;
+                            color: #dc2626;
+                            margin-right: 4px;
+                        }
+
+                        /* Buttons */
+                        #btn-delete-selected-teachers,
+                        #btn-clear-teacher-selection {
+                            padding: 7px 14px;
+                        }
+
+                        /* Make absolutely sure the bar spans the entire card */
+                        .card>.teacher-bulk-bar {
+                            width: 100% !important;
+                            max-width: none !important;
+                            flex: 0 0 100%;
+                        }
+                    </style>
+
+
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped card-table table-vcenter text-nowrap mb-0" id="teachersTable">
@@ -323,7 +381,8 @@ $controller = new Controller();
                                         <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
                                             @if(PermissionHelper::canFeature('delete_teacher'))
                                                 <td style="width:1px;">
-                                                    <input type="checkbox" class="teacher-select-checkbox" value="{{ $teacher->id }}">
+                                                    <input type="checkbox" class="teacher-select-checkbox"
+                                                        value="{{ $teacher->id }}">
                                                 </td>
                                             @endif
                                             <td style="width:1px;">{{ $key + 1 }}</td>
@@ -404,7 +463,8 @@ $controller = new Controller();
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="{{ PermissionHelper::canFeature('delete_teacher') ? 9 : 8 }}" class="text-center py-5">
+                                            <td colspan="{{ PermissionHelper::canFeature('delete_teacher') ? 9 : 8 }}"
+                                                class="text-center py-5">
                                                 <div class="text-center">
                                                     <div class="mb-3">
                                                         <i class="fas fa-users-slash fa-4x text-muted"></i>
@@ -467,8 +527,8 @@ $controller = new Controller();
             </div>
         </div>
     </div>
-                </div>
-        </div>
+    </div>
+    </div>
     </div>
 @endsection
 
@@ -622,9 +682,9 @@ $controller = new Controller();
         $(document).on('click', '.btn-view-teacher', function () {
             const teacherId = $(this).data('id');
             $('#modalContent').html(`
-                    <div class="d-flex justify-content-center py-5">
-                        <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
-                    </div>`);
+                            <div class="d-flex justify-content-center py-5">
+                                <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+                            </div>`);
             $('#teacherProfileModal').modal('show');
 
             $.ajax({
@@ -633,10 +693,10 @@ $controller = new Controller();
                 success: function (response) { displayTeacherProfile(response); },
                 error: function () {
                     $('#modalContent').html(`
-                            <div class="text-center py-5">
-                                <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-                                <p class="text-danger">Error loading teacher information.</p>
-                            </div>`);
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                                        <p class="text-danger">Error loading teacher information.</p>
+                                    </div>`);
                 }
             });
         });
@@ -754,25 +814,25 @@ $controller = new Controller();
 
         function displayTeacherProfile(teacher) {
             const profileHtml = `
-                    <div class="container-fluid p-4">
-                        <div class="row">
-                            <div class="col-lg-4 mb-4">
-                                <div class="card border-0 shadow-sm rounded-4 h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="position-relative d-inline-block mb-3">
-                                            <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                                class="rounded-circle shadow"
-                                                style="width:180px;height:180px;object-fit:cover;"
-                                                alt="Teacher Profile">
+                            <div class="container-fluid p-4">
+                                <div class="row">
+                                    <div class="col-lg-4 mb-4">
+                                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                                            <div class="card-body text-center p-4">
+                                                <div class="position-relative d-inline-block mb-3">
+                                                    <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
+                                                        class="rounded-circle shadow"
+                                                        style="width:180px;height:180px;object-fit:cover;"
+                                                        alt="Teacher Profile">
+                                                </div>
+                                                <h4 class="fw-bold mb-1">
+                                                    ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
+                                                </h4>
+                                            </div>
                                         </div>
-                                        <h4 class="fw-bold mb-1">
-                                            ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
-                                        </h4>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>`;
+                            </div>`;
             $('#modalContent').html(profileHtml);
         }
 

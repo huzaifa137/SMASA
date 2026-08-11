@@ -94,7 +94,7 @@ class SchoolProductController extends Controller
         // so it's restricted to TechSate admins rather than every school
         // admin who can merge. Adjust this to match your own role model
         // if school-level admins should also be allowed to do this.
-        if (!Helper::isAdminAllowed()) {
+        if (!Helper::isTechSateAdminOrSchoolAdminsAlone()) {
             abort(403, 'Only a TechSate administrator can split merged categories apart.');
         }
 

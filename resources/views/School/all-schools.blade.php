@@ -130,21 +130,22 @@ use App\Http\Controllers\Helper;
                                                 <i class="fas fa-edit"></i>
                                             </a>
 
-                                            @if ($customSubjectsActive)
-                                                <span class="btn btn-sm btn-outline-success disabled"
-                                                    title="This school has switched to its own subjects" style="margin-right:6px;">
-                                                    <i class="fas fa-book"></i> Custom
-                                                </span>
-                                            @else
-                                                <a href="javascript:void(0);"
-                                                    class="btn btn-sm {{ $customSubjectsEnabled ? 'btn-outline-warning' : 'btn-outline-dark' }} btn-toggle-custom-subjects"
-                                                    data-school-id="{{ $schoolID }}"
-                                                    data-enabled="{{ $customSubjectsEnabled ? '1' : '0' }}"
-                                                    title="{{ $customSubjectsEnabled ? 'Lock custom subjects option' : 'Unlock custom subjects option for this school' }}"
-                                                    style="margin-right:6px;">
-                                                    <i class="fas fa-book-open"></i>
-                                                </a>
-                                            @endif
+                                           @if ($customSubjectsActive)
+    <span class="btn btn-sm disabled"
+        style="margin-right:6px; background-color: #006400; color: white; border-color: #006400;"
+        title="This school has switched to its own subjects">
+       <i class="fas fa-sliders-h"></i> Custom
+    </span>
+@else
+    <a href="javascript:void(0);"
+        class="btn btn-sm {{ $customSubjectsEnabled ? 'btn-warning' : 'btn-dark' }} btn-toggle-custom-subjects"
+        data-school-id="{{ $schoolID }}"
+        data-enabled="{{ $customSubjectsEnabled ? '1' : '0' }}"
+        title="{{ $customSubjectsEnabled ? 'Lock custom subjects option' : 'Unlock custom subjects option for this school' }}"
+        style="margin-right:6px;">
+        <i class="fas fa-cogs"></i>
+    </a>
+@endif
 
                                             <a href="javascript:void(0);"
                                                 class="btn btn-sm btn-outline-danger btn-delete disabled"
