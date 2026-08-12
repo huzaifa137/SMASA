@@ -1159,21 +1159,27 @@
                             <span class="school-badge">{{ $schoolCode }}</span>
                         </h1>
                     </div>
-                    <div class="school-meta">
-                        <div style="display:flex;flex-wrap:nowrap;gap:12px;justify-content:flex-start;overflow-x:auto;margin-top:1em;">
-                            @if($schoolCategory !== '—')
-                                <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
-                                    {{ $schoolCategory }}</span>
-                            @endif
-                            <span style="white-space:nowrap;"><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
-                            @if($currentTerm !== '—')
-                                <span style="white-space:nowrap;"><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
-                            @endif
-                        </div>
-                        <div>
-                            <span><i class="fas fa-clock"></i> {{ $currentDate->format('l, d M Y') }}</span>
-                        </div>
-                    </div>
+<div class="school-meta">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;align-items:center;margin-top:1em;width:100%;" class="school-meta-items">
+        @if($schoolCategory !== '—')
+            <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
+                {{ $schoolCategory }}</span>
+        @endif
+        <span style="white-space:nowrap;"><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
+        @if($currentTerm !== '—')
+            <span style="white-space:nowrap;"><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
+        @endif
+        <span style="white-space:nowrap;"><i class="fas fa-clock"></i> {{ $currentDate->format('l, d M Y') }}</span>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        .school-meta-items {
+            justify-content: center !important;
+        }
+    }
+</style>
                 </div>
                 <div class="school-actions">
                     <a href="{{ url('/school-individual-profile/' . Session('LoggedSchool')) ?? '#' }}"
