@@ -21,24 +21,53 @@ class StudentConsolidationController extends Controller
      * Main "Consolidate Students" page: stats + suggested duplicate
      * groups + a manual search-and-link tool + a list of already
      * consolidated students.
+     *
+     * Query params (all optional, all via GET so the view stays bookmarkable):
+     *   class  - filter Suggested Matches to a "senior" (class) value
+     *   stream - filter Suggested Matches to a stream value
+     *   q      - search box for the Consolidated Students list (name / admission number)
      */
-    public function index()
+    public function index(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_students');
 
         $schoolId = Helper::requireSchool();
 
-        $stats = $this->service->stats($schoolId);
-        $suggestions = $this->service->findSuggestions($schoolId);
+        $classFilter = $request->get('class') ?: null;
+        $streamFilter = $request->get('stream') ?: null;
+        $consolidatedSearch = trim((string) $request->get('q'));
 
-        $consolidated = Student::where('school_id', $schoolId)
+        $stats = $this->service->stats($schoolId);
+        $suggestions = $this->service->findSuggestions($schoolId, $classFilter, $streamFilter);
+        $classStreamOptions = $this->service->classStreamOptions($schoolId);
+
+        $consolidatedQuery = Student::where('school_id', $schoolId)
             ->whereNull('linked_student_id')
             ->has('linkedRecords')
-            ->with('linkedRecords')
-            ->orderByDesc('id')
-            ->paginate(10, ['*'], 'consolidated_page');
+            ->with('linkedRecords');
 
-        return view('student.consolidate-students', compact('stats', 'suggestions', 'consolidated'));
+        if ($consolidatedSearch !== '') {
+            $consolidatedQuery->where(function ($q) use ($consolidatedSearch) {
+                $q->where('firstname', 'like', "%{$consolidatedSearch}%")
+                    ->orWhere('lastname', 'like', "%{$consolidatedSearch}%")
+                    ->orWhere('admission_number', 'like', "%{$consolidatedSearch}%")
+                    ->orWhere('registration_number', 'like', "%{$consolidatedSearch}%")
+                    ->orWhereHas('linkedRecords', function ($lq) use ($consolidatedSearch) {
+                        $lq->where('admission_number', 'like', "%{$consolidatedSearch}%")
+                            ->orWhere('registration_number', 'like', "%{$consolidatedSearch}%");
+                    });
+            });
+        }
+
+        $consolidated = $consolidatedQuery
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'consolidated_page')
+            ->withQueryString();
+
+        return view('student.consolidate-students', compact(
+            'stats', 'suggestions', 'consolidated', 'classStreamOptions',
+            'classFilter', 'streamFilter', 'consolidatedSearch'
+        ));
     }
 
     /**
@@ -73,6 +102,8 @@ class StudentConsolidationController extends Controller
             ->map(function (Student $s) {
                 return [
                     'id' => $s->id,
+                    'firstname' => $s->firstname,
+                    'lastname' => $s->lastname,
                     'name' => trim($s->firstname . ' ' . $s->lastname),
                     'class' => Helper::recordMdname($s->senior) ?: $s->senior,
                     'stream' => $s->stream,
@@ -132,6 +163,66 @@ class StudentConsolidationController extends Controller
     }
 
     /**
+     * Delete exact duplicate enrollment row(s) — same child, same class,
+     * same stream — keeping exactly one. Refuses to delete any row that
+     * already has academic/financial history attached, since that would
+     * silently strand marks, attendance, or fee records.
+     */
+    public function deleteDuplicates(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('add_student');
+
+        $request->validate([
+            'keep_student_id' => 'required|integer',
+            'delete_student_ids' => 'required|array|min:1',
+            'delete_student_ids.*' => 'integer|different:keep_student_id',
+        ]);
+
+        $schoolId = Helper::requireSchool();
+
+        $keep = Student::where('school_id', $schoolId)->findOrFail($request->keep_student_id);
+        $toDelete = Student::where('school_id', $schoolId)
+            ->whereIn('id', $request->delete_student_ids)
+            ->get();
+
+        if ($toDelete->isEmpty()) {
+            return response()->json(['status' => false, 'message' => 'Nothing to delete.'], 422);
+        }
+
+        // Refuse to delete anything that already has real data attached —
+        // this endpoint is only for genuinely empty accidental duplicates.
+        foreach ($toDelete as $dup) {
+            if ($this->service->hasRelatedRecords($dup)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "{$dup->firstname} {$dup->lastname}'s duplicate record already has exam, attendance or fee data attached, so it can't be safely deleted. Use \"Link\" instead, or clear that data first.",
+                ], 422);
+            }
+        }
+
+        DB::transaction(function () use ($keep, $toDelete) {
+            $ids = $toDelete->pluck('id');
+
+            // If any duplicate being removed was itself a primary with linked
+            // programs, re-point those children to the record we're keeping.
+            Student::whereIn('linked_student_id', $ids)->update(['linked_student_id' => $keep->id]);
+
+            DB::table('student_match_dismissals')
+                ->where(function ($q) use ($ids) {
+                    $q->whereIn('student_id_one', $ids)->orWhereIn('student_id_two', $ids);
+                })->delete();
+
+            Student::whereIn('id', $ids)->delete();
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Duplicate record(s) removed. ' . $keep->firstname . ' ' . $keep->lastname . ' is now the only record for that class.',
+            'deleted_count' => $toDelete->count(),
+        ]);
+    }
+
+    /**
      * Undo a consolidation — the record goes back to being counted as its
      * own separate student.
      */
@@ -150,30 +241,42 @@ class StudentConsolidationController extends Controller
     }
 
     /**
-     * Mark a suggested pair as "not the same student" so it stops
-     * appearing in future suggestions.
+     * Mark a suggested group as "not the same student" so it stops
+     * appearing in future suggestions. Accepts either the classic
+     * {student_id_one, student_id_two} pair, or {student_ids: [...]}" for
+     * groups with more than two members — every pairwise combination
+     * within the group is recorded as dismissed.
      */
     public function dismiss(Request $request)
     {
         PermissionHelper::denyUnlessFeature('add_student');
 
-        $request->validate([
-            'student_id_one' => 'required|integer',
-            'student_id_two' => 'required|integer|different:student_id_one',
-        ]);
+        $ids = $request->get('student_ids');
+        if (!is_array($ids) || count($ids) < 2) {
+            $request->validate([
+                'student_id_one' => 'required|integer',
+                'student_id_two' => 'required|integer|different:student_id_one',
+            ]);
+            $ids = [$request->student_id_one, $request->student_id_two];
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (count($ids) < 2) {
+            return response()->json(['status' => false, 'message' => 'Pick at least two records to dismiss.'], 422);
+        }
 
         $schoolId = Helper::requireSchool();
-        [$a, $b] = [min($request->student_id_one, $request->student_id_two), max($request->student_id_one, $request->student_id_two)];
+        $dismissedBy = session('LoggedTeacher') ?? session('LoggedAdmin');
 
-        DB::table('student_match_dismissals')->updateOrInsert(
-            ['student_id_one' => $a, 'student_id_two' => $b],
-            [
-                'school_id' => $schoolId,
-                'dismissed_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
+        for ($i = 0; $i < count($ids); $i++) {
+            for ($j = $i + 1; $j < count($ids); $j++) {
+                [$a, $b] = [min($ids[$i], $ids[$j]), max($ids[$i], $ids[$j])];
+                DB::table('student_match_dismissals')->updateOrInsert(
+                    ['student_id_one' => $a, 'student_id_two' => $b],
+                    ['school_id' => $schoolId, 'dismissed_by' => $dismissedBy, 'updated_at' => now(), 'created_at' => now()]
+                );
+            }
+        }
 
         return response()->json(['status' => true, 'message' => 'Got it — these will no longer be suggested as a match.']);
     }

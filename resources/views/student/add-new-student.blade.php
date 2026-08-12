@@ -306,6 +306,9 @@ use App\Http\Controllers\Helper;
                                     <span id="linkExistingPickedText"></span>
                                     <i class="fas fa-xmark" id="linkExistingClear" style="cursor:pointer;margin-left:auto;"></i>
                                 </div>
+                                <div id="linkExistingAutofillNote" style="display:none;font-size:.76rem;color:#166534;margin-top:6px;">
+                                    <i class="fas fa-circle-info"></i> First name, last name and gender were filled in from that record — feel free to edit if needed.
+                                </div>
                                 <input type="hidden" name="linked_student_id" id="linked_student_id" value="">
                             </div>
 
@@ -350,12 +353,12 @@ use App\Http\Controllers\Helper;
                                 <!-- Migration-based fields -->
                                 <div class="form-group">
                                     <label>First Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="firstname" class="form-control">
+                                    <input type="text" name="firstname" id="firstname" class="form-control">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Last Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="lastname" class="form-control">
+                                    <input type="text" name="lastname" id="lastname" class="form-control">
                                 </div>
 
                                 <div class="form-group">
@@ -375,7 +378,7 @@ use App\Http\Controllers\Helper;
 
                                 <div class="form-group">
                                     <label>Gender <span class="text-danger">*</span></label>
-                                    <select name="gender" class="form-control select2">
+                                    <select name="gender" id="gender" class="form-control select2">
                                         <option value="">-- Select --</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
@@ -1048,6 +1051,10 @@ use App\Http\Controllers\Helper;
                 let linkSearchTimer = null;
                 const $linkSearch = $('#linkExistingSearch');
                 const $linkResults = $('#linkExistingResults');
+                const $firstname = $('#firstname');
+                const $lastname = $('#lastname');
+                const $gender = $('#gender');
+                const autoFillStyle = { background: '#f0fdf4', borderColor: '#86efac' };
 
                 $linkSearch.on('input', function () {
                     clearTimeout(linkSearchTimer);
@@ -1071,6 +1078,13 @@ use App\Http\Controllers\Helper;
                                         $('#linkExistingPicked').css('display', 'flex');
                                         $linkResults.hide();
                                         $linkSearch.val('');
+
+                                        // Auto-fill from the existing record — same physical
+                                        // student, so these details are already known.
+                                        if (s.firstname) $firstname.val(s.firstname).css(autoFillStyle);
+                                        if (s.lastname) $lastname.val(s.lastname).css(autoFillStyle);
+                                        if (s.gender) $gender.val(s.gender).trigger('change').css(autoFillStyle);
+                                        $('#linkExistingAutofillNote').show();
                                     });
                                 $linkResults.append($item);
                             });
@@ -1083,6 +1097,13 @@ use App\Http\Controllers\Helper;
                     pickedLinkedStudent = null;
                     $('#linked_student_id').val('');
                     $('#linkExistingPicked').hide();
+                    $('#linkExistingAutofillNote').hide();
+
+                    // Unlock the fields again — leave whatever values are there so
+                    // nothing typed by the admin gets wiped, just remove the auto-fill highlight.
+                    $firstname.css({ background: '', borderColor: '' });
+                    $lastname.css({ background: '', borderColor: '' });
+                    $gender.css({ background: '', borderColor: '' });
                 });
 
                 $(document).on('click', function (e) {

@@ -8,21 +8,56 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Finds enrollment rows in the `students` table that most likely belong
- * to the same physical child (e.g. one row in a Theology class, another
- * in a Secular class) so an admin can review and link them together.
+ * to the same physical child, and separates two very different cases:
+ *
+ *  - type = 'duplicate'      Same child, same class, same stream — this is
+ *                             a data-entry accident (double submit / re-import)
+ *                             and the extra row(s) should be DELETED.
+ *  - type = 'multi_program'  Same child, different class (e.g. Theology +
+ *                             Secular) — this is a legitimate double
+ *                             enrollment and the rows should be LINKED so
+ *                             the child is counted once school-wide.
  */
 class StudentConsolidationService
 {
     /**
-     * Build a list of suggested duplicate groups for a school.
-     * Each group = ['key' => ..., 'confidence' => 'high|medium', 'students' => Collection<Student>]
+     * Tables (besides `students` itself) that may hold academic/financial
+     * history tied to a student. Used to block deleting a record that
+     * actually has data attached to it — deleting should only ever remove
+     * genuinely empty accidental duplicates.
+     *
+     * 'column' => which column on that table holds the reference
+     * 'via'    => whether that column stores the numeric students.id or the registration_number
      */
-    public function findSuggestions(int $schoolId): Collection
+    protected const RELATED_TABLES = [
+        ['table' => 'examination_marks', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'student_attendances', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'student_fee_allocations', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'fee_payments', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'student_id_cards', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'student_exam_summaries', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'marks', 'column' => 'student_id', 'via' => 'registration_number'],
+        ['table' => 'student_results', 'column' => 'student_id', 'via' => 'registration_number'],
+    ];
+
+    /**
+     * Build the list of suggested groups for a school. Optionally narrow to
+     * a specific class ("senior") and/or stream — a group is included if
+     * ANY of its students belong to that class/stream (a multi_program
+     * group naturally spans two classes).
+     *
+     * Each group = [
+     *   'key' => string,
+     *   'type' => 'duplicate' | 'multi_program',
+     *   'confidence' => 'high' | 'medium',
+     *   'reason' => string,
+     *   'students' => Collection<Student>,
+     * ]
+     */
+    public function findSuggestions(int $schoolId, ?string $classFilter = null, ?string $streamFilter = null): Collection
     {
         // Only look at rows that are not already consolidated (i.e. not
-        // already marked as someone's linked/duplicate record). A row
-        // that is already a primary with children is still eligible to
-        // receive more matches.
+        // already marked as someone's linked/duplicate record).
         $students = Student::where('school_id', $schoolId)
             ->whereNull('linked_student_id')
             ->get();
@@ -32,35 +67,19 @@ class StudentConsolidationService
         }
 
         $dismissed = $this->dismissedPairs($schoolId);
-
         $groups = collect();
 
-        // High confidence: same normalized name + same date of birth (when present) + same gender.
+        // ── Pass 1: same name + same date of birth + same gender (high confidence) ──
         $byNameDob = $students->groupBy(function (Student $s) {
             return $this->normalizeName($s) . '|' . ($s->date_of_birth ?: '') . '|' . strtolower((string) $s->gender);
         });
 
         foreach ($byNameDob as $key => $bucket) {
-            if ($bucket->count() < 2) {
-                continue;
-            }
-            $bucket = $this->stripDismissed($bucket, $dismissed);
-            if ($bucket->count() < 2) {
-                continue;
-            }
-            $confidence = $bucket->first()->date_of_birth ? 'high' : 'medium';
-            $groups->push([
-                'key' => 'name-dob-' . $key,
-                'confidence' => $confidence,
-                'reason' => $bucket->first()->date_of_birth
-                    ? 'Same name, date of birth and gender'
-                    : 'Same name and gender',
-                'students' => $bucket->sortBy('id')->values(),
-            ]);
+            $this->pushBucketGroups($groups, $bucket, $dismissed, $key, !!$bucket->first()?->date_of_birth);
         }
 
-        // Medium confidence: same normalized name + same guardian phone (catches
-        // cases where date of birth wasn't captured on one of the enrollments).
+        // ── Pass 2: same name + same guardian phone (medium confidence), for
+        // whatever wasn't already caught by pass 1 ──
         $alreadyGrouped = $groups->flatMap(fn ($g) => $g['students']->pluck('id'))->unique();
 
         $byNamePhone = $students
@@ -71,22 +90,67 @@ class StudentConsolidationService
             });
 
         foreach ($byNamePhone as $key => $bucket) {
-            if ($bucket->count() < 2) {
-                continue;
-            }
-            $bucket = $this->stripDismissed($bucket, $dismissed);
-            if ($bucket->count() < 2) {
-                continue;
-            }
-            $groups->push([
-                'key' => 'name-phone-' . $key,
-                'confidence' => 'medium',
-                'reason' => 'Same name and guardian contact number',
-                'students' => $bucket->sortBy('id')->values(),
-            ]);
+            $this->pushBucketGroups($groups, $bucket, $dismissed, $key, false);
         }
 
-        return $groups->sortByDesc(fn ($g) => $g['confidence'] === 'high' ? 1 : 0)->values();
+        $groups = $groups->sortByDesc(fn ($g) => $g['confidence'] === 'high' ? 1 : 0)->values();
+
+        if ($classFilter || $streamFilter) {
+            $groups = $groups->filter(function ($g) use ($classFilter, $streamFilter) {
+                return $g['students']->contains(function (Student $s) use ($classFilter, $streamFilter) {
+                    $classOk = !$classFilter || (string) $s->senior === (string) $classFilter;
+                    $streamOk = !$streamFilter || (string) $s->stream === (string) $streamFilter;
+                    return $classOk && $streamOk;
+                });
+            })->values();
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Splits one raw name-match bucket into:
+     *  - a 'duplicate' group per (class, stream) that has more than one row
+     *  - one 'multi_program' group across the de-duplicated representatives,
+     *    if the child spans more than one class
+     */
+    protected function pushBucketGroups(Collection &$groups, Collection $bucket, Collection $dismissed, string $key, bool $hasDob): void
+    {
+        if ($bucket->count() < 2) {
+            return;
+        }
+
+        $bucket = $this->stripDismissed($bucket, $dismissed);
+        if ($bucket->count() < 2) {
+            return;
+        }
+
+        $confidence = $hasDob ? 'high' : 'medium';
+        $byClassStream = $bucket->groupBy(fn (Student $s) => $s->senior . '|' . $s->stream);
+        $representatives = collect();
+
+        foreach ($byClassStream as $csKey => $csBucket) {
+            if ($csBucket->count() > 1) {
+                $groups->push([
+                    'key' => 'dup-' . $key . '-' . $csKey,
+                    'type' => 'duplicate',
+                    'confidence' => $confidence,
+                    'reason' => 'Appears ' . $csBucket->count() . ' times in the same class and stream — likely a duplicate entry',
+                    'students' => $csBucket->sortBy('id')->values(),
+                ]);
+            }
+            $representatives->push($csBucket->sortBy('id')->first());
+        }
+
+        if ($representatives->count() > 1) {
+            $groups->push([
+                'key' => 'multi-' . $key,
+                'type' => 'multi_program',
+                'confidence' => $confidence,
+                'reason' => $hasDob ? 'Same name, date of birth and gender' : 'Same name and guardian contact number',
+                'students' => $representatives->sortBy('id')->values(),
+            ]);
+        }
     }
 
     /**
@@ -105,6 +169,40 @@ class StudentConsolidationService
             'multi_program_students' => $consolidated,
             'pending_review' => $this->findSuggestions($schoolId)->sum(fn ($g) => $g['students']->count()),
         ];
+    }
+
+    /**
+     * Distinct (class, stream) combinations actually present among a
+     * school's students — used to populate the filter dropdowns.
+     */
+    public function classStreamOptions(int $schoolId): Collection
+    {
+        return Student::where('school_id', $schoolId)
+            ->select('senior', 'stream')
+            ->whereNotNull('senior')
+            ->distinct()
+            ->orderBy('senior')
+            ->get();
+    }
+
+    /**
+     * True if a student has any academic/financial history attached —
+     * used to refuse deleting a record that isn't actually an empty
+     * accidental duplicate.
+     */
+    public function hasRelatedRecords(Student $student): bool
+    {
+        foreach (self::RELATED_TABLES as $ref) {
+            $value = $ref['via'] === 'id' ? $student->id : $student->registration_number;
+            if (empty($value)) {
+                continue;
+            }
+            $exists = DB::table($ref['table'])->where($ref['column'], $value)->exists();
+            if ($exists) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function normalizeName(Student $s): string
