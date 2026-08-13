@@ -489,6 +489,116 @@ use App\Http\Controllers\Helper;
             background: #ebebeb;
         }
 
+        /* ══════════════════════════════════════════════════════
+           DESIGN TEMPLATE GALLERY
+        ══════════════════════════════════════════════════════ */
+        .cp-template-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .65rem;
+            margin-bottom: .3rem;
+        }
+
+        .cp-template-card {
+            border: 2px solid #e6e6ef;
+            border-radius: 12px;
+            padding: .55rem .55rem .7rem;
+            cursor: pointer;
+            transition: all .15s ease;
+            background: #fff;
+            text-align: center;
+        }
+
+        .cp-template-card:hover {
+            border-color: #c9c7f5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(44,41,202,.1);
+        }
+
+        .cp-template-card.selected {
+            border-color: var(--brand, #2f2ccb);
+            background: rgba(47,44,203,.045);
+            box-shadow: 0 6px 16px rgba(44,41,202,.14);
+        }
+
+        .cp-tpl-thumb {
+            width: 100%;
+            height: 78px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f4f4f8;
+            border: 1px solid #eaeaf0;
+            margin-bottom: .4rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cp-tpl-name {
+            font-size: .74rem;
+            font-weight: 800;
+            color: #222;
+        }
+
+        .cp-tpl-desc {
+            font-size: .6rem;
+            color: #999;
+            line-height: 1.3;
+            margin-top: .1rem;
+        }
+
+        .cp-tpl-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--brand, #2f2ccb);
+            color: #fff;
+            font-size: .55rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 20px;
+            display: none;
+        }
+
+        .cp-template-card.selected .cp-tpl-badge { display: block; }
+
+        /* ── Classic thumb: centred header, gold band, ornate corners ── */
+        .cp-tpl-thumb-classic { border: 2px solid #d9a441; }
+        .cp-tpl-thumb-classic .tpl-hdr {
+            height: 30px; display: flex; align-items: center; justify-content: center;
+            gap: 4px; border-bottom: 2px solid #d9a441;
+        }
+        .cp-tpl-thumb-classic .tpl-hdr .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #d9a441; background: #fff; }
+        .cp-tpl-thumb-classic .tpl-hdr .bar { width: 34px; height: 5px; border-radius: 2px; background: #d0d0d8; }
+        .cp-tpl-thumb-classic .tpl-band { height: 9px; background: #d9a441; margin: 3px 8px; border-radius: 1px; }
+        .cp-tpl-thumb-classic .tpl-rows { flex: 1; margin: 5px 8px 0; display: flex; flex-direction: column; gap: 3px; }
+        .cp-tpl-thumb-classic .tpl-rows div { height: 4px; background: #e4e4ea; border-radius: 1px; }
+
+        /* ── Modern thumb: bold colour banner, squared, flat top rule ── */
+        .cp-tpl-thumb-modern { border-top: 4px solid #2f2ccb; }
+        .cp-tpl-thumb-modern .tpl-hdr {
+            height: 34px; background: linear-gradient(120deg,#2f2ccb,#1e1c99);
+            display: flex; align-items: center; gap: 4px; padding-left: 7px;
+        }
+        .cp-tpl-thumb-modern .tpl-hdr .dot { width: 12px; height: 12px; border-radius: 4px; background: #fff; }
+        .cp-tpl-thumb-modern .tpl-hdr .bar { width: 40px; height: 5px; border-radius: 2px; background: rgba(255,255,255,.85); }
+        .cp-tpl-thumb-modern .tpl-band { height: 8px; background: #1a1a1a; margin: 0; }
+        .cp-tpl-thumb-modern .tpl-rows { flex: 1; margin: 5px 8px 0; display: flex; flex-direction: column; gap: 3px; }
+        .cp-tpl-thumb-modern .tpl-rows div { height: 4px; background: #e4e4ea; border-radius: 1px; }
+        .cp-tpl-thumb-modern .tpl-rows div:first-child { background: #c8c5f2; }
+
+        /* ── Minimal thumb: hairline only, left aligned, quiet ── */
+        .cp-tpl-thumb-minimal { border: 1px solid #e2e2e2; }
+        .cp-tpl-thumb-minimal .tpl-hdr {
+            height: 30px; display: flex; align-items: center; gap: 5px; padding-left: 7px;
+            border-bottom: 1px solid #e6e6e6;
+        }
+        .cp-tpl-thumb-minimal .tpl-hdr .dot { width: 9px; height: 9px; border-radius: 2px; background: #f0f0f0; border: 1px solid #ddd; }
+        .cp-tpl-thumb-minimal .tpl-hdr .bar { width: 30px; height: 4px; border-radius: 2px; background: #999; border-bottom: 2px solid #2f2ccb; }
+        .cp-tpl-thumb-minimal .tpl-band { height: 4px; width: 40px; margin: 5px 0 0 7px; background: #ccc; }
+        .cp-tpl-thumb-minimal .tpl-rows { flex: 1; margin: 6px 7px 0; display: flex; flex-direction: column; gap: 4px; }
+        .cp-tpl-thumb-minimal .tpl-rows div { height: 3px; background: #eee; border-radius: 0; }
+
         /* Checkbox rows */
         .cp-check-row {
             display: flex;
@@ -855,6 +965,48 @@ function setLanguage(lang) {
                             </div>
                         @endif
 
+                        {{-- ── GROUP: Design Template ── --}}
+                        <div class="cp-group-label"><i class="fas fa-swatchbook"></i> Design Template</div>
+                        <div class="small text-muted" style="font-size:.72rem;line-height:1.4;padding:0 .25rem .5rem;">
+                            Pick the overall report card design. Your accent colour, toggles, and every
+                            student's data stay exactly the same — only the visual style changes.
+                        </div>
+
+                        <div class="cp-template-gallery" id="cpTemplateGallery">
+                            <div class="cp-template-card selected" data-template="classic" onclick="selectTemplate('classic', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-classic">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div><div class="dot"></div></div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                </div>
+                                <div class="cp-tpl-name">Classic</div>
+                                <div class="cp-tpl-desc">Ornate border, medallion logos, formal &amp; traditional</div>
+                            </div>
+
+                            <div class="cp-template-card" data-template="modern" onclick="selectTemplate('modern', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-modern">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div></div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                </div>
+                                <div class="cp-tpl-name">Modern</div>
+                                <div class="cp-tpl-desc">Bold colour banner, squared logo, confident &amp; bright</div>
+                            </div>
+
+                            <div class="cp-template-card" data-template="minimal" onclick="selectTemplate('minimal', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-minimal">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div></div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                </div>
+                                <div class="cp-tpl-name">Minimal</div>
+                                <div class="cp-tpl-desc">Hairline rules, quiet whitespace, editorial &amp; clean</div>
+                            </div>
+                        </div>
+
                         {{-- ── GROUP: Appearance ── --}}
                         <div class="cp-group-label"><i class="fas fa-palette"></i> Appearance</div>
 
@@ -1204,6 +1356,13 @@ function setLanguage(lang) {
             </button>
         </div>
     </div>
+
+    <button type="button" class="cp-btn-sm w-100" onclick="previewDesign()"
+        style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;transition:all 0.2s;font-weight:600;margin-bottom:.5rem;"
+        onmouseover="this.style.background='rgba(47,44,203,.06)';"
+        onmouseout="this.style.background='#fff';">
+        <i class="fas fa-eye me-1"></i> Live preview this design
+    </button>
 
     <button type="button" class="cp-btn-sm w-100" onclick="savePassslipCustomisation()"
         style="font-size:.75rem;padding:.5rem 1rem;background:linear-gradient(135deg, #1e1b4b, #2f2ccb);color:#fff;border:none;border-radius:10px;transition:all 0.2s;font-weight:600;"
@@ -1580,6 +1739,7 @@ function setLanguage(lang) {
        URL query-params before every navigation.
     ───────────────────────────────────────────── */
     const DEFAULTS = {
+        template:            'classic',
         accent:              '#f0a500',
         exam_ids:            '',
         avg_exam_ids:        '{{ $exam->id }}',
@@ -1612,12 +1772,31 @@ function setLanguage(lang) {
 
     let currentSettings = { ...DEFAULTS };
 
+    /* ── Design template selection ──
+       Switching template never touches the toggles/accent above it —
+       it's a pure presentation swap on top of the same settings. ── */
+    function selectTemplate(key, el) {
+        currentSettings.template = key;
+        document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        updateSummary();
+    }
+
+    function setTemplateSelectionUI(key) {
+        const card = document.querySelector('.cp-template-card[data-template="' + key + '"]');
+        if (!card) return;
+        document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+    }
+
     /* ── Read toggles from DOM → currentSettings ── */
     function readSettings() {
         document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
             currentSettings[cb.id.replace('cb_', '')] = cb.checked;
         });
         currentSettings.accent = document.getElementById('cpColorPicker').value;
+        const selectedTplCard = document.querySelector('.cp-template-card.selected');
+        currentSettings.template = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
 
         // Combine-examinations selection: extra exam ids + which ids to average
         const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
@@ -1716,6 +1895,7 @@ function injectIntoForm(formEl) {
     /* ── Reset to defaults ── */
     function resetCustomisation() {
         currentSettings = { ...DEFAULTS };
+        setTemplateSelectionUI(DEFAULTS.template);
         document.getElementById('cpColorPicker').value = DEFAULTS.accent;
         document.getElementById('cpAccentPreview').style.background = DEFAULTS.accent;
         document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
@@ -1735,6 +1915,24 @@ function injectIntoForm(formEl) {
         });
         updateAllLinks();
         updateSummary();
+    }
+
+    /* ── Open a real, fully-rendered preview of the currently selected
+       template + toggles + accent — in a new tab, against live data,
+       without saving anything yet. This is the ONE place the full
+       currentSettings deliberately IS broadcast via query-string,
+       since it's an explicit one-off "show me" action, not a link
+       every student/class tile inherits. ── */
+    function previewDesign() {
+        readSettings();
+        const p = new URLSearchParams();
+        Object.entries(currentSettings).forEach(([k, v]) => {
+            if (k === 'exam_ids' || k === 'avg_exam_ids') return; // panel-local, not a slip toggle
+            p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
+        });
+        p.set('lang', new URLSearchParams(window.location.search).get('lang') || 'en');
+        const url = '{{ route('examination.passslips.all', $exam->id) }}?' + p.toString();
+        window.open(url, '_blank');
     }
 
     /* ── Persist current toggle state for one or more classes ──
@@ -1798,6 +1996,7 @@ function injectIntoForm(formEl) {
                     return; // nothing saved yet for this class — leave panel as-is
                 }
                 const saved = res.settings;
+                setTemplateSelectionUI(saved.template || 'classic');
                 if (saved.accent) {
                     document.getElementById('cpColorPicker').value = saved.accent;
                     document.getElementById('cpAccentPreview').style.background = saved.accent;

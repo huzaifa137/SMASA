@@ -208,11 +208,11 @@
             ->where('examination_marks.school_id', $schoolId)
             ->whereNotNull('marks_obtained')
             ->selectRaw('
-                                    subjects.subject as subject_name,
-                                    AVG(marks_obtained) as avg_score,
-                                    COUNT(*) as total_marks,
-                                    SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
-                                ')
+                                            subjects.subject as subject_name,
+                                            AVG(marks_obtained) as avg_score,
+                                            COUNT(*) as total_marks,
+                                            SUM(CASE WHEN marks_obtained >= 50 THEN 1 ELSE 0 END) as passed_count
+                                        ')
             ->groupBy('subjects.ID', 'subjects.subject')
             ->orderByDesc('avg_score')
             ->limit(6)
@@ -1159,27 +1159,29 @@
                             <span class="school-badge">{{ $schoolCode }}</span>
                         </h1>
                     </div>
-<div class="school-meta">
-    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;align-items:center;margin-top:1em;width:100%;" class="school-meta-items">
-        @if($schoolCategory !== '—')
-            <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
-                {{ $schoolCategory }}</span>
-        @endif
-        <span style="white-space:nowrap;"><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
-        @if($currentTerm !== '—')
-            <span style="white-space:nowrap;"><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
-        @endif
-        <span style="white-space:nowrap;"><i class="fas fa-clock"></i> {{ $currentDate->format('l, d M Y') }}</span>
-    </div>
-</div>
+                    <div class="school-meta">
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;align-items:center;margin-top:1em;width:100%;"
+                            class="school-meta-items">
+                            @if($schoolCategory !== '—')
+                                <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
+                                    {{ $schoolCategory }}</span>
+                            @endif
+                            <span style="white-space:nowrap;"><i class="fas fa-calendar-alt"></i> {{ $academicYear }}</span>
+                            @if($currentTerm !== '—')
+                                <span style="white-space:nowrap;"><i class="fas fa-book-open"></i> {{ $currentTerm }}</span>
+                            @endif
+                            <span style="white-space:nowrap;"><i class="fas fa-clock"></i>
+                                {{ $currentDate->format('l, d M Y') }}</span>
+                        </div>
+                    </div>
 
-<style>
-    @media (max-width: 768px) {
-        .school-meta-items {
-            justify-content: center !important;
-        }
-    }
-</style>
+                    <style>
+                        @media (max-width: 768px) {
+                            .school-meta-items {
+                                justify-content: center !important;
+                            }
+                        }
+                    </style>
                 </div>
                 <div class="school-actions">
                     <a href="{{ url('/school-individual-profile/' . Session('LoggedSchool')) ?? '#' }}"
@@ -1535,7 +1537,7 @@
                                     <div class="progress-track">
                                         <div class="progress-fill"
                                             style="width:{{ $subject['avg_score'] }}%;
-                                                                           background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
+                                                                                       background:{{ $subject['avg_score'] >= 70 ? 'var(--brand)' : ($subject['avg_score'] >= 50 ? 'var(--accent)' : 'var(--danger)') }};">
                                         </div>
                                     </div>
                                 </div>

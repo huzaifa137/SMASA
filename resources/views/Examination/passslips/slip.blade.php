@@ -56,6 +56,14 @@
         $accentA08 = $accentAlpha($accent, 0.08);
         $accentA22 = $accentAlpha($accent, 0.22);
         $accentA35 = $accentAlpha($accent, 0.35);
+
+        // Design template — 'classic' (default), 'modern', or 'minimal'.
+        // Query param wins (live preview), else falls back to whatever
+        // applySavedPassslipSettings() merged in from the saved profile.
+        $template = request('template', 'classic');
+        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+            $template = 'classic';
+        }
     @endphp
 
     <style>
@@ -1049,9 +1057,10 @@
             color-adjust: exact;
         }
     </style>
+    @include('Examination.passslips.partials.template-themes')
 </head>
 
-<body>
+<body class="tpl-{{ $template }}">
 
     <?php use App\Http\Controllers\Helper; ?>
 

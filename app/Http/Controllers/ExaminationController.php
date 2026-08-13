@@ -1085,6 +1085,7 @@ class ExaminationController extends Controller
             'class_ids' => 'required|array|min:1',
             'class_ids.*' => 'integer',
             'settings' => 'required|array',
+            'settings.template' => 'nullable|string|in:classic,modern,minimal',
         ]);
 
         $schoolId = Session('LoggedSchool');

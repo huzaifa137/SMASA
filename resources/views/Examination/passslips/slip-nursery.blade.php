@@ -27,6 +27,12 @@
             return sprintf('#%02x%02x%02x', $r, $g, $b);
         };
         $accentDark = $hexToDark($accent);
+
+        // Design template — 'classic' (default), 'modern', or 'minimal'.
+        $template = request('template', 'classic');
+        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+            $template = 'classic';
+        }
     @endphp
 
     <style>
@@ -662,9 +668,10 @@
             color-adjust: exact;
         }
     </style>
+    @include('Examination.passslips.partials.template-themes')
 </head>
 
-<body>
+<body class="tpl-{{ $template }}">
 
     <?php use App\Http\Controllers\Helper; ?>
 

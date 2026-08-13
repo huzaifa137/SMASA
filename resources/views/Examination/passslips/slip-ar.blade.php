@@ -68,6 +68,12 @@
         $accentA22 = $accentAlpha($accent, 0.22);
         $accentA35 = $accentAlpha($accent, 0.35);
 
+        // Design template — 'classic' (default), 'modern', or 'minimal'.
+        $template = request('template', 'classic');
+        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+            $template = 'classic';
+        }
+
         /* ── Arabic label map ─────────────────────────────────────────
            All UI strings that appear on the printed slip.
         ──────────────────────────────────────────────────────────────*/
@@ -1022,9 +1028,10 @@
             }
         }
     </style>
+    @include('Examination.passslips.partials.template-themes')
 </head>
 
-<body>
+<body class="tpl-{{ $template }}">
 
     <?php use App\Http\Controllers\Helper; ?>
 
