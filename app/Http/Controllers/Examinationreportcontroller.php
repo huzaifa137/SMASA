@@ -635,11 +635,17 @@ class ExaminationReportController extends Controller
         });
 
         $genderComparison = collect(['Male', 'Female'])->map(function ($gender) use ($studentTotals, $students) {
-            $ids = $students->where('gender', $gender)->pluck('id');
+            $ids = $students->where('gender', $gender)
+                ->pluck('id')
+                ->filter(fn($id) => is_int($id) || is_string($id)) // drop null/non-scalar ids
+                ->values()
+                ->all();
+
             $scores = $studentTotals->only($ids);
+
             return (object) [
                 'gender' => $gender,
-                'count' => $ids->count(),
+                'count' => count($ids),
                 'average' => $scores->isNotEmpty() ? round($scores->avg(), 1) : null,
             ];
         })->filter(fn($g) => $g->count > 0)->values();

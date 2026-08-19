@@ -482,7 +482,7 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="exam-hero-v2-stat-divider"></div>
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number">{{ count($gradingSchemes); }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ count($gradingSchemes) }}</div>
                     <div class="exam-hero-v2-stat-label">Grading Schemes</div>
                 </div>
                 <div class="exam-hero-v2-stat-divider"></div>

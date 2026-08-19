@@ -796,11 +796,20 @@ use App\Http\Controllers\Helper;
                 <div class="col-12">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center" style="gap:12px;">
                         <span class="status-pill status-{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
+                   
+ 
                         <a href="{{ route('examination.index') }}" class="btn fw-semibold"
                             style="border-radius:1rem;padding:.7rem 1.5rem;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);color:white;"
                             onmouseover="this.style.background='rgba(255,255,255,.3)'"
                             onmouseout="this.style.background='rgba(255,255,255,.2)'">
                             <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                        </a>
+ 
+                        <a href="{{ route('report-templates.index') }}" class="btn fw-semibold"
+                            style="border-radius:1rem;padding:.7rem 1.5rem;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);color:white;"
+                            onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                            onmouseout="this.style.background='rgba(255,255,255,.2)'">
+                            <i class="fas fa-palette me-2"></i> Report Card Designer
                         </a>
                     </div>
                 </div>
@@ -1672,12 +1681,12 @@ function setLanguage(lang) {
                                        data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
                                        onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
                                        target="_blank">
-
+ 
                                         <div class="student-card-avatar"
                                             style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
                                             {{ $initials }}
                                         </div>
-
+ 
                                         <div class="student-card-info">
                                             <div class="student-card-name">
                                                 {{ $student->lastname }} {{ $student->firstname }}
@@ -1698,12 +1707,71 @@ function setLanguage(lang) {
                                                 @endif
                                             </div>
                                         </div>
-
+ 
                                         <div class="student-card-action">
                                             <i class="fas fa-print"></i>
                                             <span>Print Slip</span>
                                         </div>
                                     </a>
+ 
+{{--
+    REPLACE WITH (same card, wrapped, plus the new secondary link):
+--}}
+ 
+                                    {{-- href is updated by JS with customisation params --}}
+                                    <div class="student-card-wrap" style="position:relative;">
+                                    <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
+                                       class="student-card student-link"
+                                       data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
+                                       data-name="{{ strtolower($fullName) }}"
+                                       data-adm="{{ strtolower($student->adm_no ?? '') }}"
+                                       data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
+                                       onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
+                                       target="_blank">
+ 
+                                        <div class="student-card-avatar"
+                                            style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
+                                            {{ $initials }}
+                                        </div>
+ 
+                                        <div class="student-card-info">
+                                            <div class="student-card-name">
+                                                {{ $student->lastname }} {{ $student->firstname }}
+                                                @if(property_exists($student, 'other_names') && $student->other_names)
+                                                    <span class="other-names">{{ $student->other_names }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="student-card-meta">
+                                                <span class="meta-tag">
+                                                    <i class="fas fa-graduation-cap"></i>
+                                                    {{ Helper::recordMdname($student->class_id) }}
+                                                    {{ $student->stream_id ? '– ' . $student->stream_id : '' }}
+                                                </span>
+                                                @if($student->adm_no ?? false)
+                                                    <span class="meta-tag">
+                                                        <i class="fas fa-id-card"></i>{{ $student->adm_no }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+ 
+                                        <div class="student-card-action">
+                                            <i class="fas fa-print"></i>
+                                            <span>Print Slip</span>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('examination.report-card.download', [$exam->id, $student->id]) }}"
+                                       title="Download report card (new design)"
+                                       onclick="event.stopPropagation(); showLoading('Generating report card for {{ addslashes($student->firstname) }}…')"
+                                       target="_blank"
+                                       style="position:absolute; top:8px; right:8px; z-index:2;
+                                              width:30px; height:30px; border-radius:50%;
+                                              display:flex; align-items:center; justify-content:center;
+                                              background:#fff; box-shadow:0 2px 8px rgba(44,41,202,.18);
+                                              color:var(--brand-mid, #5351e4); font-size:.8rem;">
+                                        <i class="fas fa-palette"></i>
+                                    </a>
+                                    </div>{{-- /.student-card-wrap --}}
                                 @empty
                                     <div class="empty-state">
                                         <i class="fas fa-user-graduate"></i>
