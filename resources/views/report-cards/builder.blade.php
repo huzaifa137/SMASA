@@ -1,372 +1,202 @@
+{{--
+    SECTION BUILDER — replaces the old blank Fabric.js canvas.
+
+    You never start empty here: $template->elements already comes seeded
+    from one of the Classic / Modern / Minimal starters (see
+    ReportCardTemplateSeeder + report-cards/index.blade.php "Use as
+    starting point"). Editing means:
+      - drag a section's right edge (or use the width buttons) to resize
+        it in grid units — col-md-3, col-md-6, col-md-12, etc.
+      - drag a section by its handle to reorder it, up/down within its
+        row or into another row
+      - add a section from the palette if you want something extra
+    There is no free-form x/y canvas any more — every section always
+    belongs to a row and a width, exactly like render.blade.php renders it.
+--}}
 @extends('layouts-side-bar.master')
 
 @section('css')
     <style>
-        body {
-            overflow-x: hidden;
-        }
+        body { overflow-x: hidden; }
 
         #rc-builder {
             display: grid;
-            grid-template-columns: 250px minmax(0, 1fr) 280px;
+            grid-template-columns: 230px minmax(0, 1fr) 300px;
             gap: 0;
             background: #eef0f4;
         }
 
         @media (max-width: 1200px) {
-            #rc-builder {
-                grid-template-columns: 210px minmax(0, 1fr) 240px;
-            }
-
-            .rc-palette-grid {
-                grid-template-columns: 1fr;
-            }
+            #rc-builder { grid-template-columns: 200px minmax(0, 1fr) 260px; }
         }
 
         @media (max-width: 900px) {
-            #rc-builder {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
-                height: auto;
-            }
-
-            .rc-palette,
-            .rc-props {
-                max-height: 40vh;
-            }
-
-            .rc-canvas-wrap {
-                min-height: 50vh;
-            }
+            #rc-builder { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto !important; }
+            .rc-palette, .rc-props { max-height: 40vh; }
+            .rc-canvas-wrap { min-height: 50vh; }
         }
 
         #rc-js-error-banner {
-            display: none;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: #fdecec;
-            color: #9c1c1c;
-            border-bottom: 1px solid #f3c2c2;
-            padding: .6rem 1rem;
-            font-size: .82rem;
-            font-family: monospace;
-            white-space: pre-wrap;
+            display: none; position: sticky; top: 0; z-index: 50;
+            background: #fdecec; color: #9c1c1c; border-bottom: 1px solid #f3c2c2;
+            padding: .6rem 1rem; font-size: .82rem; font-family: monospace; white-space: pre-wrap;
         }
 
-        .rc-palette,
-        .rc-props {
-            background: #fff;
-            border-right: 1px solid #e5e7f2;
-            overflow-y: auto;
-            padding: 1rem;
+        .rc-palette, .rc-props { background: #fff; border-right: 1px solid #e5e7f2; overflow-y: auto; padding: 1rem; }
+        .rc-props { border-right: none; border-left: 1px solid #e5e7f2; }
+        .rc-palette h3, .rc-props h3 {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+            color: #6c7293; margin: 1rem 0 .6rem;
         }
+        .rc-palette h3:first-child { margin-top: 0; }
+        .rc-palette p.rc-hint { font-size: .78rem; color: #8a8fa8; margin: 0 0 1rem; line-height: 1.5; }
 
-        .rc-props {
-            border-right: none;
-            border-left: 1px solid #e5e7f2;
+        .rc-palette-list button {
+            display: block; width: 100%; text-align: left; font-size: .78rem; padding: .55rem .6rem;
+            border: 1px solid #e2e4f3; border-radius: 8px; background: #fafbff; cursor: pointer;
+            color: #333349; margin-bottom: .4rem; transition: all .12s;
         }
+        .rc-palette-list button:hover { background: #5351e4; color: #fff; border-color: #5351e4; }
 
-        .rc-palette h3,
-        .rc-props h3 {
-            font-size: .78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            color: #6c7293;
-            margin: 1rem 0 .6rem;
-        }
-
-        .rc-palette h3:first-child {
-            margin-top: 0;
-        }
-
-        .rc-palette-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: .4rem;
-        }
-
-        .rc-palette-grid button {
-            font-size: .74rem;
-            padding: .55rem .4rem;
-            border: 1px solid #e2e4f3;
-            border-radius: 8px;
-            background: #fafbff;
-            cursor: pointer;
-            text-align: left;
-            transition: all .12s;
-            color: #333349;
-        }
-
-        .rc-palette-grid button:hover {
-            background: #5351e4;
-            color: #fff;
-            border-color: #5351e4;
-        }
-
-        .rc-align-row {
-            display: flex;
-            gap: .3rem;
-        }
-
-        .rc-align-row button {
-            flex: 1;
-            padding: .5rem 0;
-            border: 1px solid #e2e4f3;
-            border-radius: 8px;
-            background: #fafbff;
-            cursor: pointer;
-        }
-
-        .rc-align-row button:hover {
-            background: #eef0fb;
-        }
-
-        .rc-layers {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .rc-layers li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .4rem;
-            padding: .45rem .55rem;
-            border-radius: 6px;
-            font-size: .78rem;
-            color: #4a4a68;
-            cursor: pointer;
-            margin-bottom: 2px;
-        }
-
-        .rc-layers li:hover {
-            background: #f4f5fa;
-        }
-
-        .rc-layers li.active {
-            background: #eef0fb;
-            color: #423fc9;
-            font-weight: 600;
-        }
-
-        .rc-layers li .rc-layer-name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            flex: 1;
-        }
-
-        .rc-layers li .rc-layer-actions {
-            display: flex;
-            gap: 2px;
-            opacity: .6;
-        }
-
-        .rc-layers li .rc-layer-actions button {
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: .7rem;
-            padding: 2px 4px;
-        }
-
-        .rc-layers li .rc-layer-actions button:hover {
-            opacity: 1;
-            color: #d64545;
-        }
-
-        .rc-stage {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            min-height: 0;
-        }
+        /* min-width: 0 is the actual fix here — grid items default to
+           min-width: auto, which stops this middle track shrinking below
+           the fixed-width .rc-sheet (794px) inside it. Without it, the
+           whole #rc-builder grid overflows past the viewport and pushes
+           the right-hand .rc-props column off-screen instead of the
+           canvas simply scrolling within its own column. */
+        .rc-stage { display: flex; flex-direction: column; height: 100%; min-height: 0; min-width: 0; }
 
         .rc-toolbar {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            padding: .6rem 1rem;
-            background: #fff;
-            border-bottom: 1px solid #e5e7f2;
+            display: flex; align-items: center; gap: .75rem; padding: .6rem 1rem;
+            background: #fff; border-bottom: 1px solid #e5e7f2;
         }
-
         .rc-toolbar #rc-template-name {
-            font-size: .95rem;
-            font-weight: 700;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            padding: .3rem .5rem;
-            flex: 1;
-            max-width: 320px;
-            color: #1e1e2d;
+            font-size: .95rem; font-weight: 700; border: 1px solid transparent; border-radius: 6px;
+            padding: .3rem .5rem; flex: 1; max-width: 320px; color: #1e1e2d;
         }
-
-        .rc-toolbar #rc-template-name:hover,
-        .rc-toolbar #rc-template-name:focus {
-            border-color: #dcdfef;
-            outline: none;
-            background: #fafbff;
+        .rc-toolbar #rc-template-name:hover, .rc-toolbar #rc-template-name:focus {
+            border-color: #dcdfef; outline: none; background: #fafbff;
         }
-
-        .rc-save-status {
-            font-size: .75rem;
-            color: #8a8fa8;
-            margin-right: auto;
-        }
-
+        .rc-save-status { font-size: .75rem; color: #8a8fa8; margin-right: auto; }
         .rc-toolbar button {
-            font-size: .82rem;
-            font-weight: 600;
-            padding: .5rem .9rem;
-            border-radius: 8px;
-            border: 1px solid #dcdfef;
-            background: #fff;
-            color: #4a4a68;
-            cursor: pointer;
+            font-size: .82rem; font-weight: 600; padding: .5rem .9rem; border-radius: 8px;
+            border: 1px solid #dcdfef; background: #fff; color: #4a4a68; cursor: pointer;
+        }
+        .rc-toolbar button:hover { background: #f4f5fa; }
+        .rc-toolbar button.primary { background: #5351e4; border-color: #5351e4; color: #fff; }
+        .rc-toolbar button.primary:hover { background: #423fc9; }
+
+        .rc-canvas-wrap { flex: 1; overflow: auto; padding: 2rem; }
+        .rc-sheet {
+            width: 794px; min-height: 400px; margin: 0 auto; background: #fff;
+            box-shadow: 0 4px 24px rgba(0,0,0,.15); padding: 40px; box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
-        .rc-toolbar button:hover {
-            background: #f4f5fa;
+        .rc-row {
+            width: 100%; overflow: hidden; margin-bottom: 12px; padding: 6px;
+            border: 1px dashed transparent; border-radius: 6px; transition: border-color .12s, background .12s;
         }
+        .rc-row.rc-row-dragover { border-color: #5351e4; background: #f5f5ff; }
+        .rc-row-controls {
+            display: flex; align-items: center; gap: .3rem; margin-bottom: 4px; opacity: 0; transition: opacity .12s;
+        }
+        .rc-row:hover .rc-row-controls { opacity: 1; }
+        .rc-row-controls span { font-size: .68rem; color: #a5a8c0; text-transform: uppercase; letter-spacing: .04em; margin-right: auto; }
+        .rc-row-controls button {
+            font-size: .7rem; padding: .15rem .4rem; border: 1px solid #e2e4f3; border-radius: 4px;
+            background: #fafbff; cursor: pointer; color: #4a4a68;
+        }
+        .rc-row-controls button:hover { background: #eef0fb; }
 
-        .rc-toolbar button.primary {
-            background: #5351e4;
-            border-color: #5351e4;
-            color: #fff;
+        .rc-col {
+            float: left; box-sizing: border-box; padding: 0 6px; position: relative; cursor: pointer;
         }
+        .rc-col-inner {
+            position: relative; border: 1.5px solid #e5e7f2; border-radius: 6px; background: #fafbff;
+            padding: 8px 10px; min-height: 44px; overflow: hidden;
+        }
+        .rc-col.selected .rc-col-inner { border-color: #5351e4; box-shadow: 0 0 0 2px rgba(83,81,228,.15); background: #f6f6ff; }
+        .rc-col-inner:hover { border-color: #b7bbea; }
+        .rc-col-badge {
+            font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+            color: #8a8fa8; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .rc-col-badge .rc-col-width { color: #5351e4; }
+        .rc-col-preview { font-size: .78rem; color: #333349; line-height: 1.35; }
+        .rc-col-preview table { width: 100%; border-collapse: collapse; font-size: .68rem; }
+        .rc-col-preview table th, .rc-col-preview table td { border: 1px solid #ddd; padding: 2px 4px; }
 
-        .rc-toolbar button.primary:hover {
-            background: #423fc9;
+        .rc-col-drag {
+            position: absolute; top: 2px; left: 2px; font-size: .8rem; color: #b5b8cc; cursor: grab;
+            padding: 2px 4px; line-height: 1; user-select: none;
         }
+        .rc-col-del {
+            position: absolute; top: 2px; right: 2px; font-size: .72rem; color: #c9ccdc; cursor: pointer;
+            border: none; background: none; padding: 2px 4px; line-height: 1;
+        }
+        .rc-col-del:hover { color: #d64545; }
+        .rc-col-resize {
+            position: absolute; top: 0; right: -4px; width: 9px; height: 100%; cursor: ew-resize; z-index: 5;
+        }
+        .rc-col-resize::after {
+            content: ''; position: absolute; top: 50%; right: 3px; width: 3px; height: 20px;
+            background: #d7d9ee; border-radius: 2px; transform: translateY(-50%);
+        }
+        .rc-col:hover .rc-col-resize::after, .rc-col.selected .rc-col-resize::after { background: #5351e4; }
 
-        .rc-toolbar button.danger {
-            color: #d64545;
-            border-color: #f3d4d4;
+        .rc-add-row-btn {
+            display: block; width: 100%; text-align: center; padding: .6rem; margin-top: .5rem;
+            border: 1px dashed #c8cdf0; border-radius: 8px; background: #fafbff; color: #5351e4;
+            font-size: .8rem; font-weight: 600; cursor: pointer;
         }
-
-        .rc-toolbar button.danger:hover {
-            background: #fdf1f1;
-        }
-
-        .rc-canvas-wrap {
-            flex: 1;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .rc-canvas-wrap canvas {
-            box-shadow: 0 4px 24px rgba(0, 0, 0, .15);
-            background: #fff;
-        }
+        .rc-add-row-btn:hover { background: #eef0fb; }
 
         .rc-props label {
-            display: block;
-            font-size: .78rem;
-            font-weight: 600;
-            color: #4a4a68;
-            margin-bottom: .9rem;
+            display: block; font-size: .78rem; font-weight: 600; color: #4a4a68; margin-bottom: .9rem;
         }
-
-        .rc-props label input[type=text],
-        .rc-props label input[type=number],
-        .rc-props label textarea,
-        .rc-props label select {
-            display: block;
-            width: 100%;
-            margin-top: .3rem;
-            padding: .45rem .55rem;
-            border: 1px solid #dcdfef;
-            border-radius: 6px;
-            font-size: .82rem;
-            font-weight: 400;
+        .rc-props label input[type=text], .rc-props label input[type=number],
+        .rc-props label textarea, .rc-props label select {
+            display: block; width: 100%; margin-top: .3rem; padding: .45rem .55rem;
+            border: 1px solid #dcdfef; border-radius: 6px; font-size: .82rem; font-weight: 400;
         }
-
-        .rc-props label input[type=color] {
-            width: 100%;
-            height: 34px;
-            margin-top: .3rem;
-            border: 1px solid #dcdfef;
-            border-radius: 6px;
-        }
-
-        .rc-props label input[type=checkbox] {
-            margin-left: .5rem;
-        }
-
-        .rc-props .rc-prop-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: .5rem;
-        }
-
-        .rc-props .rc-empty-hint {
-            color: #8a8fa8;
-            font-size: .85rem;
-            margin-top: 2rem;
-            text-align: center;
-        }
-
-        .rc-props .rc-el-actions {
-            display: flex;
-            gap: .4rem;
-            margin: 1rem 0 1.25rem;
-        }
-
-        .rc-props .rc-el-actions button {
-            flex: 1;
-            font-size: .76rem;
-            font-weight: 600;
-            padding: .45rem 0;
-            border-radius: 6px;
-            border: 1px solid #dcdfef;
-            background: #fafbff;
-            cursor: pointer;
-        }
-
-        .rc-props .rc-el-actions button:hover {
-            background: #eef0fb;
-        }
-
-        .rc-props .rc-el-actions button.rc-delete-btn {
-            color: #d64545;
-        }
-
-        .rc-props .rc-el-actions button.rc-delete-btn:hover {
-            background: #fdf1f1;
-        }
-
+        .rc-props label input[type=color] { width: 100%; height: 34px; margin-top: .3rem; border: 1px solid #dcdfef; border-radius: 6px; }
+        .rc-props label input[type=checkbox] { margin-left: .5rem; }
+        .rc-props .rc-prop-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+        .rc-props .rc-empty-hint { color: #8a8fa8; font-size: .85rem; margin-top: 2rem; text-align: center; }
         .rc-props .rc-type-badge {
-            display: inline-block;
-            font-size: .68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            color: #5351e4;
-            background: #eef0fb;
-            padding: .2rem .5rem;
-            border-radius: 20px;
-            margin-bottom: .8rem;
+            display: inline-block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+            color: #5351e4; background: #eef0fb; padding: .2rem .5rem; border-radius: 20px; margin-bottom: .8rem;
         }
+        .rc-width-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: .3rem; margin-top: .3rem; }
+        .rc-width-grid button {
+            font-size: .72rem; padding: .35rem 0; border: 1px solid #dcdfef; border-radius: 6px;
+            background: #fafbff; cursor: pointer; color: #4a4a68;
+        }
+        .rc-width-grid button.active { background: #5351e4; border-color: #5351e4; color: #fff; }
+        .rc-el-actions { display: flex; gap: .4rem; margin: 0 0 1.25rem; }
+        .rc-el-actions button {
+            flex: 1; font-size: .76rem; font-weight: 600; padding: .45rem 0; border-radius: 6px;
+            border: 1px solid #dcdfef; background: #fafbff; cursor: pointer;
+        }
+        .rc-el-actions button:hover { background: #eef0fb; }
+        .rc-el-actions button.rc-delete-btn { color: #d64545; }
+        .rc-el-actions button.rc-delete-btn:hover { background: #fdf1f1; }
     </style>
 @endsection
 
 @section('content')
     <div id="rc-js-error-banner"></div>
-    <div id="rc-builder" class="rc-builder" style="margin-top:2rem;"margin-bottom:2rem;">
+    <div id="rc-builder" style="margin-top:2rem;">
 
-        {{-- LEFT: element palette --}}
+        {{-- LEFT: add-section palette --}}
         <aside class="rc-palette">
-            <h3>Add element</h3>
-            <div class="rc-palette-grid">
+            <h3>Add a section</h3>
+            <p class="rc-hint">This design already starts from the {{ $template->name }} template. Add a section only if you need something extra — resize and reorder what's already here by dragging.</p>
+            <div class="rc-palette-list">
+                <button data-add="text">🔤 Text</button>
                 <button data-add="logo" data-slot="logo_primary">🖼 Logo (Left)</button>
                 <button data-add="logo" data-slot="logo_secondary">🖼 Logo (Right)</button>
-                <button data-add="text">🔤 Text</button>
                 <button data-add="student_field" data-field="name">👤 Student Name</button>
                 <button data-add="student_field" data-field="admission_no">🔢 Admission No.</button>
                 <button data-add="student_field" data-field="class">🏫 Class</button>
@@ -378,32 +208,16 @@
                 <button data-add="signature">✍️ Signature Line</button>
                 <button data-add="attendance">📅 Attendance</button>
                 <button data-add="divider">➖ Divider</button>
-                <button data-add="shape">▭ Shape / Accent</button>
+                <button data-add="shape">▭ Shape / Accent Band</button>
                 <button data-add="watermark">💧 Watermark</button>
                 <button data-add="qr_code">▦ QR Code</button>
             </div>
 
-            <h3>Alignment</h3>
-            <div class="rc-align-row">
-                <button data-align="left" title="Align left">⟸</button>
-                <button data-align="center-h" title="Center horizontally">↔</button>
-                <button data-align="right" title="Align right">⟹</button>
-            </div>
-            <div class="rc-align-row" style="margin-top:.4rem;">
-                <button data-align="top" title="Align top">⟰</button>
-                <button data-align="center-v" title="Center vertically">↕</button>
-                <button data-align="bottom" title="Align bottom">⟱</button>
-            </div>
-
-            <h3>Canvas background</h3>
-            <label>Color <input type="color" id="rc-bg-color"
-                    value="{{ $template->background['color'] ?? '#FFFFFF' }}"></label>
-
-            <h3>Layers <span style="font-weight:400; color:#b5b8cc;">(top → bottom)</span></h3>
-            <ul id="rc-layers" class="rc-layers"></ul>
+            <h3>Page background</h3>
+            <label>Color <input type="color" id="rc-bg-color" value="{{ $template->background['color'] ?? '#FFFFFF' }}"></label>
         </aside>
 
-        {{-- CENTER: canvas --}}
+        {{-- CENTER: the sections, in rows --}}
         <main class="rc-stage">
             <div class="rc-toolbar">
                 <input id="rc-template-name" value="{{ $template->name }}" />
@@ -412,22 +226,19 @@
                 <button id="rc-publish-btn" class="primary">Publish</button>
             </div>
             <div class="rc-canvas-wrap">
-                <canvas id="rc-canvas" width="{{ $template->canvas_width }}"
-                    height="{{ $template->canvas_height }}"></canvas>
+                <div class="rc-sheet" id="rc-sheet"></div>
+                <button class="rc-add-row-btn" id="rc-add-row-btn" style="max-width:794px; margin:.5rem auto 0;">+ Add row</button>
             </div>
         </main>
 
-        {{-- RIGHT: properties panel --}}
+        {{-- RIGHT: properties panel for the selected section --}}
         <aside class="rc-props" id="rc-props">
-            <p class="rc-empty-hint">Select an element to edit it, or add one from the left.</p>
+            <p class="rc-empty-hint">Select a section to resize, reorder, or edit it — or add one from the left.</p>
         </aside>
-    </div>
-    </div>
-    </div>
+    </div></div></div></div>
 @endsection
 
 @section('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
     <script>
         function rcShowError(msg) {
             var banner = document.getElementById('rc-js-error-banner');
@@ -435,319 +246,370 @@
             banner.textContent = '⚠ Report card builder error — open DevTools console for full details.\n' + msg;
             console.error('[Report Card Builder]', msg);
         }
+        // The builder used to lock #rc-builder to a fixed pixel height
+        // measured once from the viewport top. That math goes stale the
+        // moment the page scrolls under a sticky/fixed top bar, which is
+        // what was rendering content underneath the nav. Letting the
+        // builder flow with the page (like every other screen in this
+        // app) instead of fighting its scroll removes that bug entirely.
 
-        // Fit the 3-column builder to whatever vertical space is actually left
-        // below this page's header/nav — measured, not guessed — and keep it
-        // correct across window resizes and different screen sizes.
-        function rcFitBuilderHeight() {
-            var el = document.getElementById('rc-builder');
-            if (!el) return;
-            var top = el.getBoundingClientRect().top + window.scrollY;
-            var h = Math.max(480, window.innerHeight - el.getBoundingClientRect().top);
-            el.style.height = h + 'px';
+        // Scale the 794px sheet down (via CSS zoom, which — unlike
+        // transform: scale() — actually shrinks the box for layout
+        // purposes) so narrower screens never need a horizontal
+        // scrollbar just to see the whole page.
+        function rcFitSheetWidth() {
+            var wrap = document.querySelector('.rc-canvas-wrap');
+            var sheet = document.getElementById('rc-sheet');
+            if (!wrap || !sheet) return;
+            var wrapStyles = getComputedStyle(wrap);
+            var horizontalPadding = parseFloat(wrapStyles.paddingLeft) + parseFloat(wrapStyles.paddingRight);
+            var available = wrap.clientWidth - horizontalPadding;
+            var scale = Math.max(0.3, Math.min(1, available / 794));
+            sheet.style.zoom = scale;
         }
-        window.addEventListener('resize', rcFitBuilderHeight);
-        document.addEventListener('DOMContentLoaded', rcFitBuilderHeight);
-        rcFitBuilderHeight();
-
+        window.addEventListener('resize', rcFitSheetWidth);
+        document.addEventListener('DOMContentLoaded', rcFitSheetWidth);
+        rcFitSheetWidth();
         window.addEventListener('error', function (e) {
             rcShowError((e.error && e.error.stack) ? e.error.stack : e.message);
         });
 
         try {
             (function () {
-                if (typeof fabric === 'undefined') {
-                    rcShowError('fabric.js did not load — check your internet connection / that cdnjs.cloudflare.com is reachable, or download fabric.min.js locally and update the <script src> in resources/views/report-cards/builder.blade.php.');
-                    return;
-                }
-
                 const SAVE_URL = "{{ route('report-templates.autosave', $template) }}";
                 const PUBLISH_URL = "{{ route('report-templates.publish', $template) }}";
                 const PREVIEW_URL = "{{ route('report-templates.preview', $template) }}";
                 const CSRF = "{{ csrf_token() }}";
+                const WIDTHS = [2, 3, 4, 6, 8, 9, 12];
 
-                const canvas = new fabric.Canvas('rc-canvas', { backgroundColor: {!! json_encode($template->background['color'] ?? '#ffffff') !!} });
+                // Every element already has {id, type, row, width, props} —
+                // seeded from the Classic/Modern/Minimal starter this
+                // template was duplicated from. Legacy free-canvas elements
+                // (x/y, no row/width) are migrated on load so old data
+                // doesn't crash the new editor.
                 let elements = @json($template->elements ?: []);
-                let selectedId = null;
+                elements = elements.map((el, i) => ({
+                    id: el.id || ('el-' + i),
+                    type: el.type,
+                    row: el.row ?? i,
+                    width: el.width ?? 12,
+                    props: el.props || {},
+                }));
+                let selectedId = elements[0]?.id ?? null;
+                let dragId = null;
 
                 const TYPE_LABELS = {
                     logo: 'Logo', text: 'Text', student_field: 'Student Field', student_photo: 'Student Photo',
                     subjects_table: 'Subjects Table', grading_key: 'Grading Key', remarks: 'Remarks', signature: 'Signature',
-                    attendance: 'Attendance', divider: 'Divider', shape: 'Shape', watermark: 'Watermark', qr_code: 'QR Code',
+                    attendance: 'Attendance', divider: 'Divider', shape: 'Shape / Band', watermark: 'Watermark', qr_code: 'QR Code',
                 };
 
-                // ---- render existing elements onto the canvas as fabric objects ----
-                function elementToFabricObject(el) {
-                    // Each element type gets a lightweight visual proxy on the canvas —
-                    // a labeled rectangle for structured types (tables, remarks, etc.)
-                    // and a real text object for text, so designers get an
-                    // accurate-enough WYSIWYG without re-implementing every renderer
-                    // branch in canvas-land. The Blade renderer is the source of truth
-                    // for the final pixel-perfect output.
-                    const common = {
-                        left: el.x, top: el.y, width: el.w, height: el.h,
-                        angle: el.rotation || 0, selectable: true,
-                    };
-
-                    if (el.type === 'text') {
-                        return new fabric.Textbox(el.props.content || 'Text', {
-                            ...common,
-                            fontSize: el.props.fontSize || 14,
-                            fontWeight: el.props.fontWeight || 400,
-                            fill: el.props.color || '#111',
-                        });
-                    }
-
-                    if (el.type === 'logo' || el.type === 'student_photo') {
-                        const rect = new fabric.Rect({ width: el.w, height: el.h, fill: '#eef2ff', stroke: '#c7d2fe', strokeDashArray: [4, 4] });
-                        const label = new fabric.Text(el.type === 'logo' ? (el.props.slot === 'logo_secondary' ? 'Logo R' : 'Logo L') : 'Photo', {
-                            fontSize: 12, fill: '#4338ca', originX: 'center', originY: 'center', left: el.w / 2, top: el.h / 2,
-                        });
-                        return new fabric.Group([rect, label], common);
-                    }
-
-                    // structured/data-bound elements -> labeled placeholder block
-                    const labels = {
-                        subjects_table: 'Subjects Table', grading_key: 'Grading Key',
-                        remarks: (el.props.role === 'head_teacher' ? 'Head Teacher Remarks' : 'Class Teacher Remarks'),
-                        signature: el.props.label || 'Signature', attendance: 'Attendance',
-                        student_field: el.props.label || el.props.field, divider: 'Divider',
-                        shape: 'Shape', watermark: 'Watermark', qr_code: 'QR Code',
-                    };
-                    const rect = new fabric.Rect({ width: el.w, height: el.h, fill: '#f8fafc', stroke: '#cbd5e1' });
-                    const label = new fabric.Text(labels[el.type] || el.type, {
-                        fontSize: 12, fill: '#334155', originX: 'center', originY: 'center', left: el.w / 2, top: el.h / 2,
-                    });
-                    return new fabric.Group([rect, label], common);
+                function rows() {
+                    const byRow = {};
+                    elements.forEach(el => { (byRow[el.row] = byRow[el.row] || []).push(el); });
+                    return Object.keys(byRow).map(Number).sort((a, b) => a - b).map(r => ({ row: r, els: byRow[r] }));
                 }
 
-                function loadElements() {
-                    canvas.clear();
+                function nextRowNumber() {
+                    return elements.length ? Math.max(...elements.map(e => e.row)) + 1 : 0;
+                }
+
+                // ---- lightweight, per-type preview markup (right panel + "Preview with sample data" gives full fidelity) ----
+                function colPreview(el) {
+                    const p = el.props || {};
+                    switch (el.type) {
+                        case 'text': return `<div style="font-size:${Math.min(p.fontSize||14,20)}px;font-weight:${p.fontWeight||400};color:${p.color||'#111'};">${(p.content||'Text').replace(/<[^>]+>/g,' ')}</div>`;
+                        case 'logo': return `<div style="height:${Math.min(p.height||60,60)}px;display:flex;align-items:center;justify-content:center;background:#eef2ff;border:1px dashed #c7d2fe;border-radius:6px;color:#4338ca;font-size:.68rem;">Logo${p.slot==='logo_secondary'?' (R)':''}</div>`;
+                        case 'student_photo': return `<div style="height:60px;display:flex;align-items:center;justify-content:center;background:#eef2ff;border:1px dashed #c7d2fe;border-radius:6px;color:#4338ca;font-size:.68rem;">Student Photo</div>`;
+                        case 'student_field': return `<div><strong>${p.label||p.field||''}:</strong> Sample</div>`;
+                        case 'subjects_table': {
+                            const cols = p.columns || ['name','score','grade','remark'];
+                            return `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody><tr>${cols.map(()=>`<td>—</td>`).join('')}</tr></tbody></table>`;
+                        }
+                        case 'grading_key': return `<div style="color:#666;">A: 80–100 &nbsp; B: 65–79 &nbsp; C: 50–64</div>`;
+                        case 'remarks': return `<div><strong style="text-transform:capitalize;">${(p.role||'').replace('_',' ')} remarks:</strong> <span style="color:#888;">…</span></div>`;
+                        case 'signature': return `<div style="padding-top:16px;"><div style="border-top:1px solid #333;margin-bottom:2px;"></div><span style="font-size:.7rem;color:#555;">${p.label||'Signature'}</span></div>`;
+                        case 'attendance': return `<div>Present: — &nbsp; Absent: —</div>`;
+                        case 'divider': return `<div style="height:${p.thickness||2}px;background:${p.color||'#ccc'};"></div>`;
+                        case 'shape': return `<div style="height:${Math.min(p.height||20,30)}px;background:${p.fill||'#e5e7f2'};border-radius:${p.borderRadius||0}px;"></div>`;
+                        case 'watermark': return `<div style="color:#bbb;font-size:.7rem;">Watermark: "${p.content||''}" (renders faint, behind everything)</div>`;
+                        case 'qr_code': return `<div style="width:40px;height:40px;background:repeating-linear-gradient(45deg,#ddd,#ddd 3px,#fff 3px,#fff 6px);border-radius:4px;"></div>`;
+                        default: return '';
+                    }
+                }
+
+                function render() {
+                    const sheet = document.getElementById('rc-sheet');
+                    sheet.style.background = bgColor;
+                    sheet.innerHTML = '';
+
+                    rows().forEach(({ row, els }) => {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'rc-row';
+                        rowEl.dataset.row = row;
+
+                        const controls = document.createElement('div');
+                        controls.className = 'rc-row-controls';
+                        controls.innerHTML = `<span>Row</span>
+                            <button data-row-up>↑ row</button>
+                            <button data-row-down>↓ row</button>
+                            <button data-row-del>🗑 row</button>`;
+                        controls.querySelector('[data-row-up]').onclick = () => moveRow(row, -1);
+                        controls.querySelector('[data-row-down]').onclick = () => moveRow(row, 1);
+                        controls.querySelector('[data-row-del]').onclick = () => deleteRow(row);
+                        rowEl.appendChild(controls);
+
+                        els.forEach(el => rowEl.appendChild(colNode(el)));
+
+                        rowEl.addEventListener('dragover', e => { e.preventDefault(); rowEl.classList.add('rc-row-dragover'); });
+                        rowEl.addEventListener('dragleave', () => rowEl.classList.remove('rc-row-dragover'));
+                        rowEl.addEventListener('drop', e => {
+                            e.preventDefault();
+                            rowEl.classList.remove('rc-row-dragover');
+                            if (dragId) moveElementToRow(dragId, row);
+                        });
+
+                        sheet.appendChild(rowEl);
+                    });
+
+                    renderProps();
+                }
+
+                function colNode(el) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'rc-col' + (el.id === selectedId ? ' selected' : '');
+                    wrap.style.cssText = `width:${el.width/12*100}%;`;
+                    wrap.dataset.id = el.id;
+
+                    const inner = document.createElement('div');
+                    inner.className = 'rc-col-inner';
+                    inner.innerHTML = `
+                        <span class="rc-col-drag" draggable="true" title="Drag to reorder">⠿</span>
+                        <button class="rc-col-del" title="Delete section">✕</button>
+                        <div class="rc-col-badge"><span>${TYPE_LABELS[el.type] || el.type}</span><span class="rc-col-width">md-${el.width}</span></div>
+                        <div class="rc-col-preview">${colPreview(el)}</div>
+                        <div class="rc-col-resize"></div>
+                    `;
+                    inner.addEventListener('click', (e) => {
+                        if (e.target.closest('.rc-col-del') || e.target.closest('.rc-col-resize')) return;
+                        selectedId = el.id;
+                        render();
+                    });
+                    inner.querySelector('.rc-col-del').addEventListener('click', (e) => { e.stopPropagation(); deleteElement(el.id); });
+
+                    const dragHandle = inner.querySelector('.rc-col-drag');
+                    dragHandle.addEventListener('dragstart', (e) => { dragId = el.id; e.dataTransfer.effectAllowed = 'move'; });
+                    dragHandle.addEventListener('dragend', () => { dragId = null; });
+
+                    // drop-to-reorder within/between rows, positioned before this section
+                    wrap.addEventListener('dragover', e => e.preventDefault());
+                    wrap.addEventListener('drop', e => {
+                        e.preventDefault(); e.stopPropagation();
+                        if (dragId && dragId !== el.id) reorderBefore(dragId, el.id);
+                    });
+
+                    // drag-to-resize the right edge, snapping to the nearest grid width
+                    const resizer = inner.querySelector('.rc-col-resize');
+                    resizer.addEventListener('mousedown', (ev) => {
+                        ev.preventDefault(); ev.stopPropagation();
+                        selectedId = el.id;
+                        const sheetWidth = document.getElementById('rc-sheet').clientWidth;
+                        const startX = ev.clientX;
+                        const startWidth = el.width;
+                        function onMove(e2) {
+                            const deltaCols = Math.round((e2.clientX - startX) / (sheetWidth / 12));
+                            el.width = Math.max(2, Math.min(12, startWidth + deltaCols));
+                            render();
+                        }
+                        function onUp() {
+                            document.removeEventListener('mousemove', onMove);
+                            document.removeEventListener('mouseup', onUp);
+                            scheduleSave();
+                        }
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                    });
+
+                    wrap.appendChild(inner);
+                    return wrap;
+                }
+
+                function reorderBefore(movingId, targetId) {
+                    const moving = elements.find(e => e.id === movingId);
+                    const target = elements.find(e => e.id === targetId);
+                    if (!moving || !target) return;
+                    moving.row = target.row;
+                    elements = elements.filter(e => e.id !== movingId);
+                    const idx = elements.findIndex(e => e.id === targetId);
+                    elements.splice(idx, 0, moving);
+                    selectedId = movingId;
+                    render(); scheduleSave();
+                }
+
+                function moveElementToRow(id, row) {
+                    const el = elements.find(e => e.id === id);
+                    if (!el) return;
+                    el.row = row;
+                    selectedId = id;
+                    render(); scheduleSave();
+                }
+
+                function moveRow(row, dir) {
+                    const rs = rows().map(r => r.row);
+                    const idx = rs.indexOf(row);
+                    const swapWith = rs[idx + dir];
+                    if (swapWith === undefined) return;
                     elements.forEach(el => {
-                        const obj = elementToFabricObject(el);
-                        obj.__elId = el.id;
-                        canvas.add(obj);
-                        if (el.id === selectedId) canvas.setActiveObject(obj);
+                        if (el.row === row) el.row = swapWith;
+                        else if (el.row === swapWith) el.row = row;
                     });
-                    canvas.renderAll();
-                    renderLayers();
+                    render(); scheduleSave();
                 }
 
-                function renderLayers() {
-                    const list = document.getElementById('rc-layers');
-                    list.innerHTML = '';
-                    elements.slice().sort((a, b) => (b.zIndex || 1) - (a.zIndex || 1)).forEach(el => {
-                        const li = document.createElement('li');
-                        li.className = el.id === selectedId ? 'active' : '';
-                        li.innerHTML = `<span class="rc-layer-name">${TYPE_LABELS[el.type] || el.type}${el.props?.label ? ' — ' + el.props.label : ''}</span>
-                    <span class="rc-layer-actions"><button data-del="${el.id}" title="Delete">✕</button></span>`;
-                        li.addEventListener('click', (e) => {
-                            if (e.target.closest('[data-del]')) return;
-                            selectElement(el.id);
-                        });
-                        list.appendChild(li);
-                    });
-                    list.querySelectorAll('[data-del]').forEach(btn => {
-                        btn.addEventListener('click', () => deleteElement(btn.dataset.del));
-                    });
-                }
-
-                function selectElement(id) {
-                    const obj = canvas.getObjects().find(o => o.__elId === id);
-                    if (obj) canvas.setActiveObject(obj);
-                    canvas.renderAll();
-                }
-
-                // ---- palette: add new element ----
-                document.querySelectorAll('[data-add]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const type = btn.dataset.add;
-                        const id = type + '-' + Date.now();
-                        const defaults = {
-                            logo: { w: 90, h: 90, props: { slot: btn.dataset.slot || 'logo_primary', borderRadius: 8 } },
-                            text: { w: 200, h: 30, props: { content: 'Edit this text', fontSize: 16 } },
-                            student_field: { w: 220, h: 24, props: { field: btn.dataset.field, label: btn.dataset.field } },
-                            student_photo: { w: 110, h: 130, props: { borderRadius: 4 } },
-                            subjects_table: { w: 500, h: 260, props: { columns: ['name', 'score', 'grade', 'remark'], zebra: true } },
-                            grading_key: { w: 400, h: 30, props: {} },
-                            remarks: { w: 500, h: 60, props: { role: btn.dataset.role } },
-                            signature: { w: 160, h: 50, props: { label: 'Class Teacher' } },
-                            attendance: { w: 220, h: 24, props: {} },
-                            divider: { w: 600, h: 2, props: { color: '#ccc' } },
-                            shape: { w: 120, h: 60, props: { fill: '#f1f5f9', borderRadius: 6 } },
-                            watermark: { w: 400, h: 200, props: { content: 'SCHOOL', opacity: 0.06 } },
-                            qr_code: { w: 100, h: 100, props: { dataField: '@{{student.admission_no}}' } },
-                        }[type];
-
-                        const maxZ = elements.reduce((m, e) => Math.max(m, e.zIndex || 1), 0);
-                        const el = { id, type, x: 60, y: 60, rotation: 0, zIndex: maxZ + 1, align: 'left', ...defaults };
-                        elements.push(el);
-                        selectedId = id;
-                        loadElements();
-                        selectElement(id);
-                        scheduleSave();
-                    });
-                });
-
-                // ---- keep element x/y/w/h in sync when dragged/resized ----
-                canvas.on('object:modified', (e) => {
-                    const obj = e.target;
-                    const el = elements.find(x => x.id === obj.__elId);
-                    if (!el) return;
-                    el.x = Math.round(obj.left);
-                    el.y = Math.round(obj.top);
-                    el.w = Math.round(obj.width * (obj.scaleX || 1));
-                    el.h = Math.round(obj.height * (obj.scaleY || 1));
-                    el.rotation = Math.round(obj.angle || 0);
-                    obj.set({ scaleX: 1, scaleY: 1, width: el.w, height: el.h });
-                    scheduleSave();
-                    showProps(el);
-                });
-
-                canvas.on('selection:created', (e) => onSelect(e.selected[0]));
-                canvas.on('selection:updated', (e) => onSelect(e.selected[0]));
-                canvas.on('selection:cleared', () => {
-                    selectedId = null;
-                    document.getElementById('rc-props').innerHTML = '<p class="rc-empty-hint">Select an element to edit it, or add one from the left.</p>';
-                    renderLayers();
-                });
-
-                function onSelect(obj) {
-                    const el = elements.find(x => x.id === obj.__elId);
-                    if (!el) return;
-                    selectedId = el.id;
-                    showProps(el);
-                    renderLayers();
+                function deleteRow(row) {
+                    if (!confirm('Remove every section in this row?')) return;
+                    elements = elements.filter(e => e.row !== row);
+                    if (!elements.find(e => e.id === selectedId)) selectedId = elements[0]?.id ?? null;
+                    render(); scheduleSave();
                 }
 
                 function deleteElement(id) {
                     elements = elements.filter(e => e.id !== id);
-                    if (selectedId === id) selectedId = null;
-                    loadElements();
-                    document.getElementById('rc-props').innerHTML = '<p class="rc-empty-hint">Select an element to edit it, or add one from the left.</p>';
-                    scheduleSave();
+                    if (selectedId === id) selectedId = elements[0]?.id ?? null;
+                    render(); scheduleSave();
                 }
 
-                function duplicateElement(el) {
-                    const copy = JSON.parse(JSON.stringify(el));
-                    copy.id = el.type + '-' + Date.now();
-                    copy.x = el.x + 16;
-                    copy.y = el.y + 16;
-                    const maxZ = elements.reduce((m, e) => Math.max(m, e.zIndex || 1), 0);
-                    copy.zIndex = maxZ + 1;
-                    elements.push(copy);
-                    selectedId = copy.id;
-                    loadElements();
-                    selectElement(copy.id);
-                    scheduleSave();
+                function addElement(type, extraProps) {
+                    const id = type + '-' + Date.now();
+                    const defaults = {
+                        text: { content: 'New text', fontSize: 14 },
+                        logo: { slot: extraProps?.slot || 'logo_primary', height: 70 },
+                        student_field: { field: extraProps?.field || 'name', label: 'Field' },
+                        student_photo: { height: 120 },
+                        subjects_table: { columns: ['name', 'score', 'grade', 'remark'], zebra: true, fontSize: 12 },
+                        grading_key: { fontSize: 11 },
+                        remarks: { role: extraProps?.role || 'class_teacher', fontSize: 12 },
+                        signature: { label: 'Signature' },
+                        attendance: { fontSize: 12 },
+                        divider: { color: '#cccccc', thickness: 2 },
+                        shape: { fill: '#f1f5f9', height: 20 },
+                        watermark: { content: 'DRAFT', opacity: 0.08 },
+                        qr_code: { dataField: '', size: 90 },
+                    };
+                    const el = { id, type, row: nextRowNumber(), width: 12, props: { ...(defaults[type] || {}), ...(extraProps || {}) } };
+                    elements.push(el);
+                    selectedId = id;
+                    render(); scheduleSave();
                 }
 
-                // ---- keyboard shortcuts: Delete/Backspace removes the selected element ----
-                document.addEventListener('keydown', (e) => {
-                    if (!selectedId) return;
-                    const tag = (e.target.tagName || '').toLowerCase();
-                    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-                    if (e.key === 'Delete' || e.key === 'Backspace') {
-                        e.preventDefault();
-                        deleteElement(selectedId);
-                    }
+                document.querySelectorAll('[data-add]').forEach(btn => {
+                    btn.addEventListener('click', () => addElement(btn.dataset.add, {
+                        slot: btn.dataset.slot, field: btn.dataset.field, role: btn.dataset.role,
+                    }));
                 });
+                document.getElementById('rc-add-row-btn').addEventListener('click', () => addElement('text', { content: 'New text' }));
 
-                // ---- properties panel: type-specific fields ----
-                function showProps(el) {
+                // ---- right-hand properties panel ----
+                function renderProps() {
                     const panel = document.getElementById('rc-props');
-                    let fields = `<span class="rc-type-badge">${TYPE_LABELS[el.type] || el.type}</span>
-                <div class="rc-el-actions">
-                    <button id="rc-dup-btn">⧉ Duplicate</button>
-                    <button id="rc-delete-btn" class="rc-delete-btn">✕ Delete</button>
-                </div>
-                <div class="rc-prop-row">
-                    <label>X <input type="number" data-p="x" value="${el.x}"></label>
-                    <label>Y <input type="number" data-p="y" value="${el.y}"></label>
-                </div>
-                <div class="rc-prop-row">
-                    <label>W <input type="number" data-p="w" value="${el.w}"></label>
-                    <label>H <input type="number" data-p="h" value="${el.h}"></label>
-                </div>
-                <div class="rc-prop-row">
-                    <label>Rotation <input type="number" data-p="rotation" value="${el.rotation || 0}"></label>
-                    <label>Layer (z) <input type="number" data-p="zIndex" value="${el.zIndex || 1}"></label>
-                </div>`;
+                    const el = elements.find(e => e.id === selectedId);
+                    if (!el) { panel.innerHTML = '<p class="rc-empty-hint">Select a section to resize, reorder, or edit it — or add one from the left.</p>'; return; }
 
+                    let html = `<span class="rc-type-badge">${TYPE_LABELS[el.type] || el.type}</span>
+                        <div class="rc-el-actions"><button class="rc-delete-btn" id="rc-delete-btn">Delete section</button></div>
+                        <label>Section width (grid columns, out of 12)
+                            <div class="rc-width-grid">
+                                ${WIDTHS.map(w => `<button data-width="${w}" class="${el.width === w ? 'active' : ''}">${w}</button>`).join('')}
+                            </div>
+                        </label>
+                        <label>Row <input type="number" min="0" data-p="row" value="${el.row}"></label>`;
+
+                    const p = el.props || {};
                     if (el.type === 'text') {
-                        fields += `<label>Content <textarea data-pp="content" rows="3">${el.props.content || ''}</textarea></label>
-                    <p style="font-size:.72rem;color:#8a8fa8;margin:-.6rem 0 .8rem;">Use @{{school_name}}, @{{term}}, @{{year}}, @{{student.name}}, @{{overall_grade}}, etc.</p>
-                    <div class="rc-prop-row">
-                        <label>Font size <input type="number" data-pp="fontSize" value="${el.props.fontSize || 14}"></label>
-                        <label>Weight <input type="number" step="100" data-pp="fontWeight" value="${el.props.fontWeight || 400}"></label>
-                    </div>
-                    <label>Color <input type="color" data-pp="color" value="${el.props.color || '#111111'}"></label>`;
+                        html += `<label>Content (HTML + @{{merge_tags}} allowed) <textarea rows="3" data-pp="content">${p.content || ''}</textarea></label>
+                        <div class="rc-prop-row">
+                            <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 14}"></label>
+                            <label>Weight <input type="number" step="100" data-pp="fontWeight" value="${p.fontWeight || 400}"></label>
+                        </div>
+                        <label>Color <input type="color" data-pp="color" value="${p.color || '#111111'}"></label>
+                        <label>Align
+                            <select data-pp="align">
+                                <option value="left" ${(p.align||'left')==='left'?'selected':''}>Left</option>
+                                <option value="center" ${p.align==='center'?'selected':''}>Center</option>
+                                <option value="right" ${p.align==='right'?'selected':''}>Right</option>
+                            </select>
+                        </label>`;
                     }
                     if (el.type === 'logo') {
-                        fields += `<label>Slot
-                    <select data-pp="slot">
-                        <option value="logo_primary" ${el.props.slot === 'logo_primary' ? 'selected' : ''}>Primary</option>
-                        <option value="logo_secondary" ${el.props.slot === 'logo_secondary' ? 'selected' : ''}>Secondary</option>
-                    </select></label>
-                    <label>Rounding <input type="number" data-pp="borderRadius" value="${el.props.borderRadius || 0}"></label>
-                    <label>Drop shadow <input type="checkbox" data-pp="shadow" ${el.props.shadow ? 'checked' : ''}></label>`;
-                    }
-                    if (el.type === 'student_photo') {
-                        fields += `<label>Rounding <input type="number" data-pp="borderRadius" value="${el.props.borderRadius || 0}"></label>
-                    <label>Grayscale <input type="checkbox" data-pp="grayscale" ${el.props.grayscale ? 'checked' : ''}></label>`;
+                        html += `<label>Slot
+                            <select data-pp="slot">
+                                <option value="logo_primary" ${p.slot!=='logo_secondary'?'selected':''}>Primary</option>
+                                <option value="logo_secondary" ${p.slot==='logo_secondary'?'selected':''}>Secondary</option>
+                            </select></label>
+                        <label>Height (px) <input type="number" data-pp="height" value="${p.height || 70}"></label>
+                        <label>Rounding <input type="number" data-pp="borderRadius" value="${p.borderRadius || 0}"></label>
+                        <label>Drop shadow <input type="checkbox" data-pp="shadow" ${p.shadow ? 'checked' : ''}></label>`;
                     }
                     if (el.type === 'student_field') {
-                        fields += `<label>Field
-                    <select data-pp="field">
-                        ${['name', 'admission_no', 'class', 'stream', 'dob'].map(f => `<option value="${f}" ${el.props.field === f ? 'selected' : ''}>${f}</option>`).join('')}
-                    </select></label>
-                    <label>Label <input type="text" data-pp="label" value="${el.props.label || ''}"></label>
-                    <label>Font size <input type="number" data-pp="fontSize" value="${el.props.fontSize || 13}"></label>`;
+                        html += `<label>Field
+                            <select data-pp="field">
+                                <option value="name" ${p.field==='name'?'selected':''}>Name</option>
+                                <option value="admission_no" ${p.field==='admission_no'?'selected':''}>Admission No.</option>
+                                <option value="class" ${p.field==='class'?'selected':''}>Class</option>
+                                <option value="stream" ${p.field==='stream'?'selected':''}>Stream</option>
+                                <option value="dob" ${p.field==='dob'?'selected':''}>Date of Birth</option>
+                            </select></label>
+                        <label>Label <input type="text" data-pp="label" value="${p.label || ''}"></label>
+                        <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 13}"></label>`;
+                    }
+                    if (el.type === 'student_photo') {
+                        html += `<label>Height (px) <input type="number" data-pp="height" value="${p.height || 120}"></label>
+                        <label>Rounding <input type="number" data-pp="borderRadius" value="${p.borderRadius || 4}"></label>`;
                     }
                     if (el.type === 'subjects_table') {
-                        fields += `<label>Columns (comma separated) <input type="text" data-pp="columns" value="${(el.props.columns || []).join(',')}"></label>
-                    <label>Header color <input type="color" data-pp="headerColor" value="${el.props.headerColor || '#f2f2f2'}"></label>
-                    <label>Font size <input type="number" data-pp="fontSize" value="${el.props.fontSize || 12}"></label>
-                    <label>Zebra stripes <input type="checkbox" data-pp="zebra" ${el.props.zebra ? 'checked' : ''}></label>`;
+                        html += `<label>Columns (comma separated) <input type="text" data-pp="columns" value="${(p.columns || []).join(',')}"></label>
+                        <label>Header color <input type="color" data-pp="headerColor" value="${p.headerColor || '#f2f2f2'}"></label>
+                        <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 12}"></label>
+                        <label>Zebra stripes <input type="checkbox" data-pp="zebra" ${p.zebra ? 'checked' : ''}></label>`;
                     }
                     if (el.type === 'remarks') {
-                        fields += `<label>Role
-                    <select data-pp="role">
-                        <option value="class_teacher" ${el.props.role === 'class_teacher' ? 'selected' : ''}>Class Teacher</option>
-                        <option value="head_teacher" ${el.props.role === 'head_teacher' ? 'selected' : ''}>Head Teacher</option>
-                    </select></label>
-                    <label>Font size <input type="number" data-pp="fontSize" value="${el.props.fontSize || 12}"></label>`;
+                        html += `<label>Role
+                            <select data-pp="role">
+                                <option value="class_teacher" ${p.role==='class_teacher'?'selected':''}>Class Teacher</option>
+                                <option value="head_teacher" ${p.role==='head_teacher'?'selected':''}>Head Teacher</option>
+                            </select></label>
+                        <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 12}"></label>`;
                     }
                     if (el.type === 'signature') {
-                        fields += `<label>Label <input type="text" data-pp="label" value="${el.props.label || ''}"></label>`;
+                        html += `<label>Label <input type="text" data-pp="label" value="${p.label || ''}"></label>`;
                     }
                     if (el.type === 'divider') {
-                        fields += `<label>Color <input type="color" data-pp="color" value="${el.props.color || '#cccccc'}"></label>`;
+                        html += `<label>Color <input type="color" data-pp="color" value="${p.color || '#cccccc'}"></label>
+                        <label>Thickness (px) <input type="number" data-pp="thickness" value="${p.thickness || 2}"></label>`;
                     }
                     if (el.type === 'shape') {
-                        fields += `<label>Fill <input type="color" data-pp="fill" value="${el.props.fill || '#f1f5f9'}"></label>
-                    <label>Border color <input type="color" data-pp="borderColor" value="${el.props.borderColor || '#cccccc'}"></label>
-                    <label>Rounding <input type="number" data-pp="borderRadius" value="${el.props.borderRadius || 0}"></label>`;
+                        html += `<label>Fill <input type="color" data-pp="fill" value="${p.fill || '#f1f5f9'}"></label>
+                        <label>Height (px) <input type="number" data-pp="height" value="${p.height || 20}"></label>
+                        <label>Rounding <input type="number" data-pp="borderRadius" value="${p.borderRadius || 0}"></label>`;
                     }
                     if (el.type === 'watermark') {
-                        fields += `<label>Text <input type="text" data-pp="content" value="${el.props.content || ''}"></label>
-                    <label>Opacity <input type="number" step="0.01" min="0" max="1" data-pp="opacity" value="${el.props.opacity ?? 0.08}"></label>`;
+                        html += `<label>Text <input type="text" data-pp="content" value="${p.content || ''}"></label>
+                        <label>Opacity <input type="number" step="0.01" min="0" max="1" data-pp="opacity" value="${p.opacity ?? 0.08}"></label>`;
                     }
                     if (el.type === 'qr_code') {
-                        fields += `<label>Encodes <input type="text" data-pp="dataField" value="${el.props.dataField || ''}"></label>
-                    <p style="font-size:.72rem;color:#8a8fa8;margin-top:-.6rem;">Merge tag, e.g. @{{student.admission_no}}</p>`;
+                        html += `<label>Encodes <input type="text" data-pp="dataField" value="${p.dataField || ''}"></label>
+                        <p style="font-size:.72rem;color:#8a8fa8;margin-top:-.6rem;">Merge tag, e.g. @{{student.admission_no}}. Leave blank to use the verification QR already on pass slips.</p>
+                        <label>Size (px) <input type="number" data-pp="size" value="${p.size || 90}"></label>`;
                     }
 
-                    panel.innerHTML = fields;
-
+                    panel.innerHTML = html;
                     panel.querySelector('#rc-delete-btn').addEventListener('click', () => deleteElement(el.id));
-                    panel.querySelector('#rc-dup-btn').addEventListener('click', () => duplicateElement(el));
 
+                    panel.querySelectorAll('[data-width]').forEach(btn => {
+                        btn.addEventListener('click', () => { el.width = Number(btn.dataset.width); render(); scheduleSave(); });
+                    });
                     panel.querySelectorAll('[data-p]').forEach(input => {
-                        input.addEventListener('input', () => {
-                            el[input.dataset.p] = Number(input.value);
-                            loadElements(); scheduleSave();
-                        });
+                        input.addEventListener('input', () => { el[input.dataset.p] = Number(input.value); render(); scheduleSave(); });
                     });
                     panel.querySelectorAll('[data-pp]').forEach(input => {
                         input.addEventListener('input', () => {
@@ -755,40 +617,18 @@
                             if (input.dataset.pp === 'columns') val = val.split(',').map(s => s.trim()).filter(Boolean);
                             if (input.dataset.pp === 'opacity') val = Number(val);
                             el.props[input.dataset.pp] = val;
-                            loadElements(); scheduleSave();
+                            render(); scheduleSave();
                         });
                     });
                 }
 
-                // ---- alignment tools (relative to canvas) ----
-                document.querySelectorAll('[data-align]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const obj = canvas.getActiveObject();
-                        if (!obj) return;
-                        const cw = canvas.getWidth(), ch = canvas.getHeight();
-                        const w = obj.width * (obj.scaleX || 1), h = obj.height * (obj.scaleY || 1);
-                        switch (btn.dataset.align) {
-                            case 'left': obj.set('left', 20); break;
-                            case 'right': obj.set('left', cw - w - 20); break;
-                            case 'center-h': obj.set('left', (cw - w) / 2); break;
-                            case 'top': obj.set('top', 20); break;
-                            case 'bottom': obj.set('top', ch - h - 20); break;
-                            case 'center-v': obj.set('top', (ch - h) / 2); break;
-                        }
-                        canvas.fire('object:modified', { target: obj });
-                        canvas.renderAll();
-                    });
-                });
-
-                // ---- canvas background color ----
+                // ---- page background ----
                 let bgColor = {!! json_encode($template->background['color'] ?? '#ffffff') !!};
                 document.getElementById('rc-bg-color').addEventListener('input', (e) => {
                     bgColor = e.target.value;
-                    canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
-                    scheduleSave();
+                    render(); scheduleSave();
                 });
 
-                // ---- template name ----
                 document.getElementById('rc-template-name').addEventListener('input', scheduleSave);
 
                 // ---- autosave (debounced) ----
@@ -828,7 +668,6 @@
                     window.open(PREVIEW_URL, '_blank');
                 });
 
-                // Warn before leaving with unsaved edits still in-flight.
                 window.addEventListener('beforeunload', (e) => {
                     if (document.getElementById('rc-save-status').textContent === 'Saving…') {
                         e.preventDefault();
@@ -836,7 +675,8 @@
                     }
                 });
 
-                loadElements();
+                render();
+                rcFitSheetWidth();
             })();
         } catch (err) {
             rcShowError(err && err.stack ? err.stack : String(err));
