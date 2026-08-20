@@ -5,10 +5,13 @@
     from one of the Classic / Modern / Minimal starters (see
     ReportCardTemplateSeeder + report-cards/index.blade.php "Use as
     starting point"). Editing means:
+      - click anywhere on a section to select it, or drag it anywhere on
+        its card to move/reorder it — the whole card is the drag handle
       - drag a section's right edge (or use the width buttons) to resize
         it in grid units — col-md-3, col-md-6, col-md-12, etc.
-      - drag a section by its handle to reorder it, up/down within its
-        row or into another row
+      - drag a section's bottom edge to resize its height in px (logo,
+        student photo, and shape/band sections only — everything else
+        sizes itself to its content)
       - add a section from the palette if you want something extra
     There is no free-form x/y canvas any more — every section always
     belongs to a row and a width, exactly like render.blade.php renders it.
@@ -114,8 +117,10 @@
         }
         .rc-col-inner {
             position: relative; border: 1.5px solid #e5e7f2; border-radius: 6px; background: #fafbff;
-            padding: 8px 10px; min-height: 44px; overflow: hidden;
+            padding: 8px 10px; min-height: 44px; overflow: hidden; cursor: grab;
         }
+        .rc-col-inner:active { cursor: grabbing; }
+        .rc-col-inner.rc-dragging { opacity: .4; }
         .rc-col.selected .rc-col-inner { border-color: #5351e4; box-shadow: 0 0 0 2px rgba(83,81,228,.15); background: #f6f6ff; }
         .rc-col-inner:hover { border-color: #b7bbea; }
         .rc-col-badge {
@@ -128,12 +133,12 @@
         .rc-col-preview table th, .rc-col-preview table td { border: 1px solid #ddd; padding: 2px 4px; }
 
         .rc-col-drag {
-            position: absolute; top: 2px; left: 2px; font-size: .8rem; color: #b5b8cc; cursor: grab;
-            padding: 2px 4px; line-height: 1; user-select: none;
+            position: absolute; top: 2px; left: 2px; font-size: .8rem; color: #b5b8cc;
+            padding: 2px 4px; line-height: 1; user-select: none; pointer-events: none;
         }
         .rc-col-del {
             position: absolute; top: 2px; right: 2px; font-size: .72rem; color: #c9ccdc; cursor: pointer;
-            border: none; background: none; padding: 2px 4px; line-height: 1;
+            border: none; background: none; padding: 2px 4px; line-height: 1; z-index: 6;
         }
         .rc-col-del:hover { color: #d64545; }
         .rc-col-resize {
@@ -144,6 +149,15 @@
             background: #d7d9ee; border-radius: 2px; transform: translateY(-50%);
         }
         .rc-col:hover .rc-col-resize::after, .rc-col.selected .rc-col-resize::after { background: #5351e4; }
+
+        .rc-col-resize-v {
+            position: absolute; left: 0; bottom: -4px; width: 100%; height: 9px; cursor: ns-resize; z-index: 5;
+        }
+        .rc-col-resize-v::after {
+            content: ''; position: absolute; left: 50%; bottom: 3px; height: 3px; width: 20px;
+            background: #d7d9ee; border-radius: 2px; transform: translateX(-50%);
+        }
+        .rc-col:hover .rc-col-resize-v::after, .rc-col.selected .rc-col-resize-v::after { background: #5351e4; }
 
         .rc-add-row-btn {
             display: block; width: 100%; text-align: center; padding: .6rem; margin-top: .5rem;
@@ -192,7 +206,7 @@
         {{-- LEFT: add-section palette --}}
         <aside class="rc-palette">
             <h3>Add a section</h3>
-            <p class="rc-hint">This design already starts from the {{ $template->name }} template. Add a section only if you need something extra — resize and reorder what's already here by dragging.</p>
+            <p class="rc-hint">This design already starts from the {{ $template->name }} template. Add a section only if you need something extra — click any card to select it, drag anywhere on it to move, drag its right edge to resize width, and (for logo/photo/shape) its bottom edge to resize height.</p>
             <div class="rc-palette-list">
                 <button data-add="text">🔤 Text</button>
                 <button data-add="logo" data-slot="logo_primary">🖼 Logo (Left)</button>
@@ -375,6 +389,11 @@
                     renderProps();
                 }
 
+                // Element types whose height is an explicit pixel prop (rather
+                // than auto-sized from content) — these get a bottom-edge
+                // drag-to-resize handle, same interaction as the width handle.
+                const HEIGHT_RESIZABLE_TYPES = ['logo', 'student_photo', 'shape'];
+
                 function colNode(el) {
                     const wrap = document.createElement('div');
                     wrap.className = 'rc-col' + (el.id === selectedId ? ' selected' : '');
@@ -383,23 +402,38 @@
 
                     const inner = document.createElement('div');
                     inner.className = 'rc-col-inner';
+                    inner.draggable = true;
+                    inner.title = 'Click to select. Drag anywhere on the card to move it.';
                     inner.innerHTML = `
-                        <span class="rc-col-drag" draggable="true" title="Drag to reorder">⠿</span>
+                        <span class="rc-col-drag" title="Drag to reorder">⠿</span>
                         <button class="rc-col-del" title="Delete section">✕</button>
                         <div class="rc-col-badge"><span>${TYPE_LABELS[el.type] || el.type}</span><span class="rc-col-width">md-${el.width}</span></div>
                         <div class="rc-col-preview">${colPreview(el)}</div>
-                        <div class="rc-col-resize"></div>
+                        <div class="rc-col-resize" title="Drag to resize width"></div>
+                        ${HEIGHT_RESIZABLE_TYPES.includes(el.type) ? '<div class="rc-col-resize-v" title="Drag to resize height"></div>' : ''}
                     `;
+                    // The whole card is the click target (select) AND the drag
+                    // source (reorder) now — not just the small ⠿ icon — so
+                    // clicking/dragging anywhere on it works, except the
+                    // delete button and the two resize handles.
                     inner.addEventListener('click', (e) => {
-                        if (e.target.closest('.rc-col-del') || e.target.closest('.rc-col-resize')) return;
+                        if (e.target.closest('.rc-col-del') || e.target.closest('.rc-col-resize') || e.target.closest('.rc-col-resize-v')) return;
                         selectedId = el.id;
                         render();
                     });
-                    inner.querySelector('.rc-col-del').addEventListener('click', (e) => { e.stopPropagation(); deleteElement(el.id); });
+                    const delBtn = inner.querySelector('.rc-col-del');
+                    delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+                    delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteElement(el.id); });
 
-                    const dragHandle = inner.querySelector('.rc-col-drag');
-                    dragHandle.addEventListener('dragstart', (e) => { dragId = el.id; e.dataTransfer.effectAllowed = 'move'; });
-                    dragHandle.addEventListener('dragend', () => { dragId = null; });
+                    inner.addEventListener('dragstart', (e) => {
+                        dragId = el.id;
+                        e.dataTransfer.effectAllowed = 'move';
+                        inner.classList.add('rc-dragging');
+                    });
+                    inner.addEventListener('dragend', () => {
+                        dragId = null;
+                        inner.classList.remove('rc-dragging');
+                    });
 
                     // drop-to-reorder within/between rows, positioned before this section
                     wrap.addEventListener('dragover', e => e.preventDefault());
@@ -429,6 +463,32 @@
                         document.addEventListener('mousemove', onMove);
                         document.addEventListener('mouseup', onUp);
                     });
+
+                    // drag-to-resize height (bottom edge) for logo / photo / shape
+                    // sections — exactly the same interaction as the width
+                    // handle above, just vertical and writing straight to
+                    // props.height instead of the grid width.
+                    const vResizer = inner.querySelector('.rc-col-resize-v');
+                    if (vResizer) {
+                        vResizer.addEventListener('mousedown', (ev) => {
+                            ev.preventDefault(); ev.stopPropagation();
+                            selectedId = el.id;
+                            const startY = ev.clientY;
+                            const startHeight = el.props.height || 60;
+                            function onMove(e2) {
+                                const deltaY = e2.clientY - startY;
+                                el.props.height = Math.max(16, Math.min(500, Math.round(startHeight + deltaY)));
+                                render();
+                            }
+                            function onUp() {
+                                document.removeEventListener('mousemove', onMove);
+                                document.removeEventListener('mouseup', onUp);
+                                scheduleSave();
+                            }
+                            document.addEventListener('mousemove', onMove);
+                            document.addEventListener('mouseup', onUp);
+                        });
+                    }
 
                     wrap.appendChild(inner);
                     return wrap;
@@ -538,7 +598,11 @@
                                 <option value="center" ${p.align==='center'?'selected':''}>Center</option>
                                 <option value="right" ${p.align==='right'?'selected':''}>Right</option>
                             </select>
-                        </label>`;
+                        </label>
+                        <label>Background <input type="text" data-pp="background" placeholder="e.g. #111827 or transparent" value="${p.background || ''}"></label>
+                        <label>Padding <input type="text" data-pp="padding" placeholder="e.g. 8px 14px" value="${p.padding || ''}"></label>
+                        <label>Corner rounding (px) <input type="number" data-pp="borderRadius" value="${p.borderRadius || 0}"></label>
+                        <label>Uppercase <input type="checkbox" data-pp="uppercase" ${p.uppercase ? 'checked' : ''}></label>`;
                     }
                     if (el.type === 'logo') {
                         html += `<label>Slot
@@ -548,7 +612,9 @@
                             </select></label>
                         <label>Height (px) <input type="number" data-pp="height" value="${p.height || 70}"></label>
                         <label>Rounding <input type="number" data-pp="borderRadius" value="${p.borderRadius || 0}"></label>
-                        <label>Drop shadow <input type="checkbox" data-pp="shadow" ${p.shadow ? 'checked' : ''}></label>`;
+                        <label>Drop shadow <input type="checkbox" data-pp="shadow" ${p.shadow ? 'checked' : ''}></label>
+                        <label>Background <input type="text" data-pp="background" placeholder="e.g. #111827 (for a banner header)" value="${p.background || ''}"></label>
+                        <label>Padding <input type="text" data-pp="padding" placeholder="e.g. 10px" value="${p.padding || ''}"></label>`;
                     }
                     if (el.type === 'student_field') {
                         html += `<label>Field
@@ -568,7 +634,9 @@
                     }
                     if (el.type === 'subjects_table') {
                         html += `<label>Columns (comma separated) <input type="text" data-pp="columns" value="${(p.columns || []).join(',')}"></label>
+                        <label>Column labels (comma separated, same order as columns — leave blank to use column names) <input type="text" data-pp="columnLabels" value="${(p.columns || []).map(c => (p.columnLabels && p.columnLabels[c]) || '').join(',')}"></label>
                         <label>Header color <input type="color" data-pp="headerColor" value="${p.headerColor || '#f2f2f2'}"></label>
+                        <label>Header text color <input type="text" data-pp="headerTextColor" placeholder="e.g. #ffffff" value="${p.headerTextColor || ''}"></label>
                         <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 12}"></label>
                         <label>Zebra stripes <input type="checkbox" data-pp="zebra" ${p.zebra ? 'checked' : ''}></label>`;
                     }
@@ -599,7 +667,10 @@
                     if (el.type === 'qr_code') {
                         html += `<label>Encodes <input type="text" data-pp="dataField" value="${p.dataField || ''}"></label>
                         <p style="font-size:.72rem;color:#8a8fa8;margin-top:-.6rem;">Merge tag, e.g. @{{student.admission_no}}. Leave blank to use the verification QR already on pass slips.</p>
-                        <label>Size (px) <input type="number" data-pp="size" value="${p.size || 90}"></label>`;
+                        <label>Size (px) <input type="number" data-pp="size" value="${p.size || 90}"></label>
+                        <label>Caption above <input type="text" data-pp="topLabel" placeholder="e.g. Scan to verify" value="${p.topLabel || ''}"></label>
+                        <label>Caption below <input type="text" data-pp="bottomLabel" placeholder="e.g. school short code" value="${p.bottomLabel || ''}"></label>
+                        <label>Caption color <input type="color" data-pp="labelColor" value="${p.labelColor || '#333333'}"></label>`;
                     }
 
                     panel.innerHTML = html;
@@ -615,6 +686,12 @@
                         input.addEventListener('input', () => {
                             let val = input.type === 'checkbox' ? input.checked : input.value;
                             if (input.dataset.pp === 'columns') val = val.split(',').map(s => s.trim()).filter(Boolean);
+                            if (input.dataset.pp === 'columnLabels') {
+                                const labels = val.split(',').map(s => s.trim());
+                                const cols = el.props.columns || [];
+                                val = {};
+                                cols.forEach((c, i) => { if (labels[i]) val[c] = labels[i]; });
+                            }
                             if (input.dataset.pp === 'opacity') val = Number(val);
                             el.props[input.dataset.pp] = val;
                             render(); scheduleSave();

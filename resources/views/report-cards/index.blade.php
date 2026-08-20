@@ -147,6 +147,47 @@
             background: #f4f5fa;
         }
 
+        .rc-gallery-actions button.rc-btn-danger {
+            color: #d9435e;
+            border-color: #f3cdd6;
+        }
+
+        .rc-gallery-actions button.rc-btn-danger:hover {
+            background: #fdecef;
+        }
+
+        .rc-gallery-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .5rem;
+            border-bottom: 2px solid #eceffc;
+            margin-bottom: 1rem;
+            padding-bottom: .5rem;
+        }
+
+        .rc-gallery-section-head h2 {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .rc-btn-restore {
+            font-size: .8rem;
+            font-weight: 600;
+            padding: .4rem .75rem;
+            border-radius: 8px;
+            border: 1px solid #dcdfef;
+            background: #fff;
+            color: #5351e4;
+            cursor: pointer;
+        }
+
+        .rc-btn-restore:hover {
+            background: #eef0fb;
+        }
+
         .rc-new-blank {
             margin-top: 1rem;
             padding: 1.5rem;
@@ -189,6 +230,42 @@
         .rc-new-blank button:hover {
             background: #333349;
         }
+        .rc-danger-zone {
+            margin-top: -.5rem;
+            margin-bottom: 2rem;
+            padding: .9rem 1.1rem;
+            background: #fff8f8;
+            border: 1px solid #f3cdd6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .rc-danger-zone p {
+            margin: 0;
+            font-size: .82rem;
+            color: #8a4a56;
+            max-width: 560px;
+        }
+
+        .rc-btn-reset-all {
+            font-size: .82rem;
+            font-weight: 700;
+            padding: .55rem .9rem;
+            border-radius: 8px;
+            border: 1px solid #d9435e;
+            background: #d9435e;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .rc-btn-reset-all:hover {
+            background: #c22e49;
+        }
     </style>
 @endsection
 
@@ -204,10 +281,40 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @php
+            $hasAnyOwnDesign = collect($templates)->flatten()->contains(fn ($t) => $t->school_id);
+        @endphp
+        @if($hasAnyOwnDesign)
+            <div class="rc-danger-zone">
+                <p><strong>Start over completely:</strong> permanently deletes every custom design your school has created
+                    or duplicated, in every category, and puts Nursery, Primary, Secondary and Custom all back on the
+                    system default (Modern, Classic, Minimal). This can't be undone.</p>
+                <form method="POST" action="{{ route('report-templates.reset-all') }}"
+                      onsubmit="return confirm('Delete ALL of your custom report card designs, in every category, and reset everything back to the system defaults? This cannot be undone.');">
+                    @csrf
+                    <button type="submit" class="rc-btn-reset-all">Reset everything to system defaults</button>
+                </form>
+            </div>
+        @endif
+
+
         @foreach(['nursery', 'primary', 'secondary', 'custom'] as $category)
             @if(!empty($templates[$category]))
                 <section class="rc-gallery-section">
-                    <h2>{{ ucfirst($category) }}</h2>
+                    <div class="rc-gallery-section-head">
+                        <h2>{{ ucfirst($category) }}</h2>
+                        @php
+                            $hasCustomDefault = collect($templates[$category])
+                                ->contains(fn ($t) => $t->school_id && $t->is_default);
+                        @endphp
+                        @if($hasCustomDefault)
+                            <form method="POST" action="{{ route('report-templates.restore-default', $category) }}"
+                                  onsubmit="return confirm('Switch back to the system default {{ $category }} design (Modern, Classic or Minimal)? Your custom design stays saved — you can set it as default again any time.');">
+                                @csrf
+                                <button type="submit" class="rc-btn-restore">Restore default</button>
+                            </form>
+                        @endif
+                    </div>
                     <div class="rc-gallery-grid">
                         @foreach($templates[$category] as $t)
                             <div class="rc-gallery-card {{ $t->is_default && $t->school_id ? 'is-default' : '' }}">
@@ -238,6 +345,12 @@
                                                     <button type="submit">Set as default</button>
                                                 </form>
                                             @endunless
+                                            <form method="POST" action="{{ route('report-templates.destroy', $t) }}"
+                                                  onsubmit="return confirm('Delete &quot;{{ $t->name }}&quot;? This can\'t be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="rc-btn-danger">Delete</button>
+                                            </form>
                                         @endif
                                     </div>
                                 </div>

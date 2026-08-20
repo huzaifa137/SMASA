@@ -138,6 +138,44 @@ class ReportCardTemplateController extends Controller
     }
 
     /**
+     * Un-sets this school's chosen default for a category, so printing
+     * falls back to the built-in system design (Modern / Classic / Minimal)
+     * for that category again. The school's own custom template(s) are not
+     * touched or deleted — just no longer marked default — so they can pick
+     * "Set as default" again later if they change their mind.
+     */
+    public function restoreDefault(Request $request, string $category)
+    {
+        abort_unless(in_array($category, ReportCardTemplate::CATEGORIES, true), 404);
+
+        $schoolId = session('LoggedSchool');
+
+        ReportCardTemplate::restoreSystemDefault($schoolId, $category);
+
+        return redirect()->route('report-templates.index')
+            ->with('success', "Switched back to the system default {$category} design.");
+    }
+
+    /**
+     * Wipes every template this school has created/duplicated, across all
+     * categories, and puts every category back on the system default
+     * (Modern / Classic / Minimal). This is the "start over completely"
+     * button — unlike restoreDefault() above (which just un-chooses one
+     * category's default and keeps the design saved), this permanently
+     * removes the designs themselves.
+     */
+    public function resetAll(Request $request)
+    {
+        $schoolId = session('LoggedSchool');
+
+        $removed = ReportCardTemplate::resetSchoolToDefaults($schoolId);
+
+        return redirect()->route('report-templates.index')->with('success', $removed > 0
+            ? "Removed all {$removed} of your custom designs — every category is back to the system default (Modern, Classic, Minimal)."
+            : "You don't have any custom designs to remove — everything is already on the system defaults.");
+    }
+
+    /**
      * Live preview with sample data — used both as the small iframe
      * thumbnail on the gallery and the full "Preview with sample data"
      * button inside the builder. Renders the DRAFT (unpublished) layout so

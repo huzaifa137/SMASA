@@ -68,13 +68,19 @@
 
                             @case('logo')
                                 @php $src = $data[$props['slot'] ?? 'logo_primary'] ?? null; $h = $props['height'] ?? 72; @endphp
-                                @if($src)
-                                    <img src="{{ $src }}" style="
-                                        height:{{ $h }}px; max-width:100%; object-fit:contain;
-                                        border-radius:{{ $props['borderRadius'] ?? 0 }}px;
-                                        {{ !empty($props['shadow']) ? 'box-shadow:0 2px 6px rgba(0,0,0,.15);' : '' }}
-                                    ">
-                                @endif
+                                <div style="
+                                    display:inline-block;
+                                    {{ isset($props['background']) ? 'background:'.$props['background'].';' : '' }}
+                                    {{ isset($props['padding']) ? 'padding:'.$props['padding'].';' : '' }}
+                                ">
+                                    @if($src)
+                                        <img src="{{ $src }}" style="
+                                            height:{{ $h }}px; max-width:100%; object-fit:contain;
+                                            border-radius:{{ $props['borderRadius'] ?? 0 }}px;
+                                            {{ !empty($props['shadow']) ? 'box-shadow:0 2px 6px rgba(0,0,0,.15);' : '' }}
+                                        ">
+                                    @endif
+                                </div>
                                 @break
 
                             @case('text')
@@ -83,6 +89,10 @@
                                     font-weight:{{ $props['fontWeight'] ?? 400 }};
                                     color:{{ $props['color'] ?? '#111' }};
                                     line-height:1.35;
+                                    {{ isset($props['background']) ? 'background:'.$props['background'].';' : '' }}
+                                    {{ isset($props['padding']) ? 'padding:'.$props['padding'].';' : '' }}
+                                    {{ isset($props['borderRadius']) ? 'border-radius:'.$props['borderRadius'].'px;' : '' }}
+                                    {{ !empty($props['uppercase']) ? 'text-transform:uppercase; letter-spacing:.08em;' : '' }}
                                 ">{!! \App\Support\MergeTags::resolve($props['content'] ?? '', $data) !!}</div>
                                 @break
 
@@ -111,7 +121,7 @@
                                     <thead>
                                         <tr style="background:{{ $props['headerColor'] ?? '#f2f2f2' }};">
                                             @foreach($props['columns'] ?? ['name','score','grade','remark'] as $col)
-                                                <th style="padding:5px 8px; border:1px solid #ccc; text-align:left; text-transform:capitalize;">{{ str_replace('_',' ',$col) }}</th>
+                                                <th style="padding:5px 8px; border:1px solid #ccc; text-align:left; text-transform:capitalize; color:{{ $props['headerTextColor'] ?? 'inherit' }};">{{ $props['columnLabels'][$col] ?? str_replace('_',' ',$col) }}</th>
                                             @endforeach
                                         </tr>
                                     </thead>
@@ -178,9 +188,17 @@
                                         : ($data['qr_text'] ?? \App\Support\MergeTags::resolve('@{{student.admission_no}}', $data));
                                     $size = $props['size'] ?? 90;
                                 @endphp
-                                @if($qrValue !== '')
-                                    <img src="data:image/svg+xml;base64,{{ base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size($size)->generate($qrValue)) }}" style="width:{{ $size }}px; height:{{ $size }}px;">
-                                @endif
+                                <div style="display:inline-block; text-align:center;">
+                                    @if(!empty($props['topLabel']))
+                                        <div style="font-size:{{ $props['labelFontSize'] ?? 10 }}px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:{{ $props['labelColor'] ?? '#333' }}; margin-bottom:5px;">{{ $props['topLabel'] }}</div>
+                                    @endif
+                                    @if($qrValue !== '')
+                                        <img src="data:image/svg+xml;base64,{{ base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size($size)->generate($qrValue)) }}" style="width:{{ $size }}px; height:{{ $size }}px; {{ !empty($props['border']) ? 'border:'.$props['border'].';padding:4px;' : '' }}">
+                                    @endif
+                                    @if(!empty($props['bottomLabel']))
+                                        <div style="font-size:{{ $props['labelFontSize'] ?? 10 }}px; font-weight:700; letter-spacing:.07em; color:{{ $props['labelColor'] ?? '#333' }}; margin-top:5px;">{{ $props['bottomLabel'] }}</div>
+                                    @endif
+                                </div>
                                 @break
 
                             @case('custom_html')

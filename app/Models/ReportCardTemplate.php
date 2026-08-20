@@ -114,17 +114,57 @@ class ReportCardTemplate extends Model
     }
 
     /**
+     * Un-choose whatever this school's own default is for a category, so
+     * printing falls back to the system's starter design for that category
+     * again (see resolveForSchool below). The school's custom template(s)
+     * are left untouched — just no longer marked as the default — so this
+     * is fully reversible with "Set as default" later.
+     */
+    public static function restoreSystemDefault(?int $schoolId, string $category): void
+    {
+        static::forSchool($schoolId)
+            ->category($category)
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
+    }
+
+    /**
+     * Nuclear option for "reset everything": soft-deletes EVERY template
+     * this school owns (any category) and clears any default flags, so
+     * every category falls all the way back to the system starter design
+     * (Modern / Classic / Minimal) — exactly the empty-slate state a
+     * school was in before it ever customized anything. Starter templates
+     * (school_id null) are never touched. Returns how many were removed.
+     */
+    public static function resetSchoolToDefaults(?int $schoolId): int
+    {
+        if (! $schoolId) {
+            return 0;
+        }
+
+        $owned = static::forSchool($schoolId)->where('is_active', true)->get();
+
+        static::forSchool($schoolId)->update(['is_active' => false, 'is_default' => false]);
+
+        return $owned->count();
+    }
+
+    /**
      * Resolve the template a given school should print with for a category:
-     * 1. That school's own template marked is_default for the category.
-     * 2. Any other active template that school owns in the category.
-     * 3. The global starter default for the category.
+     * 1. That school's own template explicitly marked is_default (chosen
+     *    via "Set as default") for the category.
+     * 2. The system starter default for the category — this is what a
+     *    school prints with once it has no explicit default of its own,
+     *    e.g. right after "Restore default" is used.
+     * 3. Any other active template that school owns in the category
+     *    (keeps things working even if a starter default is missing).
      * 4. Any active starter template for the category (last resort).
      */
     public static function resolveForSchool(?int $schoolId, string $category): ?self
     {
         return static::forSchool($schoolId)->category($category)->active()->where('is_default', true)->first()
-            ?? static::forSchool($schoolId)->category($category)->active()->latest()->first()
             ?? static::starter()->category($category)->active()->where('is_default', true)->first()
+            ?? static::forSchool($schoolId)->category($category)->active()->latest()->first()
             ?? static::starter()->category($category)->active()->first();
     }
 }

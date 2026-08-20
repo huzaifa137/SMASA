@@ -618,6 +618,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/', 'store')->name('store');
+            Route::post('/restore-default/{category}', 'restoreDefault')->name('restore-default');
+            Route::post('/reset-all', 'resetAll')->name('reset-all');
             Route::get('/{template}/edit', 'edit')->name('edit');
             Route::put('/{template}/autosave', 'autosave')->name('autosave');
             Route::post('/{template}/publish', 'publish')->name('publish');
