@@ -225,6 +225,8 @@
                 <button data-add="shape">▭ Shape / Accent Band</button>
                 <button data-add="watermark">💧 Watermark</button>
                 <button data-add="qr_code">▦ QR Code</button>
+                <button data-add="chart" data-kind="line_comparison">📈 Subject Chart</button>
+                <button data-add="chart" data-kind="bar_history">📊 History Chart</button>
             </div>
 
             <h3>Page background</h3>
@@ -316,6 +318,7 @@
                     logo: 'Logo', text: 'Text', student_field: 'Student Field', student_photo: 'Student Photo',
                     subjects_table: 'Subjects Table', grading_key: 'Grading Key', remarks: 'Remarks', signature: 'Signature',
                     attendance: 'Attendance', divider: 'Divider', shape: 'Shape / Band', watermark: 'Watermark', qr_code: 'QR Code',
+                    chart: 'Chart',
                 };
 
                 function rows() {
@@ -348,6 +351,7 @@
                         case 'shape': return `<div style="height:${Math.min(p.height||20,30)}px;background:${p.fill||'#e5e7f2'};border-radius:${p.borderRadius||0}px;"></div>`;
                         case 'watermark': return `<div style="color:#bbb;font-size:.7rem;">Watermark: "${p.content||''}" (renders faint, behind everything)</div>`;
                         case 'qr_code': return `<div style="width:40px;height:40px;background:repeating-linear-gradient(45deg,#ddd,#ddd 3px,#fff 3px,#fff 6px);border-radius:4px;"></div>`;
+                        case 'chart': return `<div style="height:44px;display:flex;align-items:flex-end;gap:3px;padding:4px;background:#f7f8fc;border:1px dashed #c7d2fe;border-radius:6px;">${(p.kind==='bar_history'?[10,18,14,26]:[16,10,20,12]).map(h=>`<div style="width:8px;height:${h}px;background:#8a90c7;border-radius:1px;"></div>`).join('')}<span style="font-size:.6rem;color:#4338ca;margin-left:4px;align-self:center;">${p.kind==='bar_history'?'History':'Subject'} chart</span></div>`;
                         default: return '';
                     }
                 }
@@ -555,6 +559,11 @@
                         shape: { fill: '#f1f5f9', height: 20 },
                         watermark: { content: 'DRAFT', opacity: 0.08 },
                         qr_code: { dataField: '', size: 90 },
+                        chart: {
+                            kind: extraProps?.kind || 'line_comparison',
+                            title: (extraProps?.kind === 'bar_history') ? 'Performance Over Time' : 'Subject Performance — Student vs Class',
+                            height: 130,
+                        },
                     };
                     const el = { id, type, row: nextRowNumber(), width: 12, props: { ...(defaults[type] || {}), ...(extraProps || {}) } };
                     elements.push(el);
@@ -564,7 +573,7 @@
 
                 document.querySelectorAll('[data-add]').forEach(btn => {
                     btn.addEventListener('click', () => addElement(btn.dataset.add, {
-                        slot: btn.dataset.slot, field: btn.dataset.field, role: btn.dataset.role,
+                        slot: btn.dataset.slot, field: btn.dataset.field, role: btn.dataset.role, kind: btn.dataset.kind,
                     }));
                 });
                 document.getElementById('rc-add-row-btn').addEventListener('click', () => addElement('text', { content: 'New text' }));
@@ -624,6 +633,8 @@
                                 <option value="class" ${p.field==='class'?'selected':''}>Class</option>
                                 <option value="stream" ${p.field==='stream'?'selected':''}>Stream</option>
                                 <option value="dob" ${p.field==='dob'?'selected':''}>Date of Birth</option>
+                                <option value="gender" ${p.field==='gender'?'selected':''}>Gender</option>
+                                <option value="status" ${p.field==='status'?'selected':''}>Status (Promoted/Repeat)</option>
                             </select></label>
                         <label>Label <input type="text" data-pp="label" value="${p.label || ''}"></label>
                         <label>Font size <input type="number" data-pp="fontSize" value="${p.fontSize || 13}"></label>`;
@@ -671,6 +682,18 @@
                         <label>Caption above <input type="text" data-pp="topLabel" placeholder="e.g. Scan to verify" value="${p.topLabel || ''}"></label>
                         <label>Caption below <input type="text" data-pp="bottomLabel" placeholder="e.g. school short code" value="${p.bottomLabel || ''}"></label>
                         <label>Caption color <input type="color" data-pp="labelColor" value="${p.labelColor || '#333333'}"></label>`;
+                    }
+                    if (el.type === 'chart') {
+                        html += `<label>Chart type
+                            <select data-pp="kind">
+                                <option value="line_comparison" ${(p.kind||'line_comparison')==='line_comparison'?'selected':''}>Subject Performance — Student vs Class</option>
+                                <option value="bar_history" ${p.kind==='bar_history'?'selected':''}>Performance Over Time (history)</option>
+                            </select></label>
+                        <label>Title <input type="text" data-pp="title" value="${p.title || ''}"></label>
+                        <label>Height (px) <input type="number" data-pp="height" value="${p.height || 130}"></label>
+                        <label>Student / bar color <input type="color" data-pp="studentColor" value="${p.studentColor || '#15213b'}"></label>
+                        <label>Class-average color <input type="color" data-pp="classColor" value="${p.classColor || '#c7cbd6'}"></label>
+                        <p style="font-size:.72rem;color:#8a8fa8;margin-top:-.6rem;">Rendered as static SVG server-side (not JS) so the builder preview and the printed PDF always match exactly.</p>`;
                     }
 
                     panel.innerHTML = html;

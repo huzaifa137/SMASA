@@ -78,17 +78,31 @@ class ReportCardRenderer
         ?SchoolProfile $profile = null,
         bool $forPdf = false
     ): array {
-        $subjects = collect($passslipData['subjectMarks'] ?? [])->map(fn ($m) => [
-            'name'          => $m->subject_name ?? '',
-            'score'         => $m->marks_obtained ?? '',
-            'total'         => $m->total_marks ?? '',
-            'grade'         => $m->grade ?? '',
-            'remark'        => $m->grade_remark ?? '',
-            'points'        => $m->grade_points ?? '',
-            'percentage'    => $m->percentage ?? '',
-            'class_average' => $m->class_average ?? '',
-            'teacher'       => $m->teacher_name ?? '',
-        ])->values()->toArray();
+        // Per-subject movement vs the previous exam — same "DEV." column the
+        // real pass slip shows (see slip.blade.php ~line 1620), reusing the
+        // previousSubjectMarks map buildPassslipData() already computes.
+        $prevSubjects = collect($passslipData['previousSubjectMarks'] ?? []);
+        $subjects = collect($passslipData['subjectMarks'] ?? [])->map(function ($m) use ($prevSubjects) {
+            $dev = null;
+            $prev = $prevSubjects->get($m->subject_id ?? null);
+            if ($prev && ($prev->total_marks ?? 0) > 0 && is_numeric($m->percentage ?? null)) {
+                $prevPct = round(($prev->marks_obtained / $prev->total_marks) * 100, 1);
+                $dev = round($m->percentage - $prevPct, 1);
+            }
+
+            return [
+                'name'          => $m->subject_name ?? '',
+                'score'         => $m->marks_obtained ?? '',
+                'total'         => $m->total_marks ?? '',
+                'grade'         => $m->grade ?? '',
+                'remark'        => $m->grade_remark ?? '',
+                'points'        => $m->grade_points ?? '',
+                'percentage'    => $m->percentage ?? '',
+                'class_average' => $m->class_average ?? '',
+                'teacher'       => $m->teacher_name ?? '',
+                'dev'           => $dev === null ? '—' : ($dev > 0 ? "+{$dev} ↑" : ($dev < 0 ? "{$dev} ↓" : '—')),
+            ];
+        })->values()->toArray();
 
         $gradingKey = collect($exam->resolvedGradingBands() ?? [])->map(fn ($g) => [
             'grade' => $g->grade ?? '',
@@ -96,8 +110,24 @@ class ReportCardRenderer
             'max'   => $g->max_mark ?? '',
         ])->toArray();
 
+        // Same "Promoted / Repeat" fallback logic as slip.blade.php (~line
+        // 1235) when the exam/student don't carry an explicit status —
+        // derived from whether the overall remark reads as a pass or fail.
+        $status = $passslipData['statusLabel']
+            ?? (str_contains(strtolower($passslipData['overallRemark'] ?? ''), 'fail') ? 'Repeat' : 'Promoted');
+
+        // "Performance Over Time" bar-chart series — last up to 3 previous
+        // exams plus the current one, exactly what buildPassslipData()
+        // already assembles for the canvas chart on the real pass slip.
+        $performanceHistory = collect($passslipData['growthData'] ?? [])
+            ->map(fn ($g) => ['label' => $g['label'] ?? '', 'value' => $g['percentage'] ?? 0])
+            ->values()->toArray();
+
         return [
             'school_name'    => $school->name ?? '',
+            'school_phone'   => $profile->phone ?? '',
+            'school_email'   => $profile->email ?? '',
+            'school_motto'   => $profile->motto ?? '',
             'logo_primary'   => $this->logoUrl($profile, $forPdf),
             'logo_secondary' => null, // SMASA schools currently store a single logo; wire a 2nd slot here if that's ever added
             'term'           => $exam->term ?? '',
@@ -108,11 +138,14 @@ class ReportCardRenderer
                 'admission_no'  => $student->admission_number ?? '',
                 'class'         => $className ?? '',
                 'stream'        => $student->stream ?? '',
+                'gender'        => $student->gender ?? '',
+                'status'        => ucfirst($status),
                 'photo_url'     => $this->photoUrl($student, $forPdf),
                 'dob'           => optional($student->date_of_birth)->format
                     ? optional($student->date_of_birth)->format('d M Y')
                     : ($student->date_of_birth ?? ''),
             ],
+            'performance_history' => $performanceHistory,
             'subjects' => $subjects,
             // SMASA doesn't track per-exam attendance yet — left blank until
             // that data exists; the `attendance` element just renders '-'.
@@ -229,19 +262,28 @@ class ReportCardRenderer
 
         return [
             'school_name'    => 'Greenfield Academy',
+            'school_phone'   => '+256 700 000 000',
+            'school_email'   => 'info@greenfieldacademy.ug',
+            'school_motto'   => 'Let Us Light the Way',
             'logo_primary'   => $logo,
             'logo_secondary' => $logo,
             'term' => 'Term 2', 'year' => '2026', 'exam_name' => 'End of Term Exam',
             'student' => [
                 'name' => 'Amara Nakato', 'admission_no' => 'GA-2024-118',
                 'class' => 'Primary 5', 'stream' => 'Blue',
+                'gender' => 'Female', 'status' => 'Promoted',
                 'photo_url' => $photo, 'dob' => '14 Mar 2016',
             ],
             'subjects' => [
-                ['name' => 'Mathematics', 'score' => 88, 'total' => 100, 'grade' => 'A', 'remark' => 'Excellent', 'percentage' => 88, 'class_average' => 71, 'teacher' => 'Mr. Okello'],
-                ['name' => 'English', 'score' => 74, 'total' => 100, 'grade' => 'B', 'remark' => 'Good effort', 'percentage' => 74, 'class_average' => 68, 'teacher' => 'Ms. Nabirye'],
-                ['name' => 'Science', 'score' => 81, 'total' => 100, 'grade' => 'A-', 'remark' => 'Very good', 'percentage' => 81, 'class_average' => 70, 'teacher' => 'Mr. Kato'],
-                ['name' => 'Social Studies', 'score' => 69, 'total' => 100, 'grade' => 'B-', 'remark' => 'Fair', 'percentage' => 69, 'class_average' => 64, 'teacher' => 'Mrs. Achen'],
+                ['name' => 'Mathematics', 'score' => 88, 'total' => 100, 'grade' => 'A', 'remark' => 'Excellent', 'percentage' => 88, 'class_average' => 71, 'teacher' => 'Mr. Okello', 'dev' => '+4 ↑'],
+                ['name' => 'English', 'score' => 74, 'total' => 100, 'grade' => 'B', 'remark' => 'Good effort', 'percentage' => 74, 'class_average' => 68, 'teacher' => 'Ms. Nabirye', 'dev' => '-2 ↓'],
+                ['name' => 'Science', 'score' => 81, 'total' => 100, 'grade' => 'A-', 'remark' => 'Very good', 'percentage' => 81, 'class_average' => 70, 'teacher' => 'Mr. Kato', 'dev' => '+6 ↑'],
+                ['name' => 'Social Studies', 'score' => 69, 'total' => 100, 'grade' => 'B-', 'remark' => 'Fair', 'percentage' => 69, 'class_average' => 64, 'teacher' => 'Mrs. Achen', 'dev' => '—'],
+            ],
+            'performance_history' => [
+                ['label' => 'Term 3 2025', 'value' => 66],
+                ['label' => 'Term 1 2026', 'value' => 71],
+                ['label' => 'Term 2 2026', 'value' => 78],
             ],
             'attendance' => ['present' => 84, 'absent' => 3],
             'remarks' => [

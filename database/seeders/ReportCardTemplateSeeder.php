@@ -20,13 +20,18 @@ class ReportCardTemplateSeeder extends Seeder
      * this class" resolution both keep working unchanged. "Classic" is
      * marked as the out-of-the-box default for each category.
      *
-     * Known gap: the pass-slip's two performance charts ("Subject
-     * Performance — Student vs Class" and "Performance Over Time") have no
-     * equivalent element type in the drag-and-drop builder yet — it only
-     * lays out text/table/image "sections" in rows, there's no chart
-     * renderer. Everything else (header, title band, student info, subject
-     * table, totals bar, remarks, signatures, footer) is rebuilt here to
-     * match.
+     * The pass-slip's two performance charts ("Subject Performance —
+     * Student vs Class" and "Performance Over Time") are reproduced with a
+     * `chart` element type (see resources/views/report-cards/render.blade.php)
+     * that draws plain server-side SVG — no chart.js/canvas — so the
+     * builder preview, the live browser slip, and the printed PDF are
+     * guaranteed to render identically.
+     *
+     * Rollout note: these upgrades (dual-logo header, student photo + QR +
+     * gender/status/position fields, the DEV. column, both charts) are
+     * currently wired for "modern" only — classic/minimal are being
+     * upgraded to match in the same way, one style at a time, so their
+     * output below is unchanged for now.
      */
     private const STYLES = ['classic', 'modern', 'minimal'];
 
@@ -125,26 +130,64 @@ class ReportCardTemplateSeeder extends Seeder
             'borderRadius' => $style === 'minimal' ? 6 : 12,
             'border' => $style === 'minimal' ? '1px solid #e2e2e2' : '3px solid ' . $ink,
         ]);
-        $infoLines = [
-            '<strong>NAME:</strong> {{student.name}}',
-            '<strong>CLASS:</strong> {{student.class}}',
-            '<strong>ADM NO:</strong> {{student.admission_no}}',
-            '<strong>POSITION:</strong> {{class_rank}} of {{class_total}}',
-        ];
-        $els[] = $this->el('info-1', 'text', $row, 5, [
-            'content' => implode('<br>', $infoLines), 'fontSize' => 13, 'color' => '#222', 'align' => 'left',
-        ]);
-        $els[] = $this->el('qr-1', 'qr_code', $row, 4, [
-            'size' => 90,
-            'topLabel' => 'Scan to verify',
-            'labelColor' => $style === 'minimal' ? '#888' : '#333',
-            'border' => $style === 'minimal' ? null : '2px solid ' . $ink,
-        ]);
+
+        if ($style === 'modern') {
+            // Matches the real pass-slip's student panel exactly (Name /
+            // Gender / Class / Status pill / LIN / Position), plus the
+            // "Subject Performance — Student vs Class" mini chart and the
+            // verification QR alongside it — see slip.blade.php stu-row.
+            $infoLines = [
+                '<strong>NAME:</strong> {{student.name}}',
+                '<strong>GENDER:</strong> {{student.gender}}',
+                '<strong>CLASS:</strong> {{student.class}}',
+                '<strong>STATUS:</strong> <span style="font-weight:700;color:' . $ink . ';">{{student.status}}</span>',
+                '<strong>LIN:</strong> {{student.admission_no}}',
+                '<strong>POSITION:</strong> {{class_rank}} of {{class_total}}',
+            ];
+            $els[] = $this->el('info-1', 'text', $row, 4, [
+                'content' => implode('<br>', $infoLines), 'fontSize' => 12, 'color' => '#222', 'align' => 'left',
+            ]);
+            $els[] = $this->el('chart-1', 'chart', $row, 3, [
+                'kind' => 'line_comparison',
+                'title' => 'Subject Performance — Student vs Class',
+                'height' => 120,
+                'studentColor' => $ink,
+            ]);
+            $els[] = $this->el('qr-1', 'qr_code', $row, 2, [
+                'size' => 78,
+                'topLabel' => 'Scan to verify',
+                'labelColor' => '#333',
+                'bottomLabel' => 'SMASA',
+                'border' => '2px solid ' . $ink,
+            ]);
+        } else {
+            $infoLines = [
+                '<strong>NAME:</strong> {{student.name}}',
+                '<strong>CLASS:</strong> {{student.class}}',
+                '<strong>ADM NO:</strong> {{student.admission_no}}',
+                '<strong>POSITION:</strong> {{class_rank}} of {{class_total}}',
+            ];
+            $els[] = $this->el('info-1', 'text', $row, 5, [
+                'content' => implode('<br>', $infoLines), 'fontSize' => 13, 'color' => '#222', 'align' => 'left',
+            ]);
+            $els[] = $this->el('qr-1', 'qr_code', $row, 4, [
+                'size' => 90,
+                'topLabel' => 'Scan to verify',
+                'labelColor' => $style === 'minimal' ? '#888' : '#333',
+                'border' => $style === 'minimal' ? null : '2px solid ' . $ink,
+            ]);
+        }
         $row++;
 
         // ── Subjects table ──────────────────────────────────────────
-        $columns = $isEarlyYears ? ['name', 'grade', 'remark', 'teacher'] : ['name', 'score', 'grade', 'remark', 'teacher'];
-        $labels = ['name' => 'Subjects', 'score' => 'Marks', 'grade' => 'Grade', 'remark' => 'Comment', 'teacher' => 'Teacher'];
+        // "modern" also shows the DEV. column (movement vs the previous
+        // exam) the real slip has, right after the score.
+        if ($style === 'modern' && !$isEarlyYears) {
+            $columns = ['name', 'score', 'dev', 'grade', 'remark', 'teacher'];
+        } else {
+            $columns = $isEarlyYears ? ['name', 'grade', 'remark', 'teacher'] : ['name', 'score', 'grade', 'remark', 'teacher'];
+        }
+        $labels = ['name' => 'Subjects', 'score' => 'Marks', 'dev' => 'Dev.', 'grade' => 'Grade', 'remark' => 'Comment', 'teacher' => 'Teacher'];
         $els[] = $this->el('table-1', 'subjects_table', $row, 12, [
             'columns' => $columns,
             'columnLabels' => array_intersect_key($labels, array_flip($columns)),
@@ -174,8 +217,18 @@ class ReportCardTemplateSeeder extends Seeder
         $els[] = $this->el('att-1', 'attendance', $row, 4, ['fontSize' => 11]);
         $row++;
 
-        // ── Remarks ──────────────────────────────────────────────────
-        $els[] = $this->el('remarks-1', 'remarks', $row, 12, ['role' => 'class_teacher', 'fontSize' => 12]);
+        // ── Remarks (+ "Performance Over Time" chart for modern) ──────
+        if ($style === 'modern') {
+            $els[] = $this->el('chart-2', 'chart', $row, 5, [
+                'kind' => 'bar_history',
+                'title' => 'Performance Over Time',
+                'height' => 130,
+                'studentColor' => $ink,
+            ]);
+            $els[] = $this->el('remarks-1', 'remarks', $row, 7, ['role' => 'class_teacher', 'fontSize' => 12]);
+        } else {
+            $els[] = $this->el('remarks-1', 'remarks', $row, 12, ['role' => 'class_teacher', 'fontSize' => 12]);
+        }
         $row++;
         if (!$isEarlyYears) {
             $els[] = $this->el('remarks-2', 'remarks', $row, 12, ['role' => 'head_teacher', 'fontSize' => 12]);

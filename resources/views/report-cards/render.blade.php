@@ -201,6 +201,91 @@
                                 </div>
                                 @break
 
+                            @case('chart')
+                                {{--
+                                    Inline-SVG stand-in for the two Chart.js
+                                    canvases the real pass slip draws with JS
+                                    (see slip.blade.php $cMini / $cPerf).
+                                    dompdf can't execute chart.js, so this is
+                                    plain SVG built server-side — it renders
+                                    identically in the builder preview, the
+                                    live browser view, AND the printed PDF.
+                                    kind: 'line_comparison' (student vs class
+                                    average per subject) or 'bar_history'
+                                    (percentage over past exams).
+                                --}}
+                                @php
+                                    $chartKind = $props['kind'] ?? 'line_comparison';
+                                    $chartTitle = $props['title'] ?? ($chartKind === 'bar_history' ? 'Performance Over Time' : 'Subject Performance — Student vs Class');
+                                    $chartH = max(60, (int) ($props['height'] ?? 130));
+                                    $studentColor = $props['studentColor'] ?? '#15213b';
+                                    $classColor = $props['classColor'] ?? '#c7cbd6';
+                                    $barColor = $props['barColor'] ?? $studentColor;
+                                    $vbW = 300;
+                                    $padL = $chartKind === 'bar_history' ? 22 : 8;
+                                    $padR = 8; $padT = 12; $padB = 20;
+                                    $plotW = $vbW - $padL - $padR;
+                                    $plotH = $chartH - $padT - $padB;
+                                @endphp
+                                <div style="font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#555; margin-bottom:4px;">{{ $chartTitle }}</div>
+                                @if($chartKind === 'bar_history')
+                                    @php $history = $data['performance_history'] ?? []; $n = count($history); @endphp
+                                    @if($n > 0)
+                                        <svg viewBox="0 0 {{ $vbW }} {{ $chartH }}" style="width:100%; height:auto; display:block;">
+                                            <line x1="{{ $padL }}" y1="{{ $padT + $plotH }}" x2="{{ $vbW - $padR }}" y2="{{ $padT + $plotH }}" stroke="#e2e2e2" stroke-width="1" />
+                                            @foreach([0, 50, 100] as $tick)
+                                                <text x="{{ $padL - 4 }}" y="{{ $padT + $plotH - ($tick / 100 * $plotH) + 3 }}" font-size="7" fill="#999" text-anchor="end">{{ $tick }}</text>
+                                            @endforeach
+                                            @php $gap = $plotW / $n; $barW = min(34, $gap * 0.55); @endphp
+                                            @foreach($history as $i => $pt)
+                                                @php
+                                                    $val = max(0, min(100, (float) ($pt['value'] ?? 0)));
+                                                    $barH = $val / 100 * $plotH;
+                                                    $x = $padL + $i * $gap + ($gap - $barW) / 2;
+                                                    $y = $padT + $plotH - $barH;
+                                                @endphp
+                                                <rect x="{{ round($x, 1) }}" y="{{ round($y, 1) }}" width="{{ round($barW, 1) }}" height="{{ round($barH, 1) }}" rx="2" fill="{{ $barColor }}" />
+                                                <text x="{{ round($x + $barW / 2, 1) }}" y="{{ round($y - 4, 1) }}" font-size="7.5" font-weight="700" fill="{{ $barColor }}" text-anchor="middle">{{ $val }}%</text>
+                                                <text x="{{ round($x + $barW / 2, 1) }}" y="{{ $chartH - 4 }}" font-size="7" fill="#888" text-anchor="middle">{{ \Illuminate\Support\Str::limit($pt['label'] ?? '', 10, '') }}</text>
+                                            @endforeach
+                                        </svg>
+                                    @else
+                                        <div style="font-size:11px; color:#999; padding:10px 0;">No exam history yet.</div>
+                                    @endif
+                                @else
+                                    @php $subjects = $data['subjects'] ?? []; $n = count($subjects); @endphp
+                                    @if($n > 0)
+                                        @php
+                                            $stepX = $n > 1 ? $plotW / ($n - 1) : 0;
+                                            $studentPts = []; $classPts = [];
+                                            foreach ($subjects as $i => $subj) {
+                                                $x = $n > 1 ? $padL + $i * $stepX : $padL + $plotW / 2;
+                                                $sv = max(0, min(100, (float) ($subj['percentage'] ?? 0)));
+                                                $cv = max(0, min(100, (float) ($subj['class_average'] ?? $sv)));
+                                                $studentPts[] = round($x, 1) . ',' . round($padT + $plotH - ($sv / 100 * $plotH), 1);
+                                                $classPts[] = round($x, 1) . ',' . round($padT + $plotH - ($cv / 100 * $plotH), 1);
+                                            }
+                                        @endphp
+                                        <svg viewBox="0 0 {{ $vbW }} {{ $chartH }}" style="width:100%; height:auto; display:block;">
+                                            <line x1="{{ $padL }}" y1="{{ $padT + $plotH }}" x2="{{ $vbW - $padR }}" y2="{{ $padT + $plotH }}" stroke="#e2e2e2" stroke-width="1" />
+                                            <polyline points="{{ implode(' ', $classPts) }}" fill="none" stroke="{{ $classColor }}" stroke-width="2" stroke-dasharray="3,2" />
+                                            <polyline points="{{ implode(' ', $studentPts) }}" fill="none" stroke="{{ $studentColor }}" stroke-width="2" />
+                                            @foreach($subjects as $i => $subj)
+                                                @php [$sx, $sy] = explode(',', $studentPts[$i]); @endphp
+                                                <circle cx="{{ $sx }}" cy="{{ $sy }}" r="2.4" fill="{{ $studentColor }}" />
+                                                <text x="{{ $sx }}" y="{{ $chartH - 4 }}" font-size="7" fill="#888" text-anchor="middle">{{ \Illuminate\Support\Str::limit($subj['name'] ?? '', 6, '') }}</text>
+                                            @endforeach
+                                        </svg>
+                                        <div style="font-size:8px; color:#888; margin-top:2px;">
+                                            <span style="color:{{ $studentColor }};">●</span> Student &nbsp;
+                                            <span style="color:{{ $classColor }};">●</span> Class
+                                        </div>
+                                    @else
+                                        <div style="font-size:11px; color:#999; padding:10px 0;">No subjects recorded.</div>
+                                    @endif
+                                @endif
+                                @break
+
                             @case('custom_html')
                                 {!! $props['html'] ?? '' !!}
                                 @break

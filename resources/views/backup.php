@@ -79,6 +79,28 @@ storage:relink
     </div>
 @endif
 
+# Laravel runtime-generated files — these are recreated automatically and
+# should never be committed (they're per-environment, change on every
+# request, and are the source of the constant session/view/cache diffs).
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+!/storage/framework/cache/data/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/testing/.gitignore
+!/storage/framework/views/.gitignore
+/storage/logs/*.log
+/storage/tmp/*
+!/storage/tmp/.gitignore
+
+git rm -r --cached storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/tmp
+
+git add .gitignore storage/framework/cache/data/.gitignore storage/framework/sessions/.gitignore storage/framework/views/.gitignore storage/tmp/.gitignore
+git add -A
+git commit -m "Stop tracking Laravel runtime-generated files (sessions, cache, views, logs, tmp)"
+git push
+
 
 use App\Http\Controllers\Helper;
 
