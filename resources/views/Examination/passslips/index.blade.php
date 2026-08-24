@@ -1268,6 +1268,14 @@ function setLanguage(lang) {
                         </div>
 
                         <div class="cp-check-row">
+                            <label for="cb_show_discipline"><i class="fas fa-user-shield"></i> Discipline section</label>
+                            <label class="cp-switch">
+                                <input type="checkbox" id="cb_show_discipline" class="cp-toggle-cb" checked onchange="updateSummary()">
+                                <span class="cp-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="cp-check-row">
                             <label for="cb_show_signatures"><i class="fas fa-signature"></i> Signature column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_signatures" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1488,6 +1496,38 @@ function setLanguage(lang) {
                            style="padding:.9rem;font-weight:600;">
                             <i class="fas fa-print me-2"></i>
                             Print All Pass Slips
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ┌──────────────────────────────────┐
+                     │  Discipline Ratings              │
+                     └──────────────────────────────────┘ --}}
+                <div class="ps-section-card mb-4">
+                    <div class="ps-section-header">
+                        <div class="ps-section-icon"><i class="fas fa-user-shield"></i></div>
+                        <div>
+                            <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Discipline Ratings</div>
+                            <div class="text-muted" style="font-size:.78rem;">Punctuality, behaviour &amp; conduct per student</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="d-flex align-items-start gap-2 mb-4 p-3"
+                            style="background:var(--brand-ultra);border-radius:var(--radius-md);border-left:3px solid var(--brand);">
+                            <i class="fas fa-info-circle" style="color:var(--brand);font-size:.9rem;margin-top:.1em;"></i>
+                            <div class="small text-muted" style="font-size:.8rem;line-height:1.4;">
+                                &nbsp;Rate each student against your school's discipline criteria. Ratings
+                                appear as a Discipline table on the report card when that section is enabled.
+                            </div>
+                        </div>
+
+                        <a href="{{ route('examination.discipline.entry', $exam->id) }}"
+                           class="print-btn w-100 justify-content-center"
+                           style="padding:.9rem;font-weight:600;">
+                            <i class="fas fa-user-shield me-2"></i>
+                            Open Discipline Entry
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
@@ -1833,6 +1873,7 @@ function setLanguage(lang) {
         show_totals_row:     true,
         show_perf_chart:     true,
         show_remarks:        true,
+        show_discipline:     true,
         show_signatures:     true,
         show_footer_timestamp: true,
         show_confidential:   true,

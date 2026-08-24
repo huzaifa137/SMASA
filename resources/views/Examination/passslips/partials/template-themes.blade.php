@@ -111,18 +111,32 @@
         border-color: var(--accent-a35, rgba(0,0,0,.18));
     }
 
+    body.tpl-modern .discipline-col {
+        border-right-color: var(--accent-a22, rgba(0,0,0,.12));
+    }
+
+    body.tpl-modern .discipline-title {
+        color: var(--accent-dark);
+    }
+
 
     /* ═══════════════════════════════════════════════════════════════
-       MINIMAL — quiet, editorial, generous whitespace. No border,
-       no watermark noise, one accent hairline, single-logo header.
+       MINIMAL — formal, ruled "examination document" look: sharp
+       corners, a boxed two-logo header, hairline grid rules on every
+       table and panel, no soft shadows/gradients/colour fills. Same
+       markup/toggles as the other two templates — this is a restyle,
+       not a rebuild. Modelled after traditional CBSE-style report
+       cards (double logo header, gridded marks table, boxed
+       Co-Scholastic/Discipline + Remarks + Signature strip).
     ═══════════════════════════════════════════════════════════════ */
     body.tpl-minimal .slip {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
-        border: 1px solid #e6e6e6;
+        box-shadow: none;
+        border: 1.5px solid #111;
+        border-radius: 0;
     }
 
     body.tpl-minimal .slip.has-border {
-        border: 1px solid #e6e6e6;
+        border: 1.5px solid #111;
         outline: none;
     }
 
@@ -133,101 +147,219 @@
 
     body.tpl-minimal .watermark,
     body.tpl-minimal .watermark-text {
-        opacity: .035;
+        opacity: .04;
     }
 
+    /* ── Header: logo · centred identity block · logo, like a
+       traditional two-crest school letterhead ── */
     body.tpl-minimal .sch-header {
-        border-bottom: 1px solid #e2e2e2;
-        padding: 1.5rem 1.4rem 1.1rem;
+        border-bottom: 2px solid #111;
+        padding: 1rem 1.2rem .9rem;
     }
 
     body.tpl-minimal .sch-logo-area-right {
-        display: none;
+        display: flex;
     }
 
     body.tpl-minimal .sch-logo-box {
-        width: 68px;
-        height: 68px;
-        border-radius: 8px;
-        border: 1px solid #e2e2e2;
-        background: #fafafa;
+        width: 72px;
+        height: 72px;
+        border-radius: 4px;
+        border: 1.5px solid #111;
+        background: #fff;
+    }
+
+    body.tpl-minimal .sch-logo-box i {
+        color: #111;
     }
 
     body.tpl-minimal .sch-center {
-        text-align: left;
-        padding-left: .3rem;
+        text-align: center;
+        padding: 0 .5rem;
     }
 
     body.tpl-minimal .sch-name {
-        font-size: 26px;
-        font-weight: 700;
-        letter-spacing: .01em;
-        border-bottom: 2px solid var(--accent);
-        display: inline-block;
-        padding-bottom: 4px;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: .02em;
+        color: #111;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    body.tpl-minimal .sch-arabic-name {
+        color: #333;
     }
 
     body.tpl-minimal .sch-details,
     body.tpl-minimal .sch-motto {
-        font-weight: 400;
-        color: #666;
+        font-weight: 500;
+        color: #444;
         font-style: normal;
     }
 
+    /* ── Title band: a ruled document title instead of a coloured
+       banner — "ACADEMIC REPORT FORM — ..." reads like a form header ── */
     body.tpl-minimal .title-band {
-        background: transparent;
-        text-align: left;
-        padding: .8rem 1.4rem 0;
+        background: #fff;
+        text-align: center;
+        padding: .55rem 1.2rem;
+        border-bottom: 1.5px solid #111;
     }
 
     body.tpl-minimal .title-band span {
-        color: #888;
-        font-weight: 600;
-        letter-spacing: .12em;
-        font-size: .68rem;
+        color: #111;
+        font-weight: 800;
+        letter-spacing: .06em;
+        font-size: .74rem;
     }
 
+    /* ── Student info: boxed ledger rows instead of a soft card ── */
     body.tpl-minimal .stu-row {
-        border-bottom: 1px solid #eee;
+        border-bottom: 2px solid #111;
+        align-items: stretch;
+    }
+
+    body.tpl-minimal .stu-photo {
+        border: 1.5px solid #111;
+        border-radius: 0;
     }
 
     body.tpl-minimal .stu-details {
-        border-right: none;
+        border-right: 1px solid #ccc;
+        gap: 0;
     }
 
+    body.tpl-minimal .stu-field {
+        padding: .18rem 0;
+        border-bottom: 1px dotted #ccc;
+    }
+
+    body.tpl-minimal .stu-field:last-child {
+        border-bottom: none;
+    }
+
+    body.tpl-minimal .stu-chart-area {
+        border-right: 1px solid #ccc;
+        padding-right: .8rem;
+    }
+
+    body.tpl-minimal .stu-chart-title {
+        color: #111;
+        font-weight: 800;
+    }
+
+    body.tpl-minimal .stu-qr-col {
+        border-left: none;
+    }
+
+    body.tpl-minimal .stu-qr-box {
+        border: 1.5px solid #111;
+        border-radius: 2px;
+        box-shadow: none;
+    }
+
+    body.tpl-minimal .stu-qr-label {
+        color: #111;
+    }
+
+    body.tpl-minimal .status-pill {
+        border-radius: 2px;
+    }
+
+    /* ── Summary bar (if used) ── */
     body.tpl-minimal .sum-bar {
-        background: transparent;
-        border-bottom: 1px solid #eee;
+        background: #fafafa;
+        border-bottom: 2px solid #111;
     }
 
     body.tpl-minimal .sum-cell {
-        border-right: 1px solid #f0f0f0;
+        border-right: 1px solid #ccc;
     }
 
     body.tpl-minimal .sum-val {
         color: #111;
-        font-weight: 700;
+        font-weight: 800;
     }
 
+    /* ── Marks table: full black exam-paper grid ── */
     body.tpl-minimal .marks-tbl {
-        border: none;
-        border-top: 2px solid #111;
+        border: 1.5px solid #111;
     }
 
     body.tpl-minimal .marks-tbl th {
-        background: #fff;
+        background: #f2f2f2;
         color: #111;
-        border-bottom: 1px solid #111;
+        border-right: 1px solid #111;
+        border-bottom: 1.5px solid #111;
+        font-weight: 800;
+    }
+
+    body.tpl-minimal .marks-tbl th:last-child {
         border-right: none;
-        font-weight: 700;
     }
 
     body.tpl-minimal .marks-tbl td {
-        border-color: #f0f0f0 !important;
+        border: 1px solid #ccc !important;
     }
 
-    body.tpl-minimal .status-pill {
-        border-radius: 3px;
+    body.tpl-minimal .marks-tbl tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    body.tpl-minimal .g-pill {
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, .12);
+    }
+
+    body.tpl-minimal .totals-row td {
+        background: #eee;
+        border-top: 2px solid #111 !important;
+    }
+
+    /* ── Bottom strip: boxed Discipline / Remarks / Signature panels,
+       ruled like the reference report's Co-Scholastic/Discipline grid ── */
+    body.tpl-minimal .bottom-section {
+        border-top: 2px solid #111;
+    }
+
+    body.tpl-minimal .perf-chart-col,
+    body.tpl-minimal .discipline-col {
+        border-right: 1px solid #111;
+    }
+
+    body.tpl-minimal .sig-col-right {
+        border-left: 1px solid #111;
+    }
+
+    body.tpl-minimal .perf-chart-title,
+    body.tpl-minimal .remarks-section-title,
+    body.tpl-minimal .discipline-title,
+    body.tpl-minimal .sig-col-title {
+        color: #111;
+        border-bottom: 1px solid #111;
+    }
+
+    body.tpl-minimal .discipline-row {
+        border-bottom: 1px dotted #ccc;
+    }
+
+    body.tpl-minimal .discipline-rate {
+        border-radius: 2px;
+    }
+
+    body.tpl-minimal .sig-slot {
+        border-bottom: 1.5px solid #111;
+    }
+
+    body.tpl-minimal .sig-dashes {
+        border-top: 1.5px dashed #111;
+    }
+
+    /* ── Footer ── */
+    body.tpl-minimal .slip-footer {
+        background: #fff;
+        border-top: 2px solid #111;
     }
 
     body.tpl-minimal .title-band + * .marks-tbl,
@@ -235,14 +367,14 @@
         border-radius: 4px;
     }
 
-    /* RTL (Arabic slip): mirror the left-aligned minimal header */
+    /* RTL (Arabic slip): keep the centred minimal header centred */
     html[dir="rtl"] body.tpl-minimal .sch-center {
-        text-align: right;
-        padding-left: .3rem;
-        padding-right: 0;
+        text-align: center;
+        padding-left: .5rem;
+        padding-right: .5rem;
     }
 
     html[dir="rtl"] body.tpl-minimal .title-band {
-        text-align: right;
+        text-align: center;
     }
 </style>

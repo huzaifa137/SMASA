@@ -12,6 +12,9 @@ use App\Models\Classroom;
 use App\Models\Teacher;
 use App\Models\Stream;
 use App\Models\ClassSubject;
+use App\Models\DisciplineCriteria;
+use App\Models\StudentDisciplineRating;
+use App\Services\DisciplineCriteriaDefaults;
 use Carbon\Carbon;
 
 class ExaminationController extends Controller
@@ -688,6 +691,214 @@ class ExaminationController extends Controller
         }
     }
 
+    // ─── Discipline / Conduct Ratings ───────────────────────────────────────
+    // Per-school configurable criteria (Punctuality, Behaviour, ...), rated
+    // A/B/C by the class teacher per exam. Feeds the "Discipline" block on
+    // the pass slip / report card (see buildPassslipData()).
+
+    /**
+     * Teacher-facing entry screen: pick a class/stream, rate every student
+     * against every active criterion for this exam.
+     */
+    public function disciplineEntry(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        DisciplineCriteriaDefaults::seedForSchool($schoolId);
+
+        $criteria = DisciplineCriteria::where('school_id', $schoolId)
+            ->active()
+            ->ordered()
+            ->get();
+
+        // Classes that actually have marks recorded for this exam, same
+        // source the pass-slip "class" picker already relies on.
+        $classOptions = ExaminationMark::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->select('class_id', 'stream_id')
+            ->distinct()
+            ->get()
+            ->map(fn($row) => (object) [
+                'class_id' => $row->class_id,
+                'stream_id' => $row->stream_id,
+                'class_name' => Helper::recordMdname($row->class_id),
+                'stream_name' => $row->stream_id,
+            ])
+            ->sortBy('class_name')
+            ->values();
+
+        $classId = $request->get('class_id', $classOptions->first()->class_id ?? null);
+        $streamId = $request->get('stream_id', $classOptions->first()->stream_id ?? null);
+
+        $students = collect();
+        $ratings = collect();
+
+        if ($classId !== null) {
+            $students = DB::table('students')
+                ->where('school_id', $schoolId)
+                ->where('senior', $classId)
+                ->where('stream', $streamId)
+                ->orderBy('firstname')
+                ->get();
+
+            $ratings = StudentDisciplineRating::where('examination_id', $examId)
+                ->where('school_id', $schoolId)
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->get()
+                ->groupBy('student_id');
+        }
+
+        return view('Examination.discipline.entry', compact(
+            'exam',
+            'criteria',
+            'classOptions',
+            'classId',
+            'streamId',
+            'students',
+            'ratings'
+        ));
+    }
+
+    /**
+     * Save a whole grid of ratings (all students × all criteria) in one go.
+     */
+    public function saveDisciplineRatings(Request $request, $examId)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to enter discipline ratings.'], 403);
+        }
+
+        $request->validate([
+            'class_id' => 'required|integer',
+            'stream_id' => 'nullable|string|max:10',
+            'ratings' => 'required|array',
+            'ratings.*.student_id' => 'required|integer',
+            'ratings.*.discipline_criteria_id' => 'required|integer',
+            'ratings.*.rating' => 'nullable|string|max:5',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->ratings as $entry) {
+                if (!array_key_exists('rating', $entry) || $entry['rating'] === '' || $entry['rating'] === null) {
+                    // Blank cell — clear any previously saved rating rather
+                    // than writing an empty row.
+                    StudentDisciplineRating::where('examination_id', $examId)
+                        ->where('school_id', $schoolId)
+                        ->where('student_id', $entry['student_id'])
+                        ->where('discipline_criteria_id', $entry['discipline_criteria_id'])
+                        ->delete();
+                    continue;
+                }
+
+                StudentDisciplineRating::updateOrCreate(
+                    [
+                        'examination_id' => $examId,
+                        'school_id' => $schoolId,
+                        'student_id' => $entry['student_id'],
+                        'discipline_criteria_id' => $entry['discipline_criteria_id'],
+                    ],
+                    [
+                        'class_id' => $request->class_id,
+                        'stream_id' => $request->stream_id,
+                        'rating' => strtoupper($entry['rating']),
+                        'entered_by' => $teacherId,
+                        'entered_at' => now(),
+                    ]
+                );
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Discipline ratings saved.']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Add / rename / deactivate / reorder a school's discipline criteria.
+     * Kept lightweight (one JSON endpoint) rather than a full CRUD page,
+     * since schools typically set this up once and rarely touch it again.
+     */
+    public function saveDisciplineCriteria(Request $request)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+
+        // Add a new criterion
+        if ($request->filled('name') && !$request->filled('id')) {
+            $request->validate(['name' => 'required|string|max:120']);
+
+            $nextOrder = (int) DisciplineCriteria::where('school_id', $schoolId)->max('sort_order') + 1;
+
+            $criteria = DisciplineCriteria::create([
+                'school_id' => $schoolId,
+                'name' => $request->name,
+                'sort_order' => $nextOrder,
+                'is_active' => true,
+            ]);
+
+            return response()->json(['success' => true, 'criteria' => $criteria]);
+        }
+
+        // Rename / reorder / toggle an existing criterion
+        if ($request->filled('id')) {
+            $criteria = DisciplineCriteria::where('school_id', $schoolId)
+                ->where('id', $request->id)
+                ->firstOrFail();
+
+            if ($request->filled('name')) {
+                $criteria->name = $request->name;
+            }
+            if ($request->has('sort_order')) {
+                $criteria->sort_order = (int) $request->sort_order;
+            }
+            if ($request->has('is_active')) {
+                $criteria->is_active = (bool) $request->is_active;
+            }
+            $criteria->save();
+
+            return response()->json(['success' => true, 'criteria' => $criteria]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Nothing to save.'], 422);
+    }
+
+    public function deleteDisciplineCriteria($id)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+
+        $criteria = DisciplineCriteria::where('school_id', $schoolId)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $criteria->delete(); // ratings cascade via FK
+
+        return response()->json(['success' => true]);
+    }
+
     public function passslipStudent($examId, $studentId)
     {
 
@@ -1124,6 +1335,7 @@ class ExaminationController extends Controller
                 'isEarlyYears' => false,
                 'earlyYearsAverage' => null,
                 'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
+                'disciplineRatings' => collect(),
             ];
         }
 
@@ -1315,6 +1527,25 @@ class ExaminationController extends Controller
             (($student->lastname ?? '') . ' ' . ($student->firstname ?? ''))
         );
 
+        // ── Discipline ratings (Punctuality, Behaviour, ...) ──────────────────
+        // One row per active criterion, in display order, with this
+        // student's rating for THIS exam (blank if not yet entered).
+        $disciplineCriteria = DisciplineCriteria::where('school_id', $schoolId)
+            ->active()
+            ->ordered()
+            ->get();
+
+        $disciplineRatingsByCriteria = StudentDisciplineRating::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->where('student_id', $studentId)
+            ->get()
+            ->keyBy('discipline_criteria_id');
+
+        $disciplineRatings = $disciplineCriteria->map(fn($c) => (object) [
+            'name' => $c->name,
+            'rating' => $disciplineRatingsByCriteria[$c->id]->rating ?? null,
+        ]);
+
         $qrText = implode("\n", array_filter([
             'SMASA',
             Helper::schoolNameBySchoolID($schoolId) ?? '',
@@ -1343,6 +1574,7 @@ class ExaminationController extends Controller
             'isEarlyYears' => $isEarlyYears,
             'earlyYearsAverage' => $earlyYearsAverage,
             'earlyYearsMaxMark' => $reportMaxMark,
+            'disciplineRatings' => $disciplineRatings,
         ];
     }
 

@@ -591,6 +591,12 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{id}/passslips/settings', 'getPassslipSettings')->name('passslips.settings.get');
             Route::post('/{id}/passslips/settings', 'savePassslipSettings')->name('passslips.settings.save');
 
+            // Discipline / Conduct Ratings
+            Route::get('/{id}/discipline', 'disciplineEntry')->name('discipline.entry');
+            Route::post('/{id}/discipline/save', 'saveDisciplineRatings')->name('discipline.save');
+            Route::post('/discipline/criteria', 'saveDisciplineCriteria')->name('discipline.criteria.save');
+            Route::delete('/discipline/criteria/{criteriaId}', 'deleteDisciplineCriteria')->name('discipline.criteria.delete');
+
             // Examination Details and Status
             Route::get('/{exam}/details', 'getDetails')->name('details');
             Route::get('/{examination}/status', 'getStatus')->name('status');

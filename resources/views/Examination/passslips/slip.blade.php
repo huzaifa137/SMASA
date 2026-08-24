@@ -876,6 +876,88 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
+   DISCIPLINE / CONDUCT
+════════════════════════════════════════════════════════════════ */
+        .discipline-col {
+            flex: 0 0 190px;
+            padding: .7rem .9rem;
+            border-right: 1.5px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .discipline-title {
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: #555;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: .2rem;
+            margin-bottom: .35rem;
+        }
+
+        .discipline-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .4rem;
+            padding: .18rem 0;
+            border-bottom: 1px dotted #e2e2e2;
+        }
+
+        .discipline-row:last-child {
+            border-bottom: none;
+        }
+
+        .discipline-crit {
+            font-size: .68rem;
+            color: #333;
+            line-height: 1.25;
+        }
+
+        .discipline-rate {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 .3rem;
+            border-radius: 3px;
+            font-size: .7rem;
+            font-weight: 800;
+            background: #eef0f4;
+            color: #333;
+            border: 1px solid #d8dbe2;
+        }
+
+        .discipline-rate.dr-A {
+            background: #d4f5e2;
+            color: #1a7a4a;
+            border-color: #a9dfbf;
+        }
+
+        .discipline-rate.dr-B {
+            background: #cfe2ff;
+            color: #0a4191;
+            border-color: #a9c8f5;
+        }
+
+        .discipline-rate.dr-C {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #f0dfa0;
+        }
+
+        .discipline-rate.dr-empty {
+            background: #f5f5f5;
+            color: #bbb;
+            border-color: #e6e6e6;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
    QR + FOOTER
 ════════════════════════════════════════════════════════════════ */
         .slip-footer {
@@ -1018,7 +1100,8 @@
             .watermark-text,
             .watermark img,
             .stu-qr-box,
-            .stu-qr-box img {
+            .stu-qr-box img,
+            .discipline-rate {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 color-adjust: exact;
@@ -1051,6 +1134,8 @@
         .sig-dashes,
         .sig-slot,
         .remarks-col,
+        .discipline-col,
+        .discipline-rate,
         .sig-col-right {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -1218,6 +1303,7 @@
                     'totals_row' => $on('show_totals_row', true, $savedCfg),
                     'perf_chart' => $on('show_perf_chart', true, $savedCfg),
                     'remarks' => $on('show_remarks', true, $savedCfg),
+                    'discipline' => $on('show_discipline', true, $savedCfg),
                     'signatures' => $on('show_signatures', true, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
@@ -1763,7 +1849,7 @@
                 </div>
 
                 {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
-                @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['signatures'])
+                @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['discipline'] || $cfg['signatures'])
                     <div class="bottom-section">
 
                         {{-- Performance Over Time chart --}}
@@ -1800,6 +1886,21 @@
                                     </div>
                                     <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
                                 </div>
+                            </div>
+                        @endif
+
+                        {{-- Discipline --}}
+                        @if($cfg['discipline'] && isset($disciplineRatings) && count($disciplineRatings) > 0)
+                            <div class="discipline-col">
+                                <div class="discipline-title">Discipline</div>
+                                @foreach($disciplineRatings as $dr)
+                                    <div class="discipline-row">
+                                        <span class="discipline-crit">{{ $dr->name }}</span>
+                                        <span class="discipline-rate {{ $dr->rating ? 'dr-' . $dr->rating : 'dr-empty' }}">
+                                            {{ $dr->rating ?: '—' }}
+                                        </span>
+                                    </div>
+                                @endforeach
                             </div>
                         @endif
 
