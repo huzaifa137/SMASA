@@ -949,6 +949,7 @@ class ExaminationController extends Controller
         $useAvg = $passslipData['useAvg'] ?? false;
         $examSummary = $passslipData['examSummary'] ?? [];
         $avgSummary = $passslipData['avgSummary'] ?? null;
+        $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
 
         // After getting student info, check if nursery
         $isNursery = $this->isNurseryClass($student->senior);
@@ -982,7 +983,8 @@ class ExaminationController extends Controller
             'examsList',
             'useAvg',
             'examSummary',
-            'avgSummary'
+            'avgSummary',
+            'disciplineRatings'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
@@ -1051,6 +1053,7 @@ class ExaminationController extends Controller
                 'useAvg' => $passslipData['useAvg'] ?? false,
                 'examSummary' => $passslipData['examSummary'] ?? [],
                 'avgSummary' => $passslipData['avgSummary'] ?? null,
+                'disciplineRatings' => $passslipData['disciplineRatings'] ?? collect(),
             ];
         })
             // ✅ FIXED: Use sort() with comparison function instead of sortByDesc().thenBy()
@@ -1144,6 +1147,7 @@ class ExaminationController extends Controller
                     'useAvg' => $passslipData['useAvg'] ?? false,
                     'examSummary' => $passslipData['examSummary'] ?? [],
                     'avgSummary' => $passslipData['avgSummary'] ?? null,
+                    'disciplineRatings' => $passslipData['disciplineRatings'] ?? collect(),
                 ];
             }
         }
@@ -1529,7 +1533,10 @@ class ExaminationController extends Controller
 
         // ── Discipline ratings (Punctuality, Behaviour, ...) ──────────────────
         // One row per active criterion, in display order, with this
-        // student's rating for THIS exam (blank if not yet entered).
+        // student's rating for THIS exam (blank if not yet entered). Seed the
+        // school's starter set on first touch so the block always has rows
+        // to show, even if nobody has opened the Discipline page yet.
+        DisciplineCriteriaDefaults::seedForSchool($schoolId);
         $disciplineCriteria = DisciplineCriteria::where('school_id', $schoolId)
             ->active()
             ->ordered()
@@ -1691,6 +1698,28 @@ class ExaminationController extends Controller
             $student = DB::table('students')->where('id', $studentId)->first();
         }
 
+        // ── Discipline ratings for a combined/multi-exam slip ─────────────────
+        // Discipline is recorded per single examination, so a combined report
+        // shows the ratings entered against the most recent exam in the set
+        // (same convention used above for the grading scale).
+        $latestExamId = !empty($examIds) ? end($examIds) : null;
+        DisciplineCriteriaDefaults::seedForSchool($schoolId);
+        $disciplineCriteria = DisciplineCriteria::where('school_id', $schoolId)
+            ->active()
+            ->ordered()
+            ->get();
+        $disciplineRatingsByCriteria = $latestExamId
+            ? StudentDisciplineRating::where('examination_id', $latestExamId)
+                ->where('school_id', $schoolId)
+                ->where('student_id', $studentId)
+                ->get()
+                ->keyBy('discipline_criteria_id')
+            : collect();
+        $disciplineRatings = $disciplineCriteria->map(fn($c) => (object) [
+            'name' => $c->name,
+            'rating' => $disciplineRatingsByCriteria[$c->id]->rating ?? null,
+        ]);
+
         if ($allSubjectIds->isEmpty()) {
             return [
                 'subjectMarks' => collect(),
@@ -1712,6 +1741,7 @@ class ExaminationController extends Controller
                 'useAvg' => false,
                 'examSummary' => [],
                 'avgSummary' => null,
+                'disciplineRatings' => $disciplineRatings,
             ];
         }
 
@@ -1888,6 +1918,7 @@ class ExaminationController extends Controller
             'useAvg' => $useAvg,
             'examSummary' => $examSummary,
             'avgSummary' => $avgSummary,
+            'disciplineRatings' => $disciplineRatings,
         ];
     }
 

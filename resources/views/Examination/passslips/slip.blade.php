@@ -1202,6 +1202,7 @@
                     'useAvg' => $useAvg ?? false,
                     'examSummary' => $examSummary ?? [],
                     'avgSummary' => $avgSummary ?? null,
+                    'disciplineRatings' => $disciplineRatings ?? collect(),
                 ]
             ];
         } else {
@@ -1258,6 +1259,7 @@
                 $useAvgSlip = $slipData['useAvg'] ?? false;
                 $examSummarySlip = collect($slipData['examSummary'] ?? []);
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
+                $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
 
                 $divClass = function ($div) {
                     if (!$div || $div === '—')
@@ -1890,10 +1892,10 @@
                         @endif
 
                         {{-- Discipline --}}
-                        @if($cfg['discipline'] && isset($disciplineRatings) && count($disciplineRatings) > 0)
+                        @if($cfg['discipline'] && $disciplineRatingsSlip->count() > 0)
                             <div class="discipline-col">
                                 <div class="discipline-title">Discipline</div>
-                                @foreach($disciplineRatings as $dr)
+                                @foreach($disciplineRatingsSlip as $dr)
                                     <div class="discipline-row">
                                         <span class="discipline-crit">{{ $dr->name }}</span>
                                         <span class="discipline-rate {{ $dr->rating ? 'dr-' . $dr->rating : 'dr-empty' }}">
