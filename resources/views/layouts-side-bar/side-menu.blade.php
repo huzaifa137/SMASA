@@ -1122,7 +1122,9 @@ use App\Helpers\PermissionHelper;
         font-size: 13.5px;
     }
 
-    .sub-menu li a:hover {
+    .app-sidebar3 .sub-menu li a:hover,
+    .app-sidebar3 .sub-menu li a:hover i,
+    .app-sidebar3 .sub-menu li a:hover span {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         color: #fff !important;
         transform: translateX(4px);

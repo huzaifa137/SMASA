@@ -276,205 +276,206 @@ use App\Http\Controllers\Helper;
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
-    <script>
-        $(document).ready(function () {
-            var table = $('#schoolsTable').DataTable({
-                responsive: false, // Ensure this is compatible with your CSS/layout
-                pageLength: 10,
-                stateSave: true, // Remember current page/sort/search across full page reloads
-                stateDuration: -1, // -1 = persist for the browser session; use a number (seconds) to expire, e.g. 7200 for 2 hours
-                order: [
-                    [0, 'asc']
-                ],
-                dom: 'frtip', // Defines table controls (Filter, Row length, Table, Info, Paging)
-                columnDefs: [{
-                    orderable: false,
-                    targets: [1, 4, 5] // Adjust these target indices if columns change
-                },
-                {
-                    className: 'text-center',
-                    targets: '_all'
-                }
-                ],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search schools..."
+<script>
+    $(document).ready(function () {
+        var table = $('#schoolsTable').DataTable({
+            responsive: false,
+            pageLength: 10,
+            stateSave: true,
+            stateDuration: -1,
+            order: [
+                [0, 'asc']
+            ],
+            dom: 'frtip',
+            columnDefs: [{
+                orderable: false,
+                targets: [1, 4, 5]
+            },
+            {
+                className: 'text-center',
+                targets: '_all'
+            }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search schools..."
+            }
+        });
+
+        // ── Explicit page-memory ──────────────────────────────────────
+        // Guarantees we land back on the same DataTables page after a full
+        // page reload (e.g. after a status/custom-subjects update),
+        // instead of relying only on DataTables' own stateSave restore.
+        var savedPage = sessionStorage.getItem('schoolsTable_page');
+        if (savedPage !== null) {
+            table.page(parseInt(savedPage, 10)).draw('page');
+            sessionStorage.removeItem('schoolsTable_page');
+        }
+
+        function reloadKeepingPage() {
+            sessionStorage.setItem('schoolsTable_page', table.page());
+            location.reload();
+        }
+
+        // ── All click handlers below are delegated to `document` ──────
+        // (not the individual buttons) so they keep working no matter
+        // which DataTables page the row currently lives on.
+
+        // Delete functionality
+        $(document).on('click', '#schoolsTable .btn-delete', function () {
+            var schoolId = $(this).data('id');
+            var row = table.row($(this).closest('tr'));
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/school/' + schoolId,
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function () {
+                            row.remove().draw();
+                            Swal.fire('Deleted!', 'School has been deleted.', 'success');
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Something went wrong deleting the school.', 'error');
+                        }
+                    });
                 }
             });
+        });
 
-            // Delete functionality
-            $('#schoolsTable tbody').on('click', '.btn-delete', function () {
-                var schoolId = $(this).data('id');
-                var row = table.row($(this).parents('tr'));
+        // Edit functionality
+        $(document).on('click', '#schoolsTable .btn-edit', function () {
+            var editUrl = $(this).data('edit-url');
 
+            Swal.fire({
+                title: 'Edit School?',
+                text: "You are about to edit this school.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, proceed!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = editUrl;
+                }
+            });
+        });
+
+        // Unlock / lock the "custom subjects" option for a school
+        $(document).on('click', '#schoolsTable .btn-toggle-custom-subjects', function () {
+            const schoolId = $(this).data('school-id');
+            const currentlyEnabled = $(this).data('enabled') == '1';
+            const nextState = !currentlyEnabled;
+
+            Swal.fire({
+                title: nextState ? 'Unlock custom subjects?' : 'Lock custom subjects?',
+                text: nextState ?
+                    "This lets the school switch to defining its own subject names instead of the shared list. It won't change anything until the school confirms the switch on their side." :
+                    "This will hide the switch option from the school again (only relevant if they haven't switched yet).",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/schools/${schoolId}/toggle-custom-subjects`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            enabled: nextState ? 1 : 0
+                        },
+                        success: function (response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Done!',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            reloadKeepingPage();
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'Failed to update this school.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Open modal with current school status
+        $(document).on('click', '#schoolsTable .btn-change-school-status', function () {
+            const schoolId = $(this).data('id');
+            const currentStatus = $(this).data('status');
+
+            $('#schoolStatusId').val(schoolId);
+
+            const $select = $('#newSchoolStatus');
+            $select.val(currentStatus);
+
+            const currentOption = $select.find('option[value="' + currentStatus + '"]');
+            if (currentOption.length) {
+                $select.prepend(currentOption);
+            }
+
+            $('#changeSchoolStatusModal').modal('show');
+        });
+
+        // Submit status change with confirmation
+        $('#changeSchoolStatusForm').on('submit', function (e) {
+            e.preventDefault();
+            const schoolId = $('#schoolStatusId').val();
+            const newStatus = $('#newSchoolStatus').val();
+
+            $('#changeSchoolStatusModal').modal('hide');
+
+            setTimeout(() => {
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/school/' + schoolId,
-                            type: 'DELETE',
-                            data: {
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function (response) {
-                                row.remove()
-                                    .draw(); // Remove row from DataTable and redraw
-
-                                Swal.fire(
-                                    'Deleted!',
-                                    'School has been deleted.',
-                                    'success'
-                                );
-                            },
-                            error: function (xhr) {
-                                Swal.fire(
-                                    'Error!',
-                                    'Something went wrong deleting the school.',
-                                    'error'
-                                );
-                            }
-                        });
-                    }
-                });
-            });
-
-            // Edit functionality
-            $('#schoolsTable tbody').on('click', '.btn-edit', function () {
-                var editUrl = $(this).data('edit-url');
-
-                Swal.fire({
-                    title: 'Edit School?',
-                    text: "You are about to edit this school.",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#0d6efd',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, proceed!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = editUrl;
-                    }
-                });
-            });
-
-            // Unlock / lock the "custom subjects" option for a school
-            // Delegated to tbody so it keeps working across DataTables pages
-            $('#schoolsTable tbody').on('click', '.btn-toggle-custom-subjects', function () {
-                const schoolId = $(this).data('school-id');
-                const currentlyEnabled = $(this).data('enabled') == '1';
-                const nextState = !currentlyEnabled;
-
-                Swal.fire({
-                    title: nextState ? 'Unlock custom subjects?' : 'Lock custom subjects?',
-                    text: nextState ?
-                        "This lets the school switch to defining its own subject names instead of the shared list. It won't change anything until the school confirms the switch on their side." :
-                        "This will hide the switch option from the school again (only relevant if they haven't switched yet).",
+                    text: "This will update the school's status.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#28a745',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, proceed'
+                    confirmButtonText: 'Yes, change it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/schools/${schoolId}/toggle-custom-subjects`,
+                            url: `/schools/${schoolId}/change-status`,
                             type: 'POST',
                             data: {
                                 _token: '{{ csrf_token() }}',
-                                enabled: nextState ? 1 : 0
+                                status: newStatus
                             },
                             success: function (response) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Done!',
-                                    text: response.message,
+                                    title: 'Updated!',
+                                    text: response.message || 'School status updated.',
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
-                                location.reload();
+                                reloadKeepingPage();
                             },
-                            error: function () {
-                                Swal.fire('Error', 'Failed to update this school.', 'error');
+                            error: function (data) {
+                                $('body').html(data.responseText);
                             }
                         });
                     }
                 });
-            });
-
-            // Open modal with current school status
-            // Delegated to tbody so it keeps working across DataTables pages
-            $('#schoolsTable tbody').on('click', '.btn-change-school-status', function () {
-                const schoolId = $(this).data('id');
-                const currentStatus = $(this).data('status');
-
-                $('#schoolStatusId').val(schoolId);
-
-                const $select = $('#newSchoolStatus');
-                $select.val(currentStatus); // Set value (in case browser already supports it)
-
-                // Reorder options dynamically
-                const currentOption = $select.find('option[value="' + currentStatus + '"]');
-                if (currentOption.length) {
-                    $select.prepend(currentOption); // Move to top
-                }
-
-                $('#changeSchoolStatusModal').modal('show');
-            });
-
-            // Submit status change with confirmation
-            $('#changeSchoolStatusForm').on('submit', function (e) {
-                e.preventDefault();
-                const schoolId = $('#schoolStatusId').val();
-                const newStatus = $('#newSchoolStatus').val();
-
-                $('#changeSchoolStatusModal').modal('hide');
-
-                setTimeout(() => {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "This will update the school's status.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, change it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: `/schools/${schoolId}/change-status`,
-                                type: 'POST',
-                                data: {
-                                    _token: '{{ csrf_token() }}',
-                                    status: newStatus
-                                },
-                                success: function (response) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Updated!',
-                                        text: response.message ||
-                                            'School status updated.',
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-
-                                    // Reload to update UI
-                                    location.reload();
-                                },
-                                error: function (data) {
-                                    $('body').html(data.responseText);
-                                }
-                            });
-                        }
-                    });
-                }, 300);
-            });
+            }, 300);
         });
-    </script>
+    });
+</script>
 @endsection
