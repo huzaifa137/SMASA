@@ -1892,17 +1892,21 @@
                         @endif
 
                         {{-- Discipline --}}
-                        @if($cfg['discipline'] && $disciplineRatingsSlip->count() > 0)
+                        @if($cfg['discipline'])
                             <div class="discipline-col">
                                 <div class="discipline-title">Discipline</div>
-                                @foreach($disciplineRatingsSlip as $dr)
+                                @forelse($disciplineRatingsSlip as $dr)
                                     <div class="discipline-row">
                                         <span class="discipline-crit">{{ $dr->name }}</span>
                                         <span class="discipline-rate {{ $dr->rating ? 'dr-' . $dr->rating : 'dr-empty' }}">
                                             {{ $dr->rating ?: '—' }}
                                         </span>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="discipline-row discipline-row-empty">
+                                        <span class="discipline-crit" style="color:#aaa;">No criteria recorded</span>
+                                    </div>
+                                @endforelse
                             </div>
                         @endif
 

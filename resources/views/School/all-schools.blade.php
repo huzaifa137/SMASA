@@ -281,6 +281,8 @@ use App\Http\Controllers\Helper;
             var table = $('#schoolsTable').DataTable({
                 responsive: false, // Ensure this is compatible with your CSS/layout
                 pageLength: 10,
+                stateSave: true, // Remember current page/sort/search across full page reloads
+                stateDuration: -1, // -1 = persist for the browser session; use a number (seconds) to expire, e.g. 7200 for 2 hours
                 order: [
                     [0, 'asc']
                 ],
@@ -338,9 +340,6 @@ use App\Http\Controllers\Helper;
                                     'error'
                                 );
                             }
-                            // error: function(data) {
-                            // $('body').html(data.responseText);
-                            // }
                         });
                     }
                 });
@@ -364,11 +363,10 @@ use App\Http\Controllers\Helper;
                     }
                 });
             });
-        });
 
-        $(document).ready(function () {
             // Unlock / lock the "custom subjects" option for a school
-            $('.btn-toggle-custom-subjects').on('click', function () {
+            // Delegated to tbody so it keeps working across DataTables pages
+            $('#schoolsTable tbody').on('click', '.btn-toggle-custom-subjects', function () {
                 const schoolId = $(this).data('school-id');
                 const currentlyEnabled = $(this).data('enabled') == '1';
                 const nextState = !currentlyEnabled;
@@ -411,7 +409,8 @@ use App\Http\Controllers\Helper;
             });
 
             // Open modal with current school status
-            $('.btn-change-school-status').on('click', function () {
+            // Delegated to tbody so it keeps working across DataTables pages
+            $('#schoolsTable tbody').on('click', '.btn-change-school-status', function () {
                 const schoolId = $(this).data('id');
                 const currentStatus = $(this).data('status');
 
@@ -428,7 +427,6 @@ use App\Http\Controllers\Helper;
 
                 $('#changeSchoolStatusModal').modal('show');
             });
-
 
             // Submit status change with confirmation
             $('#changeSchoolStatusForm').on('submit', function (e) {
@@ -469,9 +467,6 @@ use App\Http\Controllers\Helper;
                                     // Reload to update UI
                                     location.reload();
                                 },
-                                // error: function (xhr) {
-                                //     Swal.fire('Error', 'Failed to change status.', 'error');
-                                // }
                                 error: function (data) {
                                     $('body').html(data.responseText);
                                 }
