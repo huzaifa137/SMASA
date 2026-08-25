@@ -517,16 +517,11 @@
 @section('content')
     @php
         $isEdit = isset($structure);
-        $categories = [
-            'tuition' => 'Tuition',
-            'boarding' => 'Boarding',
-            'activity' => 'Activity',
-            'library' => 'Library',
-            'sport' => 'Sports',
-            'medical' => 'Medical',
-            'exam' => 'Exams',
-            'other' => 'Other',
-        ];
+        // $categories comes from the controller — FeeCategory::forSchool(), each
+        // school's own customizable list (seeded with sensible defaults the
+        // first time they visit this page).
+        $categoryOptions = $categories->pluck('name', 'id');
+        $defaultCategoryId = $categories->first()->id ?? '';
         $existingItems = old('items', $isEdit ? $structure->items->toArray() : []);
     @endphp
 
@@ -624,9 +619,14 @@
                         style="background:var(--bl);color:var(--b);border-radius:20px;padding:.15rem .6rem;font-size:.72rem;font-weight:700;"
                         id="itemCount">0</span>
                 </div>
-                <button type="button" class="btn btn-add btn-sm" id="addItem">
-                    <i class="fas fa-plus"></i> Add Item
-                </button>
+                <div style="display:flex;gap:.5rem;">
+                    <a href="{{ route('finance.fee-categories.index') }}" class="btn btn-outline btn-sm" title="Add or edit the categories available below">
+                        <i class="fas fa-tags"></i> Manage Categories
+                    </a>
+                    <button type="button" class="btn btn-add btn-sm" id="addItem">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
             </div>
 
             <div class="items-wrapper">
@@ -647,9 +647,9 @@
                             <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
                             <input type="text" name="items[{{ $i }}][item_name]" class="form-control"
                                 value="{{ $item['item_name'] ?? '' }}" placeholder="e.g. Tuition Fees" required>
-                            <select name="items[{{ $i }}][category]" class="form-control">
-                                @foreach($categories as $cv => $cl)
-                                    <option value="{{ $cv }}" {{ ($item['category'] ?? '') == $cv ? 'selected' : '' }}>{{ $cl }}
+                            <select name="items[{{ $i }}][fee_category_id]" class="form-control">
+                                @foreach($categoryOptions as $cv => $cl)
+                                    <option value="{{ $cv }}" {{ ($item['fee_category_id'] ?? '') == $cv ? 'selected' : '' }}>{{ $cl }}
                                     </option>
                                 @endforeach
                             </select>
@@ -713,7 +713,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // ── Config ──────────────────────────────────────────────────────
-        const CATEGORIES = @json($categories);
+        const CATEGORIES = @json($categoryOptions);
+        const DEFAULT_CATEGORY = @json((string) $defaultCategoryId);
         let itemIndex = {{ count($existingItems) }};
         const isEdit = {{ $isEdit ? 'true' : 'false' }};
 
@@ -726,9 +727,9 @@
         const emptyState = document.getElementById('emptyState');
 
         // ── Build category <select> options ──────────────────────────────
-        function catOptions(selected = 'tuition') {
+        function catOptions(selected = DEFAULT_CATEGORY) {
             return Object.entries(CATEGORIES)
-                .map(([v, l]) => `<option value="${v}"${v === selected ? ' selected' : ''}>${l}</option>`)
+                .map(([v, l]) => `<option value="${v}"${String(v) === String(selected) ? ' selected' : ''}>${l}</option>`)
                 .join('');
         }
 
@@ -746,7 +747,7 @@
         // ── Build a single item card ──────────────────────────────────────
         function buildItemCard(idx, data = {}) {
             const name = data.item_name ?? '';
-            const cat = data.category ?? 'tuition';
+            const cat = data.fee_category_id ?? DEFAULT_CATEGORY;
             const amount = data.amount ?? 0;
             const mand = data.is_mandatory !== false;
             const formattedAmount = amount ? formatNumberWithCommas(amount) : '';
@@ -758,7 +759,7 @@
                 <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
                 <input type="text" name="items[${idx}][item_name]" class="form-control"
                     value="${name.replace(/"/g, '&quot;')}" placeholder="e.g. Tuition Fees" required>
-                <select name="items[${idx}][category]" class="form-control">
+                <select name="items[${idx}][fee_category_id]" class="form-control">
                     ${catOptions(cat)}
                 </select>
                 <input type="text" name="items[${idx}][amount]" class="form-control item-amount"

@@ -29,6 +29,20 @@ class FeePayment extends Model
         return $this->belongsTo(StudentFeeAllocation::class, 'allocation_id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(FeePaymentItem::class);
+    }
+
+    /**
+     * True when at least one line on this payment was for something outside
+     * the student's fee structure (a broken item, a fine, etc.).
+     */
+    public function hasExternalItems(): bool
+    {
+        return $this->items->contains(fn($i) => $i->is_external);
+    }
+
     public static function generateReceiptNumber(int $schoolId): string
     {
         $prefix = 'RCP-' . date('Y') . '-';

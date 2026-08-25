@@ -924,9 +924,15 @@ use App\Helpers\PermissionHelper;
                 @endif
 
                 {{-- User Rights --}}
-                {{-- Always shown on an active school — a freshly-added school needs this
-                to configure roles before any other module becomes accessible. --}}
-                @if(PermissionHelper::canModule('user_rights') || empty(PermissionHelper::accessibleModuleKeys()))
+                {{-- PermissionHelper::canModule('user_rights') already covers both
+                legitimate cases on its own: (1) a role was explicitly granted
+                access to this module, or (2) this school has never configured
+                a single SchoolRole yet, in which case whichever teacher is
+                logged in gets a one-time bootstrap allowance to set the first
+                role up. Once any role exists for the school, that allowance is
+                gone for good — a teacher with no role assigned then sees
+                nothing here, full stop. See PermissionHelper::isBootstrapAllowed(). --}}
+                @if(PermissionHelper::canModule('user_rights'))
                     <li class="slide has-sub">
                         <a class="side-menu__item" href="#" data-toggle="submenu">
                             <i class="fas fa-shield-alt fa-2x mr-3"></i>
@@ -955,7 +961,7 @@ use App\Helpers\PermissionHelper;
                     $accessible = PermissionHelper::accessibleModuleKeys();
                     $hasRole = PermissionHelper::getCurrentSchoolRole() !== null;
                 @endphp
-                {{-- Only show "no modules" warning when a role IS assigned but grants nothing --}}
+                {{-- A role IS assigned but grants nothing --}}
                 @if($hasRole && empty($accessible))
                     <li class="slide px-3 py-2">
                         <div
@@ -963,6 +969,18 @@ use App\Helpers\PermissionHelper;
                             <i class="fa fa-lock mr-2"></i>
                             <strong>No modules assigned to your role.</strong><br>
                             Contact your school administrator.
+                        </div>
+                    </li>
+                @elseif(!$hasRole && !PermissionHelper::canModule('user_rights'))
+                    {{-- No role assigned yet, and the school already has roles
+                    configured, so this teacher is NOT the bootstrap case —
+                    they simply haven't been assigned a role by the admin yet. --}}
+                    <li class="slide px-3 py-2">
+                        <div
+                            style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;font-size:.78rem;color:#1e40af;">
+                            <i class="fa fa-hourglass-half mr-2"></i>
+                            <strong>Awaiting role assignment.</strong><br>
+                            Your account hasn't been assigned a role yet. Contact your school administrator for access.
                         </div>
                     </li>
                 @endif

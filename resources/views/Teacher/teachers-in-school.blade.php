@@ -351,6 +351,43 @@ $controller = new Controller();
                             max-width: none !important;
                             flex: 0 0 100%;
                         }
+
+                        /* ── Fix 1: Pin the Action column to the right edge ──
+       So the edit/delete icons are ALWAYS visible, no scrolling needed. */
+                        #teachersTable th:last-child,
+                        #teachersTable td:last-child {
+                            position: sticky;
+                            right: 0;
+                            z-index: 2;
+                            /* sits above the scrolling row */
+                            box-shadow: -3px 0 8px rgba(0, 0, 0, 0.06);
+                            /* subtle separation line */
+                            white-space: nowrap;
+                            /* never wrap the buttons */
+                        }
+
+                        /* ── Fix 2: Slim down the Role dropdown ──
+       The 220px inline style is what's forcing the table to be super wide.
+       This overrides it and shrinks it back to a comfortable size. */
+                        #teachersTable .role-select {
+                            width: 150px !important;
+                            min-width: 150px !important;
+                            max-width: 150px !important;
+                        }
+
+                        #teachersTable .role-select+.select2-container {
+                            width: 150px !important;
+                            min-width: 150px !important;
+                            max-width: 150px !important;
+                        }
+
+                        /* ── Fix 3: Make sure the sticky background matches the striped rows ──
+       If you're using dark-mode / custom card colors, adjust the background below. */
+                        @media (prefers-color-scheme: dark) {
+
+                            #teachersTable th:last-child,
+                            #teachersTable td:last-child {}
+                        }
                     </style>
 
 
@@ -682,9 +719,9 @@ $controller = new Controller();
         $(document).on('click', '.btn-view-teacher', function () {
             const teacherId = $(this).data('id');
             $('#modalContent').html(`
-                            <div class="d-flex justify-content-center py-5">
-                                <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
-                            </div>`);
+                                <div class="d-flex justify-content-center py-5">
+                                    <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+                                </div>`);
             $('#teacherProfileModal').modal('show');
 
             $.ajax({
@@ -693,10 +730,10 @@ $controller = new Controller();
                 success: function (response) { displayTeacherProfile(response); },
                 error: function () {
                     $('#modalContent').html(`
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-                                        <p class="text-danger">Error loading teacher information.</p>
-                                    </div>`);
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                                            <p class="text-danger">Error loading teacher information.</p>
+                                        </div>`);
                 }
             });
         });
@@ -814,25 +851,25 @@ $controller = new Controller();
 
         function displayTeacherProfile(teacher) {
             const profileHtml = `
-                            <div class="container-fluid p-4">
-                                <div class="row">
-                                    <div class="col-lg-4 mb-4">
-                                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                                            <div class="card-body text-center p-4">
-                                                <div class="position-relative d-inline-block mb-3">
-                                                    <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                                        class="rounded-circle shadow"
-                                                        style="width:180px;height:180px;object-fit:cover;"
-                                                        alt="Teacher Profile">
+                                <div class="container-fluid p-4">
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-4">
+                                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="position-relative d-inline-block mb-3">
+                                                        <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
+                                                            class="rounded-circle shadow"
+                                                            style="width:180px;height:180px;object-fit:cover;"
+                                                            alt="Teacher Profile">
+                                                    </div>
+                                                    <h4 class="fw-bold mb-1">
+                                                        ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
+                                                    </h4>
                                                 </div>
-                                                <h4 class="fw-bold mb-1">
-                                                    ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
-                                                </h4>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>`;
+                                </div>`;
             $('#modalContent').html(profileHtml);
         }
 

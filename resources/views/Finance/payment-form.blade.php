@@ -720,6 +720,17 @@
                     </div>
                 </div>
 
+                {{-- Payment Type Toggle --}}
+                <div class="form-group" style="margin-bottom:1.25rem;">
+                    <label class="method-card" style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;cursor:pointer;width:100%;justify-content:flex-start;" id="externalToggleCard">
+                        <input type="checkbox" id="isExternalPayment" style="width:18px;height:18px;accent-color:var(--fin-blue);cursor:pointer;flex-shrink:0;">
+                        <span>
+                            <strong style="display:block;font-size:.85rem;">This is a non-fee payment</strong>
+                            <small style="color:var(--text-3);font-weight:400;">e.g. a broken item, a fine — something outside this student's fee structure</small>
+                        </span>
+                    </label>
+                </div>
+
                 {{-- Fee Allocation --}}
                 <div class="form-group" id="allocationGroup">
                     <label>Fee Allocation (Outstanding Balance) <span class="req">*</span></label>
@@ -731,6 +742,39 @@
                     </small>
                 </div>
                 <div id="allocationPreview" style="margin-bottom:1.25rem;"></div>
+
+                {{-- What is this payment for? (category breakdown) --}}
+                <div class="form-group" id="breakdownToggleGroup" style="display:none;">
+                    <label class="checkbox-label" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                        <input type="checkbox" id="useBreakdown" style="width:18px;height:18px;accent-color:var(--fin-blue);cursor:pointer;">
+                        <span style="font-weight:600;font-size:.85rem;">Choose exactly what this payment covers</span>
+                    </label>
+                    <small style="color:var(--text-3);display:block;margin-top:.3rem;">
+                        <i class="fas fa-info-circle"></i> Optional — split the amount across this student's fee categories (Tuition, Library, Medical, etc.) instead of one lump sum
+                    </small>
+                </div>
+
+                <div id="breakdownBox" style="display:none;margin-bottom:1.25rem;"></div>
+
+                {{-- Non-fee payment details (shown when the toggle above is checked) --}}
+                <div id="externalBox" style="display:none;margin-bottom:1.25rem;">
+                    <div class="form-group">
+                        <label>Category <span class="req">*</span></label>
+                        <select id="externalCategoryId" class="form-control-fin">
+                            <option value="">— Select category —</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" data-label="{{ $cat->name }}" {{ $cat->is_external ? 'selected' : '' }}>
+                                    {{ $cat->name }}{{ $cat->is_external ? ' (non-fee)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>What happened? <span class="req">*</span></label>
+                        <textarea id="externalDescription" class="form-control-fin" rows="2"
+                            placeholder="e.g. Broken classroom window pane, replacement cost"></textarea>
+                    </div>
+                </div>
 
                 {{-- Year & Term --}}
                 <div class="form-row">
@@ -854,6 +898,9 @@
         let state = { classId: null, className: null, streamId: null, streamName: null, studentId: null };
         let allStudents = [];
         let allAllocations = [];
+        let allocationItems = [];       // structure-item breakdown for the currently selected allocation
+        let isExternalPayment = false;
+        let useBreakdown = false;
 
         // ─────────────────────────────────────────────────────────────────
         // Amount input — display vs hidden
@@ -1100,14 +1147,24 @@
             const preview = document.getElementById('allocationPreview');
             const display = document.getElementById('amount_paid_display');
             const hidden = document.getElementById('amount_paid');
+            const breakdownToggleGroup = document.getElementById('breakdownToggleGroup');
+            const breakdownBox = document.getElementById('breakdownBox');
+            const useBreakdownCb = document.getElementById('useBreakdown');
 
             display.value = '';
             hidden.value = '';
+            allocationItems = [];
+            useBreakdownCb.checked = false;
+            useBreakdown = false;
+            breakdownBox.style.display = 'none';
+            breakdownBox.innerHTML = '';
 
             if (!id) {
                 preview.innerHTML = '';
                 display.removeAttribute('data-max');
+                display.readOnly = false;
                 display.placeholder = 'e.g. 500,000';
+                breakdownToggleGroup.style.display = 'none';
                 return;
             }
 
@@ -1118,6 +1175,7 @@
             display.setAttribute('data-max', balance);
             display.placeholder = `Max: UGX ${balance.toLocaleString('en-US')}`;
             document.getElementById('term').value = alloc.term;
+            breakdownToggleGroup.style.display = 'block';
 
             const statusMap = {
                 paid: '<span class="badge-fin badge-green"><i class="fas fa-check-circle"></i> Fully Paid</span>',
@@ -1145,6 +1203,165 @@
                         <i class="fas fa-lightbulb"></i> Enter an amount up to UGX ${balance.toLocaleString('en-US')}
                     </div>
                 </div>`;
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // Category breakdown — let the payer choose what this payment covers
+        // ─────────────────────────────────────────────────────────────────
+        async function loadAllocationItems(allocationId) {
+            const box = document.getElementById('breakdownBox');
+            box.innerHTML = '<div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading fee categories…</div>';
+            box.style.display = 'block';
+
+            try {
+                const r = await fetch(`{{ route('finance.allocation-items') }}?allocation_id=${allocationId}`);
+                const data = await r.json();
+                allocationItems = data.items ?? [];
+                renderBreakdownBox();
+            } catch {
+                box.innerHTML = '<div class="loading-row" style="color:var(--fin-red)">Could not load fee categories for this allocation.</div>';
+            }
+        }
+
+        function renderBreakdownBox() {
+            const box = document.getElementById('breakdownBox');
+
+            if (!allocationItems.length) {
+                box.innerHTML = '<div class="loading-row">No fee items found on this structure.</div>';
+                return;
+            }
+
+            const rows = allocationItems.map((item, i) => {
+                const suggested = Math.max(0, item.balance);
+                return `
+                <div class="breakdown-row" data-idx="${i}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--border);">
+                    <input type="checkbox" class="bd-check" data-idx="${i}" ${suggested > 0 ? 'checked' : ''} style="width:17px;height:17px;accent-color:var(--fin-blue);flex-shrink:0;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--text-1);">${item.item_name}</div>
+                        <div style="font-size:.72rem;color:var(--text-3);">${item.category} · Paid so far: UGX ${item.paid.toLocaleString('en-US')} of UGX ${item.amount.toLocaleString('en-US')}</div>
+                    </div>
+                    <input type="text" class="form-control-fin bd-amount" data-idx="${i}" style="width:140px;text-align:right;"
+                        value="${suggested > 0 ? suggested.toLocaleString('en-US') : ''}" placeholder="0" ${suggested > 0 ? '' : 'disabled'}>
+                </div>`;
+            }).join('');
+
+            box.innerHTML = `
+                <div style="border:1px solid var(--border);border-radius:12px;padding:.75rem 1rem;background:#fafbff;">
+                    ${rows}
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;margin-top:.25rem;font-size:.85rem;">
+                        <strong>Breakdown Total</strong>
+                        <strong id="breakdownTotal">UGX 0</strong>
+                    </div>
+                    <small style="color:var(--text-3);"><i class="fas fa-info-circle"></i> This total will be used as the Amount Paid below</small>
+                </div>`;
+
+            box.querySelectorAll('.bd-check').forEach(cb => {
+                cb.addEventListener('change', function () {
+                    const amtInput = box.querySelector(`.bd-amount[data-idx="${this.dataset.idx}"]`);
+                    amtInput.disabled = !this.checked;
+                    if (this.checked && !amtInput.value) {
+                        const item = allocationItems[this.dataset.idx];
+                        amtInput.value = Math.max(0, item.balance).toLocaleString('en-US');
+                    }
+                    recalcBreakdown();
+                });
+            });
+            box.querySelectorAll('.bd-amount').forEach(inp => {
+                inp.addEventListener('input', function () {
+                    const digits = this.value.replace(/\D/g, '');
+                    this.value = digits ? parseInt(digits, 10).toLocaleString('en-US') : '';
+                    recalcBreakdown();
+                });
+            });
+
+            recalcBreakdown();
+        }
+
+        function recalcBreakdown() {
+            const box = document.getElementById('breakdownBox');
+            let total = 0;
+            box.querySelectorAll('.bd-check:checked').forEach(cb => {
+                const amtInput = box.querySelector(`.bd-amount[data-idx="${cb.dataset.idx}"]`);
+                total += parseInt((amtInput.value || '0').replace(/,/g, ''), 10) || 0;
+            });
+            const totalEl = document.getElementById('breakdownTotal');
+            if (totalEl) totalEl.textContent = `UGX ${total.toLocaleString('en-US')}`;
+
+            if (useBreakdown) {
+                document.getElementById('amount_paid_display').value = total.toLocaleString('en-US');
+                document.getElementById('amount_paid').value = total;
+            }
+        }
+
+        function collectBreakdownLines() {
+            const box = document.getElementById('breakdownBox');
+            const lines = [];
+            box.querySelectorAll('.bd-check:checked').forEach(cb => {
+                const idx = cb.dataset.idx;
+                const amtInput = box.querySelector(`.bd-amount[data-idx="${idx}"]`);
+                const amount = parseInt((amtInput.value || '0').replace(/,/g, ''), 10) || 0;
+                if (amount <= 0) return;
+                const item = allocationItems[idx];
+                lines.push({
+                    fee_structure_item_id: item.id,
+                    fee_category_id: item.fee_category_id,
+                    label: item.item_name,
+                    amount: amount,
+                    is_external: 0,
+                });
+            });
+            return lines;
+        }
+
+        document.getElementById('useBreakdown').addEventListener('change', function () {
+            useBreakdown = this.checked;
+            const display = document.getElementById('amount_paid_display');
+
+            if (useBreakdown) {
+                if (state.studentId && document.getElementById('allocation_id').value) {
+                    loadAllocationItems(document.getElementById('allocation_id').value);
+                }
+                display.readOnly = true;
+                display.placeholder = 'Auto-calculated from breakdown below';
+            } else {
+                display.readOnly = false;
+                display.value = '';
+                document.getElementById('amount_paid').value = '';
+                document.getElementById('breakdownBox').style.display = 'none';
+            }
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // Non-fee / external payment toggle
+        // ─────────────────────────────────────────────────────────────────
+        document.getElementById('isExternalPayment').addEventListener('change', function () {
+            isExternalPayment = this.checked;
+
+            const allocationGroup = document.getElementById('allocationGroup');
+            const allocationPreview = document.getElementById('allocationPreview');
+            const breakdownToggleGroup = document.getElementById('breakdownToggleGroup');
+            const breakdownBox = document.getElementById('breakdownBox');
+            const externalBox = document.getElementById('externalBox');
+            const display = document.getElementById('amount_paid_display');
+
+            if (isExternalPayment) {
+                allocationGroup.style.display = 'none';
+                allocationPreview.innerHTML = '';
+                breakdownToggleGroup.style.display = 'none';
+                breakdownBox.style.display = 'none';
+                document.getElementById('useBreakdown').checked = false;
+                useBreakdown = false;
+                document.getElementById('allocation_id').value = '';
+                externalBox.style.display = 'block';
+                display.removeAttribute('data-max');
+                display.readOnly = false;
+                display.placeholder = 'Amount for this charge, e.g. 50,000';
+            } else {
+                allocationGroup.style.display = 'block';
+                externalBox.style.display = 'none';
+                display.value = '';
+                document.getElementById('amount_paid').value = '';
+            }
         });
 
         document.getElementById('academic_year').addEventListener('change', function () {
@@ -1181,21 +1398,93 @@
                     text: 'Please select a student before proceeding.', confirmButtonColor: '#2f2ccb'
                 });
             }
-            if (rawAmount <= 0) {
-                display.focus();
-                return Swal.fire({
-                    icon: 'error', title: 'Invalid Amount',
-                    text: 'Please enter a valid amount greater than 0.', confirmButtonColor: '#2f2ccb'
-                });
+
+            // ── Build the "what was this paid for" breakdown, if any ──────
+            let items = [];
+
+            if (isExternalPayment) {
+                const catSelect = document.getElementById('externalCategoryId');
+                const catId = catSelect.value;
+                const catLabel = catSelect.options[catSelect.selectedIndex]?.dataset.label || catSelect.options[catSelect.selectedIndex]?.text || 'Other';
+                const description = document.getElementById('externalDescription').value.trim();
+
+                if (!catId) {
+                    return Swal.fire({
+                        icon: 'error', title: 'Category Required',
+                        text: 'Please choose a category for this non-fee payment.', confirmButtonColor: '#2f2ccb'
+                    });
+                }
+                if (!description) {
+                    document.getElementById('externalDescription').focus();
+                    return Swal.fire({
+                        icon: 'error', title: 'Description Required',
+                        text: 'Please describe what this payment is for.', confirmButtonColor: '#2f2ccb'
+                    });
+                }
+                if (rawAmount <= 0) {
+                    display.focus();
+                    return Swal.fire({
+                        icon: 'error', title: 'Invalid Amount',
+                        text: 'Please enter a valid amount greater than 0.', confirmButtonColor: '#2f2ccb'
+                    });
+                }
+
+                items = [{
+                    fee_category_id: catId,
+                    label: catLabel,
+                    amount: rawAmount,
+                    is_external: 1,
+                    description: description,
+                }];
+            } else {
+                if (rawAmount <= 0) {
+                    display.focus();
+                    return Swal.fire({
+                        icon: 'error', title: 'Invalid Amount',
+                        text: 'Please enter a valid amount greater than 0.', confirmButtonColor: '#2f2ccb'
+                    });
+                }
+                const max = parseFloat(display.getAttribute('data-max') || '0');
+                if (max > 0 && rawAmount > max) {
+                    return Swal.fire({
+                        icon: 'error', title: 'Amount Exceeds Balance',
+                        text: `UGX ${rawAmount.toLocaleString()} exceeds the outstanding balance of UGX ${max.toLocaleString()}.`,
+                        confirmButtonColor: '#2f2ccb'
+                    });
+                }
+
+                if (useBreakdown) {
+                    items = collectBreakdownLines();
+                    const linesTotal = items.reduce((s, l) => s + l.amount, 0);
+                    if (!items.length) {
+                        return Swal.fire({
+                            icon: 'error', title: 'Nothing Selected',
+                            text: 'Tick at least one category and enter an amount, or turn off the breakdown option.',
+                            confirmButtonColor: '#2f2ccb'
+                        });
+                    }
+                    if (linesTotal !== rawAmount) {
+                        return Swal.fire({
+                            icon: 'error', title: 'Breakdown Doesn\'t Add Up',
+                            text: `The breakdown (UGX ${linesTotal.toLocaleString()}) must equal the amount paid (UGX ${rawAmount.toLocaleString()}).`,
+                            confirmButtonColor: '#2f2ccb'
+                        });
+                    }
+                }
             }
-            const max = parseFloat(display.getAttribute('data-max') || '0');
-            if (max > 0 && rawAmount > max) {
-                return Swal.fire({
-                    icon: 'error', title: 'Amount Exceeds Balance',
-                    text: `UGX ${rawAmount.toLocaleString()} exceeds the outstanding balance of UGX ${max.toLocaleString()}.`,
-                    confirmButtonColor: '#2f2ccb'
+
+            // Inject items[] as hidden inputs so the regular POST carries them
+            paymentForm.querySelectorAll('input[name^="items["]').forEach(el => el.remove());
+            items.forEach((line, idx) => {
+                Object.entries(line).forEach(([key, val]) => {
+                    if (val === null || val === undefined) return;
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `items[${idx}][${key}]`;
+                    input.value = val;
+                    paymentForm.appendChild(input);
                 });
-            }
+            });
 
             const studentName = document.getElementById('recapName').textContent || 'selected student';
 
@@ -1203,7 +1492,7 @@
                 title: 'Record Payment?',
                 html: `<span style="color:#475569">You are about to record<br>
                        <strong style="font-size:1.1rem;color:#0f172a">UGX ${rawAmount.toLocaleString()}</strong><br>
-                       for <strong>${studentName}</strong><br><br>
+                       for <strong>${studentName}</strong>${isExternalPayment ? '<br><small style="color:#d97706">Non-fee payment</small>' : ''}<br><br>
                        <small style="color:#94a3b8">This action cannot be undone.</small></span>`,
                 icon: 'question',
                 showCancelButton: true,

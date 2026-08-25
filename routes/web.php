@@ -804,10 +804,20 @@ Route::prefix('finance')
             Route::delete('/{id}', 'deleteFeeStructure')->name('destroy');
         });
 
-        // ── Fee Allocations ─────────────────────────────────────────────────
+        // ── Fee Categories (per-school, custom) ───────────────────────────────
+        Route::prefix('fee-categories')->name('fee-categories.')->group(function () {
+            Route::get('/', 'feeCategories')->name('index');
+            Route::post('/', 'storeFeeCategory')->name('store');
+            Route::put('/{id}', 'updateFeeCategory')->name('update');
+            Route::delete('/{id}', 'deleteFeeCategory')->name('destroy');
+        });
+
+
+ // ── Fee Allocations ─────────────────────────────────────────────────
         Route::get('/fee-allocations', 'feeAllocations')->name('fee-allocations');
         Route::post('/allocate-fees', 'allocateFees')->name('allocate-fees');
         Route::get('/student-allocations', 'getStudentAllocations')->name('student-allocations');
+        Route::get('/allocation-items', 'getAllocationItems')->name('allocation-items');
         Route::get('/fee-allocation/{id}/data', 'getFeeAllocationData')->name('fee-allocation.data');
         Route::put('/fee-allocation/{id}', 'updateFeeAllocation')->name('fee-allocation.update');
         Route::delete('/fee-allocation/{id}', 'deleteFeeAllocation')->name('fee-allocation.delete');

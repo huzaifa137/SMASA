@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FeeStructureItem extends Model
 {
     protected $fillable = [
-        'fee_structure_id', 'item_name', 'category', 'amount',
+        'fee_structure_id', 'item_name', 'category', 'fee_category_id', 'amount',
         'is_mandatory', 'description', 'sort_order',
     ];
 
@@ -16,5 +16,15 @@ class FeeStructureItem extends Model
     public function feeStructure()
     {
         return $this->belongsTo(FeeStructure::class);
+    }
+
+    public function feeCategory()
+    {
+        return $this->belongsTo(FeeCategory::class);
+    }
+
+    public function paymentItems()
+    {
+        return $this->hasMany(FeePaymentItem::class);
     }
 }

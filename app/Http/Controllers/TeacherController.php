@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
 use App\Helpers\PermissionHelper;
 use App\Services\TeacherDeletionService;
 
@@ -81,12 +80,12 @@ class TeacherController extends Controller
 
         // ── Login credentials ───────────────────────────────────────────
         // Teachers log in by phonenumber + password (see
-        // UserController::authenticateSchool). Previously this endpoint
-        // never set a password at all, so newly added teachers had no way
-        // to ever log in. If the admin supplied one, hash and use it;
-        // otherwise generate a temporary one and force a change on first
-        // login, the same pattern used by the bulk-import flow.
-        $plainPassword = $request->filled('password') ? $request->password : Str::random(10);
+        // UserController::authenticateSchool). We phase away from random
+        // temporary passwords here too, matching the admin-side flow
+        // (UserRightsController::adminCreateTeacher): default to a fixed
+        // 123456789 when the admin doesn't type one, and force a change
+        // on first login either way.
+        $plainPassword = $request->filled('password') ? $request->password : '123456789';
 
         unset($validated['password']);
         $validated['password'] = Hash::make($plainPassword);

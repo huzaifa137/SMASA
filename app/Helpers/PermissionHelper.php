@@ -177,11 +177,51 @@ class PermissionHelper
     /**
      * Bootstrap is only allowed for a teacher who is actually logged
      * into a school session (not an unauthenticated request, and not
-     * a system admin who already bypassed above).
+     * a system admin who already bypassed above) — AND only while that
+     * school has never configured a single SchoolRole yet.
+     *
+     * This second condition is critical. Without it, ANY teacher with
+     * no SchoolRole assigned gets the bootstrap allowance — including a
+     * teacher added days or months later via the normal "Add Teacher"
+     * screen, who simply hasn't been assigned a role yet by the admin.
+     * That would let any newly-created teacher walk into User Rights
+     * and grant themselves (or anyone) whatever role/access they want.
+     *
+     * The moment the school has at least one SchoolRole, the bootstrap
+     * window is considered closed for good: every teacher is governed
+     * strictly by their own assigned role from then on, and "no role
+     * assigned" means "no access" — not "full access to assign roles".
      */
     private static function isBootstrapAllowed(): bool
     {
-        return session()->has('LoggedTeacher') && session()->has('LoggedSchool');
+        if (!session()->has('LoggedTeacher') || !session()->has('LoggedSchool')) {
+            return false;
+        }
+
+        return !self::schoolHasAnyRoleConfigured((int) session('LoggedSchool'));
+    }
+
+    /**
+     * True once the given school has created at least one SchoolRole.
+     * Cached briefly since this is checked on every canModule()/
+     * canFeature() call for roleless teachers.
+     */
+    private static function schoolHasAnyRoleConfigured(int $schoolId): bool
+    {
+        return Cache::remember("school_has_roles_{$schoolId}", self::$cacheTtl, function () use ($schoolId) {
+            return SchoolRole::where('school_id', $schoolId)->exists();
+        });
+    }
+
+    /**
+     * Flush the "does this school have any roles yet" cache. Call this
+     * immediately after creating or deleting a SchoolRole, so the
+     * bootstrap window closes (or reopens, if a school is left with
+     * zero roles again) without waiting out the cache TTL.
+     */
+    public static function flushSchoolRolesCache(int $schoolId): void
+    {
+        Cache::forget("school_has_roles_{$schoolId}");
     }
 
     /**

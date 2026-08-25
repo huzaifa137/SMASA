@@ -7,7 +7,9 @@ use App\Models\BudgetItem;
 use App\Models\ChartOfAccount;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\FeeCategory;
 use App\Models\FeePayment;
+use App\Models\FeePaymentItem;
 use App\Models\FeeStructure;
 use App\Models\FeeStructureItem;
 use App\Models\FinanceTransaction;
@@ -160,7 +162,9 @@ class FinanceController extends Controller
                 'name' => \App\Http\Controllers\Helper::recordMdname($c->class_name) ?? $c->class_name,
             ]);
 
-        return view('Finance.fee-structure-form', compact('classrooms'));
+        $categories = FeeCategory::forSchool($schoolId);
+
+        return view('Finance.fee-structure-form', compact('classrooms', 'categories'));
     }
 
     public function storeFeeStructure(Request $request)
@@ -170,6 +174,7 @@ class FinanceController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to manage fee structures.'], 403);
         }
 
+        $schoolId = session('LoggedSchool');
 
         $validated = $request->validate([
             'name' => 'required|string|max:200',
@@ -180,12 +185,10 @@ class FinanceController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
-            'items.*.category' => 'required|string|max:100',
+            'items.*.fee_category_id' => 'required|exists:fee_categories,id',
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.is_mandatory' => 'boolean',
         ]);
-
-        $schoolId = session('LoggedSchool');
 
         DB::beginTransaction();
         try {
@@ -202,9 +205,11 @@ class FinanceController extends Controller
 
             $total = 0;
             foreach ($validated['items'] as $i => $item) {
+                $category = FeeCategory::where('school_id', $schoolId)->findOrFail($item['fee_category_id']);
                 $structure->items()->create([
                     'item_name' => $item['item_name'],
-                    'category' => $item['category'],
+                    'category' => $category->name,
+                    'fee_category_id' => $category->id,
                     'amount' => $item['amount'],
                     'is_mandatory' => $item['is_mandatory'] ?? true,
                     'sort_order' => $i,
@@ -239,7 +244,9 @@ class FinanceController extends Controller
                 'name' => \App\Http\Controllers\Helper::recordMdname($c->class_name) ?? $c->class_name,
             ]);
 
-        return view('Finance.fee-structure-form', compact('structure', 'classrooms'));
+        $categories = FeeCategory::forSchool($schoolId);
+
+        return view('Finance.fee-structure-form', compact('structure', 'classrooms', 'categories'));
     }
 
     public function updateFeeStructure(Request $request, int $id)
@@ -259,7 +266,7 @@ class FinanceController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
-            'items.*.category' => 'required|string|max:100',
+            'items.*.fee_category_id' => 'required|exists:fee_categories,id',
             'items.*.amount' => 'required|numeric|min:0',
         ]);
 
@@ -268,9 +275,11 @@ class FinanceController extends Controller
             $structure->items()->delete();
             $total = 0;
             foreach ($validated['items'] as $i => $item) {
+                $category = FeeCategory::where('school_id', $schoolId)->findOrFail($item['fee_category_id']);
                 $structure->items()->create([
                     'item_name' => $item['item_name'],
-                    'category' => $item['category'],
+                    'category' => $category->name,
+                    'fee_category_id' => $category->id,
                     'amount' => $item['amount'],
                     'is_mandatory' => $item['is_mandatory'] ?? true,
                     'sort_order' => $i,
@@ -306,6 +315,122 @@ class FinanceController extends Controller
         $structure = FeeStructure::where('school_id', $schoolId)->findOrFail($id);
         $structure->delete();
         return back()->with('success', 'Fee structure deleted.');
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // FEE CATEGORIES (per-school, used by fee structure items and payments)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public function feeCategories()
+    {
+        PermissionHelper::denyUnlessFeature('manage_fees');
+
+        $schoolId = session('LoggedSchool');
+        // Ensures the school has its starter set before we count usage.
+        FeeCategory::forSchool($schoolId);
+
+        $categories = FeeCategory::where('school_id', $schoolId)
+            ->withCount(['structureItems', 'paymentItems'])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('Finance.fee-categories', compact('categories'));
+    }
+
+    public function storeFeeCategory(Request $request)
+    {
+        if (!PermissionHelper::canFeature('manage_fees')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = session('LoggedSchool');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'color' => 'nullable|string|max:10',
+            'icon' => 'nullable|string|max:50',
+            'description' => 'nullable|string',
+            'is_external' => 'boolean',
+        ]);
+
+        $slug = \Illuminate\Support\Str::slug($validated['name']);
+        if (FeeCategory::where('school_id', $schoolId)->where('slug', $slug)->exists()) {
+            return back()->with('error', 'A category with that name already exists.');
+        }
+
+        FeeCategory::create([
+            'school_id' => $schoolId,
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'color' => $validated['color'] ?? '#2f2ccb',
+            'icon' => $validated['icon'] ?? 'fa-tag',
+            'description' => $validated['description'] ?? null,
+            'is_external' => $validated['is_external'] ?? false,
+            'sort_order' => FeeCategory::where('school_id', $schoolId)->max('sort_order') + 1,
+        ]);
+
+        return back()->with('success', 'Category added.');
+    }
+
+    public function updateFeeCategory(Request $request, int $id)
+    {
+        if (!PermissionHelper::canFeature('manage_fees')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = session('LoggedSchool');
+        $category = FeeCategory::where('school_id', $schoolId)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'color' => 'nullable|string|max:10',
+            'icon' => 'nullable|string|max:50',
+            'description' => 'nullable|string',
+            'is_external' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+
+        $slug = \Illuminate\Support\Str::slug($validated['name']);
+        if (
+            $slug !== $category->slug &&
+            FeeCategory::where('school_id', $schoolId)->where('slug', $slug)->where('id', '!=', $category->id)->exists()
+        ) {
+            return back()->with('error', 'A category with that name already exists.');
+        }
+
+        $category->update([
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'color' => $validated['color'] ?? $category->color,
+            'icon' => $validated['icon'] ?? $category->icon,
+            'description' => $validated['description'] ?? null,
+            'is_external' => $validated['is_external'] ?? false,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        return back()->with('success', 'Category updated.');
+    }
+
+    public function deleteFeeCategory(int $id)
+    {
+        if (!PermissionHelper::canFeature('manage_fees')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = session('LoggedSchool');
+        $category = FeeCategory::where('school_id', $schoolId)->findOrFail($id);
+
+        // Categories already used on fee structure items or past payments are
+        // kept for historical accuracy — deactivate instead of deleting so old
+        // structures/receipts don't lose their category label.
+        if ($category->structureItems()->exists() || $category->paymentItems()->exists()) {
+            $category->update(['is_active' => false]);
+            return back()->with('success', 'Category is in use, so it was deactivated instead of deleted.');
+        }
+
+        $category->delete();
+        return back()->with('success', 'Category deleted.');
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -460,7 +585,9 @@ class FinanceController extends Controller
             ->orderBy('class_name')
             ->get();
 
-        return view('Finance.payment-form', compact('classrooms', 'receiptNum'));
+        $categories = FeeCategory::forSchool($schoolId);
+
+        return view('Finance.payment-form', compact('classrooms', 'receiptNum', 'categories'));
     }
 
     public function getStudentAllocations(Request $request)
@@ -484,11 +611,63 @@ class FinanceController extends Controller
         return response()->json(['student' => $student, 'allocations' => $allocations]);
     }
 
+    /**
+     * The fee-structure line items (categories) behind a specific allocation,
+     * each with how much has already been confirmed-paid against it, so the
+     * payment form can let the payer choose what this payment covers instead
+     * of dumping the whole amount into one generic "fees" bucket.
+     */
+    public function getAllocationItems(Request $request)
+    {
+        $schoolId = session('LoggedSchool');
+
+        $allocation = StudentFeeAllocation::where('school_id', $schoolId)
+            ->with('feeStructure.items.feeCategory')
+            ->findOrFail($request->allocation_id);
+
+        $items = $allocation->feeStructure->items->map(function ($item) use ($allocation) {
+            $paid = FeePaymentItem::where('fee_structure_item_id', $item->id)
+                ->where('is_external', false)
+                ->whereHas('payment', function ($q) use ($allocation) {
+                    $q->where('allocation_id', $allocation->id)->where('status', 'confirmed');
+                })
+                ->sum('amount');
+
+            $balance = max(0, (float) $item->amount - (float) $paid);
+
+            return [
+                'id' => $item->id,
+                'item_name' => $item->item_name,
+                'category' => $item->feeCategory?->name ?? $item->category,
+                'fee_category_id' => $item->fee_category_id,
+                'amount' => (float) $item->amount,
+                'paid' => (float) $paid,
+                'balance' => $balance,
+                'is_mandatory' => (bool) $item->is_mandatory,
+            ];
+        });
+
+        return response()->json(['items' => $items]);
+    }
+
     public function storePayment(Request $request)
     {
 
         if (!PermissionHelper::canFeature('record_payment')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to record payments.'], 403);
+        }
+
+        // Normalize is_external to a real boolean before validating — some
+        // clients send "true"/"false" strings, which Laravel's `boolean` rule
+        // rejects (it only accepts 1/0/"1"/"0"/true/false).
+        if ($request->has('items')) {
+            $items = $request->input('items', []);
+            foreach ($items as $i => $line) {
+                if (array_key_exists('is_external', $line)) {
+                    $items[$i]['is_external'] = filter_var($line['is_external'], FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+            $request->merge(['items' => $items]);
         }
 
         $validated = $request->validate([
@@ -502,7 +681,31 @@ class FinanceController extends Controller
             'transaction_reference' => 'nullable|string|max:100',
             'bank_name' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
+            // Optional breakdown of what this payment covers. When omitted,
+            // behaviour is unchanged from before — the whole amount is simply
+            // recorded against the allocation, same as always.
+            'items' => 'nullable|array|min:1',
+            'items.*.fee_structure_item_id' => 'nullable|exists:fee_structure_items,id',
+            'items.*.fee_category_id' => 'nullable|exists:fee_categories,id',
+            'items.*.label' => 'required_with:items|string|max:200',
+            'items.*.amount' => 'required_with:items|numeric|min:0.01',
+            'items.*.is_external' => 'nullable|boolean',
+            'items.*.description' => 'nullable|string',
         ]);
+
+        // When a breakdown is supplied, its lines must add up to the amount
+        // actually being paid — otherwise money could silently go unaccounted
+        // for (or be double counted) in category-wise reports.
+        if (!empty($validated['items'])) {
+            $linesTotal = round(array_sum(array_column($validated['items'], 'amount')), 2);
+            if (abs($linesTotal - round((float) $validated['amount_paid'], 2)) > 0.01) {
+                return back()->withInput()->with(
+                    'error',
+                    "The payment breakdown (UGX " . number_format($linesTotal, 0) .
+                        ") doesn't add up to the amount paid (UGX " . number_format($validated['amount_paid'], 0) . ")."
+                );
+            }
+        }
 
         $schoolId = session('LoggedSchool');
         $receiptNum = FeePayment::generateReceiptNumber($schoolId);
@@ -527,6 +730,36 @@ class FinanceController extends Controller
                 'confirmed_by' => session('LoggedUser'),
                 'confirmed_at' => now(),
             ]);
+
+            // Record what the payment was for. Each line either points at a
+            // fee_structure_item (paying towards a known category on the
+            // student's structure) or is "external" — a category + free-text
+            // description for something outside the structure entirely, e.g.
+            // a broken window. Structure items are looked up here (rather
+            // than trusted from the form) so a tampered request can't post a
+            // line for an item belonging to another school/structure.
+            foreach ($validated['items'] ?? [] as $line) {
+                $structureItem = null;
+                $feeCategoryId = $line['fee_category_id'] ?? null;
+
+                if (!empty($line['fee_structure_item_id'])) {
+                    $structureItem = FeeStructureItem::whereHas(
+                        'feeStructure',
+                        fn($q) => $q->where('school_id', $schoolId)
+                    )->find($line['fee_structure_item_id']);
+                    $feeCategoryId = $feeCategoryId ?? $structureItem?->fee_category_id;
+                }
+
+                FeePaymentItem::create([
+                    'fee_payment_id' => $payment->id,
+                    'fee_structure_item_id' => $structureItem?->id,
+                    'fee_category_id' => $feeCategoryId,
+                    'label' => $line['label'],
+                    'amount' => $line['amount'],
+                    'is_external' => $structureItem ? false : (bool) ($line['is_external'] ?? true),
+                    'description' => $line['description'] ?? null,
+                ]);
+            }
 
             // Update allocation balance. allocation_id is only ever set when
             // the form's allocation dropdown was used — payments recorded
@@ -581,7 +814,7 @@ class FinanceController extends Controller
         PermissionHelper::denyUnlessFeature('view_finance');
         $schoolId = session('LoggedSchool');
         $payment = FeePayment::where('school_id', $schoolId)
-            ->with(['student', 'allocation.feeStructure'])
+            ->with(['student', 'allocation.feeStructure', 'items.category'])
             ->findOrFail($id);
 
         $school = \App\Models\School::find($schoolId);

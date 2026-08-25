@@ -18,6 +18,13 @@ use Illuminate\Support\Str;
 
 class UserRightsController extends Controller
 {
+    /**
+     * Temporary cap on how many teacher accounts a system admin can create
+     * for a single school via /user-rights/admin-schools. Remove/raise this
+     * once the school-side self-service flow is trusted to take over.
+     */
+    private const MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL = 2;
+
     // ──────────────────────────────────────────────
     // Dashboard
     // ──────────────────────────────────────────────
@@ -90,6 +97,10 @@ class UserRightsController extends Controller
             'is_active' => true,
         ]);
 
+        // This school now has at least one role — close the PermissionHelper
+        // bootstrap window immediately instead of waiting out the cache TTL.
+        PermissionHelper::flushSchoolRolesCache($schoolId);
+
         return response()->json(['success' => true, 'message' => 'Role created successfully.', 'role' => $role]);
     }
 
@@ -129,6 +140,11 @@ class UserRightsController extends Controller
         }
 
         $role->delete();
+
+        // If that was the school's last role, this reopens the bootstrap
+        // window so someone can create a first role again; otherwise it's
+        // a no-op re-cache of "school still has roles".
+        PermissionHelper::flushSchoolRolesCache($schoolId);
 
         return response()->json(['success' => true, 'message' => 'Role deleted.']);
     }
@@ -491,7 +507,7 @@ class UserRightsController extends Controller
             'modules',
             'roleIdsWithUrp',
             'teachers'
-        ));
+        ))->with('maxAdminCreatedTeachers', self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL);
     }
 
     /**
@@ -514,6 +530,16 @@ class UserRightsController extends Controller
     public function adminCreateTeacher(Request $request, School $school)
     {
         abort_unless(PermissionHelper::isSystemAdmin(), 403, 'System administrators only.');
+
+        // Temporary cap while this is being rolled out: each school may
+        // have at most 2 teacher accounts created from the admin side.
+        $existingTeacherCount = Teacher::where('school_id', $school->id)->count();
+        if ($existingTeacherCount >= self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This school already has the maximum of ' . self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL . ' teacher accounts allowed for now.',
+            ], 422);
+        }
 
         $validated = $request->validate([
             'surname' => 'required|string|max:255',
@@ -599,6 +625,10 @@ class UserRightsController extends Controller
             'is_active' => true,
         ]);
 
+        // This school now has at least one role — close the PermissionHelper
+        // bootstrap window immediately instead of waiting out the cache TTL.
+        PermissionHelper::flushSchoolRolesCache($school->id);
+
         return response()->json(['success' => true, 'message' => 'Role created successfully.', 'role' => $role]);
     }
 
@@ -632,6 +662,11 @@ class UserRightsController extends Controller
         }
 
         $role->delete();
+
+        // If that was the school's last role, this reopens the bootstrap
+        // window so someone can create a first role again; otherwise it's
+        // a no-op re-cache of "school still has roles".
+        PermissionHelper::flushSchoolRolesCache($role->school_id);
 
         return response()->json(['success' => true, 'message' => 'Role deleted.']);
     }

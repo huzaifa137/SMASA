@@ -396,6 +396,15 @@
                 to create one (you can assign a role to them in the same step).
             </div>
         </div>
+    @elseif($teachers->count() >= $maxAdminCreatedTeachers)
+        <div class="risk-banner" style="background:#f8fafc;border-color:#e2e8f0;border-left-color:#64748b;color:#334155;">
+            <i class="fa fa-user-lock fa-lg"></i>
+            <div>
+                <strong>Teacher account limit reached ({{ $maxAdminCreatedTeachers }}/{{ $maxAdminCreatedTeachers }}).</strong>
+                Admin-side account creation is capped at {{ $maxAdminCreatedTeachers }} teachers per school for now.
+                Further staff can be added by the school itself once logged in.
+            </div>
+        </div>
     @endif
 
     <div class="row g-3">
@@ -494,9 +503,16 @@
         placeholder="Search staff..."
         style="font-family:inherit;max-width:180px;">
 
-    <button type="button" id="btnOpenAddTeacher" class="btn btn-sm btn-primary">
-        <i class="fa fa-user-plus mr-1"></i>Add Staff
-    </button>
+    @if($teachers->count() >= $maxAdminCreatedTeachers)
+        <button type="button" id="btnOpenAddTeacher" class="btn btn-sm btn-secondary" disabled
+            title="This school already has the maximum of {{ $maxAdminCreatedTeachers }} teacher accounts allowed for now.">
+            <i class="fa fa-user-plus mr-1"></i>Add Staff ({{ $maxAdminCreatedTeachers }}/{{ $maxAdminCreatedTeachers }})
+        </button>
+    @else
+        <button type="button" id="btnOpenAddTeacher" class="btn btn-sm btn-primary">
+            <i class="fa fa-user-plus mr-1"></i>Add Staff
+        </button>
+    @endif
 </div>
                 </div>
                 <div class="card-body p-3" id="teacherList">

@@ -258,7 +258,25 @@ body {
             </tr>
         </thead>
         <tbody>
-            @if($payment->allocation && $payment->allocation->feeStructure && $payment->allocation->feeStructure->items->count())
+            @if($payment->items->count())
+                {{-- This transaction's actual breakdown of what was paid for --}}
+                @foreach($payment->items as $line)
+                <tr>
+                    <td>
+                        {{ $line->label }}
+                        @if($line->is_external)
+                            <span style="font-size:7px;color:#b45309;text-transform:uppercase;font-weight:700;">&nbsp;· Non-fee item</span>
+                        @endif
+                        @if($line->description)
+                            <div style="font-size:7.5px;color:#94a3b8;">{{ $line->description }}</div>
+                        @endif
+                    </td>
+                    <td style="font-size:8px;color:#64748b;text-transform:capitalize">{{ $line->category->name ?? '—' }}</td>
+                    <td>{{ number_format($line->amount, 0) }}</td>
+                </tr>
+                @endforeach
+            @elseif($payment->allocation && $payment->allocation->feeStructure && $payment->allocation->feeStructure->items->count())
+                {{-- Older payments recorded before category breakdowns existed --}}
                 @foreach($payment->allocation->feeStructure->items as $item)
                 <tr>
                     <td>{{ $item->item_name }}</td>
