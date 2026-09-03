@@ -1310,7 +1310,17 @@ function setLanguage(lang) {
         <i class="fas fa-info-circle me-1"></i>
         Click on classes below to select/unselect them. This setup will be saved and applied automatically every time their passlips are printed.
     </div>
-    
+
+    {{-- Saved Customisations — one tab per class that already has a
+         saved profile. Click a tab to load ONLY that class's settings
+         into the panel for review/editing; the trash icon removes it. --}}
+    <div id="cpSavedTabsWrap" class="mb-2" style="display:none;">
+        <div class="text-muted mb-1" style="font-size:.72rem;font-weight:600;">
+            <i class="fas fa-folder-open me-1"></i> Saved customisations
+        </div>
+        <div id="cpSavedTabs" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
+    </div>
+
     {{-- Class Selection Chips --}}
     <div id="cpClassSelector" class="mb-2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border-radius: 12px; min-height: 60px; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
         @foreach ($examClasses->unique('class_id') as $ec)
@@ -1425,6 +1435,64 @@ function setLanguage(lang) {
 
     .cp-class-chip {
         animation: chipFadeIn 0.2s ease-out;
+    }
+
+    /* Saved-customisations tabs */
+    .cp-saved-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .35rem .5rem .35rem .8rem;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #eef2ff;
+        border: 1.5px solid #c7d2fe;
+        color: #3730a3;
+        transition: all .15s ease;
+        user-select: none;
+    }
+    .cp-saved-tab:hover {
+        border-color: #4338ca;
+    }
+    .cp-saved-tab.active {
+        background: linear-gradient(135deg, #2f2ccb 0%, #4338ca 100%);
+        border-color: #2f2ccb;
+        color: #fff;
+        box-shadow: 0 3px 10px rgba(47,44,203,.25);
+    }
+    .cp-saved-tab .cp-saved-tab-remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: .6rem;
+        opacity: .65;
+    }
+    .cp-saved-tab .cp-saved-tab-remove:hover {
+        opacity: 1;
+        background: rgba(0,0,0,.12);
+    }
+    .cp-saved-tab.active .cp-saved-tab-remove:hover {
+        background: rgba(255,255,255,.25);
+    }
+    /* Small dot on a class chip that already has something saved, so
+       it's visible at a glance even in the "select classes to save
+       for" picker below. */
+    .cp-class-chip.has-saved::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #16a34a;
+        display: inline-block;
+        margin-left: .15rem;
+    }
+    .cp-class-chip.selected.has-saved::after {
+        background: #fff;
     }
 
     .cp-unsaved-banner {
@@ -2252,6 +2320,12 @@ function injectIntoForm(formEl) {
                     // Panel now matches the database — clear the banner.
                     savedSnapshot = { ...currentSettings };
                     checkUnsavedChanges();
+                    // Refresh the Saved Customisations tabs so a class
+                    // saved for the first time gets a tab immediately,
+                    // without needing a page reload.
+                    fetchSavedList().then(() => {
+                        if (classIds.length === 1) setActiveSavedTab(classIds[0]);
+                    });
                 }
             })
             .catch(() => {
@@ -2264,6 +2338,46 @@ function injectIntoForm(formEl) {
        Fires when the teacher/admin picks a class in the "Save
        Customisation" selector, so they can see what's already saved
        (if anything) before adjusting and re-saving. */
+    /* ── Apply a saved settings object to the panel's controls ──
+       Shared by loadPassslipCustomisation() (class picker) and
+       selectSavedTab() (Saved Customisations tabs), so there's one
+       place that knows how to paint saved settings onto the DOM. */
+    function applySettingsToPanel(saved) {
+        setTemplateSelectionUI(saved.template || 'classic');
+        if (saved.accent) {
+            document.getElementById('cpColorPicker').value = saved.accent;
+            document.getElementById('cpAccentPreview').style.background = saved.accent;
+            document.querySelectorAll('.cp-preset-dot').forEach(d => {
+                d.classList.toggle('active', d.dataset.color === saved.accent);
+            });
+        }
+        document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
+            const key = cb.id.replace('cb_', '');
+            cb.checked = key in saved ? !!saved[key] : (DEFAULTS[key] !== false);
+        });
+
+        // Restore combine-examinations selection
+        const extraIds = typeof saved.exam_ids === 'string' ? saved.exam_ids.split(',').filter(Boolean) : [];
+        document.querySelectorAll('.exam-combine-cb').forEach(cb => {
+            cb.checked = extraIds.includes(cb.value);
+            const avgCb = document.getElementById('cb_avg_' + cb.value);
+            if (avgCb) avgCb.disabled = !cb.checked;
+        });
+        if (typeof saved.avg_exam_ids === 'string') {
+            const avgIds = saved.avg_exam_ids.split(',').filter(Boolean);
+            document.querySelectorAll('.exam-avg-cb').forEach(cb => {
+                if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
+            });
+        }
+
+        updateAllLinks();
+        readSettings();
+        // This IS the saved state we just loaded — panel now matches
+        // the database, so the unsaved-changes banner should be clean.
+        savedSnapshot = { ...currentSettings };
+        updateSummary();
+    }
+
     function loadPassslipCustomisation() {
         const classSelect = document.getElementById('cpClassSelect');
         const firstSelected = classSelect.selectedOptions[0];
@@ -2281,45 +2395,174 @@ function injectIntoForm(formEl) {
                     checkUnsavedChanges();
                     return; // leave panel as-is otherwise
                 }
-                const saved = res.settings;
-                setTemplateSelectionUI(saved.template || 'classic');
-                if (saved.accent) {
-                    document.getElementById('cpColorPicker').value = saved.accent;
-                    document.getElementById('cpAccentPreview').style.background = saved.accent;
-                    document.querySelectorAll('.cp-preset-dot').forEach(d => {
-                        d.classList.toggle('active', d.dataset.color === saved.accent);
-                    });
-                }
-                document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-                    const key = cb.id.replace('cb_', '');
-                    if (key in saved) cb.checked = !!saved[key];
-                });
-
-                // Restore combine-examinations selection
-                if (typeof saved.exam_ids === 'string') {
-                    const extraIds = saved.exam_ids.split(',').filter(Boolean);
-                    document.querySelectorAll('.exam-combine-cb').forEach(cb => {
-                        cb.checked = extraIds.includes(cb.value);
-                        const avgCb = document.getElementById('cb_avg_' + cb.value);
-                        if (avgCb) avgCb.disabled = !cb.checked;
-                    });
-                }
-                if (typeof saved.avg_exam_ids === 'string') {
-                    const avgIds = saved.avg_exam_ids.split(',').filter(Boolean);
-                    document.querySelectorAll('.exam-avg-cb').forEach(cb => {
-                        if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
-                    });
-                }
-
-                updateAllLinks();
-                readSettings();
-                // This IS the saved state we just loaded — panel now
-                // matches the database, so the banner should be clean.
-                savedSnapshot = { ...currentSettings };
-                updateSummary();
+                applySettingsToPanel(res.settings);
+                setActiveSavedTab(firstSelected.value);
             })
             .catch(() => { /* silent — keep current panel state */ });
     }
+
+    /* ─────────────────────────────────────────────
+       SAVED CUSTOMISATIONS — tab strip
+       One tab per class that already has a saved
+       profile. Editing/removing happens here, kept
+       separate from the "select classes to save for"
+       chips above so the two flows stop colliding.
+       ───────────────────────────────────────────── */
+    let savedTabsCache = []; // [{class_id, class_name, settings}]
+
+    function fetchSavedList() {
+        return fetch('{{ route('examination.passslips.settings.list', $exam->id) }}', {
+            headers: { 'Accept': 'application/json' },
+        })
+            .then(r => r.json())
+            .then(res => {
+                savedTabsCache = (res.success && Array.isArray(res.items)) ? res.items : [];
+                renderSavedTabs();
+            })
+            .catch(() => { /* silent — tabs just won't show this time */ });
+    }
+
+    function renderSavedTabs() {
+        const wrap = document.getElementById('cpSavedTabsWrap');
+        const holder = document.getElementById('cpSavedTabs');
+        if (!wrap || !holder) return;
+
+        // Mark which class chips already have a saved profile (small dot),
+        // regardless of whether the tab strip itself is shown.
+        document.querySelectorAll('.cp-class-chip').forEach(chip => {
+            const has = savedTabsCache.some(it => String(it.class_id) === chip.dataset.classId);
+            chip.classList.toggle('has-saved', has);
+        });
+
+        if (savedTabsCache.length === 0) {
+            wrap.style.display = 'none';
+            holder.innerHTML = '';
+            return;
+        }
+
+        wrap.style.display = '';
+        holder.innerHTML = savedTabsCache.map(it => `
+            <span class="cp-saved-tab" data-class-id="${it.class_id}" onclick="selectSavedTab(${it.class_id})">
+                <i class="fas fa-sliders-h" style="font-size:.62rem;"></i>
+                <span>${it.class_name}</span>
+                <span class="cp-saved-tab-remove" title="Remove this class's saved customisation"
+                      onclick="removeSavedTab(event, ${it.class_id}, '${(it.class_name + '').replace(/'/g, "\\'")}')">
+                    <i class="fas fa-times"></i>
+                </span>
+            </span>
+        `).join('');
+    }
+
+    function setActiveSavedTab(classId) {
+        document.querySelectorAll('.cp-saved-tab').forEach(tab => {
+            tab.classList.toggle('active', String(classId) === tab.dataset.classId);
+        });
+    }
+
+    /* Click a Saved Customisation tab: load THAT class's settings into
+       the panel and put the class picker into single-select mode on
+       just this class, so a subsequent Save re-saves the same class
+       instead of accidentally fanning out to whatever else was still
+       ticked in the chip list. */
+    function selectSavedTab(classId) {
+        const entry = savedTabsCache.find(it => String(it.class_id) === String(classId));
+        if (!entry) return;
+
+        document.querySelectorAll('.cp-class-chip').forEach(chip => {
+            chip.classList.toggle('selected', chip.dataset.classId === String(classId));
+        });
+        updateSelectedCount();
+        updateHiddenSelect();
+
+        applySettingsToPanel(entry.settings || {});
+        setActiveSavedTab(classId);
+
+        localStorage.setItem('cpSelectedClasses', JSON.stringify([String(classId)]));
+        scrollToSavePanel();
+    }
+
+    /* Delete a saved profile. Doesn't touch other classes' saved data
+       — only the row for this one class. */
+
+async function removeSavedTab(evt, classId, className) {
+    evt.stopPropagation(); // don't also trigger selectSavedTab()
+
+    const result = await Swal.fire({
+        title: 'Remove customisation?',
+        text: `Remove the saved customisation for "${className}"? Its pass slips will go back to the default look next time they're printed.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    fetch('{{ url('examinations') }}/{{ $exam->id }}/passslips/settings/' + classId, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+    })
+        .then(r => r.json())
+        .then(() => {
+            const wasActive = document
+                .querySelector(`.cp-saved-tab[data-class-id="${classId}"]`)
+                ?.classList.contains('active');
+
+            fetchSavedList();
+
+            // Deselect the chip for the removed class so it stops
+            // showing up in "N class(es) selected" once its saved
+            // profile no longer exists, regardless of whether it was
+            // the class currently loaded in the panel.
+            const chip = document.querySelector(`.cp-class-chip[data-class-id="${classId}"]`);
+            if (chip) chip.classList.remove('selected');
+            updateSelectedCount();
+            updateHiddenSelect();
+
+            // Keep localStorage in sync so a refresh doesn't silently
+            // bring the removed class's selection back.
+            const remaining = getSelectedClassIds();
+            localStorage.setItem('cpSelectedClasses', JSON.stringify(remaining));
+
+            if (wasActive) {
+                // The class we just deleted was loaded in the panel —
+                // repaint it back to DEFAULTS so it matches reality.
+                // (Deliberately NOT calling resetCustomisation() here:
+                // that function re-saves, which would recreate
+                // the row we just deleted.)
+                applySettingsToPanel({});
+                savedSnapshot = { ...DEFAULTS };
+                checkUnsavedChanges();
+            }
+            setActiveSavedTab(null);
+
+            Swal.fire({
+                title: 'Removed!',
+                text: `The saved customisation for "${className}" has been removed.`,
+                icon: 'success',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        })
+        .catch(() => {
+            Swal.fire({
+                title: 'Failed to remove',
+                text: 'Please check your connection and try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+}
+
+
     document.addEventListener('DOMContentLoaded', () => {
         const classSelect = document.getElementById('cpClassSelect');
         if (classSelect) classSelect.addEventListener('change', loadPassslipCustomisation);
@@ -2431,11 +2674,26 @@ function toggleClassChip(element) {
     element.classList.toggle('selected');
     updateSelectedCount();
     updateHiddenSelect();
+    syncActiveTabFromChipSelection();
     loadPassslipCustomisation();
-    
+
     // Auto-save selected classes to localStorage
     const selected = getSelectedClassIds();
     localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
+}
+
+/* Keep the Saved Customisations tab strip's "active" highlight in sync
+   with the chip picker: highlighted only when exactly one class is
+   selected there and it has a saved tab. Any other combination (none,
+   or multiple classes) means editing a single saved profile doesn't
+   apply, so no tab should look active. */
+function syncActiveTabFromChipSelection() {
+    const selected = getSelectedClassIds();
+    if (selected.length === 1) {
+        setActiveSavedTab(selected[0]);
+    } else {
+        setActiveSavedTab(null);
+    }
 }
 
 function getSelectedClassIds() {
@@ -2475,6 +2733,7 @@ function selectAllClasses() {
     });
     updateSelectedCount();
     updateHiddenSelect();
+    syncActiveTabFromChipSelection();
     loadPassslipCustomisation();
     const selected = getSelectedClassIds();
     localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
@@ -2486,6 +2745,7 @@ function deselectAllClasses() {
     });
     updateSelectedCount();
     updateHiddenSelect();
+    setActiveSavedTab(null);
     localStorage.setItem('cpSelectedClasses', JSON.stringify([]));
 }
 
@@ -2516,23 +2776,13 @@ savePassslipCustomisation = function() {
 // INIT - Load saved selections on page load
 // ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-    // Load saved selections from localStorage
-    const savedClasses = localStorage.getItem('cpSelectedClasses');
-    if (savedClasses) {
-        try {
-            const classIds = JSON.parse(savedClasses);
-            document.querySelectorAll('.cp-class-chip').forEach(chip => {
-                if (classIds.includes(chip.dataset.classId)) {
-                    chip.classList.add('selected');
-                }
-            });
-            updateSelectedCount();
-            updateHiddenSelect();
-            loadPassslipCustomisation();
-        } catch(e) {
-            // Silently fail
-        }
-    }
+    // Populate the Saved Customisations tab strip only. We deliberately
+    // do NOT restore a previous chip selection from localStorage here —
+    // that was causing classes to appear "pre-selected" on every fresh
+    // page load, which is confusing since nothing has actually been
+    // chosen yet in this visit. The picker now always starts empty.
+    fetchSavedList();
+    localStorage.removeItem('cpSelectedClasses');
 });
 </script>
 

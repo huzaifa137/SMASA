@@ -1345,6 +1345,62 @@ class ExaminationController extends Controller
         return response()->json(['success' => true, 'message' => 'Passlip customisation saved for the selected class(es).']);
     }
 
+    /**
+     * List every class in this exam that already has a SAVED
+     * customisation, with its settings — powers the "Saved
+     * Customisations" tab strip so it only ever shows classes that
+     * actually have something saved, not every class in the exam.
+     */
+    public function listPassslipSettings($examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $classIds = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->pluck('class_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        $saved = Helper::listPassslipSettings($schoolId, $classIds);
+
+        $items = collect($saved)->map(function ($settings, $classId) {
+            return [
+                'class_id'   => (int) $classId,
+                'class_name' => Helper::recordMdname($classId),
+                'settings'   => $settings,
+            ];
+        })->values();
+
+        return response()->json(['success' => true, 'items' => $items]);
+    }
+
+    /**
+     * Remove the saved customisation for one class — its real pass
+     * slips fall back to DEFAULTS on the next print.
+     */
+    public function deletePassslipSettings(Request $request, $examId, $classId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+
+        $deleted = Helper::deletePassslipSettings($schoolId, $classId);
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'message' => $deleted ? 'Customisation removed for this class.' : 'Nothing was saved for this class.',
+        ]);
+    }
+
 
     // ─── Private helper ─────────────────────────────────────────────────────────
 

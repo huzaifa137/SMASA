@@ -707,6 +707,46 @@ class Helper extends Controller
         }
     }
 
+    /**
+     * All SAVED customisation rows (school + one of the given class ids),
+     * keyed by class_id → decoded settings array. Only classes that
+     * actually have a row come back — this is what powers the
+     * "Saved Customisations" tab strip, so a class with nothing saved
+     * simply doesn't get a tab.
+     */
+    public static function listPassslipSettings($schoolId, array $classIds): array
+    {
+        if (empty($schoolId) || empty($classIds)) {
+            return [];
+        }
+
+        return DB::table('passslip_settings')
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $classIds)
+            ->get()
+            ->mapWithKeys(function ($row) {
+                $decoded = json_decode($row->settings, true);
+                return [$row->class_id => is_array($decoded) ? $decoded : []];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Delete the saved customisation for a single class, reverting its
+     * real pass slips back to DEFAULTS on next print.
+     */
+    public static function deletePassslipSettings($schoolId, $classId): bool
+    {
+        if (empty($schoolId) || empty($classId)) {
+            return false;
+        }
+
+        return DB::table('passslip_settings')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->delete() > 0;
+    }
+
     public static function category_name($user = '')
     {
         $user = (int) $user;
