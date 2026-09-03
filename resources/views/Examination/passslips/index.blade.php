@@ -2131,7 +2131,19 @@ function injectIntoForm(formEl) {
         updateSummary();
     }
 
-    /* ── Reset to defaults ── */
+    /* ── Reset to defaults ──
+       Previously this only rewrote the DOM/currentSettings and stopped —
+       no visible confirmation, and (the more serious half of the bug) no
+       persistence. Real pass slips never read the live panel; they read
+       whatever's saved in passslip_settings via applySavedPassslipSettings().
+       So if a class already had a saved profile with extra Combine
+       Examinations checked (e.g. from earlier testing), clicking "Reset
+       to defaults" wiped the panel's checkboxes but left that saved row
+       untouched — every student in that class kept getting a multi-exam
+       slip, and there was no on-screen sign that anything needed saving.
+       Now Reset also gives immediate feedback, and — if a class is
+       currently selected in the Save Customisation picker — actually
+       persists the cleared defaults for it, the same way Save does. */
     function resetCustomisation() {
         currentSettings = { ...DEFAULTS };
         setTemplateSelectionUI(DEFAULTS.template);
@@ -2154,6 +2166,25 @@ function injectIntoForm(formEl) {
         });
         updateAllLinks();
         updateSummary();
+
+        const statusEl = document.getElementById('cpSaveStatus');
+        const classSelect = document.getElementById('cpClassSelect');
+        const classIds = classSelect
+            ? Array.from(classSelect.selectedOptions).map(o => o.value)
+            : [];
+
+        if (classIds.length > 0) {
+            // A class is loaded — reset AND persist, so this class's real
+            // pass slips (including its Combine Examinations selection)
+            // actually go back to defaults, not just the panel preview.
+            savePassslipCustomisation();
+        } else if (statusEl) {
+            // No class loaded — the panel is back to defaults, but nothing
+            // has been (or needs to be) saved. Say so explicitly, since
+            // silence here is exactly what made this bug hard to notice.
+            statusEl.style.color = '#666';
+            statusEl.textContent = 'Panel reset to defaults. If a class still shows extra examinations on its real slips, select it above and this will save the cleared defaults for it too.';
+        }
     }
 
     /* ── Open a real, fully-rendered preview of the currently selected
