@@ -876,6 +876,8 @@ Route::prefix('finance')
         });
         // ── Reports ─────────────────────────────────────────────────────────
         Route::get('/reports', 'reports')->name('reports');
+        Route::get('/reports/export/csv', 'reportsExportCsv')->name('reports.export.csv');
+        Route::get('/reports/export/pdf', 'reportsExportPdf')->name('reports.export.pdf');
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
         Route::get('/outstanding-fees/pdf', 'outstandingFeesPdf')->name('outstanding-fees.pdf');
         Route::post('/outstanding-fees/recalculate', 'recalculateBalances')->name('outstanding-fees.recalculate');

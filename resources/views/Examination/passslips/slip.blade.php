@@ -1020,6 +1020,571 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
+   CLASSIC TEMPLATE — Riverside-style redesign
+   (report-number letterhead, boxed student-info panel, performance-
+   summary strip, subject table with grade points, discipline/grade-
+   scale/remarks footer, attendance + promotion, signatures,
+   certification). Namespaced with an "rc-" prefix so it layers safely
+   on top of the shared .slip/.marks-tbl/etc. rules above.
+════════════════════════════════════════════════════════════════ */
+        :root {
+            --rc-navy: #16213e;
+            --rc-navy-light: #1f2f57;
+        }
+
+        .rc-letterhead {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.1rem .6rem;
+        }
+
+        .rc-lh-logo {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f4e8;
+        }
+
+        .rc-lh-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rc-lh-logo i {
+            font-size: 2.1rem;
+            color: var(--accent);
+        }
+
+        .rc-lh-center {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rc-lh-name {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: .02em;
+            color: var(--rc-navy);
+            text-transform: uppercase;
+            line-height: 1.15;
+        }
+
+        .rc-lh-arabic {
+            font-size: 20px;
+            font-weight: 600;
+            direction: rtl;
+            margin-top: 3px;
+            color: var(--rc-navy);
+        }
+
+        .rc-lh-details {
+            font-size: .74rem;
+            color: #333;
+            margin-top: 4px;
+            line-height: 1.55;
+        }
+
+        .rc-lh-details i {
+            width: 13px;
+            color: var(--accent-dark);
+            margin-right: .25rem;
+        }
+
+        .rc-lh-motto {
+            font-size: .72rem;
+            font-style: italic;
+            font-weight: 700;
+            color: var(--rc-navy);
+            margin-top: 3px;
+        }
+
+        .rc-lh-reportno {
+            flex-shrink: 0;
+            border: 1.5px solid #cfd4de;
+            border-radius: 4px;
+            padding: .4rem .7rem;
+            text-align: center;
+        }
+
+        .rc-lh-reportno .lbl {
+            font-size: .58rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .rc-lh-reportno .val {
+            font-size: .72rem;
+            font-weight: 800;
+            color: var(--rc-navy);
+            margin-top: .15rem;
+        }
+
+        .rc-title-block {
+            text-align: center;
+            padding: .1rem 1.1rem .7rem;
+        }
+
+        .rc-title-rule {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
+            margin: 0 1.1rem .55rem;
+        }
+
+        .rc-title {
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            color: var(--rc-navy);
+            text-transform: uppercase;
+        }
+
+        .rc-subtitle {
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .09em;
+            color: var(--accent-dark);
+            text-transform: uppercase;
+            margin-top: .2rem;
+        }
+
+        /* ── Boxed section shell (Student Information / Discipline / etc) ── */
+        .rc-section {
+            margin: 0 1.1rem .8rem;
+            border: 1.3px solid #d6dae2;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .rc-section-hd {
+            background: var(--rc-navy);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            padding: .38rem .7rem;
+        }
+
+        .rc-stu-grid {
+            display: flex;
+            gap: 1rem;
+            padding: .7rem .9rem;
+        }
+
+        .rc-stu-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: .32rem;
+            min-width: 0;
+        }
+
+        .rc-stu-row {
+            font-size: .76rem;
+            color: #222;
+            display: flex;
+            gap: .3rem;
+        }
+
+        .rc-stu-row .k {
+            font-weight: 800;
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .rc-stu-photo-col {
+            flex-shrink: 0;
+            width: 92px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .rc-stu-photo-box {
+            width: 88px;
+            height: 106px;
+            border: 1.5px solid #c8c8c8;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .rc-stu-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rc-stu-photo-box .nophoto {
+            font-size: .55rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            padding: 0 .3rem;
+        }
+
+        .rc-stu-photo-box .nophoto i {
+            display: block;
+            font-size: 1.7rem;
+            color: #b6b6b6;
+            margin-bottom: .2rem;
+        }
+
+        .rc-stu-extra {
+            display: flex;
+            gap: 1rem;
+            padding: 0 .9rem .7rem;
+            border-top: 1px solid #eceef2;
+            margin-top: -1px;
+        }
+
+        .rc-stu-extra:empty { display: none; }
+
+        .rc-stu-extra .stu-chart-area,
+        .rc-stu-extra .stu-qr-col {
+            border: none;
+            padding: .5rem 0 0;
+            width: auto;
+            flex: 1;
+        }
+
+        .rc-stu-extra .stu-qr-col {
+            flex: 0 0 130px;
+            align-items: center;
+        }
+
+        /* ── Performance summary strip ── */
+        .rc-summary {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 1.1rem .8rem;
+            border: 1.3px solid #d6dae2;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .rc-summary-cell {
+            flex: 1 1 0;
+            min-width: 78px;
+            text-align: center;
+            padding: .55rem .3rem;
+            border-right: 1px solid #e4e7ed;
+            border-bottom: 1px solid #e4e7ed;
+        }
+
+        .rc-summary-cell:last-child {
+            border-right: none;
+        }
+
+        .rc-summary-cell i {
+            font-size: 1rem;
+            color: var(--accent-dark);
+        }
+
+        .rc-summary-lbl {
+            font-size: .53rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            color: #777;
+            text-transform: uppercase;
+            margin-top: .25rem;
+        }
+
+        .rc-summary-val {
+            font-size: .92rem;
+            font-weight: 900;
+            color: var(--rc-navy);
+            margin-top: .1rem;
+        }
+
+        /* ── Subject performance table wrapper ── */
+        .rc-table-wrap {
+            margin: 0 1.1rem .8rem;
+        }
+
+        .rc-table-wrap .marks-tbl {
+            border: 1.3px solid #d6dae2;
+        }
+
+        .rc-table-wrap .marks-tbl th {
+            background: var(--rc-navy) !important;
+        }
+
+        .rc-table-wrap .marks-tbl .totals-row td {
+            background: #eef0f4 !important;
+        }
+
+        /* ── Footer 3-column: discipline / grade-scale / class-teacher ── */
+        .rc-footer-grid {
+            display: flex;
+            gap: .8rem;
+            margin: 0 1.1rem .8rem;
+            align-items: stretch;
+        }
+
+        .rc-footer-grid .rc-section {
+            margin: 0;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rc-mini-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .68rem;
+        }
+
+        .rc-mini-tbl th {
+            background: #eef0f4;
+            color: #444;
+            font-size: .58rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            padding: .3rem .45rem;
+            text-align: left;
+            border-bottom: 1.3px solid #d6dae2;
+        }
+
+        .rc-mini-tbl td {
+            padding: .32rem .45rem;
+            border-bottom: 1px solid #eceef2;
+            vertical-align: top;
+        }
+
+        .rc-mini-tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rc-dg-pill {
+            display: inline-block;
+            min-width: 1.3em;
+            text-align: center;
+            font-weight: 800;
+            padding: 0 .3em;
+            border-radius: 3px;
+        }
+
+        .rc-dg-A { background: #d5f5e3; color: #1a7a4a; }
+        .rc-dg-B { background: #eaf3fc; color: #2e6da4; }
+        .rc-dg-C { background: #fdebd0; color: #a04000; }
+
+        .rc-remarks-box {
+            padding: .55rem .7rem;
+            font-size: .7rem;
+            color: #222;
+            line-height: 1.5;
+        }
+
+        .rc-remarks-box .rc-remark-line {
+            margin-bottom: .55rem;
+        }
+
+        .rc-remarks-box .who {
+            font-weight: 800;
+            color: var(--rc-navy);
+            font-size: .68rem;
+        }
+
+        .rc-remarks-box .sig-line {
+            margin-top: .3rem;
+            border-bottom: 1px dashed #aaa;
+            height: 14px;
+        }
+
+        .rc-odg-box {
+            margin: .5rem .7rem .6rem;
+            border: 1.3px solid #e4c988;
+            background: #fdf7e8;
+            border-radius: 3px;
+            padding: .4rem .6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rc-odg-box .lbl {
+            font-size: .6rem;
+            font-weight: 800;
+            color: #7a5b00;
+            text-transform: uppercase;
+        }
+
+        /* ── Attendance + Promotion row ── */
+        .rc-two-col {
+            display: flex;
+            gap: .8rem;
+            margin: 0 1.1rem .8rem;
+        }
+
+        .rc-two-col .rc-section {
+            margin: 0;
+            flex: 1;
+        }
+
+        .rc-kv-grid {
+            padding: .55rem .7rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .35rem .6rem;
+        }
+
+        .rc-kv {
+            font-size: .66rem;
+        }
+
+        .rc-kv .k {
+            display: block;
+            font-weight: 700;
+            color: #777;
+            font-size: .56rem;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .rc-kv .v {
+            font-weight: 800;
+            color: var(--rc-navy);
+            font-size: .82rem;
+        }
+
+        .rc-promo-body {
+            padding: .55rem .7rem;
+        }
+
+        .rc-promo-text {
+            font-size: .68rem;
+            color: #333;
+            line-height: 1.45;
+        }
+
+        .rc-promo-to {
+            margin-top: .4rem;
+        }
+
+        .rc-promo-to .lbl {
+            font-size: .56rem;
+            font-weight: 700;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .rc-promo-to .val {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--accent-dark);
+        }
+
+        /* ── Signatures row ── */
+        .rc-sig-row {
+            display: flex;
+            margin: 0 1.1rem .8rem;
+            border-top: 1.3px solid var(--rc-navy);
+        }
+
+        .rc-sig-cell {
+            flex: 1;
+            padding: .6rem .8rem 0;
+            border-right: 1px solid #e4e7ed;
+        }
+
+        .rc-sig-cell:last-child {
+            border-right: none;
+        }
+
+        .rc-sig-cell .lbl {
+            font-size: .68rem;
+            font-weight: 800;
+            color: var(--rc-navy);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: .55rem;
+        }
+
+        .rc-sig-line {
+            font-size: .66rem;
+            color: #999;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: .35rem;
+            margin-bottom: .5rem;
+        }
+
+        /* ── Certification footer ── */
+        .rc-cert {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            margin: 0 1.1rem .6rem;
+            padding-top: .6rem;
+            border-top: 1.3px solid #e4e7ed;
+        }
+
+        .rc-cert-badge {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--rc-navy);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+        }
+
+        .rc-cert-text {
+            flex: 1;
+            font-size: .64rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .rc-cert-stamp {
+            flex-shrink: 0;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: .5rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+            letter-spacing: .02em;
+            text-transform: uppercase;
+            line-height: 1.2;
+            transform: rotate(-8deg);
+            opacity: .85;
+        }
+
+        @media print {
+            .rc-lh-reportno,
+            .rc-cert-stamp {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════════
    PRINT
 ════════════════════════════════════════════════════════════════ */
         @media print {
@@ -1398,6 +1963,94 @@
 
                 /*
                 |──────────────────────────────────────────────────────────────
+                | NEW "classic" layout — extra derived fields.
+                | Everything below is computed from data the system already
+                | has (student row, subject marks, exam, grading scheme,
+                | attendance log). Where the schema simply has no such field
+                | yet (e.g. House/Team isn't tracked per-student), we fall
+                | back to an em-dash rather than invent a value.
+                |──────────────────────────────────────────────────────────────
+                */
+                $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
+                $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
+                $houseTeam = $s->house ?? '—'; // not modelled per-student in this schema yet
+
+                $noOfSubjects = $subjMarks->count();
+
+                $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
+                $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
+
+                $divisionLabel = $avgSummarySlip['division'] ?? ($examSummarySlip->last()['division'] ?? null);
+
+                // Auto-generated report reference (not a stored DB field —
+                // built from the school, exam and student so every printed
+                // slip has a unique, reproducible number for the letterhead).
+                $schoolInitials = collect(preg_split('/\s+/', trim($schoolName)))
+                    ->filter()
+                    ->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                    ->implode('');
+                $reportNo = ($schoolInitials ?: 'RC') . '/' . ($exam->exam_code ?: strtoupper(substr($exam->term ?? 'TRM', 0, 3)))
+                    . '/' . $exam->academic_year . '/' . str_pad((string) $s->id, 4, '0', STR_PAD_LEFT);
+
+                // Grade scale (this exam's resolved grading bands) for the
+                // "Grade Scale" reference table — skipped for early years,
+                // which use a Fair/Good/Excellent preset scale instead.
+                $gradeBands = $isEarlyYears ? collect() : $exam->resolvedGradingBands();
+
+                // Attendance for this exam's term window (student_attendances
+                // log). Left blank (—) if the exam has no start/end date set.
+                $attPresent = 0;
+                $attDaysOpened = 0;
+                $attPct = null;
+                if (!empty($exam->start_date) && !empty($exam->end_date)) {
+                    $attPresent = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->whereIn('status', ['present', 'late'])
+                        ->count();
+                    $attTaken = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->count();
+                    $attDaysOpened = DB::table('student_attendances')
+                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('class_id', $s->senior)
+                        ->where('stream_id', $s->stream)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->distinct()
+                        ->count('attendance_date');
+                    $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
+                    $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
+                }
+                $attAbsent = max(0, $attDaysOpened - $attPresent);
+
+                // Discipline: per-criterion remark text + an overall grade,
+                // derived from the A/B/C ratings already stored.
+                $disciplineRemarkFor = fn($r) => match ($r) {
+                    'A' => 'Consistently meets expectations.',
+                    'B' => 'Generally meets expectations.',
+                    'C' => 'Needs improvement.',
+                    default => 'Not yet rated.',
+                };
+                $disciplinePointsMap = ['A' => 3, 'B' => 2, 'C' => 1];
+                $dPoints = $disciplineRatingsSlip->pluck('rating')->filter()
+                    ->map(fn($r) => $disciplinePointsMap[$r] ?? null)->filter(fn($v) => $v !== null);
+                $overallDisciplineGrade = null;
+                $overallDisciplineRemark = null;
+                if ($dPoints->count() > 0) {
+                    $avgD = $dPoints->avg();
+                    $overallDisciplineGrade = $avgD >= 2.5 ? 'A' : ($avgD >= 1.5 ? 'B' : 'C');
+                    $overallDisciplineRemark = $avgD >= 2.5 ? 'Excellent' : ($avgD >= 1.5 ? 'Good' : 'Needs Improvement');
+                }
+
+                $nextAcademicYear = is_numeric($exam->academic_year)
+                    ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
+                    : '—';
+
+                $headTeacherName = $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher');
+
+                /*
+                |──────────────────────────────────────────────────────────────
                 | Build the dynamic table column list.
                 | We hide/show columns based on $cfg flags so the header and
                 | every data row always stay in sync.
@@ -1426,138 +2079,193 @@
                     @endif
                 @endif
 
-                {{-- ══ SCHOOL HEADER ══════════════════════════════════════════ --}}
-                <div class="sch-header">
-                    <div class="sch-logo-area">
-                        <div class="sch-logo-box">
-                            @if($cfg['logo'] && $schoolLogoUrl)
-                                <img src="{{ $schoolLogoUrl }}" alt="logo">
-                            @else
-                                <i class="fas fa-school"></i>
-                            @endif
-                        </div>
+                {{-- ══ LETTERHEAD ═══════════════════════════════════════════════ --}}
+                <div class="rc-letterhead">
+                    <div class="rc-lh-logo">
+                        @if($cfg['logo'] && $schoolLogoUrl)
+                            <img src="{{ $schoolLogoUrl }}" alt="logo">
+                        @else
+                            <i class="fas fa-school"></i>
+                        @endif
                     </div>
 
-                    <div class="sch-center">
-                        <div class="sch-name">{{ $schoolName }}</div>
+                    <div class="rc-lh-center">
+                        <div class="rc-lh-name">{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
-                            <div class="sch-arabic-name">{{ $schoolNameArabic }}</div>
+                            <div class="rc-lh-arabic">{{ $schoolNameArabic }}</div>
                         @endif
 
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
-                            <div class="sch-details">
-                                @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
-                                @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
-                                @if($schoolLocation)<span> {{ $schoolLocation }}</span>@endif
+                            <div class="rc-lh-details">
+                                @if($schoolLocation)<div><i class="fas fa-location-dot"></i>{{ $schoolLocation }}</div>@endif
+                                @if($schoolPhone)<div><i class="fas fa-phone"></i>{{ $schoolPhone }}</div>@endif
+                                @if($schoolEmail)<div><i class="fas fa-envelope"></i>{{ $schoolEmail }}</div>@endif
                             </div>
                         @endif
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
+                            <div class="rc-lh-motto">MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
                     </div>
 
-                    <div class="sch-logo-area sch-logo-area-right">
-                        <div class="sch-logo-box">
-                            @if($cfg['logo'] && $schoolLogoUrl)
-                                <img src="{{ $schoolLogoUrl }}" alt="logo">
-                            @else
-                                <i class="fas fa-school"></i>
-                            @endif
-                        </div>
+                    <div class="rc-lh-reportno">
+                        <div class="lbl">Report No.</div>
+                        <div class="val">{{ $reportNo }}</div>
                     </div>
                 </div>
 
-                {{-- ══ TITLE BAND ═══════════════════════════════════════════════ --}}
-                <div class="title-band">
-                    <span>
-                        ACADEMIC REPORT FORM — {{ Helper::recordMdname($s->senior) }}
-                        — {{ strtoupper($exam->term) }} — ({{ $exam->academic_year }})
-                    </span>
+                {{-- ══ TITLE ════════════════════════════════════════════════════ --}}
+                <div class="rc-title-block">
+                    <div class="rc-title">Academic Performance Report</div>
+                    <div class="rc-subtitle">
+                        {{ Helper::recordMdname($s->senior) }} &nbsp;|&nbsp; {{ strtoupper($exam->term) }} {{ $exam->academic_year }}
+                    </div>
                 </div>
+                <div class="rc-title-rule"></div>
 
-                {{-- ══ STUDENT INFO ROW ═══════════════════════════════════════════ --}}
-                <div class="stu-row">
+                {{-- ══ STUDENT INFORMATION ═════════════════════════════════════════ --}}
+                <div class="rc-section">
+                    <div class="rc-section-hd">Student Information</div>
+                    <div class="rc-stu-grid">
+                        <div class="rc-stu-col">
+                            <div class="rc-stu-row"><span class="k">Student Name:</span>
+                                <span>{{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Admission No.:</span> <span>{{ $admissionNo }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Class:</span>
+                                <span>{{ Helper::recordMdname($s->senior) }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Stream:</span> <span>{{ $s->stream ?? '—' }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Academic Year:</span> <span>{{ $exam->academic_year }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Term:</span> <span>{{ $exam->term }}</span></div>
+                        </div>
 
-                    {{-- Photo --}}
-                    @if($cfg['photo'])
-                        <div class="stu-photo">
-                            @if($photo)
-                                <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}"
-                                    style="width:100%;height:100%;object-fit:cover;">
-                            @else
-                                <div class="nophoto">
-                                    <i class="fas fa-user"></i>
-                                    <span>No Photo</span>
+                        @if($cfg['photo'])
+                            <div class="rc-stu-photo-col">
+                                <div class="rc-stu-photo-box">
+                                    @if($photo)
+                                        <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}">
+                                    @else
+                                        <div class="nophoto">
+                                            <i class="fas fa-user"></i>
+                                            Photo
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="rc-stu-col">
+                            <div class="rc-stu-row"><span class="k">Date of Birth:</span> <span>{{ $dobFormatted }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Gender:</span> <span>{{ $s->gender ?? '—' }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Class Teacher:</span>
+                                <span>{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span></div>
+                            <div class="rc-stu-row"><span class="k">House / Team:</span> <span>{{ $houseTeam }}</span></div>
+                            <div class="rc-stu-row"><span class="k">Date of Report:</span> <span>{{ now()->format('d M Y') }}</span></div>
+                            <div class="rc-stu-row">
+                                <span class="k">Status:</span>
+                                <span @php
+                                    $statusLower = strtolower($statusLabel);
+                                    if ($isEarlyYears) {
+                                        $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
+                                    } else {
+                                        $statusClass = str_contains($statusLower, 'promot')
+                                            ? 'status-promoted'
+                                            : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
+                                    }
+                                @endphp class="status-pill {{ $statusClass }}" style="margin-top:0;">
+                                    {{ ucfirst($statusLabel) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if(($cfg['minichart'] && count($miniLabels) > 0) || ($cfg['qr'] && $qrText))
+                        <div class="rc-stu-extra">
+                            {{-- Mini Line Chart --}}
+                            @if($cfg['minichart'] && count($miniLabels) > 0)
+                                <div class="stu-chart-area">
+                                    <div class="stu-chart-title">Subject Performance — Student vs Class</div>
+                                    <canvas id="{{ $cMini }}" height="90"></canvas>
+                                </div>
+                            @endif
+
+                            {{-- QR Code --}}
+                            @if($cfg['qr'] && $qrText)
+                                <div class="stu-qr-col">
+                                    <div class="stu-qr-title">Scan to Verify</div>
+                                    <div class="stu-qr-box">
+                                        <canvas id="{{ $qrId }}"></canvas>
+                                    </div>
+                                    <div class="stu-qr-label">SMASA</div>
                                 </div>
                             @endif
                         </div>
                     @endif
-
-                    {{-- Details --}}
-                    <div class="stu-details">
-                        <div class="stu-field">
-                            <strong>NAME:</strong>
-                            {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
-                        </div>
-                        <div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}</div>
-                        <div class="stu-field">
-                            <strong>CLASS:</strong>
-                            {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
-                        </div>
-                        <div class="stu-field" style="margin-top:.2rem;">
-                            <strong>STATUS:</strong>
-                            <span @php
-                                $statusLower = strtolower($statusLabel);
-                                if ($isEarlyYears) {
-                                    $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
-                                } else {
-                                    $statusClass = str_contains($statusLower, 'promot')
-                                        ? 'status-promoted'
-                                        : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
-                                }
-                            @endphp class="status-pill {{ $statusClass }}">
-                                {{ ucfirst($statusLabel) }}
-                            </span>
-                        </div>
-                        <div class="stu-field"><strong>LIN:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}</div>
-                        @if($cfg['rank'] && is_numeric($rank))
-                            <div class="stu-field" style="margin-top:.2rem;">
-                                <strong>POSITION:</strong>
-                                <span style="font-weight:800;color:#888;">
-                                    {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
-                                        {{ $classTotalN }}</span>
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Mini Line Chart --}}
-                    @if($cfg['minichart'] && count($miniLabels) > 0)
-                        <div class="stu-chart-area">
-                            <div class="stu-chart-title">Subject Performance — Student vs Class</div>
-                            <canvas id="{{ $cMini }}" height="110"></canvas>
-                        </div>
-                    @endif
-
-                    {{-- QR Code --}}
-                    @if($cfg['qr'] && $qrText)
-                        <div class="stu-qr-col">
-                            <div class="stu-qr-title">Scan to Verify</div>
-                            <div class="stu-qr-box">
-                                <canvas id="{{ $qrId }}"></canvas>
-                            </div>
-                            <div class="stu-qr-label">SMASA</div>
-                        </div>
-                    @endif
-
                 </div>
 
-
+                {{-- ══ ACADEMIC PERFORMANCE SUMMARY ═══════════════════════════════ --}}
+                <div class="rc-summary">
+                    @if($cfg['total_score'])
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-clipboard-list"></i>
+                            <div class="rc-summary-lbl">Total Marks</div>
+                            <div class="rc-summary-val">{{ $totObt }} / {{ $totMax }}</div>
+                        </div>
+                    @endif
+                    @if($cfg['average'])
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-chart-column"></i>
+                            <div class="rc-summary-lbl">Average Mark</div>
+                            <div class="rc-summary-val">{{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}</div>
+                        </div>
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-percent"></i>
+                            <div class="rc-summary-lbl">Average %</div>
+                            <div class="rc-summary-val">{{ $isEarlyYears ? '—' : $pct . '%' }}</div>
+                        </div>
+                    @endif
+                    @if($cfg['grade_pill'] && !$isEarlyYears)
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-award"></i>
+                            <div class="rc-summary-lbl">Overall Grade</div>
+                            <div class="rc-summary-val">{{ $oGrade }}</div>
+                        </div>
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-star"></i>
+                            <div class="rc-summary-lbl">Grade Point</div>
+                            <div class="rc-summary-val">{{ $avgGradePoint ?? '—' }}</div>
+                        </div>
+                    @endif
+                    @if($divisionLabel)
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-trophy"></i>
+                            <div class="rc-summary-lbl">Division</div>
+                            <div class="rc-summary-val">{{ strtoupper($divisionLabel) }}</div>
+                        </div>
+                    @endif
+                    @if($cfg['rank'] && is_numeric($rank))
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-ranking-star"></i>
+                            <div class="rc-summary-lbl">Position</div>
+                            <div class="rc-summary-val">{{ $rank }} / {{ $classTotalN }}</div>
+                        </div>
+                    @endif
+                    <div class="rc-summary-cell">
+                        <i class="fas fa-book"></i>
+                        <div class="rc-summary-lbl">No. of Subjects</div>
+                        <div class="rc-summary-val">{{ $noOfSubjects }}</div>
+                    </div>
+                    @if($attPct !== null)
+                        <div class="rc-summary-cell">
+                            <i class="fas fa-calendar-check"></i>
+                            <div class="rc-summary-lbl">Attendance</div>
+                            <div class="rc-summary-val">{{ $attPct }}%</div>
+                        </div>
+                    @endif
+                </div>
 
                 {{-- ══ MARKS TABLE ════════════════════════════════════════════════ --}}
-                <div class="marks-wrap">
+                <div class="rc-table-wrap">
                     @if($multiExam)
                         {{-- ── MULTI-EXAM TABLE (BOT | MID | EOT …) ── --}}
                         @php
@@ -1676,18 +2384,24 @@
                         <table class="marks-tbl">
                             <thead>
                                 <tr>
-                                    <th class="tl" style="min-width:110px;">SUBJECTS</th>
+                                    <th style="width:28px;">NO.</th>
+                                    <th class="tl" style="min-width:110px;">SUBJECT</th>
                                     @if($cfg['score_col'])
-                                        <th style="width:48px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
+                                        <th style="width:56px;">FULL MARKS</th>
+                                        <th style="width:64px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS OBTAINED' }}</th>
+                                        @if(!$isEarlyYears)
+                                            <th style="width:56px;">PERCENTAGE (%)</th>
+                                        @endif
                                     @endif
                                     @if($cfg['dev'])
                                         <th style="width:38px;">DEV.</th>
                                     @endif
                                     @if($cfg['grade_pill'] && !$isEarlyYears)
                                         <th style="width:38px;">GRADE</th>
+                                        <th style="width:48px;">GRADE POINT</th>
                                     @endif
                                     @if($cfg['comment_col'])
-                                        <th class="tl">COMMENT</th>
+                                        <th class="tl">REMARKS</th>
                                     @endif
                                     @if($cfg['teacher_col'])
                                         <th class="tl" style="min-width:100px;">TEACHER</th>
@@ -1701,7 +2415,7 @@
                                     @foreach($grouped as $grpName => $grpSubjs)
                                         @if($grpName)
                                             <tr class="grp-row">
-                                                <td colspan="{{ $visibleCols }}">{{ strtoupper($grpName) }}</td>
+                                                <td colspan="{{ $visibleCols + 1 }}">{{ strtoupper($grpName) }}</td>
                                             </tr>
                                         @endif
                                         @foreach($grpSubjs as $sm)
@@ -1715,16 +2429,14 @@
                                                 }
                                             @endphp
                                             <tr>
+                                                <td class="num-td">{{ $rn }}</td>
                                                 <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                                 @if($cfg['score_col'])
-                                                    <td class="score-td">
-                                                        @if($isEarlyYears)
-                                                            {{ $sm->marks_obtained ?? '—' }}<span
-                                                                style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
-                                                        @else
-                                                            {{ $sm->percentage }}%
-                                                        @endif
-                                                    </td>
+                                                    <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                    <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
+                                                    @if(!$isEarlyYears)
+                                                        <td class="score-td">{{ $sm->percentage }}%</td>
+                                                    @endif
                                                 @endif
                                                 @if($cfg['dev'])
                                                     <td class="num-td">
@@ -1741,6 +2453,7 @@
                                                     <td class="num-td">
                                                         <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                     </td>
+                                                    <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['comment_col'])
                                                     <td>{{ $sm->grade_remark ?? '—' }}</td>
@@ -1763,16 +2476,14 @@
                                             }
                                         @endphp
                                         <tr>
+                                            <td class="num-td">{{ $rn }}</td>
                                             <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                             @if($cfg['score_col'])
-                                                <td class="score-td">
-                                                    @if($isEarlyYears)
-                                                        {{ $sm->marks_obtained ?? '—' }}<span
-                                                            style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
-                                                    @else
-                                                        {{ $sm->percentage }}%
-                                                    @endif
-                                                </td>
+                                                <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
+                                                @if(!$isEarlyYears)
+                                                    <td class="score-td">{{ $sm->percentage }}%</td>
+                                                @endif
                                             @endif
                                             @if($cfg['dev'])
                                                 <td class="num-td">
@@ -1789,6 +2500,7 @@
                                                 <td class="num-td">
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
+                                                <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                             @endif
                                             @if($cfg['comment_col'])
                                                 <td>{{ $sm->grade_remark ?? '—' }}</td>
@@ -1804,19 +2516,16 @@
                                 @if($cfg['totals_row'])
                                     @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0); @endphp
                                     <tr class="totals-row">
-                                        <td
+                                        <td colspan="2"
                                             style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
-                                            TOTAL / AVERAGE
+                                            TOTAL
                                         </td>
                                         @if($cfg['score_col'])
-                                            <td class="score-td">
-                                                @if($isEarlyYears)
-                                                    {{ $earlyYearsAvg }}<span
-                                                        style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
-                                                @else
-                                                    {{ $pct }}%
-                                                @endif
-                                            </td>
+                                            <td class="score-td">{{ $totMax }}</td>
+                                            <td class="score-td">{{ $totObt }}</td>
+                                            @if(!$isEarlyYears)
+                                                <td class="score-td">{{ $pct }}%</td>
+                                            @endif
                                         @endif
                                         @if($cfg['dev'])
                                             <td class="num-td">
@@ -1833,6 +2542,7 @@
                                             <td class="num-td">
                                                 <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
                                             </td>
+                                            <td class="num-td">{{ $avgGradePoint ?? '—' }}</td>
                                         @endif
                                         @if($resultColspan > 0)
                                             <td colspan="{{ $resultColspan }}">
@@ -1850,85 +2560,198 @@
                     @endif
                 </div>
 
-                {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
-                @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['discipline'] || $cfg['signatures'])
-                    <div class="bottom-section">
+                {{-- ══ OPTIONAL PERFORMANCE-OVER-TIME CHART ═══════════════════════ --}}
+                @if($cfg['perf_chart'] && count($growth) > 0)
+                    <div class="rc-section">
+                        <div class="rc-section-hd">{{ $s->firstname }}'s Performance Over Time</div>
+                        <div style="padding:.6rem .8rem;">
+                            <canvas id="{{ $cPerf }}" height="90"></canvas>
+                        </div>
+                    </div>
+                @endif
 
-                        {{-- Performance Over Time chart --}}
-                        @if($cfg['perf_chart'] && count($growth) > 0)
-                            <div class="perf-chart-col">
-                                <div class="perf-chart-title">{{ $s->firstname }}'s Performance over Time</div>
-                                <canvas id="{{ $cPerf }}" height="140"></canvas>
+                {{-- ══ DISCIPLINE & CONDUCT · GRADE SCALE · CLASS TEACHER'S REMARKS ══ --}}
+                @if($cfg['discipline'] || $cfg['remarks'])
+                    <div class="rc-footer-grid">
+
+                        {{-- Discipline & Conduct --}}
+                        @if($cfg['discipline'] && $disciplineRatingsSlip->count() > 0)
+                            <div class="rc-section">
+                                <div class="rc-section-hd">Discipline &amp; Conduct</div>
+                                <table class="rc-mini-tbl">
+                                    <thead>
+                                        <tr>
+                                            <th>Criteria</th>
+                                            <th style="width:40px;">Grade</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($disciplineRatingsSlip as $dr)
+                                            <tr>
+                                                <td>{{ $dr->name }}</td>
+                                                <td>
+                                                    @if($dr->rating)
+                                                        <span class="rc-dg-pill rc-dg-{{ $dr->rating }}">{{ $dr->rating }}</span>
+                                                    @else
+                                                        <span style="color:#bbb;">—</span>
+                                                    @endif
+                                                </td>
+                                                <td style="color:#555;">{{ $disciplineRemarkFor($dr->rating) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                @if($overallDisciplineGrade)
+                                    <div class="rc-odg-box">
+                                        <span class="lbl">Overall Discipline Grade</span>
+                                        <span>
+                                            <span class="rc-dg-pill rc-dg-{{ $overallDisciplineGrade }}">{{ $overallDisciplineGrade }}</span>
+                                            <strong style="margin-left:.3rem;">{{ $overallDisciplineRemark }}</strong>
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         @endif
 
-                        {{-- Remarks --}}
-                        @if($cfg['remarks'])
-                            <div class="remarks-col">
-                                <div class="remarks-section-title">Remarks</div>
+                        {{-- Grade Scale --}}
+                        @if(!$isEarlyYears && $gradeBands->count() > 0)
+                            <div class="rc-section">
+                                <div class="rc-section-hd">Grade Scale</div>
+                                <table class="rc-mini-tbl">
+                                    <thead>
+                                        <tr>
+                                            <th>Grade</th>
+                                            <th>Percentage (%)</th>
+                                            <th>Grade Point</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($gradeBands as $band)
+                                            <tr>
+                                                <td><span class="g-pill {{ $gc($band->grade) }}">{{ $band->grade }}</span></td>
+                                                <td>{{ rtrim(rtrim(number_format($band->min_mark, 1), '0'), '.') }} – {{ rtrim(rtrim(number_format($band->max_mark, 1), '0'), '.') }}</td>
+                                                <td>{{ $band->points ?? '—' }}</td>
+                                                <td style="color:#555;">{{ $band->remark ?? '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
 
+                        {{-- Class Teacher's Remarks --}}
+                        @if($cfg['remarks'])
+                            <div class="rc-section">
+                                <div class="rc-section-hd">Class Teacher's Remarks</div>
                                 @php
                                     $classTeacher = $subjMarks->first()?->class_teacher ?? null;
                                     $classTeacherName = $classTeacher ?? ($s->class_teacher ?? 'Class Teacher');
                                     $ctRemark = $s->class_teacher_remark ?? '';
                                 @endphp
-                                <div class="remark-block">
-                                    <div class="remark-teacher">
-                                        {{ $classTeacherName }}
+                                <div class="rc-remarks-box">
+                                    <div class="rc-remark-line">
+                                        <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
+                                        <div class="sig-line" style="margin-top:.4rem;"></div>
+                                        <div class="who">{{ $classTeacherName }}</div>
                                     </div>
-                                    <div class="remark-text">{{ $ctRemark ?: 'No remarks recorded.' }}</div>
-                                </div>
 
-                                <div class="sig-dashes" style="font-weight:Bold;">House Teacher</div>
-                                <div style="height:18px;border-bottom:1.5px dashed #444;margin-bottom:.4rem;"></div>
+                                    <div class="rc-remark-line">
+                                        <div style="font-size:.58rem;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:.03em;">House Teacher</div>
+                                        <div class="sig-line"></div>
+                                    </div>
 
-                                <div class="remark-block">
-                                    <div class="remark-teacher">
-                                        {{ $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher') }}
+                                    <div class="rc-remark-line" style="margin-bottom:0;">
+                                        <div>{{ $s->head_teacher_remark ?? '' }}</div>
+                                        <div class="sig-line" style="margin-top:.4rem;"></div>
+                                        <div class="who">{{ $headTeacherName }}</div>
                                     </div>
-                                    <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Discipline --}}
-                        @if($cfg['discipline'])
-                            <div class="discipline-col">
-                                <div class="discipline-title">Discipline</div>
-                                @forelse($disciplineRatingsSlip as $dr)
-                                    <div class="discipline-row">
-                                        <span class="discipline-crit">{{ $dr->name }}</span>
-                                        <span class="discipline-rate {{ $dr->rating ? 'dr-' . $dr->rating : 'dr-empty' }}">
-                                            {{ $dr->rating ?: '—' }}
-                                        </span>
-                                    </div>
-                                @empty
-                                    <div class="discipline-row discipline-row-empty">
-                                        <span class="discipline-crit" style="color:#aaa;">No criteria recorded</span>
-                                    </div>
-                                @endforelse
-                            </div>
-                        @endif
-
-                        {{-- Signatures --}}
-                        @if($cfg['signatures'])
-                            <div class="sig-col-right">
-                                <div class="sig-col-title">Signature</div>
-                                <div style="width:100%;margin-top:.5rem;">
-                                    <div class="sig-slot">Class Teacher</div>
-                                    <div class="sig-slot" style="margin-top:1.4rem;">House Teacher</div>
-                                    <div class="sig-slot has-sig" style="margin-top:1.4rem;">
-                                        @if(!empty($s->head_teacher_signature))
-                                            <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
-                                                style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
-                                        @endif
-                                        Head Teacher
-                                    </div>
-                                    <div class="sig-slot" style="margin-top:1.4rem;">Parent / Guardian</div>
                                 </div>
                             </div>
                         @endif
 
+                    </div>
+                @endif
+
+                {{-- ══ ATTENDANCE RECORD · PROMOTION / PROGRESSION ═══════════════════ --}}
+                <div class="rc-two-col">
+                    <div class="rc-section">
+                        <div class="rc-section-hd">Attendance Record</div>
+                        <div class="rc-kv-grid">
+                            <div class="rc-kv"><span class="k">Days School Opened</span>
+                                <span class="v">{{ $attDaysOpened ?: '—' }}</span></div>
+                            <div class="rc-kv"><span class="k">Days Present</span>
+                                <span class="v">{{ $attPresent ?: '—' }}</span></div>
+                            <div class="rc-kv"><span class="k">Days Absent</span>
+                                <span class="v">{{ $attDaysOpened ? $attAbsent : '—' }}</span></div>
+                            <div class="rc-kv"><span class="k">Attendance</span>
+                                <span class="v">{{ $attPct !== null ? $attPct . '%' : '—' }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="rc-section">
+                        <div class="rc-section-hd">Promotion / Progression</div>
+                        <div class="rc-promo-body">
+                            <div class="rc-promo-text">
+                                @if($isEarlyYears)
+                                    {{ $oRemark ?: 'Progressing well.' }}
+                                @else
+                                    {{ $passed ? 'The learner has completed the requirements for promotion to the next class.' : 'The learner needs to repeat this class before progressing further.' }}
+                                @endif
+                            </div>
+                            <div class="rc-promo-to">
+                                <div class="lbl">Status</div>
+                                <div class="val">{{ ucfirst($statusLabel) }}</div>
+                                <div style="font-size:.6rem;color:#888;margin-top:.15rem;">For academic year {{ $nextAcademicYear }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ══ SIGNATURES ══════════════════════════════════════════════════ --}}
+                @if($cfg['signatures'])
+                    <div class="rc-sig-row">
+                        <div class="rc-sig-cell">
+                            <div class="lbl">Class Teacher</div>
+                            <div class="rc-sig-line">Name: ____________________</div>
+                            <div class="rc-sig-line">Signature: ________________</div>
+                            <div class="rc-sig-line">Date: ____________________</div>
+                        </div>
+                        <div class="rc-sig-cell">
+                            <div class="lbl">Parent / Guardian</div>
+                            <div class="rc-sig-line">Name: ____________________</div>
+                            <div class="rc-sig-line">Signature: ________________</div>
+                            <div class="rc-sig-line">Date: ____________________</div>
+                        </div>
+                        <div class="rc-sig-cell">
+                            <div class="lbl">School Administration</div>
+                            <div class="rc-sig-line">
+                                Name: {{ $headTeacherName }}
+                            </div>
+                            <div class="rc-sig-line">
+                                Signature:
+                                @if(!empty($s->head_teacher_signature))
+                                    <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
+                                        style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;" alt="sig">
+                                @else
+                                    ________________
+                                @endif
+                            </div>
+                            <div class="rc-sig-line">Date: ____________________</div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ══ CERTIFICATION ═══════════════════════════════════════════════ --}}
+                @if($cfg['confidential'] || $cfg['footer_timestamp'])
+                    <div class="rc-cert">
+                        <div class="rc-cert-badge"><i class="fas fa-award"></i></div>
+                        <div class="rc-cert-text">
+                            This is to certify that the information provided in this report is a true and
+                            accurate record of the academic performance of the above named learner.
+                        </div>
+                        <div class="rc-cert-stamp">{{ Str::limit($schoolName, 18, '') }}<br>Official</div>
                     </div>
                 @endif
 

@@ -69,6 +69,34 @@ body{background:var(--bg);}
     margin-bottom:.6rem;
 }
 
+/* Tabs */
+.report-tabs{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    margin-bottom:1.5rem;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:.5rem;
+    box-shadow:var(--shadow);
+}
+.report-tab{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    padding:.65rem 1.15rem;
+    border-radius:10px;
+    font-size:.85rem;
+    font-weight:700;
+    color:var(--text-2);
+    text-decoration:none;
+    transition:all .15s;
+}
+.report-tab:hover{background:#f5f6ff;color:#2f2ccb;}
+.report-tab.active{background:#2f2ccb;color:#fff;}
+.report-tab .tab-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:.78rem;opacity:.85;}
+
 /* Cards */
 .fin-card{
     background:var(--surface);
@@ -113,9 +141,10 @@ body{background:var(--bg);}
     transition:all .18s;
 }
 .btn-primary-fin{background:#2f2ccb;color:#fff;}
-.btn-primary-fin:hover{background:#2420a8;transform:translateY(-1px);box-shadow:0 4px 14px rgba(47,44,203,.35);}
+.btn-primary-fin:hover{background:#2420a8;transform:translateY(-1px);box-shadow:0 4px 14px rgba(47,44,203,.35);color:#fff;}
 .btn-outline-fin{background:transparent;border:1.5px solid var(--border);color:var(--text-2);}
 .btn-outline-fin:hover{border-color:#2f2ccb;color:#2f2ccb;}
+.btn-sm-fin{padding:.45rem .9rem;font-size:.78rem;}
 
 /* Badges */
 .badge-fin{
@@ -130,6 +159,7 @@ body{background:var(--bg);}
 .badge-green{background:var(--fin-green-l);color:var(--fin-green);}
 .badge-amber{background:var(--fin-amber-l);color:var(--fin-amber);}
 .badge-blue{background:rgba(47,44,203,.1);color:#2f2ccb;}
+.badge-red{background:var(--fin-red-l);color:var(--fin-red);}
 
 .amount-mono{font-family:'DM Mono',monospace;font-weight:600;}
 
@@ -204,6 +234,7 @@ body{background:var(--bg);}
     border-color:#2f2ccb;
     box-shadow:0 0 0 3px rgba(47,44,203,.1);
 }
+.filter-actions{display:flex;gap:.6rem;flex:0 0 auto;}
 
 /* Tables */
 .report-table{
@@ -223,6 +254,8 @@ body{background:var(--bg);}
     border-bottom:none;
     text-align:left;
 }
+.report-table th a{color:#fff;text-decoration:none;}
+.report-table th a:hover{text-decoration:underline;}
 .report-table th:first-child{border-radius:10px 0 0 0;}
 .report-table th:last-child{border-radius:0 10px 0 0;}
 .report-table td{
@@ -264,9 +297,56 @@ body{background:var(--bg);}
     transition:width .3s;
 }
 
+/* Rank cards (Most/Least Done) */
+.rank-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1rem;
+    padding:1.5rem;
+}
+.rank-list{
+    background:#fafbff;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:1rem 1.1rem;
+}
+.rank-list h4{
+    margin:0 0 .7rem;
+    font-size:.78rem;
+    font-weight:800;
+    color:var(--text-2);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+}
+.rank-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:.45rem 0;
+    border-bottom:1px dashed var(--border);
+    font-size:.82rem;
+}
+.rank-row:last-child{border-bottom:none;}
+.rank-row .rname{display:flex;align-items:center;gap:.5rem;color:var(--text-1);font-weight:600;}
+.rank-row .rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.rank-row .rval{font-family:'DM Mono',monospace;font-weight:700;color:var(--text-2);}
+.rank-empty{color:var(--text-3);font-size:.8rem;padding:.6rem 0;}
+
+/* Pagination */
+.pagination-container{
+    padding:1rem 1.5rem;
+    border-top:1px solid var(--border);
+    background:#fafbff;
+    border-radius:0 0 var(--radius) var(--radius);
+}
+
 /* Responsive */
 @media(max-width:900px){
     .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .rank-grid{grid-template-columns:1fr;}
 }
 @media(max-width:768px){
     .fin-hero{padding:1.5rem;}
@@ -276,11 +356,12 @@ body{background:var(--bg);}
     .filter-group{width:100%;}
     .report-table{min-width:600px;display:block;overflow-x:auto;}
     .fin-card-header{flex-direction:column;align-items:flex-start;}
+    .report-tabs{overflow-x:auto;flex-wrap:nowrap;}
 }
 
 /* Print Styles */
 @media print {
-    .fin-hero, .stat-grid, .filters, .btn-fin, .chart-container {
+    .fin-hero, .report-tabs, .stat-grid, .filters, .btn-fin, .chart-container, .pagination-container {
         display: none !important;
     }
     .fin-card {
@@ -307,6 +388,38 @@ body{background:var(--bg);}
 
 @section('content')
 
+@php
+    // Small helper: build a "same page, tweak these params" URL from the
+    // CURRENT query string — used by tab links, sortable column headers,
+    // and the export buttons so nothing ever drops an active filter.
+    $withQuery = fn(array $overrides) => route('finance.reports', array_merge(request()->query(), $overrides));
+    $sortLink = function ($col, $label) use ($filters, $withQuery) {
+        $nextDir = ($filters['sort_by'] === $col && $filters['sort_dir'] === 'asc') ? 'desc' : 'asc';
+        $icon = $filters['sort_by'] === $col ? ($filters['sort_dir'] === 'asc' ? ' ↑' : ' ↓') : '';
+        return '<a href="' . $withQuery(['sort_by' => $col, 'sort_dir' => $nextDir]) . '">' . $label . $icon . '</a>';
+    };
+@endphp
+
+{{-- Report Type Tabs --}}
+<div class="report-tabs">
+    <a href="{{ $withQuery(['report_type' => 'overview']) }}" class="report-tab {{ $filters['report_type'] === 'overview' ? 'active' : '' }}">
+        <i class="fas fa-chart-pie"></i> Overview
+    </a>
+    <a href="{{ $withQuery(['report_type' => 'payments']) }}" class="report-tab {{ $filters['report_type'] === 'payments' ? 'active' : '' }}">
+        <i class="fas fa-hand-holding-usd"></i> Payments
+        <span class="tab-amt">UGX {{ number_format($incomeTotal, 0) }}</span>
+    </a>
+    <a href="{{ $withQuery(['report_type' => 'expenses']) }}" class="report-tab {{ $filters['report_type'] === 'expenses' ? 'active' : '' }}">
+        <i class="fas fa-receipt"></i> Expenses
+        <span class="tab-amt">UGX {{ number_format($expenseTotal, 0) }}</span>
+    </a>
+    <a href="{{ $withQuery(['report_type' => 'payroll']) }}" class="report-tab {{ $filters['report_type'] === 'payroll' ? 'active' : '' }}">
+        <i class="fas fa-users"></i> Payroll
+        <span class="tab-amt">UGX {{ number_format($payrollTotal, 0) }}</span>
+    </a>
+</div>
+
+@if($filters['report_type'] === 'overview')
 {{-- Filters --}}
 <div class="fin-card">
     <div class="fin-card-header">
@@ -316,6 +429,7 @@ body{background:var(--bg);}
         </button>
     </div>
     <div class="filters">
+        <input type="hidden" id="reportType" value="overview">
         <div class="filter-group">
             <label>Academic Year</label>
             <select id="filterYear" onchange="applyFilters()">
@@ -525,10 +639,612 @@ body{background:var(--bg);}
         </table>
     </div>
 </div>
-</div>
+@endif
+
+@if($filters['report_type'] === 'payments')
+{{-- Payments Filters --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-filter"></i> Payments Filters</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    <div class="filters">
+        <input type="hidden" id="reportType" value="payments">
+        <div class="filter-group">
+            <label>Academic Year</label>
+            <select id="filterYear">
+                <option value="{{ date('Y') }}" {{ $filters['year'] == date('Y') ? 'selected' : '' }}>{{ date('Y') }}</option>
+                <option value="{{ date('Y')-1 }}" {{ $filters['year'] == date('Y')-1 ? 'selected' : '' }}>{{ date('Y')-1 }}</option>
+                <option value="{{ date('Y')-2 }}" {{ $filters['year'] == date('Y')-2 ? 'selected' : '' }}>{{ date('Y')-2 }}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Term</label>
+            <select id="filterTerm">
+                <option value="">Full Year</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Period</label>
+            <select id="filterPeriod" onchange="toggleDateInputs()">
+                <option value="">All / Custom</option>
+                <option value="today" {{ $filters['period'] == 'today' ? 'selected' : '' }}>Today (Daily)</option>
+                <option value="this_week" {{ $filters['period'] == 'this_week' ? 'selected' : '' }}>This Week (Weekly)</option>
+                <option value="this_month" {{ $filters['period'] == 'this_month' ? 'selected' : '' }}>This Month (Monthly)</option>
+                <option value="this_year" {{ $filters['period'] == 'this_year' ? 'selected' : '' }}>This Year (Annual)</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date From</label>
+            <input type="date" id="filterDateFrom" value="{{ $filters['date_from'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Date To</label>
+            <input type="date" id="filterDateTo" value="{{ $filters['date_to'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Payment Method</label>
+            <select id="filterMethod">
+                <option value="">All Methods</option>
+                <option value="cash" {{ $filters['payment_method'] == 'cash' ? 'selected' : '' }}>Cash</option>
+                <option value="bank_transfer" {{ $filters['payment_method'] == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                <option value="mobile_money" {{ $filters['payment_method'] == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
+                <option value="cheque" {{ $filters['payment_method'] == 'cheque' ? 'selected' : '' }}>Cheque</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select id="filterStatus">
+                <option value="" {{ $filters['status'] == '' ? 'selected' : '' }}>Confirmed (default)</option>
+                <option value="confirmed" {{ $filters['status'] == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                <option value="reversed" {{ $filters['status'] == 'reversed' ? 'selected' : '' }}>Reversed</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Class</label>
+            <select id="filterClass">
+                <option value="">All Classes</option>
+                @foreach($classrooms as $c)
+                    <option value="{{ $c->class_id }}" {{ $filters['class_id'] == $c->class_id ? 'selected' : '' }}>{{ Helper::recordMdname($c->class_id) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Group By (trend)</label>
+            <select id="filterGroupBy">
+                <option value="day" {{ $filters['group_by'] == 'day' ? 'selected' : '' }}>Daily</option>
+                <option value="week" {{ $filters['group_by'] == 'week' ? 'selected' : '' }}>Weekly</option>
+                <option value="month" {{ $filters['group_by'] == 'month' ? 'selected' : '' }}>Monthly</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="filterSearch" placeholder="Receipt #, student, adm #" value="{{ $filters['search'] }}">
+        </div>
+        <div class="filter-actions">
+            <button class="btn-fin btn-primary-fin" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>
+            <a href="{{ route('finance.reports', ['report_type' => 'payments']) }}" class="btn-fin btn-outline-fin"><i class="fas fa-rotate-left"></i> Reset</a>
+        </div>
+    </div>
 </div>
 
+{{-- Payments Stats --}}
+@php $topMethod = $byMethod->sortByDesc('total')->first(); @endphp
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($totalAmount, 0) }}</div>
+        <div class="label">Total Collected</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ number_format($totalCount) }}</div>
+        <div class="label">Transactions</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($avgAmount, 0) }}</div>
+        <div class="label">Average Payment</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ $topMethod ? ucfirst(str_replace('_', ' ', $topMethod->payment_method)) : '—' }}</div>
+        <div class="label">Top Method</div>
+    </div>
+</div>
+
+{{-- Trend + Method breakdown --}}
+<div class="row" style="margin:0 -10px 20px; display:flex; flex-wrap:wrap;">
+    <div class="col-lg-6" style="padding:0 10px; flex:1; min-width:300px;">
+        <div class="fin-card">
+            <div class="fin-card-header">
+                <h3><i class="fas fa-chart-line"></i> Collections Trend ({{ ucfirst($filters['group_by']) }})</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="paymentsTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6" style="padding:0 10px; flex:1; min-width:300px;">
+        <div class="fin-card">
+            <div class="fin-card-header">
+                <h3><i class="fas fa-chart-pie"></i> By Payment Method</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="paymentsMethodChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Payments Listing --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-list"></i> Payment Transactions</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Receipt #</th>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Method</th>
+                    <th>{!! $sortLink('date', 'Date') !!}</th>
+                    <th>{!! $sortLink('amount', 'Amount (UGX)') !!}</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($listing as $p)
+                <tr>
+                    <td>{{ $p->receipt_number }}</td>
+                    <td><strong>{{ $p->student->firstname ?? '' }} {{ $p->student->lastname ?? '' }}</strong></td>
+                    <td>{{ Helper::recordMdname($p->student->senior ?? null) ?? '—' }}</td>
+                    <td>{{ ucfirst(str_replace('_', ' ', $p->payment_method)) }}</td>
+                    <td>{{ optional($p->payment_date)->format('d M Y') }}</td>
+                    <td class="amount-mono">UGX {{ number_format($p->amount_paid, 0) }}</td>
+                    <td>
+                        <span class="badge-fin {{ $p->status === 'confirmed' ? 'badge-green' : 'badge-red' }}">{{ ucfirst($p->status) }}</span>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" style="text-align:center;padding:2rem;">No payments match the selected filters.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-container">{{ $listing->links() }}</div>
+</div>
+@endif
+
+@if($filters['report_type'] === 'expenses')
+{{-- Expenses Filters --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-filter"></i> Expenses Filters</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    <div class="filters">
+        <input type="hidden" id="reportType" value="expenses">
+        <div class="filter-group">
+            <label>Academic Year</label>
+            <select id="filterYear">
+                <option value="{{ date('Y') }}" {{ $filters['year'] == date('Y') ? 'selected' : '' }}>{{ date('Y') }}</option>
+                <option value="{{ date('Y')-1 }}" {{ $filters['year'] == date('Y')-1 ? 'selected' : '' }}>{{ date('Y')-1 }}</option>
+                <option value="{{ date('Y')-2 }}" {{ $filters['year'] == date('Y')-2 ? 'selected' : '' }}>{{ date('Y')-2 }}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Term</label>
+            <select id="filterTerm">
+                <option value="">Full Year</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Period</label>
+            <select id="filterPeriod" onchange="toggleDateInputs()">
+                <option value="">All / Custom</option>
+                <option value="today" {{ $filters['period'] == 'today' ? 'selected' : '' }}>Today (Daily)</option>
+                <option value="this_week" {{ $filters['period'] == 'this_week' ? 'selected' : '' }}>This Week (Weekly)</option>
+                <option value="this_month" {{ $filters['period'] == 'this_month' ? 'selected' : '' }}>This Month (Monthly)</option>
+                <option value="this_year" {{ $filters['period'] == 'this_year' ? 'selected' : '' }}>This Year (Annual)</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date From</label>
+            <input type="date" id="filterDateFrom" value="{{ $filters['date_from'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Date To</label>
+            <input type="date" id="filterDateTo" value="{{ $filters['date_to'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Category</label>
+            <select id="filterCategory">
+                <option value="">All Categories</option>
+                @foreach($expenseCategories as $cat)
+                    <option value="{{ $cat->id }}" {{ $filters['category_id'] == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select id="filterStatus">
+                <option value="" {{ $filters['status'] == '' ? 'selected' : '' }}>Approved + Paid (default)</option>
+                <option value="draft" {{ $filters['status'] == 'draft' ? 'selected' : '' }}>Draft</option>
+                <option value="approved" {{ $filters['status'] == 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="paid" {{ $filters['status'] == 'paid' ? 'selected' : '' }}>Paid</option>
+                <option value="cancelled" {{ $filters['status'] == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Group By (trend)</label>
+            <select id="filterGroupBy">
+                <option value="day" {{ $filters['group_by'] == 'day' ? 'selected' : '' }}>Daily</option>
+                <option value="week" {{ $filters['group_by'] == 'week' ? 'selected' : '' }}>Weekly</option>
+                <option value="month" {{ $filters['group_by'] == 'month' ? 'selected' : '' }}>Monthly</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="filterSearch" placeholder="Title, payee, expense #" value="{{ $filters['search'] }}">
+        </div>
+        <div class="filter-actions">
+            <button class="btn-fin btn-primary-fin" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>
+            <a href="{{ route('finance.reports', ['report_type' => 'expenses']) }}" class="btn-fin btn-outline-fin"><i class="fas fa-rotate-left"></i> Reset</a>
+        </div>
+    </div>
+</div>
+
+{{-- Expenses Stats --}}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($totalAmount, 0) }}</div>
+        <div class="label">Total Spent</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ number_format($totalCount) }}</div>
+        <div class="label">Expenses Logged</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($avgAmount, 0) }}</div>
+        <div class="label">Average Expense</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ $byCategory->count() }}</div>
+        <div class="label">Categories Used</div>
+    </div>
+</div>
+
+{{-- Most Done / Least Done Categories --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-ranking-star"></i> Expense Categories — Most vs Least</h3>
+    </div>
+    <div class="rank-grid">
+        <div class="rank-list">
+            <h4><i class="fas fa-fire" style="color:#dc2626;"></i> Highest Spend</h4>
+            @forelse($mostSpent->take(5) as $c)
+                <div class="rank-row">
+                    <span class="rname"><span class="rdot" style="background:{{ $c->category_color ?? '#2f2ccb' }};"></span>{{ $c->category_name }}</span>
+                    <span class="rval">UGX {{ number_format($c->total, 0) }}</span>
+                </div>
+            @empty
+                <div class="rank-empty">No expense data yet.</div>
+            @endforelse
+        </div>
+        <div class="rank-list">
+            <h4><i class="fas fa-repeat" style="color:#2f2ccb;"></i> Most Frequent (Most Done)</h4>
+            @forelse($mostFrequent->take(5) as $c)
+                <div class="rank-row">
+                    <span class="rname"><span class="rdot" style="background:{{ $c->category_color ?? '#2f2ccb' }};"></span>{{ $c->category_name }}</span>
+                    <span class="rval">{{ number_format($c->count) }}x</span>
+                </div>
+            @empty
+                <div class="rank-empty">No expense data yet.</div>
+            @endforelse
+        </div>
+        <div class="rank-list">
+            <h4><i class="fas fa-leaf" style="color:#059669;"></i> Lowest Spend (Least Done)</h4>
+            @forelse($leastSpent->take(5) as $c)
+                <div class="rank-row">
+                    <span class="rname"><span class="rdot" style="background:{{ $c->category_color ?? '#2f2ccb' }};"></span>{{ $c->category_name }}</span>
+                    <span class="rval">UGX {{ number_format($c->total, 0) }}</span>
+                </div>
+            @empty
+                <div class="rank-empty">No expense data yet.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
+{{-- Trend --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-chart-line"></i> Expense Trend ({{ ucfirst($filters['group_by']) }})</h3>
+    </div>
+    <div class="chart-container">
+        <canvas id="expensesTrendChart"></canvas>
+    </div>
+</div>
+
+{{-- Expenses Listing --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-list"></i> Expense Transactions</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Expense #</th>
+                    <th>{!! $sortLink('title', 'Title') !!}</th>
+                    <th>Category</th>
+                    <th>Payee</th>
+                    <th>{!! $sortLink('date', 'Date') !!}</th>
+                    <th>{!! $sortLink('amount', 'Amount (UGX)') !!}</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($listing as $e)
+                <tr>
+                    <td>{{ $e->expense_number }}</td>
+                    <td><strong>{{ $e->title }}</strong></td>
+                    <td>{{ $e->category->name ?? '—' }}</td>
+                    <td>{{ $e->payee_name ?? '—' }}</td>
+                    <td>{{ optional($e->expense_date)->format('d M Y') }}</td>
+                    <td class="amount-mono">UGX {{ number_format($e->amount, 0) }}</td>
+                    <td>
+                        @php $eBadge = match($e->status) { 'paid','approved' => 'badge-green', 'draft' => 'badge-amber', 'cancelled' => 'badge-red', default => 'badge-blue' }; @endphp
+                        <span class="badge-fin {{ $eBadge }}">{{ ucfirst($e->status) }}</span>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" style="text-align:center;padding:2rem;">No expenses match the selected filters.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-container">{{ $listing->links() }}</div>
+</div>
+@endif
+
+@if($filters['report_type'] === 'payroll')
+{{-- Payroll Filters --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-filter"></i> Payroll Filters</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    <div class="filters">
+        <input type="hidden" id="reportType" value="payroll">
+        <div class="filter-group">
+            <label>Academic Year</label>
+            <select id="filterYear">
+                <option value="{{ date('Y') }}" {{ $filters['year'] == date('Y') ? 'selected' : '' }}>{{ date('Y') }}</option>
+                <option value="{{ date('Y')-1 }}" {{ $filters['year'] == date('Y')-1 ? 'selected' : '' }}>{{ date('Y')-1 }}</option>
+                <option value="{{ date('Y')-2 }}" {{ $filters['year'] == date('Y')-2 ? 'selected' : '' }}>{{ date('Y')-2 }}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Term</label>
+            <select id="filterTerm">
+                <option value="">Full Year</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Payroll Period</label>
+            <select id="filterPayrollPeriod">
+                <option value="">All Periods</option>
+                @foreach($payrollPeriods as $pp)
+                    <option value="{{ $pp->id }}" {{ $filters['payroll_period_id'] == $pp->id ? 'selected' : '' }}>{{ $pp->period_name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Period</label>
+            <select id="filterPeriod" onchange="toggleDateInputs()">
+                <option value="">All / Custom</option>
+                <option value="today" {{ $filters['period'] == 'today' ? 'selected' : '' }}>Today (Daily)</option>
+                <option value="this_week" {{ $filters['period'] == 'this_week' ? 'selected' : '' }}>This Week (Weekly)</option>
+                <option value="this_month" {{ $filters['period'] == 'this_month' ? 'selected' : '' }}>This Month (Monthly)</option>
+                <option value="this_year" {{ $filters['period'] == 'this_year' ? 'selected' : '' }}>This Year (Annual)</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date From</label>
+            <input type="date" id="filterDateFrom" value="{{ $filters['date_from'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Date To</label>
+            <input type="date" id="filterDateTo" value="{{ $filters['date_to'] }}">
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select id="filterStatus">
+                <option value="">All Statuses</option>
+                <option value="draft" {{ $filters['status'] == 'draft' ? 'selected' : '' }}>Draft</option>
+                <option value="approved" {{ $filters['status'] == 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="paid" {{ $filters['status'] == 'paid' ? 'selected' : '' }}>Paid</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="filterSearch" placeholder="Teacher name" value="{{ $filters['search'] }}">
+        </div>
+        <div class="filter-actions">
+            <button class="btn-fin btn-primary-fin" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>
+            <a href="{{ route('finance.reports', ['report_type' => 'payroll']) }}" class="btn-fin btn-outline-fin"><i class="fas fa-rotate-left"></i> Reset</a>
+        </div>
+    </div>
+</div>
+
+{{-- Payroll Stats --}}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($totalGross, 0) }}</div>
+        <div class="label">Gross Pay</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($totalDeductions, 0) }}</div>
+        <div class="label">Total Deductions</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">UGX {{ number_format($totalNet, 0) }}</div>
+        <div class="label">Net Pay</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ number_format($totalCount) }}</div>
+        <div class="label">Payslips</div>
+    </div>
+</div>
+
+{{-- Status Breakdown --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-chart-simple"></i> Payroll by Status</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Payslips</th>
+                    <th>Net Pay (UGX)</th>
+                    <th>% of Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($byStatus as $st)
+                @php $stPct = $totalNet > 0 ? round(($st->total / $totalNet) * 100, 1) : 0; @endphp
+                <tr>
+                    <td>
+                        @php $sBadge = match($st->status) { 'paid','approved' => 'badge-green', 'draft' => 'badge-amber', default => 'badge-blue' }; @endphp
+                        <span class="badge-fin {{ $sBadge }}">{{ ucfirst($st->status) }}</span>
+                    </td>
+                    <td>{{ number_format($st->count) }}</td>
+                    <td class="amount-mono">UGX {{ number_format($st->total, 0) }}</td>
+                    <td>{{ $stPct }}%</td>
+                </tr>
+                @empty
+                <tr><td colspan="4" style="text-align:center;padding:2rem;">No payroll data available</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{-- Payroll Listing --}}
+<div class="fin-card">
+    <div class="fin-card-header">
+        <h3><i class="fas fa-list"></i> Payslips</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Payslip #</th>
+                    <th>Teacher</th>
+                    <th>Period</th>
+                    <th>Gross Pay (UGX)</th>
+                    <th>Deductions (UGX)</th>
+                    <th>{!! $sortLink('amount', 'Net Pay (UGX)') !!}</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($listing as $slip)
+                <tr>
+                    <td>{{ $slip->payslip_number }}</td>
+                    <td><strong>{{ $slip->teacher->firstname ?? '' }} {{ $slip->teacher->surname ?? '' }}</strong></td>
+                    <td>{{ $slip->period->period_name ?? '—' }}</td>
+                    <td class="amount-mono">UGX {{ number_format($slip->gross_pay, 0) }}</td>
+                    <td class="amount-mono" style="color:#dc2626;">UGX {{ number_format($slip->total_deductions, 0) }}</td>
+                    <td class="amount-mono" style="color:#059669;">UGX {{ number_format($slip->net_pay, 0) }}</td>
+                    <td>
+                        @php $pBadge = match($slip->status) { 'paid','approved' => 'badge-green', 'draft' => 'badge-amber', default => 'badge-blue' }; @endphp
+                        <span class="badge-fin {{ $pBadge }}">{{ ucfirst($slip->status) }}</span>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" style="text-align:center;padding:2rem;">No payslips match the selected filters.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-container">{{ $listing->links() }}</div>
+</div>
+
+@endif
+</div></div></div>
 <script>
+function applyFilters() {
+    const params = new URLSearchParams(window.location.search);
+    const reportTypeEl = document.getElementById('reportType');
+    if (reportTypeEl) params.set('report_type', reportTypeEl.value);
+
+    const fieldMap = {
+        filterYear: 'year',
+        filterTerm: 'term',
+        filterPeriod: 'period',
+        filterDateFrom: 'date_from',
+        filterDateTo: 'date_to',
+        filterMethod: 'payment_method',
+        filterStatus: 'status',
+        filterClass: 'class_id',
+        filterCategory: 'category_id',
+        filterPayrollPeriod: 'payroll_period_id',
+        filterGroupBy: 'group_by',
+        filterSearch: 'search',
+    };
+    Object.keys(fieldMap).forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const key = fieldMap[id];
+        if (el.value) params.set(key, el.value); else params.delete(key);
+    });
+    params.delete('page');
+    window.location.href = "{{ route('finance.reports') }}?" + params.toString();
+}
+
+function toggleDateInputs() {
+    const period = document.getElementById('filterPeriod');
+    if (!period || !period.value) return;
+    const from = document.getElementById('filterDateFrom');
+    const to = document.getElementById('filterDateTo');
+    if (from) from.value = '';
+    if (to) to.value = '';
+}
+
+@if($filters['report_type'] === 'overview')
 const monthlyData = @json($monthlyPayments);
 const methodData = @json($byMethod);
 
@@ -626,13 +1342,96 @@ if (document.getElementById('methodChart')) {
         }
     });
 }
+@endif
 
-function applyFilters() {
-    let year = document.getElementById('filterYear').value;
-    let term = document.getElementById('filterTerm').value;
-    let url = "{{ route('finance.reports') }}?year=" + year;
-    if(term) url += "&term=" + term;
-    window.location.href = url;
+@if($filters['report_type'] === 'payments')
+const paymentsTrend = @json($trend);
+const paymentsMethod = @json($byMethod);
+
+if (document.getElementById('paymentsTrendChart')) {
+    new Chart(document.getElementById('paymentsTrendChart'), {
+        type: 'bar',
+        data: {
+            labels: paymentsTrend.map(d => d.bucket),
+            datasets: [{
+                label: 'Collections (UGX)',
+                data: paymentsTrend.map(d => parseFloat(d.total)),
+                backgroundColor: 'rgba(5,150,105,.15)',
+                borderColor: '#059669',
+                borderWidth: 2.5,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+                tooltip: { callbacks: { label: c => 'UGX ' + c.raw.toLocaleString() } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' },
+                    ticks: { font: { family: 'DM Mono', size: 10 },
+                        callback: v => 'UGX ' + (v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v) } },
+                x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 10 } } }
+            }
+        }
+    });
 }
+
+if (document.getElementById('paymentsMethodChart')) {
+    new Chart(document.getElementById('paymentsMethodChart'), {
+        type: 'doughnut',
+        data: {
+            labels: paymentsMethod.map(d => d.payment_method.replace('_', ' ').toUpperCase()),
+            datasets: [{
+                data: paymentsMethod.map(d => parseFloat(d.total)),
+                backgroundColor: ['#2f2ccb', '#059669', '#d97706', '#7c3aed', '#0d9488'],
+                borderWidth: 0, hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, usePointStyle: true, boxWidth: 10 } },
+                tooltip: { callbacks: { label: function(context) {
+                    const value = context.raw;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    return `${context.label}: UGX ${value.toLocaleString()} (${((value/total)*100).toFixed(1)}%)`;
+                } } } }
+        }
+    });
+}
+@endif
+
+@if($filters['report_type'] === 'expenses')
+const expensesTrend = @json($trend);
+
+if (document.getElementById('expensesTrendChart')) {
+    new Chart(document.getElementById('expensesTrendChart'), {
+        type: 'bar',
+        data: {
+            labels: expensesTrend.map(d => d.bucket),
+            datasets: [{
+                label: 'Expenses (UGX)',
+                data: expensesTrend.map(d => parseFloat(d.total)),
+                backgroundColor: 'rgba(220,38,38,.12)',
+                borderColor: '#dc2626',
+                borderWidth: 2.5,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+                tooltip: { callbacks: { label: c => 'UGX ' + c.raw.toLocaleString() } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' },
+                    ticks: { font: { family: 'DM Mono', size: 10 },
+                        callback: v => 'UGX ' + (v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v) } },
+                x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 10 } } }
+            }
+        }
+    });
+}
+@endif
 </script>
 @endsection

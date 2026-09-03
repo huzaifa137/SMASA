@@ -1369,16 +1369,18 @@ class FinanceController extends Controller
     // REPORTS
     // ══════════════════════════════════════════════════════════════════════════
 
-    public function reports()
+    public function reports(Request $request)
     {
 
         PermissionHelper::denyUnlessFeature('financial_reports');
 
         $schoolId = session('LoggedSchool');
-        $year = request('year', date('Y'));
-        $term = request('term', '');
+        $filters = $this->reportFilters($request);
+        $year = $filters['year'];
+        $term = $filters['term'];
 
-        // Income vs Expense summary
+        // ── Overview summary — always computed so the tab strip's headline
+        // numbers stay visible no matter which report tab is open ─────────
         $incomeTotal = FeePayment::where('school_id', $schoolId)
             ->where('academic_year', $year)->where('status', 'confirmed')
             ->when($term, fn($q) => $q->where('term', $term))
@@ -1426,16 +1428,391 @@ class FinanceController extends Controller
             ->groupBy('payment_method')
             ->get();
 
-        return view('Finance.reports', compact(
-            'incomeTotal',
-            'expenseTotal',
-            'payrollTotal',
-            'byClass',
-            'monthlyPayments',
-            'byMethod',
-            'year',
-            'term'
-        ));
+        // ── Drill-down report (Payments / Expenses / Payroll tab) ─────────
+        $reportData = match ($filters['report_type']) {
+            'payments' => $this->buildPaymentsReport($schoolId, $filters),
+            'expenses' => $this->buildExpensesReport($schoolId, $filters),
+            'payroll' => $this->buildPayrollReport($schoolId, $filters),
+            default => [],
+        };
+
+        $classrooms = Classroom::where('school_id', $schoolId)->orderBy('class_name')->get();
+        $expenseCategories = ExpenseCategory::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get();
+        $payrollPeriods = PayrollPeriod::where('school_id', $schoolId)->where('academic_year', $year)->orderByDesc('period_start')->get();
+
+        return view('Finance.reports', array_merge([
+            'incomeTotal' => $incomeTotal,
+            'expenseTotal' => $expenseTotal,
+            'payrollTotal' => $payrollTotal,
+            'byClass' => $byClass,
+            'monthlyPayments' => $monthlyPayments,
+            'byMethod' => $byMethod,
+            'year' => $year,
+            'term' => $term,
+            'filters' => $filters,
+            'classrooms' => $classrooms,
+            'expenseCategories' => $expenseCategories,
+            'payrollPeriods' => $payrollPeriods,
+        ], $reportData));
+    }
+
+    /**
+     * Normalise every finance-report filter from the request into one
+     * array, shared by the reports page and both exports (CSV/PDF) so
+     * whatever the user filtered down to on screen is exactly what
+     * leaves the system.
+     */
+    private function reportFilters(Request $request): array
+    {
+        $filters = [
+            'report_type' => $request->query('report_type', 'overview'), // overview|payments|expenses|payroll
+            'year' => $request->query('year', date('Y')),
+            'term' => $request->query('term', ''),
+            'period' => $request->query('period', ''), // '' | today | this_week | this_month | this_year
+            'date_from' => $request->query('date_from', ''),
+            'date_to' => $request->query('date_to', ''),
+            'category_id' => $request->query('category_id', ''),
+            'payment_method' => $request->query('payment_method', ''),
+            'status' => $request->query('status', ''),
+            'payroll_period_id' => $request->query('payroll_period_id', ''),
+            'class_id' => $request->query('class_id', ''),
+            'stream_id' => $request->query('stream_id', ''),
+            'search' => $request->query('search', ''),
+            'sort_by' => $request->query('sort_by', ''),
+            'sort_dir' => $request->query('sort_dir') === 'asc' ? 'asc' : 'desc',
+            'group_by' => in_array($request->query('group_by'), ['day', 'week', 'month'], true)
+                ? $request->query('group_by')
+                : 'month',
+        ];
+
+        if (!in_array($filters['report_type'], ['overview', 'payments', 'expenses', 'payroll'], true)) {
+            $filters['report_type'] = 'overview';
+        }
+
+        [$filters['resolved_from'], $filters['resolved_to']] = $this->resolveReportPeriodDates($filters);
+
+        return $filters;
+    }
+
+    /**
+     * Turn a "period" preset (Today / This Week / This Month / This Year)
+     * — or an explicit date_from/date_to pair, which always wins — into a
+     * concrete date window. Returns [null, null] when the report should
+     * stay scoped by academic year/term only (no extra date narrowing).
+     */
+    private function resolveReportPeriodDates(array $filters): array
+    {
+        if ($filters['date_from'] || $filters['date_to']) {
+            $from = $filters['date_from'] ? Carbon::parse($filters['date_from'])->startOfDay() : null;
+            $to = $filters['date_to'] ? Carbon::parse($filters['date_to'])->endOfDay() : ($from ? $from->copy()->endOfDay() : null);
+            return [$from, $to];
+        }
+
+        return match ($filters['period']) {
+            'today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+            'this_week' => [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()],
+            'this_month' => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
+            'this_year' => [Carbon::createFromDate((int) $filters['year'], 1, 1)->startOfDay(), Carbon::createFromDate((int) $filters['year'], 12, 31)->endOfDay()],
+            default => [null, null],
+        };
+    }
+
+    /** MySQL DATE_FORMAT expression for grouping a date column by day/week/month. */
+    private function reportGroupExpression(string $column, string $groupBy): string
+    {
+        return match ($groupBy) {
+            'day' => "DATE_FORMAT($column, '%Y-%m-%d')",
+            'week' => "DATE_FORMAT($column, '%x-W%v')",
+            default => "DATE_FORMAT($column, '%Y-%m')",
+        };
+    }
+
+    private function financePaymentsQuery($schoolId, array $filters)
+    {
+        return FeePayment::where('school_id', $schoolId)
+            ->where('academic_year', $filters['year'])
+            ->when($filters['term'], fn($q) => $q->where('term', $filters['term']))
+            ->when($filters['status'], fn($q) => $q->where('status', $filters['status']), fn($q) => $q->where('status', 'confirmed'))
+            ->when($filters['payment_method'], fn($q) => $q->where('payment_method', $filters['payment_method']))
+            ->when($filters['resolved_from'], fn($q) => $q->whereDate('payment_date', '>=', $filters['resolved_from']))
+            ->when($filters['resolved_to'], fn($q) => $q->whereDate('payment_date', '<=', $filters['resolved_to']))
+            ->when($filters['class_id'] || $filters['stream_id'], function ($q) use ($filters) {
+                $q->whereHas('student', function ($sq) use ($filters) {
+                    $sq->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
+                        ->when($filters['stream_id'], fn($sq2) => $sq2->where('stream', $filters['stream_id']));
+                });
+            })
+            ->when($filters['search'], function ($q) use ($filters) {
+                $needle = $filters['search'];
+                $q->where(function ($sq) use ($needle) {
+                    $sq->where('receipt_number', 'like', "%{$needle}%")
+                        ->orWhereHas('student', fn($ssq) => $ssq->where('firstname', 'like', "%{$needle}%")
+                            ->orWhere('lastname', 'like', "%{$needle}%")
+                            ->orWhere('admission_number', 'like', "%{$needle}%"));
+                });
+            })
+            ->with('student');
+    }
+
+    private function financeExpensesQuery($schoolId, array $filters)
+    {
+        // Every column is qualified with the `expenses.` table prefix because
+        // buildExpensesReport() joins in `expense_categories` on top of this
+        // query for the category breakdown — expense_categories has its own
+        // school_id, so an unqualified `school_id` (etc.) becomes ambiguous
+        // and MySQL rejects the query outright once that join is added.
+        return Expense::where('expenses.school_id', $schoolId)
+            ->where('expenses.academic_year', $filters['year'])
+            ->when($filters['term'], fn($q) => $q->where('expenses.term', $filters['term']))
+            ->when($filters['category_id'], fn($q) => $q->where('expenses.category_id', $filters['category_id']))
+            ->when($filters['status'], fn($q) => $q->where('expenses.status', $filters['status']), fn($q) => $q->whereIn('expenses.status', ['approved', 'paid']))
+            ->when($filters['payment_method'], fn($q) => $q->where('expenses.payment_method', $filters['payment_method']))
+            ->when($filters['resolved_from'], fn($q) => $q->whereDate('expenses.expense_date', '>=', $filters['resolved_from']))
+            ->when($filters['resolved_to'], fn($q) => $q->whereDate('expenses.expense_date', '<=', $filters['resolved_to']))
+            ->when($filters['search'], function ($q) use ($filters) {
+                $needle = $filters['search'];
+                $q->where(function ($sq) use ($needle) {
+                    $sq->where('expenses.title', 'like', "%{$needle}%")
+                        ->orWhere('expenses.payee_name', 'like', "%{$needle}%")
+                        ->orWhere('expenses.expense_number', 'like', "%{$needle}%");
+                });
+            })
+            ->with('category');
+    }
+
+    private function financePayrollQuery($schoolId, array $filters)
+    {
+        return PayrollSlip::where('school_id', $schoolId)
+            ->whereHas('period', function ($q) use ($filters) {
+                $q->where('academic_year', $filters['year'])
+                    ->when($filters['term'], fn($q2) => $q2->where('term', $filters['term']))
+                    ->when($filters['resolved_from'], fn($q2) => $q2->whereDate('period_start', '>=', $filters['resolved_from']))
+                    ->when($filters['resolved_to'], fn($q2) => $q2->whereDate('period_end', '<=', $filters['resolved_to']));
+            })
+            ->when($filters['payroll_period_id'], fn($q) => $q->where('payroll_period_id', $filters['payroll_period_id']))
+            ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
+            ->when($filters['payment_method'], fn($q) => $q->where('payment_method', $filters['payment_method']))
+            ->when($filters['search'], function ($q) use ($filters) {
+                $needle = $filters['search'];
+                $q->whereHas('teacher', fn($tq) => $tq->where('firstname', 'like', "%{$needle}%")
+                    ->orWhere('surname', 'like', "%{$needle}%"));
+            })
+            ->with(['teacher', 'period']);
+    }
+
+    /**
+     * Payments drill-down: listing + totals + method breakdown + a
+     * day/week/month trend, all built from the same filtered query.
+     */
+    private function buildPaymentsReport($schoolId, array $filters): array
+    {
+        $sortColumn = $filters['sort_by'] === 'amount' ? 'amount_paid' : 'payment_date';
+
+        $listing = (clone $this->financePaymentsQuery($schoolId, $filters))
+            ->orderBy($sortColumn, $filters['sort_dir'])
+            ->paginate(25)->appends(request()->query());
+
+        $statsQuery = $this->financePaymentsQuery($schoolId, $filters);
+        $totalAmount = (clone $statsQuery)->sum('amount_paid');
+        $totalCount = (clone $statsQuery)->count();
+        $avgAmount = $totalCount > 0 ? $totalAmount / $totalCount : 0;
+
+        $byMethod = (clone $this->financePaymentsQuery($schoolId, $filters))
+            ->selectRaw('payment_method, SUM(amount_paid) as total, COUNT(*) as count')
+            ->groupBy('payment_method')
+            ->orderByDesc('total')
+            ->get();
+
+        $trendExpr = $this->reportGroupExpression('payment_date', $filters['group_by']);
+        $trend = (clone $this->financePaymentsQuery($schoolId, $filters))
+            ->selectRaw("$trendExpr as bucket, SUM(amount_paid) as total, COUNT(*) as count")
+            ->groupBy('bucket')->orderBy('bucket')->get();
+
+        return compact('listing', 'totalAmount', 'totalCount', 'avgAmount', 'byMethod', 'trend');
+    }
+
+    /**
+     * Expenses drill-down: listing + totals + a category breakdown
+     * ranked three ways (most spent, most frequent, least spent) so the
+     * "Most Done / Less Done" cards the user asked for come straight off
+     * one query, plus a day/week/month trend.
+     */
+    private function buildExpensesReport($schoolId, array $filters): array
+    {
+        $sortColumn = match ($filters['sort_by']) {
+            'amount' => 'amount',
+            'title' => 'title',
+            default => 'expense_date',
+        };
+
+        $listing = (clone $this->financeExpensesQuery($schoolId, $filters))
+            ->orderBy($sortColumn, $filters['sort_dir'])
+            ->paginate(25)->appends(request()->query());
+
+        $statsQuery = $this->financeExpensesQuery($schoolId, $filters);
+        $totalAmount = (clone $statsQuery)->sum('amount');
+        $totalCount = (clone $statsQuery)->count();
+        $avgAmount = $totalCount > 0 ? $totalAmount / $totalCount : 0;
+
+        $byCategory = (clone $this->financeExpensesQuery($schoolId, $filters))
+            ->join('expense_categories', 'expense_categories.id', '=', 'expenses.category_id')
+            ->selectRaw('expense_categories.id as category_id, expense_categories.name as category_name,
+                expense_categories.color as category_color, SUM(expenses.amount) as total, COUNT(*) as count')
+            ->groupBy('expense_categories.id', 'expense_categories.name', 'expense_categories.color')
+            ->get();
+
+        $mostSpent = $byCategory->sortByDesc('total')->values();
+        $mostFrequent = $byCategory->sortByDesc('count')->values();
+        $leastSpent = $byCategory->sortBy('total')->values();
+
+        $trendExpr = $this->reportGroupExpression('expense_date', $filters['group_by']);
+        $trend = (clone $this->financeExpensesQuery($schoolId, $filters))
+            ->selectRaw("$trendExpr as bucket, SUM(amount) as total, COUNT(*) as count")
+            ->groupBy('bucket')->orderBy('bucket')->get();
+
+        return compact('listing', 'totalAmount', 'totalCount', 'avgAmount', 'byCategory', 'mostSpent', 'mostFrequent', 'leastSpent', 'trend');
+    }
+
+    /**
+     * Payroll drill-down: listing + gross/deductions/net totals + a
+     * status breakdown (draft/approved/paid).
+     */
+    private function buildPayrollReport($schoolId, array $filters): array
+    {
+        $sortColumn = $filters['sort_by'] === 'amount' ? 'net_pay' : 'paid_date';
+
+        $listing = (clone $this->financePayrollQuery($schoolId, $filters))
+            ->orderBy($sortColumn, $filters['sort_dir'])
+            ->paginate(25)->appends(request()->query());
+
+        $statsQuery = $this->financePayrollQuery($schoolId, $filters);
+        $totalNet = (clone $statsQuery)->sum('net_pay');
+        $totalGross = (clone $statsQuery)->sum('gross_pay');
+        $totalDeductions = (clone $statsQuery)->sum('total_deductions');
+        $totalCount = (clone $statsQuery)->count();
+
+        $byStatus = (clone $this->financePayrollQuery($schoolId, $filters))
+            ->selectRaw('status, SUM(net_pay) as total, COUNT(*) as count')
+            ->groupBy('status')
+            ->get();
+
+        return compact('listing', 'totalNet', 'totalGross', 'totalDeductions', 'totalCount', 'byStatus');
+    }
+
+    /**
+     * CSV export — mirrors whatever the on-screen tab is filtered to
+     * (Payments / Expenses / Payroll), unpaginated, same as the
+     * outstanding-fees PDF export pattern.
+     */
+    public function reportsExportCsv(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('financial_reports');
+
+        $schoolId = session('LoggedSchool');
+        $filters = $this->reportFilters($request);
+        $type = in_array($filters['report_type'], ['payments', 'expenses', 'payroll'], true)
+            ? $filters['report_type'] : 'payments';
+
+        $filename = "Finance-" . ucfirst($type) . "-Report-" . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->stream(function () use ($schoolId, $filters, $type) {
+            $file = fopen('php://output', 'w');
+
+            if ($type === 'payments') {
+                fputcsv($file, ['Receipt #', 'Student', 'Adm #', 'Amount Paid', 'Method', 'Date', 'Term', 'Year', 'Status']);
+                $this->financePaymentsQuery($schoolId, $filters)->orderByDesc('payment_date')
+                    ->chunk(500, function ($rows) use ($file) {
+                        foreach ($rows as $r) {
+                            fputcsv($file, [
+                                $r->receipt_number,
+                                trim(($r->student->firstname ?? '') . ' ' . ($r->student->lastname ?? '')),
+                                $r->student->admission_number ?? '',
+                                $r->amount_paid,
+                                ucfirst(str_replace('_', ' ', $r->payment_method)),
+                                optional($r->payment_date)->format('Y-m-d'),
+                                $r->term,
+                                $r->academic_year,
+                                ucfirst($r->status),
+                            ]);
+                        }
+                    });
+            } elseif ($type === 'expenses') {
+                fputcsv($file, ['Expense #', 'Title', 'Category', 'Amount', 'Payee', 'Method', 'Date', 'Status']);
+                $this->financeExpensesQuery($schoolId, $filters)->orderByDesc('expense_date')
+                    ->chunk(500, function ($rows) use ($file) {
+                        foreach ($rows as $r) {
+                            fputcsv($file, [
+                                $r->expense_number,
+                                $r->title,
+                                $r->category->name ?? '',
+                                $r->amount,
+                                $r->payee_name,
+                                ucfirst(str_replace('_', ' ', $r->payment_method ?? '')),
+                                optional($r->expense_date)->format('Y-m-d'),
+                                ucfirst($r->status),
+                            ]);
+                        }
+                    });
+            } else { // payroll
+                fputcsv($file, ['Payslip #', 'Teacher', 'Period', 'Gross Pay', 'Deductions', 'Net Pay', 'Status', 'Paid Date']);
+                $this->financePayrollQuery($schoolId, $filters)->orderByDesc('paid_date')
+                    ->chunk(500, function ($rows) use ($file) {
+                        foreach ($rows as $r) {
+                            fputcsv($file, [
+                                $r->payslip_number,
+                                trim(($r->teacher->firstname ?? '') . ' ' . ($r->teacher->surname ?? '')),
+                                $r->period->period_name ?? '',
+                                $r->gross_pay,
+                                $r->total_deductions,
+                                $r->net_pay,
+                                ucfirst($r->status),
+                                optional($r->paid_date)->format('Y-m-d'),
+                            ]);
+                        }
+                    });
+            }
+
+            fclose($file);
+        }, 200, $headers);
+    }
+
+    /**
+     * PDF export — same filtered dataset as the CSV export, formatted as
+     * a printable report (mirrors outstandingFeesPdf()).
+     */
+    public function reportsExportPdf(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('financial_reports');
+
+        $schoolId = session('LoggedSchool');
+        $filters = $this->reportFilters($request);
+        $type = in_array($filters['report_type'], ['payments', 'expenses', 'payroll'], true)
+            ? $filters['report_type'] : 'payments';
+        $school = \App\Models\School::find($schoolId);
+
+        if ($type === 'payments') {
+            $rows = $this->financePaymentsQuery($schoolId, $filters)->orderByDesc('payment_date')->get();
+            $total = $rows->sum('amount_paid');
+            $pdf = Pdf::loadView('Finance.pdf.report-payments', compact('rows', 'total', 'filters', 'school'))
+                ->setPaper('a4', 'landscape');
+        } elseif ($type === 'expenses') {
+            $rows = $this->financeExpensesQuery($schoolId, $filters)->orderByDesc('expense_date')->get();
+            $total = $rows->sum('amount');
+            $pdf = Pdf::loadView('Finance.pdf.report-expenses', compact('rows', 'total', 'filters', 'school'))
+                ->setPaper('a4', 'landscape');
+        } else {
+            $rows = $this->financePayrollQuery($schoolId, $filters)->orderByDesc('paid_date')->get();
+            $total = $rows->sum('net_pay');
+            $pdf = Pdf::loadView('Finance.pdf.report-payroll', compact('rows', 'total', 'filters', 'school'))
+                ->setPaper('a4', 'landscape');
+        }
+
+        return $pdf->stream("Finance-" . ucfirst($type) . "-Report-" . now()->format('Y-m-d') . '.pdf');
     }
 
     public function outstandingFees(Request $request)
