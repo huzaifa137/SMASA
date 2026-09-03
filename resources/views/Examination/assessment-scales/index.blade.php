@@ -563,7 +563,6 @@
                     align-items: center;
                 }
 
-                /* Animated particles background */
                 .as-topbar::before {
                     content: '';
                     position: absolute;
@@ -594,7 +593,6 @@
                     }
                 }
 
-                /* Decorative glow - top right */
                 .as-topbar::after {
                     content: '';
                     position: absolute;
@@ -607,7 +605,6 @@
                     pointer-events: none;
                 }
 
-                /* Additional glow - bottom left (using a separate element) */
                 .as-topbar .as-topbar-glow-bottom {
                     position: absolute;
                     bottom: -40%;
@@ -740,7 +737,6 @@
                     display: inline;
                 }
 
-                /* ── Responsive ────────────────────────────────────────────── */
                 @media (max-width: 768px) {
                     .as-topbar {
                         padding: 1.5rem 1.5rem;
@@ -805,9 +801,6 @@
                     }
                 }
 
-                /* ── Professional Table Styles ────────────────────────────── */
-
-                /* Enhanced band-table styling */
                 .band-table {
                     width: 100%;
                     border-collapse: separate;
@@ -819,7 +812,6 @@
                     box-shadow: 0 1px 3px rgba(27, 29, 40, .04);
                 }
 
-                /* Table header with gradient */
                 .band-table thead {
                     background: #2C29CA;
                 }
@@ -846,7 +838,6 @@
                     background: rgba(255, 255, 255, .15);
                 }
 
-                /* Table rows with hover effects */
                 .band-table tbody tr {
                     transition: all .2s ease;
                     border-bottom: 1px solid #F3F4F6;
@@ -868,7 +859,6 @@
                     vertical-align: middle;
                 }
 
-                /* Alternating row colors (zebra stripes) */
                 .band-table tbody tr:nth-child(even) {
                     background: #FAFAFE;
                 }
@@ -877,7 +867,6 @@
                     background: #F5F4FF;
                 }
 
-                /* Enhanced grade chips */
                 .grade-chip {
                     display: inline-flex;
                     align-items: center;
@@ -906,7 +895,6 @@
                     box-shadow: 0 2px 8px rgba(44, 41, 202, .15);
                 }
 
-                /* Grade chip variants */
                 .grade-chip.grade-distinction {
                     background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
                     color: #065F46;
@@ -961,9 +949,6 @@
                     text-align: center;
                 }
 
-                /* ── Action Buttons ────────────────────────────────────────── */
-
-                /* Edit button - primary color */
                 .icon-btn.edit-scale {
                     color: #2C29CA;
                     border-color: rgba(44, 41, 202, 0.2);
@@ -975,7 +960,6 @@
                     border-color: #2C29CA;
                 }
 
-                /* Toggle button - green when active, gray when inactive */
                 .icon-btn.toggle-scale[data-active="1"] {
                     color: #12875A;
                     border-color: rgba(18, 135, 90, 0.2);
@@ -998,7 +982,6 @@
                     border-color: #6B7280;
                 }
 
-                /* Delete button - red */
                 .icon-btn.danger.delete-scale {
                     color: #C4293A;
                     border-color: rgba(196, 41, 58, 0.2);
@@ -1009,8 +992,6 @@
                     color: #C4293A;
                     border-color: #C4293A;
                 }
-
-                /* ── Detail Panel Enhancements ────────────────────────────── */
 
                 .gs-detail-panel {
                     background: var(--surface);
@@ -1043,7 +1024,6 @@
                     }
                 }
 
-                /* Section label with icon */
                 .section-label {
                     font-size: .75rem;
                     font-weight: 700;
@@ -1064,7 +1044,6 @@
                     border-radius: 99px;
                 }
 
-                /* Detail stats cards enhancement */
                 .detail-stats {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
@@ -1100,7 +1079,6 @@
                     margin-top: .1rem;
                 }
 
-                /* Detail top section */
                 .detail-top {
                     display: flex;
                     flex-wrap: wrap;
@@ -1129,7 +1107,6 @@
                     color: var(--primary);
                 }
 
-                /* Badge pills enhancement */
                 .badge-pill {
                     font-size: .65rem;
                     font-weight: 700;
@@ -1169,7 +1146,6 @@
                     border: 1px solid rgba(44, 41, 202, .15);
                 }
 
-                /* ── Responsive Table ────────────────────────────────────────── */
                 @media (max-width: 768px) {
                     .band-table {
                         font-size: .78rem;
@@ -1279,32 +1255,32 @@
 
                     <div class="as-detail-panel">
                         @foreach ($scales as $scale)
-                                            <div class="as-detail {{ $loop->first ? 'active' : '' }}" id="scale-detail-{{ $scale->id }}">
-                                                <div class="detail-top">
-                                                    <div>
-                                                        <div class="detail-title-row">
-                                                            <h4>{{ $scale->name }}</h4>
-                                                            @if ($scale->is_default)
-                                                                <span class="badge-pill badge-default">Default</span>
-                                                            @endif
-                                                            @if (!$scale->is_active)
-                                                                <span class="badge-pill badge-inactive">Inactive</span>
-                                                            @endif
-                                                            @if ($scale->usesLinkedGrading())
-                                                                <span class="badge-pill badge-linked">Grade:
-                                                                    {{ $scale->gradingScheme->name ?? '—' }}</span>
-                                                            @endif
-                                                            @if ($scale->allow_custom_score)
-                                                                <span class="badge-pill badge-linked">Custom scores allowed</span>
-                                                            @endif
-                                                        </div>
-                                                        @if ($scale->description)
-                                                            <p class="detail-desc">{{ $scale->description }}</p>
-                                                        @endif
-                                                    </div>
-                                                    <div class="detail-actions">
-                                                        <a href="{{ route('examination.assessment-scales.assign-page', $scale->id) }}"
-                                                            class="btn btn-sm" style="
+                            <div class="as-detail {{ $loop->first ? 'active' : '' }}" id="scale-detail-{{ $scale->id }}">
+                                <div class="detail-top">
+                                    <div>
+                                        <div class="detail-title-row">
+                                            <h4>{{ $scale->name }}</h4>
+                                            @if ($scale->is_default)
+                                                <span class="badge-pill badge-default">Default</span>
+                                            @endif
+                                            @if (!$scale->is_active)
+                                                <span class="badge-pill badge-inactive">Inactive</span>
+                                            @endif
+                                            @if ($scale->usesLinkedGrading())
+                                                <span class="badge-pill badge-linked">Grade:
+                                                    {{ $scale->gradingScheme->name ?? '—' }}</span>
+                                            @endif
+                                            @if ($scale->allow_custom_score)
+                                                <span class="badge-pill badge-linked">Custom scores allowed</span>
+                                            @endif
+                                        </div>
+                                        @if ($scale->description)
+                                            <p class="detail-desc">{{ $scale->description }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="detail-actions">
+                                        <a href="{{ route('examination.assessment-scales.assign-page', $scale->id) }}"
+                                            class="btn btn-sm" style="
                                    text-decoration: none;
                                    display: inline-flex;
                                    align-items: center;
@@ -1318,64 +1294,64 @@
                                    border-radius: 0.5rem;
                                    transition: all 0.25s ease;
                                " onmouseover="this.style.background='#2C29CA'; this.style.color='#ffffff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(44, 41, 202, 0.25)';"
-                                                            onmouseout="this.style.background='#EEEDFC'; this.style.color='#2C29CA'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                                                            <i class="fas fa-sitemap"></i>
-                                                            <span>Assign to Classes &amp; Subjects</span>
-                                                        </a>
-                                                        <button type="button" class="icon-btn edit-scale" data-id="{{ $scale->id }}" title="Edit"><i
-                                                                class="fas fa-edit"></i></button>
-                                                        <button type="button" class="icon-btn toggle-scale" data-id="{{ $scale->id }}"
-                                                            data-active="{{ $scale->is_active ? 1 : 0 }}"
-                                                            title="{{ $scale->is_active ? 'Deactivate' : 'Activate' }}"><i
-                                                                class="fas fa-power-off"></i></button>
-                                                        <button type="button" class="icon-btn danger delete-scale" data-id="{{ $scale->id }}"
-                                                            title="Delete"><i class="fas fa-trash"></i></button>
-                                                    </div>
-                                                </div>
+                                            onmouseout="this.style.background='#EEEDFC'; this.style.color='#2C29CA'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                            <i class="fas fa-sitemap"></i>
+                                            <span>Assign to Classes &amp; Subjects</span>
+                                        </a>
+                                        <button type="button" class="icon-btn edit-scale" data-id="{{ $scale->id }}" title="Edit"><i
+                                                class="fas fa-edit"></i></button>
+                                        <button type="button" class="icon-btn toggle-scale" data-id="{{ $scale->id }}"
+                                            data-active="{{ $scale->is_active ? 1 : 0 }}"
+                                            title="{{ $scale->is_active ? 'Deactivate' : 'Activate' }}"><i
+                                                class="fas fa-power-off"></i></button>
+                                        <button type="button" class="icon-btn danger delete-scale" data-id="{{ $scale->id }}"
+                                            title="Delete"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
 
-                                                <div class="detail-stats">
-                                                    <div class="detail-stat">
-                                                        <div class="label">Score Range</div>
-                                                        <div class="value">
-                                                            {{ rtrim(rtrim(number_format($scale->min_score, 2), '0'), '.') }}–{{ rtrim(rtrim(number_format($scale->max_score, 2), '0'), '.') }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="detail-stat">
-                                                        <div class="label">Custom Scores</div>
-                                                        <div class="value">{{ $scale->allow_custom_score ? 'Allowed' : 'Restricted' }}</div>
-                                                    </div>
-                                                    <div class="detail-stat">
-                                                        <div class="label">Letter Grade</div>
-                                                        <div class="value" style="font-size:.85rem;">
-                                                            {{ $scale->usesLinkedGrading() ? ($scale->gradingScheme->name ?? 'Linked') : 'None (comment only)' }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="detail-stat">
-                                                        <div class="label">Subjects Using</div>
-                                                        <div class="value">{{ $scale->class_subjects_count }}</div>
-                                                    </div>
-                                                </div>
+                                <div class="detail-stats">
+                                    <div class="detail-stat">
+                                        <div class="label">Score Range</div>
+                                        <div class="value">
+                                            {{ rtrim(rtrim(number_format($scale->min_score, 2), '0'), '.') }}–{{ rtrim(rtrim(number_format($scale->max_score, 2), '0'), '.') }}
+                                        </div>
+                                    </div>
+                                    <div class="detail-stat">
+                                        <div class="label">Custom Scores</div>
+                                        <div class="value">{{ $scale->allow_custom_score ? 'Allowed' : 'Restricted' }}</div>
+                                    </div>
+                                    <div class="detail-stat">
+                                        <div class="label">Letter Grade</div>
+                                        <div class="value" style="font-size:.85rem;">
+                                            {{ $scale->usesLinkedGrading() ? ($scale->gradingScheme->name ?? 'Linked') : 'None (comment only)' }}
+                                        </div>
+                                    </div>
+                                    <div class="detail-stat">
+                                        <div class="label">Subjects Using</div>
+                                        <div class="value">{{ $scale->class_subjects_count }}</div>
+                                    </div>
+                                </div>
 
-                                                <div class="section-label">System Comments (presets)</div>
-                                                <table class="band-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Score / Range</th>
-                                                            <th>Label (auto-fills the comment)</th>
-                                                            <th>Remark</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach ($scale->presets as $preset)
-                                                            <tr>
-                                                                <td><span class="grade-chip">{{ $preset->rangeLabel() }}</span></td>
-                                                                <td>{{ $preset->label }}</td>
-                                                                <td>{{ $preset->remark ?? '—' }}</td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                <div class="section-label">System Comments (presets)</div>
+                                <table class="band-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Score / Range</th>
+                                            <th>Label (auto-fills the comment)</th>
+                                            <th>Remark</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($scale->presets as $preset)
+                                            <tr>
+                                                <td><span class="grade-chip">{{ $preset->rangeLabel() }}</span></td>
+                                                <td>{{ $preset->label }}</td>
+                                                <td>{{ $preset->remark ?? '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         @endforeach
                     </div>
                 </div>
@@ -1390,9 +1366,6 @@
             @endif
 
         </div>
-    </div>
-    </div>
-    </div>
     </div>
 
     {{-- ── Create / Edit Modal (hidden template, injected via SweetAlert) ── --}}
@@ -1580,7 +1553,7 @@
             style="display: grid; grid-template-columns: 0.55fr 0.15fr 0.55fr 1.5fr 0.9fr 0.4fr; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; padding: 0.4rem 0.6rem; background: white; border-radius: 0.4rem; border: 1px solid #E5E7EB; transition: all 0.2s;"
             onmouseover="this.style.borderColor='#2C29CA'; this.style.boxShadow='0 2px 8px rgba(44,41,202,0.08)';"
             onmouseout="this.style.borderColor='#E5E7EB'; this.style.boxShadow='none';">
-            <input type="number" step="0.01" class="preset-score preset-min"
+            <input type="number" step="0.01" class="preset-min"
                 style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.82rem; font-weight: 600; border: 1.5px solid #E5E7EB; border-radius: 0.3rem; background: #FAFBFC; transition: all 0.2s; outline: none;"
                 placeholder="1"
                 onfocus="this.style.borderColor='#2C29CA'; this.style.boxShadow='0 0 0 3px rgba(44,41,202,0.08)';"
@@ -1652,7 +1625,8 @@
             box-shadow: 0 6px 20px rgba(44, 41, 202, 0.35) !important;
         }
 
-        .swal2-cancel {
+        .swal2-cancel,
+        .as-swal-cancel {
             padding: 0.6rem 1.8rem !important;
             font-weight: 600 !important;
             border-radius: 0.5rem !important;
@@ -1663,7 +1637,8 @@
             transition: all 0.2s !important;
         }
 
-        .swal2-cancel:hover {
+        .swal2-cancel:hover,
+        .as-swal-cancel:hover {
             background: #E5E7EB !important;
             transform: translateY(-2px) !important;
         }
@@ -1679,31 +1654,41 @@
         }
     </style>
 
-    <template id="presetRowTemplate">
-        <div class="preset-row">
-            <input type="number" step="0.01" class="form-control form-control-sm preset-score" placeholder="1">
-            <input type="text" class="form-control form-control-sm preset-label"
-                placeholder="Works under Teacher's Guidance">
-            <input type="text" class="form-control form-control-sm preset-remark" placeholder="Fair">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-preset-row"><i
-                    class="fas fa-times"></i></button>
-        </div>
-    </template>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         const csrfToken = '{{ csrf_token() }}';
 
+        // ── List ↔ detail switching (remembers last-selected scale) ──────────
+        function activateScale(targetId) {
+            document.querySelectorAll('.scale-list-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.as-detail').forEach(d => d.classList.remove('active'));
+            document.querySelector(`.scale-list-item[data-target="${targetId}"]`)?.classList.add('active');
+            document.getElementById(targetId)?.classList.add('active');
+        }
+
         document.querySelectorAll('.scale-list-item').forEach(btn => {
             btn.addEventListener('click', function () {
-                document.querySelectorAll('.scale-list-item').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.as-detail').forEach(d => d.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById(this.dataset.target)?.classList.add('active');
+                activateScale(this.dataset.target);
+                localStorage.setItem('selectedScaleId', this.dataset.target.replace('scale-detail-', ''));
             });
         });
 
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedId = localStorage.getItem('selectedScaleId');
+            const savedTarget = savedId ? `scale-detail-${savedId}` : null;
+            if (savedTarget && document.querySelector(`.scale-list-item[data-target="${savedTarget}"]`)) {
+                activateScale(savedTarget);
+            } else {
+                const first = document.querySelector('.scale-list-item');
+                if (first) {
+                    activateScale(first.dataset.target);
+                    localStorage.setItem('selectedScaleId', first.dataset.target.replace('scale-detail-', ''));
+                }
+            }
+        });
+
+        // ── Preset rows ────────────────────────────────────────────────────
         function addPresetRow(container, preset = null) {
             const tpl = document.getElementById('presetRowTemplate').content.cloneNode(true);
             const row = tpl.querySelector('.preset-row');
@@ -1712,8 +1697,7 @@
                 const max = preset.max_score ?? preset.score ?? '';
                 row.querySelector('.preset-min').value = min;
                 // Only show a "To" value when it's an actual range — a
-                // single-value preset (min === max) should render as just
-                // the one number, matching how it was originally entered.
+                // single-value preset (min === max) renders as just one number.
                 row.querySelector('.preset-max').value = (max !== '' && parseFloat(max) !== parseFloat(min)) ? max : '';
                 row.querySelector('.preset-label').value = preset.label ?? '';
                 row.querySelector('.preset-remark').value = preset.remark ?? '';
@@ -1733,18 +1717,14 @@
                 const max = maxEl ? maxEl.value.trim() : '';
                 const label = labelEl ? labelEl.value.trim() : '';
 
-                if (min === '' && !label) {
-                    // A genuinely blank row (e.g. one that was added but
-                    // never filled in) — silently ignore it rather than
-                    // blocking save over an empty row nobody meant to use.
-                    return;
-                }
+                if (min === '' && !label) return; // fully blank row — ignore silently
+
                 if (min === '' || !label) {
                     skippedRows.push({ row: i + 1, missing: min === '' ? 'From score' : 'Label' });
                     return;
                 }
                 if (max !== '' && parseFloat(max) < parseFloat(min)) {
-                    skippedRows.push({ row: i + 1, missing: null, rangeError: true, min, max });
+                    skippedRows.push({ row: i + 1, rangeError: true, min, max });
                     return;
                 }
 
@@ -1759,174 +1739,14 @@
             return presets;
         }
 
-        // NOTE: openScaleModal is fully (re)defined further down this file,
-        // where it's wired up with a loading-overlay UX. That is the
-        // version actually used everywhere below — this file used to also
-        // carry an earlier, now-unused definition here, which has been
-        // removed to avoid two copies drifting out of sync.
-
-        document.getElementById('btnNewScale').addEventListener('click', () => openScaleModal());
-
-        document.querySelectorAll('.edit-scale').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const scale = window.__scalesById[this.dataset.id];
-                openScaleModal(scale);
-            });
-        });
-
-        document.querySelectorAll('.toggle-scale').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                const nextActive = this.dataset.active === '1' ? 0 : 1;
-                $.ajax({
-                    url: `{{ url('examinations/assessment-scales') }}/${id}/toggle-active`,
-                    method: 'POST',
-                    data: { is_active: nextActive },
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
-                    success: function () { window.location.reload(); },
-                    error: function (xhr) { Swal.fire('Error', xhr.responseJSON?.message || 'Could not update scale.', 'error'); },
-                });
-            });
-        });
-
-        document.querySelectorAll('.delete-scale').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                Swal.fire({
-                    title: 'Delete this assessment scale?',
-                    text: 'This cannot be undone. Scales attached to a class subject cannot be deleted.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it',
-                    confirmButtonColor: '#C4293A',
-                }).then(result => {
-                    if (!result.isConfirmed) return;
-                    $.ajax({
-                        url: `{{ url('examinations/assessment-scales') }}/${id}`,
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken },
-                        success: function (res) {
-                            if (res.success) {
-                                Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
-                                    .then(() => window.location.reload());
-                            } else {
-                                Swal.fire('Cannot Delete', res.message, 'warning');
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scale.', 'warning');
-                        },
-                    });
-                });
-            });
-        });
-    </script>
-
-    // Add this script after the existing scripts
-    <script>
-        // Enhanced function with loader for creating new scale
-        document.getElementById('btnNewScale').addEventListener('click', function () {
-            // Show loading state on button
-            const originalHtml = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            this.disabled = true;
-
-            // Open modal after a small delay to show loader
-            setTimeout(() => {
-                openScaleModal();
-                // Reset button after modal opens
-                this.innerHTML = originalHtml;
-                this.disabled = false;
-            }, 100);
-        });
-
-        // openScaleModal: opens the create/edit form with a loading overlay while
-        // the save request is in flight.
+        // ── Create / Edit modal ──────────────────────────────────────────────
         function openScaleModal(existing = null) {
             const isEdit = !!existing;
 
-            // Show loading overlay when saving
-            let loadingOverlay = null;
+            const url = isEdit
+                ? `{{ url('examinations/assessment-scales') }}/${existing?.id}/update`
+                : `{{ route('examination.assessment-scales.store') }}`;
 
-            const showLoader = () => {
-                loadingOverlay = document.createElement('div');
-                loadingOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-                backdrop-filter: blur(4px);
-            `;
-                loadingOverlay.innerHTML = `
-                <div style="
-                    background: white;
-                    padding: 2rem 3rem;
-                    border-radius: 1rem;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    text-align: center;
-                    animation: scaleIn 0.1s ease;
-                ">
-                    <div style="
-                        width: 50px;
-                        height: 50px;
-                        border: 4px solid #E5E7EB;
-                        border-top: 4px solid #2C29CA;
-                        border-radius: 50%;
-                        margin: 0 auto 1rem auto;
-                        animation: spin 1s linear infinite;
-                    "></div>
-                    <p style="
-                        margin: 0;
-                        font-family: 'Inter', sans-serif;
-                        font-weight: 600;
-                        color: #1B1D28;
-                        font-size: 1rem;
-                    ">${isEdit ? 'Saving changes...' : 'Creating scale...'}</p>
-                    <p style="
-                        margin: 0.25rem 0 0 0;
-                        font-family: 'Inter', sans-serif;
-                        font-size: 0.85rem;
-                        color: #6B7280;
-                    ">Please wait while we process your request</p>
-                </div>
-            `;
-                document.body.appendChild(loadingOverlay);
-
-                // Add keyframe animation
-                if (!document.getElementById('loaderStyles')) {
-                    const style = document.createElement('style');
-                    style.id = 'loaderStyles';
-                    style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    @keyframes scaleIn {
-                        from { transform: scale(0.9); opacity: 0; }
-                        to { transform: scale(1); opacity: 1; }
-                    }
-                `;
-                    document.head.appendChild(style);
-                }
-            };
-
-            const hideLoader = () => {
-                if (loadingOverlay && loadingOverlay.parentNode) {
-                    loadingOverlay.remove();
-                    loadingOverlay = null;
-                }
-            };
-
-            // Original SweetAlert logic with loader integration
             Swal.fire({
                 title: isEdit ? 'Edit Assessment Scale' : 'New Assessment Scale',
                 html: document.getElementById('scaleFormTemplate').innerHTML,
@@ -1935,11 +1755,9 @@
                 confirmButtonText: isEdit ? 'Save Changes' : 'Create Scale',
                 confirmButtonColor: '#2C29CA',
                 cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'as-swal-confirm',
-                    cancelButton: 'as-swal-cancel'
-                },
+                customClass: { confirmButton: 'as-swal-confirm', cancelButton: 'as-swal-cancel' },
                 focusConfirm: false,
+                allowOutsideClick: () => !Swal.isLoading(),
                 didOpen: () => {
                     const popup = Swal.getPopup();
                     const container = document.getElementById('presetRows');
@@ -1950,9 +1768,8 @@
                     const linkedGradingOption = popup.querySelector('#linkedGradingOption');
 
                     // Custom (unbounded) scores and a linked, percentage-based
-                    // grading scheme can't coexist — see AssessmentScale::
-                    // usesLinkedGrading(). Keep the two controls in sync so the
-                    // form can never be submitted in that contradictory state.
+                    // grading scheme can't coexist. Keep the two controls in
+                    // sync so the form can never be submitted contradictorily.
                     function syncCustomScoreVsGrading(source) {
                         const customOn = allowCustomCheckbox.checked;
                         const linkedSelected = gradeModeSelect.value === 'linked_grading_scheme';
@@ -1997,25 +1814,9 @@
                     }
 
                     syncCustomScoreVsGrading(null);
-
                     document.getElementById('addPresetRow').addEventListener('click', () => addPresetRow(container));
-
-                    // Add cancel button style
-                    const cancelBtn = document.querySelector('.swal2-cancel');
-                    if (cancelBtn) {
-                        cancelBtn.style.cssText = `
-                        padding: 0.6rem 1.8rem;
-                        font-weight: 600;
-                        border-radius: 0.5rem;
-                        font-size: 0.85rem;
-                        background: #F3F4F6;
-                        color: #374151;
-                        border: 1px solid #E5E7EB;
-                        transition: all 0.2s;
-                    `;
-                    }
                 },
-                preConfirm: () => {
+                preConfirm: async () => {
                     const popup = Swal.getPopup();
                     const name = popup.querySelector('[name="name"]').value.trim();
                     const minScore = popup.querySelector('[name="min_score"]').value;
@@ -2038,32 +1839,35 @@
                         return false;
                     }
                     if (allowCustomScore && gradeMode === 'linked_grading_scheme') {
-                        Swal.showValidationMessage('Custom Scores and a linked Grading Scheme can\'t be combined. Turn one off.');
+                        Swal.showValidationMessage("Custom Scores and a linked Grading Scheme can't be combined. Turn one off.");
                         return false;
                     }
                     if (presets.length < 1) {
                         const skipped = collectPresets.lastSkipped || [];
                         if (skipped.length) {
                             const first = skipped[0];
-                            Swal.showValidationMessage(`Row ${first.row} is missing its ${first.missing} — fill it in, or remove the row with the × button.`);
+                            if (first.rangeError) {
+                                Swal.showValidationMessage(`Row ${first.row}: "To" (${first.max}) can't be less than "From" (${first.min}).`);
+                            } else {
+                                Swal.showValidationMessage(`Row ${first.row} is missing its ${first.missing} — fill it in, or remove the row with the × button.`);
+                            }
                         } else {
-                            Swal.showValidationMessage('Add at least one system comment (a Score and a Label) below.');
+                            Swal.showValidationMessage('Add at least one system comment (a From score and a Label) below.');
                         }
                         return false;
                     }
-                    // Presets only have to sit inside min/max when custom (unbounded)
-                    // scores are off — with Custom Scores on, min/max is just the
-                    // "typical" range and presets are free to sit outside it.
+                    // Presets only need to sit inside min/max when custom
+                    // (unbounded) scores are off.
                     if (!allowCustomScore) {
                         for (const p of presets) {
-                            if (p.score < parseFloat(minScore) || p.score > parseFloat(maxScore)) {
-                                Swal.showValidationMessage(`Comment score ${p.score} is outside the ${minScore}-${maxScore} range.`);
+                            if (p.min_score < parseFloat(minScore) || p.max_score > parseFloat(maxScore)) {
+                                Swal.showValidationMessage(`Comment range ${p.min_score}-${p.max_score} falls outside the ${minScore}-${maxScore} range.`);
                                 return false;
                             }
                         }
                     }
 
-                    return {
+                    const payload = {
                         name,
                         description: popup.querySelector('[name="description"]').value.trim() || null,
                         min_score: minScore,
@@ -2074,177 +1878,109 @@
                         is_default: popup.querySelector('[name="is_default"]').checked ? 1 : 0,
                         presets,
                     };
-                },
-            }).then(result => {
-                if (!result.isConfirmed) {
-                    hideLoader();
-                    return;
-                }
 
-                // Show loader before making the request
-                showLoader();
+                    // Submit here, inside preConfirm — a server-side error keeps
+                    // this same modal open (fields + presets intact) instead of
+                    // closing it and popping a separate, disconnected error box.
+                    Swal.showLoading();
+                    try {
+                        const res = await $.ajax({
+                            url,
+                            method: 'POST',
+                            data: JSON.stringify(payload),
+                            contentType: 'application/json',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                        });
 
-                const url = isEdit
-                    ? `{{ url('examinations/assessment-scales') }}/${existing.id}/update`
-                    : `{{ route('examination.assessment-scales.store') }}`;
-
-                $.ajax({
-                    url,
-                    method: 'POST',
-                    data: JSON.stringify(result.value),
-                    contentType: 'application/json',
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
-                    success: function (res) {
-                        hideLoader();
-                        if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: isEdit ? 'Saved!' : 'Created!',
-                                text: res.message,
-                                confirmButtonColor: '#2C29CA',
-                                timer: 1000,
-                                timerProgressBar: true
-                            }).then(() => window.location.reload());
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
+                        if (!res.success) {
+                            Swal.showValidationMessage(res.message || 'Something went wrong.');
+                            return false;
                         }
-                    },
-                    error: function (xhr) {
-                        hideLoader();
+
+                        return res;
+                    } catch (xhr) {
                         const message = xhr.responseJSON?.message
                             || (xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n') : 'Something went wrong.');
-                        Swal.fire('Error', message, 'error');
-                    },
-                });
+                        Swal.showValidationMessage(message);
+                        return false;
+                    }
+                },
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: isEdit ? 'Saved!' : 'Created!',
+                    text: result.value?.message || 'Assessment scale saved.',
+                    confirmButtonColor: '#2C29CA',
+                    timer: 1500,
+                    timerProgressBar: true,
+                }).then(() => window.location.reload());
             });
-        };
-
-        // Add styles for enhanced loader
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = `
-        .as-swal-cancel {
-            padding: 0.6rem 1.8rem !important;
-            font-weight: 600 !important;
-            border-radius: 0.5rem !important;
-            font-size: 0.85rem !important;
-            background: #F3F4F6 !important;
-            color: #374151 !important;
-            border: 1px solid #E5E7EB !important;
-            transition: all 0.2s !important;
-        }
-        .as-swal-cancel:hover {
-            background: #E5E7EB !important;
-            transform: translateY(-2px) !important;
-        }
-        .swal2-popup {
-            border-radius: 1rem !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
-        }
-        .swal2-title {
-            font-size: 1.25rem !important;
-            font-weight: 700 !important;
-            color: #1B1D28 !important;
-            padding: 0 !important;
-            margin-bottom: 0.5rem !important;
-        }
-        .swal2-html-container {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        .swal2-actions {
-            margin-top: 1.25rem !important;
-            gap: 0.5rem !important;
-        }
-        .swal2-confirm {
-            padding: 0.6rem 1.8rem !important;
-            font-weight: 600 !important;
-            border-radius: 0.5rem !important;
-            font-size: 0.85rem !important;
-            background: linear-gradient(135deg, #2C29CA, #6366F1) !important;
-            box-shadow: 0 4px 14px rgba(44,41,202,0.25) !important;
-            transition: all 0.2s !important;
-            letter-spacing: 0.01em !important;
-        }
-        .swal2-confirm:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(44,41,202,0.35) !important;
-        }
-        .swal2-close {
-            color: #6B7280 !important;
-            transition: all 0.2s !important;
-        }
-        .swal2-close:hover {
-            color: #1B1D28 !important;
-            transform: rotate(90deg) !important;
-        }
-    `;
-        document.head.appendChild(styleSheet);
-    </script>
-
-    // Add this after your existing scripts
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the currently selected scale ID from localStorage
-        const selectedScaleId = localStorage.getItem('selectedScaleId');
-        
-        if (selectedScaleId) {
-            // Find the list item button with matching data-target
-            const targetButton = document.querySelector(`.scale-list-item[data-target="scale-detail-${selectedScaleId}"]`);
-            
-            if (targetButton) {
-                // Remove active class from all items
-                document.querySelectorAll('.scale-list-item').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.as-detail').forEach(d => d.classList.remove('active'));
-                
-                // Add active class to the selected button and its corresponding detail
-                targetButton.classList.add('active');
-                const detailElement = document.getElementById(`scale-detail-${selectedScaleId}`);
-                if (detailElement) {
-                    detailElement.classList.add('active');
-                }
-            } else {
-                // If the saved scale doesn't exist (e.g., was deleted), fallback to first
-                fallbackToFirstScale();
-            }
-        } else {
-            // If no scale was previously selected, show the first one
-            fallbackToFirstScale();
         }
 
-        // Add click event listeners to all scale list items
-        document.querySelectorAll('.scale-list-item').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Extract the scale ID from data-target attribute
-                const targetId = this.dataset.target;
-                const scaleId = targetId.replace('scale-detail-', '');
-                
-                // Store the selected scale ID in localStorage
-                localStorage.setItem('selectedScaleId', scaleId);
-                
-                // Update UI
-                document.querySelectorAll('.scale-list-item').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.as-detail').forEach(d => d.classList.remove('active'));
-                
-                this.classList.add('active');
-                document.getElementById(targetId)?.classList.add('active');
+        document.getElementById('btnNewScale').addEventListener('click', () => openScaleModal());
+
+        // ── Edit ──────────────────────────────────────────────────────────────
+        document.querySelectorAll('.edit-scale').forEach(el => {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                const scale = window.__scalesById[this.dataset.id];
+                openScaleModal(scale);
             });
         });
-    });
 
-    // Helper function to fallback to the first scale
-    function fallbackToFirstScale() {
-        const firstButton = document.querySelector('.scale-list-item');
-        if (firstButton) {
-            const targetId = firstButton.dataset.target;
-            const scaleId = targetId.replace('scale-detail-', '');
-            localStorage.setItem('selectedScaleId', scaleId);
-            
-            firstButton.classList.add('active');
-            document.getElementById(targetId)?.classList.add('active');
-        }
-    }
-</script>
+        // ── Toggle Active ─────────────────────────────────────────────────────
+        document.querySelectorAll('.toggle-scale').forEach(el => {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                const id = this.dataset.id;
+                const nextActive = this.dataset.active === '1' ? 0 : 1;
+                $.ajax({
+                    url: `{{ url('examinations/assessment-scales') }}/${id}/toggle-active`,
+                    method: 'POST',
+                    data: { is_active: nextActive },
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    success: function () { window.location.reload(); },
+                    error: function (xhr) { Swal.fire('Error', xhr.responseJSON?.message || 'Could not update scale.', 'error'); },
+                });
+            });
+        });
+
+        // ── Delete ────────────────────────────────────────────────────────────
+        document.querySelectorAll('.delete-scale').forEach(el => {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                const id = this.dataset.id;
+                Swal.fire({
+                    title: 'Delete this assessment scale?',
+                    text: 'This cannot be undone. Scales attached to a class subject cannot be deleted.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it',
+                    confirmButtonColor: '#C4293A',
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+                    $.ajax({
+                        url: `{{ url('examinations/assessment-scales') }}/${id}`,
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrfToken },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
+                                    .then(() => window.location.reload());
+                            } else {
+                                Swal.fire('Cannot Delete', res.message, 'warning');
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scale.', 'warning');
+                        },
+                    });
+                });
+            });
+        });
+    </script>
 
     @php
         $scalesData = [];

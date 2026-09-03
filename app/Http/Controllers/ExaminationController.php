@@ -96,7 +96,7 @@ class ExaminationController extends Controller
         return view('Examination.create', compact('examCode', 'classStreams', 'gradingSchemes', 'schoolExaminations', 'schoolClasses'));
     }
 
-    // ─── Store new examination ─────────────────────────────────────────────────
+    // ── Store new examination ─────────────────────────────────────────────────
 
     public function store(Request $request)
     {
@@ -114,6 +114,8 @@ class ExaminationController extends Controller
             'description' => 'nullable|string',
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
+            'class_grading_schemes' => 'nullable|array',
+            'class_grading_schemes.*' => 'nullable|integer|exists:grading_schemes,id',
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -155,11 +157,17 @@ class ExaminationController extends Controller
             // Each class_stream value is encoded as "classId_streamId"
             foreach ($validated['class_streams'] as $cs) {
                 [$classId, $streamId] = explode('_', $cs);
+                $streamId = $streamId ?: null;
+
+                // 🔥 Per-class grading scheme override (null = use exam default)
+                $classSchemeId = $validated['class_grading_schemes'][$cs] ?? null;
+
                 ExaminationClass::create([
                     'examination_id' => $exam->id,
                     'class_id' => $classId,
                     'stream_id' => $streamId ?: null,
                     'school_id' => $schoolId,
+                    'grading_scheme_id' => $classSchemeId,
                 ]);
             }
 
@@ -568,16 +576,21 @@ class ExaminationController extends Controller
         DB::beginTransaction();
         try {
 
-
             $marksCount = ExaminationMark::where('examination_id', $id)->count();
             $classesCount = ExaminationClass::where('examination_id', $id)->count();
+            $disciplineCount = StudentDisciplineRating::where('examination_id', $id)->count();
+
             $deletedMarks = ExaminationMark::where('examination_id', $id)->delete();
             $deletedClasses = ExaminationClass::where('examination_id', $id)->delete();
+            $deletedDiscipline = StudentDisciplineRating::where('examination_id', $id)->delete();
             $exam->delete();
 
             DB::commit();
 
             $message = "Examination '{$exam->exam_name}' has been permanently deleted.";
+            if ($disciplineCount > 0) {
+                $message .= " Removed {$disciplineCount} discipline rating record(s).";
+            }
             if ($marksCount > 0) {
                 $message .= " Removed {$marksCount} student mark record(s).";
             }
@@ -589,6 +602,7 @@ class ExaminationController extends Controller
                 'success' => true,
                 'message' => $message,
                 'deleted_records' => [
+                    'discipline_ratings' => $deletedDiscipline,
                     'marks' => $deletedMarks,
                     'classes' => $deletedClasses,
                     'exam' => 1
@@ -1431,6 +1445,7 @@ class ExaminationController extends Controller
                 'earlyYearsAverage' => null,
                 'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
                 'disciplineRatings' => collect(),
+                'qrText' => '',
             ];
         }
 
@@ -1474,8 +1489,15 @@ class ExaminationController extends Controller
         $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 1) : 0;
 
         // ── Overall grade (by percentage) ─────────────────────────────────────
-        // Fetch grading scale once before the map (this exam's chosen scheme)
-        $gradingScale = $exam->resolvedGradingBands();
+        // 🔥 Fetch grading scale: prefer the class-specific scheme, fallback to exam default
+        $examClass = ExaminationClass::where('examination_id', $examId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->first();
+
+        $gradingScale = ($examClass && $examClass->grading_scheme_id && $examClass->gradingScheme)
+            ? $examClass->gradingScheme->bands
+            : $exam->resolvedGradingBands();
 
         $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
             $pct = $m->total_marks > 0
@@ -1622,7 +1644,7 @@ class ExaminationController extends Controller
             (($student->lastname ?? '') . ' ' . ($student->firstname ?? ''))
         );
 
-        // ── Discipline ratings (Punctuality, Behaviour, ...) ──────────────────
+        // ─ Discipline ratings (Punctuality, Behaviour, ...) ──────────────────
         // One row per active criterion, in display order, with this
         // student's rating for THIS exam (blank if not yet entered). Seed the
         // school's starter set on first touch so the block always has rows
@@ -1789,7 +1811,7 @@ class ExaminationController extends Controller
             $student = DB::table('students')->where('id', $studentId)->first();
         }
 
-        // ── Discipline ratings for a combined/multi-exam slip ─────────────────
+        // ── Discipline ratings for a combined/multi-exam slip ────────────────
         // Discipline is recorded per single examination, so a combined report
         // shows the ratings entered against the most recent exam in the set
         // (same convention used above for the grading scale).
@@ -1833,6 +1855,7 @@ class ExaminationController extends Controller
                 'examSummary' => [],
                 'avgSummary' => null,
                 'disciplineRatings' => $disciplineRatings,
+                'qrText' => '',
             ];
         }
 
@@ -1989,6 +2012,26 @@ class ExaminationController extends Controller
         $rank = $classTotals->search(fn($r) => $r->student_id == $studentId);
         $classRank = $rank !== false ? ($rank + 1) : '—';
 
+        // ── 🔥 FIX: Generate QR Code Text for Multi-Exam Verification ─────────
+        $studentName = trim(
+            (($student->lastname ?? '') . ' ' . ($student->firstname ?? '') . ' ' . ($student->other_names ?? ''))
+        );
+        $examNames = $exams->pluck('exam_name')->implode(' | ');
+        $firstExam = $exams->first();
+
+        $qrText = implode("\n", array_filter([
+            'SMASA',
+            Helper::schoolNameBySchoolID($schoolId) ?? '',
+            'NAME: ' . $studentName,
+            'CLASS: ' . (Helper::recordMdname($classId) ?? $classId),
+            'STREAM: ' . ($streamId ?? ''),
+            'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
+            'EXAM: ' . $examNames,
+            'TERM: ' . ($firstExam->term ?? '') . ' ' . ($firstExam->academic_year ?? ''),
+            'SCORE: ' . ($isEarlyYears ? ($earlyYearsAverage ?? 0) . '/' . $combinedMaxMark : $percentage . '%'),
+            'GRADE: ' . ($isEarlyYears ? $overallRemark : ($overallGrade ?? '—')),
+        ]));
+
         return [
             'subjectMarks' => $subjectRows,
             'totalObtained' => $totalObtained,
@@ -2010,6 +2053,7 @@ class ExaminationController extends Controller
             'examSummary' => $examSummary,
             'avgSummary' => $avgSummary,
             'disciplineRatings' => $disciplineRatings,
+            'qrText' => $qrText,
         ];
     }
 
@@ -2658,6 +2702,13 @@ class ExaminationController extends Controller
             ->get()
             ->map(fn($ec) => $ec->class_id . '_' . ($ec->stream_id ?? ''));
 
+        //  Per-class grading scheme mapping for the frontend
+        $classGradingSchemes = ExaminationClass::where('examination_id', $examination->id)
+            ->whereNotNull('grading_scheme_id')
+            ->pluck('grading_scheme_id', function ($ec) {
+                return $ec->class_id . '_' . ($ec->stream_id ?? '');
+            });
+
         return response()->json([
             'id' => $examination->id,
             'exam_name' => $examination->exam_name,
@@ -2674,6 +2725,7 @@ class ExaminationController extends Controller
             'grading_schemes' => $gradingSchemes,
             'class_streams' => $classStreams,
             'selected_class_streams' => $selectedClassStreams,
+            'class_grading_schemes' => $classGradingSchemes,
             'description' => $examination->description,
             'status' => $examination->status,
             'status_label' => ucfirst(str_replace('_', ' ', $examination->status)),
@@ -2709,6 +2761,10 @@ class ExaminationController extends Controller
             // ✅ NEW: Classes Involved — at least one class-stream must remain selected
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
+
+            // 🔥 NEW: Per-class grading scheme overrides
+            'class_grading_schemes' => 'nullable|array',
+            'class_grading_schemes.*' => 'nullable|integer|exists:grading_schemes,id',
 
             // ✅ NEW: status validation (VERY IMPORTANT)
             'status' => 'required|in:draft,active,marks_entry,closed,results_released',
@@ -2747,6 +2803,10 @@ class ExaminationController extends Controller
         $classStreams = $validated['class_streams'];
         unset($validated['class_streams']);
 
+        // 🔥 Pull per-class grading schemes out too
+        $classGradingSchemes = $validated['class_grading_schemes'] ?? [];
+        unset($validated['class_grading_schemes']);
+
         DB::beginTransaction();
         try {
             /**
@@ -2776,19 +2836,28 @@ class ExaminationController extends Controller
                 [$classId, $streamId] = array_pad(explode('_', $cs, 2), 2, null);
                 $streamId = $streamId ?: null;
 
+                // 🔥 Get the per-class grading scheme (null = use exam default)
+                $schemeId = $classGradingSchemes[$cs] ?? null;
+
                 $alreadyExists = ExaminationClass::where('examination_id', $examination->id)
                     ->where('class_id', $classId)
                     ->where(function ($q) use ($streamId) {
                         $streamId ? $q->where('stream_id', $streamId) : $q->whereNull('stream_id');
                     })
-                    ->exists();
+                    ->first();
 
-                if (!$alreadyExists) {
+                if ($alreadyExists) {
+                    // Update existing record with new grading scheme
+                    $alreadyExists->update([
+                        'grading_scheme_id' => $schemeId,
+                    ]);
+                } else {
                     ExaminationClass::create([
                         'examination_id' => $examination->id,
                         'class_id' => $classId,
                         'stream_id' => $streamId,
                         'school_id' => $examination->school_id,
+                        'grading_scheme_id' => $schemeId,
                     ]);
                 }
             }

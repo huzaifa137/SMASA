@@ -13,6 +13,7 @@ class ExaminationClass extends Model
         'school_id',
         'results_released_at',
         'released_by',
+        'grading_scheme_id',
     ];
 
     protected $casts = [
@@ -24,14 +25,36 @@ class ExaminationClass extends Model
         return $this->belongsTo(Examination::class);
     }
 
+    public function gradingScheme()
+    {
+        return $this->belongsTo(GradingScheme::class, 'grading_scheme_id');
+    }
+
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class, 'class_id');
+    }
+
+    public function stream()
+    {
+        return $this->belongsTo(Stream::class, 'stream_id');
+    }
+
     /**
-     * Released independently of the exam-level status. Also true once the
-     * whole exam moves to results_released / closed with released results
-     * — a class row is the exception (release early), not the only path.
+     * Check if this class's results have been released.
      */
     public function isReleased(): bool
     {
-        return $this->results_released_at !== null
-            || $this->examination?->status === 'results_released';
+        return !is_null($this->results_released_at);
+    }
+
+    /**
+     * Resolve the grading bands for this specific class in this exam.
+     * Falls back to the parent examination's default scheme if none is set.
+     */
+    public function resolvedGradingBands()
+    {
+        $scheme = $this->gradingScheme ?? $this->examination?->gradingScheme;
+        return $scheme ? $scheme->bands : collect();
     }
 }

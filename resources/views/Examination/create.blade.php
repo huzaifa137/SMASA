@@ -1,3 +1,4 @@
+
 <?php
 use App\Http\Controllers\Helper;
 ?>
@@ -63,9 +64,10 @@ use App\Http\Controllers\Helper;
             cursor: pointer;
             transition: all .18s;
             display: flex;
-            align-items: center;
-            gap: .6rem;
+            flex-direction: column;
+            gap: .5rem;
             font-size: .85rem;
+            position: relative;
         }
 
         .cs-item:hover {
@@ -78,6 +80,13 @@ use App\Http\Controllers\Helper;
             background: #ede9ff;
             color: #2C29CA;
             font-weight: 600;
+        }
+
+        .cs-item .cs-top {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            width: 100%;
         }
 
         .cs-item .cs-icon {
@@ -97,6 +106,107 @@ use App\Http\Controllers\Helper;
         .cs-item.selected .cs-icon {
             background: #2C29CA;
             color: #fff;
+        }
+
+        .cs-item .cs-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cs-item .cs-info .cs-name {
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .cs-item .cs-info .cs-stream {
+            font-size: .75rem;
+            color: #6c757d;
+        }
+
+        .cs-item.selected .cs-info .cs-stream {
+            color: #4a47a3;
+        }
+
+        /* 🔥 FIXED: Per-class grading scheme dropdown styles */
+        .cs-item .class-grading-scheme-select-wrapper {
+            width: 100%;
+            display: none;
+            margin-top: 0.25rem;
+            animation: slideDown 0.2s ease;
+        }
+
+        .cs-item.has-custom-scheme .class-grading-scheme-select-wrapper {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cs-item .class-grading-scheme-select {
+            width: 100%;
+            font-size: 0.72rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.4rem;
+            border: 1.5px solid #d4d0f0;
+            background: #ffffff;
+            color: #1a1a2e;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232C29CA' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+            padding-right: 1.8rem;
+        }
+
+        .cs-item .class-grading-scheme-select:focus {
+            outline: none;
+            border-color: #2C29CA;
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.12);
+        }
+
+        .cs-item .class-grading-scheme-select:hover {
+            border-color: #2C29CA;
+        }
+
+        .cs-item .class-grading-scheme-select option {
+            padding: 0.4rem 0.6rem;
+            font-weight: 400;
+        }
+
+        .cs-item .class-grading-scheme-select option:checked {
+            background: #ede9ff;
+            color: #2C29CA;
+        }
+
+        .cs-item .class-grading-scheme-select::-ms-expand {
+            display: none;
+        }
+
+        .cs-item.selected .class-grading-scheme-select {
+            border-color: #2C29CA;
+            background-color: #ffffff;
+        }
+
+        .cs-item .scheme-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #2C29CA;
+            display: block;
+            margin-bottom: 0.15rem;
+            opacity: 0.8;
         }
 
         .step-badge {
@@ -144,315 +254,352 @@ use App\Http\Controllers\Helper;
             padding: 0.5rem 1rem;
         }
 
-        /* ── Hero V2: Premium Dark Gradient with Glow ──────────────── */
-.exam-hero-v2 {
-    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
-    border-radius: 1.25rem;
-    padding: 0;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
-}
+        /* ─ Hero V2: Premium Dark Gradient with Glow ──────────────── */
+        .exam-hero-v2 {
+            background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+            border-radius: 1.25rem;
+            padding: 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+        }
 
-/* Animated particles background */
-.exam-hero-v2-particles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.1), transparent),
-        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.08), transparent),
-        radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,.12), transparent),
-        radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,.06), transparent),
-        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.1), transparent),
-        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,.08), transparent);
-    background-size: 200px 200px;
-    opacity: 0.5;
-    pointer-events: none;
-    animation: particleMove 20s linear infinite;
-}
+        /* Animated particles background */
+        .exam-hero-v2-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.1), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.08), transparent),
+                radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,.12), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,.06), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.1), transparent),
+                radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,.08), transparent);
+            background-size: 200px 200px;
+            opacity: 0.5;
+            pointer-events: none;
+            animation: particleMove 20s linear infinite;
+        }
 
-@keyframes particleMove {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-20px, -20px); }
-}
+        @keyframes particleMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-20px, -20px); }
+        }
 
-/* Decorative glow elements */
-.exam-hero-v2::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    right: -10%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
+        /* Decorative glow elements */
+        .exam-hero-v2::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-.exam-hero-v2::after {
-    content: '';
-    position: absolute;
-    bottom: -40%;
-    left: -5%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
+        .exam-hero-v2::after {
+            content: '';
+            position: absolute;
+            bottom: -40%;
+            left: -5%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-.exam-hero-v2-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-    padding: 2.5rem 3rem;
-    position: relative;
-    z-index: 1;
-}
+        .exam-hero-v2-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            padding: 2.5rem 3rem;
+            position: relative;
+            z-index: 1;
+        }
 
-.exam-hero-v2-content {
-    flex: 1;
-    min-width: 250px;
-}
+        .exam-hero-v2-content {
+            flex: 1;
+            min-width: 250px;
+        }
 
-.exam-hero-v2-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid rgba(255, 255, 255, .08);
-    color: rgba(255, 255, 255, .7);
-    font-size: .7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    padding: .4rem 1rem;
-    border-radius: 99px;
-    margin-bottom: 1rem;
-    backdrop-filter: blur(10px);
-}
+        .exam-hero-v2-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .7);
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            padding: .4rem 1rem;
+            border-radius: 99px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
 
-.exam-hero-v2-badge i {
-    color: #818CF8;
-    font-size: .6rem;
-}
+        .exam-hero-v2-badge i {
+            color: #818CF8;
+            font-size: .6rem;
+        }
 
-.exam-hero-v2-title {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #ffffff;
-    margin: 0 0 .5rem 0;
-    letter-spacing: -.03em;
-    line-height: 1.15;
-}
+        .exam-hero-v2-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 0 0 .5rem 0;
+            letter-spacing: -.03em;
+            line-height: 1.15;
+        }
 
-.exam-hero-v2-subtitle {
-    font-size: .95rem;
-    color: rgba(255, 255, 255, .6);
-    margin: 0 0 1.5rem 0;
-    line-height: 1.6;
-    max-width: 50ch;
-}
+        .exam-hero-v2-subtitle {
+            font-size: .95rem;
+            color: rgba(255, 255, 255, .6);
+            margin: 0 0 1.5rem 0;
+            line-height: 1.6;
+            max-width: 50ch;
+        }
 
-.exam-hero-v2-stats {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
+        .exam-hero-v2-stats {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
-.exam-hero-v2-stat {
-    display: flex;
-    flex-direction: column;
-}
+        .exam-hero-v2-stat {
+            display: flex;
+            flex-direction: column;
+        }
 
-.exam-hero-v2-stat-number {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #ffffff;
-    line-height: 1.2;
-}
+        .exam-hero-v2-stat-number {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+        }
 
-.exam-hero-v2-stat-label {
-    font-size: .7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: rgba(255, 255, 255, .4);
-}
+        .exam-hero-v2-stat-label {
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: rgba(255, 255, 255, .4);
+        }
 
-.exam-hero-v2-stat-divider {
-    width: 1px;
-    height: 30px;
-    background: rgba(255, 255, 255, .1);
-}
+        .exam-hero-v2-stat-divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, .1);
+        }
 
-.exam-hero-v2-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
+        .exam-hero-v2-actions {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
 
-.exam-hero-v2-action-divider {
-    width: 1px;
-    height: 35px;
-    background: rgba(255, 255, 255, .1);
-}
+        .exam-hero-v2-action-divider {
+            width: 1px;
+            height: 35px;
+            background: rgba(255, 255, 255, .1);
+        }
 
-.btn-exam-v2-glass {
-    display: inline-flex;
-    align-items: center;
-    gap: .6rem;
-    padding: .7rem 1.3rem;
-    background: rgba(255, 255, 255, .06);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, .08);
-    color: rgba(255, 255, 255, .8);
-    font-weight: 600;
-    font-size: .85rem;
-    border-radius: .6rem;
-    text-decoration: none;
-    transition: all .25s ease;
-}
+        .btn-exam-v2-glass {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .7rem 1.3rem;
+            background: rgba(255, 255, 255, .06);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .8);
+            font-weight: 600;
+            font-size: .85rem;
+            border-radius: .6rem;
+            text-decoration: none;
+            transition: all .25s ease;
+        }
 
-.btn-exam-v2-glass:hover {
-    background: rgba(255, 255, 255, .12);
-    color: #ffffff;
-    text-decoration: none;
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, .15);
-}
+        .btn-exam-v2-glass:hover {
+            background: rgba(255, 255, 255, .12);
+            color: #ffffff;
+            text-decoration: none;
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, .15);
+        }
 
-.btn-exam-v2-gradient {
-    display: inline-flex;
-    align-items: center;
-    gap: .6rem;
-    padding: .7rem 1.6rem;
-    background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
-    color: #ffffff;
-    font-weight: 700;
-    font-size: .85rem;
-    border: none;
-    border-radius: .6rem;
-    text-decoration: none;
-    transition: all .25s ease;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
-}
+        .btn-exam-v2-gradient {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .7rem 1.6rem;
+            background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: .85rem;
+            border: none;
+            border-radius: .6rem;
+            text-decoration: none;
+            transition: all .25s ease;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
+        }
 
-.btn-exam-v2-gradient:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
-    color: #ffffff;
-    text-decoration: none;
-}
+        .btn-exam-v2-gradient:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
+            color: #ffffff;
+            text-decoration: none;
+        }
 
-.btn-exam-v2-gradient:active {
-    transform: translateY(0) scale(1);
-}
+        .btn-exam-v2-gradient:active {
+            transform: translateY(0) scale(1);
+        }
 
-/* ── Responsive V2 ──────────────────────────────────────────── */
-@media (max-width: 992px) {
-    .exam-hero-v2-container {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 2rem 1.75rem;
-    }
+        /* ── Responsive V2 ──────────────────────────────────────────── */
+        @media (max-width: 992px) {
+            .exam-hero-v2-container {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 2rem 1.75rem;
+            }
 
-    .exam-hero-v2-title {
-        font-size: 1.8rem;
-    }
+            .exam-hero-v2-title {
+                font-size: 1.8rem;
+            }
 
-    .exam-hero-v2-actions {
-        width: 100%;
-        flex-direction: column;
-    }
+            .exam-hero-v2-actions {
+                width: 100%;
+                flex-direction: column;
+            }
 
-    .exam-hero-v2-action-divider {
-        width: 100%;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.93);
-    }
+            .exam-hero-v2-action-divider {
+                width: 100%;
+                height: 1px;
+                background: rgba(255, 255, 255, 0.93);
+            }
 
-    .btn-exam-v2-glass,
-    .btn-exam-v2-gradient {
-        width: 100%;
-        justify-content: center;
-    }
+            .btn-exam-v2-glass,
+            .btn-exam-v2-gradient {
+                width: 100%;
+                justify-content: center;
+            }
 
-    .exam-hero-v2-subtitle br {
-        display: none;
-    }
-}
+            .exam-hero-v2-subtitle br {
+                display: none;
+            }
+        }
 
-@media (max-width: 480px) {
-    .exam-hero-v2-container {
-        padding: 1.5rem 1.25rem;
-    }
+        @media (max-width: 480px) {
+            .exam-hero-v2-container {
+                padding: 1.5rem 1.25rem;
+            }
 
-    .exam-hero-v2-title {
-        font-size: 1.5rem;
-    }
+            .exam-hero-v2-title {
+                font-size: 1.5rem;
+            }
 
-    .exam-hero-v2-stats {
-        gap: .75rem;
-    }
+            .exam-hero-v2-stats {
+                gap: .75rem;
+            }
 
-    .exam-hero-v2-stat-number {
-        font-size: 1.1rem;
-    }
-}
+            .exam-hero-v2-stat-number {
+                font-size: 1.1rem;
+            }
+        }
 
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    font-weight: 700;
-    font-size: .85rem;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: #2C29CA;
-    margin-bottom: 1.2rem;
-    padding-bottom: .5rem;
-    border-bottom: 2px solid #ede9ff;
-    flex-wrap: wrap;              /* NEW: allow the row to wrap as a whole on small screens */
-    row-gap: .75rem;              /* NEW: spacing when it wraps to a new line */
-}
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            font-weight: 700;
+            font-size: .85rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: #2C29CA;
+            margin-bottom: 1.2rem;
+            padding-bottom: .5rem;
+            border-bottom: 2px solid #ede9ff;
+            flex-wrap: wrap;
+            row-gap: .75rem;
+        }
 
-.section-header.d-flex.justify-content-between {
-    justify-content: space-between;
-}
+        .section-header.d-flex.justify-content-between {
+            justify-content: space-between;
+        }
 
-/* NEW: make the button group itself a flex row instead of relying on inline wrapping */
-.section-header .header-actions {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    flex-wrap: wrap;
-}
+        /* NEW: make the button group itself a flex row instead of relying on inline wrapping */
+        .section-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
 
-@media (max-width: 576px) {
-    .section-header.d-flex.justify-content-between {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .section-header .header-actions {
-        width: 100%;
-        flex-direction: column;   /* stack buttons one under another, full width */
-    }
-    .section-header .header-actions .btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
+        @media (max-width: 576px) {
+            .section-header.d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .section-header .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            .section-header .header-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* 🔥 NEW: Per-class grading scheme styles */
+        .class-grading-scheme-select {
+            display: none;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .cs-item.has-custom-scheme .class-grading-scheme-select {
+            display: block;
+        }
+
+        .scheme-toggle-wrapper {
+            background: #f8f7ff;
+            border: 1px solid #ede9ff;
+            border-radius: 0.6rem;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .scheme-toggle-wrapper label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2C29CA;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .scheme-toggle-wrapper .form-check-input {
+            cursor: pointer;
+        }
+
+        .per-class-info {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
     </style>
 @endsection
 
@@ -556,9 +703,7 @@ use App\Http\Controllers\Helper;
                                 <div class="col-md-4 mt-3">
                                     <label class="form-label fw-semibold">Academic Year <span
                                             class="text-danger">*</span></label>
-                                    <!-- <input type="number" name="academic_year" class="form-control" value="{{ date('Y') }}"
-                                        min="2000" max="2099" placeholder="{{ date('Y') }}"> -->
-                                        <input type="number" name="academic_year" class="form-control" value="{{ Helper::active_year() }}"
+                                    <input type="number" name="academic_year" class="form-control" value="{{ Helper::active_year() }}"
                                         min="2000" max="2099" placeholder="{{ date('Y') }}" readonly>
                                 </div>
                                 <div class="col-12 mt-3">
@@ -700,6 +845,26 @@ $bandsJson = json_encode($bandsData);
                                 Select all class–stream combinations sitting this examination.
                             </p>
 
+                            {{-- 🔥 NEW: Grading Scheme Toggle --}}
+                            <div class="scheme-toggle-wrapper">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="grading_mode" id="gradingModeSingle" value="single" checked>
+                                    <label class="form-check-label" for="gradingModeSingle">
+                                        Use single grading scheme for all classes
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="grading_mode" id="gradingModePerClass" value="per_class">
+                                    <label class="form-check-label" for="gradingModePerClass">
+                                        Assign different grading schemes per class
+                                    </label>
+                                </div>
+                                <div class="per-class-info" id="perClassInfo" style="display:none;">
+                                    <i class="fas fa-info-circle text-primary me-1"></i>
+                                    When enabled, you can select a specific grading scheme for each class below.
+                                </div>
+                            </div>
+
                             {{-- Select All toggle --}}
                             <div class="d-flex justify-content-between align-items-center mb-3 text-white">
                                 <span id="selectedCount" class="badge bg-primary" style="font-size:.78rem;">0
@@ -714,19 +879,36 @@ $bandsJson = json_encode($bandsData);
                                 @forelse ($classStreams as $cs)
                                     <div class="cs-item" data-value="{{ $cs->class_id }}_{{ $cs->stream_id }}"
                                         onclick="toggleClassStream(this)">
-                                        <div class="cs-icon">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-semibold" style="line-height:1.2;">
-                                                {{ Helper::recordMdname($cs->class_id) }}
+                                        <div class="cs-top">
+                                            <div class="cs-icon">
+                                                <i class="fas fa-users"></i>
                                             </div>
-                                            <div class="text-muted" style="font-size:.75rem;">
-                                                {{ $cs->stream_id ?? 'No Stream' }}
+                                            <div class="cs-info">
+                                                <div class="cs-name">
+                                                    {{ Helper::recordMdname($cs->class_id) }}
+                                                </div>
+                                                <div class="cs-stream">
+                                                    {{ $cs->stream_id ?? 'No Stream' }}
+                                                </div>
                                             </div>
+                                            <input type="checkbox" name="class_streams[]"
+                                                value="{{ $cs->class_id }}_{{ $cs->stream_id }}" class="d-none cs-checkbox">
                                         </div>
-                                        <input type="checkbox" name="class_streams[]"
-                                            value="{{ $cs->class_id }}_{{ $cs->stream_id }}" class="d-none cs-checkbox">
+                                        
+                                        {{-- 🔥 FIXED: Per-class grading scheme dropdown with wrapper --}}
+                                        <div class="class-grading-scheme-select-wrapper">
+                                            <span class="scheme-label">
+                                                <i class="fas fa-tag me-1"></i> Grading Scheme
+                                            </span>
+                                            <select name="class_grading_schemes[{{ $cs->class_id }}_{{ $cs->stream_id }}]" 
+                                                class="class-grading-scheme-select"
+                                                onclick="event.stopPropagation();">
+                                                <option value="">-- Use Exam Default --</option>
+                                                @foreach($gradingSchemes as $scheme)
+                                                    <option value="{{ $scheme->id }}">{{ $scheme->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                 @empty
                                     <div class="text-center text-muted py-4" style="grid-column:1/-1;">
@@ -779,11 +961,44 @@ $bandsJson = json_encode($bandsData);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // ── Grading Mode Toggle ────────────────────────────────────────────────
+        $('input[name="grading_mode"]').on('change', function() {
+            const isPerClass = $(this).val() === 'per_class';
+            $('#perClassInfo').toggle(isPerClass);
+            
+            // Show/hide per-class scheme dropdowns for selected items
+            if (isPerClass) {
+                $('.cs-item.selected').addClass('has-custom-scheme');
+                $('.cs-item.selected .class-grading-scheme-select-wrapper').show();
+            } else {
+                $('.cs-item').removeClass('has-custom-scheme');
+                $('.class-grading-scheme-select-wrapper').hide().find('select').val('');
+            }
+        });
 
         // ── Class-stream toggle ─────────────────────────────────────────────────
         function toggleClassStream(el) {
+            // Prevent toggling if clicking on select element
+            if (event && event.target && event.target.closest('select')) {
+                return;
+            }
+            
             el.classList.toggle('selected');
-            el.querySelector('.cs-checkbox').checked = el.classList.contains('selected');
+            const isChecked = el.classList.contains('selected');
+            el.querySelector('.cs-checkbox').checked = isChecked;
+            
+            // Show/hide per-class scheme dropdown if in per-class mode
+            if ($('input[name="grading_mode"]:checked').val() === 'per_class') {
+                if (isChecked) {
+                    el.classList.add('has-custom-scheme');
+                    el.querySelector('.class-grading-scheme-select-wrapper').style.display = 'block';
+                } else {
+                    el.classList.remove('has-custom-scheme');
+                    el.querySelector('.class-grading-scheme-select-wrapper').style.display = 'none';
+                    el.querySelector('.class-grading-scheme-select').value = '';
+                }
+            }
+            
             updateCount();
         }
 
@@ -798,6 +1013,18 @@ $bandsJson = json_encode($bandsData);
             document.querySelectorAll('.cs-item').forEach(el => {
                 el.classList.toggle('selected', allSelected);
                 el.querySelector('.cs-checkbox').checked = allSelected;
+                
+                // Handle per-class scheme visibility
+                if ($('input[name="grading_mode"]:checked').val() === 'per_class') {
+                    if (allSelected) {
+                        el.classList.add('has-custom-scheme');
+                        el.querySelector('.class-grading-scheme-select-wrapper').style.display = 'block';
+                    } else {
+                        el.classList.remove('has-custom-scheme');
+                        el.querySelector('.class-grading-scheme-select-wrapper').style.display = 'none';
+                        el.querySelector('.class-grading-scheme-select').value = '';
+                    }
+                }
             });
             this.innerHTML = allSelected
                 ? '<i class="fas fa-times me-1"></i> Deselect All'
@@ -890,7 +1117,8 @@ $bandsJson = json_encode($bandsData);
                 html: `<div style="text-align:left; font-size:.9rem;">
                                                 <strong>${$form.find('[name="exam_name"]').val()}</strong><br>
                                                 Type: ${$form.find('[name="exam_type"]').val()} &bull; ${$form.find('[name="term"]').val()} ${$form.find('[name="academic_year"]').val()}<br>
-                                                Classes: ${document.querySelectorAll('.cs-checkbox:checked').length} selected
+                                                Classes: ${document.querySelectorAll('.cs-checkbox:checked').length} selected<br>
+                                                Grading: ${$('input[name="grading_mode"]:checked').val() === 'per_class' ? 'Per-class schemes' : 'Single scheme'}
                                            </div>`,
                 icon: 'question',
                 showCancelButton: true,
@@ -918,9 +1146,6 @@ $bandsJson = json_encode($bandsData);
                             Swal.fire('Error', res.message, 'error');
                         }
                     },
-                    // error: function (xhr) { $('body').html(xhr.responseText);
-
-                    //  },
                     error: function (xhr) {
                         let message = 'Something went wrong';
 

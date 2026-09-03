@@ -2109,259 +2109,314 @@
     </template>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        const csrfToken = '{{ csrf_token() }}';
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const csrfToken = '{{ csrf_token() }}';
 
-        // ── List ↔ detail switching ──────────────────────────────────────────
-        document.querySelectorAll('.scheme-list-item').forEach(btn => {
-            btn.addEventListener('click', function () {
-                document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.gs-detail').forEach(d => d.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById(this.dataset.target)?.classList.add('active');
+    // ── List ↔ detail switching ──────────────────────────────────────────
+    document.querySelectorAll('.scheme-list-item').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.gs-detail').forEach(d => d.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.dataset.target)?.classList.add('active');
+        });
+    });
+
+    function addBandRow(container, band = null) {
+        const tpl = document.getElementById('bandRowTemplate').content.cloneNode(true);
+        const row = tpl.querySelector('.band-row');
+        if (band) {
+            row.querySelector('.band-grade').value = band.grade ?? '';
+            row.querySelector('.band-min').value = band.min_mark ?? '';
+            row.querySelector('.band-max').value = band.max_mark ?? '';
+            row.querySelector('.band-remark').value = band.remark ?? '';
+            row.querySelector('.band-points').value = band.points ?? '';
+        }
+        row.querySelector('.remove-band-row').addEventListener('click', () => row.remove());
+        container.appendChild(row);
+    }
+
+    function collectBands(container) {
+        const bands = [];
+        container.querySelectorAll('.band-row').forEach(row => {
+            const grade = row.querySelector('.band-grade').value.trim();
+            const min = row.querySelector('.band-min').value;
+            const max = row.querySelector('.band-max').value;
+            if (!grade || min === '' || max === '') return;
+            bands.push({
+                grade,
+                min_mark: parseFloat(min),
+                max_mark: parseFloat(max),
+                remark: row.querySelector('.band-remark').value.trim() || null,
+                points: row.querySelector('.band-points').value || null,
             });
         });
+        return bands;
+    }
 
-        function addBandRow(container, band = null) {
-            const tpl = document.getElementById('bandRowTemplate').content.cloneNode(true);
-            const row = tpl.querySelector('.band-row');
-            if (band) {
-                row.querySelector('.band-grade').value = band.grade ?? '';
-                row.querySelector('.band-min').value = band.min_mark ?? '';
-                row.querySelector('.band-max').value = band.max_mark ?? '';
-                row.querySelector('.band-remark').value = band.remark ?? '';
-                row.querySelector('.band-points').value = band.points ?? '';
+    // ── Band coverage validation ────────────────────────────────────────
+    // Checks: min > max on a single band, missing coverage from 0%,
+    // gaps between bands, overlapping bands, missing coverage up to 100%.
+    function validateBandCoverage(bands) {
+        for (const b of bands) {
+            if (parseFloat(b.min_mark) > parseFloat(b.max_mark)) {
+                return `"${b.grade}": min mark cannot be greater than max mark.`;
             }
-            row.querySelector('.remove-band-row').addEventListener('click', () => row.remove());
-            container.appendChild(row);
         }
 
-        function collectBands(container) {
-            const bands = [];
-            container.querySelectorAll('.band-row').forEach(row => {
-                const grade = row.querySelector('.band-grade').value.trim();
-                const min = row.querySelector('.band-min').value;
-                const max = row.querySelector('.band-max').value;
-                if (!grade || min === '' || max === '') return;
-                bands.push({
-                    grade,
-                    min_mark: parseFloat(min),
-                    max_mark: parseFloat(max),
-                    remark: row.querySelector('.band-remark').value.trim() || null,
-                    points: row.querySelector('.band-points').value || null,
-                });
-            });
-            return bands;
+        const sorted = [...bands].sort((a, b) => parseFloat(a.min_mark) - parseFloat(b.min_mark));
+        const EPS = 0.05; // tolerance for floating point / step gaps
+
+        if (parseFloat(sorted[0].min_mark) > EPS) {
+            return `Grade bands must start at 0% — missing coverage from 0% to ${sorted[0].min_mark}%.`;
         }
 
-        function openSchemeModal(existing = null) {
-            const isEdit = !!existing;
+        for (let i = 0; i < sorted.length - 1; i++) {
+            const cur = sorted[i];
+            const next = sorted[i + 1];
+            const curMax = parseFloat(cur.max_mark);
+            const nextMin = parseFloat(next.min_mark);
+
+            if (nextMin - curMax > 1 + EPS) {
+                return `Missing coverage between ${curMax}% and ${nextMin}% (between "${cur.grade}" and "${next.grade}").`;
+            }
+            if (nextMin <= curMax - EPS) {
+                return `Overlapping ranges between "${cur.grade}" (${cur.min_mark}–${cur.max_mark}%) and "${next.grade}" (${next.min_mark}–${next.max_mark}%).`;
+            }
+        }
+
+        const last = sorted[sorted.length - 1];
+        if (parseFloat(last.max_mark) < 100 - EPS) {
+            return `Grade bands must reach 100% — missing coverage from ${last.max_mark}% to 100%.`;
+        }
+
+        return null;
+    }
+
+    function openSchemeModal(existing = null) {
+        const isEdit = !!existing;
+
+        const url = isEdit
+            ? `{{ url('examinations/grading-schemes') }}/${existing?.id}/update`
+            : `{{ route('examination.grading-schemes.store') }}`;
+
+        Swal.fire({
+            title: isEdit ? 'Edit Grading Scheme' : 'New Grading Scheme',
+            html: document.getElementById('schemeFormTemplate').innerHTML,
+            width: 700,
+            showCancelButton: true,
+            confirmButtonText: isEdit ? 'Save Changes' : 'Create Scheme',
+            confirmButtonColor: '#2C29CA',
+            customClass: { confirmButton: 'gs-swal-confirm' },
+            focusConfirm: false,
+            allowOutsideClick: () => !Swal.isLoading(),
+            didOpen: () => {
+                const popup = Swal.getPopup();
+                const container = document.getElementById('bandRows');
+
+                if (isEdit) {
+                    popup.querySelector('[name="name"]').value = existing.name;
+                    popup.querySelector('[name="description"]').value = existing.description ?? '';
+                    popup.querySelector('[name="total_marks"]').value = existing.total_marks;
+                    popup.querySelector('[name="pass_mark"]').value = existing.pass_mark;
+                    popup.querySelector('[name="is_default"]').checked = !!existing.is_default;
+                    (existing.bands || []).forEach(b => addBandRow(container, b));
+                } else {
+                    // Sensible starting point: standard 9-point scale
+                    [
+                        { grade: 'D1', min_mark: 80, max_mark: 100, remark: 'Distinction', points: 1 },
+                        { grade: 'D2', min_mark: 75, max_mark: 79, remark: 'Distinction', points: 2 },
+                        { grade: 'C3', min_mark: 70, max_mark: 74, remark: 'Credit', points: 3 },
+                        { grade: 'C4', min_mark: 65, max_mark: 69, remark: 'Credit', points: 4 },
+                        { grade: 'C5', min_mark: 60, max_mark: 64, remark: 'Credit', points: 5 },
+                        { grade: 'C6', min_mark: 55, max_mark: 59, remark: 'Credit', points: 6 },
+                        { grade: 'P7', min_mark: 45, max_mark: 54, remark: 'Pass', points: 7 },
+                        { grade: 'P8', min_mark: 40, max_mark: 44, remark: 'Pass', points: 8 },
+                        { grade: 'F9', min_mark: 0, max_mark: 39, remark: 'Fail', points: 9 },
+                    ].forEach(b => addBandRow(container, b));
+                }
+
+                document.getElementById('addBandRow').addEventListener('click', () => addBandRow(container));
+            },
+            preConfirm: async () => {
+                const popup = Swal.getPopup();
+                const name = popup.querySelector('[name="name"]').value.trim();
+                const totalMarks = popup.querySelector('[name="total_marks"]').value;
+                const passMark = popup.querySelector('[name="pass_mark"]').value;
+                const bands = collectBands(document.getElementById('bandRows'));
+
+                if (!name) {
+                    Swal.showValidationMessage('Please enter a scheme name.');
+                    return false;
+                }
+                if (!totalMarks || !passMark) {
+                    Swal.showValidationMessage('Please enter total marks and pass mark.');
+                    return false;
+                }
+                if (parseInt(passMark) > parseInt(totalMarks)) {
+                    Swal.showValidationMessage('Pass mark cannot exceed total marks.');
+                    return false;
+                }
+                if (bands.length < 1) {
+                    Swal.showValidationMessage('Add at least one grade band.');
+                    return false;
+                }
+
+                const coverageError = validateBandCoverage(bands);
+                if (coverageError) {
+                    Swal.showValidationMessage(coverageError);
+                    return false;
+                }
+
+                const payload = {
+                    name,
+                    description: popup.querySelector('[name="description"]').value.trim() || null,
+                    total_marks: totalMarks,
+                    pass_mark: passMark,
+                    is_default: popup.querySelector('[name="is_default"]').checked ? 1 : 0,
+                    bands,
+                };
+
+                // Submit here, inside preConfirm — a server-side error keeps
+                // this same modal open (fields + bands intact) instead of
+                // closing it and popping a separate, disconnected error box.
+                try {
+                    const res = await $.ajax({
+                        url,
+                        method: 'POST',
+                        data: JSON.stringify(payload),
+                        contentType: 'application/json',
+                        headers: { 'X-CSRF-TOKEN': csrfToken },
+                    });
+
+                    if (!res.success) {
+                        Swal.showValidationMessage(res.message || 'Something went wrong.');
+                        return false;
+                    }
+
+                    return res;
+                } catch (xhr) {
+                    const message = xhr.responseJSON?.message
+                        || (xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n') : 'Something went wrong.');
+                    Swal.showValidationMessage(message);
+                    return false;
+                }
+            },
+        }).then(result => {
+            if (!result.isConfirmed) return;
 
             Swal.fire({
-                title: isEdit ? 'Edit Grading Scheme' : 'New Grading Scheme',
-                html: document.getElementById('schemeFormTemplate').innerHTML,
-                width: 700,
-                showCancelButton: true,
-                confirmButtonText: isEdit ? 'Save Changes' : 'Create Scheme',
+                icon: 'success',
+                title: 'Saved!',
+                text: result.value?.message || 'Grading scheme saved.',
                 confirmButtonColor: '#2C29CA',
-                customClass: { confirmButton: 'gs-swal-confirm' },
-                focusConfirm: false,
-                didOpen: () => {
-                    const popup = Swal.getPopup();
-                    const container = document.getElementById('bandRows');
+            }).then(() => window.location.reload());
+        });
+    }
 
-                    if (isEdit) {
-                        popup.querySelector('[name="name"]').value = existing.name;
-                        popup.querySelector('[name="description"]').value = existing.description ?? '';
-                        popup.querySelector('[name="total_marks"]').value = existing.total_marks;
-                        popup.querySelector('[name="pass_mark"]').value = existing.pass_mark;
-                        popup.querySelector('[name="is_default"]').checked = !!existing.is_default;
-                        (existing.bands || []).forEach(b => addBandRow(container, b));
-                    } else {
-                        // Sensible starting point: standard 9-point scale
-                        [
-                            { grade: 'D1', min_mark: 80, max_mark: 100, remark: 'Distinction', points: 1 },
-                            { grade: 'D2', min_mark: 75, max_mark: 79, remark: 'Distinction', points: 2 },
-                            { grade: 'C3', min_mark: 70, max_mark: 74, remark: 'Credit', points: 3 },
-                            { grade: 'C4', min_mark: 65, max_mark: 69, remark: 'Credit', points: 4 },
-                            { grade: 'C5', min_mark: 60, max_mark: 64, remark: 'Credit', points: 5 },
-                            { grade: 'C6', min_mark: 55, max_mark: 59, remark: 'Credit', points: 6 },
-                            { grade: 'P7', min_mark: 45, max_mark: 54, remark: 'Pass', points: 7 },
-                            { grade: 'P8', min_mark: 40, max_mark: 44, remark: 'Pass', points: 8 },
-                            { grade: 'F9', min_mark: 0, max_mark: 39, remark: 'Fail', points: 9 },
-                        ].forEach(b => addBandRow(container, b));
-                    }
+    document.getElementById('btnNewScheme').addEventListener('click', () => openSchemeModal());
 
-                    document.getElementById('addBandRow').addEventListener('click', () => addBandRow(container));
-                },
-                preConfirm: () => {
-                    const popup = Swal.getPopup();
-                    const name = popup.querySelector('[name="name"]').value.trim();
-                    const totalMarks = popup.querySelector('[name="total_marks"]').value;
-                    const passMark = popup.querySelector('[name="pass_mark"]').value;
-                    const bands = collectBands(document.getElementById('bandRows'));
+    // ── Edit ──────────────────────────────────────────────────────────────
+    document.querySelectorAll('.edit-scheme').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            // Scheme + band data is embedded server-side below, so no extra
+            // request is needed to populate the edit modal.
+            const scheme = window.__schemesById[id];
+            openSchemeModal(scheme);
+        });
+    });
 
-                    if (!name) {
-                        Swal.showValidationMessage('Please enter a scheme name.');
-                        return false;
-                    }
-                    if (!totalMarks || !passMark) {
-                        Swal.showValidationMessage('Please enter total marks and pass mark.');
-                        return false;
-                    }
-                    if (parseInt(passMark) > parseInt(totalMarks)) {
-                        Swal.showValidationMessage('Pass mark cannot exceed total marks.');
-                        return false;
-                    }
-                    if (bands.length < 1) {
-                        Swal.showValidationMessage('Add at least one grade band.');
-                        return false;
-                    }
+    // ── Toggle Active with SweetAlert Confirmation ────────────────────────
+    document.querySelectorAll('.toggle-scheme').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const isActive = this.dataset.active === '1';
+            const action = isActive ? 'deactivate' : 'activate';
+            const actionText = isActive ? 'Deactivate' : 'Activate';
+            const iconColor = isActive ? '#C4293A' : '#12875A';
 
-                    return {
-                        name,
-                        description: popup.querySelector('[name="description"]').value.trim() || null,
-                        total_marks: totalMarks,
-                        pass_mark: passMark,
-                        is_default: popup.querySelector('[name="is_default"]').checked ? 1 : 0,
-                        bands,
-                    };
-                },
+            Swal.fire({
+                title: `${actionText} Grading Scheme?`,
+                text: `Are you sure you want to ${action} this grading scheme? ${isActive ? 'Inactive schemes cannot be used for new exams.' : 'Active schemes can be used for new exams.'}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${actionText} it`,
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: iconColor,
+                cancelButtonColor: '#6B7280',
             }).then(result => {
                 if (!result.isConfirmed) return;
 
-                const url = isEdit
-                    ? `{{ url('examinations/grading-schemes') }}/${existing.id}/update`
-                    : `{{ route('examination.grading-schemes.store') }}`;
-
+                const nextActive = isActive ? 0 : 1;
                 $.ajax({
-                    url,
+                    url: `{{ url('examinations/grading-schemes') }}/${id}/toggle-active`,
                     method: 'POST',
-                    data: JSON.stringify(result.value),
-                    contentType: 'application/json',
+                    data: { is_active: nextActive },
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: `Scheme has been ${action}ed successfully.`,
+                            confirmButtonColor: '#2C29CA',
+                            timer: 2000,
+                            timerProgressBar: true,
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message || 'Could not update scheme status.',
+                            confirmButtonColor: '#C4293A',
+                        });
+                    },
+                });
+            });
+        });
+    });
+
+    // ── Delete ────────────────────────────────────────────────────────────
+    document.querySelectorAll('.delete-scheme').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            Swal.fire({
+                title: 'Delete this grading scheme?',
+                text: 'This cannot be undone. Schemes already used by an exam cannot be deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it',
+                confirmButtonColor: '#C4293A',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: `{{ url('examinations/grading-schemes') }}/${id}`,
+                    method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': csrfToken },
                     success: function (res) {
                         if (res.success) {
-                            Swal.fire({ icon: 'success', title: 'Saved!', text: res.message, confirmButtonColor: '#2C29CA' })
+                            Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
                                 .then(() => window.location.reload());
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire('Cannot Delete', res.message, 'warning');
                         }
                     },
                     error: function (xhr) {
-                        const message = xhr.responseJSON?.message
-                            || (xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n') : 'Something went wrong.');
-                        Swal.fire('Error', message, 'error');
+                        Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scheme.', 'warning');
                     },
                 });
             });
-        }
-
-        document.getElementById('btnNewScheme').addEventListener('click', () => openSchemeModal());
-
-        // ── Edit ──────────────────────────────────────────────────────────────
-        document.querySelectorAll('.edit-scheme').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                // Scheme + band data is embedded server-side below, so no extra
-                // request is needed to populate the edit modal.
-                const scheme = window.__schemesById[id];
-                openSchemeModal(scheme);
-            });
         });
-
-        // ── Toggle Active ─────────────────────────────────────────────────────
-        // ── Toggle Active with SweetAlert Confirmation ────────────────────────────
-        document.querySelectorAll('.toggle-scheme').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                const isActive = this.dataset.active === '1';
-                const action = isActive ? 'deactivate' : 'activate';
-                const actionText = isActive ? 'Deactivate' : 'Activate';
-                const iconColor = isActive ? '#C4293A' : '#12875A';
-
-                Swal.fire({
-                    title: `${actionText} Grading Scheme?`,
-                    text: `Are you sure you want to ${action} this grading scheme? ${isActive ? 'Inactive schemes cannot be used for new exams.' : 'Active schemes can be used for new exams.'}`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: `Yes, ${actionText} it`,
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: iconColor,
-                    cancelButtonColor: '#6B7280',
-                }).then(result => {
-                    if (!result.isConfirmed) return;
-
-                    const nextActive = isActive ? 0 : 1;
-                    $.ajax({
-                        url: `{{ url('examinations/grading-schemes') }}/${id}/toggle-active`,
-                        method: 'POST',
-                        data: { is_active: nextActive },
-                        headers: { 'X-CSRF-TOKEN': csrfToken },
-                        success: function (res) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated!',
-                                text: `Scheme has been ${action}ed successfully.`,
-                                confirmButtonColor: '#2C29CA',
-                                timer: 2000,
-                                timerProgressBar: true,
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        },
-                        error: function (xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON?.message || 'Could not update scheme status.',
-                                confirmButtonColor: '#C4293A',
-                            });
-                        },
-                    });
-                });
-            });
-        });
-
-        // ── Delete ────────────────────────────────────────────────────────────
-        document.querySelectorAll('.delete-scheme').forEach(el => {
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                Swal.fire({
-                    title: 'Delete this grading scheme?',
-                    text: 'This cannot be undone. Schemes already used by an exam cannot be deleted.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it',
-                    confirmButtonColor: '#C4293A',
-                }).then(result => {
-                    if (!result.isConfirmed) return;
-                    $.ajax({
-                        url: `{{ url('examinations/grading-schemes') }}/${id}`,
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken },
-                        success: function (res) {
-                            if (res.success) {
-                                Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
-                                    .then(() => window.location.reload());
-                            } else {
-                                Swal.fire('Cannot Delete', res.message, 'warning');
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scheme.', 'warning');
-                        },
-                    });
-                });
-            });
-        });
-    </script>
-
+    });
+</script>
     {{-- Build schemes data in PHP for JavaScript --}}
     @php
         $schemesData = [];
