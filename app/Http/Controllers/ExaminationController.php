@@ -691,6 +691,41 @@ class ExaminationController extends Controller
         }
     }
 
+    /**
+     * Resolve which primary (non-nursery) pass-slip view to render.
+     *
+     * The three design templates (Classic / Modern / Minimal) used to
+     * be one file (slip.blade.php) with a body-class switch and a
+     * shared theme-overlay stylesheet — until a Classic-only markup
+     * redesign quietly broke that switch by replacing the classes the
+     * overlay targeted. They're now three separate, self-contained
+     * views (slip-classic / slip-modern / slip-minimal), each with its
+     * own dedicated theme partial, so this just picks the right file.
+     *
+     * $template comes from an explicit ?template= query param (live
+     * preview) or, failing that, whatever applySavedPassslipSettings()
+     * already merged into request() from the class's saved profile.
+     */
+    public function resolvePrimarySlipView(string $lang): string
+    {
+        if ($lang === 'ar') {
+            // Arabic slip still uses the single shared file with the
+            // legacy in-file template switch — not part of this split yet.
+            return 'Examination.passslips.slip-ar';
+        }
+
+        $template = request('template', 'classic');
+        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+            $template = 'classic';
+        }
+
+        return match ($template) {
+            'modern' => 'Examination.passslips.slip-modern',
+            'minimal' => 'Examination.passslips.slip-minimal',
+            default => 'Examination.passslips.slip-classic',
+        };
+    }
+
     // ─── Discipline / Conduct Ratings ───────────────────────────────────────
     // Per-school configurable criteria (Punctuality, Behaviour, ...), rated
     // A/B/C by the class teacher per exam. Feeds the "Discipline" block on
@@ -960,7 +995,7 @@ class ExaminationController extends Controller
         if ($isNursery) {
             $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
         } else {
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+            $view = $this->resolvePrimarySlipView($lang);
         }
 
         return view($view, compact(
@@ -1077,7 +1112,7 @@ class ExaminationController extends Controller
         if ($isNursery) {
             $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
         } else {
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+            $view = $this->resolvePrimarySlipView($lang);
         }
 
         return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
@@ -1181,7 +1216,7 @@ class ExaminationController extends Controller
         if ($isNursery) {
             $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
         } else {
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-ar' : 'Examination.passslips.slip';
+            $view = $this->resolvePrimarySlipView($lang);
         }
 
         return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery]);

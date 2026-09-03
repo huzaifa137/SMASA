@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Card — {{ $exam->exam_name }}</title>
+    <title>Report Card (Classic) — {{ $exam->exam_name }}</title>
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
@@ -57,13 +57,10 @@
         $accentA22 = $accentAlpha($accent, 0.22);
         $accentA35 = $accentAlpha($accent, 0.35);
 
-        // Design template — 'classic' (default), 'modern', or 'minimal'.
-        // Query param wins (live preview), else falls back to whatever
-        // applySavedPassslipSettings() merged in from the saved profile.
-        $template = request('template', 'classic');
-        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
-            $template = 'classic';
-        }
+        // This view IS the Classic (Riverside) design — no runtime
+        // switching needed. Kept as a variable only because the shared
+        // template-themes.blade.php partial keys off it.
+        $template = 'classic';
     @endphp
 
     <style>
@@ -1707,7 +1704,7 @@
             color-adjust: exact;
         }
     </style>
-    @include('Examination.passslips.partials.template-themes')
+    @include('Examination.passslips.partials.template-classic')
 </head>
 
 <body class="tpl-{{ $template }}">

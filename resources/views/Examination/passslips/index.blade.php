@@ -1427,6 +1427,50 @@ function setLanguage(lang) {
         animation: chipFadeIn 0.2s ease-out;
     }
 
+    .cp-unsaved-banner {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: #fff8e6;
+        border: 1.5px solid #f0c14b;
+        border-left: 4px solid #e8a917;
+        border-radius: 10px;
+        padding: .7rem .9rem;
+        margin-bottom: 1rem;
+        font-size: .78rem;
+        color: #6b4e00;
+        line-height: 1.4;
+        animation: chipFadeIn 0.2s ease-out;
+    }
+
+    .cp-unsaved-banner i {
+        color: #e8a917;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .cp-unsaved-banner span {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .cp-unsaved-banner-btn {
+        flex-shrink: 0;
+        background: #e8a917;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: .35rem .7rem;
+        font-size: .72rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .cp-unsaved-banner-btn:hover {
+        background: #d29a0f;
+    }
+
     @keyframes chipFadeIn {
         from {
             opacity: 0;
@@ -1531,6 +1575,35 @@ function setLanguage(lang) {
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
+                </div>
+
+                {{-- ┌──────────────────────────────────┐
+                     │  Unsaved-customisation notice     │
+                     └──────────────────────────────────┘
+                     Real pass slips (student links, class print, Print
+                     All) resolve each class's own SAVED design from the
+                     database, not whatever's currently sitting in the
+                     panel above — so an unsaved template/colour/toggle/
+                     combine-exam change never accidentally leaks into
+                     another class's report. This banner is what tells
+                     the user that tradeoff exists, instead of them
+                     wondering why a real slip below doesn't match what
+                     they just changed above. Hidden by default; JS
+                     toggles it on whenever currentSettings drifts from
+                     the last-loaded/last-saved snapshot for the class(es)
+                     selected in the Save-Customisation panel. --}}
+                <div id="cpUnsavedBanner" class="cp-unsaved-banner" style="display:none;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>
+                        You've changed the accent colour, toggles, or Combine Examinations for
+                        <strong id="cpUnsavedClassNames">this class</strong> but haven't saved it yet.
+                        (Design Template applies immediately — no save needed for that.) The links
+                        below will still print the <em>last saved</em> version of everything else
+                        until you hit Save Customisation.
+                    </span>
+                    <button type="button" class="cp-unsaved-banner-btn" onclick="scrollToSavePanel()">
+                        Save now
+                    </button>
                 </div>
 
                 {{-- ┌──────────────────────────────────┐
@@ -1880,6 +1953,46 @@ function setLanguage(lang) {
     };
 
     let currentSettings = { ...DEFAULTS };
+    // Baseline to compare currentSettings against, so we can tell the
+    // user when the panel no longer matches what's actually saved (and
+    // therefore what real pass slips still render). Reset to DEFAULTS
+    // whenever the loaded class has nothing saved yet, since DEFAULTS
+    // is what a real slip falls back to in that case.
+    let savedSnapshot = { ...DEFAULTS };
+
+    /* ── Unsaved-changes banner ──
+       Real student/class links resolve each class's SAVED settings
+       server-side; they never pick up the panel's live state directly.
+       So whenever currentSettings drifts from savedSnapshot, warn the
+       user before they click through and get confused by a report that
+       doesn't match what they just changed. ── */
+    function checkUnsavedChanges() {
+        const banner = document.getElementById('cpUnsavedBanner');
+        if (!banner) return;
+
+        // "template" is excluded from this comparison: buildQS() /
+        // injectIntoForm() now apply it to every link immediately (see
+        // note there), so an unsaved template change is never actually
+        // stale on a real slip — only accent/toggles/combine-exams are.
+        const { template: _ignoredA, ...liveRest } = currentSettings;
+        const { template: _ignoredB, ...savedRest } = savedSnapshot;
+        const dirty = JSON.stringify(liveRest) !== JSON.stringify(savedRest);
+        banner.style.display = dirty ? 'flex' : 'none';
+
+        if (dirty) {
+            const classSelect = document.getElementById('cpClassSelect');
+            const names = classSelect
+                ? Array.from(classSelect.selectedOptions).map(o => o.textContent.trim())
+                : [];
+            const label = document.getElementById('cpUnsavedClassNames');
+            if (label) label.textContent = names.length ? names.join(', ') : 'this class';
+        }
+    }
+
+    function scrollToSavePanel() {
+        const el = document.getElementById('cpClassSelector') || document.getElementById('cpBody');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
     /* ── Design template selection ──
        Switching template never touches the toggles/accent above it —
@@ -1931,24 +2044,33 @@ function setLanguage(lang) {
 
     /* ── Build query-string from currentSettings ── */
 function buildQS() {
-    // Deliberately NOT including currentSettings here anymore. Those
-    // toggles reflect whichever class was last loaded into the panel —
-    // broadcasting them into every student/class link meant printing P1
-    // would silently use whatever was loaded for Baby Class, etc. Each
-    // print now resolves its OWN class's saved settings server-side
-    // (applySavedPassslipSettings); lang is the only setting that's
-    // genuinely a page-wide preference rather than per-class.
+    // Deliberately NOT including accent/toggles here. Those reflect
+    // whichever class was last loaded into the panel — broadcasting
+    // them into every student/class link meant printing P1 would
+    // silently use whatever was loaded for Baby Class, etc. Each print
+    // still resolves its OWN class's saved accent/toggles server-side
+    // (applySavedPassslipSettings).
+    //
+    // "template" is the one exception: per the panel's own description
+    // ("...accent colour, toggles, and every student's data stay
+    // exactly the same — only the visual style changes"), the design
+    // template is a page-wide presentation choice, not per-class data —
+    // so, like lang, it's fine (and expected) to apply it everywhere
+    // immediately, matching what Live Preview already shows, instead of
+    // waiting for a Save.
     const p = new URLSearchParams();
     const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
     p.set('lang', currentLang);
+    const selectedTplCard = document.querySelector('.cp-template-card.selected');
+    p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
     return p.toString();
 }
 
 function injectIntoForm(formEl) {
     // Same reasoning as buildQS() above: don't force the panel's
-    // currently-loaded toggle state onto whichever class tile was
-    // clicked. Leave settings out entirely so the server resolves that
-    // specific class's own saved profile.
+    // currently-loaded accent/toggle state onto whichever class tile
+    // was clicked — but the design template IS page-wide, so pass it
+    // through just like lang.
     formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
     // Add lang
     const langInp = document.createElement('input');
@@ -1957,6 +2079,14 @@ function injectIntoForm(formEl) {
     langInp.value = new URLSearchParams(window.location.search).get('lang') || 'en';
     langInp.classList.add('cp-injected');
     formEl.appendChild(langInp);
+    // Add template
+    const selectedTplCard = document.querySelector('.cp-template-card.selected');
+    const tplInp = document.createElement('input');
+    tplInp.type = 'hidden';
+    tplInp.name = 'template';
+    tplInp.value = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
+    tplInp.classList.add('cp-injected');
+    formEl.appendChild(tplInp);
 }
 
     /* ── Update ALL student links + Print All href ── */
@@ -2035,8 +2165,14 @@ function injectIntoForm(formEl) {
     function previewDesign() {
         readSettings();
         const p = new URLSearchParams();
+        // NOTE: exam_ids/avg_exam_ids (Combine Examinations) used to be
+        // skipped here, on the reasoning that they're "panel-local, not
+        // a slip toggle" — but that's exactly what made the live preview
+        // silently ignore any Combine Examinations selection that hadn't
+        // been saved yet, even though the preview's whole purpose is to
+        // show unsaved changes. They're genuine slip params (read by
+        // resolveExamSelection() server-side), so they belong here too.
         Object.entries(currentSettings).forEach(([k, v]) => {
-            if (k === 'exam_ids' || k === 'avg_exam_ids') return; // panel-local, not a slip toggle
             p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
         });
         p.set('lang', new URLSearchParams(window.location.search).get('lang') || 'en');
@@ -2080,6 +2216,12 @@ function injectIntoForm(formEl) {
                 statusEl.textContent = res.success
                     ? 'Saved for ' + classIds.length + ' class(es). ✓'
                     : (res.message || 'Failed to save.');
+
+                if (res.success) {
+                    // Panel now matches the database — clear the banner.
+                    savedSnapshot = { ...currentSettings };
+                    checkUnsavedChanges();
+                }
             })
             .catch(() => {
                 statusEl.style.color = '#c0392b';
@@ -2102,7 +2244,11 @@ function injectIntoForm(formEl) {
             .then(r => r.json())
             .then(res => {
                 if (!res.success || !res.settings || Object.keys(res.settings).length === 0) {
-                    return; // nothing saved yet for this class — leave panel as-is
+                    // Nothing saved yet for this class — a real slip would
+                    // fall back to DEFAULTS, so that's the clean baseline.
+                    savedSnapshot = { ...DEFAULTS };
+                    checkUnsavedChanges();
+                    return; // leave panel as-is otherwise
                 }
                 const saved = res.settings;
                 setTemplateSelectionUI(saved.template || 'classic');
@@ -2135,6 +2281,10 @@ function injectIntoForm(formEl) {
                 }
 
                 updateAllLinks();
+                readSettings();
+                // This IS the saved state we just loaded — panel now
+                // matches the database, so the banner should be clean.
+                savedSnapshot = { ...currentSettings };
                 updateSummary();
             })
             .catch(() => { /* silent — keep current panel state */ });
@@ -2151,6 +2301,8 @@ function injectIntoForm(formEl) {
         const el      = document.getElementById('cpSummary');
         if (el) el.textContent = enabled + '/' + total + ' on';
         updateAllLinks();
+        readSettings();
+        checkUnsavedChanges();
     }
 
     /* ── Panel collapse/expand ── */
@@ -2226,9 +2378,9 @@ function injectIntoForm(formEl) {
     document.addEventListener('DOMContentLoaded', function () {
         updateSummary();   // sets summary badge & links on first load
 
-        // Whenever any toggle changes → update links
+        // Whenever any toggle changes → update links + unsaved-changes check
         document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-            cb.addEventListener('change', updateAllLinks);
+            cb.addEventListener('change', updateSummary);
         });
     });
 
