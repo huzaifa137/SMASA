@@ -51,114 +51,115 @@ use App\Helpers\PermissionHelper;
                 margin: 0 auto;
             }
 
-          /* Premium Teacher Assignment Center Header */
-.dashboard-header {
-    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
-    border-radius: var(--radius-2xl);
-    padding: 32px 36px;
-    margin-bottom: 28px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
-}
+            /* Premium Teacher Assignment Center Header */
+            .dashboard-header {
+                background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+                border-radius: var(--radius-2xl);
+                padding: 32px 36px;
+                margin-bottom: 28px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
+            }
 
-.dashboard-header::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    right: -10%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
+            .dashboard-header::before {
+                content: '';
+                position: absolute;
+                top: -30%;
+                right: -10%;
+                width: 500px;
+                height: 500px;
+                background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+                border-radius: 50%;
+                pointer-events: none;
+            }
 
-.dashboard-header::after {
-    content: '';
-    position: absolute;
-    bottom: -40%;
-    left: -5%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
+            .dashboard-header::after {
+                content: '';
+                position: absolute;
+                bottom: -40%;
+                left: -5%;
+                width: 400px;
+                height: 400px;
+                background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
+                border-radius: 50%;
+                pointer-events: none;
+            }
 
-.header-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 24px;
-}
+            .header-content {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 24px;
+            }
 
-.header-title-section h2 {
-    color: white;
-    font-weight: 800;
-    margin: 0;
-    font-size: 28px;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
+            .header-title-section h2 {
+                color: white;
+                font-weight: 800;
+                margin: 0;
+                font-size: 28px;
+                letter-spacing: -0.5px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
 
-.header-title-section h2 .icon-circle {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, .1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, .1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+            .header-title-section h2 .icon-circle {
+                width: 48px;
+                height: 48px;
+                border-radius: var(--radius-lg);
+                background: rgba(255, 255, 255, .1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, .1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-.header-subtitle {
-    color: rgba(255, 255, 255, .7);
-    margin-top: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+            .header-subtitle {
+                color: rgba(255, 255, 255, .7);
+                margin-top: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }
 
-.header-stats {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-}
+            .header-stats {
+                display: flex;
+                gap: 16px;
+                flex-wrap: wrap;
+            }
 
-.stat-card {
-    background: rgba(255, 255, 255, .08);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, .1);
-    border-radius: var(--radius-lg);
-    padding: 16px 24px;
-    color: white;
-    min-width: 140px;
-}
+            .stat-card {
+                background: rgba(255, 255, 255, .08);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, .1);
+                border-radius: var(--radius-lg);
+                padding: 16px 24px;
+                color: white;
+                min-width: 140px;
+            }
 
-.stat-value {
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
+            .stat-value {
+                font-size: 28px;
+                font-weight: 800;
+                letter-spacing: -1px;
+            }
 
-.stat-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, .6);
-    margin-top: 4px;
-    font-weight: 600;
-}
+            .stat-label {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: rgba(255, 255, 255, .6);
+                margin-top: 4px;
+                font-weight: 600;
+            }
+
             /* Floating Action Bar */
             .floating-action-bar {
                 position: sticky;
@@ -603,13 +604,13 @@ use App\Helpers\PermissionHelper;
             }
 
             /* ---- Teacher/Supervisor select boxes ----
-                   NOTE: renamed from ".custom-select" -> ".teacher-select".
-                   Bootstrap 4 (loaded via dataTables.bootstrap4.min.css) ships its
-                   OWN ".custom-select" rule with its own height/line-height/padding
-                   and a native background-image chevron. That rule was colliding
-                   with this one and squashing the text inside the box, which is
-                   what caused the "cut-through" look in the dropdowns. Renaming
-                   the class avoids the collision entirely. */
+                       NOTE: renamed from ".custom-select" -> ".teacher-select".
+                       Bootstrap 4 (loaded via dataTables.bootstrap4.min.css) ships its
+                       OWN ".custom-select" rule with its own height/line-height/padding
+                       and a native background-image chevron. That rule was colliding
+                       with this one and squashing the text inside the box, which is
+                       what caused the "cut-through" look in the dropdowns. Renaming
+                       the class avoids the collision entirely. */
             .teacher-select-wrapper {
                 position: relative;
             }
@@ -654,6 +655,104 @@ use App\Helpers\PermissionHelper;
                 color: var(--text-muted);
                 pointer-events: none;
                 transition: all 0.3s ease;
+            }
+
+            /* ---- Searchable teacher dropdown (plain CSS/JS — no select2) ----
+                       The real <select class="teacher-select"> stays in the DOM
+                       (just hidden) so every bit of existing dirty-tracking /
+                       save logic above keeps working untouched. This just adds a
+                       type-to-filter text input + custom list on top of it. */
+            .ts-combo {
+                position: relative;
+            }
+
+            .ts-combo-input {
+                width: 100%;
+                height: 46px;
+                box-sizing: border-box;
+                padding: 0 40px 0 16px;
+                border: 2px solid #e2e8f0;
+                border-radius: var(--radius-sm);
+                font-size: 14px;
+                line-height: 1.4;
+                font-weight: 500;
+                font-family: inherit;
+                transition: all 0.3s ease;
+                background-color: white;
+                color: var(--text-primary);
+                cursor: text;
+            }
+
+            .ts-combo-input:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            }
+
+            .ts-combo-wrapper.open .ts-combo-input {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+
+            .ts-combo-wrapper.open::after {
+                transform: translateY(-50%) rotate(180deg);
+            }
+
+            .ts-combo-menu {
+                display: none;
+                position: fixed;
+                /* was absolute — see JS: menu is portaled to <body> */
+                z-index: 5000;
+                /* was 50 — must beat every card's own stacking context */
+                background: white;
+                border: 2px solid var(--accent);
+                border-radius: var(--radius-sm);
+                max-height: 220px;
+                overflow-y: auto;
+                box-shadow: var(--shadow-lg);
+            }
+
+            .ts-combo-menu.show {
+                display: block;
+            }
+
+            .ts-combo-option {
+                padding: 10px 16px;
+                font-size: 13.5px;
+                font-weight: 500;
+                color: var(--text-primary);
+                cursor: pointer;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .ts-combo-option:hover,
+            .ts-combo-option.active {
+                background: var(--accent-light);
+                color: var(--accent);
+            }
+
+            .ts-combo-option.selected {
+                font-weight: 700;
+            }
+
+            .ts-combo-option.selected::after {
+                content: '\f00c';
+                font-family: 'Font Awesome 6 Free';
+                font-weight: 900;
+                float: right;
+                color: var(--accent);
+            }
+
+            .ts-combo-empty {
+                padding: 12px 16px;
+                font-size: 13px;
+                color: var(--text-muted);
+                text-align: center;
+                font-style: italic;
             }
 
             /* Stream Section */
@@ -900,8 +999,7 @@ use App\Helpers\PermissionHelper;
                                                         <?php    $classroom = $data['classroom']; ?>
                                                         <div class="class-card-premium"
                                                             data-class-name="{{ strtolower(Helper::recordMdname($classroom->class_name)) }}">
-                                                            <div class="class-card-header-premium"
-    data-target="#classBody{{ $classroom->id }}">
+                                                            <div class="class-card-header-premium" data-target="#classBody{{ $classroom->id }}">
                                                                 <div class="class-identity">
                                                                     <div class="class-avatar">
                                                                         {{ substr(Helper::recordMdname($classroom->class_name), 0, 1) }}
@@ -1091,8 +1189,8 @@ use App\Helpers\PermissionHelper;
             </div>
         </div>
     </div>
-      </div>
-        </div>
+    </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1123,6 +1221,164 @@ use App\Helpers\PermissionHelper;
         };
 
         const CSRF_TOKEN = "{{ csrf_token() }}";
+
+        // ── Searchable Teacher Dropdown (plain CSS/JS, no select2) ──────────────
+        // Wraps every .teacher-select with a type-to-filter text input. The
+        // original <select> is kept in the DOM (just visually hidden) and is
+        // still what gets read/written by the assignment logic below — we only
+        // ever call $select.val(x).trigger('change') on it, so refreshDirtyState,
+        // updateAllBadges and saveDirtyFields need zero changes.
+        function initTeacherCombos() {
+            $('.teacher-select').each(function () {
+                const $select = $(this);
+                if ($select.data('tsComboInit')) return;
+                $select.data('tsComboInit', true);
+
+                const $wrapper = $select.closest('.teacher-select-wrapper');
+                if (!$wrapper.length) return;
+                $wrapper.addClass('ts-combo-wrapper');
+
+                const options = $select.find('option').map(function () {
+                    return { value: this.value, text: $(this).text().trim() };
+                }).get();
+
+                function currentOption() {
+                    const val = String($select.val() ?? '');
+                    return options.find(o => String(o.value) === val) || options[0] || { value: '', text: '' };
+                }
+
+                const $combo = $('<div class="ts-combo"></div>');
+                const $input = $('<input type="text" class="ts-combo-input" autocomplete="off" spellcheck="false">');
+                // Actually portal the menu to <body> this time — the old code only
+                // claimed to via a comment. This is what removes it from any
+                // ancestor's overflow:hidden / transform stacking-context entirely.
+                const $menu = $('<div class="ts-combo-menu"></div>').appendTo(document.body);
+                $combo.append($input);
+
+                $select.hide().after($combo);
+                $input.val(currentOption().text);
+
+                let activeIndex = -1;
+
+                // Compute the menu's screen position from the input's real
+                // bounding box every time it opens or the page scrolls/resizes.
+                function positionMenu() {
+                    const rect = $input[0].getBoundingClientRect();
+                    $menu.css({
+                        top: rect.bottom + 4,
+                        left: rect.left,
+                        width: rect.width
+                    });
+                }
+
+                function renderMenu(term) {
+                    term = (term || '').toLowerCase();
+                    const filtered = term ? options.filter(o => o.text.toLowerCase().includes(term)) : options;
+                    const currentVal = String($select.val() ?? '');
+
+                    $menu.empty();
+                    if (!filtered.length) {
+                        $menu.append('<div class="ts-combo-empty">No matches found</div>');
+                        return;
+                    }
+                    filtered.forEach(o => {
+                        const $opt = $('<div class="ts-combo-option"></div>')
+                            .attr('data-value', o.value)
+                            .text(o.text);
+                        if (String(o.value) === currentVal) $opt.addClass('selected');
+                        $menu.append($opt);
+                    });
+                }
+
+                function highlight(idx) {
+                    const $opts = $menu.find('.ts-combo-option');
+                    $opts.removeClass('active');
+                    activeIndex = -1;
+                    if (idx >= 0 && idx < $opts.length) {
+                        $opts.eq(idx).addClass('active');
+                        const el = $opts.eq(idx).get(0);
+                        if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+                        activeIndex = idx;
+                    }
+                }
+
+                function repositionOnScroll() {
+                    if ($menu.hasClass('show')) positionMenu();
+                }
+
+                function openMenu() {
+                    // Only one combo open at a time — avoids stray menus stacking up.
+                    $('.ts-combo-menu.show').not($menu).removeClass('show');
+                    $('.ts-combo-wrapper.open').not($wrapper).removeClass('open');
+
+                    renderMenu('');
+                    positionMenu();
+                    $menu.addClass('show');
+                    $wrapper.addClass('open');
+                    highlight(-1);
+
+                    $(window).on('scroll.tsCombo resize.tsCombo', repositionOnScroll);
+                }
+
+                function closeMenu() {
+                    $menu.removeClass('show');
+                    $wrapper.removeClass('open');
+                    $input.val(currentOption().text);
+                    $(window).off('scroll.tsCombo resize.tsCombo', repositionOnScroll);
+                }
+
+                function selectOption($opt) {
+                    $select.val($opt.attr('data-value')).trigger('change');
+                    $input.val($opt.text());
+                    $menu.removeClass('show');
+                    $wrapper.removeClass('open');
+                }
+
+                $input.on('focus', function () {
+                    $(this).select();
+                    openMenu();
+                });
+
+                $input.on('input', function () {
+                    renderMenu($(this).val());
+                    positionMenu();
+                    $menu.addClass('show');
+                    $wrapper.addClass('open');
+                    highlight(-1);
+                });
+
+                $input.on('keydown', function (e) {
+                    const $opts = $menu.find('.ts-combo-option');
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!$menu.hasClass('show')) { openMenu(); return; }
+                        highlight(Math.min(activeIndex + 1, $opts.length - 1));
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        highlight(Math.max(activeIndex - 1, 0));
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeIndex >= 0 && $opts.eq(activeIndex).length) {
+                            selectOption($opts.eq(activeIndex));
+                        } else if ($opts.length === 1 && !$opts.hasClass('ts-combo-empty')) {
+                            selectOption($opts.eq(0));
+                        }
+                        $input.trigger('blur');
+                    } else if (e.key === 'Escape') {
+                        $input.trigger('blur');
+                    }
+                });
+
+                $menu.on('mousedown', '.ts-combo-option', function (e) {
+                    e.preventDefault();
+                    selectOption($(this));
+                });
+
+                $input.on('blur', function () {
+                    closeMenu();
+                });
+            });
+        }
 
         $(document).ready(function () {
 
@@ -1336,6 +1592,7 @@ use App\Helpers\PermissionHelper;
 
             // Initialize
             updateAllBadges();
+            initTeacherCombos();
         });
     </script>
 @endsection

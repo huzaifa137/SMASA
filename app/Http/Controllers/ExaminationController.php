@@ -2703,10 +2703,15 @@ class ExaminationController extends Controller
             ->map(fn($ec) => $ec->class_id . '_' . ($ec->stream_id ?? ''));
 
         //  Per-class grading scheme mapping for the frontend
+        // NOTE: Eloquent's pluck() only accepts column-name strings (it runs the
+        // lookup as a SQL SELECT), so passing a closure as the key here throws a
+        // TypeError ("must be of type string|array|int|null") and blew up this
+        // whole endpoint with a 500 error. Build the map manually instead.
         $classGradingSchemes = ExaminationClass::where('examination_id', $examination->id)
             ->whereNotNull('grading_scheme_id')
-            ->pluck('grading_scheme_id', function ($ec) {
-                return $ec->class_id . '_' . ($ec->stream_id ?? '');
+            ->get()
+            ->mapWithKeys(function ($ec) {
+                return [$ec->class_id . '_' . ($ec->stream_id ?? '') => $ec->grading_scheme_id];
             });
 
         return response()->json([

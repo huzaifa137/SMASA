@@ -4596,7 +4596,22 @@ use App\Helpers\PermissionHelper;
         // uses an inline onclick handler.
         function toggleEditClassStream(el) {
             el.classList.toggle('selected');
-            el.querySelector('.edit-cs-checkbox').checked = el.classList.contains('selected');
+            const isChecked = el.classList.contains('selected');
+            el.querySelector('.edit-cs-checkbox').checked = isChecked;
+
+            // Show/hide this item's per-class grading scheme dropdown, but only
+            // while "per-class" grading mode is active.
+            const modeInput = document.querySelector('input[name="edit_grading_mode"]:checked');
+            if (modeInput && modeInput.value === 'per_class') {
+                if (isChecked) {
+                    el.classList.add('has-custom-scheme');
+                } else {
+                    el.classList.remove('has-custom-scheme');
+                    const sel = el.querySelector('.edit-class-grading-scheme-select');
+                    if (sel) sel.value = '';
+                }
+            }
+
             updateEditClassCount();
         }
 
@@ -4677,16 +4692,38 @@ use App\Helpers\PermissionHelper;
 
                     const classStreams = exam.class_streams || [];
                     const selectedClassStreams = (exam.selected_class_streams || []).map(String);
+
+                    // 🔥 Per-class grading scheme overrides currently saved for this exam
+                    // (key = "classId_streamId", value = grading_scheme_id).
+                    const classGradingSchemes = exam.class_grading_schemes || {};
+                    const hasAnyOverride = Object.keys(classGradingSchemes).length > 0;
+
+                    const classGradingSchemeOptionsHTML = (currentValue) => `
+                                                                                                <option value="">-- Use Exam Default --</option>
+                                                                                                ${gradingSchemes.map(s => `
+                                                                                                    <option value="${s.id}" ${String(currentValue) === String(s.id) ? 'selected' : ''}>${s.name}</option>
+                                                                                                `).join('')}
+                                                                                            `;
+
                     const classStreamItemsHTML = classStreams.length ? classStreams.map(cs => {
                         const isSelected = selectedClassStreams.includes(String(cs.value));
+                        const currentSchemeId = classGradingSchemes[cs.value] ?? '';
+                        const hasCustomScheme = hasAnyOverride && currentSchemeId !== '';
                         return `
-                                                                                                <div class="edit-cs-item ${isSelected ? 'selected' : ''}" data-value="${cs.value}" onclick="toggleEditClassStream(this)">
-                                                                                                    <div class="edit-cs-icon"><i class="fas fa-users"></i></div>
-                                                                                                    <div>
-                                                                                                        <div class="fw-semibold" style="line-height:1.2;">${cs.class_name || 'Unnamed Class'}</div>
-                                                                                                        <div class="text-muted" style="font-size:.75rem;">${cs.stream_name || 'No Stream'}</div>
+                                                                                                <div class="edit-cs-item ${isSelected ? 'selected' : ''} ${hasCustomScheme ? 'has-custom-scheme' : ''}" data-value="${cs.value}">
+                                                                                                    <div class="edit-cs-top" onclick="toggleEditClassStream(this.parentElement)">
+                                                                                                        <div class="edit-cs-icon"><i class="fas fa-users"></i></div>
+                                                                                                        <div>
+                                                                                                            <div class="fw-semibold" style="line-height:1.2;">${cs.class_name || 'Unnamed Class'}</div>
+                                                                                                            <div class="text-muted" style="font-size:.75rem;">${cs.stream_name || 'No Stream'}</div>
+                                                                                                        </div>
+                                                                                                        <input type="checkbox" name="class_streams[]" value="${cs.value}" class="d-none edit-cs-checkbox" ${isSelected ? 'checked' : ''}>
                                                                                                     </div>
-                                                                                                    <input type="checkbox" name="class_streams[]" value="${cs.value}" class="d-none edit-cs-checkbox" ${isSelected ? 'checked' : ''}>
+                                                                                                    <div class="edit-class-grading-scheme-wrapper">
+                                                                                                        <select class="edit-class-grading-scheme-select" data-cs-key="${cs.value}" onclick="event.stopPropagation();">
+                                                                                                            ${classGradingSchemeOptionsHTML(currentSchemeId)}
+                                                                                                        </select>
+                                                                                                    </div>
                                                                                                 </div>`;
                     }).join('') : `
                                                                                                 <div class="text-center text-muted py-4" style="grid-column:1/-1;">
@@ -4889,6 +4926,55 @@ use App\Helpers\PermissionHelper;
                                                                                                             background: #2C29CA;
                                                                                                             color: #fff;
                                                                                                         }
+                                                                                                        .edit-cs-item {
+                                                                                                            flex-wrap: wrap;
+                                                                                                        }
+                                                                                                        .edit-cs-item .edit-cs-top {
+                                                                                                            display: flex;
+                                                                                                            align-items: center;
+                                                                                                            gap: 8px;
+                                                                                                            width: 100%;
+                                                                                                        }
+                                                                                                        .edit-grading-mode-box {
+                                                                                                            background: #fafbff;
+                                                                                                            border: 1.5px solid #e2e8f0;
+                                                                                                            border-radius: 10px;
+                                                                                                            padding: 10px 12px;
+                                                                                                            margin-bottom: 12px;
+                                                                                                        }
+                                                                                                        .edit-grading-mode-box .form-check {
+                                                                                                            font-size: 0.8rem;
+                                                                                                        }
+                                                                                                        .edit-per-class-info {
+                                                                                                            display: none;
+                                                                                                            font-size: 0.72rem;
+                                                                                                            color: #6c757d;
+                                                                                                            margin-top: 6px;
+                                                                                                        }
+                                                                                                        .edit-cs-item .edit-class-grading-scheme-wrapper {
+                                                                                                            width: 100%;
+                                                                                                            display: none;
+                                                                                                            margin-top: 0.25rem;
+                                                                                                        }
+                                                                                                        .edit-cs-item.has-custom-scheme .edit-class-grading-scheme-wrapper {
+                                                                                                            display: block;
+                                                                                                        }
+                                                                                                        .edit-cs-item .edit-class-grading-scheme-select {
+                                                                                                            width: 100%;
+                                                                                                            font-size: 0.72rem;
+                                                                                                            padding: 0.3rem 0.6rem;
+                                                                                                            border-radius: 0.4rem;
+                                                                                                            border: 1.5px solid #d4d0f0;
+                                                                                                            background: #ffffff;
+                                                                                                            color: #1a1a2e;
+                                                                                                            font-weight: 500;
+                                                                                                            cursor: pointer;
+                                                                                                        }
+                                                                                                        .edit-cs-item .edit-class-grading-scheme-select:focus {
+                                                                                                            outline: none;
+                                                                                                            border-color: #2C29CA;
+                                                                                                            box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.12);
+                                                                                                        }
                                                                                                     </style>
 
                                                                                                     <div style="margin-top: 1rem;">
@@ -4996,6 +5082,28 @@ use App\Helpers\PermissionHelper;
                                                                                                                 <div class="edit-section-title">
                                                                                                                     <i class="fas fa-chalkboard-teacher"></i> Classes Involved
                                                                                                                 </div>
+
+                                                                                                                <!-- 🔥 Grading mode: single scheme for all classes, or per-class overrides -->
+                                                                                                                <div class="edit-grading-mode-box">
+                                                                                                                    <div class="form-check">
+                                                                                                                        <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModeSingle" value="single" ${hasAnyOverride ? '' : 'checked'}>
+                                                                                                                        <label class="form-check-label" for="editGradingModeSingle">
+                                                                                                                            Use single grading scheme for all classes
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div class="form-check mt-1">
+                                                                                                                        <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModePerClass" value="per_class" ${hasAnyOverride ? 'checked' : ''}>
+                                                                                                                        <label class="form-check-label" for="editGradingModePerClass">
+                                                                                                                            Assign different grading schemes per class
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div class="edit-per-class-info" id="editPerClassInfo">
+                                                                                                                        <i class="fas fa-info-circle text-primary me-1"></i>
+                                                                                                                        Pick a scheme per selected class below, or leave it on "Use Exam Default".
+                                                                                                                        Switching back to "single" clears any class-specific overrides when you save.
+                                                                                                                    </div>
+                                                                                                                </div>
+
                                                                                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                                                                                     <span id="editSelectedCount" class="badge bg-primary text-white" style="font-size:.7rem;">${selectedClassStreams.length} selected</span>
                                                                                                                     <button type="button" id="editToggleAllClasses" class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.72rem;">
@@ -5123,10 +5231,19 @@ use App\Helpers\PermissionHelper;
                                     const items = document.querySelectorAll('#editClassStreamGrid .edit-cs-item');
                                     const allCurrentlySelected = document.querySelectorAll('#editClassStreamGrid .edit-cs-item.selected').length === items.length && items.length > 0;
                                     const makeSelected = !allCurrentlySelected;
+                                    const isPerClass = document.querySelector('input[name="edit_grading_mode"]:checked')?.value === 'per_class';
 
                                     items.forEach(el => {
                                         el.classList.toggle('selected', makeSelected);
                                         el.querySelector('.edit-cs-checkbox').checked = makeSelected;
+
+                                        if (isPerClass && makeSelected) {
+                                            el.classList.add('has-custom-scheme');
+                                        } else if (!makeSelected) {
+                                            el.classList.remove('has-custom-scheme');
+                                            const sel = el.querySelector('.edit-class-grading-scheme-select');
+                                            if (sel) sel.value = '';
+                                        }
                                     });
 
                                     this.innerHTML = makeSelected
@@ -5136,6 +5253,31 @@ use App\Helpers\PermissionHelper;
                                     updateEditClassCount();
                                 });
                             }
+
+                            // 🔥 Grading mode toggle — single scheme for all classes vs. per-class overrides
+                            const editModeRadios = document.querySelectorAll('input[name="edit_grading_mode"]');
+                            const editPerClassInfo = document.getElementById('editPerClassInfo');
+
+                            function syncEditGradingModeUI() {
+                                const isPerClass = document.querySelector('input[name="edit_grading_mode"]:checked')?.value === 'per_class';
+                                if (editPerClassInfo) editPerClassInfo.style.display = isPerClass ? 'block' : 'none';
+
+                                document.querySelectorAll('#editClassStreamGrid .edit-cs-item').forEach(el => {
+                                    if (isPerClass && el.classList.contains('selected')) {
+                                        el.classList.add('has-custom-scheme');
+                                    } else {
+                                        el.classList.remove('has-custom-scheme');
+                                        if (!isPerClass) {
+                                            const sel = el.querySelector('.edit-class-grading-scheme-select');
+                                            if (sel) sel.value = '';
+                                        }
+                                    }
+                                });
+                            }
+
+                            editModeRadios.forEach(r => r.addEventListener('change', syncEditGradingModeUI));
+                            // Reflect the exam's saved state (some classes already have overrides) as soon as the modal opens.
+                            syncEditGradingModeUI();
                         },
                         preConfirm: () => {
                             const formData = new FormData(document.getElementById('editExamForm'));
@@ -5147,6 +5289,22 @@ use App\Helpers\PermissionHelper;
                                 document.querySelectorAll('#editClassStreamGrid .edit-cs-checkbox:checked')
                             ).map(cb => cb.value);
                             delete data['class_streams[]'];
+
+                            // 🔥 Per-class grading scheme overrides.
+                            // Only collected in "per_class" mode — switching back to "single" and
+                            // saving intentionally sends an empty map so every selected class
+                            // reverts to the exam's general/default grading scheme.
+                            const isPerClassMode = document.querySelector('input[name="edit_grading_mode"]:checked')?.value === 'per_class';
+                            data.class_grading_schemes = {};
+                            if (isPerClassMode) {
+                                document.querySelectorAll('#editClassStreamGrid .edit-cs-item.selected .edit-class-grading-scheme-select')
+                                    .forEach(sel => {
+                                        if (sel.value) {
+                                            data.class_grading_schemes[sel.dataset.csKey] = sel.value;
+                                        }
+                                    });
+                            }
+                            delete data.edit_grading_mode;
 
                             // Validate examination details
                             if (!data.exam_name || !data.exam_name.trim()) {
