@@ -2,13 +2,13 @@
 use App\Http\Controllers\Helper;
 ?>
 {{-- resources/views/Examination/passslips/customize.blade.php
-     "Customize this design" — reached from the Design Template gallery
-     on the pass slips index. Shows ONLY the toggles that actually affect
-     the chosen template (Helper::passslipTogglesForTemplate), side by
-     side with a live iframe preview that starts fully-featured and
-     updates as toggles change — no reload needed to SEE the change
-     (the iframe's own src is refreshed under the hood), and nothing is
-     saved until "Save for selected classes" is clicked. --}}
+"Customize this design" — reached from the Design Template gallery
+on the pass slips index. Shows ONLY the toggles that actually affect
+the chosen template (Helper::passslipTogglesForTemplate), side by
+side with a live iframe preview that starts fully-featured and
+updates as toggles change — no reload needed to SEE the change
+(the iframe's own src is refreshed under the hood), and nothing is
+saved until "Save for selected classes" is clicked. --}}
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -123,9 +123,17 @@ use App\Http\Controllers\Helper;
         }
 
         @keyframes cz-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
-            70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
-            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, .5);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
 
         .cz-iframe-shell {
@@ -151,12 +159,14 @@ use App\Http\Controllers\Helper;
             display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,.6);
+            background: rgba(255, 255, 255, .6);
             font-size: .8rem;
             color: #64748b;
         }
 
-        .cz-loading.show { display: flex; }
+        .cz-loading.show {
+            display: flex;
+        }
 
         .cz-group-label {
             font-size: .72rem;
@@ -168,7 +178,9 @@ use App\Http\Controllers\Helper;
             padding: 0 .25rem;
         }
 
-        .cz-group-label:first-of-type { margin-top: .25rem; }
+        .cz-group-label:first-of-type {
+            margin-top: .25rem;
+        }
 
         .cz-check-row {
             display: flex;
@@ -187,7 +199,11 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .cz-switch input { opacity: 0; width: 0; height: 0; }
+        .cz-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
         .cz-switch-slider {
             position: absolute;
@@ -210,8 +226,13 @@ use App\Http\Controllers\Helper;
             transition: .18s;
         }
 
-        .cz-switch input:checked + .cz-switch-slider { background: var(--brand); }
-        .cz-switch input:checked + .cz-switch-slider::before { transform: translateX(17px); }
+        .cz-switch input:checked+.cz-switch-slider {
+            background: var(--brand);
+        }
+
+        .cz-switch input:checked+.cz-switch-slider::before {
+            transform: translateX(17px);
+        }
 
         .cz-tpl-mini {
             display: flex;
@@ -232,7 +253,10 @@ use App\Http\Controllers\Helper;
             transition: all .15s;
         }
 
-        .cz-tpl-mini-card:hover { border-color: var(--brand-mid); color: var(--brand); }
+        .cz-tpl-mini-card:hover {
+            border-color: var(--brand-mid);
+            color: var(--brand);
+        }
 
         .cz-tpl-mini-card.selected {
             border-color: var(--brand);
@@ -271,7 +295,9 @@ use App\Http\Controllers\Helper;
             border: 2px solid transparent;
         }
 
-        .cz-preset-dot.active { border-color: #1e1b4b; }
+        .cz-preset-dot.active {
+            border-color: #1e1b4b;
+        }
 
         .cz-class-chip {
             padding: .4rem .8rem;
@@ -310,6 +336,60 @@ use App\Http\Controllers\Helper;
             font-size: .78rem;
             padding: .45rem 1rem;
         }
+
+        #czPreviewClass.form-control {
+            background-color: #f8f9fa;
+            border: 2px solid #2C29CA;
+            border-radius: 8px;
+            padding: 6px 12px;
+            height: auto;
+            min-height: 38px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.3s ease;
+            -webkit-appearance: auto;
+            appearance: auto;
+            cursor: pointer;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            width: auto;
+            max-width: 300px;
+            display: inline-block;
+        }
+
+        #czPreviewClass.form-control:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        #czPreviewClass.form-control option {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        #czPreviewClass.form-control {
+            background-color: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.3s ease;
+            -webkit-appearance: auto;
+            appearance: auto;
+            cursor: pointer;
+        }
+
+        #czPreviewClass.form-control:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        #czPreviewClass.form-control option {
+            padding: 8px 12px;
+        }
     </style>
 @endsection
 
@@ -317,9 +397,10 @@ use App\Http\Controllers\Helper;
     <div class="container-fluid" style="padding: 1.25rem 1.5rem;">
 
         <div class="cz-topbar">
-            <a href="{{ route('examination.passslips.index', $exam->id) }}" class="cz-back">
+            <a href="{{ route('examination.passslips.index', $exam->id) }}" class="btn btn-primary cz-back">
                 <i class="fas fa-arrow-left"></i> Back to Pass Slips
             </a>
+
             <h1 class="cz-title">
                 Customize this design — {{ $exam->exam_name }} ({{ $exam->term }})
             </h1>
@@ -346,8 +427,8 @@ use App\Http\Controllers\Helper;
                 </div>
 
                 {{-- Accent colour — applies in every scenario of every
-                     design template, so it's never gated behind a
-                     capability check. --}}
+                design template, so it's never gated behind a
+                capability check. --}}
                 <div class="cz-group-label"><i class="fas fa-palette"></i> Accent Colour</div>
                 <div class="cz-color-row">
                     <label for="czColorPicker">Accent colour</label>
@@ -357,20 +438,28 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="cz-presets" id="czPresets">
                     @foreach ([
-                        ['#f0a500', 'Amber (default)'], ['#c0392b', 'Ruby Red'], ['#2C29CA', 'Brand Blue'],
-                        ['#10b981', 'Emerald'], ['#7c3aed', 'Violet'], ['#0f172a', 'Midnight'],
-                        ['#e11d48', 'Rose'], ['#0ea5e9', 'Sky'], ['#15803d', 'Forest Green'],
-                        ['#dc2626', 'Crimson'], ['#4338ca', 'Indigo'], ['#374151', 'Slate Gray'],
-                    ] as [$hex, $label])
-                        <div class="cz-preset-dot {{ $hex === '#f0a500' ? 'active' : '' }}"
-                             style="background:{{ $hex }};" title="{{ $label }}" data-color="{{ $hex }}"></div>
+                            ['#f0a500', 'Amber (default)'],
+                            ['#c0392b', 'Ruby Red'],
+                            ['#2C29CA', 'Brand Blue'],
+                            ['#10b981', 'Emerald'],
+                            ['#7c3aed', 'Violet'],
+                            ['#0f172a', 'Midnight'],
+                            ['#e11d48', 'Rose'],
+                            ['#0ea5e9', 'Sky'],
+                            ['#15803d', 'Forest Green'],
+                            ['#dc2626', 'Crimson'],
+                            ['#4338ca', 'Indigo'],
+                            ['#374151', 'Slate Gray'],
+                        ] as [$hex, $label])
+                        <div class="cz-preset-dot {{ $hex === '#f0a500' ? 'active' : '' }}" style="background:{{ $hex }};"
+                            title="{{ $label }}" data-color="{{ $hex }}"></div>
                     @endforeach
                 </div>
 
                 {{-- ── Dynamically-filtered toggle groups ──
-                     Only the sections/keys this template actually supports
-                     are rendered here at all — this is the fix for the
-                     "toggle does nothing" problem. --}}
+                Only the sections/keys this template actually supports
+                are rendered here at all — this is the fix for the
+                "toggle does nothing" problem. --}}
                 @foreach ($toggleGroups as $groupLabel => $toggles)
                     <div class="cz-group-label">{{ $groupLabel }}</div>
                     @foreach ($toggles as $key => $meta)
@@ -389,11 +478,13 @@ use App\Http\Controllers\Helper;
                     @foreach ($siblingExams as $se)
                         <div class="cz-check-row">
                             <label for="cz_exam_{{ $se->id }}">
-                                <input type="checkbox" id="cz_exam_{{ $se->id }}" class="cz-exam-combine-cb" value="{{ $se->id }}" style="margin-right:.4rem;">
+                                <input type="checkbox" id="cz_exam_{{ $se->id }}" class="cz-exam-combine-cb" value="{{ $se->id }}"
+                                    style="margin-right:.4rem;">
                                 {{ $se->exam_name }} ({{ $se->term }})
                             </label>
                             <label class="cz-switch" title="Include in average">
-                                <input type="checkbox" id="cz_avg_{{ $se->id }}" class="cz-exam-avg-cb" value="{{ $se->id }}" disabled>
+                                <input type="checkbox" id="cz_avg_{{ $se->id }}" class="cz-exam-avg-cb" value="{{ $se->id }}"
+                                    disabled>
                                 <span class="cz-switch-slider"></span>
                             </label>
                         </div>
@@ -406,7 +497,8 @@ use App\Http\Controllers\Helper;
                     It'll be applied automatically every time their pass slips are printed.
                 </div>
 
-                <div id="czClassSelector" style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem;background:#f8fafc;border-radius:12px;border:2px solid #e2e8f0;min-height:52px;margin-bottom:.6rem;">
+                <div id="czClassSelector"
+                    style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem;background:#f8fafc;border-radius:12px;border:2px solid #e2e8f0;min-height:52px;margin-bottom:.6rem;">
                     @foreach ($examClasses->unique('class_id') as $ec)
                         <div class="cz-class-chip" data-class-id="{{ $ec->class_id }}">
                             {{ Helper::recordMdname($ec->class_id) }}
@@ -419,8 +511,10 @@ use App\Http\Controllers\Helper;
                         <span id="czSelectedCount">0</span> class(es) selected
                     </span>
                     <div style="display:flex;gap:.4rem;">
-                        <button type="button" class="cz-btn-outline" id="czSelectAll" style="padding:.25rem .6rem;font-size:.68rem;">All</button>
-                        <button type="button" class="cz-btn-outline" id="czSelectNone" style="padding:.25rem .6rem;font-size:.68rem;">None</button>
+                        <button type="button" class="cz-btn-outline" id="czSelectAll"
+                            style="padding:.25rem .6rem;font-size:.68rem;">All</button>
+                        <button type="button" class="cz-btn-outline" id="czSelectNone"
+                            style="padding:.25rem .6rem;font-size:.68rem;">None</button>
                     </div>
                 </div>
 
@@ -431,14 +525,17 @@ use App\Http\Controllers\Helper;
 
             </div>
 
+
+
             {{-- ══════════ RIGHT: live preview ══════════ --}}
             <div class="cz-preview-wrap">
                 <div class="cz-preview-head">
                     <div style="font-size:.8rem;color:#334155;font-weight:600;">
                         <span class="cz-live-dot"></span> Live preview
                     </div>
-                    <select id="czPreviewClass">
-                        <option value="">Preview with: any available student</option>
+
+                    <select id="czPreviewClass" class="form-control">
+                        <!-- <option value="">Preview with: any available student</option> -->
                         @foreach ($examClasses->unique('class_id') as $ec)
                             <option value="{{ $ec->class_id }}|{{ $ec->stream_id }}">
                                 Preview with: {{ Helper::recordMdname($ec->class_id) }}
@@ -454,7 +551,7 @@ use App\Http\Controllers\Helper;
         </div>
     </div>
     </div>
-        </div>
+    </div>
     </div>
 
     <script>

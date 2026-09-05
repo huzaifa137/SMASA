@@ -1179,12 +1179,19 @@
             padding: .7rem .9rem;
         }
 
-        .rc-stu-col {
-            flex: 1;
+        /* Flex-wrap field list: rows sit two-per-line by default. When a
+           row is toggled off it is never rendered at all (not merely
+           hidden), so the browser simply has fewer boxes to lay out and
+           the rest reflow to fill the space automatically. The
+           ":last-child:nth-child(odd)" rule below is what turns "one
+           lone item left in the final row" into a full-width row instead
+           of a half-empty one — it only matches when the last row has
+           exactly one item in it. */
+        .rc-stu-fields {
             display: flex;
-            flex-direction: column;
-            gap: .32rem;
-            min-width: 0;
+            flex-wrap: wrap;
+            gap: .32rem 1rem;
+            align-content: flex-start;
         }
 
         .rc-stu-row {
@@ -1192,6 +1199,12 @@
             color: #222;
             display: flex;
             gap: .3rem;
+            flex: 1 1 44%;
+            min-width: 180px;
+        }
+
+        .rc-stu-row:last-child:nth-child(odd) {
+            flex-basis: 100%;
         }
 
         .rc-stu-row .k {
@@ -1596,6 +1609,75 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
+           A4 SINGLE-PAGE FIT — "DENSE" MODE
+           Applied via the .rc-dense class (set in PHP from a rough content
+           score: subject count + active optional sections). Tightens
+           paddings/gaps/font-sizes just enough to reclaim the vertical
+           space a busy slip needs to still land on one A4 page, without
+           visually breaking the layout for the common, lighter case.
+════════════════════════════════════════════════════════════════ */
+        .slip.rc-dense .rc-section-hd {
+            padding: .28rem .6rem;
+            font-size: .66rem;
+        }
+
+        .slip.rc-dense .rc-stu-grid {
+            padding: .45rem .8rem;
+        }
+
+        .slip.rc-dense .rc-stu-fields {
+            gap: .18rem .8rem;
+        }
+
+        .slip.rc-dense .rc-stu-row {
+            font-size: .68rem;
+        }
+
+        .slip.rc-dense .rc-summary-cell {
+            padding: .35rem .3rem;
+        }
+
+        .slip.rc-dense .rc-summary-lbl {
+            font-size: .48rem;
+        }
+
+        .slip.rc-dense .rc-summary-val {
+            font-size: .8rem;
+        }
+
+        .slip.rc-dense .marks-tbl th,
+        .slip.rc-dense .marks-tbl td {
+            padding: .22rem .35rem !important;
+            font-size: .66rem;
+        }
+
+        .slip.rc-dense .rc-mini-tbl th,
+        .slip.rc-dense .rc-mini-tbl td {
+            padding: .22rem .35rem;
+        }
+
+        .slip.rc-dense .rc-remarks-box {
+            padding: .4rem .6rem;
+            font-size: .64rem;
+        }
+
+        .slip.rc-dense .rc-remarks-box .rc-remark-line {
+            margin-bottom: .35rem;
+        }
+
+        .slip.rc-dense .rc-section,
+        .slip.rc-dense .rc-summary,
+        .slip.rc-dense .rc-table-wrap,
+        .slip.rc-dense .rc-footer-grid,
+        .slip.rc-dense .rc-two-col {
+            margin-bottom: .5rem;
+        }
+
+        .slip.rc-dense canvas {
+            max-height: 70px !important;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
    PRINT
 ════════════════════════════════════════════════════════════════ */
         @media print {
@@ -1886,11 +1968,39 @@
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     // New toggles
-                    'total_score' => $on('show_total_score', true, $savedCfg),
-                    'average' => $on('show_average', true, $savedCfg),
                     'result' => $on('show_result', true, $savedCfg),
                     'score_col' => $on('show_score_col', true, $savedCfg),
                     'comment_col' => $on('show_comment_col', true, $savedCfg),
+
+                    // Whole-section master switches
+                    'section_student_info' => $on('show_section_student_info', true, $savedCfg),
+                    'section_summary' => $on('show_section_summary', true, $savedCfg),
+                    'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+
+                    // Student Information — per-field
+                    'stu_name' => $on('show_stu_name', true, $savedCfg),
+                    'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_class' => $on('show_stu_class', true, $savedCfg),
+                    'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+                    'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
+                    'stu_term' => $on('show_stu_term', true, $savedCfg),
+                    'stu_dob' => $on('show_stu_dob', true, $savedCfg),
+                    'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                    'stu_class_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
+                    'stu_house' => $on('show_stu_house', true, $savedCfg),
+                    'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
+                    'stu_status' => $on('show_stu_status', true, $savedCfg),
+
+                    // Summary Bar — per-field
+                    'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
+                    'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
+                    'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
+                    'sum_grade' => $on('show_sum_grade', true, $savedCfg),
+                    'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                    'sum_division' => $on('show_sum_division', true, $savedCfg),
+                    'sum_position' => $on('show_sum_position', true, $savedCfg),
+                    'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
+                    'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
                 ];
 
                 // Early years classes aren't scored Pass/Fail against the
@@ -1988,6 +2098,26 @@
 
                 $noOfSubjects = $subjMarks->count();
 
+                // ── A4 single-page fit ──────────────────────────────────
+                // A slip with lots of subjects, a long discipline table, or
+                // several optional sections switched on can genuinely run
+                // longer than one A4 page. There's no reliable way to
+                // measure rendered height from Blade/PHP before it's drawn,
+                // so instead we estimate "how much is on this page" from
+                // the same data that drives the toggles, and drop a
+                // ".rc-dense" class on the slip when it crosses a
+                // threshold. The stylesheet below shrinks paddings, gaps
+                // and font-sizes under that class — enough headroom that a
+                // slip with e.g. 12+ subjects and every optional section
+                // enabled still lands on one page instead of spilling a
+                // couple of rows onto a second.
+                $rcContentScore = $noOfSubjects
+                    + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
+                    + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
+                    + ($cfg['remarks'] ? 2 : 0)
+                    + ($cfg['signatures'] ? 1 : 0);
+                $isDense = $rcContentScore > 14;
+
                 $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
                 $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
 
@@ -2077,7 +2207,7 @@
             @endphp
 
             {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
-            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
+            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }} {{ $isDense ? 'rc-dense' : '' }}">
 
                 {{-- Watermark --}}
                 @if($cfg['watermark'])
@@ -2155,131 +2285,186 @@
                 </div>
                 <div class="rc-title-rule"></div>
 
-                {{-- ══ STUDENT INFORMATION ═════════════════════════════════════════ --}}
-                <div class="rc-section">
-                    <div class="rc-section-hd">Student Information</div>
-                    <div class="rc-stu-grid"
-                        style="display: flex; justify-content: space-between; align-items: stretch; padding: .7rem .9rem; gap: 1rem;">
-                        <div class="rc-stu-col"
-                            style="flex: 2; display: flex; flex-direction: column; gap: .32rem; min-width: 0;">
-                            <div class="rc-stu-row"><span class="k">Student Name:</span>
-                                <span>{{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}</span>
+                {{-- ══ STUDENT INFORMATION ═════════════════════════════════════════
+                     Whole section can be switched off with one master toggle
+                     (show_section_student_info). Each row inside it has its
+                     own show_stu_* toggle. The rows live in ONE flex-wrap
+                     list (.rc-stu-fields) rather than two hard-coded halves,
+                     so when a row is switched off the rest reflow to fill
+                     the gap instead of leaving a blank slot — and if only
+                     one row is left in the final line, the
+                     ":last-child:nth-child(odd)" rule in the stylesheet
+                     stretches it to the full width. ══════════════════════ --}}
+                @if($cfg['section_student_info'])
+                    <div class="rc-section">
+                        <div class="rc-section-hd">Student Information</div>
+                        <div class="rc-stu-grid"
+                            style="display: flex; align-items: stretch; padding: .7rem .9rem; gap: 1rem;">
+                            <div class="rc-stu-fields" style="flex: 1; min-width: 0;">
+                                @if($cfg['stu_name'])
+                                    <div class="rc-stu-row"><span class="k">Student Name:</span>
+                                        <span>{{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_admission'])
+                                    <div class="rc-stu-row"><span class="k">Admission No.:</span>
+                                        <span>{{ $admissionNo }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_class'])
+                                    <div class="rc-stu-row"><span class="k">Class:</span>
+                                        <span>{{ Helper::recordMdname($s->senior) }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_stream'])
+                                    <div class="rc-stu-row"><span class="k">Stream:</span>
+                                        <span>{{ $s->stream ?? '—' }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_academic_year'])
+                                    <div class="rc-stu-row"><span class="k">Academic Year:</span>
+                                        <span>{{ $exam->academic_year }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_term'])
+                                    <div class="rc-stu-row"><span class="k">Term:</span>
+                                        <span>{{ $exam->term }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_dob'])
+                                    <div class="rc-stu-row"><span class="k">Date of Birth:</span>
+                                        <span>{{ $dobFormatted }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_gender'])
+                                    <div class="rc-stu-row"><span class="k">Gender:</span>
+                                        <span>{{ $s->gender ?? '—' }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_class_teacher'])
+                                    <div class="rc-stu-row"><span class="k">Class Teacher:</span>
+                                        <span>{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_house'])
+                                    <div class="rc-stu-row"><span class="k">House / Team:</span>
+                                        <span>{{ $houseTeam }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_report_date'])
+                                    <div class="rc-stu-row"><span class="k">Date of Report:</span>
+                                        <span>{{ now()->format('d M Y') }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_status'])
+                                    <div class="rc-stu-row">
+                                        <span class="k">Status:</span>
+                                        <span @php
+                                            $statusLower = strtolower($statusLabel);
+                                            if ($isEarlyYears) {
+                                                $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
+                                            } else {
+                                                $statusClass = str_contains($statusLower, 'promot')
+                                                    ? 'status-promoted'
+                                                    : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
+                                            }
+                                        @endphp class="status-pill {{ $statusClass }}"
+                                            style="margin-top:0;">
+                                            {{ ucfirst($statusLabel) }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
-                            <div class="rc-stu-row"><span class="k">Admission No.:</span> <span>{{ $admissionNo }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">Class:</span>
-                                <span>{{ Helper::recordMdname($s->senior) }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">Stream:</span> <span>{{ $s->stream ?? '—' }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">Academic Year:</span>
-                                <span>{{ $exam->academic_year }}</span></div>
-                            <div class="rc-stu-row"><span class="k">Term:</span> <span>{{ $exam->term }}</span></div>
-                        </div>
 
-                        <div class="rc-stu-col"
-                            style="flex: 2; display: flex; flex-direction: column; gap: .32rem; min-width: 0;">
-                            <div class="rc-stu-row"><span class="k">Date of Birth:</span> <span>{{ $dobFormatted }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">Gender:</span> <span>{{ $s->gender ?? '—' }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">Class Teacher:</span>
-                                <span>{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
-                            </div>
-                            <div class="rc-stu-row"><span class="k">House / Team:</span> <span>{{ $houseTeam }}</span></div>
-                            <div class="rc-stu-row"><span class="k">Date of Report:</span>
-                                <span>{{ now()->format('d M Y') }}</span></div>
-                            <div class="rc-stu-row">
-                                <span class="k">Status:</span>
-                                <span @php
-                                    $statusLower = strtolower($statusLabel);
-                                    if ($isEarlyYears) {
-                                        $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
-                                    } else {
-                                        $statusClass = str_contains($statusLower, 'promot')
-                                            ? 'status-promoted'
-                                            : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
-                                    }
-                                @endphp class="status-pill {{ $statusClass }}"
-                                    style="margin-top:0;">
-                                    {{ ucfirst($statusLabel) }}
-                                </span>
-                            </div>
-                        </div>
-
-                        @if($cfg['photo'])
-                            <div class="rc-stu-photo-col"
-                                style="flex-shrink: 0; width: 92px; display: flex; flex-direction: column; align-items: center; gap: .3rem; padding-left: 0.5rem;">
-                                <div class="rc-stu-photo-box"
-                                    style="width: 88px; height: 106px; border: 1.5px solid #c8c8c8; border-radius: 3px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; text-align: center;">
-                                    @if($photo)
-                                        <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}">
-                                    @else
-                                        <div class="nophoto"
-                                            style="font-size: .55rem; color: #999; text-transform: uppercase; letter-spacing: .03em; padding: 0 .3rem; text-align: center;">
-                                            <i class="fas fa-user"
-                                                style="display: block; font-size: 1.7rem; color: #b6b6b6; margin-bottom: .2rem;"></i>
-                                            Photo
-                                        </div>
-                                    @endif
+                            @if($cfg['photo'])
+                                <div class="rc-stu-photo-col"
+                                    style="flex-shrink: 0; width: 92px; display: flex; flex-direction: column; align-items: center; gap: .3rem; padding-left: 0.5rem;">
+                                    <div class="rc-stu-photo-box"
+                                        style="width: 88px; height: 106px; border: 1.5px solid #c8c8c8; border-radius: 3px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; text-align: center;">
+                                        @if($photo)
+                                            <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}">
+                                        @else
+                                            <div class="nophoto"
+                                                style="font-size: .55rem; color: #999; text-transform: uppercase; letter-spacing: .03em; padding: 0 .3rem; text-align: center;">
+                                                <i class="fas fa-user"
+                                                    style="display: block; font-size: 1.7rem; color: #b6b6b6; margin-bottom: .2rem;"></i>
+                                                Photo
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
-                    {{-- ══ ACADEMIC PERFORMANCE SUMMARY ═══════════════════════════════ --}}
+                @endif
+
+                {{-- ══ ACADEMIC PERFORMANCE SUMMARY ═══════════════════════════════
+                     Whole strip can be switched off with show_section_summary;
+                     each cell inside has its own show_sum_* toggle. Cells use
+                     "flex: 1 1 0" with no fixed basis, so whatever is left
+                     after some are switched off automatically grows to fill
+                     the row — no code change needed for that part, it
+                     already behaved this way. ══════════════════════════════ --}}
+                @if($cfg['section_summary'])
                     <div class="rc-summary">
-                        @if($cfg['total_score'])
+                        @if($cfg['sum_total_marks'])
                             <div class="rc-summary-cell">
                                 <i class="fas fa-clipboard-list"></i>
                                 <div class="rc-summary-lbl">Total Marks</div>
                                 <div class="rc-summary-val">{{ $totObt }} / {{ $totMax }}</div>
                             </div>
                         @endif
-                        @if($cfg['average'])
+                        @if($cfg['sum_average_mark'])
                             <div class="rc-summary-cell">
                                 <i class="fas fa-chart-column"></i>
                                 <div class="rc-summary-lbl">Average Mark</div>
                                 <div class="rc-summary-val">
                                     {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}</div>
                             </div>
+                        @endif
+                        @if($cfg['sum_average_pct'])
                             <div class="rc-summary-cell">
                                 <i class="fas fa-percent"></i>
                                 <div class="rc-summary-lbl">Average %</div>
                                 <div class="rc-summary-val">{{ $isEarlyYears ? '—' : $pct . '%' }}</div>
                             </div>
                         @endif
-                        @if($cfg['grade_pill'] && !$isEarlyYears)
+                        @if($cfg['sum_grade'] && !$isEarlyYears)
                             <div class="rc-summary-cell">
                                 <i class="fas fa-award"></i>
                                 <div class="rc-summary-lbl">Overall Grade</div>
                                 <div class="rc-summary-val">{{ $oGrade }}</div>
                             </div>
+                        @endif
+                        @if($cfg['sum_grade_point'] && !$isEarlyYears)
                             <div class="rc-summary-cell">
                                 <i class="fas fa-star"></i>
                                 <div class="rc-summary-lbl">Grade Point</div>
                                 <div class="rc-summary-val">{{ $avgGradePoint ?? '—' }}</div>
                             </div>
                         @endif
-                        @if($divisionLabel)
+                        @if($cfg['sum_division'] && $divisionLabel)
                             <div class="rc-summary-cell">
                                 <i class="fas fa-trophy"></i>
                                 <div class="rc-summary-lbl">Division</div>
                                 <div class="rc-summary-val">{{ strtoupper($divisionLabel) }}</div>
                             </div>
                         @endif
-                        @if($cfg['rank'] && is_numeric($rank))
+                        @if($cfg['sum_position'] && is_numeric($rank))
                             <div class="rc-summary-cell">
                                 <i class="fas fa-ranking-star"></i>
                                 <div class="rc-summary-lbl">Position</div>
                                 <div class="rc-summary-val">{{ $rank }} / {{ $classTotalN }}</div>
                             </div>
                         @endif
-                        <div class="rc-summary-cell">
-                            <i class="fas fa-book"></i>
-                            <div class="rc-summary-lbl">No. of Subjects</div>
-                            <div class="rc-summary-val">{{ $noOfSubjects }}</div>
-                        </div>
-                        @if($attPct !== null)
+                        @if($cfg['sum_subjects'])
+                            <div class="rc-summary-cell">
+                                <i class="fas fa-book"></i>
+                                <div class="rc-summary-lbl">No. of Subjects</div>
+                                <div class="rc-summary-val">{{ $noOfSubjects }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_attendance'] && $attPct !== null)
                             <div class="rc-summary-cell">
                                 <i class="fas fa-calendar-check"></i>
                                 <div class="rc-summary-lbl">Attendance</div>
@@ -2287,8 +2472,13 @@
                             </div>
                         @endif
                     </div>
+                @endif
 
-                    {{-- ══ MARKS TABLE ════════════════════════════════════════════════ --}}
+                {{-- ══ MARKS TABLE ════════════════════════════════════════════════
+                     Whole table can be switched off with show_section_marks_table;
+                     column-level toggles (score/dev/grade/comment/teacher/totals)
+                     keep working exactly as before inside it. ═══════════════════ --}}
+                @if($cfg['section_marks_table'])
                     <div class="rc-table-wrap">
                         @if($multiExam)
                             {{-- ── MULTI-EXAM TABLE (BOT | MID | EOT …) ── --}}
@@ -2584,9 +2774,10 @@
                             </table>
                         @endif
                     </div>
+                @endif
 
-                    {{-- ══ OPTIONAL PERFORMANCE-OVER-TIME CHART ═══════════════════════ --}}
-                    @if($cfg['perf_chart'] && count($growth) > 0)
+                {{-- ══ OPTIONAL PERFORMANCE-OVER-TIME CHART ═══════════════════════ --}}
+                @if($cfg['perf_chart'] && count($growth) > 0)
                         <div class="rc-section">
                             <div class="rc-section-hd">{{ $s->firstname }}'s Performance Over Time</div>
                             <div style="padding:.6rem .8rem;">

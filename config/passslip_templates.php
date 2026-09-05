@@ -26,6 +26,14 @@
 | section, update its list here to match — that's the only place
 | this needs to change.
 |
+| NOTE (classic): 'show_total_score', 'show_average' and 'show_rank'
+| have been superseded in Classic by the granular Summary Bar toggles
+| ('show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
+| 'show_sum_position', etc.) and are no longer in classic's capability
+| list. They're left in the registry only so any already-saved settings
+| JSON containing the old keys doesn't error out — they're simply
+| ignored by Classic now.
+|
 */
 
 return [
@@ -33,6 +41,41 @@ return [
     'toggles' => [
         'show_border' => ['label' => 'Decorative border & corners', 'icon' => 'fa-border-all', 'group' => 'Appearance'],
         'show_watermark' => ['label' => 'Watermark (logo / school name)', 'icon' => 'fa-stamp', 'group' => 'Appearance'],
+
+        // ── Whole-section master switches ───────────────────────────
+        // Turn an entire boxed section off in one click. Independent of
+        // the field-level toggles further down — e.g. show_section_student_info
+        // OFF hides the box completely regardless of what its individual
+        // show_stu_* switches are set to. Placed early/prominently since
+        // this is usually the first decision someone makes.
+        'show_section_student_info' => ['label' => 'Student Information (entire section)', 'icon' => 'fa-id-card', 'group' => 'Sections'],
+        'show_section_summary' => ['label' => 'Performance Summary strip (entire section)', 'icon' => 'fa-chart-simple', 'group' => 'Sections'],
+        'show_section_marks_table' => ['label' => 'Marks Table (entire section)', 'icon' => 'fa-table', 'group' => 'Sections'],
+
+        // ── Student Information — per-field toggles ─────────────────
+        'show_stu_name' => ['label' => 'Student Name', 'icon' => 'fa-user', 'group' => 'Student Information Fields'],
+        'show_stu_admission' => ['label' => 'Admission No.', 'icon' => 'fa-id-badge', 'group' => 'Student Information Fields'],
+        'show_stu_class' => ['label' => 'Class', 'icon' => 'fa-chalkboard', 'group' => 'Student Information Fields'],
+        'show_stu_stream' => ['label' => 'Stream', 'icon' => 'fa-diagram-project', 'group' => 'Student Information Fields'],
+        'show_stu_academic_year' => ['label' => 'Academic Year', 'icon' => 'fa-calendar', 'group' => 'Student Information Fields'],
+        'show_stu_term' => ['label' => 'Term', 'icon' => 'fa-calendar-days', 'group' => 'Student Information Fields'],
+        'show_stu_dob' => ['label' => 'Date of Birth', 'icon' => 'fa-cake-candles', 'group' => 'Student Information Fields'],
+        'show_stu_gender' => ['label' => 'Gender', 'icon' => 'fa-venus-mars', 'group' => 'Student Information Fields'],
+        'show_stu_class_teacher' => ['label' => 'Class Teacher', 'icon' => 'fa-chalkboard-teacher', 'group' => 'Student Information Fields'],
+        'show_stu_house' => ['label' => 'House / Team', 'icon' => 'fa-house', 'group' => 'Student Information Fields'],
+        'show_stu_report_date' => ['label' => 'Date of Report', 'icon' => 'fa-clock', 'group' => 'Student Information Fields'],
+        'show_stu_status' => ['label' => 'Status', 'icon' => 'fa-flag', 'group' => 'Student Information Fields'],
+
+        // ── Performance Summary strip — per-field toggles ────────────
+        'show_sum_total_marks' => ['label' => 'Total Marks', 'icon' => 'fa-clipboard-list', 'group' => 'Summary Bar Fields'],
+        'show_sum_average_mark' => ['label' => 'Average Mark', 'icon' => 'fa-chart-column', 'group' => 'Summary Bar Fields'],
+        'show_sum_average_pct' => ['label' => 'Average %', 'icon' => 'fa-percent', 'group' => 'Summary Bar Fields'],
+        'show_sum_grade' => ['label' => 'Overall Grade', 'icon' => 'fa-award', 'group' => 'Summary Bar Fields'],
+        'show_sum_grade_point' => ['label' => 'Grade Point', 'icon' => 'fa-star', 'group' => 'Summary Bar Fields'],
+        'show_sum_division' => ['label' => 'Division', 'icon' => 'fa-trophy', 'group' => 'Summary Bar Fields'],
+        'show_sum_position' => ['label' => 'Position / Rank', 'icon' => 'fa-ranking-star', 'group' => 'Summary Bar Fields'],
+        'show_sum_subjects' => ['label' => 'No. of Subjects', 'icon' => 'fa-book', 'group' => 'Summary Bar Fields'],
+        'show_sum_attendance' => ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'group' => 'Summary Bar Fields'],
 
         'show_logo' => ['label' => 'School logo', 'icon' => 'fa-image', 'group' => 'School Header'],
         'show_arabic' => ['label' => 'Arabic school name', 'icon' => 'fa-language', 'group' => 'School Header'],
@@ -72,11 +115,23 @@ return [
         'classic' => [
             'show_border', 'show_watermark',
             'show_logo', 'show_arabic', 'show_motto', 'show_contact',
-            'show_photo', 'show_minichart', 'show_qr', 'show_rank',
-            'show_total_score', 'show_average',
+            'show_photo', 'show_minichart', 'show_qr',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',
+
+            // Whole-section masters
+            'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+
+            // Student Information — per-field
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
+            'show_stu_academic_year', 'show_stu_term', 'show_stu_dob', 'show_stu_gender',
+            'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
+
+            // Summary Bar — per-field
+            'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
         'modern' => [
             'show_border', 'show_watermark',
