@@ -331,9 +331,18 @@ class ExaminationController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        // Uses the grading scheme picked for THIS exam (falls back to the
-        // school's / global default scheme if none was picked yet).
-        $gradingScale = $exam->resolvedGradingBands();
+        // 🔥 Prefer this class-stream's own grading scheme (if one was
+        // assigned when the exam was created/edited); fall back to the
+        // exam's default scheme (which itself falls back to the school's /
+        // global default) when this class has no override.
+        $examClass = ExaminationClass::where('examination_id', $examId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->first();
+
+        $gradingScale = $examClass
+            ? $examClass->resolvedGradingBands()
+            : $exam->resolvedGradingBands();
 
         // Subjects that have an Assessment Scale attached (via
         // class_subjects.assessment_scale_id) are graded on that scale's
@@ -420,8 +429,20 @@ class ExaminationController extends Controller
             return response()->json(['success' => false, 'message' => 'Marks entry is closed.'], 403);
         }
 
-        // Get grading scale (school's chosen scheme for this exam)
-        $gradingScale = $exam->resolvedGradingBands();
+        // 🔥 Get grading scale: prefer this class-stream's own grading
+        // scheme (assigned per-class on the exam), fall back to the exam's
+        // default scheme when this class has no override. This must match
+        // the resolution used in marksEntrySubject()/buildPassslipData(),
+        // otherwise the grade shown on the entry screen and the grade
+        // actually persisted here can disagree.
+        $examClass = ExaminationClass::where('examination_id', $examId)
+            ->where('class_id', $request->class_id)
+            ->where('stream_id', (string) $request->stream_id)
+            ->first();
+
+        $gradingScale = $examClass
+            ? $examClass->resolvedGradingBands()
+            : $exam->resolvedGradingBands();
 
         // Subjects with an Assessment Scale attached (class_subjects.
         // assessment_scale_id) use that scale's own score range and

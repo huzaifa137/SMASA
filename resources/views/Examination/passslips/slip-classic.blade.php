@@ -1104,39 +1104,39 @@
             margin-top: 3px;
         }
 
-        .rc-lh-reportno {
-            flex-shrink: 0;
-            border: 1.5px solid #cfd4de;
-            border-radius: 4px;
-            padding: .4rem .7rem;
-            text-align: center;
-        }
+.rc-lh-reportno {
+    flex-shrink: 0;
+    border: 1.5px solid #cfd4de;
+    border-radius: 4px;
+    padding: .2rem .5rem;
+    text-align: center;
+}
 
-        .rc-lh-reportno .lbl {
-            font-size: .58rem;
-            font-weight: 800;
-            letter-spacing: .06em;
-            color: #666;
-            text-transform: uppercase;
-        }
+.rc-lh-reportno .lbl {
+    font-size: .5rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    color: #666;
+    text-transform: uppercase;
+}
 
-        .rc-lh-reportno .val {
-            font-size: .72rem;
-            font-weight: 800;
-            color: var(--rc-navy);
-            margin-top: .15rem;
-        }
+.rc-lh-reportno .val {
+    font-size: .6rem;
+    font-weight: 800;
+    color: var(--rc-navy);
+    margin-top: .05rem;
+}
 
-        .rc-title-block {
-            text-align: center;
-            padding: .1rem 1.1rem .7rem;
-        }
+.rc-title-block {
+    text-align: center;
+    padding: 0rem 1.1rem .1rem;
+}
 
-        .rc-title-rule {
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
-            margin: 0 1.1rem .55rem;
-        }
+.rc-title-rule {
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
+    margin: 0 1.1rem .25rem;
+}
 
         .rc-title {
             font-size: 1.55rem;
@@ -2107,16 +2107,32 @@
                             <div class="rc-lh-arabic">{{ $schoolNameArabic }}</div>
                         @endif
 
-                        @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
-                            <div class="rc-lh-details">
-                                @if($schoolLocation)
-                                <div><i class="fas fa-location-dot"></i>{{ $schoolLocation }}</div>@endif
-                                @if($schoolPhone)
-                                <div><i class="fas fa-phone"></i>{{ $schoolPhone }}</div>@endif
-                                @if($schoolEmail)
-                                <div><i class="fas fa-envelope"></i>{{ $schoolEmail }}</div>@endif
-                            </div>
-                        @endif
+@if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
+    <div class="rc-lh-details">
+        <div style="white-space: nowrap;">
+            
+            @if($schoolLocation)
+                <span style="margin-right: 20px;">
+                    <i class="fas fa-location-dot"></i> {{ $schoolLocation }}
+                </span>
+            @endif
+
+            @if($schoolPhone)
+                <span style="margin-right: 20px;">
+                    <i class="fas fa-phone"></i> {{ $schoolPhone }}
+                </span>
+            @endif
+
+            @if($schoolEmail)
+                <span>
+                    <i class="fas fa-envelope"></i> {{ $schoolEmail }}
+                </span>
+            @endif
+
+        </div>
+    </div>
+@endif
+
 
                         @if($cfg['motto'] && $schoolMotto)
                             <div class="rc-lh-motto">MOTTO : "{{ $schoolMotto }}"</div>

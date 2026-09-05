@@ -32,7 +32,6 @@ use App\Http\Controllers\UserRightsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ParentPortalController;
 use App\Http\Controllers\StudentConsolidationController;
-use App\Http\Controllers\ReportCardTemplateController;
 
 Route::get('/logout', function () {
     session()->flush();
@@ -618,33 +617,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // Uses the same SchoolAuth + module:examinations middleware as the
     // rest of the examinations module.
     // ─────────────────────────────────────────────────────────────────────
-    Route::prefix('report-templates')
-        ->name('report-templates.')
-        ->controller(ReportCardTemplateController::class)
-        ->middleware(['module:examinations'])
-        ->middleware(['SchoolAuth'])
-        ->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::post('/', 'store')->name('store');
-            Route::post('/restore-default/{category}', 'restoreDefault')->name('restore-default');
-            Route::post('/reset-all', 'resetAll')->name('reset-all');
-            Route::get('/{template}/edit', 'edit')->name('edit');
-            Route::put('/{template}/autosave', 'autosave')->name('autosave');
-            Route::post('/{template}/publish', 'publish')->name('publish');
-            Route::post('/{template}/duplicate', 'duplicate')->name('duplicate');
-            Route::post('/{template}/set-default', 'setDefault')->name('set-default');
-            Route::get('/{template}/preview', 'preview')->name('preview');
-            Route::delete('/{template}', 'destroy')->name('destroy');
-        });
-
-    // One real download route wired to the new designer — generates a
-    // student's report card PDF using their school's chosen template
-    // instead of the old fixed Blade view. Sits next to the existing
-    // pass-slip routes for discoverability.
-    Route::get('/examinations/{examId}/report-card/{studentId}/download', [ReportCardTemplateController::class, 'downloadForStudent'])
-        ->middleware(['module:examinations', 'SchoolAuth'])
-        ->name('examination.report-card.download');
-
 
     // Grading Schemes (per-school customizable grade bands + scale)
     Route::prefix('examinations/grading-schemes')
