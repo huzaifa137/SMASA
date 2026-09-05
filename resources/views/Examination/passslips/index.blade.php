@@ -1010,8 +1010,17 @@ function setLanguage(lang) {
                             </div>
                         </div>
 
+                        {{-- Each design only actually uses some of the toggles
+                             below — "Customize this design" opens a dedicated
+                             page showing just the ones THIS template supports,
+                             side by side with a live preview. --}}
+                        <a href="#" id="cpCustomizeLink" class="cp-btn-sm w-100 d-block text-center"
+                           style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;font-weight:600;margin-bottom:1rem;text-decoration:none;">
+                            <i class="fas fa-sliders-h me-1"></i> Customize this design
+                        </a>
+
                         {{-- ── GROUP: Appearance ── --}}
-                        <div class="cp-group-label"><i class="fas fa-palette"></i> Appearance</div>
+                        <div class="cp-group-label" data-group="Appearance"><i class="fas fa-palette"></i> Appearance</div>
 
                         {{-- Accent / Primary colour --}}
                         <div class="cp-color-row">
@@ -1078,7 +1087,7 @@ function setLanguage(lang) {
                         <div class="cp-accent-preview" id="cpAccentPreview" style="background:#f0a500;"></div>
 
                         {{-- Border toggle --}}
-                        <div class="cp-check-row mt-2">
+                        <div class="cp-check-row mt-2" data-cap="show_border">
                             <label for="cb_show_border"><i class="fas fa-border-all"></i> Decorative border & corners</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_border" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1086,7 +1095,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_watermark">
                             <label for="cb_show_watermark"><i class="fas fa-stamp"></i> Watermark (logo / school name)</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_watermark" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1095,9 +1104,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Header ── --}}
-                        <div class="cp-group-label"><i class="fas fa-school"></i> School Header</div>
+                        <div class="cp-group-label" data-group="School Header"><i class="fas fa-school"></i> School Header</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_logo">
                             <label for="cb_show_logo"><i class="fas fa-image"></i> School logo</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_logo" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1105,7 +1114,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_arabic">
                             <label for="cb_show_arabic"><i class="fas fa-language"></i> Arabic school name</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_arabic" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1113,7 +1122,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_motto">
                             <label for="cb_show_motto"><i class="fas fa-quote-left"></i> School motto</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_motto" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1121,7 +1130,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_contact">
                             <label for="cb_show_contact"><i class="fas fa-phone"></i> Phone / email / location</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_contact" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1130,9 +1139,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Student Block ── --}}
-                        <div class="cp-group-label"><i class="fas fa-user-graduate"></i> Student Block</div>
+                        <div class="cp-group-label" data-group="Student Block"><i class="fas fa-user-graduate"></i> Student Block</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_photo">
                             <label for="cb_show_photo"><i class="fas fa-portrait"></i> Student photo</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_photo" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1140,7 +1149,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_minichart">
                             <label for="cb_show_minichart"><i class="fas fa-chart-line"></i> Subject mini chart (student vs class)</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_minichart" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1148,7 +1157,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_qr">
                             <label for="cb_show_qr"><i class="fas fa-qrcode"></i> QR code</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_qr" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1156,7 +1165,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_rank">
                             <label for="cb_show_rank"><i class="fas fa-trophy"></i> Class position / rank</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_rank" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1165,9 +1174,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Summary Bar ── --}}
-                        <div class="cp-group-label"><i class="fas fa-square-poll-horizontal"></i> Summary Bar</div>
+                        <div class="cp-group-label" data-group="Summary Bar"><i class="fas fa-square-poll-horizontal"></i> Summary Bar</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_total_score">
                             <label for="cb_show_total_score"><i class="fas fa-hashtag"></i> Total Score / Marks box</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_total_score" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1175,7 +1184,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_average">
                             <label for="cb_show_average"><i class="fas fa-percent"></i> Average box</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_average" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1183,7 +1192,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_result">
                             <label for="cb_show_result"><i class="fas fa-flag-checkered"></i> Result box</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_result" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1192,9 +1201,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Marks Table ── --}}
-                        <div class="cp-group-label"><i class="fas fa-table"></i> Marks Table</div>
+                        <div class="cp-group-label" data-group="Marks Table"><i class="fas fa-table"></i> Marks Table</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_score_col">
                             <label for="cb_show_score_col"><i class="fas fa-list-ol"></i> Score / Marks column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_score_col" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1202,7 +1211,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_dev">
                             <label for="cb_show_dev"><i class="fas fa-arrows-alt-v"></i> Development (DEV ↑↓) column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_dev" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1210,7 +1219,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_grade_pill">
                             <label for="cb_show_grade_pill"><i class="fas fa-tag"></i> Grade pills (A / B / C …)</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_grade_pill" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1218,7 +1227,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_comment_col">
                             <label for="cb_show_comment_col"><i class="fas fa-comment-dots"></i> Comment column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_comment_col" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1226,7 +1235,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_teacher_col">
                             <label for="cb_show_teacher_col"><i class="fas fa-chalkboard-teacher"></i> Teacher column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_teacher_col" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1234,7 +1243,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_totals_row">
                             <label for="cb_show_totals_row"><i class="fas fa-sigma"></i> Totals / average row</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_totals_row" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1243,9 +1252,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Bottom Section ── --}}
-                        <div class="cp-group-label"><i class="fas fa-chart-bar"></i> Bottom Section</div>
+                        <div class="cp-group-label" data-group="Bottom Section"><i class="fas fa-chart-bar"></i> Bottom Section</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_perf_chart">
                             <label for="cb_show_perf_chart"><i class="fas fa-chart-bar"></i> Performance-over-time chart</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_perf_chart" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1253,7 +1262,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_remarks">
                             <label for="cb_show_remarks"><i class="fas fa-comment-alt"></i> Remarks section</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_remarks" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1261,7 +1270,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_discipline">
                             <label for="cb_show_discipline"><i class="fas fa-user-shield"></i> Discipline section</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_discipline" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1269,7 +1278,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_signatures">
                             <label for="cb_show_signatures"><i class="fas fa-signature"></i> Signature column</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_signatures" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1278,9 +1287,9 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- ── GROUP: Footer ── --}}
-                        <div class="cp-group-label"><i class="fas fa-shoe-prints"></i> Footer</div>
+                        <div class="cp-group-label" data-group="Footer"><i class="fas fa-shoe-prints"></i> Footer</div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_footer_timestamp">
                             <label for="cb_show_footer_timestamp"><i class="fas fa-clock"></i> Generation timestamp</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_footer_timestamp" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -1288,7 +1297,7 @@ function setLanguage(lang) {
                             </label>
                         </div>
 
-                        <div class="cp-check-row">
+                        <div class="cp-check-row" data-cap="show_confidential">
                             <label for="cb_show_confidential"><i class="fas fa-lock"></i> CONFIDENTIAL stamp</label>
                             <label class="cp-switch">
                                 <input type="checkbox" id="cb_show_confidential" class="cp-toggle-cb" checked onchange="updateSummary()">
@@ -2005,6 +2014,54 @@ function setLanguage(lang) {
     };
 
     let currentSettings = { ...DEFAULTS };
+
+    /* ─────────────────────────────────────────────
+       PER-TEMPLATE CAPABILITY FILTERING
+       Sourced straight from config/passslip_templates.php
+       (via Helper::passslipCapabilitiesFor) — never hand-
+       duplicated here, so this can't drift out of sync with
+       what the templates actually render. Hides any toggle row
+       that has no effect on the currently-selected design, and
+       hides a whole group heading if every row under it is hidden.
+    ───────────────────────────────────────────── */
+    const TEMPLATE_CAPABILITIES = @json(
+        collect(['classic', 'modern', 'minimal'])->mapWithKeys(
+            fn ($t) => [$t => \App\Http\Controllers\Helper::passslipCapabilitiesFor($t)]
+        )
+    );
+
+    function filterPanelForTemplate(templateKey) {
+        const capable = TEMPLATE_CAPABILITIES[templateKey] || [];
+        const visibleGroups = new Set();
+
+        document.querySelectorAll('.cp-check-row[data-cap]').forEach(row => {
+            const key = row.dataset.cap;
+            const isCapable = capable.includes(key);
+            row.style.display = isCapable ? '' : 'none';
+            if (isCapable) {
+                const group = findGroupFor(row);
+                if (group) visibleGroups.add(group);
+            }
+        });
+
+        document.querySelectorAll('.cp-group-label[data-group]').forEach(label => {
+            label.style.display = visibleGroups.has(label.dataset.group) ? '' : 'none';
+        });
+    }
+
+    /* Walk backwards from a toggle row to the nearest preceding
+       .cp-group-label[data-group] to find which group it belongs to. */
+    function findGroupFor(row) {
+        let el = row.previousElementSibling;
+        while (el) {
+            if (el.classList.contains('cp-group-label') && el.dataset.group) {
+                return el.dataset.group;
+            }
+            el = el.previousElementSibling;
+        }
+        return null;
+    }
+
     // Baseline to compare currentSettings against, so we can tell the
     // user when the panel no longer matches what's actually saved (and
     // therefore what real pass slips still render). Reset to DEFAULTS
@@ -2053,14 +2110,29 @@ function setLanguage(lang) {
         currentSettings.template = key;
         document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
+        updateCustomizeLink(key);
+        filterPanelForTemplate(key);
         updateSummary();
     }
+
+    /* ── Keep "Customize this design" pointed at whichever template
+       card is currently selected, so its filtered toggle panel matches
+       what's shown here. ── */
+    function updateCustomizeLink(templateKey) {
+        const link = document.getElementById('cpCustomizeLink');
+        if (link) {
+            link.href = '{{ route('examination.passslips.customize', $exam->id) }}?template=' + encodeURIComponent(templateKey);
+        }
+    }
+    updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
+    filterPanelForTemplate(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
 
     function setTemplateSelectionUI(key) {
         const card = document.querySelector('.cp-template-card[data-template="' + key + '"]');
         if (!card) return;
         document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
+        filterPanelForTemplate(key);
     }
 
     /* ── Read toggles from DOM → currentSettings ── */

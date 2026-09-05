@@ -1341,6 +1341,178 @@ class ExaminationController extends Controller
     }
 
     /**
+     * The "Customize this design" side-by-side page. Reached by clicking
+     * a Design Template card on the pass slips index, then "Customize
+     * this design". Shows ONLY the toggles that actually affect the
+     * chosen template's markup (via Helper::passslipTogglesForTemplate)
+     * next to a live iframe preview, so there's nothing on the panel
+     * that silently does nothing.
+     */
+    public function passslipCustomize(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $template = $request->query('template', 'classic');
+        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+            $template = 'classic';
+        }
+
+        $examClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->get();
+
+        // Same "combine examinations" list the main panel offers, so
+        // this page's Appearance-adjacent group stays consistent with it.
+        $siblingExams = Examination::where('school_id', $schoolId)
+            ->where('academic_year', $exam->academic_year)
+            ->where('id', '!=', $exam->id)
+            ->orderBy('start_date')
+            ->get();
+
+        $toggleGroups = Helper::passslipTogglesForTemplate($template);
+
+        return view('Examination.passslips.customize', compact(
+            'exam',
+            'template',
+            'examClasses',
+            'siblingExams',
+            'toggleGroups'
+        ));
+    }
+
+    /**
+     * Read-only, non-release-gated single-student render used ONLY by
+     * the "Customize this design" page's live preview iframe. Unlike
+     * passslipStudent()/passslipClass()/passslipAll(), it deliberately:
+     *   - skips classIsReleased() — this is an admin design tool, not a
+     *     real report card, so it must work before anything is released;
+     *   - ignores any saved passslip_settings row — the customise page
+     *     always sends every show_* key explicitly on every request
+     *     (same approach the existing "Live preview this design" button
+     *     already uses), so there's nothing to merge in.
+     *
+     * Picks whichever student the customise page asked for via
+     * ?class_id= (first student found in that class), falling back to
+     * the exam's first available class/student so the preview always
+     * has something to render even before a class is chosen.
+     */
+    public function passslipPreview(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $classId = $request->query('class_id');
+        $streamId = $request->query('stream_id');
+
+        $studentQuery = DB::table('students')->where('school_id', $schoolId);
+
+        if ($classId) {
+            $studentQuery->where('senior', $classId);
+            if ($streamId) {
+                $studentQuery->where('stream', $streamId);
+            }
+        }
+
+        $student = $studentQuery->first();
+
+        // No student in that specific class (or no class chosen at all
+        // yet) — fall back to the first student in any class attached
+        // to this exam, so the preview is never just a blank error.
+        if (!$student) {
+            $ec = DB::table('examination_classes')
+                ->where('examination_id', $examId)
+                ->where('school_id', $schoolId)
+                ->first();
+
+            if ($ec) {
+                $student = DB::table('students')
+                    ->where('school_id', $schoolId)
+                    ->where('senior', $ec->class_id)
+                    ->where('stream', $ec->stream_id)
+                    ->first();
+            }
+        }
+
+        if (!$student) {
+            abort(404, 'No student available yet to preview this design against.');
+        }
+
+        [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
+        $multiExam = count($examIds) > 1;
+
+        if ($multiExam) {
+            $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
+        } else {
+            $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+        }
+
+        $qrText = $passslipData['qrText'] ?? '';
+        $subjectMarks = $passslipData['subjectMarks'] ?? collect();
+        $totalObtained = $passslipData['totalObtained'] ?? 0;
+        $totalMax = $passslipData['totalMax'] ?? 0;
+        $percentage = $passslipData['percentage'] ?? 0;
+        $overallGrade = $passslipData['overallGrade'] ?? '—';
+        $overallRemark = $passslipData['overallRemark'] ?? '—';
+        $classRank = $passslipData['classRank'] ?? '—';
+        $classTotal = $passslipData['classTotal'] ?? 0;
+        $growthData = $passslipData['growthData'] ?? [];
+        $previousSubjectMarks = $passslipData['previousSubjectMarks'] ?? collect();
+        $isEarlyYears = $passslipData['isEarlyYears'] ?? false;
+        $earlyYearsAverage = $passslipData['earlyYearsAverage'] ?? null;
+        $earlyYearsMaxMark = $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark();
+        $examsList = $passslipData['examsList'] ?? collect([$exam]);
+        $useAvg = $passslipData['useAvg'] ?? false;
+        $examSummary = $passslipData['examSummary'] ?? [];
+        $avgSummary = $passslipData['avgSummary'] ?? null;
+        $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
+
+        $isNursery = $this->isNurseryClass($student->senior);
+        $lang = request('lang', 'en');
+
+        if ($isNursery) {
+            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+        } else {
+            $view = $this->resolvePrimarySlipView($lang);
+        }
+
+        return view($view, compact(
+            'exam',
+            'student',
+            'qrText',
+            'subjectMarks',
+            'totalObtained',
+            'totalMax',
+            'percentage',
+            'overallGrade',
+            'overallRemark',
+            'classRank',
+            'classTotal',
+            'growthData',
+            'previousSubjectMarks',
+            'isEarlyYears',
+            'earlyYearsAverage',
+            'earlyYearsMaxMark',
+            'examsList',
+            'useAvg',
+            'examSummary',
+            'avgSummary',
+            'disciplineRatings'
+        ) + ['mode' => 'single', 'multiExam' => $multiExam]);
+    }
+
+    /**
      * Fetch the saved show/hide customisation for a single class, so the
      * customisation panel can pre-populate its checkboxes instead of
      * always resetting to "all on" after a page refresh.

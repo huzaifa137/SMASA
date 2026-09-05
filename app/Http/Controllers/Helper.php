@@ -747,6 +747,52 @@ class Helper extends Controller
             ->delete() > 0;
     }
 
+    /**
+     * Every show_* toggle the customise panel can ever render, with its
+     * label/icon/group — the master registry from
+     * config/passslip_templates.php.
+     */
+    public static function passslipToggleRegistry(): array
+    {
+        return config('passslip_templates.toggles', []);
+    }
+
+    /**
+     * Which show_* keys actually affect the given design template's
+     * markup. Falls back to every known key (old "show everything"
+     * behaviour) if the template isn't in the manifest yet, so a new/
+     * unlisted template never ends up with an empty panel.
+     */
+    public static function passslipCapabilitiesFor(string $template): array
+    {
+        $capabilities = config('passslip_templates.capabilities', []);
+
+        return $capabilities[$template] ?? array_keys(self::passslipToggleRegistry());
+    }
+
+    /**
+     * The toggle registry, filtered down to only the keys the given
+     * template actually supports and grouped by section — exactly the
+     * shape the "Customize this design" side-by-side page loops over.
+     * Section order follows the order groups first appear in the
+     * registry.
+     */
+    public static function passslipTogglesForTemplate(string $template): array
+    {
+        $registry = self::passslipToggleRegistry();
+        $capable = self::passslipCapabilitiesFor($template);
+
+        $grouped = [];
+        foreach ($registry as $key => $meta) {
+            if (!in_array($key, $capable, true)) {
+                continue;
+            }
+            $grouped[$meta['group']][$key] = $meta;
+        }
+
+        return $grouped;
+    }
+
     public static function category_name($user = '')
     {
         $user = (int) $user;
