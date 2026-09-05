@@ -78,6 +78,13 @@ return [
         'show_sum_attendance' => ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'group' => 'Summary Bar Fields'],
 
         'show_logo' => ['label' => 'School logo', 'icon' => 'fa-image', 'group' => 'School Header'],
+        // ── Modern has two logos (left + right of the school name) that
+        // can each be removed independently. Kept as separate keys
+        // instead of reusing 'show_logo' so one side can come off while
+        // the other stays. Falls back to 'show_logo' if a saved profile
+        // predates this split (see the $on() calls in slip-modern).
+        'show_logo_left' => ['label' => 'Left school logo', 'icon' => 'fa-image', 'group' => 'School Header'],
+        'show_logo_right' => ['label' => 'Right school logo', 'icon' => 'fa-image', 'group' => 'School Header'],
         'show_arabic' => ['label' => 'Arabic school name', 'icon' => 'fa-language', 'group' => 'School Header'],
         'show_motto' => ['label' => 'School motto', 'icon' => 'fa-quote-left', 'group' => 'School Header'],
         'show_contact' => ['label' => 'Phone / email / location', 'icon' => 'fa-phone', 'group' => 'School Header'],
@@ -135,11 +142,25 @@ return [
         ],
         'modern' => [
             'show_border', 'show_watermark',
-            'show_logo', 'show_arabic', 'show_motto', 'show_contact',
+            'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr', 'show_rank',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',
+
+            // Whole-section masters
+            'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+
+            // Student Information — per-field (Modern's info row only
+            // shows this subset; Stream/DOB/etc. aren't part of its
+            // design, so those keys are simply left off this list).
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
+
+            // Summary Bar — per-field (new section for Modern, mirrors
+            // Classic's Performance Summary strip using the same keys).
+            'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
         'minimal' => [
             'show_border', 'show_watermark',
