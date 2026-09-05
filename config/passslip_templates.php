@@ -93,6 +93,11 @@ return [
         'show_minichart' => ['label' => 'Subject mini chart (student vs class)', 'icon' => 'fa-chart-line', 'group' => 'Student Block'],
         'show_qr' => ['label' => 'QR code', 'icon' => 'fa-qrcode', 'group' => 'Student Block'],
         'show_rank' => ['label' => 'Class position / rank', 'icon' => 'fa-trophy', 'group' => 'Student Block'],
+        // Whole-block master for just the Name/Gender/Class/Status/LIN/
+        // Position text list — independent of the photo/mini-chart/QR
+        // toggles above, so it can come off on its own and let those
+        // three reflow into the freed space instead of leaving it empty.
+        'show_stu_details_block' => ['label' => 'Student details text block (name, class, status, etc.)', 'icon' => 'fa-address-card', 'group' => 'Student Block'],
 
         'show_total_score' => ['label' => 'Total Score / Marks box', 'icon' => 'fa-hashtag', 'group' => 'Summary Bar'],
         'show_average' => ['label' => 'Average box', 'icon' => 'fa-percent', 'group' => 'Summary Bar'],
@@ -143,7 +148,7 @@ return [
         'modern' => [
             'show_border', 'show_watermark',
             'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
-            'show_photo', 'show_minichart', 'show_qr', 'show_rank',
+            'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',

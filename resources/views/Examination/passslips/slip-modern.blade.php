@@ -334,27 +334,55 @@
 
         /* ════════════════════════════════════════════════════════════════
    STUDENT INFO ROW
+   Photo / Details (name, class, status, etc.) / Mini-chart / QR are
+   four flex columns, in that left-to-right order. All four use
+   identical "flex: 1 1 0" so — same reflow approach used for the
+   bottom section and the summary bar — whichever of them are actually
+   switched on always divide the row's full width evenly between
+   themselves: 4 on = quarters, 3 on = thirds, 2 on = halves, 1 on =
+   the full width. Removing any one frees its share for whichever of
+   the *others* remain — nothing is ever left as dead, empty space.
 ════════════════════════════════════════════════════════════════ */
         .stu-row {
             display: flex;
+            flex-wrap: wrap;
             align-items: stretch;
             padding: .7rem 1.1rem;
-            gap: 1rem;
             border-bottom: 1.5px solid #e0e0e0;
         }
 
+        .stu-row>* {
+            flex: 1 1 0;
+            min-width: 150px;
+        }
+
+        /* Divider between whichever columns are actually rendered — only
+           applied to a column that has a preceding sibling, so the row
+           never shows a stray border on its leading edge no matter which
+           combination of photo/details/chart/qr is switched on. */
+        .stu-row>*+* {
+            border-left: 1.5px solid #e8e8e8;
+        }
+
         .stu-photo {
-            flex-shrink: 0;
-            width: 90px;
-            height: 110px;
-            border: 1.5px solid #c8c8c8;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #f0f0f0;
+            padding: 0 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
+.stu-photo-box {
+    width: 100%;
+    max-width: 140px;   /* narrower, so ratio suits a portrait photo */
+    height: 170px;       /* was 110px — this is the real fix */
+    border: 1.5px solid #c8c8c8;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
         .stu-photo img {
             width: 100%;
@@ -386,13 +414,11 @@
         }
 
         .stu-details {
-            flex: 1;
+            padding: 0 1rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
             gap: .3rem;
-            border-right: 1.5px solid #e8e8e8;
-            padding-right: 1rem;
         }
 
         .stu-field {
@@ -433,11 +459,9 @@
 
         /* Mini chart */
         .stu-chart-area {
-            flex-shrink: 0;
-            width: 215px;
+            padding: 0 1rem;
             display: flex;
             flex-direction: column;
-            padding-right: .4rem;
         }
 
         .stu-chart-title {
@@ -456,15 +480,12 @@
 
         /* QR column */
         .stu-qr-col {
-            flex-shrink: 0;
-            width: 145px;
+            padding: 0 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: .45rem;
-            border-left: 1.5px solid #e8e8e8;
-            padding-left: 1rem;
         }
 
         .stu-qr-title {
@@ -802,14 +823,15 @@
             flex: 1;
         }
 
-        .remarks-col {
-            flex: 1 1 300px;
-            min-width: 220px;
-            padding: .7rem 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: .5rem;
-        }
+.remarks-col {
+    flex: 1 1 300px;
+    min-width: 220px;
+    padding: .7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    border-right: 1.5px solid #ddd;   /* ← add this line */
+}
 
         .remarks-section-title {
             font-size: .72rem;
@@ -1220,6 +1242,11 @@
             print-color-adjust: exact;
             color-adjust: exact;
         }
+
+        .perf-chart-col { min-width: 150px; }
+.remarks-col     { min-width: 160px; }
+.discipline-col  { min-width: 130px; }
+.sig-col-right   { min-width: 90px; }
     </style>
     @include('Examination.passslips.partials.template-modern')
 </head>
@@ -1406,6 +1433,12 @@
 
                     // Student Info row — per-field (Modern's row only
                     // ever showed this subset of fields).
+                    // 'stu_details_block' is a whole-block master for just
+                    // the Name/Gender/Class/Status/LIN/Position text list —
+                    // independent of 'photo'/'minichart'/'qr' so it can be
+                    // switched off on its own and let those three reflow
+                    // into the freed space (see .stu-row above).
+                    'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
                     'stu_name' => $on('show_stu_name', true, $savedCfg),
                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
                     'stu_class' => $on('show_stu_class', true, $savedCfg),
@@ -1653,80 +1686,91 @@
 
                 {{-- ══ STUDENT INFO ROW ═══════════════════════════════════════════
                      Whole row can be switched off with show_section_student_info.
+
+                     Photo / Details / Mini-chart / QR are four flat flex
+                     columns (in that order) so whichever of them are
+                     switched on always divide the row's full width evenly
+                     between themselves (4 on = quarters, 3 on = thirds,
+                     2 on = halves, 1 on = the full width) — see .stu-row
+                     above. Removing any one frees its share for whichever
+                     of the others remain; nothing is left as dead space.
+
                      Each field inside .stu-details has its own show_stu_*
-                     toggle; since .stu-details stacks fields in a column,
-                     removing one just shortens the list — nothing to reflow.
-                     Photo / mini-chart / QR are fixed-width flex items and
-                     .stu-details is "flex: 1" with no basis, so removing any
-                     of those three already lets .stu-details grow to fill
-                     the freed width automatically. ══════════════════════ --}}
+                     toggle for finer control, but the whole block can also
+                     be switched off in one go with show_stu_details_block.
+                     ══════════════════════════════════════════════════════ --}}
                 @if($cfg['section_student_info'])
                     <div class="stu-row">
 
                         {{-- Photo --}}
                         @if($cfg['photo'])
                             <div class="stu-photo">
-                                @if($photo)
-                                    <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}"
-                                        style="width:100%;height:100%;object-fit:cover;">
-                                @else
-                                    <div class="nophoto">
-                                        <i class="fas fa-user"></i>
-                                        <span>No Photo</span>
-                                    </div>
-                                @endif
+                                <div class="stu-photo-box">
+                                    @if($photo)
+                                        <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}">
+                                    @else
+                                        <div class="nophoto">
+                                            <i class="fas fa-user"></i>
+                                            <span>No Photo</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 
                         {{-- Details --}}
-                        <div class="stu-details">
-                            @if($cfg['stu_name'])
-                                <div class="stu-field">
-                                    <strong>NAME:</strong>
-                                    {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
-                                </div>
-                            @endif
-                            @if($cfg['stu_gender'])
-                                <div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}
-                                </div>
-                            @endif
-                            @if($cfg['stu_class'])
-                                <div class="stu-field">
-                                    <strong>CLASS:</strong>
-                                    {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
-                                </div>
-                            @endif
-                            @if($cfg['stu_status'])
-                                <div class="stu-field" style="margin-top:.2rem;">
-                                    <strong>STATUS:</strong>
-                                    <span @php
-                                        $statusLower = strtolower($statusLabel);
-                                        if ($isEarlyYears) {
-                                            $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
-                                        } else {
-                                            $statusClass = str_contains($statusLower, 'promot')
-                                                ? 'status-promoted'
-                                                : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
-                                        }
-                                    @endphp class="status-pill {{ $statusClass }}">
-                                        {{ ucfirst($statusLabel) }}
-                                    </span>
-                                </div>
-                            @endif
-                            @if($cfg['stu_admission'])
-                                <div class="stu-field"><strong>LIN:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}
-                                </div>
-                            @endif
-                            @if($cfg['rank'] && is_numeric($rank))
-                                <div class="stu-field" style="margin-top:.2rem;">
-                                    <strong>POSITION:</strong>
-                                    <span style="font-weight:800;color:#888;">
-                                        {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
-                                            {{ $classTotalN }}</span>
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
+                        @if($cfg['stu_details_block'])
+                            <div class="stu-details">
+                                @if($cfg['stu_name'])
+                                    <div class="stu-field">
+                                        <strong>NAME:</strong>
+                                        {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_gender'])
+                                    <div class="stu-field"><strong>Gender:</strong>
+                                        {{ $s->gender ?? ($s->index_no ?? '—') }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_class'])
+                                    <div class="stu-field">
+                                        <strong>CLASS:</strong>
+                                        {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_status'])
+                                    <div class="stu-field" style="margin-top:.2rem;">
+                                        <strong>STATUS:</strong>
+                                        <span @php
+                                            $statusLower = strtolower($statusLabel);
+                                            if ($isEarlyYears) {
+                                                $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
+                                            } else {
+                                                $statusClass = str_contains($statusLower, 'promot')
+                                                    ? 'status-promoted'
+                                                    : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
+                                            }
+                                        @endphp class="status-pill {{ $statusClass }}">
+                                            {{ ucfirst($statusLabel) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_admission'])
+                                    <div class="stu-field"><strong>LIN:</strong>
+                                        {{ $s->adm_no ?? ($s->index_no ?? '—') }}
+                                    </div>
+                                @endif
+                                @if($cfg['rank'] && is_numeric($rank))
+                                    <div class="stu-field" style="margin-top:.2rem;">
+                                        <strong>POSITION:</strong>
+                                        <span style="font-weight:800;color:#888;">
+                                            {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
+                                                {{ $classTotalN }}</span>
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                         {{-- Mini Line Chart --}}
                         @if($cfg['minichart'] && count($miniLabels) > 0)
