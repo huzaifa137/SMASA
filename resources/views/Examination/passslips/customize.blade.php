@@ -370,7 +370,7 @@ saved until "Save for selected classes" is clicked. --}}
 
         #czPreviewClass.form-control {
             background-color: #f8f9fa;
-            border: 2px solid #007bff;
+            border: 2px solid #2C29CA;
             border-radius: 8px;
             padding: 12px 16px;
             font-weight: 500;

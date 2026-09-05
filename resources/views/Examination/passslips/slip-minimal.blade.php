@@ -337,14 +337,27 @@
 ════════════════════════════════════════════════════════════════ */
         .stu-row {
             display: flex;
+            flex-wrap: wrap;
             align-items: stretch;
             padding: .7rem 1.1rem;
             gap: 1rem;
             border-bottom: 1.5px solid #e0e0e0;
         }
 
+        /* Photo is a flexible, centring outer cell (".stu-photo") holding
+           a fixed-size visual box (".stu-photo-box") — this way, when the
+           mini-chart and/or QR are switched off, the outer cell can still
+           grow to absorb the freed width instead of leaving it empty,
+           while the photo itself stays a sane, fixed portrait size. */
         .stu-photo {
-            flex-shrink: 0;
+            flex: 1 1 110px;
+            min-width: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stu-photo-box {
             width: 90px;
             height: 110px;
             border: 1.5px solid #c8c8c8;
@@ -356,13 +369,13 @@
             justify-content: center;
         }
 
-        .stu-photo img {
+        .stu-photo-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .stu-photo .nophoto {
+        .stu-photo-box .nophoto {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -373,12 +386,12 @@
             background: #e8e8e8;
         }
 
-        .stu-photo .nophoto i {
+        .stu-photo-box .nophoto i {
             font-size: 2.8rem;
             color: #b0b0b0;
         }
 
-        .stu-photo .nophoto span {
+        .stu-photo-box .nophoto span {
             font-size: .55rem;
             color: #aaa;
             text-transform: uppercase;
@@ -386,7 +399,7 @@
         }
 
         .stu-details {
-            flex: 1;
+            flex: 1 1 220px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -431,10 +444,11 @@
             border: 1px solid #f1948a;
         }
 
-        /* Mini chart */
+        /* Mini chart — flexible basis so it grows to absorb space freed
+           by the photo and/or QR being switched off. */
         .stu-chart-area {
-            flex-shrink: 0;
-            width: 215px;
+            flex: 1 1 215px;
+            min-width: 160px;
             display: flex;
             flex-direction: column;
             padding-right: .4rem;
@@ -454,10 +468,12 @@
             flex: 1;
         }
 
-        /* QR column */
+        /* QR column — flexible basis so it grows to absorb space freed by
+           the photo and/or mini-chart being switched off, while the QR
+           box itself (".stu-qr-box") stays a fixed, scannable size. */
         .stu-qr-col {
-            flex-shrink: 0;
-            width: 145px;
+            flex: 1 1 145px;
+            min-width: 110px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -762,13 +778,21 @@
 ════════════════════════════════════════════════════════════════ */
         .bottom-section {
             display: flex;
+            flex-wrap: wrap;
             gap: 0;
             border-top: 1.5px solid #ddd;
             min-height: 200px;
         }
 
+        /* Bottom-section columns use "flex: 1 1 <basis>" rather than a
+           hard "flex: 0 0 <basis>" so that whichever of perf-chart /
+           remarks / discipline / signatures are actually switched on
+           share out the full row width between themselves — removing
+           one frees its width for the others to grow into, instead of
+           leaving a blank gap on the right. */
         .perf-chart-col {
-            flex: 0 0 260px;
+            flex: 1 1 260px;
+            min-width: 190px;
             padding: .7rem .9rem;
             border-right: 1.5px solid #ddd;
             display: flex;
@@ -789,11 +813,13 @@
         }
 
         .remarks-col {
-            flex: 1;
+            flex: 1 1 300px;
+            min-width: 220px;
             padding: .7rem 1rem;
             display: flex;
             flex-direction: column;
             gap: .5rem;
+            border-right: 1.5px solid #ddd;
         }
 
         .remarks-section-title {
@@ -836,7 +862,8 @@
         }
 
         .sig-col-right {
-            flex: 0 0 130px;
+            flex: 1 1 130px;
+            min-width: 110px;
             padding: .7rem .8rem;
             border-left: 1.5px solid #ddd;
             display: flex;
@@ -876,7 +903,8 @@
    DISCIPLINE / CONDUCT
 ════════════════════════════════════════════════════════════════ */
         .discipline-col {
-            flex: 0 0 190px;
+            flex: 1 1 190px;
+            min-width: 150px;
             padding: .7rem .9rem;
             border-right: 1.5px solid #ddd;
             display: flex;
@@ -1089,6 +1117,7 @@
             .marks-tbl thead,
             .sch-header,
             .sum-bar,
+            .sum-cell,
             .slip-footer,
             .status-promoted,
             .status-repeat,
@@ -1098,7 +1127,11 @@
             .watermark img,
             .stu-qr-box,
             .stu-qr-box img,
-            .discipline-rate {
+            .discipline-rate,
+            .perf-chart-title,
+            .discipline-title,
+            .remarks-section-title,
+            .sig-col-title {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 color-adjust: exact;
@@ -1119,6 +1152,7 @@
         .marks-tbl thead,
         .sch-header,
         .sum-bar,
+        .sum-cell,
         .slip-footer,
         .status-promoted,
         .status-repeat,
@@ -1133,11 +1167,20 @@
         .remarks-col,
         .discipline-col,
         .discipline-rate,
-        .sig-col-right {
+        .sig-col-right,
+        .perf-chart-title,
+        .discipline-title,
+        .remarks-section-title,
+        .sig-col-title {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
             color-adjust: exact;
         }
+
+        .perf-chart-col { min-width: 150px; }
+        .remarks-col     { min-width: 160px; }
+        .discipline-col  { min-width: 130px; }
+        .sig-col-right   { min-width: 90px; }
     </style>
     @include('Examination.passslips.partials.template-minimal')
 </head>
@@ -1288,7 +1331,13 @@
                 $cfg = [
                     'border' => $on('show_border', true, $savedCfg),
                     'watermark' => $on('show_watermark', true, $savedCfg),
-                    'logo' => $on('show_logo', true, $savedCfg),
+                    // Two independent logos (left + right of the school
+                    // name), same split as Modern. Each falls back to the
+                    // legacy single 'show_logo' key first, so an old saved
+                    // profile that predates this split still behaves the
+                    // same until it's re-saved with the new granular keys.
+                    'logo_left' => $on('show_logo_left', $on('show_logo', true, $savedCfg), $savedCfg),
+                    'logo_right' => $on('show_logo_right', $on('show_logo', true, $savedCfg), $savedCfg),
                     'arabic' => $on('show_arabic', true, $savedCfg),
                     'motto' => $on('show_motto', true, $savedCfg),
                     'contact' => $on('show_contact', true, $savedCfg),
@@ -1306,12 +1355,44 @@
                     'signatures' => $on('show_signatures', true, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
-                    // New toggles
-                    'total_score' => $on('show_total_score', true, $savedCfg),
-                    'average' => $on('show_average', true, $savedCfg),
-                    'result' => $on('show_result', true, $savedCfg),
                     'score_col' => $on('show_score_col', true, $savedCfg),
                     'comment_col' => $on('show_comment_col', true, $savedCfg),
+
+                    // Whole-section master switches — same keys/behaviour
+                    // as Classic/Modern: OFF hides the box completely
+                    // regardless of what its individual field-level
+                    // toggles are set to.
+                    'section_student_info' => $on('show_section_student_info', true, $savedCfg),
+                    'section_summary' => $on('show_section_summary', true, $savedCfg),
+                    'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+
+                    // Student Info ledger — per-field (Minimal's info
+                    // block only ever showed this subset of fields).
+                    // 'stu_details_block' is a whole-block master for the
+                    // Name/Gender/Class/Status/LIN/Position ledger rows —
+                    // independent of 'photo'/'minichart'/'qr' so it can be
+                    // switched off on its own and let those three reflow
+                    // into the freed space.
+                    'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
+                    'stu_name' => $on('show_stu_name', true, $savedCfg),
+                    'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_class' => $on('show_stu_class', true, $savedCfg),
+                    'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                    'stu_status' => $on('show_stu_status', true, $savedCfg),
+
+                    // Performance Summary strip — per-field (new section
+                    // for Minimal; the CSS already existed but was never
+                    // actually rendered — reuses Classic/Modern's exact
+                    // keys/labels).
+                    'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
+                    'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
+                    'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
+                    'sum_grade' => $on('show_sum_grade', true, $savedCfg),
+                    'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                    'sum_division' => $on('show_sum_division', true, $savedCfg),
+                    'sum_position' => $on('show_sum_position', true, $savedCfg),
+                    'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
+                    'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
                 ];
 
                 // Early years classes aren't scored Pass/Fail against the
@@ -1407,6 +1488,46 @@
                     + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['comment_col'] ? 1 : 0)
                     + ($cfg['teacher_col'] ? 1 : 0);
+
+                /*
+                |──────────────────────────────────────────────────────────────
+                | Performance Summary strip — derived fields (mirrors the
+                | same block in slip-classic / slip-modern so all three
+                | templates' Summary Bars show identical figures).
+                |──────────────────────────────────────────────────────────────
+                */
+                $noOfSubjects = $subjMarks->count();
+
+                $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
+                $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
+
+                $divisionLabel = $avgSummarySlip['division'] ?? ($examSummarySlip->last()['division'] ?? null);
+
+                // Attendance for this exam's term window (student_attendances
+                // log). Left blank (—) if the exam has no start/end date set.
+                $attPresent = 0;
+                $attDaysOpened = 0;
+                $attPct = null;
+                if (!empty($exam->start_date) && !empty($exam->end_date)) {
+                    $attPresent = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->whereIn('status', ['present', 'late'])
+                        ->count();
+                    $attTaken = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->count();
+                    $attDaysOpened = DB::table('student_attendances')
+                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('class_id', $s->senior)
+                        ->where('stream_id', $s->stream)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->distinct()
+                        ->count('attendance_date');
+                    $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
+                    $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
+                }
             @endphp
 
             {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
@@ -1423,17 +1544,27 @@
                     @endif
                 @endif
 
-                {{-- ══ SCHOOL HEADER ══════════════════════════════════════════ --}}
+                {{-- ══ SCHOOL HEADER ══════════════════════════════════════════
+                     Two independent logos. Each is switched off with its
+                     own show_logo_left / show_logo_right toggle, and when
+                     off the whole .sch-logo-area (box, border and all) is
+                     skipped entirely — no placeholder is left behind. The
+                     centre block (.sch-center) is "flex: 1" with no fixed
+                     basis, so it automatically expands to fill whatever
+                     space one or both logos leave behind instead of
+                     leaving a blank gap. ══════════════════════════════ --}}
                 <div class="sch-header">
-                    <div class="sch-logo-area">
-                        <div class="sch-logo-box">
-                            @if($cfg['logo'] && $schoolLogoUrl)
-                                <img src="{{ $schoolLogoUrl }}" alt="logo">
-                            @else
-                                <i class="fas fa-school"></i>
-                            @endif
+                    @if($cfg['logo_left'])
+                        <div class="sch-logo-area">
+                            <div class="sch-logo-box">
+                                @if($schoolLogoUrl)
+                                    <img src="{{ $schoolLogoUrl }}" alt="logo">
+                                @else
+                                    <i class="fas fa-school"></i>
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="sch-center">
                         <div class="sch-name">{{ $schoolName }}</div>
@@ -1455,15 +1586,17 @@
                         @endif
                     </div>
 
-                    <div class="sch-logo-area sch-logo-area-right">
-                        <div class="sch-logo-box">
-                            @if($cfg['logo'] && $schoolLogoUrl)
-                                <img src="{{ $schoolLogoUrl }}" alt="logo">
-                            @else
-                                <i class="fas fa-school"></i>
-                            @endif
+                    @if($cfg['logo_right'])
+                        <div class="sch-logo-area sch-logo-area-right">
+                            <div class="sch-logo-box">
+                                @if($schoolLogoUrl)
+                                    <img src="{{ $schoolLogoUrl }}" alt="logo">
+                                @else
+                                    <i class="fas fa-school"></i>
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 {{-- ══ TITLE BAND ═══════════════════════════════════════════════ --}}
@@ -1474,86 +1607,187 @@
                     </span>
                 </div>
 
-                {{-- ══ STUDENT INFO ROW ═══════════════════════════════════════════ --}}
-                <div class="stu-row">
+                {{-- ══ STUDENT INFO ROW ═══════════════════════════════════════════
+                     Whole row can be switched off with show_section_student_info.
 
-                    {{-- Photo --}}
-                    @if($cfg['photo'])
-                        <div class="stu-photo">
-                            @if($photo)
-                                <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}"
-                                    style="width:100%;height:100%;object-fit:cover;">
-                            @else
-                                <div class="nophoto">
-                                    <i class="fas fa-user"></i>
-                                    <span>No Photo</span>
+                     Photo / Details / Mini-chart / QR share the row using
+                     "flex: 1 1 <basis>" rather than a hard fixed width, so
+                     whichever of them are actually switched on always
+                     divide up the row's width between themselves — removing
+                     one frees its share for whichever of the others remain,
+                     instead of leaving a blank gap.
+
+                     Each field inside .stu-details has its own show_stu_*
+                     toggle for finer control, but the whole block can also
+                     be switched off in one go with show_stu_details_block.
+                     ══════════════════════════════════════════════════════ --}}
+                @if($cfg['section_student_info'])
+                    <div class="stu-row">
+
+                        {{-- Photo --}}
+                        @if($cfg['photo'])
+                            <div class="stu-photo">
+                                <div class="stu-photo-box">
+                                    @if($photo)
+                                        <img src="{{ $photo }}" alt="{{ $s->firstname }} {{ $s->lastname }}">
+                                    @else
+                                        <div class="nophoto">
+                                            <i class="fas fa-user"></i>
+                                            <span>No Photo</span>
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                        </div>
-                    @endif
+                            </div>
+                        @endif
 
-                    {{-- Details --}}
-                    <div class="stu-details">
-                        <div class="stu-field">
-                            <strong>NAME:</strong>
-                            {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
-                        </div>
-                        <div class="stu-field"><strong>Gender:</strong> {{ $s->gender ?? ($s->index_no ?? '—') }}</div>
-                        <div class="stu-field">
-                            <strong>CLASS:</strong>
-                            {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
-                        </div>
-                        <div class="stu-field" style="margin-top:.2rem;">
-                            <strong>STATUS:</strong>
-                            <span @php
-                                $statusLower = strtolower($statusLabel);
-                                if ($isEarlyYears) {
-                                    $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
-                                } else {
-                                    $statusClass = str_contains($statusLower, 'promot')
-                                        ? 'status-promoted'
-                                        : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
-                                }
-                            @endphp class="status-pill {{ $statusClass }}">
-                                {{ ucfirst($statusLabel) }}
-                            </span>
-                        </div>
-                        <div class="stu-field"><strong>LIN:</strong> {{ $s->adm_no ?? ($s->index_no ?? '—') }}</div>
-                        @if($cfg['rank'] && is_numeric($rank))
-                            <div class="stu-field" style="margin-top:.2rem;">
-                                <strong>POSITION:</strong>
-                                <span style="font-weight:800;color:#888;">
-                                    {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
-                                        {{ $classTotalN }}</span>
-                                </span>
+                        {{-- Details --}}
+                        @if($cfg['stu_details_block'])
+                            <div class="stu-details">
+                                @if($cfg['stu_name'])
+                                    <div class="stu-field">
+                                        <strong>NAME:</strong>
+                                        {{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_gender'])
+                                    <div class="stu-field"><strong>Gender:</strong>
+                                        {{ $s->gender ?? ($s->index_no ?? '—') }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_class'])
+                                    <div class="stu-field">
+                                        <strong>CLASS:</strong>
+                                        {{ Helper::recordMdname($s->senior) }}{{ ($s->stream ?? false) ? ' — ' . $s->stream : '' }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_status'])
+                                    <div class="stu-field" style="margin-top:.2rem;">
+                                        <strong>STATUS:</strong>
+                                        <span @php
+                                            $statusLower = strtolower($statusLabel);
+                                            if ($isEarlyYears) {
+                                                $statusClass = in_array($statusLower, ['good', 'excellent']) ? 'status-promoted' : 'status-repeat';
+                                            } else {
+                                                $statusClass = str_contains($statusLower, 'promot')
+                                                    ? 'status-promoted'
+                                                    : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
+                                            }
+                                        @endphp class="status-pill {{ $statusClass }}">
+                                            {{ ucfirst($statusLabel) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_admission'])
+                                    <div class="stu-field"><strong>LIN:</strong>
+                                        {{ $s->adm_no ?? ($s->index_no ?? '—') }}
+                                    </div>
+                                @endif
+                                @if($cfg['rank'] && is_numeric($rank))
+                                    <div class="stu-field" style="margin-top:.2rem;">
+                                        <strong>POSITION:</strong>
+                                        <span style="font-weight:800;color:#888;">
+                                            {{ $ord($rank) }}<span style="font-size:.7rem;color:#888;font-weight:500;"> of
+                                                {{ $classTotalN }}</span>
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- Mini Line Chart --}}
+                        @if($cfg['minichart'] && count($miniLabels) > 0)
+                            <div class="stu-chart-area">
+                                <div class="stu-chart-title">Subject Performance — Student vs Class</div>
+                                <canvas id="{{ $cMini }}" height="110"></canvas>
+                            </div>
+                        @endif
+
+                        {{-- QR Code --}}
+                        @if($cfg['qr'] && $qrText)
+                            <div class="stu-qr-col">
+                                <div class="stu-qr-title">Scan to Verify</div>
+                                <div class="stu-qr-box">
+                                    <canvas id="{{ $qrId }}"></canvas>
+                                </div>
+                                <div class="stu-qr-label">SMASA</div>
+                            </div>
+                        @endif
+
+                    </div>
+                @endif
+
+                {{-- ══ PERFORMANCE SUMMARY BAR ═════════════════════════════════════
+                     Whole strip can be switched off with show_section_summary;
+                     each cell has its own show_sum_* toggle — same keys/
+                     behaviour as Classic/Modern's Performance Summary strip.
+                     Cells use "flex: 1" with no fixed basis, so whatever is
+                     left after some are switched off automatically grows to
+                     fill the row. ══════════════════════════════════════ --}}
+                @if($cfg['section_summary'])
+                    <div class="sum-bar">
+                        @if($cfg['sum_total_marks'])
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Total Marks</div>
+                                <div class="sum-val">{{ $totObt }} / {{ $totMax }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_average_mark'])
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Average Mark</div>
+                                <div class="sum-val">
+                                    {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_average_pct'])
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Average %</div>
+                                <div class="sum-val">{{ $isEarlyYears ? '—' : $pct . '%' }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_grade'] && !$isEarlyYears)
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Overall Grade</div>
+                                <div class="sum-val">{{ $oGrade }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_grade_point'] && !$isEarlyYears)
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Grade Point</div>
+                                <div class="sum-val">{{ $avgGradePoint ?? '—' }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_division'] && $divisionLabel)
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Division</div>
+                                <div class="sum-val">{{ strtoupper($divisionLabel) }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_position'] && is_numeric($rank))
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Position</div>
+                                <div class="sum-val">{{ $rank }} / {{ $classTotalN }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_subjects'])
+                            <div class="sum-cell">
+                                <div class="sum-lbl">No. of Subjects</div>
+                                <div class="sum-val">{{ $noOfSubjects }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_attendance'] && $attPct !== null)
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Attendance</div>
+                                <div class="sum-val">{{ $attPct }}%</div>
                             </div>
                         @endif
                     </div>
+                @endif
 
-                    {{-- Mini Line Chart --}}
-                    @if($cfg['minichart'] && count($miniLabels) > 0)
-                        <div class="stu-chart-area">
-                            <div class="stu-chart-title">Subject Performance — Student vs Class</div>
-                            <canvas id="{{ $cMini }}" height="110"></canvas>
-                        </div>
-                    @endif
-
-                    {{-- QR Code --}}
-                    @if($cfg['qr'] && $qrText)
-                        <div class="stu-qr-col">
-                            <div class="stu-qr-title">Scan to Verify</div>
-                            <div class="stu-qr-box">
-                                <canvas id="{{ $qrId }}"></canvas>
-                            </div>
-                            <div class="stu-qr-label">SMASA</div>
-                        </div>
-                    @endif
-
-                </div>
-
-
-
-                {{-- ══ MARKS TABLE ════════════════════════════════════════════════ --}}
+                {{-- ══ MARKS TABLE ════════════════════════════════════════════════
+                     Whole table can be switched off with show_section_marks_table;
+                     column-level toggles (score/dev/grade/comment/teacher/totals)
+                     keep working exactly as before inside it. ═══════════════════ --}}
+                @if($cfg['section_marks_table'])
                 <div class="marks-wrap">
                     @if($multiExam)
                         {{-- ── MULTI-EXAM TABLE (BOT | MID | EOT …) ── --}}
@@ -1846,6 +2080,7 @@
                         </table>
                     @endif
                 </div>
+                @endif
 
                 {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
                 @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['discipline'] || $cfg['signatures'])

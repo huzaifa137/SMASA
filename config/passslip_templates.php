@@ -169,11 +169,29 @@ return [
         ],
         'minimal' => [
             'show_border', 'show_watermark',
-            'show_logo', 'show_arabic', 'show_motto', 'show_contact',
-            'show_photo', 'show_minichart', 'show_qr', 'show_rank',
+            // Two independent logos either side of the school name, same
+            // split as Modern — each can be removed on its own with no
+            // placeholder left behind (see $on() fallback to 'show_logo'
+            // in slip-minimal for old saved profiles).
+            'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
+            'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',
+
+            // Whole-section masters
+            'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+
+            // Student Information — per-field (Minimal's ledger only
+            // ever showed this subset of fields, mirrors Modern's list).
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
+
+            // Summary Bar — per-field (new section for Minimal; the CSS
+            // already existed but was never actually rendered — mirrors
+            // Classic/Modern's exact keys/labels).
+            'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
     ],
 

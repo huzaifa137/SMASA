@@ -34,16 +34,30 @@
 
     body.tpl-minimal .slip {
         box-shadow: none;
-        border: 1px solid #111;
+        border: 1px solid #ccc;
         border-radius: 0;
     }
 
+    /* "Decorative border & corners" toggle: Minimal keeps this restrained
+       (no ornate corner brackets like Classic/Modern) but still gives the
+       colour picker a real, visible effect — a crisp accent-coloured
+       double rule instead of the plain black hairline used when the
+       toggle is off. */
     body.tpl-minimal .slip.has-border {
-        border: 1px solid #111;
-        outline: none;
+        border: 2px solid var(--accent);
+        outline: 1px solid rgba(0, 0, 0, .12);
+        outline-offset: -5px;
     }
 
-    body.tpl-minimal .slip.has-border::before,
+    body.tpl-minimal .slip.has-border::before {
+        content: '';
+        position: absolute;
+        inset: 6px;
+        border: 1px solid var(--accent-a35);
+        pointer-events: none;
+        z-index: 2;
+    }
+
     body.tpl-minimal .slip.has-border::after {
         content: none;
     }
@@ -56,8 +70,9 @@
     /* ── Letterhead: small square crests either side of a plain,
        tightly-set identity block — no colour fills, no circles ── */
     body.tpl-minimal .sch-header {
-        border-bottom: 1px solid #111;
-        padding: .7rem 1.1rem .55rem;
+        border-bottom: 2px solid var(--accent);
+        box-shadow: 0 1px 0 #111;
+        padding: .7rem 1.1rem .6rem;
         align-items: flex-start;
     }
 
@@ -69,13 +84,13 @@
         width: 58px;
         height: 58px;
         border-radius: 0;
-        border: 1px solid #111;
+        border: 1.5px solid var(--accent);
         background: #fff;
         margin-top: 2px;
     }
 
     body.tpl-minimal .sch-logo-box i {
-        color: #111;
+        color: var(--accent-dark);
         font-size: 1.7rem;
     }
 
@@ -119,11 +134,11 @@
     /* ── Title band: styled as a real document heading — "REPORT CARD"
        set large above the class/term line, ruled top and bottom ── */
     body.tpl-minimal .title-band {
-        background: #fff;
+        background: var(--accent-a08);
         text-align: center;
         padding: .3rem 1.2rem .45rem;
-        border-top: 1px solid #111;
-        border-bottom: 1px solid #111;
+        border-top: 1px solid var(--accent-a35);
+        border-bottom: 2px solid var(--accent);
     }
 
     body.tpl-minimal .title-band::before {
@@ -187,23 +202,33 @@
         font-weight: 700;
         font-size: .66rem;
         letter-spacing: .03em;
-        color: #444;
+        color: var(--accent-dark);
     }
 
+    /* Photo / mini-chart / QR sit on their own row underneath the ledger,
+       and reflow to fill the freed space when one of them is switched
+       off — same "flexible outer cell, fixed-size inner box" approach
+       used by the base stylesheet, just re-ordered and re-sized here for
+       the ledger look. */
     body.tpl-minimal .stu-photo {
         order: 2;
+        flex: 1 1 90px;
+        min-width: 74px;
+        margin-top: .55rem;
+    }
+
+    body.tpl-minimal .stu-photo-box {
         width: 64px;
         height: 78px;
-        border: 1px solid #111;
+        border: 1.5px solid var(--accent);
         border-radius: 0;
-        margin-top: .55rem;
     }
 
     body.tpl-minimal .stu-chart-area {
         order: 3;
         flex: 1 1 auto;
-        border-left: 1px solid #ccc;
-        border-right: 1px solid #ccc;
+        border-left: 1px solid var(--accent-a35);
+        border-right: 1px solid var(--accent-a35);
         padding: 0 .8rem;
         margin-top: .55rem;
     }
@@ -224,7 +249,7 @@
     body.tpl-minimal .stu-qr-box {
         width: 84px;
         height: 84px;
-        border: 1px solid #111;
+        border: 1.5px solid var(--accent);
         border-radius: 0;
         box-shadow: none;
         padding: 4px;
@@ -242,14 +267,18 @@
         font-family: 'Inter', sans-serif;
     }
 
-    /* ── Summary bar (multi-exam mode) ── */
+    /* ── Performance Summary strip ── */
     body.tpl-minimal .sum-bar {
-        background: #f7f7f7;
-        border-bottom: 1px solid #111;
+        background: var(--accent-a08);
+        border-bottom: 2px solid var(--accent);
     }
 
     body.tpl-minimal .sum-cell {
-        border-right: 1px solid #ccc;
+        border-right: 1px solid var(--accent-a35);
+    }
+
+    body.tpl-minimal .sum-lbl {
+        color: #555;
     }
 
     body.tpl-minimal .sum-val {
@@ -265,15 +294,15 @@
     }
 
     body.tpl-minimal .marks-tbl {
-        border: 1px solid #111;
+        border: 1.5px solid var(--accent);
         font-family: 'Inter', sans-serif;
     }
 
     body.tpl-minimal .marks-tbl th {
-        background: #eaeaea;
-        color: #111;
-        border-right: 1px solid #111;
-        border-bottom: 1px solid #111;
+        background: var(--accent-dark);
+        color: #fff;
+        border-right: 1px solid rgba(255, 255, 255, .25);
+        border-bottom: 1px solid var(--accent-dark);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .02em;
@@ -284,11 +313,16 @@
     }
 
     body.tpl-minimal .marks-tbl td {
-        border: 1px solid #999 !important;
+        border: 1px solid #ccc !important;
     }
 
     body.tpl-minimal .marks-tbl tbody tr:nth-child(even) {
         background: transparent;
+    }
+
+    body.tpl-minimal .grp-row td {
+        background: var(--accent-a22);
+        color: #111;
     }
 
     body.tpl-minimal .g-pill {
@@ -297,8 +331,8 @@
     }
 
     body.tpl-minimal .totals-row td {
-        background: #eaeaea;
-        border-top: 1px solid #111 !important;
+        background: var(--accent-a08);
+        border-top: 2px solid var(--accent) !important;
         font-weight: 700;
     }
 
@@ -306,22 +340,19 @@
        as its own ruled block, echoing a Co-Scholastic/Discipline
        grid on a traditional report card ── */
     body.tpl-minimal .bottom-section {
-        border-top: 1px solid #111;
+        border-top: 2px solid var(--accent);
         font-family: 'Inter', sans-serif;
     }
 
     body.tpl-minimal .perf-chart-col,
-    body.tpl-minimal .discipline-col {
-        border-right: 1px solid #111;
-        padding-top: 0;
-    }
-
+    body.tpl-minimal .discipline-col,
     body.tpl-minimal .remarks-col {
+        border-right: 1px solid var(--accent-a35);
         padding-top: 0;
     }
 
     body.tpl-minimal .sig-col-right {
-        border-left: 1px solid #111;
+        border-left: 1px solid var(--accent-a35);
         padding-top: 0;
     }
 
@@ -330,8 +361,8 @@
     body.tpl-minimal .discipline-title,
     body.tpl-minimal .sig-col-title {
         color: #111;
-        background: #eaeaea;
-        border-bottom: 1px solid #111;
+        background: var(--accent-a08);
+        border-bottom: 1.5px solid var(--accent);
         text-align: left;
         font-weight: 700;
         letter-spacing: .03em;
@@ -368,7 +399,7 @@
 
     body.tpl-minimal .discipline-rate {
         border-radius: 0;
-        border: 1px solid #111;
+        border: 1px solid var(--accent);
         background: #fff;
         color: #111;
     }
@@ -376,9 +407,9 @@
     body.tpl-minimal .discipline-rate.dr-A,
     body.tpl-minimal .discipline-rate.dr-B,
     body.tpl-minimal .discipline-rate.dr-C {
-        background: #fff;
+        background: var(--accent-a08);
         color: #111;
-        border-color: #111;
+        border-color: var(--accent);
     }
 
     body.tpl-minimal .discipline-rate.dr-empty {
@@ -397,7 +428,7 @@
     /* ── Footer ── */
     body.tpl-minimal .slip-footer {
         background: #fff;
-        border-top: 1px solid #111;
+        border-top: 1.5px solid var(--accent);
         font-family: 'Inter', sans-serif;
     }
 
