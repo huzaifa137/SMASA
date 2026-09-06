@@ -163,7 +163,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/edit-student-profile', 'editStudentProfile');
             });
         });
-        
+
         Route::get('/students/streams', 'getStreamsForClass')->name('students.streams.ajax');
         Route::get('/select-current-school', 'selectCurrentSchool')->name('select.current.school');
     });
@@ -612,7 +612,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         });
 
 
-        // ─────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
     // Report Card Template Designer (dynamic, per-school, drag-and-drop)
     // Add this block into routes/web.php, right after the existing
     // Route::prefix('examinations')->... group (around line ~600).
@@ -789,7 +789,7 @@ Route::prefix('finance')
         });
 
 
- // ── Fee Allocations ─────────────────────────────────────────────────
+        // ── Fee Allocations ─────────────────────────────────────────────────
         Route::get('/fee-allocations', 'feeAllocations')->name('fee-allocations');
         Route::post('/allocate-fees', 'allocateFees')->name('allocate-fees');
         Route::get('/student-allocations', 'getStudentAllocations')->name('student-allocations');
@@ -1111,9 +1111,9 @@ Route::controller(StudentConsolidationController::class)
 
 // ── Temporary push diagnostics — REMOVE after confirming push works ──────────
 Route::middleware(['AdminAuth'])->get('/push-diag', function () {
-    $adminId   = session('LoggedAdmin');
+    $adminId = session('LoggedAdmin');
     $teacherId = session('LoggedTeacher');
-    $schoolId  = session('LoggedSchool');
+    $schoolId = session('LoggedSchool');
 
     $subscriber = null;
     $subscriberType = null;
@@ -1136,21 +1136,21 @@ Route::middleware(['AdminAuth'])->get('/push-diag', function () {
     $allSubs = \Illuminate\Support\Facades\DB::table('push_subscriptions')->get();
 
     return response()->json([
-        'session'               => [
-            'LoggedAdmin'   => $adminId,
+        'session' => [
+            'LoggedAdmin' => $adminId,
             'LoggedTeacher' => $teacherId,
-            'LoggedSchool'  => $schoolId,
+            'LoggedSchool' => $schoolId,
         ],
-        'subscriber_type'       => $subscriberType,
-        'subscriber_id'         => $subscriber?->id ?? null,
-        'subscriber_found'      => !is_null($subscriber),
-        'has_push_trait'        => $hasTrait,
-        'this_user_subs'        => $subCount,
-        'all_push_subs_total'   => $allSubs->count(),
-        'all_push_subs'         => $allSubs,
-        'vapid_public_key_set'  => !empty(config('webpush.vapid.public_key')),
+        'subscriber_type' => $subscriberType,
+        'subscriber_id' => $subscriber?->id ?? null,
+        'subscriber_found' => !is_null($subscriber),
+        'has_push_trait' => $hasTrait,
+        'this_user_subs' => $subCount,
+        'all_push_subs_total' => $allSubs->count(),
+        'all_push_subs' => $allSubs,
+        'vapid_public_key_set' => !empty(config('webpush.vapid.public_key')),
         'vapid_private_key_set' => !empty(config('webpush.vapid.private_key')),
-        'vapid_subject'         => config('webpush.vapid.subject'),
+        'vapid_subject' => config('webpush.vapid.subject'),
     ], 200, [], JSON_PRETTY_PRINT);
 })->name('push.diag');
 
@@ -1160,7 +1160,7 @@ Route::middleware(['AdminAuth'])->get('/push-test', function () {
 
 // ── Temporary push send test — REMOVE after confirming push works ───────────
 Route::middleware(['AdminAuth'])->post('/push-send-test', function (\Illuminate\Http\Request $request) {
-    $adminId   = session('LoggedAdmin');
+    $adminId = session('LoggedAdmin');
     $teacherId = session('LoggedTeacher');
 
     $subscriber = null;
@@ -1203,3 +1203,16 @@ Route::middleware(['AdminAuth'])->post('/push-send-test', function (\Illuminate\
         'message' => 'Test push dispatched to ' . $subCount . ' subscription(s). Check your device.',
     ]);
 })->name('push.send-test');
+
+Route::get('/dev/passslip-preview/kindergarten', function () {
+    return view('Examination.passslips.preview-kindergarten', [
+        'child_name' => 'Aaron Kiberu',
+        'class_name' => 'Kindergarten — Red',
+        'stream' => 'Red',
+        'term' => 'Term 2',
+        'academic_year' => '2026 – 2027',
+        'attendance' => '92%',
+        'teacher' => 'Ms. Namono',
+        'dob' => '14 Mar 2021',
+    ]);
+});
