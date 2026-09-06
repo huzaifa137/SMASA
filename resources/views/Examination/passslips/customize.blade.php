@@ -185,6 +185,92 @@ selected classes" is clicked. --}}
             margin-top: .25rem;
         }
 
+        /* ── Toggle search bar ── */
+        .cz-search-wrap {
+            position: relative;
+            margin: .35rem .25rem .95rem;
+        }
+
+        .cz-search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: .78rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .cz-search-input {
+            width: 100%;
+            padding: .6rem .85rem .6rem 2.2rem;
+            font-size: .8rem;
+            color: #1e1b4b;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: .7rem;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+        }
+
+        .cz-search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .cz-search-input:focus {
+            background: #fff;
+            border-color: var(--brand-mid);
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .12);
+        }
+
+        .cz-search-clear {
+            position: absolute;
+            right: 7px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: #e2e8f0;
+            color: #64748b;
+            border-radius: 50%;
+            font-size: .6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color .15s ease, color .15s ease;
+        }
+
+        .cz-search-clear:hover {
+            background: #cbd5e1;
+            color: #334155;
+        }
+
+        .cz-toggle-group[hidden] {
+            display: none;
+        }
+
+        .cz-no-results {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            padding: 1.1rem .5rem;
+            font-size: .78rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .cz-no-results.show {
+            display: flex;
+        }
+
+        .cz-no-results i {
+            font-size: .85rem;
+        }
+
         .cz-check-row {
             display: flex;
             align-items: center;
@@ -493,18 +579,38 @@ selected classes" is clicked. --}}
                         default => [],
                     };
                 @endphp
+                {{-- ── Toggle search ── the option list can run long once
+                every section is shown, so let people jump straight to the
+                switch they're after instead of scanning by eye. Filters
+                by label text only; doesn't touch any checkbox state. --}}
+                <div class="cz-search-wrap">
+                    <i class="fas fa-search cz-search-icon"></i>
+                    <input type="text" id="czToggleSearch" class="cz-search-input" autocomplete="off"
+                        placeholder="Search options — e.g. QR code, signatures, logo…">
+                    <button type="button" id="czSearchClear" class="cz-search-clear" aria-label="Clear search"
+                        style="display:none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="cz-no-results" id="czNoResults">
+                    <i class="fas fa-circle-info"></i>
+                    No options match “<span id="czNoResultsTerm"></span>”
+                </div>
+
                 @foreach ($toggleGroups as $groupLabel => $toggles)
-                    <div class="cz-group-label">{{ $groupLabel }}</div>
-                    @foreach ($toggles as $key => $meta)
-                        <div class="cz-check-row">
-                            <label for="cb_{{ $key }}"><i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }}</label>
-                            <label class="cz-switch">
-                                <input type="checkbox" id="cb_{{ $key }}" class="cz-toggle-cb" data-key="{{ $key }}"
-                                    {{ in_array($key, $offByDefaultKeys, true) ? '' : 'checked' }}>
-                                <span class="cz-switch-slider"></span>
-                            </label>
-                        </div>
-                    @endforeach
+                    <div class="cz-toggle-group" data-toggle-group>
+                        <div class="cz-group-label">{{ $groupLabel }}</div>
+                        @foreach ($toggles as $key => $meta)
+                            <div class="cz-check-row" data-toggle-row data-search-text="{{ strtolower($meta['label']) }}">
+                                <label for="cb_{{ $key }}"><i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }}</label>
+                                <label class="cz-switch">
+                                    <input type="checkbox" id="cb_{{ $key }}" class="cz-toggle-cb" data-key="{{ $key }}"
+                                        {{ in_array($key, $offByDefaultKeys, true) ? '' : 'checked' }}>
+                                    <span class="cz-switch-slider"></span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
                 @endforeach
 
                 @if (isset($siblingExams) && $siblingExams->count() > 0)
@@ -657,6 +763,48 @@ selected classes" is clicked. --}}
             clearTimeout(refreshTimer);
             refreshTimer = setTimeout(refreshPreviewNow, 250);
         }
+
+        /* ── Toggle search ── filters the switch rows below by label
+           text as the user types. Hides a whole group's header too
+           when nothing inside it matches, and shows a "no matches"
+           note if the search comes up empty across every group.
+           Purely visual — it never touches checkbox state, so a
+           filtered-out toggle keeps whatever value it was set to. ── */
+        (function () {
+            const searchInput = document.getElementById('czToggleSearch');
+            const clearBtn = document.getElementById('czSearchClear');
+            const noResults = document.getElementById('czNoResults');
+            const noResultsTerm = document.getElementById('czNoResultsTerm');
+            if (!searchInput) return;
+
+            function applyToggleSearch() {
+                const raw = searchInput.value.trim();
+                const term = raw.toLowerCase();
+                clearBtn.style.display = raw ? 'flex' : 'none';
+
+                let anyGroupVisible = false;
+                document.querySelectorAll('[data-toggle-group]').forEach(group => {
+                    let groupHasMatch = false;
+                    group.querySelectorAll('[data-toggle-row]').forEach(row => {
+                        const matches = !term || row.dataset.searchText.includes(term);
+                        row.style.display = matches ? '' : 'none';
+                        if (matches) groupHasMatch = true;
+                    });
+                    group.hidden = !groupHasMatch;
+                    if (groupHasMatch) anyGroupVisible = true;
+                });
+
+                noResultsTerm.textContent = raw;
+                noResults.classList.toggle('show', !!term && !anyGroupVisible);
+            }
+
+            searchInput.addEventListener('input', applyToggleSearch);
+            clearBtn.addEventListener('click', function () {
+                searchInput.value = '';
+                applyToggleSearch();
+                searchInput.focus();
+            });
+        })();
 
         /* ── Toggle + colour wiring ── */
         document.querySelectorAll('.cz-toggle-cb').forEach(cb => cb.addEventListener('change', scheduleRefresh));
