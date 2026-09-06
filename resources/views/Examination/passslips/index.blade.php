@@ -39,7 +39,7 @@ use App\Http\Controllers\Helper;
             right: -60px;
             width: 260px;
             height: 260px;
-            background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, .12) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -50,7 +50,7 @@ use App\Http\Controllers\Helper;
             left: -40px;
             width: 220px;
             height: 220px;
-            background: radial-gradient(circle, rgba(108,63,197,.18) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(108, 63, 197, .18) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -59,13 +59,13 @@ use App\Http\Controllers\Helper;
             background: #fff;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-card);
-            border: 1px solid rgba(44,41,202,.08);
+            border: 1px solid rgba(44, 41, 202, .08);
             overflow: hidden;
             transition: box-shadow .2s;
         }
 
         .ps-section-card:hover {
-            box-shadow: 0 8px 36px rgba(44,41,202,.15);
+            box-shadow: 0 8px 36px rgba(44, 41, 202, .15);
         }
 
         .ps-section-header {
@@ -107,11 +107,11 @@ use App\Http\Controllers\Helper;
             border-color: var(--brand);
             background: linear-gradient(135deg, #fff, var(--brand-ultra));
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(44,41,202,.12);
+            box-shadow: 0 8px 24px rgba(44, 41, 202, .12);
         }
 
         .class-tile.selected {
-            box-shadow: 0 0 0 3px rgba(44,41,202,.2);
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .2);
         }
 
         .class-tile-icon {
@@ -120,7 +120,7 @@ use App\Http\Controllers\Helper;
 
         .class-tile:hover .class-tile-icon {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(44,41,202,.2);
+            box-shadow: 0 4px 12px rgba(44, 41, 202, .2);
         }
 
         .class-tile .badge {
@@ -134,7 +134,9 @@ use App\Http\Controllers\Helper;
         }
 
         /* ── Student search box ── */
-        .student-search-wrap { position: relative; }
+        .student-search-wrap {
+            position: relative;
+        }
 
         .student-search-wrap .search-icon {
             position: absolute;
@@ -160,7 +162,7 @@ use App\Http\Controllers\Helper;
         #studentSearch:focus {
             outline: none;
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(44,41,202,.1);
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .1);
         }
 
         .search-stats {
@@ -228,7 +230,9 @@ use App\Http\Controllers\Helper;
             transform: translateX(4px);
         }
 
-        .student-card:last-child { border-bottom: none; }
+        .student-card:last-child {
+            border-bottom: none;
+        }
 
         .student-card-avatar {
             width: 48px;
@@ -244,9 +248,14 @@ use App\Http\Controllers\Helper;
             transition: transform .2s ease;
         }
 
-        .student-card:hover .student-card-avatar { transform: scale(1.05); }
+        .student-card:hover .student-card-avatar {
+            transform: scale(1.05);
+        }
 
-        .student-card-info { flex: 1; min-width: 0; }
+        .student-card-info {
+            flex: 1;
+            min-width: 0;
+        }
 
         .student-card-name {
             font-weight: 700;
@@ -255,9 +264,17 @@ use App\Http\Controllers\Helper;
             margin-bottom: .3rem;
         }
 
-        .other-names { font-weight: 400; color: #6b7280; font-size: .85rem; }
+        .other-names {
+            font-weight: 400;
+            color: #6b7280;
+            font-size: .85rem;
+        }
 
-        .student-card-meta { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .student-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
 
         .meta-tag {
             font-size: .7rem;
@@ -267,7 +284,10 @@ use App\Http\Controllers\Helper;
             gap: .3rem;
         }
 
-        .meta-tag i { font-size: .65rem; color: var(--brand-light); }
+        .meta-tag i {
+            font-size: .65rem;
+            color: var(--brand-light);
+        }
 
         .student-card-action {
             display: flex;
@@ -281,12 +301,25 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .student-card-action i { color: var(--brand); font-size: 1rem; }
-        .student-card-action span { font-size: .65rem; font-weight: 600; color: var(--brand); }
+        .student-card-action i {
+            color: var(--brand);
+            font-size: 1rem;
+        }
 
-        .student-card:hover .student-card-action { background: var(--brand); }
+        .student-card-action span {
+            font-size: .65rem;
+            font-weight: 600;
+            color: var(--brand);
+        }
+
+        .student-card:hover .student-card-action {
+            background: var(--brand);
+        }
+
         .student-card:hover .student-card-action i,
-        .student-card:hover .student-card-action span { color: white; }
+        .student-card:hover .student-card-action span {
+            color: white;
+        }
 
         /* ── Print buttons ── */
         .print-btn {
@@ -307,7 +340,7 @@ use App\Http\Controllers\Helper;
         .print-btn:hover {
             color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(44,41,202,.3);
+            box-shadow: 0 6px 20px rgba(44, 41, 202, .3);
         }
 
         /* ── Status pill ── */
@@ -319,14 +352,29 @@ use App\Http\Controllers\Helper;
             display: inline-block;
         }
 
-        .status-closed          { background: #fde8e8; color: #c0392b; }
-        .status-results_released{ background: #d4f5e2; color: #1a7a4a; }
-        .status-marks_entry     { background: #fff3cd; color: #856404; }
-        .status-active          { background: #cfe2ff; color: #0a4191; }
+        .status-closed {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+
+        .status-results_released {
+            background: #d4f5e2;
+            color: #1a7a4a;
+        }
+
+        .status-marks_entry {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background: #cfe2ff;
+            color: #0a4191;
+        }
 
         /* ── Meta pills (hero) ── */
         .meta-pill {
-            background: rgba(255,255,255,.15);
+            background: rgba(255, 255, 255, .15);
             border-radius: .75rem;
             padding: .55rem 1rem;
             font-size: .88rem;
@@ -343,13 +391,15 @@ use App\Http\Controllers\Helper;
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(44,41,202,.12);
+            background: rgba(44, 41, 202, .12);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
 
-        #loadingOverlay.active { display: flex; }
+        #loadingOverlay.active {
+            display: flex;
+        }
 
         .spinner-ring {
             width: 56px;
@@ -360,9 +410,17 @@ use App\Http\Controllers\Helper;
             animation: spin .7s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        @media print { body { display: none; } }
+        @media print {
+            body {
+                display: none;
+            }
+        }
 
         /* ── Class filter chips ── */
         .class-filter-chip {
@@ -390,7 +448,7 @@ use App\Http\Controllers\Helper;
             background: linear-gradient(135deg, var(--brand), var(--brand-mid));
             border-color: var(--brand);
             color: white;
-            box-shadow: 0 4px 12px rgba(44,41,202,.25);
+            box-shadow: 0 4px 12px rgba(44, 41, 202, .25);
         }
 
         /* ── Empty State ── */
@@ -400,24 +458,50 @@ use App\Http\Controllers\Helper;
             color: #9ca3af;
         }
 
-        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: .5; }
-        .empty-state h4 { font-size: 1rem; font-weight: 600; color: #6b7280; margin-bottom: .5rem; }
-        .empty-state p  { font-size: .85rem; margin: 0; }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: .5;
+        }
+
+        .empty-state h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: .5rem;
+        }
+
+        .empty-state p {
+            font-size: .85rem;
+            margin: 0;
+        }
 
         /* Scrollbar */
-        .student-list::-webkit-scrollbar { width: 6px; }
-        .student-list::-webkit-scrollbar-track { background: var(--brand-ultra); }
-        .student-list::-webkit-scrollbar-thumb { background: var(--brand-light); border-radius: 3px; }
-        .student-list::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+        .student-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .student-list::-webkit-scrollbar-track {
+            background: var(--brand-ultra);
+        }
+
+        .student-list::-webkit-scrollbar-thumb {
+            background: var(--brand-light);
+            border-radius: 3px;
+        }
+
+        .student-list::-webkit-scrollbar-thumb:hover {
+            background: var(--brand);
+        }
 
         /* ════════════════════════════════════════════════
-           CUSTOMISATION PANEL
-        ════════════════════════════════════════════════ */
+               CUSTOMISATION PANEL
+            ════════════════════════════════════════════════ */
         .custom-panel {
             background: #fff;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-card);
-            border: 1px solid rgba(44,41,202,.08);
+            border: 1px solid rgba(44, 41, 202, .08);
             overflow: hidden;
             margin-bottom: 1.5rem;
         }
@@ -443,27 +527,29 @@ use App\Http\Controllers\Helper;
         }
 
         .custom-panel-header .cp-badge {
-            background: rgba(240,165,0,.25);
+            background: rgba(240, 165, 0, .25);
             color: #f0a500;
             font-size: .67rem;
             font-weight: 700;
             padding: .2rem .6rem;
             border-radius: .75rem;
-            border: 1px solid rgba(240,165,0,.4);
+            border: 1px solid rgba(240, 165, 0, .4);
             letter-spacing: .04em;
         }
 
         .custom-panel-header .cp-toggle {
-            color: rgba(255,255,255,.6);
+            color: rgba(255, 255, 255, .6);
             font-size: .85rem;
             transition: transform .25s;
         }
 
-        .custom-panel-header.collapsed .cp-toggle { transform: rotate(-90deg); }
+        .custom-panel-header.collapsed .cp-toggle {
+            transform: rotate(-90deg);
+        }
 
         .custom-panel-body {
             padding: 1.25rem 1.4rem;
-            border-top: 1px solid rgba(44,41,202,.07);
+            border-top: 1px solid rgba(44, 41, 202, .07);
         }
 
         /* Group headings inside panel */
@@ -480,7 +566,9 @@ use App\Http\Controllers\Helper;
             gap: .4rem;
         }
 
-        .cp-group-label:first-child { margin-top: 0; }
+        .cp-group-label:first-child {
+            margin-top: 0;
+        }
 
         .cp-group-label::after {
             content: '';
@@ -490,8 +578,8 @@ use App\Http\Controllers\Helper;
         }
 
         /* ══════════════════════════════════════════════════════
-           DESIGN TEMPLATE GALLERY
-        ══════════════════════════════════════════════════════ */
+               DESIGN TEMPLATE GALLERY
+            ══════════════════════════════════════════════════════ */
         .cp-template-gallery {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -512,13 +600,13 @@ use App\Http\Controllers\Helper;
         .cp-template-card:hover {
             border-color: #c9c7f5;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(44,41,202,.1);
+            box-shadow: 0 6px 16px rgba(44, 41, 202, .1);
         }
 
         .cp-template-card.selected {
             border-color: var(--brand, #2f2ccb);
-            background: rgba(47,44,203,.045);
-            box-shadow: 0 6px 16px rgba(44,41,202,.14);
+            background: rgba(47, 44, 203, .045);
+            box-shadow: 0 6px 16px rgba(44, 41, 202, .14);
         }
 
         .cp-tpl-thumb {
@@ -560,44 +648,162 @@ use App\Http\Controllers\Helper;
             display: none;
         }
 
-        .cp-template-card.selected .cp-tpl-badge { display: block; }
+        .cp-template-card.selected .cp-tpl-badge {
+            display: block;
+        }
 
         /* ── Classic thumb: centred header, gold band, ornate corners ── */
-        .cp-tpl-thumb-classic { border: 2px solid #d9a441; }
-        .cp-tpl-thumb-classic .tpl-hdr {
-            height: 30px; display: flex; align-items: center; justify-content: center;
-            gap: 4px; border-bottom: 2px solid #d9a441;
+        .cp-tpl-thumb-classic {
+            border: 2px solid #d9a441;
         }
-        .cp-tpl-thumb-classic .tpl-hdr .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #d9a441; background: #fff; }
-        .cp-tpl-thumb-classic .tpl-hdr .bar { width: 34px; height: 5px; border-radius: 2px; background: #d0d0d8; }
-        .cp-tpl-thumb-classic .tpl-band { height: 9px; background: #d9a441; margin: 3px 8px; border-radius: 1px; }
-        .cp-tpl-thumb-classic .tpl-rows { flex: 1; margin: 5px 8px 0; display: flex; flex-direction: column; gap: 3px; }
-        .cp-tpl-thumb-classic .tpl-rows div { height: 4px; background: #e4e4ea; border-radius: 1px; }
+
+        .cp-tpl-thumb-classic .tpl-hdr {
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border-bottom: 2px solid #d9a441;
+        }
+
+        .cp-tpl-thumb-classic .tpl-hdr .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1.5px solid #d9a441;
+            background: #fff;
+        }
+
+        .cp-tpl-thumb-classic .tpl-hdr .bar {
+            width: 34px;
+            height: 5px;
+            border-radius: 2px;
+            background: #d0d0d8;
+        }
+
+        .cp-tpl-thumb-classic .tpl-band {
+            height: 9px;
+            background: #d9a441;
+            margin: 3px 8px;
+            border-radius: 1px;
+        }
+
+        .cp-tpl-thumb-classic .tpl-rows {
+            flex: 1;
+            margin: 5px 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .cp-tpl-thumb-classic .tpl-rows div {
+            height: 4px;
+            background: #e4e4ea;
+            border-radius: 1px;
+        }
 
         /* ── Modern thumb: bold colour banner, squared, flat top rule ── */
-        .cp-tpl-thumb-modern { border-top: 4px solid #2f2ccb; }
-        .cp-tpl-thumb-modern .tpl-hdr {
-            height: 34px; background: linear-gradient(120deg,#2f2ccb,#1e1c99);
-            display: flex; align-items: center; gap: 4px; padding-left: 7px;
+        .cp-tpl-thumb-modern {
+            border-top: 4px solid #2f2ccb;
         }
-        .cp-tpl-thumb-modern .tpl-hdr .dot { width: 12px; height: 12px; border-radius: 4px; background: #fff; }
-        .cp-tpl-thumb-modern .tpl-hdr .bar { width: 40px; height: 5px; border-radius: 2px; background: rgba(255,255,255,.85); }
-        .cp-tpl-thumb-modern .tpl-band { height: 8px; background: #1a1a1a; margin: 0; }
-        .cp-tpl-thumb-modern .tpl-rows { flex: 1; margin: 5px 8px 0; display: flex; flex-direction: column; gap: 3px; }
-        .cp-tpl-thumb-modern .tpl-rows div { height: 4px; background: #e4e4ea; border-radius: 1px; }
-        .cp-tpl-thumb-modern .tpl-rows div:first-child { background: #c8c5f2; }
+
+        .cp-tpl-thumb-modern .tpl-hdr {
+            height: 34px;
+            background: linear-gradient(120deg, #2f2ccb, #1e1c99);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-left: 7px;
+        }
+
+        .cp-tpl-thumb-modern .tpl-hdr .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        .cp-tpl-thumb-modern .tpl-hdr .bar {
+            width: 40px;
+            height: 5px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, .85);
+        }
+
+        .cp-tpl-thumb-modern .tpl-band {
+            height: 8px;
+            background: #1a1a1a;
+            margin: 0;
+        }
+
+        .cp-tpl-thumb-modern .tpl-rows {
+            flex: 1;
+            margin: 5px 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .cp-tpl-thumb-modern .tpl-rows div {
+            height: 4px;
+            background: #e4e4ea;
+            border-radius: 1px;
+        }
+
+        .cp-tpl-thumb-modern .tpl-rows div:first-child {
+            background: #c8c5f2;
+        }
 
         /* ── Minimal thumb: hairline only, left aligned, quiet ── */
-        .cp-tpl-thumb-minimal { border: 1px solid #e2e2e2; }
+        .cp-tpl-thumb-minimal {
+            border: 1px solid #e2e2e2;
+        }
+
         .cp-tpl-thumb-minimal .tpl-hdr {
-            height: 30px; display: flex; align-items: center; gap: 5px; padding-left: 7px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding-left: 7px;
             border-bottom: 1px solid #e6e6e6;
         }
-        .cp-tpl-thumb-minimal .tpl-hdr .dot { width: 9px; height: 9px; border-radius: 2px; background: #f0f0f0; border: 1px solid #ddd; }
-        .cp-tpl-thumb-minimal .tpl-hdr .bar { width: 30px; height: 4px; border-radius: 2px; background: #999; border-bottom: 2px solid #2f2ccb; }
-        .cp-tpl-thumb-minimal .tpl-band { height: 4px; width: 40px; margin: 5px 0 0 7px; background: #ccc; }
-        .cp-tpl-thumb-minimal .tpl-rows { flex: 1; margin: 6px 7px 0; display: flex; flex-direction: column; gap: 4px; }
-        .cp-tpl-thumb-minimal .tpl-rows div { height: 3px; background: #eee; border-radius: 0; }
+
+        .cp-tpl-thumb-minimal .tpl-hdr .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+
+        .cp-tpl-thumb-minimal .tpl-hdr .bar {
+            width: 30px;
+            height: 4px;
+            border-radius: 2px;
+            background: #999;
+            border-bottom: 2px solid #2f2ccb;
+        }
+
+        .cp-tpl-thumb-minimal .tpl-band {
+            height: 4px;
+            width: 40px;
+            margin: 5px 0 0 7px;
+            background: #ccc;
+        }
+
+        .cp-tpl-thumb-minimal .tpl-rows {
+            flex: 1;
+            margin: 6px 7px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .cp-tpl-thumb-minimal .tpl-rows div {
+            height: 3px;
+            background: #eee;
+            border-radius: 0;
+        }
 
         /* Checkbox rows */
         .cp-check-row {
@@ -610,7 +816,9 @@ use App\Http\Controllers\Helper;
             cursor: pointer;
         }
 
-        .cp-check-row:hover { background: var(--brand-ultra); }
+        .cp-check-row:hover {
+            background: var(--brand-ultra);
+        }
 
         .cp-check-row label {
             display: flex;
@@ -638,7 +846,11 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .cp-switch input { opacity: 0; width: 0; height: 0; }
+        .cp-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
         .cp-switch-slider {
             position: absolute;
@@ -659,11 +871,16 @@ use App\Http\Controllers\Helper;
             background: #fff;
             border-radius: 50%;
             transition: transform .2s;
-            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
         }
 
-        .cp-switch input:checked + .cp-switch-slider { background: var(--brand); }
-        .cp-switch input:checked + .cp-switch-slider::before { transform: translateX(18px); }
+        .cp-switch input:checked+.cp-switch-slider {
+            background: var(--brand);
+        }
+
+        .cp-switch input:checked+.cp-switch-slider::before {
+            transform: translateX(18px);
+        }
 
         /* Color picker row */
         .cp-color-row {
@@ -684,7 +901,12 @@ use App\Http\Controllers\Helper;
             flex: 1;
         }
 
-        .cp-color-row label i { width: 18px; text-align: center; color: var(--brand-mid); font-size: .78rem; }
+        .cp-color-row label i {
+            width: 18px;
+            text-align: center;
+            color: var(--brand-mid);
+            font-size: .78rem;
+        }
 
         .cp-color-swatch {
             width: 32px;
@@ -726,8 +948,14 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .cp-preset-dot:hover   { transform: scale(1.2); }
-        .cp-preset-dot.active  { border-color: #333; transform: scale(1.15); }
+        .cp-preset-dot:hover {
+            transform: scale(1.2);
+        }
+
+        .cp-preset-dot.active {
+            border-color: #333;
+            transform: scale(1.15);
+        }
 
         /* Check-all button */
         .cp-check-all-row {
@@ -747,7 +975,10 @@ use App\Http\Controllers\Helper;
             color: var(--brand);
         }
 
-        .cp-check-all-btns { display: flex; gap: .4rem; }
+        .cp-check-all-btns {
+            display: flex;
+            gap: .4rem;
+        }
 
         .cp-btn-sm {
             padding: .25rem .75rem;
@@ -762,7 +993,10 @@ use App\Http\Controllers\Helper;
         }
 
         .cp-btn-sm:hover,
-        .cp-btn-sm.filled { background: var(--brand); color: #fff; }
+        .cp-btn-sm.filled {
+            background: var(--brand);
+            color: #fff;
+        }
 
         /* Live preview swatch (accent color preview) */
         .cp-accent-preview {
@@ -772,11 +1006,13 @@ use App\Http\Controllers\Helper;
             transition: background .2s;
         }
 
-        #loadingText { color: #2C29CA !important; font-weight: 600; }
-
-        
+        #loadingText {
+            color: #2C29CA !important;
+            font-weight: 600;
+        }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 @endsection
 
 @section('content')
@@ -794,17 +1030,18 @@ use App\Http\Controllers\Helper;
         <div class="ps-hero mb-4">
             <div class="row g-3">
                 <div class="col-12">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center" style="gap:12px;">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center"
+                        style="gap:12px;">
                         <span class="status-pill status-{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
-                   
- 
+
+
                         <a href="{{ route('examination.index') }}" class="btn fw-semibold"
                             style="border-radius:1rem;padding:.7rem 1.5rem;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);color:white;"
                             onmouseover="this.style.background='rgba(255,255,255,.3)'"
                             onmouseout="this.style.background='rgba(255,255,255,.2)'">
                             <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                         </a>
- 
+
                     </div>
                 </div>
                 <div class="col-12">
@@ -816,13 +1053,15 @@ use App\Http\Controllers\Helper;
                 <div class="col-12">
                     <div class="row g-3">
                         <div class="col-12 col-sm-4">
-                            <span class="meta-pill"><i class="fas fa-calendar"></i>{{ $exam->term }} | {{ $exam->academic_year }}</span>
+                            <span class="meta-pill"><i class="fas fa-calendar"></i>{{ $exam->term }} |
+                                {{ $exam->academic_year }}</span>
                         </div>
                         <div class="col-12 col-sm-4">
                             <span class="meta-pill"><i class="fas fa-code"></i>{{ $exam->exam_code }}</span>
                         </div>
                         <div class="col-12 col-sm-4">
-                            <span class="meta-pill"><i class="fas fa-layer-group"></i>{{ $examClasses->count() }} Class(es)</span>
+                            <span class="meta-pill"><i class="fas fa-layer-group"></i>{{ $examClasses->count() }}
+                                Class(es)</span>
                         </div>
                     </div>
                 </div>
@@ -836,20 +1075,26 @@ use App\Http\Controllers\Helper;
             <div class="col-lg-4">
 
                 {{-- ┌──────────────────────────────────┐
-                     │  CUSTOMISATION PANEL             │
-                     └──────────────────────────────────┘ --}}
+                │ CUSTOMISATION PANEL │
+                └──────────────────────────────────┘ --}}
                 <div class="custom-panel">
                     <div class="custom-panel-header" id="cpToggleHeader" onclick="toggleCustomPanel()">
                         <div class="cp-title">
                             <i class="fas fa-sliders"></i>
                             Customise Pass Slip
-                            <span style="width: 18px; height: 18px; background: linear-gradient(135deg, #f0a500, #ff6b6b, #4ecdc4, #45b7d1); border-radius: 50%; display: inline-block; animation: rotateColors 3s infinite;"></span>
+                            <span
+                                style="width: 18px; height: 18px; background: linear-gradient(135deg, #f0a500, #ff6b6b, #4ecdc4, #45b7d1); border-radius: 50%; display: inline-block; animation: rotateColors 3s infinite;"></span>
 
                             <style>
-                            @keyframes rotateColors {
-                                0% { filter: hue-rotate(0deg); }
-                                100% { filter: hue-rotate(360deg); }
-                            }
+                                @keyframes rotateColors {
+                                    0% {
+                                        filter: hue-rotate(0deg);
+                                    }
+
+                                    100% {
+                                        filter: hue-rotate(360deg);
+                                    }
+                                }
                             </style>
                         </div>
                         <div style="display:flex;align-items:center;gap:.5rem;">
@@ -859,58 +1104,58 @@ use App\Http\Controllers\Helper;
 
                     <div class="custom-panel-body" id="cpBody">
 
-                    {{-- Add this after the custom-panel or in the hero section --}}
-<div class="custom-panel mb-4">
-    <div class="custom-panel-header" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 60%, #1e1b4b 100%);">
-        <div class="cp-title">
-            <i class="fas fa-language"></i>
-            Language / اللغة
-        </div>
-    </div>
-    <div class="custom-panel-body">
-        <div class="d-flex gap-3 align-items-center">
-            <button class="lang-toggle-btn {{ request('lang', 'en') == 'en' ? 'active' : '' }}" 
-                    data-lang="en" 
-                    onclick="setLanguage('en')"
-                    style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang', 'en') == 'en' ? 'var(--brand)' : 'white' }}; color: {{ request('lang', 'en') == 'en' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
-                <i class="fas fa-flag-usa me-2"></i> English
-            </button>
-            <button class="lang-toggle-btn {{ request('lang') == 'ar' ? 'active' : '' }}" 
-                    data-lang="ar" 
-                    onclick="setLanguage('ar')"
-                    style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang') == 'ar' ? 'var(--brand)' : 'white' }}; color: {{ request('lang') == 'ar' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
-                <i class="fas fa-flag me-2"></i> العربية
-            </button>
-        </div>
-        <div class="mt-3 text-muted small text-center">
-            <i class="fas fa-info-circle"></i> Language preference will be applied to all pass slips
-        </div>
-    </div>
-</div>
+                        {{-- Add this after the custom-panel or in the hero section --}}
+                        <div class="custom-panel mb-4">
+                            <div class="custom-panel-header"
+                                style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 60%, #1e1b4b 100%);">
+                                <div class="cp-title">
+                                    <i class="fas fa-language"></i>
+                                    Language / اللغة
+                                </div>
+                            </div>
+                            <div class="custom-panel-body">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <button class="lang-toggle-btn {{ request('lang', 'en') == 'en' ? 'active' : '' }}"
+                                        data-lang="en" onclick="setLanguage('en')"
+                                        style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang', 'en') == 'en' ? 'var(--brand)' : 'white' }}; color: {{ request('lang', 'en') == 'en' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
+                                        <i class="fas fa-flag-usa me-2"></i> English
+                                    </button>
+                                    <button class="lang-toggle-btn {{ request('lang') == 'ar' ? 'active' : '' }}"
+                                        data-lang="ar" onclick="setLanguage('ar')"
+                                        style="flex:1; padding: .75rem; border-radius: .75rem; border: 2px solid var(--brand-pale); background: {{ request('lang') == 'ar' ? 'var(--brand)' : 'white' }}; color: {{ request('lang') == 'ar' ? 'white' : '#333' }}; font-weight: 600; transition: all .2s;">
+                                        <i class="fas fa-flag me-2"></i> العربية
+                                    </button>
+                                </div>
+                                <div class="mt-3 text-muted small text-center">
+                                    <i class="fas fa-info-circle"></i> Language preference will be applied to all pass slips
+                                </div>
+                            </div>
+                        </div>
 
-<script>
-function setLanguage(lang) {
-    // Update URL with lang parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', lang);
-    window.location.href = url.toString();
-}
-</script>
+                        <script>
+                            function setLanguage(lang) {
+                                // Update URL with lang parameter
+                                const url = new URL(window.location.href);
+                                url.searchParams.set('lang', lang);
+                                window.location.href = url.toString();
+                            }
+                        </script>
 
-<style>
-.lang-toggle-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44,41,202,.2);
-}
-.lang-toggle-btn.active {
-    border-color: var(--brand);
-    background: var(--brand) !important;
-    color: white !important;
-}
-</style>
+                        <style>
+                            .lang-toggle-btn:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 4px 12px rgba(44, 41, 202, .2);
+                            }
 
- {{-- CHECK ALL / NONE --}}
-                      
+                            .lang-toggle-btn.active {
+                                border-color: var(--brand);
+                                background: var(--brand) !important;
+                                color: white !important;
+                            }
+                        </style>
+
+                        {{-- CHECK ALL / NONE --}}
+
 
                         {{-- ── GROUP: Combine Examinations ── --}}
                         <div class="cp-group-label"><i class="fas fa-layer-group"></i> Combine Examinations</div>
@@ -963,12 +1208,21 @@ function setLanguage(lang) {
                         </div>
 
                         <div class="cp-template-gallery" id="cpTemplateGallery">
-                            <div class="cp-template-card selected" data-template="classic" onclick="selectTemplate('classic', this)">
+                            <div class="cp-template-card selected" data-template="classic"
+                                onclick="selectTemplate('classic', this)">
                                 <div class="cp-tpl-thumb cp-tpl-thumb-classic">
                                     <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
-                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div><div class="dot"></div></div>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                        <div class="dot"></div>
+                                    </div>
                                     <div class="tpl-band"></div>
-                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
                                 </div>
                                 <div class="cp-tpl-name">Classic</div>
                                 <div class="cp-tpl-desc">Ornate border, medallion logos, formal &amp; traditional</div>
@@ -977,9 +1231,16 @@ function setLanguage(lang) {
                             <div class="cp-template-card" data-template="modern" onclick="selectTemplate('modern', this)">
                                 <div class="cp-tpl-thumb cp-tpl-thumb-modern">
                                     <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
-                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div></div>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                    </div>
                                     <div class="tpl-band"></div>
-                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
                                 </div>
                                 <div class="cp-tpl-name">Modern</div>
                                 <div class="cp-tpl-desc">Bold colour banner, squared logo, confident &amp; bright</div>
@@ -988,9 +1249,16 @@ function setLanguage(lang) {
                             <div class="cp-template-card" data-template="minimal" onclick="selectTemplate('minimal', this)">
                                 <div class="cp-tpl-thumb cp-tpl-thumb-minimal">
                                     <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
-                                    <div class="tpl-hdr"><div class="dot"></div><div class="bar"></div></div>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                    </div>
                                     <div class="tpl-band"></div>
-                                    <div class="tpl-rows"><div></div><div></div><div></div></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
                                 </div>
                                 <div class="cp-tpl-name">Minimal</div>
                                 <div class="cp-tpl-desc">Hairline rules, quiet whitespace, editorial &amp; clean</div>
@@ -998,11 +1266,11 @@ function setLanguage(lang) {
                         </div>
 
                         {{-- Each design only actually uses some of the toggles
-                             below — "Customize this design" opens a dedicated
-                             page showing just the ones THIS template supports,
-                             side by side with a live preview. --}}
+                        below — "Customize this design" opens a dedicated
+                        page showing just the ones THIS template supports,
+                        side by side with a live preview. --}}
                         <a href="#" id="cpCustomizeLink" class="cp-btn-sm w-100 d-block text-center"
-                           style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;font-weight:600;margin-bottom:1rem;text-decoration:none;">
+                            style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;font-weight:600;margin-bottom:1rem;text-decoration:none;">
                             <i class="fas fa-sliders-h me-1"></i> Customize this design
                         </a>
 
@@ -1010,16 +1278,17 @@ function setLanguage(lang) {
                 </div>{{-- /.custom-panel --}}
 
 
-                
+
                 {{-- ┌──────────────────────────────────┐
-                     │  Discipline Ratings              │
-                     └──────────────────────────────────┘ --}}
+                │ Discipline Ratings │
+                └──────────────────────────────────┘ --}}
                 <div class="ps-section-card mb-4">
                     <div class="ps-section-header">
                         <div class="ps-section-icon"><i class="fas fa-user-shield"></i></div>
                         <div>
                             <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Discipline Ratings</div>
-                            <div class="text-muted" style="font-size:.78rem;">Punctuality, behaviour &amp; conduct per student</div>
+                            <div class="text-muted" style="font-size:.78rem;">Punctuality, behaviour &amp; conduct per
+                                student</div>
                         </div>
                     </div>
 
@@ -1034,8 +1303,7 @@ function setLanguage(lang) {
                         </div>
 
                         <a href="{{ route('examination.discipline.entry', $exam->id) }}"
-                           class="print-btn w-100 justify-content-center"
-                           style="padding:.9rem;font-weight:600;">
+                            class="print-btn w-100 justify-content-center" style="padding:.9rem;font-weight:600;">
                             <i class="fas fa-user-shield me-2"></i>
                             Open Discipline Entry
                             <i class="fas fa-arrow-right ms-2"></i>
@@ -1043,62 +1311,62 @@ function setLanguage(lang) {
                     </div>
                 </div>
 
-                
+
                 {{-- ┌──────────────────────────────────┐
-                     │  Bulk Print (all students)       │
-                     └──────────────────────────────────┘ --}}
+                │ Bulk Print (all students) │
+                └──────────────────────────────────┘ --}}
                 <!-- <div class="ps-section-card mb-4">
-                    <div class="ps-section-header">
-                        <div class="ps-section-icon"><i class="fas fa-print"></i></div>
-                        <div>
-                            <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Bulk Print</div>
-                            <div class="text-muted" style="font-size:.78rem;">Print all students at once</div>
-                        </div>
-                    </div>
-
-                    <div class="p-4">
-                        <div class="d-flex align-items-start gap-2 mb-4 p-3"
-                            style="background:var(--brand-ultra);border-radius:var(--radius-md);border-left:3px solid var(--brand);">
-                            <i class="fas fa-info-circle" style="color:var(--brand);font-size:.9rem;margin-top:.1em;"></i>
-                            <div class="small text-muted" style="font-size:.8rem;line-height:1.4;">
-                                &nbsp;Generate pass slips for every student across all
-                                <strong>{{ $examClasses->count() }}</strong> class(es) in this examination.
+                        <div class="ps-section-header">
+                            <div class="ps-section-icon"><i class="fas fa-print"></i></div>
+                            <div>
+                                <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Bulk Print</div>
+                                <div class="text-muted" style="font-size:.78rem;">Print all students at once</div>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center justify-content-between mb-4 pb-1">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle p-1"
-                                    style="background:var(--brand-pale);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
-                                    <i class="fas fa-layer-group" style="color:var(--brand);font-size:.7rem;"></i>
+                        <div class="p-4">
+                            <div class="d-flex align-items-start gap-2 mb-4 p-3"
+                                style="background:var(--brand-ultra);border-radius:var(--radius-md);border-left:3px solid var(--brand);">
+                                <i class="fas fa-info-circle" style="color:var(--brand);font-size:.9rem;margin-top:.1em;"></i>
+                                <div class="small text-muted" style="font-size:.8rem;line-height:1.4;">
+                                    &nbsp;Generate pass slips for every student across all
+                                    <strong>{{ $examClasses->count() }}</strong> class(es) in this examination.
                                 </div>
-                                <span class="small fw-semibold text-muted">&nbsp;&nbsp;{{ $examClasses->count() }} Classes</span>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle p-1"
-                                    style="background:var(--brand-pale);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
-                                    <i class="fas fa-users" style="color:var(--brand);font-size:.7rem;"></i>
-                                </div>
-                                <span class="small fw-semibold text-muted">&nbsp;&nbsp;{{ $allStudents->count() }} Students</span>
-                            </div>
-                        </div>
 
-                        {{-- Print All button — href built by JS --}}
-                        <a id="btnPrintAll"
-                           href="{{ route('examination.passslips.all', $exam->id) }}"
-                           class="print-btn w-100 justify-content-center"
-                           onclick="showLoading('Generating all pass slips…')"
-                           style="padding:.9rem;font-weight:600;">
-                            <i class="fas fa-print me-2"></i>
-                            Print All Pass Slips
-                            <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div> -->
+                            <div class="d-flex align-items-center justify-content-between mb-4 pb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle p-1"
+                                        style="background:var(--brand-pale);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+                                        <i class="fas fa-layer-group" style="color:var(--brand);font-size:.7rem;"></i>
+                                    </div>
+                                    <span class="small fw-semibold text-muted">&nbsp;&nbsp;{{ $examClasses->count() }} Classes</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle p-1"
+                                        style="background:var(--brand-pale);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+                                        <i class="fas fa-users" style="color:var(--brand);font-size:.7rem;"></i>
+                                    </div>
+                                    <span class="small fw-semibold text-muted">&nbsp;&nbsp;{{ $allStudents->count() }} Students</span>
+                                </div>
+                            </div>
+
+                            {{-- Print All button — href built by JS --}}
+                            <a id="btnPrintAll"
+                               href="{{ route('examination.passslips.all', $exam->id) }}"
+                               class="print-btn w-100 justify-content-center"
+                               onclick="showLoading('Generating all pass slips…')"
+                               style="padding:.9rem;font-weight:600;">
+                                <i class="fas fa-print me-2"></i>
+                                Print All Pass Slips
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div> -->
 
                 {{-- ┌──────────────────────────────────┐
-                     │  Per-Class Print                 │
-                     └──────────────────────────────────┘ --}}
+                │ Per-Class Print │
+                └──────────────────────────────────┘ --}}
                 <div class="ps-section-card">
                     <div class="ps-section-header">
                         <div class="ps-section-icon"><i class="fas fa-chalkboard-teacher"></i></div>
@@ -1124,28 +1392,29 @@ function setLanguage(lang) {
                             <div class="row g-3">
                                 @foreach($examClasses as $index => $ec)
                                     @php
-                                        $className   = Helper::recordMdname($ec->class_id);
+                                        $className = Helper::recordMdname($ec->class_id);
                                         $streamLabel = $ec->stream_id ? ' – ' . $ec->stream_id : '';
-                                        $studentCount= DB::table('students')
+                                        $studentCount = DB::table('students')
                                             ->where('school_id', Session('LoggedSchool'))
-                                            ->where('senior',    $ec->class_id)
-                                            ->where('stream',    $ec->stream_id)
+                                            ->where('senior', $ec->class_id)
+                                            ->where('stream', $ec->stream_id)
                                             ->count();
-                                        $safeStream  = $ec->stream_id ?? '';
-                                        $formId      = 'classForm_' . $ec->class_id . '_' . $safeStream;
-                                        $gradients   = ['brand','brand-mid','brand-light'];
+                                        $safeStream = $ec->stream_id ?? '';
+                                        $formId = 'classForm_' . $ec->class_id . '_' . $safeStream;
+                                        $gradients = ['brand', 'brand-mid', 'brand-light'];
                                     @endphp
                                     <div class="col-12 mb-2">
-                                        <button class="class-tile w-100 text-start p-3"
-                                                onclick="printClass('{{ $formId }}', this)">
+                                        <button class="class-tile w-100 text-start p-3" onclick="printClass('{{ $formId }}', this)">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="class-tile-icon flex-shrink-0 d-flex align-items-center justify-content-center"
                                                     style="width:42px;height:42px;background:linear-gradient(135deg,var(--{{ $gradients[$index % 3] }}),var(--brand-mid));border-radius:12px;">
                                                     <i class="fas fa-graduation-cap" style="font-size:1.2rem;color:white;"></i>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                                                        <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;line-height:1.3;">
+                                                    <div
+                                                        class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                                        <div class="fw-bold"
+                                                            style="font-size:.95rem;color:#1e1b4b;line-height:1.3;">
                                                             &nbsp;&nbsp;{{ $className }}{{ $streamLabel }}
                                                         </div>
                                                         <span class="badge"
@@ -1165,10 +1434,9 @@ function setLanguage(lang) {
                                         </button>
 
                                         {{-- Hidden GET form for this class --}}
-                                        <form id="{{ $formId }}"
-                                              action="{{ route('examination.passslips.class', $exam->id) }}"
-                                              method="GET" target="_blank" style="display:none;">
-                                            <input type="hidden" name="class_id"  value="{{ $ec->class_id }}">
+                                        <form id="{{ $formId }}" action="{{ route('examination.passslips.class', $exam->id) }}"
+                                            method="GET" target="_blank" style="display:none;">
+                                            <input type="hidden" name="class_id" value="{{ $ec->class_id }}">
                                             <input type="hidden" name="stream_id" value="{{ $safeStream }}">
                                             {{-- customisation fields injected by JS --}}
                                         </form>
@@ -1209,17 +1477,18 @@ function setLanguage(lang) {
 
                         {{-- Class filter chips --}}
                         <div class="mb-4">
-                            <label class="fw-semibold mb-3" style="font-size:.85rem;color:#444;display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;">
+                            <label class="fw-semibold mb-3"
+                                style="font-size:.85rem;color:#444;display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;">
                                 <i class="fas fa-filter" style="color:var(--brand);font-size:.8rem;"></i> Filter by Class
                             </label>
                             <div class="d-flex flex-wrap" id="classFilterContainer" style="gap:.75rem;">
-                                <button class="class-filter-chip active" data-class="all" onclick="filterClass('all', this)">
+                                <button class="class-filter-chip active" data-class="all"
+                                    onclick="filterClass('all', this)">
                                     <i class="fas fa-globe" style="margin-right:.3rem;"></i> All Classes
                                 </button>
                                 @foreach($examClasses as $ec)
-                                    <button class="class-filter-chip"
-                                            data-class="{{ $ec->class_id }}_{{ $ec->stream_id }}"
-                                            onclick="filterClass('{{ $ec->class_id }}_{{ $ec->stream_id }}', this)">
+                                    <button class="class-filter-chip" data-class="{{ $ec->class_id }}_{{ $ec->stream_id }}"
+                                        onclick="filterClass('{{ $ec->class_id }}_{{ $ec->stream_id }}', this)">
                                         <i class="fas fa-chalkboard-user" style="margin-right:.3rem;"></i>
                                         {{ Helper::recordMdname($ec->class_id) }}
                                         {{ $ec->stream_id ? '– ' . $ec->stream_id : '' }}
@@ -1231,8 +1500,7 @@ function setLanguage(lang) {
                         {{-- Search box --}}
                         <div class="student-search-wrap mb-4">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="studentSearch"
-                                placeholder="Search by name, admission number, or class…"
+                            <input type="text" id="studentSearch" placeholder="Search by name, admission number, or class…"
                                 oninput="filterStudents(this.value)" autocomplete="off">
                             @if(count($allStudents) > 0)
                                 <span class="search-stats" id="searchStats">{{ count($allStudents) }} students</span>
@@ -1258,7 +1526,7 @@ function setLanguage(lang) {
                                             ->orderBy('lastname')
                                             ->get()
                                             ->map(function ($s) use ($ec) {
-                                                $s->class_id  = $ec->class_id;
+                                                $s->class_id = $ec->class_id;
                                                 $s->stream_id = $ec->stream_id;
                                                 return $s;
                                             });
@@ -1277,19 +1545,19 @@ function setLanguage(lang) {
                                     @endphp
                                     {{-- href is updated by JS with customisation params --}}
                                     <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                       class="student-card student-link"
-                                       data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                       data-name="{{ strtolower($fullName) }}"
-                                       data-adm="{{ strtolower($student->adm_no ?? '') }}"
-                                       data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
-                                       onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
-                                       target="_blank">
- 
+                                        class="student-card student-link"
+                                        data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
+                                        data-name="{{ strtolower($fullName) }}"
+                                        data-adm="{{ strtolower($student->adm_no ?? '') }}"
+                                        data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
+                                        onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
+                                        target="_blank">
+
                                         <div class="student-card-avatar"
                                             style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
                                             {{ $initials }}
                                         </div>
- 
+
                                         <div class="student-card-info">
                                             <div class="student-card-name">
                                                 {{ $student->lastname }} {{ $student->firstname }}
@@ -1310,60 +1578,60 @@ function setLanguage(lang) {
                                                 @endif
                                             </div>
                                         </div>
- 
+
                                         <div class="student-card-action">
                                             <i class="fas fa-print"></i>
                                             <span>Print Slip</span>
                                         </div>
                                     </a>
- 
-{{--
-    REPLACE WITH (same card, wrapped, plus the new secondary link):
---}}
- 
+
+                                    {{--
+                                    REPLACE WITH (same card, wrapped, plus the new secondary link):
+                                    --}}
+
                                     {{-- href is updated by JS with customisation params --}}
                                     <div class="student-card-wrap" style="position:relative;">
-                                    <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                       class="student-card student-link"
-                                       data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                       data-name="{{ strtolower($fullName) }}"
-                                       data-adm="{{ strtolower($student->adm_no ?? '') }}"
-                                       data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
-                                       onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
-                                       target="_blank">
- 
-                                        <div class="student-card-avatar"
-                                            style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
-                                            {{ $initials }}
-                                        </div>
- 
-                                        <div class="student-card-info">
-                                            <div class="student-card-name">
-                                                {{ $student->lastname }} {{ $student->firstname }}
-                                                @if(property_exists($student, 'other_names') && $student->other_names)
-                                                    <span class="other-names">{{ $student->other_names }}</span>
-                                                @endif
+                                        <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
+                                            class="student-card student-link"
+                                            data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
+                                            data-name="{{ strtolower($fullName) }}"
+                                            data-adm="{{ strtolower($student->adm_no ?? '') }}"
+                                            data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
+                                            onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
+                                            target="_blank">
+
+                                            <div class="student-card-avatar"
+                                                style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
+                                                {{ $initials }}
                                             </div>
-                                            <div class="student-card-meta">
-                                                <span class="meta-tag">
-                                                    <i class="fas fa-graduation-cap"></i>
-                                                    {{ Helper::recordMdname($student->class_id) }}
-                                                    {{ $student->stream_id ? '– ' . $student->stream_id : '' }}
-                                                </span>
-                                                @if($student->adm_no ?? false)
+
+                                            <div class="student-card-info">
+                                                <div class="student-card-name">
+                                                    {{ $student->lastname }} {{ $student->firstname }}
+                                                    @if(property_exists($student, 'other_names') && $student->other_names)
+                                                        <span class="other-names">{{ $student->other_names }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="student-card-meta">
                                                     <span class="meta-tag">
-                                                        <i class="fas fa-id-card"></i>{{ $student->adm_no }}
+                                                        <i class="fas fa-graduation-cap"></i>
+                                                        {{ Helper::recordMdname($student->class_id) }}
+                                                        {{ $student->stream_id ? '– ' . $student->stream_id : '' }}
                                                     </span>
-                                                @endif
+                                                    @if($student->adm_no ?? false)
+                                                        <span class="meta-tag">
+                                                            <i class="fas fa-id-card"></i>{{ $student->adm_no }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                        </div>
- 
-                                        <div class="student-card-action">
-                                            <i class="fas fa-print"></i>
-                                            <span>Print Slip</span>
-                                        </div>
-                                    </a>
-                                    
+
+                                            <div class="student-card-action">
+                                                <i class="fas fa-print"></i>
+                                                <span>Print Slip</span>
+                                            </div>
+                                        </a>
+
                                     </div>{{-- /.student-card-wrap --}}
                                 @empty
                                     <div class="empty-state">
@@ -1386,253 +1654,253 @@ function setLanguage(lang) {
 
         </div>{{-- /.row --}}
     </div>{{-- /.side-app --}}
-     </div>
-                    </div>
-                </div>
+    </div>
+    </div>
+    </div>
 
     {{-- ═══════════════════════════════════════════════════════════
-         JAVASCRIPT
+    JAVASCRIPT
     ═══════════════════════════════════════════════════════════ --}}
     <script>
-    /* ── Design template selection ──
-       "Classic" is shown pre-selected purely as a visual default for
-       this gallery — it is NOT an actual choice until the user clicks a
-       card. Only once they do should "template" start being forced into
-       print links/forms as a page-wide override; before that, every
-       print action must fall through to each class's own saved template
-       (server-side, via applySavedPassslipSettings /
-       resolveBulkPassslipTemplate). Previously this flag didn't exist,
-       so "classic" — being pre-selected in the markup — was baked into
-       every link/form on page load, silently overriding every saved
-       per-class template every single time. ── */
-    let templateExplicitlyChosen = false;
+        /* ── Design template selection ──
+           "Classic" is shown pre-selected purely as a visual default for
+           this gallery — it is NOT an actual choice until the user clicks a
+           card. Only once they do should "template" start being forced into
+           print links/forms as a page-wide override; before that, every
+           print action must fall through to each class's own saved template
+           (server-side, via applySavedPassslipSettings /
+           resolveBulkPassslipTemplate). Previously this flag didn't exist,
+           so "classic" — being pre-selected in the markup — was baked into
+           every link/form on page load, silently overriding every saved
+           per-class template every single time. ── */
+        let templateExplicitlyChosen = false;
 
-    /* ── Combine Examinations ──
-       Checking a sibling exam here was supposed to fold it onto every
-       pass slip the same way it already works on "Customize this
-       design" (customize.blade.php's .cz-exam-combine-cb /
-       .cz-exam-avg-cb, wired to exam_ids / avg_exam_ids and read
-       server-side by resolveExamSelection()). On this page though,
-       onExamComboChange()/updateSummary() were referenced in the
-       checkbox onchange= attributes but never actually defined, and
-       buildQS()/injectIntoForm() never read the checkboxes at all — so
-       ticking exams here did nothing: Print All / By Class / Student
-       Directory always printed against the single base examination.
-       This wires it up the same way the customize page already does. ── */
-    function onExamComboChange(cb) {
-        // Ticking "combine this exam" enables (and auto-ticks) its own
-        // "include in average" switch; unticking clears + disables it —
-        // same behaviour as the working version on customize.blade.php.
-        const avgCb = document.getElementById('cb_avg_' + cb.value);
-        if (avgCb) {
-            avgCb.disabled = !cb.checked;
-            avgCb.checked = cb.checked;
-        }
-        updateSummary();
-    }
-
-    function updateSummary() {
-        updateAllLinks();
-    }
-
-    /* Comma-separated extra exam ids (checked .exam-combine-cb) and
-       average-in ids (checked .exam-avg-cb, which includes the base
-       exam's own always-on switch) — mirrors customize.blade.php. */
-    function getCombinedExamParams() {
-        const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
-        const avgExamIds = Array.from(document.querySelectorAll('.exam-avg-cb:checked')).map(cb => cb.value);
-        return { extraExamIds, avgExamIds };
-    }
-
-    function selectTemplate(key, el) {
-        document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        templateExplicitlyChosen = true;
-        updateCustomizeLink(key);
-        updateAllLinks();
-    }
-
-    /* ── Keep "Customize this design" pointed at whichever template
-       card is currently selected, so its filtered toggle panel matches
-       what's shown here. ── */
-    function updateCustomizeLink(templateKey) {
-        const link = document.getElementById('cpCustomizeLink');
-        if (link) {
-            link.href = '{{ route('examination.passslips.customize', $exam->id) }}?template=' + encodeURIComponent(templateKey);
-        }
-    }
-    updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
-
-    /* ── Build query-string (template + lang + combined exams) ── */
-function buildQS() {
-    // Deliberately NOT including accent/toggles here. Those reflect
-    // whichever class was last loaded into the panel — broadcasting
-    // them into every student/class link meant printing P1 would
-    // silently use whatever was loaded for Baby Class, etc. Each print
-    // still resolves its OWN class's saved accent/toggles server-side
-    // (applySavedPassslipSettings).
-    //
-    // "template" is only added once the user has actually clicked a
-    // template card this page-view (templateExplicitlyChosen). Until
-    // then it's omitted entirely so the server falls through to each
-    // class's own saved template instead of every print silently being
-    // forced onto "Classic" (its default pre-selected state here).
-    const p = new URLSearchParams();
-    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
-    p.set('lang', currentLang);
-    if (templateExplicitlyChosen) {
-        const selectedTplCard = document.querySelector('.cp-template-card.selected');
-        p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
-    }
-    // Combine Examinations — read straight from the checkboxes above,
-    // same params resolveExamSelection() already expects server-side.
-    const { extraExamIds, avgExamIds } = getCombinedExamParams();
-    if (extraExamIds.length) p.set('exam_ids', extraExamIds.join(','));
-    if (avgExamIds.length) p.set('avg_exam_ids', avgExamIds.join(','));
-    return p.toString();
-}
-
-function injectIntoForm(formEl) {
-    // Same reasoning as buildQS() above: don't force the panel's
-    // currently-loaded accent/toggle state onto whichever class tile
-    // was clicked — and only pass "template" through if the user
-    // actually picked one this page-view.
-    formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
-    // Add lang
-    const langInp = document.createElement('input');
-    langInp.type = 'hidden';
-    langInp.name = 'lang';
-    langInp.value = new URLSearchParams(window.location.search).get('lang') || 'en';
-    langInp.classList.add('cp-injected');
-    formEl.appendChild(langInp);
-    // Add template — only if explicitly chosen this page-view
-    if (templateExplicitlyChosen) {
-        const selectedTplCard = document.querySelector('.cp-template-card.selected');
-        const tplInp = document.createElement('input');
-        tplInp.type = 'hidden';
-        tplInp.name = 'template';
-        tplInp.value = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
-        tplInp.classList.add('cp-injected');
-        formEl.appendChild(tplInp);
-    }
-    // Add Combine Examinations selection, same params as buildQS() above
-    const { extraExamIds, avgExamIds } = getCombinedExamParams();
-    if (extraExamIds.length) {
-        const examInp = document.createElement('input');
-        examInp.type = 'hidden';
-        examInp.name = 'exam_ids';
-        examInp.value = extraExamIds.join(',');
-        examInp.classList.add('cp-injected');
-        formEl.appendChild(examInp);
-    }
-    if (avgExamIds.length) {
-        const avgInp = document.createElement('input');
-        avgInp.type = 'hidden';
-        avgInp.name = 'avg_exam_ids';
-        avgInp.value = avgExamIds.join(',');
-        avgInp.classList.add('cp-injected');
-        formEl.appendChild(avgInp);
-    }
-}
-
-    /* ── Update ALL student links + Print All href ── */
-    function updateAllLinks() {
-        const qs = buildQS();
-
-        // Print-All button
-        const btnAll = document.getElementById('btnPrintAll');
-        if (btnAll) {
-            const base = btnAll.href.split('?')[0];
-            btnAll.href = base + '?' + qs;
+        /* ── Combine Examinations ──
+           Checking a sibling exam here was supposed to fold it onto every
+           pass slip the same way it already works on "Customize this
+           design" (customize.blade.php's .cz-exam-combine-cb /
+           .cz-exam-avg-cb, wired to exam_ids / avg_exam_ids and read
+           server-side by resolveExamSelection()). On this page though,
+           onExamComboChange()/updateSummary() were referenced in the
+           checkbox onchange= attributes but never actually defined, and
+           buildQS()/injectIntoForm() never read the checkboxes at all — so
+           ticking exams here did nothing: Print All / By Class / Student
+           Directory always printed against the single base examination.
+           This wires it up the same way the customize page already does. ── */
+        function onExamComboChange(cb) {
+            // Ticking "combine this exam" enables (and auto-ticks) its own
+            // "include in average" switch; unticking clears + disables it —
+            // same behaviour as the working version on customize.blade.php.
+            const avgCb = document.getElementById('cb_avg_' + cb.value);
+            if (avgCb) {
+                avgCb.disabled = !cb.checked;
+                avgCb.checked = cb.checked;
+            }
+            updateSummary();
         }
 
-        // Student individual links
-        document.querySelectorAll('.student-link').forEach(a => {
-            const base = a.dataset.baseHref;
-            a.href = base + '?' + qs;
+        function updateSummary() {
+            updateAllLinks();
+        }
+
+        /* Comma-separated extra exam ids (checked .exam-combine-cb) and
+           average-in ids (checked .exam-avg-cb, which includes the base
+           exam's own always-on switch) — mirrors customize.blade.php. */
+        function getCombinedExamParams() {
+            const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
+            const avgExamIds = Array.from(document.querySelectorAll('.exam-avg-cb:checked')).map(cb => cb.value);
+            return { extraExamIds, avgExamIds };
+        }
+
+        function selectTemplate(key, el) {
+            document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            templateExplicitlyChosen = true;
+            updateCustomizeLink(key);
+            updateAllLinks();
+        }
+
+        /* ── Keep "Customize this design" pointed at whichever template
+           card is currently selected, so its filtered toggle panel matches
+           what's shown here. ── */
+        function updateCustomizeLink(templateKey) {
+            const link = document.getElementById('cpCustomizeLink');
+            if (link) {
+                link.href = '{{ route('examination.passslips.customize', $exam->id) }}?template=' + encodeURIComponent(templateKey);
+            }
+        }
+        updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
+
+        /* ── Build query-string (template + lang + combined exams) ── */
+        function buildQS() {
+            // Deliberately NOT including accent/toggles here. Those reflect
+            // whichever class was last loaded into the panel — broadcasting
+            // them into every student/class link meant printing P1 would
+            // silently use whatever was loaded for Baby Class, etc. Each print
+            // still resolves its OWN class's saved accent/toggles server-side
+            // (applySavedPassslipSettings).
+            //
+            // "template" is only added once the user has actually clicked a
+            // template card this page-view (templateExplicitlyChosen). Until
+            // then it's omitted entirely so the server falls through to each
+            // class's own saved template instead of every print silently being
+            // forced onto "Classic" (its default pre-selected state here).
+            const p = new URLSearchParams();
+            const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            p.set('lang', currentLang);
+            if (templateExplicitlyChosen) {
+                const selectedTplCard = document.querySelector('.cp-template-card.selected');
+                p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
+            }
+            // Combine Examinations — read straight from the checkboxes above,
+            // same params resolveExamSelection() already expects server-side.
+            const { extraExamIds, avgExamIds } = getCombinedExamParams();
+            if (extraExamIds.length) p.set('exam_ids', extraExamIds.join(','));
+            if (avgExamIds.length) p.set('avg_exam_ids', avgExamIds.join(','));
+            return p.toString();
+        }
+
+        function injectIntoForm(formEl) {
+            // Same reasoning as buildQS() above: don't force the panel's
+            // currently-loaded accent/toggle state onto whichever class tile
+            // was clicked — and only pass "template" through if the user
+            // actually picked one this page-view.
+            formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
+            // Add lang
+            const langInp = document.createElement('input');
+            langInp.type = 'hidden';
+            langInp.name = 'lang';
+            langInp.value = new URLSearchParams(window.location.search).get('lang') || 'en';
+            langInp.classList.add('cp-injected');
+            formEl.appendChild(langInp);
+            // Add template — only if explicitly chosen this page-view
+            if (templateExplicitlyChosen) {
+                const selectedTplCard = document.querySelector('.cp-template-card.selected');
+                const tplInp = document.createElement('input');
+                tplInp.type = 'hidden';
+                tplInp.name = 'template';
+                tplInp.value = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
+                tplInp.classList.add('cp-injected');
+                formEl.appendChild(tplInp);
+            }
+            // Add Combine Examinations selection, same params as buildQS() above
+            const { extraExamIds, avgExamIds } = getCombinedExamParams();
+            if (extraExamIds.length) {
+                const examInp = document.createElement('input');
+                examInp.type = 'hidden';
+                examInp.name = 'exam_ids';
+                examInp.value = extraExamIds.join(',');
+                examInp.classList.add('cp-injected');
+                formEl.appendChild(examInp);
+            }
+            if (avgExamIds.length) {
+                const avgInp = document.createElement('input');
+                avgInp.type = 'hidden';
+                avgInp.name = 'avg_exam_ids';
+                avgInp.value = avgExamIds.join(',');
+                avgInp.classList.add('cp-injected');
+                formEl.appendChild(avgInp);
+            }
+        }
+
+        /* ── Update ALL student links + Print All href ── */
+        function updateAllLinks() {
+            const qs = buildQS();
+
+            // Print-All button
+            const btnAll = document.getElementById('btnPrintAll');
+            if (btnAll) {
+                const base = btnAll.href.split('?')[0];
+                btnAll.href = base + '?' + qs;
+            }
+
+            // Student individual links
+            document.querySelectorAll('.student-link').forEach(a => {
+                const base = a.dataset.baseHref;
+                a.href = base + '?' + qs;
+            });
+        }
+
+        /* ── Panel collapse/expand ── */
+        function toggleCustomPanel() {
+            const body = document.getElementById('cpBody');
+            const header = document.getElementById('cpToggleHeader');
+            const chevron = document.getElementById('cpChevron');
+            const hidden = body.style.display === 'none';
+            body.style.display = hidden ? '' : 'none';
+            header.classList.toggle('collapsed', !hidden);
+            chevron.style.transform = hidden ? '' : 'rotate(-90deg)';
+        }
+
+        /* ── printClass: inject settings then submit ── */
+        function printClass(formId, btn) {
+            document.querySelectorAll('.class-tile').forEach(t => t.classList.remove('selected'));
+            if (btn) btn.classList.add('selected');
+            showLoading('Generating class pass slips…');
+            const form = document.getElementById(formId);
+            if (!form) {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                alert('Error: form not found.');
+                return;
+            }
+            injectIntoForm(form);
+            form.submit();
+        }
+
+        /* ── Loading overlay ── */
+        function showLoading(msg) {
+            document.getElementById('loadingText').textContent = msg ?? 'Generating…';
+            document.getElementById('loadingOverlay').classList.add('active');
+            setTimeout(() => document.getElementById('loadingOverlay').classList.remove('active'), 5000);
+        }
+
+        /* ── Student list filter ── */
+        let activeClassFilter = 'all';
+
+        function filterClass(key, btn) {
+            activeClassFilter = key;
+            document.querySelectorAll('.class-filter-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        function filterStudents(q) { applyFilters(q); }
+
+        function applyFilters(q) {
+            q = (q ?? document.getElementById('studentSearch').value).toLowerCase().trim();
+            const cards = document.querySelectorAll('.student-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const nameMatch = card.dataset.name.includes(q);
+                const admMatch = card.dataset.adm && card.dataset.adm.includes(q);
+                const classMatch = activeClassFilter === 'all' || card.dataset.class === activeClassFilter;
+                const show = (nameMatch || admMatch) && classMatch;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            const ss = document.getElementById('searchStats');
+            if (ss) ss.textContent = q ? `${visible} of ${cards.length} students` : `${cards.length} students`;
+
+            const nr = document.getElementById('noResultsMsg');
+            if (nr) nr.style.display = visible === 0 ? 'flex' : 'none';
+
+            const sc = document.getElementById('studentCount');
+            if (sc) sc.textContent = visible;
+        }
+
+        /* ── Init ── */
+        document.addEventListener('DOMContentLoaded', function () {
+            updateAllLinks();   // sets Print All / student link hrefs on first load
+
+            const body = document.getElementById('cpBody');
+            const chevron = document.getElementById('cpChevron');
+            if (body && chevron) {
+                body.style.display = 'none';
+                chevron.style.transform = 'rotate(-90deg)';
+            }
         });
-    }
-
-    /* ── Panel collapse/expand ── */
-    function toggleCustomPanel() {
-        const body    = document.getElementById('cpBody');
-        const header  = document.getElementById('cpToggleHeader');
-        const chevron = document.getElementById('cpChevron');
-        const hidden  = body.style.display === 'none';
-        body.style.display  = hidden ? '' : 'none';
-        header.classList.toggle('collapsed', !hidden);
-        chevron.style.transform = hidden ? '' : 'rotate(-90deg)';
-    }
-
-    /* ── printClass: inject settings then submit ── */
-    function printClass(formId, btn) {
-        document.querySelectorAll('.class-tile').forEach(t => t.classList.remove('selected'));
-        if (btn) btn.classList.add('selected');
-        showLoading('Generating class pass slips…');
-        const form = document.getElementById(formId);
-        if (!form) {
-            document.getElementById('loadingOverlay').classList.remove('active');
-            alert('Error: form not found.');
-            return;
-        }
-        injectIntoForm(form);
-        form.submit();
-    }
-
-    /* ── Loading overlay ── */
-    function showLoading(msg) {
-        document.getElementById('loadingText').textContent = msg ?? 'Generating…';
-        document.getElementById('loadingOverlay').classList.add('active');
-        setTimeout(() => document.getElementById('loadingOverlay').classList.remove('active'), 5000);
-    }
-
-    /* ── Student list filter ── */
-    let activeClassFilter = 'all';
-
-    function filterClass(key, btn) {
-        activeClassFilter = key;
-        document.querySelectorAll('.class-filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyFilters();
-    }
-
-    function filterStudents(q) { applyFilters(q); }
-
-    function applyFilters(q) {
-        q = (q ?? document.getElementById('studentSearch').value).toLowerCase().trim();
-        const cards = document.querySelectorAll('.student-card');
-        let visible = 0;
-
-        cards.forEach(card => {
-            const nameMatch  = card.dataset.name.includes(q);
-            const admMatch   = card.dataset.adm && card.dataset.adm.includes(q);
-            const classMatch = activeClassFilter === 'all' || card.dataset.class === activeClassFilter;
-            const show = (nameMatch || admMatch) && classMatch;
-            card.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-
-        const ss = document.getElementById('searchStats');
-        if (ss) ss.textContent = q ? `${visible} of ${cards.length} students` : `${cards.length} students`;
-
-        const nr = document.getElementById('noResultsMsg');
-        if (nr) nr.style.display = visible === 0 ? 'flex' : 'none';
-
-        const sc = document.getElementById('studentCount');
-        if (sc) sc.textContent = visible;
-    }
-
-    /* ── Init ── */
-    document.addEventListener('DOMContentLoaded', function () {
-        updateAllLinks();   // sets Print All / student link hrefs on first load
-
-        const body = document.getElementById('cpBody');
-        const chevron = document.getElementById('cpChevron');
-        if (body && chevron) {
-            body.style.display = 'none';
-            chevron.style.transform = 'rotate(-90deg)';
-        }
-    });
-</script>
+    </script>
 
 @endsection
