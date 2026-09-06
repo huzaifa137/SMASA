@@ -1047,7 +1047,7 @@ function setLanguage(lang) {
                 {{-- ┌──────────────────────────────────┐
                      │  Bulk Print (all students)       │
                      └──────────────────────────────────┘ --}}
-                <div class="ps-section-card mb-4">
+                <!-- <div class="ps-section-card mb-4">
                     <div class="ps-section-header">
                         <div class="ps-section-icon"><i class="fas fa-print"></i></div>
                         <div>
@@ -1094,7 +1094,7 @@ function setLanguage(lang) {
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
-                </div>
+                </div> -->
 
                 {{-- ┌──────────────────────────────────┐
                      │  Per-Class Print                 │
@@ -1395,16 +1395,59 @@ function setLanguage(lang) {
     ═══════════════════════════════════════════════════════════ --}}
     <script>
     /* ── Design template selection ──
-       This is the one piece of customisation still handled on this page:
-       it's a page-wide presentation choice (not per-class saved data), so
-       it applies immediately to every print link/form below. Everything
-       else — accent colour, feature toggles, Combine Examinations, and
-       saving a profile per class — now lives entirely on "Customize this
-       design" (see customize.blade.php), instead of being duplicated here
-       and there. ── */
+       "Classic" is shown pre-selected purely as a visual default for
+       this gallery — it is NOT an actual choice until the user clicks a
+       card. Only once they do should "template" start being forced into
+       print links/forms as a page-wide override; before that, every
+       print action must fall through to each class's own saved template
+       (server-side, via applySavedPassslipSettings /
+       resolveBulkPassslipTemplate). Previously this flag didn't exist,
+       so "classic" — being pre-selected in the markup — was baked into
+       every link/form on page load, silently overriding every saved
+       per-class template every single time. ── */
+    let templateExplicitlyChosen = false;
+
+    /* ── Combine Examinations ──
+       Checking a sibling exam here was supposed to fold it onto every
+       pass slip the same way it already works on "Customize this
+       design" (customize.blade.php's .cz-exam-combine-cb /
+       .cz-exam-avg-cb, wired to exam_ids / avg_exam_ids and read
+       server-side by resolveExamSelection()). On this page though,
+       onExamComboChange()/updateSummary() were referenced in the
+       checkbox onchange= attributes but never actually defined, and
+       buildQS()/injectIntoForm() never read the checkboxes at all — so
+       ticking exams here did nothing: Print All / By Class / Student
+       Directory always printed against the single base examination.
+       This wires it up the same way the customize page already does. ── */
+    function onExamComboChange(cb) {
+        // Ticking "combine this exam" enables (and auto-ticks) its own
+        // "include in average" switch; unticking clears + disables it —
+        // same behaviour as the working version on customize.blade.php.
+        const avgCb = document.getElementById('cb_avg_' + cb.value);
+        if (avgCb) {
+            avgCb.disabled = !cb.checked;
+            avgCb.checked = cb.checked;
+        }
+        updateSummary();
+    }
+
+    function updateSummary() {
+        updateAllLinks();
+    }
+
+    /* Comma-separated extra exam ids (checked .exam-combine-cb) and
+       average-in ids (checked .exam-avg-cb, which includes the base
+       exam's own always-on switch) — mirrors customize.blade.php. */
+    function getCombinedExamParams() {
+        const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
+        const avgExamIds = Array.from(document.querySelectorAll('.exam-avg-cb:checked')).map(cb => cb.value);
+        return { extraExamIds, avgExamIds };
+    }
+
     function selectTemplate(key, el) {
         document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
+        templateExplicitlyChosen = true;
         updateCustomizeLink(key);
         updateAllLinks();
     }
@@ -1420,7 +1463,7 @@ function setLanguage(lang) {
     }
     updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
 
-    /* ── Build query-string (template + lang only — see selectTemplate above) ── */
+    /* ── Build query-string (template + lang + combined exams) ── */
 function buildQS() {
     // Deliberately NOT including accent/toggles here. Those reflect
     // whichever class was last loaded into the panel — broadcasting
@@ -1429,26 +1472,31 @@ function buildQS() {
     // still resolves its OWN class's saved accent/toggles server-side
     // (applySavedPassslipSettings).
     //
-    // "template" is the one exception: per the panel's own description
-    // ("...accent colour, toggles, and every student's data stay
-    // exactly the same — only the visual style changes"), the design
-    // template is a page-wide presentation choice, not per-class data —
-    // so, like lang, it's fine (and expected) to apply it everywhere
-    // immediately, matching what Live Preview already shows, instead of
-    // waiting for a Save.
+    // "template" is only added once the user has actually clicked a
+    // template card this page-view (templateExplicitlyChosen). Until
+    // then it's omitted entirely so the server falls through to each
+    // class's own saved template instead of every print silently being
+    // forced onto "Classic" (its default pre-selected state here).
     const p = new URLSearchParams();
     const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
     p.set('lang', currentLang);
-    const selectedTplCard = document.querySelector('.cp-template-card.selected');
-    p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
+    if (templateExplicitlyChosen) {
+        const selectedTplCard = document.querySelector('.cp-template-card.selected');
+        p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
+    }
+    // Combine Examinations — read straight from the checkboxes above,
+    // same params resolveExamSelection() already expects server-side.
+    const { extraExamIds, avgExamIds } = getCombinedExamParams();
+    if (extraExamIds.length) p.set('exam_ids', extraExamIds.join(','));
+    if (avgExamIds.length) p.set('avg_exam_ids', avgExamIds.join(','));
     return p.toString();
 }
 
 function injectIntoForm(formEl) {
     // Same reasoning as buildQS() above: don't force the panel's
     // currently-loaded accent/toggle state onto whichever class tile
-    // was clicked — but the design template IS page-wide, so pass it
-    // through just like lang.
+    // was clicked — and only pass "template" through if the user
+    // actually picked one this page-view.
     formEl.querySelectorAll('.cp-injected').forEach(i => i.remove());
     // Add lang
     const langInp = document.createElement('input');
@@ -1457,14 +1505,34 @@ function injectIntoForm(formEl) {
     langInp.value = new URLSearchParams(window.location.search).get('lang') || 'en';
     langInp.classList.add('cp-injected');
     formEl.appendChild(langInp);
-    // Add template
-    const selectedTplCard = document.querySelector('.cp-template-card.selected');
-    const tplInp = document.createElement('input');
-    tplInp.type = 'hidden';
-    tplInp.name = 'template';
-    tplInp.value = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
-    tplInp.classList.add('cp-injected');
-    formEl.appendChild(tplInp);
+    // Add template — only if explicitly chosen this page-view
+    if (templateExplicitlyChosen) {
+        const selectedTplCard = document.querySelector('.cp-template-card.selected');
+        const tplInp = document.createElement('input');
+        tplInp.type = 'hidden';
+        tplInp.name = 'template';
+        tplInp.value = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
+        tplInp.classList.add('cp-injected');
+        formEl.appendChild(tplInp);
+    }
+    // Add Combine Examinations selection, same params as buildQS() above
+    const { extraExamIds, avgExamIds } = getCombinedExamParams();
+    if (extraExamIds.length) {
+        const examInp = document.createElement('input');
+        examInp.type = 'hidden';
+        examInp.name = 'exam_ids';
+        examInp.value = extraExamIds.join(',');
+        examInp.classList.add('cp-injected');
+        formEl.appendChild(examInp);
+    }
+    if (avgExamIds.length) {
+        const avgInp = document.createElement('input');
+        avgInp.type = 'hidden';
+        avgInp.name = 'avg_exam_ids';
+        avgInp.value = avgExamIds.join(',');
+        avgInp.classList.add('cp-injected');
+        formEl.appendChild(avgInp);
+    }
 }
 
     /* ── Update ALL student links + Print All href ── */

@@ -727,6 +727,38 @@ class ExaminationController extends Controller
     }
 
     /**
+     * Bulk Print ("all students") renders every class in the exam inside
+     * ONE HTTP request/response, and each slip.blade.php already looks up
+     * its OWN student's class settings correctly on every iteration (see
+     * $savedCfg in slip-classic/modern/minimal.blade.php). So, unlike
+     * passslipStudent()/passslipClass() (always exactly one class),
+     * applySavedPassslipSettings() must NEVER be called here for the
+     * show/hide toggles: request() is a single shared object for the
+     * whole request, so merging one class's toggle keys into it would
+     * "stick" for every other class's students rendered afterwards in
+     * the same loop, silently overriding their own saved profiles.
+     *
+     * The one exception is "template": which Blade FILE gets rendered
+     * (slip-classic vs -modern vs -minimal) is decided once, before the
+     * loop even starts, so it can't vary per-student within one bulk
+     * response. This picks a sensible one-off fallback — the first
+     * class's saved template — only if nothing more specific (an
+     * explicit ?template= from the page's design-template picker) was
+     * already supplied.
+     */
+    public function resolveBulkPassslipTemplate($schoolId, $firstClassId): void
+    {
+        if (request()->has('template') || empty($firstClassId)) {
+            return;
+        }
+
+        $saved = Helper::getPassslipSettings($schoolId, $firstClassId);
+        if (!empty($saved['template'])) {
+            request()->merge(['template' => $saved['template']]);
+        }
+    }
+
+    /**
      * Resolve which primary (non-nursery) pass-slip view to render.
      *
      * The three design templates (Classic / Modern / Minimal) used to
@@ -1173,7 +1205,11 @@ class ExaminationController extends Controller
             ->values();
 
         if ($examClasses->isNotEmpty()) {
-            $this->applySavedPassslipSettings($schoolId, $examClasses->first()->class_id);
+            // Template-only fallback (see resolveBulkPassslipTemplate()
+            // docblock) — the show/hide toggles are deliberately left
+            // alone here; each student's own class settings are picked
+            // up correctly per-slip inside the Blade loop below.
+            $this->resolveBulkPassslipTemplate($schoolId, $examClasses->first()->class_id);
         }
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
