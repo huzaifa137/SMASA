@@ -1964,7 +1964,10 @@
                     'perf_chart' => $on('show_perf_chart', true, $savedCfg),
                     'remarks' => $on('show_remarks', true, $savedCfg),
                     'discipline' => $on('show_discipline', true, $savedCfg),
-                    'signatures' => $on('show_signatures', true, $savedCfg),
+                    // Signature column defaults OFF for Classic only —
+                    // everything else in Classic is unchanged. Still
+                    // available any time via its toggle.
+                    'signatures' => $on('show_signatures', false, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     // New toggles

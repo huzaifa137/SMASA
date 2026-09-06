@@ -5,10 +5,13 @@ use App\Http\Controllers\Helper;
 "Customize this design" — reached from the Design Template gallery
 on the pass slips index. Shows ONLY the toggles that actually affect
 the chosen template (Helper::passslipTogglesForTemplate), side by
-side with a live iframe preview that starts fully-featured and
-updates as toggles change — no reload needed to SEE the change
-(the iframe's own src is refreshed under the hood), and nothing is
-saved until "Save for selected classes" is clicked. --}}
+side with a live iframe preview that starts fully-featured — except
+Minimal (Performance Summary / Discipline / Signatures start off so
+the slip fits one A4 page by default) and Classic (Signatures starts
+off) — see $offByDefaultKeys below — and updates as toggles change —
+no reload needed to SEE the change (the iframe's own src is
+refreshed under the hood), and nothing is saved until "Save for
+selected classes" is clicked. --}}
 @extends('layouts-side-bar.master')
 
 @section('css')
@@ -317,6 +320,23 @@ saved until "Save for selected classes" is clicked. --}}
             color: var(--brand);
         }
 
+        /* Small dot on a class chip that already has a saved profile —
+           same treatment as the index page's picker, so it's visible at
+           a glance which classes will actually load something. */
+        .cz-class-chip.has-saved::after {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #16a34a;
+            display: inline-block;
+            margin-left: .3rem;
+        }
+
+        .cz-class-chip.selected.has-saved::after {
+            background: var(--brand);
+        }
+
         .cz-btn-primary {
             background: linear-gradient(135deg, #1e1b4b, #2f2ccb);
             color: #fff;
@@ -460,13 +480,27 @@ saved until "Save for selected classes" is clicked. --}}
                 Only the sections/keys this template actually supports
                 are rendered here at all — this is the fix for the
                 "toggle does nothing" problem. --}}
+                @php
+                    // Minimal defaults these three OFF (see slip-minimal.blade.php)
+                    // so a fresh/direct link fits on one A4 page; Classic
+                    // defaults just Signatures off (see slip-classic.blade.php).
+                    // The panel's switches should reflect that instead of
+                    // always starting checked, or the preview and the
+                    // switches would disagree the moment the page loads.
+                    $offByDefaultKeys = match ($template) {
+                        'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures'],
+                        'classic' => ['show_signatures'],
+                        default => [],
+                    };
+                @endphp
                 @foreach ($toggleGroups as $groupLabel => $toggles)
                     <div class="cz-group-label">{{ $groupLabel }}</div>
                     @foreach ($toggles as $key => $meta)
                         <div class="cz-check-row">
                             <label for="cb_{{ $key }}"><i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }}</label>
                             <label class="cz-switch">
-                                <input type="checkbox" id="cb_{{ $key }}" class="cz-toggle-cb" data-key="{{ $key }}" checked>
+                                <input type="checkbox" id="cb_{{ $key }}" class="cz-toggle-cb" data-key="{{ $key }}"
+                                    {{ in_array($key, $offByDefaultKeys, true) ? '' : 'checked' }}>
                                 <span class="cz-switch-slider"></span>
                             </label>
                         </div>
@@ -558,14 +592,27 @@ saved until "Save for selected classes" is clicked. --}}
         const EXAM_ID = {{ $exam->id }};
         const PREVIEW_URL = '{{ route('examination.passslips.preview', $exam->id) }}';
         const SAVE_URL = '{{ route('examination.passslips.settings.save', $exam->id) }}';
+        const GET_URL = '{{ route('examination.passslips.settings.get', $exam->id) }}';
+        const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
+        // Same per-template "off unless saved otherwise" keys the PHP side
+        // uses when rendering the actual slip (see $offByDefaultKeys above),
+        // mirrored here so a loaded class's MISSING keys fall back to the
+        // correct default instead of always assuming "on".
+        const OFF_BY_DEFAULT = @json($offByDefaultKeys);
 
         let refreshTimer = null;
         const selectedClassIds = new Set();
+        let savedTabsCache = []; // [{class_id, class_name, settings}] — which classes already have a saved profile
 
         function currentTemplate() {
             const sel = document.querySelector('.cz-tpl-mini-card.selected');
             return sel ? sel.dataset.template : 'classic';
+        }
+
+        function currentPreviewClassId() {
+            const val = document.getElementById('czPreviewClass').value;
+            return val ? val.split('|')[0] : null;
         }
 
         /* ── Build the settings object every toggle/colour currently
@@ -633,7 +680,14 @@ saved until "Save for selected classes" is clicked. --}}
             scheduleRefresh();
         }));
 
-        document.getElementById('czPreviewClass').addEventListener('change', scheduleRefresh);
+        document.getElementById('czPreviewClass').addEventListener('change', function () {
+            const classId = currentPreviewClassId();
+            if (classId) {
+                loadClassCustomisation(classId, true);
+            } else {
+                scheduleRefresh();
+            }
+        });
 
         /* ── Template switch: full reload, carrying current toggle
            values across as query params so nothing already set is lost —
@@ -649,6 +703,72 @@ saved until "Save for selected classes" is clicked. --}}
             window.location.href = '{{ route('examination.passslips.customize', $exam->id) }}?' + p.toString();
         }));
 
+        /* ── Fetch/apply a class's saved profile ──────────────────────
+           This is the piece the page was missing entirely: it could
+           SAVE settings but never loaded them back, so refreshing (or
+           just re-opening the page later) always showed defaults again
+           even though the save had genuinely gone into passslip_settings
+           — indistinguishable, from here, from "the save didn't work". */
+        function applySettingsToPanel(saved) {
+            if (saved.accent) {
+                document.getElementById('czColorPicker').value = saved.accent;
+                document.querySelectorAll('.cz-preset-dot').forEach(d => {
+                    d.classList.toggle('active', d.dataset.color === saved.accent);
+                });
+            }
+            document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
+                const key = cb.dataset.key;
+                cb.checked = key in saved ? !!saved[key] : !OFF_BY_DEFAULT.includes(key);
+            });
+            const extraIds = typeof saved.exam_ids === 'string' ? saved.exam_ids.split(',').filter(Boolean) : [];
+            document.querySelectorAll('.cz-exam-combine-cb').forEach(cb => {
+                cb.checked = extraIds.includes(cb.value);
+                const avgCb = document.getElementById('cz_avg_' + cb.value);
+                if (avgCb) avgCb.disabled = !cb.checked;
+            });
+            if (typeof saved.avg_exam_ids === 'string') {
+                const avgIds = saved.avg_exam_ids.split(',').filter(Boolean);
+                document.querySelectorAll('.cz-exam-avg-cb').forEach(cb => {
+                    if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
+                });
+            }
+            refreshPreviewNow();
+        }
+
+        /* pending: true from the initial page-load call and from the
+           "Preview with" dropdown, so the iframe still gets its first
+           src (or a refresh) even when the class has nothing saved —
+           false from a chip click, where doing nothing on a miss and
+           leaving the panel as-is is the right call (existing chip
+           behaviour, unchanged). */
+        function loadClassCustomisation(classId, pending = false) {
+            fetch(GET_URL + '?class_id=' + classId, { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(res => {
+                    const usable = res.success && res.settings && Object.keys(res.settings).length > 0
+                        && (!res.settings.template || res.settings.template === currentTemplate());
+                    if (usable) {
+                        applySettingsToPanel(res.settings);
+                    } else if (pending) {
+                        refreshPreviewNow();
+                    }
+                })
+                .catch(() => { if (pending) refreshPreviewNow(); });
+        }
+
+        function fetchSavedList() {
+            fetch(LIST_URL, { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(res => {
+                    savedTabsCache = (res.success && Array.isArray(res.items)) ? res.items : [];
+                    document.querySelectorAll('.cz-class-chip').forEach(chip => {
+                        const has = savedTabsCache.some(it => String(it.class_id) === chip.dataset.classId);
+                        chip.classList.toggle('has-saved', has);
+                    });
+                })
+                .catch(() => { /* silent — dots just won't show this time */ });
+        }
+
         /* ── Class chip selection (which classes to save this profile for) ── */
         function updateSelectedCount() {
             document.getElementById('czSelectedCount').textContent = selectedClassIds.size;
@@ -661,6 +781,13 @@ saved until "Save for selected classes" is clicked. --}}
             } else {
                 selectedClassIds.add(id);
                 this.classList.add('selected');
+                // Load THIS class's saved profile into the panel — same
+                // "select a class → see what's actually saved for it"
+                // behaviour as the main pass slips page. Only fires on
+                // a fresh selection (not on deselect), and only for the
+                // chip just clicked, so picking several classes at once
+                // to batch-save doesn't fight over whose settings to show.
+                loadClassCustomisation(id);
             }
             updateSelectedCount();
         }));
@@ -676,6 +803,8 @@ saved until "Save for selected classes" is clicked. --}}
             document.querySelectorAll('.cz-class-chip').forEach(chip => chip.classList.remove('selected'));
             updateSelectedCount();
         });
+
+        fetchSavedList();
 
         /* ── Save ── */
         document.getElementById('czSaveBtn').addEventListener('click', function () {
@@ -706,6 +835,7 @@ saved until "Save for selected classes" is clicked. --}}
                     statusEl.textContent = res.success
                         ? 'Saved for ' + selectedClassIds.size + ' class(es). ✓'
                         : (res.message || 'Failed to save.');
+                    if (res.success) fetchSavedList();
                 })
                 .catch(() => {
                     statusEl.style.color = '#c0392b';
@@ -714,7 +844,20 @@ saved until "Save for selected classes" is clicked. --}}
         });
 
         // Initial paint: the slip comes up fully-featured (every toggle
-        // starts checked in the HTML above) before any customisation.
-        refreshPreviewNow();
+        // starts checked in the HTML above) before any customisation —
+        // except Minimal's Performance Summary / Discipline / Signatures
+        // and Classic's Signatures, which start unchecked per-template
+        // (see $offByDefaultKeys above). If the class the page opens on
+        // (the first "Preview with" option) already has a saved profile,
+        // load it straight away instead of showing "fully-featured"
+        // defaults that don't match what's actually saved for it — the
+        // whole point being you shouldn't have to also click that same
+        // class's chip below just to see its real settings.
+        const initialPreviewClassId = currentPreviewClassId();
+        if (initialPreviewClassId) {
+            loadClassCustomisation(initialPreviewClassId, true);
+        } else {
+            refreshPreviewNow();
+        }
     </script>
 @endsection

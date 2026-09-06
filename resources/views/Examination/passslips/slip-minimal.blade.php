@@ -1045,6 +1045,100 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
+           A4 SINGLE-PAGE FIT — "DENSE" MODE
+           Applied via the .mn-dense class (set in PHP from a rough content
+           score: subject count + active optional sections) — same idea as
+           Classic's .rc-dense / Modern's .md-dense. Tightens paddings/gaps/
+           font-sizes just enough to reclaim the vertical space a busy slip
+           needs to still land on one A4 page, without visually changing
+           the common, lighter case.
+════════════════════════════════════════════════════════════════ */
+        .slip.mn-dense .sch-header {
+            padding: .6rem 1.1rem .55rem;
+        }
+
+        .slip.mn-dense .sch-logo-box {
+            width: 74px;
+            height: 74px;
+        }
+
+        .slip.mn-dense .sch-name {
+            font-size: 28px;
+        }
+
+        .slip.mn-dense .sch-details {
+            font-size: 13px;
+        }
+
+        .slip.mn-dense .stu-row {
+            padding: .45rem .9rem;
+        }
+
+        .slip.mn-dense .stu-field {
+            font-size: .72rem;
+        }
+
+        .slip.mn-dense .sum-cell {
+            padding: .35rem .35rem;
+        }
+
+        .slip.mn-dense .sum-lbl {
+            font-size: .54rem;
+        }
+
+        .slip.mn-dense .sum-val {
+            font-size: .92rem;
+        }
+
+        .slip.mn-dense .marks-tbl th,
+        .slip.mn-dense .marks-tbl td {
+            padding: .22rem .35rem !important;
+            font-size: .66rem;
+        }
+
+        .slip.mn-dense .remark-text,
+        .slip.mn-dense .discipline-row {
+            font-size: .66rem;
+        }
+
+        .slip.mn-dense canvas {
+            max-height: 90px !important;
+        }
+
+        /* These two are fixed-pixel boxes that the base rules above never
+           touch (unlike Modern, which doesn't carry a circular logo +
+           mini-chart + QR all in the same row) — on a dense slip they're
+           often the single biggest reason the student-info row is taller
+           than it needs to be, so shrink them here too. */
+        .slip.mn-dense .stu-photo-box {
+            width: 66px;
+            height: 80px;
+        }
+
+        .slip.mn-dense .stu-qr-box {
+            width: 92px;
+            height: 92px;
+        }
+
+        .slip.mn-dense .stu-chart-title,
+        .slip.mn-dense .stu-qr-title {
+            font-size: .58rem;
+            margin-bottom: .1rem;
+        }
+
+        .slip.mn-dense .title-band {
+            padding: .3rem 1.1rem;
+        }
+
+        .slip.mn-dense .stu-row {
+            gap: .6rem;
+        }
+
+        .slip.mn-dense .bottom-section {
+            min-height: 120px;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
    PRINT
 ════════════════════════════════════════════════════════════════ */
         @media print {
@@ -1081,6 +1175,34 @@
 
             .slip-footer {
                 margin-top: auto;
+            }
+
+            /* ── Why the "big blank gap, still 2 pages" happened ──────
+               .slip's forced min-height above (one full A4 page) plus
+               .slip-footer's margin-top:auto is what pins the footer to
+               the bottom on a SHORT slip so it still looks like a full
+               printed page. But it back-fires on a busy/dense slip: the
+               browser first lays the flex column out at that full-page
+               height (footer included), THEN tries to fragment it for
+               print. .bottom-section has page-break-inside:avoid, so if
+               it doesn't fit in whatever's left of page 1 the browser
+               moves the *whole* block to page 2 — but the page-1 box is
+               still exactly one page tall, so the space that block would
+               have occupied just renders as blank. Page 2 then opens with
+               bottom-section + footer.
+               Fix: a dense slip has real content close to (or over) a
+               full page already, so it doesn't need — and shouldn't get —
+               that artificial full-page reservation. Letting it size to
+               its actual content means the browser paginates on genuine
+               content height instead of a pre-reserved page-shaped box,
+               so there's no leftover void, and if it still runs slightly
+               long, page 2 continues right on from where page 1 left off. */
+            .slip.mn-dense {
+                min-height: 0;
+            }
+
+            .slip.mn-dense .slip-footer {
+                margin-top: 0;
             }
 
             .marks-tbl tr {
@@ -1351,8 +1473,15 @@
                     'totals_row' => $on('show_totals_row', true, $savedCfg),
                     'perf_chart' => $on('show_perf_chart', true, $savedCfg),
                     'remarks' => $on('show_remarks', true, $savedCfg),
-                    'discipline' => $on('show_discipline', true, $savedCfg),
-                    'signatures' => $on('show_signatures', true, $savedCfg),
+                    // Discipline / Signatures default OFF for Minimal only
+                    // (unlike Classic/Modern) — with everything else on,
+                    // Minimal's fixed-size photo/QR row plus these two
+                    // bottom-section columns reliably pushed a slip onto
+                    // a second page. Still available any time via their
+                    // toggle — this only changes what a fresh/direct link
+                    // shows before anyone touches a toggle.
+                    'discipline' => $on('show_discipline', false, $savedCfg),
+                    'signatures' => $on('show_signatures', false, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     'score_col' => $on('show_score_col', true, $savedCfg),
@@ -1363,7 +1492,9 @@
                     // regardless of what its individual field-level
                     // toggles are set to.
                     'section_student_info' => $on('show_section_student_info', true, $savedCfg),
-                    'section_summary' => $on('show_section_summary', true, $savedCfg),
+                    // Same reasoning as discipline/signatures above —
+                    // Minimal's Performance Summary strip defaults OFF.
+                    'section_summary' => $on('show_section_summary', false, $savedCfg),
                     'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
 
                     // Student Info ledger — per-field (Minimal's info
@@ -1528,10 +1659,25 @@
                     $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
                     $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
                 }
+
+                // ── A4 single-page fit ──────────────────────────────────
+                // Same estimate-from-data approach as Classic's .rc-dense
+                // and Modern's .md-dense: there's no reliable way to
+                // measure rendered height from Blade/PHP before it's
+                // drawn, so a rough content score (subject count + active
+                // optional sections) decides whether to drop the
+                // ".mn-dense" class onto the slip.
+                $minContentScore = $noOfSubjects
+                    + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
+                    + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
+                    + ($cfg['remarks'] ? 2 : 0)
+                    + ($cfg['signatures'] ? 1 : 0)
+                    + ($cfg['section_summary'] ? 1 : 0);
+                $isDense = $minContentScore > 14;
             @endphp
 
             {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
-            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
+            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }} {{ $isDense ? 'mn-dense' : '' }}">
 
                 {{-- Watermark --}}
                 @if($cfg['watermark'])
@@ -1576,13 +1722,13 @@
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
                             <div class="sch-details">
                                 @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
-                                @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
+                                @if($schoolEmail)<span> | {{ $schoolEmail }} | </span>  @endif
                                 @if($schoolLocation)<span> {{ $schoolLocation }}</span>@endif
                             </div>
                         @endif
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
+                            <div class="sch-motto">MOTTO : <strong>"{{ $schoolMotto }}"</strong> </div>
                         @endif
                     </div>
 
