@@ -1,272 +1,1437 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Kindergarten Learning Journey — Preview</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  :root{
-    --navy:#1c3f7c;
-    --purple:#8a5fc7;
-    --pink:#ec6ea8;
-    --orange:#f2994a;
-    --green:#4caf7d;
-    --blue:#3aa8d8;
-    --yellow:#f0b429;
-    --paper:#fffdf7;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    font-family:'Baloo 2', sans-serif;
-    background:#dfe3ea;
-  }
-  .toolbar{
-    background:linear-gradient(135deg,#1c3f7c,#3aa8d8);
-    color:#fff; padding:.75rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
-    position:sticky; top:0; z-index:50; font-family:'Fredoka',sans-serif;
-  }
-  .toolbar b{font-size:1rem;}
-  .toolbar small{opacity:.8; display:block;}
-  .page-wrap{ display:flex; justify-content:center; padding:24px 0 60px; }
-  .sheet{
-    width:210mm; min-height:297mm;
-    background:var(--paper);
-    position:relative;
-    padding:10mm 11mm 8mm;
-    box-shadow:0 4px 30px rgba(0,0,0,.25);
-    overflow:hidden;
-    border-radius:6px;
-  }
-  @media print{
-    body{background:#fff;}
-    .toolbar{display:none;}
-    .page-wrap{padding:0;}
-    .sheet{box-shadow:none; width:210mm; min-height:297mm; border-radius:0;}
-  }
+    <meta charset="UTF-8">
+    <title>Kindergarten Learning Journey — Preview</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --navy: #1c3f7c;
+            --purple: #8a5fc7;
+            --pink: #ec6ea8;
+            --orange: #f2994a;
+            --green: #4caf7d;
+            --blue: #3aa8d8;
+            --yellow: #f0b429;
+            --paper: #fffdf7;
+        }
 
-  /* decorative floaters */
-  .deco{position:absolute; opacity:.95;}
-  .deco.star{color:#f0b429; font-size:20px;}
-  .deco.heart{color:#ec6ea8; font-size:16px;}
-  .deco.dot{color:#3aa8d8; font-size:14px;}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  /* HEADER */
-  .header{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; padding-bottom:6mm; }
-  .logo-shield{
-    width:70px; height:80px; background:var(--navy); color:#fff;
-    clip-path: polygon(50% 0%, 100% 15%, 100% 60%, 50% 100%, 0% 60%, 0% 15%);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-    font-size:8px; font-weight:700; line-height:1.1; padding:6px;
-  }
-  .logo-shield i{font-size:16px; margin-bottom:3px;}
-  .header-center{ text-align:center; flex:1; padding:0 10px;}
-  .school-name{
-    font-family:'Fredoka',sans-serif; font-weight:700; color:var(--navy);
-    font-size:26px; line-height:1.05; letter-spacing:.5px; text-transform:uppercase;
-  }
-  .banner{
-    display:inline-block; margin-top:6px; background:var(--purple); color:#fff;
-    padding:5px 22px; border-radius:20px; font-weight:700; font-size:13px; letter-spacing:.5px;
-    box-shadow:0 3px 0 rgba(0,0,0,.12);
-  }
-  .academic-year{ color:var(--blue); font-weight:600; margin-top:6px; font-size:12px;}
-  .side-art{ width:120px; text-align:center; }
-  .side-art img{ max-width:100%; max-height:78px; object-fit:contain;}
-  .rainbow-wrap{ position:absolute; right:6mm; top:-2mm; width:150px;}
-  .rainbow-wrap img{width:100%;}
-  .child-reading{ position:absolute; left:2mm; top:12mm; width:90px;}
-  .teddy{ position:absolute; left:20mm; top:20mm; width:44px;}
-  .blocks{ position:absolute; left:38mm; top:24mm; width:34px;}
-  .girl-wave{ position:absolute; right:2mm; top:14mm; width:78px;}
-  .palette{ position:absolute; right:34mm; top:24mm; width:40px;}
+        body {
+            font-family: 'Baloo 2', sans-serif;
+            background: #dfe3ea;
+        }
 
-  .content{ position:relative; z-index:2; margin-top:30mm; }
+        .toolbar {
+            background: linear-gradient(135deg, #1c3f7c, #3aa8d8);
+            color: #fff;
+            padding: .75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            font-family: 'Fredoka', sans-serif;
+        }
 
-  /* CHILD INFO BOX */
-  .info-box{
-    background:#fff; border:2px solid #eef1f6; border-radius:16px;
-    box-shadow:0 3px 10px rgba(0,0,0,.06);
-    padding:10px 18px 14px; margin-bottom:5mm;
-  }
-  .info-title{
-    text-align:center; font-family:'Fredoka',sans-serif; font-weight:700; color:var(--navy);
-    font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;
-  }
-  .info-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px 22px; }
-  .info-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:#333; padding:4px 0; border-bottom:1px dotted #ccc;}
-  .info-icon{
-    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:10px; flex:none;
-  }
-  .info-row .label{font-weight:600; color:#333; white-space:nowrap;}
-  .info-row .value{flex:1; color:#555;}
+        .toolbar b {
+            font-size: 1rem;
+        }
 
-  /* DEVELOPMENT JOURNEY */
-  .dev-title{
-    text-align:center; font-family:'Fredoka',sans-serif; font-weight:700; color:var(--navy);
-    font-size:14px; letter-spacing:.5px; text-transform:uppercase; margin:4mm 0 3mm;
-  }
-  .dev-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:5mm;}
-  .dev-card{
-    background:#fff; border-radius:14px; padding:10px 8px 12px; text-align:center;
-    box-shadow:0 2px 8px rgba(0,0,0,.07); border-top:4px solid var(--c);
-  }
-  .dev-card img{width:52px; height:52px; object-fit:contain; margin-bottom:4px;}
-  .dev-card h4{ font-family:'Fredoka',sans-serif; font-size:10.5px; color:var(--c); text-transform:uppercase; line-height:1.2; margin-bottom:4px;}
-  .dev-card p{font-size:9px; color:#555; line-height:1.3;}
+        .toolbar small {
+            opacity: .8;
+            display: block;
+        }
 
-  /* BOTTOM 4 PANELS */
-  .bottom-grid{ display:grid; grid-template-columns:1.1fr 1fr 1.1fr 1fr; gap:8px; margin-bottom:4mm;}
-  .panel{ background:#fff; border-radius:12px; padding:8px 10px; box-shadow:0 2px 8px rgba(0,0,0,.06); min-height:130px; position:relative;}
-  .panel h5{ font-size:10px; font-family:'Fredoka',sans-serif; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:5px;}
-  .panel h5 i{font-size:11px;}
-  .lines .line{ border-bottom:1px dotted #bbb; height:14px; margin-bottom:6px;}
-  .moment-item{ display:flex; gap:6px; align-items:center; margin-bottom:8px; font-size:9px;}
-  .moment-icon{width:16px;height:16px;border-radius:50%; display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;flex:none;}
-  .steps li{ list-style:none; display:flex; gap:6px; font-size:8.7px; margin-bottom:7px; align-items:flex-start;}
-  .steps i{color:var(--blue); font-size:9px; margin-top:2px;}
-  .message-text{font-size:9.3px; line-height:1.5; color:#444; text-align:center; font-style:italic;}
+        .page-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 24px 0 60px;
+        }
 
-  /* FOOTER SIGNATURES */
-  .sig-box{ background:#fff; border-radius:14px; padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.06); display:grid; grid-template-columns:repeat(4,1fr); gap:10px; position:relative; margin-bottom:6mm;}
-  .sig-col{ text-align:center; font-size:10px;}
-  .sig-col i{ color:var(--navy); font-size:14px; margin-bottom:6px; display:block;}
-  .sig-line{ border-bottom:1px dotted #999; height:18px; margin-bottom:3px;}
-  .sig-col span{ font-weight:600; color:#333;}
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--paper);
+            position: relative;
+            padding: 10mm 11mm 8mm;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, .25);
+            overflow: hidden;
+            border-radius: 8px;
+            border: 3px solid #6cc3e8;
+        }
 
-  .footer-art{ position:absolute; left:0; right:0; bottom:0; height:26mm; background-image:url('{{ asset('images/passslip/kindergarten/') }}/footer_landscape.png'); background-size:cover; background-position:bottom; opacity:.9; z-index:0;}
-  .backpack-deco{ position:absolute; left:6mm; bottom:2mm; width:44px; z-index:1;}
-  .pencils-deco{ position:absolute; right:8mm; bottom:2mm; width:44px; z-index:1;}
-</style>
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .page-wrap {
+                padding: 0;
+            }
+
+            .sheet {
+                box-shadow: none;
+                width: 210mm;
+                min-height: 297mm;
+                border-radius: 0;
+            }
+        }
+
+        /* decorative floaters */
+        .deco {
+            position: absolute;
+            opacity: .95;
+        }
+
+        .deco.star {
+            color: #f0b429;
+            font-size: 20px;
+        }
+
+        .deco.heart {
+            color: #ec6ea8;
+            font-size: 16px;
+        }
+
+        .deco.dot {
+            color: #3aa8d8;
+            font-size: 14px;
+        }
+
+        /* HEADER SCENE - full-bleed illustrated banner */
+        .header-scene {
+            position: relative;
+            margin: -10mm -11mm 0 -11mm;
+            height: 58mm;
+            background: linear-gradient(180deg, #fffdf7 0%, #fdfaf0 70%, #eef8ea 100%);
+            overflow: hidden;
+        }
+
+        .header-scene .hill {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 16mm;
+            background-image: url('{{ asset('images/passslip/kindergarten/') }}/hill_strip.png');
+            background-size: cover;
+            background-position: bottom;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        /* logo */
+        .shield-logo {
+            position: absolute;
+            left: 4%;
+            top: 4%;
+            width: 13%;
+            max-width: 80px;
+            z-index: 4;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .12));
+        }
+
+        .shield-logo svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* title block */
+        .title-block {
+            position: absolute;
+            left: 48%;
+            top: 4%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 54%;
+            z-index: 4;
+        }
+
+        .school-name {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 25px;
+            line-height: 1.08;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        .banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 7px;
+            background: linear-gradient(180deg, #a575d9, #8a5fc7);
+            color: #fff;
+            padding: 6px 22px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12.5px;
+            letter-spacing: .6px;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, .12);
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .banner i {
+            font-size: 11px;
+            color: #ffe27a;
+        }
+
+        .academic-year {
+            color: var(--blue);
+            font-weight: 600;
+            margin-top: 7px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .academic-year i {
+            font-size: 9px;
+            color: #8fc9e6;
+        }
+
+        /* sky group: rainbow, sun, balloon */
+        .sky-group {
+            position: absolute;
+            right: 0;
+            top: 1%;
+            width: 34%;
+            height: 46%;
+            z-index: 3;
+        }
+
+        .rainbow-wrap {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 88%;
+        }
+
+        .rainbow-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .sun-wrap {
+            position: absolute;
+            left: 0;
+            top: 10%;
+            width: 30%;
+        }
+
+        .sun-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .balloon-wrap {
+            position: absolute;
+            right: 0;
+            top: 32%;
+            width: 20%;
+        }
+
+        .balloon-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* left character group */
+        .left-group {
+            position: absolute;
+            left: 2%;
+            bottom: 10mm;
+            width: 37%;
+            height: 56%;
+            z-index: 2;
+        }
+
+        .boy-wrap {
+            position: absolute;
+            left: 8%;
+            bottom: 0;
+            width: 58%;
+            z-index: 3;
+        }
+
+        .boy-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .teddy-wrap {
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 42%;
+            z-index: 2;
+        }
+
+        .teddy-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .blocks-wrap {
+            position: absolute;
+            left: 70%;
+            bottom: 2%;
+            width: 28%;
+            z-index: 4;
+        }
+
+        .blocks-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* right character group */
+        .right-group {
+            position: absolute;
+            right: 0;
+            bottom: 10mm;
+            width: 42%;
+            height: 52%;
+            z-index: 2;
+        }
+
+        .girl-wrap {
+            position: absolute;
+            right: 22%;
+            bottom: 0;
+            width: 46%;
+            z-index: 3;
+        }
+
+        .girl-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .palette-wrap {
+            position: absolute;
+            right: 64%;
+            bottom: 2%;
+            width: 28%;
+            z-index: 2;
+        }
+
+        .palette-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .globe-wrap {
+            position: absolute;
+            right: -2%;
+            bottom: 0;
+            width: 34%;
+            z-index: 2;
+        }
+
+        .globe-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* floaters */
+        .deco2 {
+            position: absolute;
+            z-index: 5;
+        }
+
+        .deco2.star {
+            color: #f6c445;
+            font-size: 15px;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .08));
+        }
+
+        .deco2.star.sm {
+            font-size: 11px;
+        }
+
+        .deco2.heart {
+            color: #f394c0;
+            font-size: 13px;
+        }
+
+        .deco2.butterfly {
+            color: #b48ee0;
+            font-size: 17px;
+        }
+
+        .deco2.dot {
+            color: #7fc4e8;
+            font-size: 11px;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            margin-top: 4mm;
+        }
+
+        /* CHILD INFO BOX */
+        .info-box {
+            background: #fff;
+            border: 2px solid #eef1f6;
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+            padding: 8px 18px 10px;
+            margin-bottom: 3.5mm;
+        }
+
+        .info-title {
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px 22px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #333;
+            padding: 4px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        .info-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 10px;
+            flex: none;
+        }
+
+        .info-row .label {
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .info-row .value {
+            flex: 1;
+            color: #555;
+        }
+
+        /* DEVELOPMENT JOURNEY */
+        .dev-title {
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 14px;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin: 2.5mm 0 2.5mm;
+        }
+
+        .dev-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 3.5mm;
+        }
+
+        .dev-card {
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .08);
+            border: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            padding-top: 5px;
+        }
+
+        .dev-card .thumb {
+            width: 72%;
+            display: block;
+            margin: 0 auto;
+            height: auto;
+        }
+
+        .dev-card p {
+            font-size: 9px;
+            color: #555;
+            line-height: 1.35;
+            padding: 2px 10px 10px;
+        }
+
+        /* BOTTOM 4 PANELS */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1.1fr 1fr;
+            gap: 8px;
+            margin-bottom: 3mm;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 8px 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            min-height: 130px;
+            position: relative;
+        }
+
+        .panel h5 {
+            font-size: 10px;
+            font-family: 'Fredoka', sans-serif;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .panel h5 i {
+            font-size: 11px;
+        }
+
+        .lines .line {
+            border-bottom: 1px dotted #bbb;
+            height: 14px;
+            margin-bottom: 6px;
+        }
+
+        .moment-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 9px;
+        }
+
+        .moment-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 8px;
+            flex: none;
+        }
+
+        .steps li {
+            list-style: none;
+            display: flex;
+            gap: 6px;
+            font-size: 8.7px;
+            margin-bottom: 7px;
+            align-items: flex-start;
+        }
+
+        .steps i {
+            color: var(--blue);
+            font-size: 9px;
+            margin-top: 2px;
+        }
+
+        .message-text {
+            font-size: 9.3px;
+            line-height: 1.5;
+            color: #444;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* FOOTER SIGNATURES */
+        .sig-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 10px 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            position: relative;
+            margin-bottom: 4mm;
+        }
+
+        .sig-col {
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .sig-col i {
+            color: var(--navy);
+            font-size: 14px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .sig-line {
+            border-bottom: 1px dotted #999;
+            height: 18px;
+            margin-bottom: 3px;
+        }
+
+        .sig-col span {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .footer-art {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 15mm;
+            background-image: url('{{ asset('images/passslip/kindergarten/') }}/hill_strip.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            z-index: 0;
+        }
+
+        .backpack-deco {
+            position: absolute;
+            left: 6mm;
+            bottom: 1mm;
+            width: 38px;
+            z-index: 1;
+        }
+
+        .pencils-deco {
+            position: absolute;
+            right: 8mm;
+            bottom: 1mm;
+            width: 38px;
+            z-index: 1;
+        }
+
+        /* =========================================================
+     HEADER SCENE - POLISHED & UNCONGESTED
+     ========================================================= */
+        .header-scene {
+            position: relative;
+            margin: -10mm -11mm 0 -11mm;
+            height: 58mm;
+            background: linear-gradient(180deg, #fffdf7 0%, #fdfaf0 70%, #eef8ea 100%);
+            overflow: hidden;
+        }
+
+        .header-scene .hill {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 16mm;
+            background-image: url('{{ asset("images/passslip/kindergarten/hill_strip.png") }}');
+            background-size: cover;
+            background-position: bottom;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        /* --- LOGO (TOP LEFT) --- */
+        .shield-logo {
+            position: absolute;
+            left: 2.5%;
+            top: 5%;
+            width: 65px;
+            z-index: 10;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .12));
+        }
+
+        .shield-logo svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* --- CENTER TITLE BLOCK --- */
+        .title-block {
+            position: absolute;
+            left: 50%;
+            top: 4%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 44%;
+            z-index: 10;
+        }
+
+        .school-name {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 23px;
+            line-height: 1.08;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        .banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            background: linear-gradient(180deg, #a575d9, #8a5fc7);
+            color: #fff;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: .5px;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, .12);
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .banner i {
+            font-size: 9px;
+            color: #ffe27a;
+        }
+
+        .academic-year {
+            color: var(--blue);
+            font-weight: 600;
+            margin-top: 5px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .academic-year i {
+            font-size: 8px;
+            color: #8fc9e6;
+        }
+
+        /* --- TOP RIGHT SKY GROUP --- */
+        .sky-group {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 26%;
+            height: 40%;
+            z-index: 2;
+        }
+
+        .rainbow-wrap {
+            position: absolute;
+            right: 0%;
+            top: 0%;
+            width: 85%;
+        }
+
+        .rainbow-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .sun-wrap {
+            position: absolute;
+            left: -5%;
+            top: 10%;
+            width: 28%;
+        }
+
+        .sun-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .balloon-wrap {
+            position: absolute;
+            right: 2%;
+            top: 48%;
+            width: 16%;
+        }
+
+        .balloon-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* --- LEFT CHARACTER GROUP --- */
+        .left-group {
+            position: absolute;
+            left: 1%;
+            bottom: 2mm;
+            width: 28%;
+            height: 52%;
+            z-index: 3;
+        }
+
+        .boy-wrap {
+            position: absolute;
+            left: 0%;
+            bottom: 0;
+            width: 50%;
+            z-index: 3;
+        }
+
+        .boy-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .teddy-wrap {
+            position: absolute;
+            left: 42%;
+            bottom: 0;
+            width: 34%;
+            z-index: 2;
+        }
+
+        .teddy-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .blocks-wrap {
+            position: absolute;
+            left: 68%;
+            bottom: 0;
+            width: 26%;
+            z-index: 4;
+        }
+
+        .blocks-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* --- RIGHT CHARACTER GROUP --- */
+        .right-group {
+            position: absolute;
+            right: 1%;
+            bottom: 2mm;
+            width: 29%;
+            height: 52%;
+            z-index: 3;
+        }
+
+        .girl-wrap {
+            position: absolute;
+            right: 20%;
+            bottom: 0;
+            width: 40%;
+            z-index: 3;
+        }
+
+        .girl-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .palette-wrap {
+            position: absolute;
+            right: 58%;
+            bottom: 0;
+            width: 26%;
+            z-index: 2;
+        }
+
+        .palette-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .globe-wrap {
+            position: absolute;
+            right: 0%;
+            bottom: 0;
+            width: 28%;
+            z-index: 2;
+        }
+
+        .globe-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        .shield-logo {
+            width: 75px;
+            /* Increased width from 65px */
+            max-width: 110px;
+            Increased max-width from 80px to allow extra expansion
+        }
+
+        /* Floating Elements & Styles */
+        .deco2 {
+            position: absolute;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .deco2.butterfly {
+            color: #b87cd8;
+            font-size: 20px;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
+        }
+
+        .deco2.butterfly-sm {
+            color: #9d68c9;
+            font-size: 14px;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+        }
+
+        .deco2.star-gold {
+            color: #f6c445;
+            font-size: 16px;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .08));
+        }
+
+        .deco2.star-gold.sm {
+            font-size: 10px;
+        }
+
+        .deco2.heart-pink {
+            color: #f394c0;
+            font-size: 13px;
+        }
+
+        .deco2.heart-pink.sm {
+            font-size: 9px;
+        }
+
+        .deco2.dot-blue {
+            color: #7fc4e8;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .deco2.dot-pink {
+            color: #f394c0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .deco2.dot-green {
+            color: #7fd0a1;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .deco2.dot-yellow {
+            color: #f6c445;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* =========================================================
+     EXTRA HEADER DECORATIONS - hand-drawn SVGs (no icon-font gaps)
+     ========================================================= */
+        @keyframes flutter {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(var(--r, 0deg));
+            }
+
+            50% {
+                transform: translateY(-5px) rotate(calc(var(--r, 0deg) + 8deg));
+            }
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: .45;
+                transform: scale(.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes drift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(4px, -4px);
+            }
+        }
+
+        @keyframes sway {
+
+            0%,
+            100% {
+                transform: rotate(-4deg);
+            }
+
+            50% {
+                transform: rotate(4deg);
+            }
+        }
+
+        .deco-svg {
+            position: absolute;
+            z-index: 5;
+            pointer-events: none;
+            display: block;
+        }
+
+        .deco-butterfly {
+            animation: flutter 3.2s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        .deco-sparkle {
+            animation: twinkle 2.1s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        .deco-cloud-mini {
+            animation: drift 6.5s ease-in-out infinite;
+        }
+
+        .deco-flower {
+            animation: sway 3.6s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+
+        /* stagger a few so they don't all pulse in unison */
+        .deco-sparkle.d1 {
+            animation-delay: .3s;
+        }
+
+        .deco-sparkle.d2 {
+            animation-delay: .7s;
+        }
+
+        .deco-sparkle.d3 {
+            animation-delay: 1.1s;
+        }
+
+        .deco-butterfly.d1 {
+            animation-delay: .4s;
+        }
+
+        .deco-butterfly.d2 {
+            animation-delay: .9s;
+        }
+
+        @media print {
+
+            .deco-butterfly,
+            .deco-sparkle,
+            .deco-cloud-mini,
+            .deco-flower {
+                animation: none !important;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="toolbar">
-    <div>
-      <b>Kindergarten Learning Journey — Design Preview</b>
-      <small>Standalone HTML preview (not wired to live data)</small>
+    <div class="toolbar">
+        <div>
+            <b>Kindergarten Learning Journey — Design Preview</b>
+            <small>Standalone HTML preview (not wired to live data)</small>
+        </div>
+        <div>
+            <button onclick="window.print()"
+                style="padding:6px 14px;border:none;border-radius:6px;background:#fff;color:var(--navy);font-weight:700;cursor:pointer;">Print
+                / Save PDF</button>
+        </div>
     </div>
-    <div>
-      <button onclick="window.print()" style="padding:6px 14px;border:none;border-radius:6px;background:#fff;color:var(--navy);font-weight:700;cursor:pointer;">Print / Save PDF</button>
-    </div>
-  </div>
 
-  <div class="page-wrap">
-    <div class="sheet" id="sheet">
+    <div class="page-wrap">
+        <div class="sheet" id="sheet">
 
-      <!-- decorative stars/hearts -->
-      <i class="fa-solid fa-star deco star" style="left:5mm; top:2mm;"></i>
-      <i class="fa-solid fa-star deco star" style="left:60mm; top:1mm; font-size:14px;"></i>
-      <i class="fa-solid fa-heart deco heart" style="left:34mm; top:8mm;"></i>
-      <i class="fa-regular fa-star deco star" style="right:5mm; top:34mm; font-size:14px;"></i>
+            <div class="header-scene">
 
-      <div class="header">
-        <div class="logo-shield">
-          <i class="fa-solid fa-book-open"></i>
-          YOUR LOGO HERE
-        </div>
+                <!-- Decorative Butterflies (hand-drawn SVG - fa-butterfly is Pro-only, this renders everywhere) -->
+                <svg class="deco-svg deco-butterfly" style="left: 20%; top: 46%; width: 34px; --r: -12deg;"
+                    viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C46 8 40 5 36 6" stroke="#5a3b7a" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 15 C54 8 60 5 64 6" stroke="#5a3b7a" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 20 C30 -2 4 4 7 30 C9 46 30 43 50 28 Z" fill="#c68fe6" />
+                    <path d="M50 20 C70 -2 96 4 93 30 C91 46 70 43 50 28 Z" fill="#b87cd8" />
+                    <path d="M50 28 C34 36 18 56 29 66 C39 74 50 55 50 40 Z" fill="#e6b8f0" />
+                    <path d="M50 28 C66 36 82 56 71 66 C61 74 50 55 50 40 Z" fill="#d9a3ec" />
+                    <ellipse cx="50" cy="35" rx="3" ry="21" fill="#5a3b7a" />
+                    <circle cx="22" cy="20" r="4" fill="#fff" opacity=".55" />
+                    <circle cx="78" cy="20" r="4" fill="#fff" opacity=".55" />
+                </svg>
 
-        <div class="header-center">
-          <div class="school-name">Victory Christian<br>Nursery School</div>
-          <div class="banner"><i class="fa-solid fa-star"></i> KINDERGARTEN LEARNING JOURNEY <i class="fa-solid fa-star"></i></div>
-          <div class="academic-year">Academic Year: {{ $academic_year ?? '20XX – 20XX' }}</div>
-        </div>
+                <svg class="deco-svg deco-butterfly d1" style="right: 31%; top: 16%; width: 22px; --r: 15deg;"
+                    viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C46 8 40 5 36 6" stroke="#b5417a" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 15 C54 8 60 5 64 6" stroke="#b5417a" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 20 C30 -2 4 4 7 30 C9 46 30 43 50 28 Z" fill="#f7a9cd" />
+                    <path d="M50 20 C70 -2 96 4 93 30 C91 46 70 43 50 28 Z" fill="#f394c0" />
+                    <path d="M50 28 C34 36 18 56 29 66 C39 74 50 55 50 40 Z" fill="#fbc4dd" />
+                    <path d="M50 28 C66 36 82 56 71 66 C61 74 50 55 50 40 Z" fill="#f7a9cd" />
+                    <ellipse cx="50" cy="35" rx="3" ry="21" fill="#b5417a" />
+                    <circle cx="22" cy="20" r="4" fill="#fff" opacity=".55" />
+                    <circle cx="78" cy="20" r="4" fill="#fff" opacity=".55" />
+                </svg>
 
-        <div class="side-art"></div>
-      </div>
+                <svg class="deco-svg deco-butterfly d2" style="left: 37%; top: 62%; width: 20px; --r: 8deg;"
+                    viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C46 8 40 5 36 6" stroke="#b8631f" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 15 C54 8 60 5 64 6" stroke="#b8631f" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 20 C30 -2 4 4 7 30 C9 46 30 43 50 28 Z" fill="#f7c17a" />
+                    <path d="M50 20 C70 -2 96 4 93 30 C91 46 70 43 50 28 Z" fill="#f2994a" />
+                    <path d="M50 28 C34 36 18 56 29 66 C39 74 50 55 50 40 Z" fill="#fbd9ab" />
+                    <path d="M50 28 C66 36 82 56 71 66 C61 74 50 55 50 40 Z" fill="#f7c17a" />
+                    <ellipse cx="50" cy="35" rx="3" ry="21" fill="#b8631f" />
+                    <circle cx="22" cy="20" r="4" fill="#fff" opacity=".55" />
+                    <circle cx="78" cy="20" r="4" fill="#fff" opacity=".55" />
+                </svg>
 
-      <!-- floating illustration assets -->
-      <img class="child-reading" src="{{ asset('images/passslip/kindergarten/') }}/child_reading.png" alt="">
-      <img class="teddy" src="{{ asset('images/passslip/kindergarten/') }}/teddy_bear.png" alt="">
-      <img class="blocks" src="{{ asset('images/passslip/kindergarten/') }}/alphabet_blocks.png" alt="">
-      <img class="girl-wave" src="{{ asset('images/passslip/kindergarten/') }}/girl_waving.png" alt="">
-      <img class="palette" src="{{ asset('images/passslip/kindergarten/') }}/paint_palette.png" alt="">
-      <div class="rainbow-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/rainbow_clouds.png" alt=""></div>
+                <svg class="deco-svg deco-butterfly d1" style="right: 40%; top: 56%; width: 20px; --r: -10deg;"
+                    viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C46 8 40 5 36 6" stroke="#1c6f8c" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 15 C54 8 60 5 64 6" stroke="#1c6f8c" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M50 20 C30 -2 4 4 7 30 C9 46 30 43 50 28 Z" fill="#8fd4ef" />
+                    <path d="M50 20 C70 -2 96 4 93 30 C91 46 70 43 50 28 Z" fill="#3aa8d8" />
+                    <path d="M50 28 C34 36 18 56 29 66 C39 74 50 55 50 40 Z" fill="#bfe8f7" />
+                    <path d="M50 28 C66 36 82 56 71 66 C61 74 50 55 50 40 Z" fill="#8fd4ef" />
+                    <ellipse cx="50" cy="35" rx="3" ry="21" fill="#1c6f8c" />
+                    <circle cx="22" cy="20" r="4" fill="#fff" opacity=".55" />
+                    <circle cx="78" cy="20" r="4" fill="#fff" opacity=".55" />
+                </svg>
 
-      <div class="content">
+                <!-- Decorative Stars & Hearts -->
+                <i class="fa-solid fa-star deco2 star-gold" style="left: 20%; top: 10%;"></i>
+                <i class="fa-solid fa-star deco2 star-gold sm" style="left: 42%; top: 3%;"></i>
+                <i class="fa-solid fa-star deco2 star-gold sm" style="right: 34%; top: 8%;"></i>
+                <i class="fa-solid fa-star deco2 star-gold sm" style="right: 6%; top: 44%;"></i>
+                <i class="fa-solid fa-heart deco2 heart-pink" style="left: 26%; top: 25%;"></i>
+                <i class="fa-solid fa-heart deco2 heart-pink sm" style="left: 43%; top: 68%;"></i>
 
-        <!-- CHILD'S INFORMATION -->
-        <div class="info-box">
-          <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i class="fa-solid fa-leaf"></i></div>
-          <div class="info-grid">
-            <div class="info-row"><div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i></div><span class="label">Child's Name:</span><span class="value">{{ $child_name ?? '' }}</span></div>
-            <div class="info-row"><div class="info-icon" style="background:var(--orange)"><i class="fa-solid fa-book"></i></div><span class="label">Stream:</span><span class="value">{{ $stream ?? '' }}</span></div>
-            <div class="info-row"><div class="info-icon" style="background:var(--green)"><i class="fa-solid fa-calendar-days"></i></div><span class="label">Term:</span><span class="value">{{ $term ?? '' }}</span></div>
+                <!-- Decorative Dots -->
+                <span class="deco2 dot-blue" style="left: 12%; top: 15%;">•</span>
+                <span class="deco2 dot-pink" style="left: 31%; top: 12%;">•</span>
+                <span class="deco2 dot-blue" style="right: 28%; top: 38%;">•</span>
+                <span class="deco2 dot-green" style="left: 30%; top: 58%;">•</span>
+                <span class="deco2 dot-yellow" style="right: 12%; top: 22%;">•</span>
 
-            <div class="info-row"><div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-user-large"></i></div><span class="label">Class:</span><span class="value">{{ $class_name ?? '' }}</span></div>
-            <div class="info-row"><div class="info-icon" style="background:var(--purple)"><i class="fa-solid fa-clock"></i></div><span class="label">Attendance:</span><span class="value">{{ $attendance ?? '' }}</span></div>
-            <div class="info-row"><div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-chalkboard-teacher"></i></div><span class="label">Teacher:</span><span class="value">{{ $teacher ?? '' }}</span></div>
+                <!-- Decorative Sparkles (4-point twinkle stars) -->
+                <svg class="deco-svg deco-sparkle" style="left: 15%; top: 20%; width: 14px;" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" fill="#ffe27a" />
+                </svg>
+                <svg class="deco-svg deco-sparkle d1" style="right: 19%; top: 13%; width: 11px;" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" fill="#ffffff" />
+                </svg>
+                <svg class="deco-svg deco-sparkle d2" style="left: 47%; top: 76%; width: 12px;" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" fill="#f394c0" />
+                </svg>
+                <svg class="deco-svg deco-sparkle d3" style="right: 14%; top: 58%; width: 13px;" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" fill="#8fd4ef" />
+                </svg>
 
-            <div class="info-row"><div class="info-icon" style="background:var(--green)"><i class="fa-solid fa-cake-candles"></i></div><span class="label">Date of Birth:</span><span class="value">{{ $dob ?? '' }}</span></div>
-            <div class="info-row" style="grid-column:span 2;"></div>
-          </div>
-        </div>
+                <!-- Decorative Little Flowers (near the hill) -->
+                <svg class="deco-svg deco-flower" style="left: 39%; top: 79%; width: 20px;" viewBox="0 0 40 40"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#f394c0">
+                        <circle cx="20" cy="10" r="6.5" />
+                        <circle cx="20" cy="30" r="6.5" />
+                        <circle cx="10" cy="20" r="6.5" />
+                        <circle cx="30" cy="20" r="6.5" />
+                    </g>
+                    <circle cx="20" cy="20" r="6" fill="#f6c445" />
+                </svg>
+                <svg class="deco-svg deco-flower" style="right: 44%; top: 77%; width: 16px; animation-delay: .5s;"
+                    viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#b87cd8">
+                        <circle cx="20" cy="10" r="6.5" />
+                        <circle cx="20" cy="30" r="6.5" />
+                        <circle cx="10" cy="20" r="6.5" />
+                        <circle cx="30" cy="20" r="6.5" />
+                    </g>
+                    <circle cx="20" cy="20" r="6" fill="#fff4cf" />
+                </svg>
 
-        <!-- DEVELOPMENT JOURNEY -->
-        <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i class="fa-solid fa-seedling"></i></div>
-        <div class="dev-grid">
-          <div class="dev-card" style="--c:#4caf7d"><img src="{{ asset('images/passslip/kindergarten/') }}/social_emotional.png"><h4>Social &amp; Emotional Development</h4><p>Growing positive relationships and understanding feelings.</p></div>
-          <div class="dev-card" style="--c:#f2994a"><img src="{{ asset('images/passslip/kindergarten/') }}/thinking_discovery.png"><h4>Thinking &amp; Discovery</h4><p>Shows curiosity, explores, and enjoys learning new things.</p></div>
-          <div class="dev-card" style="--c:#ec6ea8"><img src="{{ asset('images/passslip/kindergarten/') }}/language_communication.png"><h4>Language &amp; Communication</h4><p>Enjoys stories, expresses ideas, and is developing confidence.</p></div>
-          <div class="dev-card" style="--c:#8a5fc7"><img src="{{ asset('images/passslip/kindergarten/') }}/creativity_expression.png"><h4>Creativity &amp; Expression</h4><p>Enjoys art, imagination, and expressing ideas in many ways.</p></div>
+                <!-- Extra little fluffy cloud tucked beside the logo -->
+                <svg class="deco-svg deco-cloud-mini" style="left: 15%; top: 6%; width: 46px; opacity:.9;"
+                    viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="30" cy="30" rx="22" ry="15" fill="#ffffff" />
+                    <ellipse cx="55" cy="21" rx="25" ry="19" fill="#ffffff" />
+                    <ellipse cx="78" cy="31" rx="17" ry="13" fill="#ffffff" />
+                </svg>
 
-          <div class="dev-card" style="--c:#3aa8d8"><img src="{{ asset('images/passslip/kindergarten/') }}/physical_development.png"><h4>Physical Development</h4><p>Developing strength, coordination and healthy movement habits.</p></div>
-          <div class="dev-card" style="--c:#4caf7d"><img src="{{ asset('images/passslip/kindergarten/') }}/cooperation_independence.png"><h4>Cooperation &amp; Independence</h4><p>Works well with others and is becoming more independent.</p></div>
-          <div class="dev-card" style="--c:#f0b429"><img src="{{ asset('images/passslip/kindergarten/') }}/music_movement.png"><h4>Music &amp; Movement</h4><p>Enjoys singing, rhythm, movement and creative musical activities.</p></div>
-          <div class="dev-card" style="--c:#4caf7d"><img src="{{ asset('images/passslip/kindergarten/') }}/exploring_world.png"><h4>Exploring The World</h4><p>Shows interest in nature, people, places and the world.</p></div>
-        </div>
+                <!-- Logo -->
+                <div class="shield-logo">
+                    <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M60 4 C50 14 30 18 16 18 C16 60 20 96 60 132 C100 96 104 60 104 18 C90 18 70 14 60 4Z"
+                            fill="#1c3f7c" stroke="#12274d" stroke-width="2" />
+                        <path d="M60 12 C51 20 34 24 22 24 C22 60 26 90 60 120 C94 90 98 60 98 24 C86 24 69 20 60 12Z"
+                            fill="none" stroke="#4d6fa8" stroke-width="1.4" />
+                        <path d="M60 26 l5 11 12 1.5 -9 8.5 2.5 12 -10.5 -6 -10.5 6 2.5 -12 -9 -8.5 12 -1.5z"
+                            fill="#ffffff" />
+                        <path d="M42 55 h36 v6 c0 9 -8 14 -18 17 c-10 -3 -18 -8 -18 -17z" fill="none" stroke="#fff"
+                            stroke-width="2.2" />
+                        <path d="M60 55 v22" stroke="#fff" stroke-width="2" />
+                        <text x="60" y="90" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
+                            font-weight="700" font-size="11">YOUR LOGO</text>
+                        <text x="60" y="103" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
+                            font-weight="700" font-size="11">HERE</text>
+                        <path
+                            d="M16 34 C10 44 9 58 13 70 M16 34 c-6 3 -9 8 -10 13 M16 34 c-7 -1 -12 2 -16 6 M13 70 c-5 2 -8 6 -10 11 M13 70 c-6 0 -10 3 -13 7"
+                            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                            transform="translate(4,20)" />
+                        <path
+                            d="M104 34 C110 44 111 58 107 70 M104 34 c6 3 9 8 10 13 M104 34 c7 -1 12 2 16 6 M107 70 c5 2 8 6 10 11 M107 70 c6 0 10 3 13 7"
+                            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                            transform="translate(-4,20)" />
+                    </svg>
+                </div>
 
-        <!-- FOUR BOTTOM PANELS -->
-        <div class="bottom-grid">
-          <div class="panel">
-            <h5 style="color:var(--navy)"><i class="fa-solid fa-pen"></i> Teacher's Observation</h5>
-            <div class="lines">
-              <div class="line"></div><div class="line"></div><div class="line"></div>
-              <div class="line"></div><div class="line"></div>
+                <!-- Title Block -->
+                <div class="title-block">
+                    <div class="school-name">Victory Christian<br>Nursery School</div>
+                    <div class="banner"><i class="fa-solid fa-star"></i> KINDERGARTEN LEARNING JOURNEY <i
+                            class="fa-solid fa-star"></i></div>
+                    <div class="academic-year"><i class="fa-solid fa-leaf"></i> Academic Year:
+                        {{ $academic_year ?? '20XX – 20XX' }} <i class="fa-solid fa-leaf"></i></div>
+                </div>
+
+                <!-- Sky Group -->
+                <div class="sky-group">
+                    <div class="rainbow-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/rainbow_clouds.png"
+                            alt=""></div>
+                    <div class="sun-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/sun.png" alt=""></div>
+                    <div class="balloon-wrap"><img
+                            src="{{ asset('images/passslip/kindergarten/') }}/hot_air_balloon.png" alt=""></div>
+                </div>
+
+                <!-- Left Group -->
+                <div class="left-group">
+                    <div class="teddy-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/teddy_bear.png"
+                            alt=""></div>
+                    <div class="boy-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/child_reading.png"
+                            alt=""></div>
+                    <div class="blocks-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/alphabet_blocks.png"
+                            alt=""></div>
+                </div>
+
+                <!-- Right Group -->
+                <div class="right-group">
+                    <div class="palette-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/paint_palette.png"
+                            alt=""></div>
+                    <div class="girl-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/girl_waving.png"
+                            alt=""></div>
+                    <div class="globe-wrap"><img src="{{ asset('images/passslip/kindergarten/') }}/globe.png" alt="">
+                    </div>
+                </div>
+
+                <div class="hill"></div>
             </div>
-          </div>
 
-          <div class="panel">
-            <h5 style="color:var(--pink)"><i class="fa-solid fa-heart"></i> Child's Special Moments</h5>
-            <div class="moment-item"><div class="moment-icon" style="background:var(--pink)"><i class="fa-solid fa-star"></i></div><div class="line" style="flex:1"></div></div>
-            <div class="moment-item"><div class="moment-icon" style="background:var(--purple)"><i class="fa-solid fa-balloon"></i></div><div class="line" style="flex:1"></div></div>
-            <div class="moment-item"><div class="moment-icon" style="background:var(--yellow)"><i class="fa-solid fa-trophy"></i></div><div class="line" style="flex:1"></div></div>
-          </div>
+            <div class="content">
 
-          <div class="panel">
-            <h5 style="color:var(--green)"><i class="fa-solid fa-seedling"></i> Next Steps In Learning</h5>
-            <ul class="steps">
-              <li><i class="fa-solid fa-magnifying-glass"></i> Keep exploring and asking wonderful questions.</li>
-              <li><i class="fa-solid fa-comments"></i> Continue building confidence in expressing ideas.</li>
-              <li><i class="fa-solid fa-user-check"></i> Develop independence and responsibility.</li>
-              <li><i class="fa-solid fa-star"></i> Keep practicing, trying and believing in yourself.</li>
-            </ul>
-          </div>
+                <!-- CHILD'S INFORMATION -->
+                <div class="info-box">
+                    <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i
+                            class="fa-solid fa-leaf"></i></div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i></div>
+                            <span class="label">Child's Name:</span><span class="value">{{ $child_name ?? '' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--orange)"><i class="fa-solid fa-book"></i>
+                            </div><span class="label">Stream:</span><span class="value">{{ $stream ?? '' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--green)"><i
+                                    class="fa-solid fa-calendar-days"></i></div><span class="label">Term:</span><span
+                                class="value">{{ $term ?? '' }}</span>
+                        </div>
 
-          <div class="panel" style="display:flex; flex-direction:column; justify-content:center;">
-            <h5 style="color:var(--purple); justify-content:center;"><i class="fa-solid fa-envelope"></i> Teacher's Message</h5>
-            <div class="message-text">
-              You are a wonderful learner with a bright future!
-              Keep shining, keep smiling, and keep growing.
-              We are proud of you!
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-user-large"></i>
+                            </div><span class="label">Class:</span><span class="value">{{ $class_name ?? '' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--purple)"><i class="fa-solid fa-clock"></i>
+                            </div><span class="label">Attendance:</span><span
+                                class="value">{{ $attendance ?? '' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon" style="background:var(--pink)"><i
+                                    class="fa-solid fa-chalkboard-teacher"></i></div><span
+                                class="label">Teacher:</span><span class="value">{{ $teacher ?? '' }}</span>
+                        </div>
+                        <div class="info-row" style="grid-column:span 2;"></div>
+                    </div>
+                </div>
+
+                <!-- DEVELOPMENT JOURNEY -->
+                <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i
+                        class="fa-solid fa-seedling"></i></div>
+                <div class="dev-grid">
+                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/social_emotional.png">
+                        <p>Growing positive relationships and understanding feelings.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#f2994a"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/thinking_discovery.png">
+                        <p>Shows curiosity, explores, and enjoys learning new things.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#ec6ea8"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/language_communication.png">
+                        <p>Enjoys stories, expresses ideas, and is developing confidence.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#8a5fc7"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/creativity_expression.png">
+                        <p>Enjoys art, imagination, and expressing ideas in many ways.</p>
+                    </div>
+
+                    <div class="dev-card" style="--c:#3aa8d8"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/physical_development.png">
+                        <p>Developing strength, coordination and healthy movement habits.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/cooperation_independence.png">
+                        <p>Works well with others and is becoming more independent.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#f0b429"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/music_movement.png">
+                        <p>Enjoys singing, rhythm, movement and creative musical activities.</p>
+                    </div>
+                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
+                            src="{{ asset('images/passslip/kindergarten/') }}/exploring_world.png">
+                        <p>Shows interest in nature, people, places and the world.</p>
+                    </div>
+                </div>
+
+                <!-- FOUR BOTTOM PANELS -->
+                <div class="bottom-grid">
+                    <div class="panel">
+                        <h5 style="color:var(--navy)"><i class="fa-solid fa-pen"></i> Teacher's Observation</h5>
+                        <div class="lines">
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h5 style="color:var(--pink)"><i class="fa-solid fa-heart"></i> Child's Special Moments</h5>
+                        <div class="moment-item">
+                            <div class="moment-icon" style="background:var(--pink)"><i class="fa-solid fa-star"></i>
+                            </div>
+                            <div class="line" style="flex:1"></div>
+                        </div>
+                        <div class="moment-item">
+                            <div class="moment-icon" style="background:var(--purple)"><i
+                                    class="fa-solid fa-balloon"></i></div>
+                            <div class="line" style="flex:1"></div>
+                        </div>
+                        <div class="moment-item">
+                            <div class="moment-icon" style="background:var(--yellow)"><i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div class="line" style="flex:1"></div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h5 style="color:var(--green)"><i class="fa-solid fa-seedling"></i> Next Steps In Learning</h5>
+                        <ul class="steps">
+                            <li><i class="fa-solid fa-magnifying-glass"></i> Keep exploring and asking wonderful
+                                questions.</li>
+                            <li><i class="fa-solid fa-comments"></i> Continue building confidence in expressing ideas.
+                            </li>
+                            <li><i class="fa-solid fa-user-check"></i> Develop independence and responsibility.</li>
+                            <li><i class="fa-solid fa-star"></i> Keep practicing, trying and believing in yourself.</li>
+                        </ul>
+                    </div>
+
+                    <div class="panel" style="display:flex; flex-direction:column; justify-content:center;">
+                        <h5 style="color:var(--purple); justify-content:center;"><i class="fa-solid fa-envelope"></i>
+                            Teacher's Message</h5>
+                        <div class="message-text">
+                            You are a wonderful learner with a bright future!
+                            Keep shining, keep smiling, and keep growing.
+                            We are proud of you!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIGNATURES -->
+                <div class="sig-box">
+                    <div class="sig-col"><i class="fa-solid fa-pen-nib"></i>
+                        <div class="sig-line"></div><span>Class Teacher</span><br><small>Signature</small>
+                    </div>
+                    <div class="sig-col"><i class="fa-solid fa-award"></i>
+                        <div class="sig-line"></div><span>Head Teacher</span><br><small>Signature</small>
+                    </div>
+                    <div class="sig-col"><i class="fa-solid fa-people-roof"></i>
+                        <div class="sig-line"></div><span>Parent / Guardian</span><br><small>Signature</small>
+                    </div>
+                    <div class="sig-col"><i class="fa-regular fa-calendar"></i>
+                        <div class="sig-line"></div><span>Date</span>
+                    </div>
+                </div>
+
             </div>
-          </div>
+
+            <div class="footer-art"></div>
+            <img class="backpack-deco" src="{{ asset('images/passslip/kindergarten/') }}/backpack.png" alt="">
+            <img class="pencils-deco" src="{{ asset('images/passslip/kindergarten/') }}/pencils.png" alt="">
         </div>
-
-        <!-- SIGNATURES -->
-        <div class="sig-box">
-          <div class="sig-col"><i class="fa-solid fa-pen-nib"></i><div class="sig-line"></div><span>Class Teacher</span><br><small>Signature</small></div>
-          <div class="sig-col"><i class="fa-solid fa-award"></i><div class="sig-line"></div><span>Head Teacher</span><br><small>Signature</small></div>
-          <div class="sig-col"><i class="fa-solid fa-people-roof"></i><div class="sig-line"></div><span>Parent / Guardian</span><br><small>Signature</small></div>
-          <div class="sig-col"><i class="fa-regular fa-calendar"></i><div class="sig-line"></div><span>Date</span></div>
-        </div>
-
-      </div>
-
-      <div class="footer-art"></div>
-      <img class="backpack-deco" src="{{ asset('images/passslip/kindergarten/') }}/backpack.png" alt="">
-      <img class="pencils-deco" src="{{ asset('images/passslip/kindergarten/') }}/pencils.png" alt="">
     </div>
-  </div>
 </body>
+
 </html>
