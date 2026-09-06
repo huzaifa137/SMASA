@@ -956,7 +956,7 @@ function setLanguage(lang) {
                         @endif
 
                         {{-- ── GROUP: Design Template ── --}}
-                        <div class="cp-group-label"><i class="fas fa-swatchbook"></i> Design Template</div>
+                        <div class="cp-group-label"><i class="fas fa-swatchbook"></i>Primary Design Template</div>
                         <div class="small text-muted" style="font-size:.72rem;line-height:1.4;padding:0 .25rem .5rem;">
                             Pick the overall report card design. Your accent colour, toggles, and every
                             student's data stay exactly the same — only the visual style changes.
