@@ -853,7 +853,6 @@ use App\Http\Controllers\Helper;
                             </style>
                         </div>
                         <div style="display:flex;align-items:center;gap:.5rem;">
-                            <small id="cpSummary" style="color:rgba(255,255,255,.5);font-size:.65rem;font-weight:600;letter-spacing:.04em;"></small>
                             <i class="fas fa-chevron-down cp-toggle" id="cpChevron"></i>
                         </div>
                     </div>
@@ -910,14 +909,8 @@ function setLanguage(lang) {
 }
 </style>
 
-                        {{-- CHECK ALL / NONE --}}
-                        <div class="cp-check-all-row">
-                            <span><i class="fas fa-check-square me-1"></i> Quick select</span>
-                            <div class="cp-check-all-btns">
-                                <button class="cp-btn-sm" onclick="setAllChecks(true)">Check All</button>
-                                <button class="cp-btn-sm" onclick="setAllChecks(false)">Uncheck All</button>
-                            </div>
-                        </div>
+ {{-- CHECK ALL / NONE --}}
+                      
 
                         {{-- ── GROUP: Combine Examinations ── --}}
                         <div class="cp-group-label"><i class="fas fa-layer-group"></i> Combine Examinations</div>
@@ -927,9 +920,11 @@ function setLanguage(lang) {
                         </div>
 
                         <div class="cp-check-row" style="opacity:.85;">
-                            <label><i class="fas fa-check-circle"></i>&nbsp; {{ $exam->exam_name }} ({{ $exam->term }}) — current</label>
+                            <label><i class="fas fa-check-circle"></i>&nbsp; {{ $exam->exam_name }} ({{ $exam->term }}) —
+                                current</label>
                             <label class="cp-switch">
-                                <input type="checkbox" id="cb_avg_base_{{ $exam->id }}" class="exam-avg-cb" value="{{ $exam->id }}" checked onchange="updateSummary()">
+                                <input type="checkbox" id="cb_avg_base_{{ $exam->id }}" class="exam-avg-cb"
+                                    value="{{ $exam->id }}" checked onchange="updateSummary()">
                                 <span class="cp-switch-slider"></span>
                             </label>
                         </div>
@@ -939,25 +934,17 @@ function setLanguage(lang) {
                                 <div class="cp-check-row">
                                     <label for="cb_exam_{{ $se->id }}">
                                         <input type="checkbox" id="cb_exam_{{ $se->id }}" class="exam-combine-cb"
-                                               value="{{ $se->id }}" onchange="onExamComboChange(this)"
-                                               style="margin-right:.4rem;">
+                                            value="{{ $se->id }}" onchange="onExamComboChange(this)" style="margin-right:.4rem;">
                                         {{ $se->exam_name }} ({{ $se->term }})
                                     </label>
                                     <label class="cp-switch" title="Include in average">
-                                        <input type="checkbox" id="cb_avg_{{ $se->id }}" class="exam-avg-cb"
-                                               value="{{ $se->id }}" disabled onchange="updateSummary()">
+                                        <input type="checkbox" id="cb_avg_{{ $se->id }}" class="exam-avg-cb" value="{{ $se->id }}"
+                                            disabled onchange="updateSummary()">
                                         <span class="cp-switch-slider"></span>
                                     </label>
                                 </div>
                             @endforeach
 
-                            <div class="cp-check-row">
-                                <label for="cb_show_multi_average"><i class="fas fa-percent"></i> Show AVERAGE column</label>
-                                <label class="cp-switch">
-                                    <input type="checkbox" id="cb_show_multi_average" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                    <span class="cp-switch-slider"></span>
-                                </label>
-                            </div>
                             <div class="small text-muted" style="font-size:.68rem;padding:0 .25rem .5rem;">
                                 Tick "Include in average" (the small switch) for at least 2 examinations to
                                 show an averaged score. Leave it on 0–1 exam and no average will be printed.
@@ -1019,551 +1006,44 @@ function setLanguage(lang) {
                             <i class="fas fa-sliders-h me-1"></i> Customize this design
                         </a>
 
-                        {{-- ── GROUP: Appearance ── --}}
-                        <div class="cp-group-label" data-group="Appearance"><i class="fas fa-palette"></i> Appearance</div>
-
-                        {{-- Accent / Primary colour --}}
-                        <div class="cp-color-row">
-                            <label for="cpColorPicker"><i class="fas fa-fill-drip"></i> Accent colour</label>
-                            <div class="cp-color-swatch" title="Pick accent colour">
-                                <input type="color" id="cpColorPicker" value="#f0a500" onchange="onColorChange(this.value)">
-                            </div>
-                        </div>
-
-                        {{-- Colour presets --}}
-                        <div class="cp-presets" id="cpPresets">
-                            @foreach([
-['#f0a500','Amber (default)'],
-['#c0392b','Ruby Red'],
-['#2C29CA','Brand Blue'],
-['#10b981','Emerald'],
-['#7c3aed','Violet'],
-['#0f172a','Midnight'],
-['#e11d48','Rose'],
-['#0ea5e9','Sky'],
-
-// Additional school-friendly colors
-['#1d4ed8','Royal Blue'],
-['#2563eb','Academic Blue'],
-['#1e3a8a','Navy Blue'],
-['#15803d','Forest Green'],
-['#166534','Dark Green'],
-['#65a30d','Lime Green'],
-['#047857','Teal'],
-['#0f766e','Deep Teal'],
-['#b45309','Golden Brown'],
-['#ca8a04','School Gold'],
-['#f59e0b','Sunflower'],
-['#dc2626','Crimson'],
-['#991b1b','Maroon'],
-['#be123c','Burgundy'],
-['#6d28d9','Deep Purple'],
-['#4338ca','Indigo'],
-['#0369a1','Ocean Blue'],
-['#0891b2','Cyan'],
-['#374151','Slate Gray'],
-['#4b5563','Charcoal'],
-['#111827','Jet Black'],
-['#92400e','Chocolate'],
-['#78350f','Coffee Brown'],
-['#14532d','Hunter Green'],
-['#134e4a','Pine Green'],
-['#86198f','Plum'],
-['#9d174d','Wine'],
-['#ea580c','Orange'],
-['#fb7185','Soft Pink'],
-['#14b8a6','Turquoise'],
-['#84cc16','Olive'],
-                            ] as [$hex, $label])
-                            <div class="cp-preset-dot {{ $hex === '#f0a500' ? 'active' : '' }}"
-                                 style="background:{{ $hex }};"
-                                 title="{{ $label }}"
-                                 data-color="{{ $hex }}"
-                                 onclick="applyPreset('{{ $hex }}', this)"></div>
-                            @endforeach
-                        </div>
-
-                        {{-- Accent preview bar --}}
-                        <div class="cp-accent-preview" id="cpAccentPreview" style="background:#f0a500;"></div>
-
-                        {{-- Border toggle --}}
-                        <div class="cp-check-row mt-2" data-cap="show_border">
-                            <label for="cb_show_border"><i class="fas fa-border-all"></i> Decorative border & corners</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_border" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_watermark">
-                            <label for="cb_show_watermark"><i class="fas fa-stamp"></i> Watermark (logo / school name)</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_watermark" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Header ── --}}
-                        <div class="cp-group-label" data-group="School Header"><i class="fas fa-school"></i> School Header</div>
-
-                        <div class="cp-check-row" data-cap="show_logo">
-                            <label for="cb_show_logo"><i class="fas fa-image"></i> School logo</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_logo" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_arabic">
-                            <label for="cb_show_arabic"><i class="fas fa-language"></i> Arabic school name</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_arabic" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_motto">
-                            <label for="cb_show_motto"><i class="fas fa-quote-left"></i> School motto</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_motto" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_contact">
-                            <label for="cb_show_contact"><i class="fas fa-phone"></i> Phone / email / location</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_contact" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Student Block ── --}}
-                        <div class="cp-group-label" data-group="Student Block"><i class="fas fa-user-graduate"></i> Student Block</div>
-
-                        <div class="cp-check-row" data-cap="show_photo">
-                            <label for="cb_show_photo"><i class="fas fa-portrait"></i> Student photo</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_photo" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_minichart">
-                            <label for="cb_show_minichart"><i class="fas fa-chart-line"></i> Subject mini chart (student vs class)</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_minichart" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_qr">
-                            <label for="cb_show_qr"><i class="fas fa-qrcode"></i> QR code</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_qr" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_rank">
-                            <label for="cb_show_rank"><i class="fas fa-trophy"></i> Class position / rank</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_rank" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Summary Bar ── --}}
-                        <div class="cp-group-label" data-group="Summary Bar"><i class="fas fa-square-poll-horizontal"></i> Summary Bar</div>
-
-                        <div class="cp-check-row" data-cap="show_total_score">
-                            <label for="cb_show_total_score"><i class="fas fa-hashtag"></i> Total Score / Marks box</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_total_score" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_average">
-                            <label for="cb_show_average"><i class="fas fa-percent"></i> Average box</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_average" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_result">
-                            <label for="cb_show_result"><i class="fas fa-flag-checkered"></i> Result box</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_result" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Marks Table ── --}}
-                        <div class="cp-group-label" data-group="Marks Table"><i class="fas fa-table"></i> Marks Table</div>
-
-                        <div class="cp-check-row" data-cap="show_score_col">
-                            <label for="cb_show_score_col"><i class="fas fa-list-ol"></i> Score / Marks column</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_score_col" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_dev">
-                            <label for="cb_show_dev"><i class="fas fa-arrows-alt-v"></i> Development (DEV ↑↓) column</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_dev" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_grade_pill">
-                            <label for="cb_show_grade_pill"><i class="fas fa-tag"></i> Grade pills (A / B / C …)</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_grade_pill" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_comment_col">
-                            <label for="cb_show_comment_col"><i class="fas fa-comment-dots"></i> Comment column</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_comment_col" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_teacher_col">
-                            <label for="cb_show_teacher_col"><i class="fas fa-chalkboard-teacher"></i> Teacher column</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_teacher_col" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_totals_row">
-                            <label for="cb_show_totals_row"><i class="fas fa-sigma"></i> Totals / average row</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_totals_row" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Bottom Section ── --}}
-                        <div class="cp-group-label" data-group="Bottom Section"><i class="fas fa-chart-bar"></i> Bottom Section</div>
-
-                        <div class="cp-check-row" data-cap="show_perf_chart">
-                            <label for="cb_show_perf_chart"><i class="fas fa-chart-bar"></i> Performance-over-time chart</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_perf_chart" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_remarks">
-                            <label for="cb_show_remarks"><i class="fas fa-comment-alt"></i> Remarks section</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_remarks" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_discipline">
-                            <label for="cb_show_discipline"><i class="fas fa-user-shield"></i> Discipline section</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_discipline" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_signatures">
-                            <label for="cb_show_signatures"><i class="fas fa-signature"></i> Signature column</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_signatures" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- ── GROUP: Footer ── --}}
-                        <div class="cp-group-label" data-group="Footer"><i class="fas fa-shoe-prints"></i> Footer</div>
-
-                        <div class="cp-check-row" data-cap="show_footer_timestamp">
-                            <label for="cb_show_footer_timestamp"><i class="fas fa-clock"></i> Generation timestamp</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_footer_timestamp" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="cp-check-row" data-cap="show_confidential">
-                            <label for="cb_show_confidential"><i class="fas fa-lock"></i> CONFIDENTIAL stamp</label>
-                            <label class="cp-switch">
-                                <input type="checkbox" id="cb_show_confidential" class="cp-toggle-cb" checked onchange="updateSummary()">
-                                <span class="cp-switch-slider"></span>
-                            </label>
-                        </div>
-
-                        {{-- Save as default for classes --}}
-                        {{-- Save as default for classes --}}
-<div class="cp-group-label"><i class="fas fa-save"></i> Save Customisation</div>
-<div class="px-1 pb-2">
-    <div class="text-muted mb-2" style="font-size:.72rem;">
-        <i class="fas fa-info-circle me-1"></i>
-        Click on classes below to select/unselect them. This setup will be saved and applied automatically every time their passlips are printed.
-    </div>
-
-    {{-- Saved Customisations — one tab per class that already has a
-         saved profile. Click a tab to load ONLY that class's settings
-         into the panel for review/editing; the trash icon removes it. --}}
-    <div id="cpSavedTabsWrap" class="mb-2" style="display:none;">
-        <div class="text-muted mb-1" style="font-size:.72rem;font-weight:600;">
-            <i class="fas fa-folder-open me-1"></i> Saved customisations
-        </div>
-        <div id="cpSavedTabs" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
-    </div>
-
-    {{-- Class Selection Chips --}}
-    <div id="cpClassSelector" class="mb-2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border-radius: 12px; min-height: 60px; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
-        @foreach ($examClasses->unique('class_id') as $ec)
-            @php
-                $className = Helper::recordMdname($ec->class_id);
-                $classId = $ec->class_id;
-            @endphp
-            <div class="cp-class-chip" 
-                 data-class-id="{{ $classId }}"
-                 onclick="toggleClassChip(this)"
-                 style="
-                     padding: 0.5rem 1rem;
-                     border-radius: 20px;
-                     font-size: .8rem;
-                     font-weight: 600;
-                     cursor: pointer;
-                     transition: all 0.2s ease;
-                     background: #fff;
-                     border: 2px solid #e2e8f0;
-                     color: #475569;
-                     user-select: none;
-                     display: inline-flex;
-                     align-items: center;
-                     gap: 0.5rem;
-                     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-                 "
-                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';"
-                 onmouseout="if(!this.classList.contains('selected')){this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)';}">
-                <span>{{ $className }}</span>
-                <span class="cp-chip-icon" style="font-size: .6rem; opacity: 0.5; transition: all 0.2s;">+</span>
-            </div>
-        @endforeach
-    </div>
-
-    {{-- Hidden select to store selected classes --}}
-    <select id="cpClassSelect" name="selected_classes[]" style="display: none;" multiple>
-        @foreach ($examClasses->unique('class_id') as $ec)
-            <option value="{{ $ec->class_id }}">{{ Helper::recordMdname($ec->class_id) }}</option>
-        @endforeach
-    </select>
-
-    {{-- Selection controls --}}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-        <span id="cpSelectedCount" style="font-size: .75rem; color: #94a3b8;">
-            <i class="fas fa-check-circle" style="color: #2f2ccb;"></i>
-            <span id="cpSelectedCountText">0</span> class(es) selected
-        </span>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="button" onclick="selectAllClasses()" 
-                    style="background: none; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.3rem 0.8rem; font-size: .7rem; color: #475569; cursor: pointer; transition: all 0.2s;"
-                    onmouseover="this.style.borderColor='#2f2ccb'; this.style.color='#2f2ccb';"
-                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569';">
-                <i class="fas fa-check-double"></i> Select All
-            </button>
-            <button type="button" onclick="deselectAllClasses()"
-                    style="background: none; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.3rem 0.8rem; font-size: .7rem; color: #475569; cursor: pointer; transition: all 0.2s;"
-                    onmouseover="this.style.borderColor='#dc2626'; this.style.color='#dc2626';"
-                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569';">
-                <i class="fas fa-times"></i> Clear All
-            </button>
-        </div>
-    </div>
-
-    <button type="button" class="cp-btn-sm w-100" onclick="previewDesign()"
-        style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;transition:all 0.2s;font-weight:600;margin-bottom:.5rem;"
-        onmouseover="this.style.background='rgba(47,44,203,.06)';"
-        onmouseout="this.style.background='#fff';">
-        <i class="fas fa-eye me-1"></i> Live preview this design
-    </button>
-
-    <button type="button" class="cp-btn-sm w-100" onclick="savePassslipCustomisation()"
-        style="font-size:.75rem;padding:.5rem 1rem;background:linear-gradient(135deg, #1e1b4b, #2f2ccb);color:#fff;border:none;border-radius:10px;transition:all 0.2s;font-weight:600;"
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(47,44,203,0.3)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-        <i class="fas fa-save me-1"></i> Save for selected class(es)
-    </button>
-    <div id="cpSaveStatus" class="text-center mt-2" style="font-size:.72rem;"></div>
-</div>
-
-<style>
-    .cp-class-chip.selected {
-        background: linear-gradient(135deg, #2f2ccb 0%, #4338ca 100%) !important;
-        color: #fff !important;
-        border-color: #2f2ccb !important;
-        box-shadow: 0 4px 16px rgba(47, 44, 203, 0.25) !important;
-        transform: translateY(-2px);
-    }
-    
-    .cp-class-chip.selected .cp-chip-icon {
-        opacity: 1 !important;
-        color: #fff !important;
-    }
-    
-    .cp-class-chip.selected .cp-chip-icon::before {
-        content: "✓" !important;
-        font-weight: 700;
-    }
-    
-    .cp-class-chip .cp-chip-icon::before {
-        content: "+";
-        font-weight: 700;
-    }
-    
-    .cp-class-chip.selected .cp-chip-icon::before {
-        content: "✓";
-    }
-    
-    #cpClassSelector:focus-within {
-        border-color: #2f2ccb;
-        box-shadow: 0 0 0 3px rgba(47, 44, 203, 0.1);
-    }
-
-    .cp-class-chip {
-        animation: chipFadeIn 0.2s ease-out;
-    }
-
-    /* Saved-customisations tabs */
-    .cp-saved-tab {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .35rem .5rem .35rem .8rem;
-        border-radius: 999px;
-        font-size: .72rem;
-        font-weight: 600;
-        cursor: pointer;
-        background: #eef2ff;
-        border: 1.5px solid #c7d2fe;
-        color: #3730a3;
-        transition: all .15s ease;
-        user-select: none;
-    }
-    .cp-saved-tab:hover {
-        border-color: #4338ca;
-    }
-    .cp-saved-tab.active {
-        background: linear-gradient(135deg, #2f2ccb 0%, #4338ca 100%);
-        border-color: #2f2ccb;
-        color: #fff;
-        box-shadow: 0 3px 10px rgba(47,44,203,.25);
-    }
-    .cp-saved-tab .cp-saved-tab-remove {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        font-size: .6rem;
-        opacity: .65;
-    }
-    .cp-saved-tab .cp-saved-tab-remove:hover {
-        opacity: 1;
-        background: rgba(0,0,0,.12);
-    }
-    .cp-saved-tab.active .cp-saved-tab-remove:hover {
-        background: rgba(255,255,255,.25);
-    }
-    /* Small dot on a class chip that already has something saved, so
-       it's visible at a glance even in the "select classes to save
-       for" picker below. */
-    .cp-class-chip.has-saved::after {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #16a34a;
-        display: inline-block;
-        margin-left: .15rem;
-    }
-    .cp-class-chip.selected.has-saved::after {
-        background: #fff;
-    }
-
-    .cp-unsaved-banner {
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        background: #fff8e6;
-        border: 1.5px solid #f0c14b;
-        border-left: 4px solid #e8a917;
-        border-radius: 10px;
-        padding: .7rem .9rem;
-        margin-bottom: 1rem;
-        font-size: .78rem;
-        color: #6b4e00;
-        line-height: 1.4;
-        animation: chipFadeIn 0.2s ease-out;
-    }
-
-    .cp-unsaved-banner i {
-        color: #e8a917;
-        font-size: 1rem;
-        flex-shrink: 0;
-    }
-
-    .cp-unsaved-banner span {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .cp-unsaved-banner-btn {
-        flex-shrink: 0;
-        background: #e8a917;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: .35rem .7rem;
-        font-size: .72rem;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    .cp-unsaved-banner-btn:hover {
-        background: #d29a0f;
-    }
-
-    @keyframes chipFadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-</style>
-
-                        {{-- Reset link --}}
-                        <div class="text-center mt-3">
-                            <button class="cp-btn-sm" onclick="resetCustomisation()" style="font-size:.72rem;padding:.3rem 1rem;">
-                                <i class="fas fa-undo me-1"></i> Reset to defaults
-                            </button>
-                        </div>
-
                     </div>{{-- /.custom-panel-body --}}
                 </div>{{-- /.custom-panel --}}
 
+
+                
+                {{-- ┌──────────────────────────────────┐
+                     │  Discipline Ratings              │
+                     └──────────────────────────────────┘ --}}
+                <div class="ps-section-card mb-4">
+                    <div class="ps-section-header">
+                        <div class="ps-section-icon"><i class="fas fa-user-shield"></i></div>
+                        <div>
+                            <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Discipline Ratings</div>
+                            <div class="text-muted" style="font-size:.78rem;">Punctuality, behaviour &amp; conduct per student</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="d-flex align-items-start gap-2 mb-4 p-3"
+                            style="background:var(--brand-ultra);border-radius:var(--radius-md);border-left:3px solid var(--brand);">
+                            <i class="fas fa-info-circle" style="color:var(--brand);font-size:.9rem;margin-top:.1em;"></i>
+                            <div class="small text-muted" style="font-size:.8rem;line-height:1.4;">
+                                &nbsp;Rate each student against your school's discipline criteria. Ratings
+                                appear as a Discipline table on the report card when that section is enabled.
+                            </div>
+                        </div>
+
+                        <a href="{{ route('examination.discipline.entry', $exam->id) }}"
+                           class="print-btn w-100 justify-content-center"
+                           style="padding:.9rem;font-weight:600;">
+                            <i class="fas fa-user-shield me-2"></i>
+                            Open Discipline Entry
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+                
                 {{-- ┌──────────────────────────────────┐
                      │  Bulk Print (all students)       │
                      └──────────────────────────────────┘ --}}
@@ -1614,67 +1094,6 @@ function setLanguage(lang) {
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
-                </div>
-
-                {{-- ┌──────────────────────────────────┐
-                     │  Discipline Ratings              │
-                     └──────────────────────────────────┘ --}}
-                <div class="ps-section-card mb-4">
-                    <div class="ps-section-header">
-                        <div class="ps-section-icon"><i class="fas fa-user-shield"></i></div>
-                        <div>
-                            <div class="fw-bold" style="font-size:.95rem;color:#1e1b4b;">Discipline Ratings</div>
-                            <div class="text-muted" style="font-size:.78rem;">Punctuality, behaviour &amp; conduct per student</div>
-                        </div>
-                    </div>
-
-                    <div class="p-4">
-                        <div class="d-flex align-items-start gap-2 mb-4 p-3"
-                            style="background:var(--brand-ultra);border-radius:var(--radius-md);border-left:3px solid var(--brand);">
-                            <i class="fas fa-info-circle" style="color:var(--brand);font-size:.9rem;margin-top:.1em;"></i>
-                            <div class="small text-muted" style="font-size:.8rem;line-height:1.4;">
-                                &nbsp;Rate each student against your school's discipline criteria. Ratings
-                                appear as a Discipline table on the report card when that section is enabled.
-                            </div>
-                        </div>
-
-                        <a href="{{ route('examination.discipline.entry', $exam->id) }}"
-                           class="print-btn w-100 justify-content-center"
-                           style="padding:.9rem;font-weight:600;">
-                            <i class="fas fa-user-shield me-2"></i>
-                            Open Discipline Entry
-                            <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                {{-- ┌──────────────────────────────────┐
-                     │  Unsaved-customisation notice     │
-                     └──────────────────────────────────┘
-                     Real pass slips (student links, class print, Print
-                     All) resolve each class's own SAVED design from the
-                     database, not whatever's currently sitting in the
-                     panel above — so an unsaved template/colour/toggle/
-                     combine-exam change never accidentally leaks into
-                     another class's report. This banner is what tells
-                     the user that tradeoff exists, instead of them
-                     wondering why a real slip below doesn't match what
-                     they just changed above. Hidden by default; JS
-                     toggles it on whenever currentSettings drifts from
-                     the last-loaded/last-saved snapshot for the class(es)
-                     selected in the Save-Customisation panel. --}}
-                <div id="cpUnsavedBanner" class="cp-unsaved-banner" style="display:none;">
-                    <i class="fas fa-triangle-exclamation"></i>
-                    <span>
-                        You've changed the accent colour, toggles, or Combine Examinations for
-                        <strong id="cpUnsavedClassNames">this class</strong> but haven't saved it yet.
-                        (Design Template applies immediately — no save needed for that.) The links
-                        below will still print the <em>last saved</em> version of everything else
-                        until you hit Save Customisation.
-                    </span>
-                    <button type="button" class="cp-unsaved-banner-btn" onclick="scrollToSavePanel()">
-                        Save now
-                    </button>
                 </div>
 
                 {{-- ┌──────────────────────────────────┐
@@ -1975,144 +1394,19 @@ function setLanguage(lang) {
          JAVASCRIPT
     ═══════════════════════════════════════════════════════════ --}}
     <script>
-    /* ─────────────────────────────────────────────
-       CUSTOMISATION STATE
-       All settings collected here; serialised to
-       URL query-params before every navigation.
-    ───────────────────────────────────────────── */
-    const DEFAULTS = {
-        template:            'classic',
-        accent:              '#f0a500',
-        exam_ids:            '',
-        avg_exam_ids:        '{{ $exam->id }}',
-        show_multi_average:  true,
-        show_border:         true,
-        show_watermark:      true,
-        show_logo:           true,
-        show_arabic:         true,
-        show_motto:          true,
-        show_contact:        true,
-        show_photo:          true,
-        show_minichart:      true,
-        show_qr:             true,
-        show_rank:           true,
-        show_total_score:    true,
-        show_average:        true,
-        show_result:         true,
-        show_score_col:      true,
-        show_dev:            true,
-        show_grade_pill:     true,
-        show_comment_col:    true,
-        show_teacher_col:    true,
-        show_totals_row:     true,
-        show_perf_chart:     true,
-        show_remarks:        true,
-        show_discipline:     true,
-        show_signatures:     true,
-        show_footer_timestamp: true,
-        show_confidential:   true,
-    };
-
-    let currentSettings = { ...DEFAULTS };
-
-    /* ─────────────────────────────────────────────
-       PER-TEMPLATE CAPABILITY FILTERING
-       Sourced straight from config/passslip_templates.php
-       (via Helper::passslipCapabilitiesFor) — never hand-
-       duplicated here, so this can't drift out of sync with
-       what the templates actually render. Hides any toggle row
-       that has no effect on the currently-selected design, and
-       hides a whole group heading if every row under it is hidden.
-    ───────────────────────────────────────────── */
-    const TEMPLATE_CAPABILITIES = @json(
-        collect(['classic', 'modern', 'minimal'])->mapWithKeys(
-            fn ($t) => [$t => \App\Http\Controllers\Helper::passslipCapabilitiesFor($t)]
-        )
-    );
-
-    function filterPanelForTemplate(templateKey) {
-        const capable = TEMPLATE_CAPABILITIES[templateKey] || [];
-        const visibleGroups = new Set();
-
-        document.querySelectorAll('.cp-check-row[data-cap]').forEach(row => {
-            const key = row.dataset.cap;
-            const isCapable = capable.includes(key);
-            row.style.display = isCapable ? '' : 'none';
-            if (isCapable) {
-                const group = findGroupFor(row);
-                if (group) visibleGroups.add(group);
-            }
-        });
-
-        document.querySelectorAll('.cp-group-label[data-group]').forEach(label => {
-            label.style.display = visibleGroups.has(label.dataset.group) ? '' : 'none';
-        });
-    }
-
-    /* Walk backwards from a toggle row to the nearest preceding
-       .cp-group-label[data-group] to find which group it belongs to. */
-    function findGroupFor(row) {
-        let el = row.previousElementSibling;
-        while (el) {
-            if (el.classList.contains('cp-group-label') && el.dataset.group) {
-                return el.dataset.group;
-            }
-            el = el.previousElementSibling;
-        }
-        return null;
-    }
-
-    // Baseline to compare currentSettings against, so we can tell the
-    // user when the panel no longer matches what's actually saved (and
-    // therefore what real pass slips still render). Reset to DEFAULTS
-    // whenever the loaded class has nothing saved yet, since DEFAULTS
-    // is what a real slip falls back to in that case.
-    let savedSnapshot = { ...DEFAULTS };
-
-    /* ── Unsaved-changes banner ──
-       Real student/class links resolve each class's SAVED settings
-       server-side; they never pick up the panel's live state directly.
-       So whenever currentSettings drifts from savedSnapshot, warn the
-       user before they click through and get confused by a report that
-       doesn't match what they just changed. ── */
-    function checkUnsavedChanges() {
-        const banner = document.getElementById('cpUnsavedBanner');
-        if (!banner) return;
-
-        // "template" is excluded from this comparison: buildQS() /
-        // injectIntoForm() now apply it to every link immediately (see
-        // note there), so an unsaved template change is never actually
-        // stale on a real slip — only accent/toggles/combine-exams are.
-        const { template: _ignoredA, ...liveRest } = currentSettings;
-        const { template: _ignoredB, ...savedRest } = savedSnapshot;
-        const dirty = JSON.stringify(liveRest) !== JSON.stringify(savedRest);
-        banner.style.display = dirty ? 'flex' : 'none';
-
-        if (dirty) {
-            const classSelect = document.getElementById('cpClassSelect');
-            const names = classSelect
-                ? Array.from(classSelect.selectedOptions).map(o => o.textContent.trim())
-                : [];
-            const label = document.getElementById('cpUnsavedClassNames');
-            if (label) label.textContent = names.length ? names.join(', ') : 'this class';
-        }
-    }
-
-    function scrollToSavePanel() {
-        const el = document.getElementById('cpClassSelector') || document.getElementById('cpBody');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
     /* ── Design template selection ──
-       Switching template never touches the toggles/accent above it —
-       it's a pure presentation swap on top of the same settings. ── */
+       This is the one piece of customisation still handled on this page:
+       it's a page-wide presentation choice (not per-class saved data), so
+       it applies immediately to every print link/form below. Everything
+       else — accent colour, feature toggles, Combine Examinations, and
+       saving a profile per class — now lives entirely on "Customize this
+       design" (see customize.blade.php), instead of being duplicated here
+       and there. ── */
     function selectTemplate(key, el) {
-        currentSettings.template = key;
         document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
         updateCustomizeLink(key);
-        filterPanelForTemplate(key);
-        updateSummary();
+        updateAllLinks();
     }
 
     /* ── Keep "Customize this design" pointed at whichever template
@@ -2125,48 +1419,8 @@ function setLanguage(lang) {
         }
     }
     updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
-    filterPanelForTemplate(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
 
-    function setTemplateSelectionUI(key) {
-        const card = document.querySelector('.cp-template-card[data-template="' + key + '"]');
-        if (!card) return;
-        document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        filterPanelForTemplate(key);
-    }
-
-    /* ── Read toggles from DOM → currentSettings ── */
-    function readSettings() {
-        document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-            currentSettings[cb.id.replace('cb_', '')] = cb.checked;
-        });
-        currentSettings.accent = document.getElementById('cpColorPicker').value;
-        const selectedTplCard = document.querySelector('.cp-template-card.selected');
-        currentSettings.template = selectedTplCard ? selectedTplCard.dataset.template : 'classic';
-
-        // Combine-examinations selection: extra exam ids + which ids to average
-        const extraExamIds = Array.from(document.querySelectorAll('.exam-combine-cb:checked')).map(cb => cb.value);
-        const avgExamIds = Array.from(document.querySelectorAll('.exam-avg-cb:checked')).map(cb => cb.value);
-        currentSettings.exam_ids = extraExamIds.join(',');
-        currentSettings.avg_exam_ids = avgExamIds.join(',');
-    }
-
-    /* ── When an "extra examination" checkbox is toggled, enable/disable
-           its paired "include in average" switch and auto-check it ── */
-    function onExamComboChange(cb) {
-        const avgCb = document.getElementById('cb_avg_' + cb.value);
-        if (avgCb) {
-            avgCb.disabled = !cb.checked;
-            if (cb.checked) {
-                avgCb.checked = true;
-            } else {
-                avgCb.checked = false;
-            }
-        }
-        updateSummary();
-    }
-
-    /* ── Build query-string from currentSettings ── */
+    /* ── Build query-string (template + lang only — see selectTemplate above) ── */
 function buildQS() {
     // Deliberately NOT including accent/toggles here. Those reflect
     // whichever class was last loaded into the panel — broadcasting
@@ -2229,410 +1483,6 @@ function injectIntoForm(formEl) {
             const base = a.dataset.baseHref;
             a.href = base + '?' + qs;
         });
-    }
-
-    /* ── Colour change ── */
-    function onColorChange(val) {
-        currentSettings.accent = val;
-        document.getElementById('cpAccentPreview').style.background = val;
-        // sync preset dots
-        document.querySelectorAll('.cp-preset-dot').forEach(d => {
-            d.classList.toggle('active', d.dataset.color === val);
-        });
-        updateAllLinks();
-        updateSummary();
-    }
-
-    function applyPreset(hex, el) {
-        document.getElementById('cpColorPicker').value = hex;
-        onColorChange(hex);
-    }
-
-    /* ── Check all / none ── */
-    function setAllChecks(state) {
-        document.querySelectorAll('.cp-toggle-cb').forEach(cb => { cb.checked = state; });
-        updateAllLinks();
-        updateSummary();
-    }
-
-    /* ── Reset to defaults ──
-       Previously this only rewrote the DOM/currentSettings and stopped —
-       no visible confirmation, and (the more serious half of the bug) no
-       persistence. Real pass slips never read the live panel; they read
-       whatever's saved in passslip_settings via applySavedPassslipSettings().
-       So if a class already had a saved profile with extra Combine
-       Examinations checked (e.g. from earlier testing), clicking "Reset
-       to defaults" wiped the panel's checkboxes but left that saved row
-       untouched — every student in that class kept getting a multi-exam
-       slip, and there was no on-screen sign that anything needed saving.
-       Now Reset also gives immediate feedback, and — if a class is
-       currently selected in the Save Customisation picker — actually
-       persists the cleared defaults for it, the same way Save does. */
-    function resetCustomisation() {
-        currentSettings = { ...DEFAULTS };
-        setTemplateSelectionUI(DEFAULTS.template);
-        document.getElementById('cpColorPicker').value = DEFAULTS.accent;
-        document.getElementById('cpAccentPreview').style.background = DEFAULTS.accent;
-        document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-            const key = cb.id.replace('cb_', '');
-            cb.checked = DEFAULTS[key] !== false;
-        });
-        document.querySelectorAll('.cp-preset-dot').forEach(d => {
-            d.classList.toggle('active', d.dataset.color === DEFAULTS.accent);
-        });
-        // Combine-examinations: uncheck all extras, disable their averages
-        document.querySelectorAll('.exam-combine-cb').forEach(cb => { cb.checked = false; });
-        document.querySelectorAll('.exam-avg-cb').forEach(cb => {
-            if (!cb.id.startsWith('cb_avg_base_')) {
-                cb.checked = false;
-                cb.disabled = true;
-            }
-        });
-        updateAllLinks();
-        updateSummary();
-
-        const statusEl = document.getElementById('cpSaveStatus');
-        const classSelect = document.getElementById('cpClassSelect');
-        const classIds = classSelect
-            ? Array.from(classSelect.selectedOptions).map(o => o.value)
-            : [];
-
-        if (classIds.length > 0) {
-            // A class is loaded — reset AND persist, so this class's real
-            // pass slips (including its Combine Examinations selection)
-            // actually go back to defaults, not just the panel preview.
-            savePassslipCustomisation();
-        } else if (statusEl) {
-            // No class loaded — the panel is back to defaults, but nothing
-            // has been (or needs to be) saved. Say so explicitly, since
-            // silence here is exactly what made this bug hard to notice.
-            statusEl.style.color = '#666';
-            statusEl.textContent = 'Panel reset to defaults. If a class still shows extra examinations on its real slips, select it above and this will save the cleared defaults for it too.';
-        }
-    }
-
-    /* ── Open a real, fully-rendered preview of the currently selected
-       template + toggles + accent — in a new tab, against live data,
-       without saving anything yet. This is the ONE place the full
-       currentSettings deliberately IS broadcast via query-string,
-       since it's an explicit one-off "show me" action, not a link
-       every student/class tile inherits. ── */
-    function previewDesign() {
-        readSettings();
-        const p = new URLSearchParams();
-        // NOTE: exam_ids/avg_exam_ids (Combine Examinations) used to be
-        // skipped here, on the reasoning that they're "panel-local, not
-        // a slip toggle" — but that's exactly what made the live preview
-        // silently ignore any Combine Examinations selection that hadn't
-        // been saved yet, even though the preview's whole purpose is to
-        // show unsaved changes. They're genuine slip params (read by
-        // resolveExamSelection() server-side), so they belong here too.
-        Object.entries(currentSettings).forEach(([k, v]) => {
-            p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
-        });
-        p.set('lang', new URLSearchParams(window.location.search).get('lang') || 'en');
-        const url = '{{ route('examination.passslips.all', $exam->id) }}?' + p.toString();
-        window.open(url, '_blank');
-    }
-
-    /* ── Persist current toggle state for one or more classes ──
-       (e.g. Nursery / Kindergarten sharing one saved profile) so it
-       survives a page refresh instead of resetting to defaults. */
-    function savePassslipCustomisation() {
-        const classSelect = document.getElementById('cpClassSelect');
-        const classIds = Array.from(classSelect.selectedOptions).map(o => parseInt(o.value, 10));
-        const statusEl = document.getElementById('cpSaveStatus');
-
-        if (classIds.length === 0) {
-            statusEl.style.color = '#c0392b';
-            statusEl.textContent = 'Select at least one class first.';
-            return;
-        }
-
-        readSettings();
-        statusEl.style.color = '#666';
-        statusEl.textContent = 'Saving…';
-
-        fetch('{{ route('examination.passslips.settings.save', $exam->id) }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                class_ids: classIds,
-                settings: currentSettings,
-            }),
-        })
-            .then(r => r.json())
-            .then(res => {
-                statusEl.style.color = res.success ? '#1a7a4a' : '#c0392b';
-                statusEl.textContent = res.success
-                    ? 'Saved for ' + classIds.length + ' class(es). ✓'
-                    : (res.message || 'Failed to save.');
-
-                if (res.success) {
-                    // Panel now matches the database — clear the banner.
-                    savedSnapshot = { ...currentSettings };
-                    checkUnsavedChanges();
-                    // Refresh the Saved Customisations tabs so a class
-                    // saved for the first time gets a tab immediately,
-                    // without needing a page reload.
-                    fetchSavedList().then(() => {
-                        if (classIds.length === 1) setActiveSavedTab(classIds[0]);
-                    });
-                }
-            })
-            .catch(() => {
-                statusEl.style.color = '#c0392b';
-                statusEl.textContent = 'Failed to save — check your connection.';
-            });
-    }
-
-    /* ── Load a class's saved settings into the panel for review ──
-       Fires when the teacher/admin picks a class in the "Save
-       Customisation" selector, so they can see what's already saved
-       (if anything) before adjusting and re-saving. */
-    /* ── Apply a saved settings object to the panel's controls ──
-       Shared by loadPassslipCustomisation() (class picker) and
-       selectSavedTab() (Saved Customisations tabs), so there's one
-       place that knows how to paint saved settings onto the DOM. */
-    function applySettingsToPanel(saved) {
-        setTemplateSelectionUI(saved.template || 'classic');
-        if (saved.accent) {
-            document.getElementById('cpColorPicker').value = saved.accent;
-            document.getElementById('cpAccentPreview').style.background = saved.accent;
-            document.querySelectorAll('.cp-preset-dot').forEach(d => {
-                d.classList.toggle('active', d.dataset.color === saved.accent);
-            });
-        }
-        document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-            const key = cb.id.replace('cb_', '');
-            cb.checked = key in saved ? !!saved[key] : (DEFAULTS[key] !== false);
-        });
-
-        // Restore combine-examinations selection
-        const extraIds = typeof saved.exam_ids === 'string' ? saved.exam_ids.split(',').filter(Boolean) : [];
-        document.querySelectorAll('.exam-combine-cb').forEach(cb => {
-            cb.checked = extraIds.includes(cb.value);
-            const avgCb = document.getElementById('cb_avg_' + cb.value);
-            if (avgCb) avgCb.disabled = !cb.checked;
-        });
-        if (typeof saved.avg_exam_ids === 'string') {
-            const avgIds = saved.avg_exam_ids.split(',').filter(Boolean);
-            document.querySelectorAll('.exam-avg-cb').forEach(cb => {
-                if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
-            });
-        }
-
-        updateAllLinks();
-        readSettings();
-        // This IS the saved state we just loaded — panel now matches
-        // the database, so the unsaved-changes banner should be clean.
-        savedSnapshot = { ...currentSettings };
-        updateSummary();
-    }
-
-    function loadPassslipCustomisation() {
-        const classSelect = document.getElementById('cpClassSelect');
-        const firstSelected = classSelect.selectedOptions[0];
-        if (!firstSelected) return;
-
-        fetch('{{ route('examination.passslips.settings.get', $exam->id) }}?class_id=' + firstSelected.value, {
-            headers: { 'Accept': 'application/json' },
-        })
-            .then(r => r.json())
-            .then(res => {
-                if (!res.success || !res.settings || Object.keys(res.settings).length === 0) {
-                    // Nothing saved yet for this class — a real slip would
-                    // fall back to DEFAULTS, so that's the clean baseline.
-                    savedSnapshot = { ...DEFAULTS };
-                    checkUnsavedChanges();
-                    return; // leave panel as-is otherwise
-                }
-                applySettingsToPanel(res.settings);
-                setActiveSavedTab(firstSelected.value);
-            })
-            .catch(() => { /* silent — keep current panel state */ });
-    }
-
-    /* ─────────────────────────────────────────────
-       SAVED CUSTOMISATIONS — tab strip
-       One tab per class that already has a saved
-       profile. Editing/removing happens here, kept
-       separate from the "select classes to save for"
-       chips above so the two flows stop colliding.
-       ───────────────────────────────────────────── */
-    let savedTabsCache = []; // [{class_id, class_name, settings}]
-
-    function fetchSavedList() {
-        return fetch('{{ route('examination.passslips.settings.list', $exam->id) }}', {
-            headers: { 'Accept': 'application/json' },
-        })
-            .then(r => r.json())
-            .then(res => {
-                savedTabsCache = (res.success && Array.isArray(res.items)) ? res.items : [];
-                renderSavedTabs();
-            })
-            .catch(() => { /* silent — tabs just won't show this time */ });
-    }
-
-    function renderSavedTabs() {
-        const wrap = document.getElementById('cpSavedTabsWrap');
-        const holder = document.getElementById('cpSavedTabs');
-        if (!wrap || !holder) return;
-
-        // Mark which class chips already have a saved profile (small dot),
-        // regardless of whether the tab strip itself is shown.
-        document.querySelectorAll('.cp-class-chip').forEach(chip => {
-            const has = savedTabsCache.some(it => String(it.class_id) === chip.dataset.classId);
-            chip.classList.toggle('has-saved', has);
-        });
-
-        if (savedTabsCache.length === 0) {
-            wrap.style.display = 'none';
-            holder.innerHTML = '';
-            return;
-        }
-
-        wrap.style.display = '';
-        holder.innerHTML = savedTabsCache.map(it => `
-            <span class="cp-saved-tab" data-class-id="${it.class_id}" onclick="selectSavedTab(${it.class_id})">
-                <i class="fas fa-sliders-h" style="font-size:.62rem;"></i>
-                <span>${it.class_name}</span>
-                <span class="cp-saved-tab-remove" title="Remove this class's saved customisation"
-                      onclick="removeSavedTab(event, ${it.class_id}, '${(it.class_name + '').replace(/'/g, "\\'")}')">
-                    <i class="fas fa-times"></i>
-                </span>
-            </span>
-        `).join('');
-    }
-
-    function setActiveSavedTab(classId) {
-        document.querySelectorAll('.cp-saved-tab').forEach(tab => {
-            tab.classList.toggle('active', String(classId) === tab.dataset.classId);
-        });
-    }
-
-    /* Click a Saved Customisation tab: load THAT class's settings into
-       the panel and put the class picker into single-select mode on
-       just this class, so a subsequent Save re-saves the same class
-       instead of accidentally fanning out to whatever else was still
-       ticked in the chip list. */
-    function selectSavedTab(classId) {
-        const entry = savedTabsCache.find(it => String(it.class_id) === String(classId));
-        if (!entry) return;
-
-        document.querySelectorAll('.cp-class-chip').forEach(chip => {
-            chip.classList.toggle('selected', chip.dataset.classId === String(classId));
-        });
-        updateSelectedCount();
-        updateHiddenSelect();
-
-        applySettingsToPanel(entry.settings || {});
-        setActiveSavedTab(classId);
-
-        localStorage.setItem('cpSelectedClasses', JSON.stringify([String(classId)]));
-        scrollToSavePanel();
-    }
-
-    /* Delete a saved profile. Doesn't touch other classes' saved data
-       — only the row for this one class. */
-
-async function removeSavedTab(evt, classId, className) {
-    evt.stopPropagation(); // don't also trigger selectSavedTab()
-
-    const result = await Swal.fire({
-        title: 'Remove customisation?',
-        text: `Remove the saved customisation for "${className}"? Its pass slips will go back to the default look next time they're printed.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, remove it',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        reverseButtons: true
-    });
-
-    if (!result.isConfirmed) {
-        return;
-    }
-
-    fetch('{{ url('examinations') }}/{{ $exam->id }}/passslips/settings/' + classId, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-        },
-    })
-        .then(r => r.json())
-        .then(() => {
-            const wasActive = document
-                .querySelector(`.cp-saved-tab[data-class-id="${classId}"]`)
-                ?.classList.contains('active');
-
-            fetchSavedList();
-
-            // Deselect the chip for the removed class so it stops
-            // showing up in "N class(es) selected" once its saved
-            // profile no longer exists, regardless of whether it was
-            // the class currently loaded in the panel.
-            const chip = document.querySelector(`.cp-class-chip[data-class-id="${classId}"]`);
-            if (chip) chip.classList.remove('selected');
-            updateSelectedCount();
-            updateHiddenSelect();
-
-            // Keep localStorage in sync so a refresh doesn't silently
-            // bring the removed class's selection back.
-            const remaining = getSelectedClassIds();
-            localStorage.setItem('cpSelectedClasses', JSON.stringify(remaining));
-
-            if (wasActive) {
-                // The class we just deleted was loaded in the panel —
-                // repaint it back to DEFAULTS so it matches reality.
-                // (Deliberately NOT calling resetCustomisation() here:
-                // that function re-saves, which would recreate
-                // the row we just deleted.)
-                applySettingsToPanel({});
-                savedSnapshot = { ...DEFAULTS };
-                checkUnsavedChanges();
-            }
-            setActiveSavedTab(null);
-
-            Swal.fire({
-                title: 'Removed!',
-                text: `The saved customisation for "${className}" has been removed.`,
-                icon: 'success',
-                timer: 1800,
-                showConfirmButton: false
-            });
-        })
-        .catch(() => {
-            Swal.fire({
-                title: 'Failed to remove',
-                text: 'Please check your connection and try again.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-}
-
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const classSelect = document.getElementById('cpClassSelect');
-        if (classSelect) classSelect.addEventListener('change', loadPassslipCustomisation);
-    });
-
-    /* ── Summary badge (count enabled features) ── */
-    function updateSummary() {
-        const total   = document.querySelectorAll('.cp-toggle-cb').length;
-        const enabled = document.querySelectorAll('.cp-toggle-cb:checked').length;
-        const el      = document.getElementById('cpSummary');
-        if (el) el.textContent = enabled + '/' + total + ' on';
-        updateAllLinks();
-        readSettings();
-        checkUnsavedChanges();
     }
 
     /* ── Panel collapse/expand ── */
@@ -2706,15 +1556,8 @@ async function removeSavedTab(evt, classId, className) {
 
     /* ── Init ── */
     document.addEventListener('DOMContentLoaded', function () {
-        updateSummary();   // sets summary badge & links on first load
+        updateAllLinks();   // sets Print All / student link hrefs on first load
 
-        // Whenever any toggle changes → update links + unsaved-changes check
-        document.querySelectorAll('.cp-toggle-cb').forEach(cb => {
-            cb.addEventListener('change', updateSummary);
-        });
-    });
-
-        document.addEventListener('DOMContentLoaded', function() {
         const body = document.getElementById('cpBody');
         const chevron = document.getElementById('cpChevron');
         if (body && chevron) {
@@ -2722,124 +1565,6 @@ async function removeSavedTab(evt, classId, className) {
             chevron.style.transform = 'rotate(-90deg)';
         }
     });
-
-/* ─────────────────────────────────────────────
-   CLASS CHIP SELECTION
-   ───────────────────────────────────────────── */
-function toggleClassChip(element) {
-    element.classList.toggle('selected');
-    updateSelectedCount();
-    updateHiddenSelect();
-    syncActiveTabFromChipSelection();
-    loadPassslipCustomisation();
-
-    // Auto-save selected classes to localStorage
-    const selected = getSelectedClassIds();
-    localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
-}
-
-/* Keep the Saved Customisations tab strip's "active" highlight in sync
-   with the chip picker: highlighted only when exactly one class is
-   selected there and it has a saved tab. Any other combination (none,
-   or multiple classes) means editing a single saved profile doesn't
-   apply, so no tab should look active. */
-function syncActiveTabFromChipSelection() {
-    const selected = getSelectedClassIds();
-    if (selected.length === 1) {
-        setActiveSavedTab(selected[0]);
-    } else {
-        setActiveSavedTab(null);
-    }
-}
-
-function getSelectedClassIds() {
-    const selected = [];
-    document.querySelectorAll('.cp-class-chip.selected').forEach(chip => {
-        selected.push(chip.dataset.classId);
-    });
-    return selected;
-}
-
-function updateSelectedCount() {
-    const count = document.querySelectorAll('.cp-class-chip.selected').length;
-    const countText = document.getElementById('cpSelectedCountText');
-    if (countText) countText.textContent = count;
-}
-
-function updateHiddenSelect() {
-    const select = document.getElementById('cpClassSelect');
-    if (!select) return;
-    
-    // Clear all selections
-    Array.from(select.options).forEach(opt => opt.selected = false);
-    
-    // Select only the selected chips
-    document.querySelectorAll('.cp-class-chip.selected').forEach(chip => {
-        Array.from(select.options).forEach(opt => {
-            if (opt.value === chip.dataset.classId) {
-                opt.selected = true;
-            }
-        });
-    });
-}
-
-function selectAllClasses() {
-    document.querySelectorAll('.cp-class-chip').forEach(chip => {
-        chip.classList.add('selected');
-    });
-    updateSelectedCount();
-    updateHiddenSelect();
-    syncActiveTabFromChipSelection();
-    loadPassslipCustomisation();
-    const selected = getSelectedClassIds();
-    localStorage.setItem('cpSelectedClasses', JSON.stringify(selected));
-}
-
-function deselectAllClasses() {
-    document.querySelectorAll('.cp-class-chip').forEach(chip => {
-        chip.classList.remove('selected');
-    });
-    updateSelectedCount();
-    updateHiddenSelect();
-    setActiveSavedTab(null);
-    localStorage.setItem('cpSelectedClasses', JSON.stringify([]));
-}
-
-// ─────────────────────────────────────────────
-// MODIFIED savePassslipCustomisation
-// ─────────────────────────────────────────────
-const originalSavePassslip = savePassslipCustomisation;
-savePassslipCustomisation = function() {
-    const selectedClasses = getSelectedClassIds();
-    const statusEl = document.getElementById('cpSaveStatus');
-    
-    if (selectedClasses.length === 0) {
-        if (statusEl) {
-            statusEl.style.color = '#c0392b';
-            statusEl.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> Please select at least one class.';
-        }
-        return;
-    }
-
-    // Update the hidden select before saving
-    updateHiddenSelect();
-    
-    // Call the original save function
-    originalSavePassslip.call(this);
-};
-
-// ─────────────────────────────────────────────
-// INIT - Load saved selections on page load
-// ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-    // Populate the Saved Customisations tab strip only. We deliberately
-    // do NOT restore a previous chip selection from localStorage here —
-    // that was causing classes to appear "pre-selected" on every fresh
-    // page load, which is confusing since nothing has actually been
-    // chosen yet in this visit. The picker now always starts empty.
-    fetchSavedList();
-    localStorage.removeItem('cpSelectedClasses');
-});
 </script>
 
 @endsection

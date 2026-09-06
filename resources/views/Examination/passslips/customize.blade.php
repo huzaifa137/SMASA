@@ -423,6 +423,91 @@ selected classes" is clicked. --}}
             background: var(--brand);
         }
 
+        /* ── Check All / Uncheck All row ── */
+        .cz-check-all-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .4rem .25rem .7rem;
+            font-size: .75rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .cz-check-all-btns {
+            display: flex;
+            gap: .4rem;
+        }
+
+        .cz-check-all-btns .cz-btn-sm {
+            background: #fff;
+            color: #2f2ccb;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: .68rem;
+            font-weight: 600;
+            padding: .25rem .6rem;
+            cursor: pointer;
+            transition: border-color .15s ease, color .15s ease;
+        }
+
+        .cz-check-all-btns .cz-btn-sm:hover {
+            border-color: var(--brand-mid);
+            color: var(--brand);
+        }
+
+        /* ── Saved Customisations — tab strip ──
+           One tab per class that already has a saved profile for this
+           exam. Mirrors the tab strip that used to live on the pass
+           slips index page, now that saving/loading/removing profiles
+           happens exclusively here. */
+        .cz-saved-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .35rem .5rem .35rem .8rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #eef2ff;
+            border: 1.5px solid #c7d2fe;
+            color: #3730a3;
+            transition: all .15s ease;
+            user-select: none;
+        }
+
+        .cz-saved-tab:hover {
+            border-color: var(--brand-mid);
+        }
+
+        .cz-saved-tab.active {
+            background: linear-gradient(135deg, #1e1b4b, #2f2ccb);
+            border-color: var(--brand);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(47, 44, 203, .25);
+        }
+
+        .cz-saved-tab .cz-saved-tab-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: .6rem;
+            opacity: .65;
+        }
+
+        .cz-saved-tab .cz-saved-tab-remove:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, .12);
+        }
+
+        .cz-saved-tab.active .cz-saved-tab-remove:hover {
+            background: rgba(255, 255, 255, .25);
+        }
+
         .cz-btn-primary {
             background: linear-gradient(135deg, #1e1b4b, #2f2ccb);
             color: #fff;
@@ -579,6 +664,19 @@ selected classes" is clicked. --}}
                         default => [],
                     };
                 @endphp
+                {{-- Check All / Uncheck All — applies to every toggle this
+                template supports (i.e. everything currently rendered in
+                the groups below), same "quick select" affordance the
+                pass slips index page used to have before its own toggle
+                panel was removed in favour of this page. --}}
+                <div class="cz-check-all-row">
+                    <span><i class="fas fa-check-square me-1"></i> Quick select</span>
+                    <div class="cz-check-all-btns">
+                        <button type="button" class="cz-btn-sm" id="czCheckAll">Check All</button>
+                        <button type="button" class="cz-btn-sm" id="czUncheckAll">Uncheck All</button>
+                    </div>
+                </div>
+
                 {{-- ── Toggle search ── the option list can run long once
                 every section is shown, so let people jump straight to the
                 switch they're after instead of scanning by eye. Filters
@@ -635,6 +733,18 @@ selected classes" is clicked. --}}
                 <div class="small text-muted mb-2" style="font-size:.72rem;">
                     Pick which class(es) this customised design belongs to, then save.
                     It'll be applied automatically every time their pass slips are printed.
+                </div>
+
+                {{-- Saved Customisations — one tab per class that already has a
+                     saved profile for this exam. Click a tab to load ONLY that
+                     class's settings into the panel above for review/editing;
+                     the trash icon removes it. Moved here from the pass slips
+                     index page, which no longer has its own toggle/save panel. --}}
+                <div id="czSavedTabsWrap" class="mb-2" style="display:none;">
+                    <div class="text-muted mb-1" style="font-size:.72rem;font-weight:600;">
+                        <i class="fas fa-folder-open me-1"></i> Saved customisations
+                    </div>
+                    <div id="czSavedTabs" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
                 </div>
 
                 <div id="czClassSelector"
@@ -700,6 +810,7 @@ selected classes" is clicked. --}}
         const SAVE_URL = '{{ route('examination.passslips.settings.save', $exam->id) }}';
         const GET_URL = '{{ route('examination.passslips.settings.get', $exam->id) }}';
         const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}';
+        const DELETE_URL_BASE = '{{ url('examinations/'.$exam->id.'/passslips/settings') }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
         // Same per-template "off unless saved otherwise" keys the PHP side
         // uses when rendering the actual slip (see $offByDefaultKeys above),
@@ -806,6 +917,18 @@ selected classes" is clicked. --}}
             });
         })();
 
+        /* ── Check All / Uncheck All ── applies to every toggle this
+           template currently supports, regardless of the search filter
+           above (a filtered-out row is still a real setting). ── */
+        document.getElementById('czCheckAll')?.addEventListener('click', function () {
+            document.querySelectorAll('.cz-toggle-cb').forEach(cb => { cb.checked = true; });
+            scheduleRefresh();
+        });
+        document.getElementById('czUncheckAll')?.addEventListener('click', function () {
+            document.querySelectorAll('.cz-toggle-cb').forEach(cb => { cb.checked = false; });
+            scheduleRefresh();
+        });
+
         /* ── Toggle + colour wiring ── */
         document.querySelectorAll('.cz-toggle-cb').forEach(cb => cb.addEventListener('change', scheduleRefresh));
         document.querySelectorAll('.cz-exam-combine-cb').forEach(cb => cb.addEventListener('change', function () {
@@ -905,7 +1028,7 @@ selected classes" is clicked. --}}
         }
 
         function fetchSavedList() {
-            fetch(LIST_URL, { headers: { 'Accept': 'application/json' } })
+            return fetch(LIST_URL, { headers: { 'Accept': 'application/json' } })
                 .then(r => r.json())
                 .then(res => {
                     savedTabsCache = (res.success && Array.isArray(res.items)) ? res.items : [];
@@ -913,8 +1036,131 @@ selected classes" is clicked. --}}
                         const has = savedTabsCache.some(it => String(it.class_id) === chip.dataset.classId);
                         chip.classList.toggle('has-saved', has);
                     });
+                    renderSavedTabs();
                 })
-                .catch(() => { /* silent — dots just won't show this time */ });
+                .catch(() => { /* silent — dots/tabs just won't show this time */ });
+        }
+
+        /* ─────────────────────────────────────────────
+           SAVED CUSTOMISATIONS — tab strip
+           One tab per class that already has a saved profile for this
+           exam. Moved here from the pass slips index page (which no
+           longer has its own toggle/save panel) so it's available for
+           every template this page serves. ───────────────────────── */
+        function renderSavedTabs() {
+            const wrap = document.getElementById('czSavedTabsWrap');
+            const holder = document.getElementById('czSavedTabs');
+            if (!wrap || !holder) return;
+
+            if (savedTabsCache.length === 0) {
+                wrap.style.display = 'none';
+                holder.innerHTML = '';
+                return;
+            }
+
+            wrap.style.display = '';
+            holder.innerHTML = savedTabsCache.map(it => `
+                <span class="cz-saved-tab" data-class-id="${it.class_id}" onclick="selectSavedTab(${it.class_id})">
+                    <i class="fas fa-sliders-h" style="font-size:.62rem;"></i>
+                    <span>${it.class_name}</span>
+                    <span class="cz-saved-tab-remove" title="Remove this class's saved customisation"
+                          onclick="removeSavedTab(event, ${it.class_id}, '${(it.class_name + '').replace(/'/g, "\\'")}')">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </span>
+            `).join('');
+        }
+
+        function setActiveSavedTab(classId) {
+            document.querySelectorAll('.cz-saved-tab').forEach(tab => {
+                tab.classList.toggle('active', String(classId) === tab.dataset.classId);
+            });
+        }
+
+        /* Click a Saved Customisation tab: load THAT class's settings
+           into the panel and put the class picker into single-select
+           mode on just this class, so a subsequent Save re-saves the
+           same class instead of fanning out to whatever else was still
+           ticked in the chip list. */
+        function selectSavedTab(classId) {
+            const entry = savedTabsCache.find(it => String(it.class_id) === String(classId));
+            if (!entry) return;
+
+            selectedClassIds.clear();
+            selectedClassIds.add(String(classId));
+            document.querySelectorAll('.cz-class-chip').forEach(chip => {
+                chip.classList.toggle('selected', chip.dataset.classId === String(classId));
+            });
+            updateSelectedCount();
+
+            applySettingsToPanel(entry.settings || {});
+            refreshPreviewNow();
+            setActiveSavedTab(classId);
+        }
+
+        /* Delete a saved profile. Doesn't touch other classes' saved
+           data — only the row for this one class. */
+        async function removeSavedTab(evt, classId, className) {
+            evt.stopPropagation(); // don't also trigger selectSavedTab()
+
+            const result = await Swal.fire({
+                title: 'Remove customisation?',
+                text: `Remove the saved customisation for "${className}"? Its pass slips will go back to the default look next time they're printed.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove it',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true,
+            });
+            if (!result.isConfirmed) return;
+
+            fetch(DELETE_URL_BASE + '/' + classId, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                    'Accept': 'application/json',
+                },
+            })
+                .then(r => r.json())
+                .then(() => {
+                    const wasActive = document
+                        .querySelector(`.cz-saved-tab[data-class-id="${classId}"]`)
+                        ?.classList.contains('active');
+
+                    fetchSavedList();
+
+                    const chip = document.querySelector(`.cz-class-chip[data-class-id="${classId}"]`);
+                    if (chip) chip.classList.remove('selected');
+                    selectedClassIds.delete(String(classId));
+                    updateSelectedCount();
+
+                    if (wasActive) {
+                        // The class we just deleted was loaded in the panel —
+                        // repaint it back to the template's plain defaults so
+                        // the panel matches reality.
+                        applySettingsToPanel({});
+                        refreshPreviewNow();
+                    }
+                    setActiveSavedTab(null);
+
+                    Swal.fire({
+                        title: 'Removed!',
+                        text: `The saved customisation for "${className}" has been removed.`,
+                        icon: 'success',
+                        timer: 1800,
+                        showConfirmButton: false,
+                    });
+                })
+                .catch(() => {
+                    Swal.fire({
+                        title: 'Failed to remove',
+                        text: 'Please check your connection and try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                });
         }
 
         /* ── Class chip selection (which classes to save this profile for) ── */
