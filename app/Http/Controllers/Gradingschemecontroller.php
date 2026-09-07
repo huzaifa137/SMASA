@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\GradingScheme;
 use App\Models\GradingScale;
+use App\Models\DivisionBand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -32,7 +33,7 @@ class GradingSchemeController extends Controller
 
         $schemes = GradingScheme::forSchool($schoolId)
             ->withCount('examinations')
-            ->with('bands')
+            ->with(['bands', 'divisionBands'])
             ->orderByDesc('is_default')
             ->orderBy('name')
             ->get();
@@ -62,6 +63,14 @@ class GradingSchemeController extends Controller
             'bands.*.max_mark' => 'required|numeric|min:0|max:100',
             'bands.*.remark' => 'nullable|string|max:100',
             'bands.*.points' => 'nullable|numeric|min:0',
+            // Division bands are optional (PLE-style Aggregate/Division
+            // reporting) — a scheme can be saved with none at all.
+            'ungraded_on_fail' => 'nullable|boolean',
+            'division_bands' => 'nullable|array',
+            'division_bands.*.min_aggregate' => 'required_with:division_bands|integer|min:0',
+            'division_bands.*.max_aggregate' => 'required_with:division_bands|integer|min:0',
+            'division_bands.*.division' => 'required_with:division_bands|string|max:50',
+            'division_bands.*.remark' => 'nullable|string|max:100',
         ]);
 
         if ($validated['pass_mark'] > $validated['total_marks']) {
@@ -78,12 +87,14 @@ class GradingSchemeController extends Controller
                 'pass_mark' => $validated['pass_mark'],
                 'is_default' => (bool) ($validated['is_default'] ?? false),
                 'is_active' => true,
+                'ungraded_on_fail' => (bool) ($validated['ungraded_on_fail'] ?? true),
                 'created_by' => Session('LoggedTeacher'),
             ]);
 
             $this->syncBands($scheme, $validated['bands']);
+            $this->syncDivisionBands($scheme, $validated['division_bands'] ?? []);
 
-            $problems = $scheme->validateBands();
+            $problems = array_merge($scheme->validateBands(), $scheme->validateDivisionBands());
             if ($problems) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => implode(' ', $problems)], 422);
@@ -98,7 +109,7 @@ class GradingSchemeController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Grading scheme created successfully.',
-                'scheme' => $scheme->load('bands'),
+                'scheme' => $scheme->load(['bands', 'divisionBands']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -131,6 +142,12 @@ class GradingSchemeController extends Controller
             'bands.*.max_mark' => 'required|numeric|min:0|max:100',
             'bands.*.remark' => 'nullable|string|max:100',
             'bands.*.points' => 'nullable|numeric|min:0',
+            'ungraded_on_fail' => 'nullable|boolean',
+            'division_bands' => 'nullable|array',
+            'division_bands.*.min_aggregate' => 'required_with:division_bands|integer|min:0',
+            'division_bands.*.max_aggregate' => 'required_with:division_bands|integer|min:0',
+            'division_bands.*.division' => 'required_with:division_bands|string|max:50',
+            'division_bands.*.remark' => 'nullable|string|max:100',
         ]);
 
         if ($validated['pass_mark'] > $validated['total_marks']) {
@@ -145,12 +162,16 @@ class GradingSchemeController extends Controller
                 'total_marks' => $validated['total_marks'],
                 'pass_mark' => $validated['pass_mark'],
                 'is_default' => (bool) ($validated['is_default'] ?? false),
+                'ungraded_on_fail' => (bool) ($validated['ungraded_on_fail'] ?? true),
             ]);
 
             $scheme->bands()->delete();
             $this->syncBands($scheme, $validated['bands']);
 
-            $problems = $scheme->validateBands();
+            $scheme->divisionBands()->delete();
+            $this->syncDivisionBands($scheme, $validated['division_bands'] ?? []);
+
+            $problems = array_merge($scheme->validateBands(), $scheme->validateDivisionBands());
             if ($problems) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => implode(' ', $problems)], 422);
@@ -165,7 +186,7 @@ class GradingSchemeController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Grading scheme updated successfully.',
-                'scheme' => $scheme->fresh('bands'),
+                'scheme' => $scheme->fresh(['bands', 'divisionBands']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -223,6 +244,20 @@ class GradingSchemeController extends Controller
                 'max_mark' => $band['max_mark'],
                 'remark' => $band['remark'] ?? null,
                 'points' => $band['points'] ?? null,
+                'sort_order' => $i,
+            ]);
+        }
+    }
+
+    private function syncDivisionBands(GradingScheme $scheme, array $divisionBands): void
+    {
+        foreach ($divisionBands as $i => $band) {
+            DivisionBand::create([
+                'grading_scheme_id' => $scheme->id,
+                'min_aggregate' => $band['min_aggregate'],
+                'max_aggregate' => $band['max_aggregate'],
+                'division' => $band['division'],
+                'remark' => $band['remark'] ?? null,
                 'sort_order' => $i,
             ]);
         }

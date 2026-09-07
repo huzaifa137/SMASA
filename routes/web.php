@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\ExaminationReportController;
 use App\Http\Controllers\GradingSchemeController;
+use App\Http\Controllers\AggregateSubjectsController;
 use App\Http\Controllers\AssessmentScaleController;
 use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
@@ -632,6 +633,20 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{id}/update', 'update')->name('update');
             Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
             Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+    // Which subjects count toward the PLE-style Aggregate/Division, per
+    // class + stream (class_subjects.counts_towards_aggregate). See
+    // AggregateSubjectsController for the full explanation.
+    Route::prefix('examinations/aggregate-subjects')
+        ->name('examination.aggregate-subjects.')
+        ->controller(AggregateSubjectsController::class)
+        ->middleware(['module:examinations'])
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{classId}/{streamId}/subjects', 'subjects')->name('subjects');
+            Route::post('/{classId}/{streamId}', 'update')->name('update');
         });
 
     // Reports & Summaries (subject x student matrices, single-subject deep

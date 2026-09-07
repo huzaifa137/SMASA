@@ -20,6 +20,11 @@ class ClassSubject extends Model
         'subject_teacher_1',
         'subject_teacher_2',
         'assessment_scale_id',
+        'counts_towards_aggregate',
+    ];
+
+    protected $casts = [
+        'counts_towards_aggregate' => 'boolean',
     ];
 
 

@@ -1918,7 +1918,6 @@
                 $examSummarySlip = collect($slipData['examSummary'] ?? []);
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
                 $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
-
                 $divClass = function ($div) {
                     if (!$div || $div === '—')
                         return 'div-x';
@@ -2000,6 +1999,7 @@
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
                     'sum_grade' => $on('show_sum_grade', true, $savedCfg),
                     'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                    'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
                     'sum_division' => $on('show_sum_division', true, $savedCfg),
                     'sum_position' => $on('show_sum_position', true, $savedCfg),
                     'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
@@ -2124,7 +2124,19 @@
                 $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
                 $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
 
-                $divisionLabel = $avgSummarySlip['division'] ?? ($examSummarySlip->last()['division'] ?? null);
+                $divisionLabel = $avgSummarySlip['division']
+                    ?? $examSummarySlip->last()['division']
+                    ?? $slipData['division']
+                    ?? null;
+                // Same fallback chain as Division above — multi-exam sources
+                // first (already scoped to this class's aggregate subjects),
+                // then the plain single-exam value computed in
+                // buildPassslipData(). Null when the scheme has no Division
+                // bands or the class has no subjects flagged toward it.
+                $aggregateLabel = $avgSummarySlip['aggregate']
+                    ?? $examSummarySlip->last()['aggregate']
+                    ?? $slipData['aggregate']
+                    ?? null;
 
                 // Auto-generated report reference (not a stored DB field —
                 // built from the school, exam and student so every printed
@@ -2444,6 +2456,13 @@
                                 <i class="fas fa-star"></i>
                                 <div class="rc-summary-lbl">Grade Point</div>
                                 <div class="rc-summary-val">{{ $avgGradePoint ?? '—' }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_aggregate'] && !$isEarlyYears && $aggregateLabel !== null)
+                            <div class="rc-summary-cell">
+                                <i class="fas fa-calculator"></i>
+                                <div class="rc-summary-lbl">Aggregate</div>
+                                <div class="rc-summary-val">{{ $aggregateLabel }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_division'] && $divisionLabel)

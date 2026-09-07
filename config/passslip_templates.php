@@ -72,6 +72,7 @@ return [
         'show_sum_average_pct' => ['label' => 'Average %', 'icon' => 'fa-percent', 'group' => 'Summary Bar Fields'],
         'show_sum_grade' => ['label' => 'Overall Grade', 'icon' => 'fa-award', 'group' => 'Summary Bar Fields'],
         'show_sum_grade_point' => ['label' => 'Grade Point', 'icon' => 'fa-star', 'group' => 'Summary Bar Fields'],
+        'show_sum_aggregate' => ['label' => 'Aggregate (PLE-style)', 'icon' => 'fa-calculator', 'group' => 'Summary Bar Fields'],
         'show_sum_division' => ['label' => 'Division', 'icon' => 'fa-trophy', 'group' => 'Summary Bar Fields'],
         'show_sum_position' => ['label' => 'Position / Rank', 'icon' => 'fa-ranking-star', 'group' => 'Summary Bar Fields'],
         'show_sum_subjects' => ['label' => 'No. of Subjects', 'icon' => 'fa-book', 'group' => 'Summary Bar Fields'],
@@ -142,7 +143,7 @@ return [
 
             // Summary Bar — per-field
             'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
-            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_aggregate', 'show_sum_division',
             'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
         'modern' => [
@@ -164,7 +165,7 @@ return [
             // Summary Bar — per-field (new section for Modern, mirrors
             // Classic's Performance Summary strip using the same keys).
             'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
-            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_aggregate', 'show_sum_division',
             'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
         'minimal' => [
@@ -190,7 +191,7 @@ return [
             // already existed but was never actually rendered — mirrors
             // Classic/Modern's exact keys/labels).
             'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
-            'show_sum_grade', 'show_sum_grade_point', 'show_sum_division',
+            'show_sum_grade', 'show_sum_grade_point', 'show_sum_aggregate', 'show_sum_division',
             'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
     ],

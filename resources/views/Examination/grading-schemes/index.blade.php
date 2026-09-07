@@ -2026,6 +2026,44 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+
+                                {{-- ── Division Bands (optional — PLE-style Aggregate/Division) ──
+                                     Only shown when the scheme actually has some configured, so
+                                     schemes that don't use Division (the majority) look exactly
+                                     as before. --}}
+                                @if ($scheme->divisionBands->isNotEmpty())
+                                    <div class="section-label" style="margin-top:1.1rem;">
+                                        Division Bands
+                                        <span class="badge-pill" style="background:#eef2ff;color:#4338ca;font-weight:600;margin-left:.4rem;font-size:.62rem;">
+                                            {{ $scheme->ungraded_on_fail ? 'Ungraded on any fail' : 'Aggregate number only' }}
+                                        </span>
+                                    </div>
+                                    <table class="band-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Division</th>
+                                                <th>Aggregate Range</th>
+                                                <th>Remark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($scheme->divisionBands as $dband)
+                                                <tr>
+                                                    <td><span class="grade-chip">{{ $dband->division }}</span></td>
+                                                    <td>{{ $dband->min_aggregate }}–{{ $dband->max_aggregate }}</td>
+                                                    <td>{{ $dband->remark ?? '—' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @else
+                                    <div class="small text-muted" style="font-size:.72rem;padding:.6rem .1rem 0;">
+                                        <i class="fas fa-circle-info"></i>
+                                        No Division bands set for this scheme — Aggregate/Division
+                                        won't appear on pass slips using it. Add some via "Edit" if
+                                        this scheme reports PLE-style Divisions.
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -2092,7 +2130,49 @@
                 style="border-radius:.5rem; font-size:.78rem;">
                 <i class="fas fa-plus me-1"></i> Add Band
             </button>
+
+            <hr class="my-3">
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold mb-0" style="font-size:.82rem;">
+                    Division Bands <span class="text-muted fw-normal">(optional — PLE-style Aggregate/Division)</span>
+                </label>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" name="ungraded_on_fail" value="1" checked>
+                    <label class="form-check-label" style="font-size:.76rem;">Ungraded on any fail</label>
+                </div>
+            </div>
+            <div class="small text-muted mb-2" style="font-size:.72rem;">
+                Maps an AGGREGATE (sum of grade points across a student's
+                subjects flagged "counts toward aggregate" — see
+                Examinations → Aggregate Subjects) to a Division. Leave
+                empty if this scheme doesn't report Divisions.
+            </div>
+            <div class="band-row" style="grid-template-columns: 1fr 1fr 1fr 1.4fr auto; font-size:.72rem; font-weight:700; color:#6c757d;">
+                <div>Min Agg.</div>
+                <div>Max Agg.</div>
+                <div>Division</div>
+                <div>Remark</div>
+                <div></div>
+            </div>
+            <div id="divisionBandRows"></div>
+            <button type="button" id="addDivisionBandRow" class="btn btn-sm btn-outline-primary mt-1"
+                style="border-radius:.5rem; font-size:.78rem;">
+                <i class="fas fa-plus me-1"></i> Add Division Band
+            </button>
         </form>
+    </template>
+
+    {{-- Row template for a single division band --}}
+    <template id="divisionBandRowTemplate">
+        <div class="band-row" style="grid-template-columns: 1fr 1fr 1fr 1.4fr auto;">
+            <input type="number" step="1" class="form-control form-control-sm dband-min" placeholder="4">
+            <input type="number" step="1" class="form-control form-control-sm dband-max" placeholder="12">
+            <input type="text" class="form-control form-control-sm dband-division" placeholder="Division 1">
+            <input type="text" class="form-control form-control-sm dband-remark" placeholder="First Grade">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-band-row"><i
+                    class="fas fa-times"></i></button>
+        </div>
     </template>
 
     {{-- Row template for a single band --}}
@@ -2136,6 +2216,57 @@
         }
         row.querySelector('.remove-band-row').addEventListener('click', () => row.remove());
         container.appendChild(row);
+    }
+
+    function addDivisionBandRow(container, band = null) {
+        const tpl = document.getElementById('divisionBandRowTemplate').content.cloneNode(true);
+        const row = tpl.querySelector('.band-row');
+        if (band) {
+            row.querySelector('.dband-min').value = band.min_aggregate ?? '';
+            row.querySelector('.dband-max').value = band.max_aggregate ?? '';
+            row.querySelector('.dband-division').value = band.division ?? '';
+            row.querySelector('.dband-remark').value = band.remark ?? '';
+        }
+        row.querySelector('.remove-band-row').addEventListener('click', () => row.remove());
+        container.appendChild(row);
+    }
+
+    function collectDivisionBands(container) {
+        const bands = [];
+        container.querySelectorAll('.band-row').forEach(row => {
+            const division = row.querySelector('.dband-division').value.trim();
+            const min = row.querySelector('.dband-min').value;
+            const max = row.querySelector('.dband-max').value;
+            if (!division || min === '' || max === '') return;
+            bands.push({
+                division,
+                min_aggregate: parseInt(min, 10),
+                max_aggregate: parseInt(max, 10),
+                remark: row.querySelector('.dband-remark').value.trim() || null,
+            });
+        });
+        return bands;
+    }
+
+    // ── Division band overlap validation (no coverage requirement — the
+    // valid aggregate range depends on how many subjects a school flags
+    // as counting toward the aggregate, so there's no fixed 0-100-style
+    // span to enforce). ──
+    function validateDivisionBandOverlap(bands) {
+        for (const b of bands) {
+            if (parseInt(b.min_aggregate) > parseInt(b.max_aggregate)) {
+                return `"${b.division}": min aggregate cannot be greater than max aggregate.`;
+            }
+        }
+        const sorted = [...bands].sort((a, b) => parseInt(a.min_aggregate) - parseInt(b.min_aggregate));
+        for (let i = 0; i < sorted.length - 1; i++) {
+            const cur = sorted[i];
+            const next = sorted[i + 1];
+            if (parseInt(next.min_aggregate) <= parseInt(cur.max_aggregate)) {
+                return `Overlapping aggregate ranges between "${cur.division}" (${cur.min_aggregate}–${cur.max_aggregate}) and "${next.division}" (${next.min_aggregate}–${next.max_aggregate}).`;
+            }
+        }
+        return null;
     }
 
     function collectBands(container) {
@@ -2215,6 +2346,7 @@
             didOpen: () => {
                 const popup = Swal.getPopup();
                 const container = document.getElementById('bandRows');
+                const divContainer = document.getElementById('divisionBandRows');
 
                 if (isEdit) {
                     popup.querySelector('[name="name"]').value = existing.name;
@@ -2222,7 +2354,9 @@
                     popup.querySelector('[name="total_marks"]').value = existing.total_marks;
                     popup.querySelector('[name="pass_mark"]').value = existing.pass_mark;
                     popup.querySelector('[name="is_default"]').checked = !!existing.is_default;
+                    popup.querySelector('[name="ungraded_on_fail"]').checked = existing.ungraded_on_fail !== false;
                     (existing.bands || []).forEach(b => addBandRow(container, b));
+                    (existing.division_bands || []).forEach(b => addDivisionBandRow(divContainer, b));
                 } else {
                     // Sensible starting point: standard 9-point scale
                     [
@@ -2236,9 +2370,13 @@
                         { grade: 'P8', min_mark: 40, max_mark: 44, remark: 'Pass', points: 8 },
                         { grade: 'F9', min_mark: 0, max_mark: 39, remark: 'Fail', points: 9 },
                     ].forEach(b => addBandRow(container, b));
+                    // Division bands start empty for a brand new scheme —
+                    // most schemes don't use them at all, so nothing is
+                    // pre-filled here (unlike the grade bands above).
                 }
 
                 document.getElementById('addBandRow').addEventListener('click', () => addBandRow(container));
+                document.getElementById('addDivisionBandRow').addEventListener('click', () => addDivisionBandRow(divContainer));
             },
             preConfirm: async () => {
                 const popup = Swal.getPopup();
@@ -2246,6 +2384,7 @@
                 const totalMarks = popup.querySelector('[name="total_marks"]').value;
                 const passMark = popup.querySelector('[name="pass_mark"]').value;
                 const bands = collectBands(document.getElementById('bandRows'));
+                const divisionBands = collectDivisionBands(document.getElementById('divisionBandRows'));
 
                 if (!name) {
                     Swal.showValidationMessage('Please enter a scheme name.');
@@ -2270,13 +2409,23 @@
                     return false;
                 }
 
+                if (divisionBands.length > 0) {
+                    const divisionError = validateDivisionBandOverlap(divisionBands);
+                    if (divisionError) {
+                        Swal.showValidationMessage(divisionError);
+                        return false;
+                    }
+                }
+
                 const payload = {
                     name,
                     description: popup.querySelector('[name="description"]').value.trim() || null,
                     total_marks: totalMarks,
                     pass_mark: passMark,
                     is_default: popup.querySelector('[name="is_default"]').checked ? 1 : 0,
+                    ungraded_on_fail: popup.querySelector('[name="ungraded_on_fail"]').checked ? 1 : 0,
                     bands,
+                    division_bands: divisionBands,
                 };
 
                 // Submit here, inside preConfirm — a server-side error keeps
@@ -2428,13 +2577,20 @@
                 'total_marks' => $scheme->total_marks,
                 'pass_mark' => $scheme->pass_mark,
                 'is_default' => $scheme->is_default,
+                'ungraded_on_fail' => $scheme->ungraded_on_fail,
                 'bands' => $scheme->bands->map(fn($b) => [
                     'grade' => $b->grade,
                     'min_mark' => $b->min_mark,
                     'max_mark' => $b->max_mark,
                     'remark' => $b->remark,
                     'points' => $b->points,
-                ])->toArray()
+                ])->toArray(),
+                'division_bands' => $scheme->divisionBands->map(fn($b) => [
+                    'min_aggregate' => $b->min_aggregate,
+                    'max_aggregate' => $b->max_aggregate,
+                    'division' => $b->division,
+                    'remark' => $b->remark,
+                ])->toArray(),
             ];
         }
     @endphp

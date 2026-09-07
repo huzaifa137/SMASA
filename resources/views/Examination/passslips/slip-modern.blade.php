@@ -1452,6 +1452,7 @@
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
                     'sum_grade' => $on('show_sum_grade', true, $savedCfg),
                     'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                    'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
                     'sum_division' => $on('show_sum_division', true, $savedCfg),
                     'sum_position' => $on('show_sum_position', true, $savedCfg),
                     'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
@@ -1564,7 +1565,14 @@
                 $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
                 $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
 
-                $divisionLabel = $avgSummarySlip['division'] ?? ($examSummarySlip->last()['division'] ?? null);
+                $divisionLabel = $avgSummarySlip['division']
+                    ?? $examSummarySlip->last()['division']
+                    ?? $slipData['division']
+                    ?? null;
+                $aggregateLabel = $avgSummarySlip['aggregate']
+                    ?? $examSummarySlip->last()['aggregate']
+                    ?? $slipData['aggregate']
+                    ?? null;
 
                 // Attendance for this exam's term window (student_attendances
                 // log). Left blank (—) if the exam has no start/end date set.
@@ -1833,6 +1841,12 @@
                             <div class="sum-cell">
                                 <div class="sum-lbl">Grade Point</div>
                                 <div class="sum-val">{{ $avgGradePoint ?? '—' }}</div>
+                            </div>
+                        @endif
+                        @if($cfg['sum_aggregate'] && !$isEarlyYears && $aggregateLabel !== null)
+                            <div class="sum-cell">
+                                <div class="sum-lbl">Aggregate</div>
+                                <div class="sum-val">{{ $aggregateLabel }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_division'] && $divisionLabel)

@@ -54,7 +54,20 @@ class ExaminationClass extends Model
      */
     public function resolvedGradingBands()
     {
-        $scheme = $this->gradingScheme ?? $this->examination?->gradingScheme;
+        $scheme = $this->resolvedGradingScheme();
         return $scheme ? $scheme->bands : collect();
+    }
+
+    /**
+     * Same resolution as resolvedGradingBands(), but returns the scheme
+     * itself — needed for anything beyond grade bands, e.g. divisionFor()
+     * for Aggregate/Division reporting. Falls back to the parent exam's
+     * default scheme resolution (including the school-default fallback)
+     * if this class has no scheme of its own.
+     */
+    public function resolvedGradingScheme()
+    {
+        return $this->gradingScheme
+            ?? $this->examination?->resolvedGradingScheme();
     }
 }

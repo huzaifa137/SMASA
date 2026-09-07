@@ -1675,6 +1675,9 @@ class ExaminationController extends Controller
                 'earlyYearsMaxMark' => Helper::earlyYearsMaxMark(),
                 'disciplineRatings' => collect(),
                 'qrText' => '',
+                'aggregate' => null,
+                'division' => null,
+                'hasAggregateSubjects' => false,
             ];
         }
 
@@ -1767,6 +1770,68 @@ class ExaminationController extends Controller
                 'teacher_comment' => $m->teacher_comment,
             ];
         })->sortBy('subject_name');
+
+        // ── PLE-style Aggregate & Division ──────────────────────────────────────
+        // Only a fixed subset of subjects counts toward the aggregate — e.g.
+        // English, Mathematics, Science, Social Studies — never everything a
+        // student sat. A subject like Religious Education can be graded and
+        // shown on the slip like normal without ever being summed in here.
+        // Which subjects count is a per-class, per-school decision made
+        // under Examinations → Aggregate Subjects
+        // (class_subjects.counts_towards_aggregate) — nothing is hardcoded.
+        //
+        // Division only appears at all when the class's grading scheme has
+        // Division bands configured (Examinations → Grading Scales); most
+        // schemes/levels don't use Division and see no change here.
+        $aggregate = null;
+        $division = null;
+        $hasAggregateSubjects = false;
+
+        if (!$isEarlyYears) {
+            // subject_id/custom_subject_id together uniquely identify a
+            // class_subjects row (see the custom-subject migrations) —
+            // match on both so schools running custom subject lists get
+            // correct aggregate flagging too, not just master-data ones.
+            $aggregateFlags = DB::table('class_subjects')
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->where('school_id', $schoolId)
+                ->where('counts_towards_aggregate', true)
+                ->get(['subject_id', 'custom_subject_id'])
+                ->map(fn($row) => ($row->subject_id ?? '0') . '|' . ($row->custom_subject_id ?? '0'))
+                ->flip();
+
+            $aggregateMarks = $marks->filter(
+                fn($m) => isset($aggregateFlags[($m->subject_id ?? '0') . '|' . ($m->custom_subject_id ?? '0')])
+            );
+
+            $hasAggregateSubjects = $aggregateMarks->isNotEmpty();
+
+            if ($hasAggregateSubjects) {
+                $aggregatePoints = 0;
+                $hasFail = false;
+
+                foreach ($aggregateMarks as $m) {
+                    $pct = $m->total_marks > 0 ? round(($m->marks_obtained / $m->total_marks) * 100, 1) : 0;
+                    $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+                    $points = $gradeRow?->points ?? $m->grade_points;
+                    $remark = $gradeRow?->remark ?? $m->grade_remark;
+
+                    $aggregatePoints += (int) ($points ?? 0);
+                    if ($remark && stripos($remark, 'fail') !== false) {
+                        $hasFail = true;
+                    }
+                }
+
+                $aggregate = $aggregatePoints;
+
+                $scheme = ($examClass && $examClass->grading_scheme_id && $examClass->gradingScheme)
+                    ? $examClass->gradingScheme
+                    : $exam->resolvedGradingScheme();
+
+                $division = $scheme?->divisionFor($aggregate, $hasFail);
+            }
+        }
 
         $overallGradeRow = $gradingScale->first(function ($g) use ($percentage) {
             return $percentage >= $g->min_mark && $percentage <= $g->max_mark;
@@ -1924,6 +1989,9 @@ class ExaminationController extends Controller
             'earlyYearsAverage' => $earlyYearsAverage,
             'earlyYearsMaxMark' => $reportMaxMark,
             'disciplineRatings' => $disciplineRatings,
+            'aggregate' => $aggregate,
+            'division' => $division,
+            'hasAggregateSubjects' => $hasAggregateSubjects,
         ];
     }
 
@@ -1952,39 +2020,6 @@ class ExaminationController extends Controller
     }
 
     /**
-     * Map an aggregate (sum of grade points across sat subjects) to a
-     * primary-section Division, per the standard PLE-style banding:
-     *
-     *   4–12   => Division 1
-     *   13–23  => Division 2
-     *   24–29  => Division 3
-     *   30–34  => Division 4
-     *   35+ or a failing (F9 / "Fail") grade in any subject => Ungraded
-     */
-    private function divisionForAggregate(?int $aggregate, bool $hasFail): string
-    {
-        if ($aggregate === null) {
-            return '—';
-        }
-        if ($hasFail || $aggregate >= 35) {
-            return 'Ungraded';
-        }
-        if ($aggregate <= 12) {
-            return 'Division 1';
-        }
-        if ($aggregate <= 23) {
-            return 'Division 2';
-        }
-        if ($aggregate <= 29) {
-            return 'Division 3';
-        }
-        if ($aggregate <= 34) {
-            return 'Division 4';
-        }
-        return 'Ungraded';
-    }
-
-    /**
      * Build passslip data for a student across MULTIPLE examinations
      * (e.g. BOT | MID | END), with an optional averaged column computed
      * from a chosen subset of those examinations.
@@ -2003,7 +2038,9 @@ class ExaminationController extends Controller
 
         // Multiple exams may theoretically use different schemes; the
         // combined report uses the scheme of the most recent exam in the set.
-        $gradingScale = $exams->last()?->resolvedGradingBands() ?? collect();
+        $latestExam = $exams->last();
+        $gradingScale = $latestExam?->resolvedGradingBands() ?? collect();
+        $combinedScheme = $latestExam?->resolvedGradingScheme();
 
         $scaleFor = function ($pct) use ($gradingScale) {
             return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
@@ -2094,6 +2131,21 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->pluck('subject_teacher_1', 'subject_id');
 
+        // Which subjects count toward the aggregate for THIS class (e.g.
+        // English, Mathematics, Science, Social Studies — never everything
+        // sat). Keyed by subject_id, matching how this whole function
+        // already keys marks/rows by subject_id. See Examinations →
+        // Aggregate Subjects for where a school sets this per class.
+        $aggregateSubjectIds = DB::table('class_subjects')
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('school_id', $schoolId)
+            ->where('counts_towards_aggregate', true)
+            ->pluck('subject_id')
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->flip();
+
         $isEarlyYears = collect($perExamSubjectMarks)
             ->flatMap(fn($c) => $c->values())
             ->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id, $m->class_id ?? $classId, $m->stream_id ?? $streamId));
@@ -2160,8 +2212,9 @@ class ExaminationController extends Controller
 
         // ── Per-exam TOTAL / AGGREGATE / DIVISION summary ───────────────
         // For each sitting (BOT / MID / EOT …): total raw marks, aggregate
-        // (sum of grade points across subjects sat), and the resulting
-        // Division for that sitting.
+        // (sum of grade points across ONLY this class's flagged aggregate
+        // subjects — see $aggregateSubjectIds above), and the resulting
+        // Division for that sitting, per the class's own grading scheme.
         $examSummary = [];
         foreach ($examIds as $eid) {
             $marksSum = 0;
@@ -2170,12 +2223,15 @@ class ExaminationController extends Controller
             $hasFail = false;
 
             foreach ($subjectRows as $sm) {
+                if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
+                    continue;
+                }
                 $ed = $sm->exams[$eid] ?? null;
                 if ($ed && $ed['percentage'] !== null) {
                     $marksSum += $ed['marks_obtained'] ?? 0;
                     $ptsSum += $ed['points'] ?? 0;
                     $ptsCount++;
-                    if (($ed['remark'] ?? null) === 'Fail') {
+                    if ($ed['remark'] && stripos($ed['remark'], 'fail') !== false) {
                         $hasFail = true;
                     }
                 }
@@ -2184,7 +2240,7 @@ class ExaminationController extends Controller
             $examSummary[$eid] = [
                 'total_marks' => $ptsCount > 0 ? $marksSum : null,
                 'aggregate' => $ptsCount > 0 ? $ptsSum : null,
-                'division' => $ptsCount > 0 ? $this->divisionForAggregate($ptsSum, $hasFail) : '—',
+                'division' => $ptsCount > 0 ? ($combinedScheme?->divisionFor($ptsSum, $hasFail) ?? '—') : '—',
             ];
         }
 
@@ -2196,10 +2252,13 @@ class ExaminationController extends Controller
             $avgHasFail = false;
 
             foreach ($subjectRows as $sm) {
+                if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
+                    continue;
+                }
                 if ($sm->avgPercentage !== null) {
                     $avgPtsSum += $sm->avgPoints ?? 0;
                     $avgPtsCount++;
-                    if (($sm->avgRemark ?? null) === 'Fail') {
+                    if ($sm->avgRemark && stripos($sm->avgRemark, 'fail') !== false) {
                         $avgHasFail = true;
                     }
                 }
@@ -2207,7 +2266,7 @@ class ExaminationController extends Controller
 
             $avgSummary = [
                 'aggregate' => $avgPtsCount > 0 ? $avgPtsSum : null,
-                'division' => $avgPtsCount > 0 ? $this->divisionForAggregate($avgPtsSum, $avgHasFail) : '—',
+                'division' => $avgPtsCount > 0 ? ($combinedScheme?->divisionFor($avgPtsSum, $avgHasFail) ?? '—') : '—',
             ];
         }
 

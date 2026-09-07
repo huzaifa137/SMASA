@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DivisionBand;
 use App\Models\GradingScale;
 use App\Models\GradingScheme;
 
@@ -38,6 +39,7 @@ class GradingSchemeDefaults
                 'pass_mark'   => $definition['pass_mark'],
                 'is_default'  => $definition['is_default'],
                 'is_active'   => true,
+                'ungraded_on_fail' => $definition['ungraded_on_fail'] ?? true,
                 'created_by'  => $createdBy,
             ]);
 
@@ -50,6 +52,21 @@ class GradingSchemeDefaults
                     'remark'     => $band[3],
                     'points'     => $band[4],
                     'sort_order' => $i,
+                ]);
+            }
+
+            // Division bands are optional — only the PLE-style 1-9 point
+            // scheme ships with them. A scheme with none simply doesn't
+            // show Aggregate/Division on the pass slip (see
+            // GradingScheme::hasDivisionBands()).
+            foreach (($definition['division_bands'] ?? []) as $i => $band) {
+                DivisionBand::create([
+                    'grading_scheme_id' => $scheme->id,
+                    'min_aggregate' => $band[0],
+                    'max_aggregate' => $band[1],
+                    'division'      => $band[2],
+                    'remark'        => $band[3],
+                    'sort_order'    => $i,
                 ]);
             }
         }
@@ -68,6 +85,7 @@ class GradingSchemeDefaults
                 'total_marks' => 100,
                 'pass_mark'   => 50,
                 'is_default'  => true,
+                'ungraded_on_fail' => true,
                 'bands' => [
                     ['D1', 80, 100, 'Distinction 1', 1],
                     ['D2', 75, 79,  'Distinction 2', 2],
@@ -78,6 +96,15 @@ class GradingSchemeDefaults
                     ['P7', 45, 54,  'Pass 7', 7],
                     ['P8', 40, 44,  'Pass 8', 8],
                     ['F9', 0,  39,  'Fail 9', 9],
+                ],
+                // Standard P.7 (PLE-style) Division structure. Each row is
+                // [min_aggregate, max_aggregate, division, remark].
+                'division_bands' => [
+                    [4,  12, 'Division 1', 'First Grade'],
+                    [13, 23, 'Division 2', 'Second Grade'],
+                    [24, 29, 'Division 3', 'Third Grade'],
+                    [30, 34, 'Division 4', 'Fourth Grade'],
+                    [35, 36, 'Ungraded (U)', 'Ungraded'],
                 ],
             ],
             [

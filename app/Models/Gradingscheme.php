@@ -17,12 +17,14 @@ class GradingScheme extends Model
         'pass_mark',
         'is_default',
         'is_active',
+        'ungraded_on_fail',
         'created_by',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
         'is_active'  => 'boolean',
+        'ungraded_on_fail' => 'boolean',
         'total_marks' => 'integer',
         'pass_mark'   => 'integer',
     ];
@@ -39,6 +41,19 @@ class GradingScheme extends Model
         return $this->hasMany(GradingScale::class, 'grading_scheme_id')
             ->orderBy('sort_order')
             ->orderByDesc('min_mark');
+    }
+
+    /**
+     * Aggregate (sum of grade points across a student's "counts toward
+     * aggregate" subjects) → Division bands, e.g. PLE's 4-12 => Division 1.
+     * A scheme with none of these simply doesn't support Division — see
+     * divisionFor() below, and hasDivisionBands().
+     */
+    public function divisionBands()
+    {
+        return $this->hasMany(DivisionBand::class, 'grading_scheme_id')
+            ->orderBy('sort_order')
+            ->orderBy('min_aggregate');
     }
 
     public function examinations()
@@ -77,6 +92,85 @@ class GradingScheme extends Model
         return $this->bands->first(
             fn($b) => $percentage >= $b->min_mark && $percentage <= $b->max_mark
         );
+    }
+
+    /**
+     * Whether this scheme offers Division reporting at all. Schemes with
+     * no division bands configured (the overwhelming majority — Division
+     * is a PLE-specific convention, not something every school's grading
+     * scheme needs) simply don't show Aggregate/Division on the pass
+     * slip; nothing else about them changes.
+     */
+    public function hasDivisionBands(): bool
+    {
+        return $this->divisionBands->isNotEmpty();
+    }
+
+    /**
+     * Map an aggregate (sum of grade points across a student's
+     * "counts toward aggregate" subjects) to this scheme's Division
+     * label, honouring its own ungraded_on_fail setting.
+     *
+     * Returns null when the scheme has no division bands at all (Division
+     * isn't applicable to this scheme) or when the aggregate falls
+     * outside every configured band (a genuine gap in the school's own
+     * setup — shown as such rather than guessed at).
+     */
+    public function divisionFor(?int $aggregate, bool $hasFail = false): ?string
+    {
+        if ($aggregate === null || $this->divisionBands->isEmpty()) {
+            return null;
+        }
+
+        if ($hasFail && $this->ungraded_on_fail) {
+            $ungraded = $this->divisionBands->first(
+                fn($b) => str_contains(strtolower($b->division), 'ungraded')
+                    || strtolower($b->division) === 'u'
+            );
+            if ($ungraded) {
+                return $ungraded->division;
+            }
+        }
+
+        $band = $this->divisionBands->first(
+            fn($b) => $aggregate >= $b->min_aggregate && $aggregate <= $b->max_aggregate
+        );
+
+        return $band?->division;
+    }
+
+    /**
+     * Basic sanity check for division bands, mirroring validateBands()
+     * above but without the "must cover the whole range" requirement —
+     * the valid aggregate range depends entirely on how many subjects a
+     * school marks as counting toward it (4 subjects on a 9-point scale
+     * spans 4-36; 5 subjects spans 5-45; etc.), so there's no single
+     * universal range to enforce coverage against. Overlaps and
+     * min > max are still hard errors.
+     */
+    public function validateDivisionBands(): array
+    {
+        $problems = [];
+        $bands = $this->divisionBands()->get();
+
+        foreach ($bands as $band) {
+            if ($band->min_aggregate > $band->max_aggregate) {
+                $problems[] = "{$band->division}: min aggregate cannot be greater than max aggregate.";
+            }
+        }
+
+        foreach ($bands as $a) {
+            foreach ($bands as $b) {
+                if ($a->id === $b->id) {
+                    continue;
+                }
+                if ($a->min_aggregate <= $b->max_aggregate && $a->max_aggregate >= $b->min_aggregate) {
+                    $problems[] = "{$a->division} and {$b->division} overlap.";
+                }
+            }
+        }
+
+        return array_unique($problems);
     }
 
     /**

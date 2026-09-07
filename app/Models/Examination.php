@@ -65,6 +65,19 @@ class Examination extends Model
      */
     public function resolvedGradingBands()
     {
+        $scheme = $this->resolvedGradingScheme();
+
+        return $scheme ? $scheme->bands : collect();
+    }
+
+    /**
+     * Same resolution as resolvedGradingBands(), but returns the scheme
+     * itself rather than just its grade bands — needed anywhere that
+     * wants more than the bands, e.g. divisionFor() for Aggregate/Division
+     * reporting.
+     */
+    public function resolvedGradingScheme()
+    {
         $scheme = $this->gradingScheme;
 
         if (!$scheme) {
@@ -74,7 +87,7 @@ class Examination extends Model
                 ->first();
         }
 
-        return $scheme ? $scheme->bands : collect();
+        return $scheme;
     }
 
     // ─── Helpers ───────────────────────────────────────────────────────────────
