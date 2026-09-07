@@ -2469,7 +2469,10 @@
                             <div class="rc-summary-cell">
                                 <i class="fas fa-trophy"></i>
                                 <div class="rc-summary-lbl">Division</div>
-                                <div class="rc-summary-val">{{ strtoupper($divisionLabel) }}</div>
+                                <div class="rc-summary-val" style="font-size: 0.75rem;">
+    {{ strtoupper($divisionLabel) }}
+</div>
+
                             </div>
                         @endif
                         @if($cfg['sum_position'] && is_numeric($rank))
@@ -2777,15 +2780,15 @@
                                             @endif
                                             @if($cfg['grade_pill'] && !$isEarlyYears)
                                                 <td class="num-td">
-                                                    <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
+                                                    <span >AGG</span>
                                                 </td>
-                                                <td class="num-td">{{ $avgGradePoint ?? '—' }}</td>
+                                                <td class="num-td">{{ $aggregateLabel }}</td>
                                             @endif
                                             @if($resultColspan > 0)
                                                 <td colspan="{{ $resultColspan }}">
                                                     <strong
                                                         style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
-                                                        {{ strtoupper($oRemark) }}
+                                                        
                                                     </strong>
                                                 </td>
                                             @endif

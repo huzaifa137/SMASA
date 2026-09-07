@@ -2601,4 +2601,58 @@
         window.__schemesById = {!! json_encode($schemesData) !!};
     </script>
 
+    // Add this script at the end of your content section, after your existing scripts
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the previously selected scheme ID from localStorage
+    const selectedSchemeId = localStorage.getItem('selectedSchemeId');
+    
+    if (selectedSchemeId) {
+        // Find the list item with matching data-target
+        const listItems = document.querySelectorAll('.scheme-list-item');
+        let found = false;
+        
+        listItems.forEach(btn => {
+            const target = btn.dataset.target;
+            if (target && target.includes(selectedSchemeId)) {
+                // Remove active class from all items and details
+                document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.gs-detail').forEach(d => d.classList.remove('active'));
+                
+                // Activate this item
+                btn.classList.add('active');
+                document.getElementById(target)?.classList.add('active');
+                found = true;
+            }
+        });
+        
+        // If the scheme wasn't found (maybe it was deleted), clear the storage
+        if (!found) {
+            localStorage.removeItem('selectedSchemeId');
+        }
+    }
+});
+
+// Update the click handler for scheme list items to save selection
+document.querySelectorAll('.scheme-list-item').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Remove active class from all items and details
+        document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.gs-detail').forEach(d => d.classList.remove('active'));
+        
+        // Activate this item
+        this.classList.add('active');
+        document.getElementById(this.dataset.target)?.classList.add('active');
+        
+        // Save the selected scheme ID to localStorage
+        const target = this.dataset.target;
+        if (target) {
+            const schemeId = target.replace('scheme-detail-', '');
+            localStorage.setItem('selectedSchemeId', schemeId);
+        }
+    });
+});
+</script>
+
 @endsection

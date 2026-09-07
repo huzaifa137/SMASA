@@ -1882,7 +1882,10 @@
                         @if($cfg['sum_total_marks'])
                             <div class="sum-cell">
                                 <div class="sum-lbl">Total Marks</div>
-                                <div class="sum-val">{{ $totObt }} / {{ $totMax }}</div>
+                                <div class="sum-val" style="font-size: 0.95rem;">
+    {{ $totObt }} / {{ $totMax }}
+</div>
+
                             </div>
                         @endif
                         @if($cfg['sum_average_mark'])
@@ -1919,7 +1922,7 @@
                         @if($cfg['sum_division'] && $divisionLabel)
                             <div class="sum-cell">
                                 <div class="sum-lbl">Division</div>
-                                <div class="sum-val">{{ strtoupper($divisionLabel) }}</div>
+                                <div class="sum-val" style="font-size: 0.85rem;">{{ strtoupper($divisionLabel) }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_position'] && is_numeric($rank))
@@ -2222,14 +2225,14 @@
                                         @endif
                                         @if($cfg['grade_pill'] && !$isEarlyYears)
                                             <td class="num-td">
-                                                <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
+                                                <span class="">AGG</span>
                                             </td>
                                         @endif
                                         @if($resultColspan > 0)
                                             <td colspan="{{ $resultColspan }}">
                                                 <strong
                                                     style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
-                                                    {{ strtoupper($oRemark) }}
+                                                    {{ strtoupper($aggregateLabel) }}
                                                 </strong>
                                             </td>
                                         @endif

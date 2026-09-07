@@ -92,7 +92,7 @@ class ExaminationController extends Controller
             ->get();
 
         $schoolClasses = count($classRecord);
-        
+
         return view('Examination.create', compact('examCode', 'classStreams', 'gradingSchemes', 'schoolExaminations', 'schoolClasses'));
     }
 
@@ -1616,9 +1616,9 @@ class ExaminationController extends Controller
 
         $items = collect($saved)->map(function ($settings, $classId) {
             return [
-                'class_id'   => (int) $classId,
+                'class_id' => (int) $classId,
                 'class_name' => Helper::recordMdname($classId),
-                'settings'   => $settings,
+                'settings' => $settings,
             ];
         })->values();
 
@@ -1678,6 +1678,13 @@ class ExaminationController extends Controller
                 'aggregate' => null,
                 'division' => null,
                 'hasAggregateSubjects' => false,
+                // Same shape buildMultiExamPassslipData() produces, so the
+                // slip templates' summary bar (which only ever reads
+                // examSummary/avgSummary, never a bare aggregate/division —
+                // see the fix below for why that matters) has something
+                // consistent to fall back to even with zero marks.
+                'examSummary' => [$examId => ['total_marks' => null, 'aggregate' => null, 'division' => null]],
+                'avgSummary' => null,
             ];
         }
 
@@ -1785,6 +1792,7 @@ class ExaminationController extends Controller
         // schemes/levels don't use Division and see no change here.
         $aggregate = null;
         $division = null;
+        $aggregateMarksSum = null;
         $hasAggregateSubjects = false;
 
         if (!$isEarlyYears) {
@@ -1809,6 +1817,7 @@ class ExaminationController extends Controller
 
             if ($hasAggregateSubjects) {
                 $aggregatePoints = 0;
+                $aggregateMarksSum = 0;
                 $hasFail = false;
 
                 foreach ($aggregateMarks as $m) {
@@ -1818,6 +1827,7 @@ class ExaminationController extends Controller
                     $remark = $gradeRow?->remark ?? $m->grade_remark;
 
                     $aggregatePoints += (int) ($points ?? 0);
+                    $aggregateMarksSum += $m->marks_obtained ?? 0;
                     if ($remark && stripos($remark, 'fail') !== false) {
                         $hasFail = true;
                     }
@@ -1992,6 +2002,34 @@ class ExaminationController extends Controller
             'aggregate' => $aggregate,
             'division' => $division,
             'hasAggregateSubjects' => $hasAggregateSubjects,
+            // The slip templates (Classic/Modern/Minimal) never read this
+            // function's own $aggregate/$division directly — their summary
+            // bar only ever looks at $avgSummarySlip['aggregate'] falling
+            // back to $examSummarySlip->last()['aggregate'] (and the same
+            // for division), because that's the one shape that also works
+            // for a combined/multi-exam slip. buildMultiExamPassslipData()
+            // below returns that shape; this single-exam path never did,
+            // so on a single, non-combined exam the summary bar's
+            // Aggregate/Division cells always found nothing and rendered
+            // as if the school didn't use them at all — not blank, just
+            // absent. Wrapping the same $aggregate/$division computed
+            // above in that shape fixes it without touching any template.
+            'examSummary' => [
+                $examId => [
+                    'total_marks' => $hasAggregateSubjects ? $aggregateMarksSum : null,
+                    'aggregate' => $aggregate,
+                    // Same convention as buildMultiExamPassslipData(): a
+                    // genuine gap in the school's own band setup (aggregate
+                    // computed fine, just doesn't land in any configured
+                    // band) shows as "—", same as it already does for a
+                    // combined slip — rather than the cell just vanishing,
+                    // which would look identical to "this school doesn't
+                    // use Division" and hide the actual gap from whoever's
+                    // reviewing the grading scheme.
+                    'division' => $hasAggregateSubjects ? ($division ?? '—') : '—',
+                ],
+            ],
+            'avgSummary' => null,
         ];
     }
 
@@ -2424,7 +2462,7 @@ class ExaminationController extends Controller
         ));
     }
 
-     public function getMarksEntryProgress()
+    public function getMarksEntryProgress()
     {
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
@@ -2753,10 +2791,10 @@ class ExaminationController extends Controller
             'school_id' => $schoolId,
             'triggered_by' => Session('LoggedAdmin') ?? Session('LoggedTeacher'),
         ], $classStudentIds->map(fn($id) => [
-            'type' => 'student',
-            'id' => $id,
-            'school_id' => $schoolId,
-        ])->toArray());
+                'type' => 'student',
+                'id' => $id,
+                'school_id' => $schoolId,
+            ])->toArray());
 
         return response()->json([
             'success' => true,

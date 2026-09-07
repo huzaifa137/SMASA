@@ -1852,7 +1852,7 @@
                         @if($cfg['sum_division'] && $divisionLabel)
                             <div class="sum-cell">
                                 <div class="sum-lbl">Division</div>
-                                <div class="sum-val">{{ strtoupper($divisionLabel) }}</div>
+                                <div class="sum-val" style="font-size: 0.75rem;">{{ strtoupper($divisionLabel) }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_position'] && is_numeric($rank))
@@ -1980,7 +1980,9 @@
                                 @if($cfg['totals_row'] && $showAggDiv)
                                     <tr class="division-row">
                                         <td class="division-label">DIVISION</td>
+                                        
                                         @foreach($examsList as $ex)
+                                        
                                             @php $div = $examSummarySlip->get($ex->id)['division'] ?? '—'; @endphp
                                             <td colspan="2">
                                                 <span class="div-pill {{ $divClass($div) }}">{{ strtoupper($div) }}</span>
@@ -2155,14 +2157,15 @@
                                         @endif
                                         @if($cfg['grade_pill'] && !$isEarlyYears)
                                             <td class="num-td">
-                                                <span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span>
+                                                <span>AGG</span>
                                             </td>
                                         @endif
                                         @if($resultColspan > 0)
                                             <td colspan="{{ $resultColspan }}">
                                                 <strong
                                                     style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
-                                                    {{ strtoupper($oRemark) }}
+                                                    <!-- {{ strtoupper($oRemark) }} -->
+                                                      {{ $aggregateLabel }}
                                                 </strong>
                                             </td>
                                         @endif
