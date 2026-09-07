@@ -581,6 +581,43 @@ selected classes" is clicked. --}}
         #czPreviewClass.form-control option {
             padding: 8px 12px;
         }
+
+        .cz-color-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cz-color-swatch input[type="color"] {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    display: block;
+    margin: -3px 0 0 -3px; /* Center the larger picker inside the container */
+    background: none;
+    border: none;
+    outline: none;
+}
+
+/* Hide the default color picker's square appearance in some browsers */
+.cz-color-swatch input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.cz-color-swatch input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+.cz-color-swatch input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
     </style>
 @endsection
 
@@ -615,6 +652,18 @@ selected classes" is clicked. --}}
                     Switching design reloads the panel with only the toggles that
                     design actually supports — your current choices carry over
                     wherever they still apply.
+                </div>
+
+                                {{-- Saved Customisations — one tab per class that already has a
+                     saved profile for this exam. Click a tab to load ONLY that
+                     class's settings into the panel above for review/editing;
+                     the trash icon removes it. Moved here from the pass slips
+                     index page, which no longer has its own toggle/save panel. --}}
+                <div id="czSavedTabsWrap" class="mb-2" style="display:none;">
+                    <div class="text-muted mb-1" style="font-size:.72rem;font-weight:600;">
+                        <i class="fas fa-folder-open me-1"></i> Saved Classes
+                    </div>
+                    <div id="czSavedTabs" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
                 </div>
 
                 {{-- Accent colour — applies in every scenario of every
@@ -1082,21 +1131,42 @@ selected classes" is clicked. --}}
            mode on just this class, so a subsequent Save re-saves the
            same class instead of fanning out to whatever else was still
            ticked in the chip list. */
-        function selectSavedTab(classId) {
-            const entry = savedTabsCache.find(it => String(it.class_id) === String(classId));
-            if (!entry) return;
+/* Click a Saved Customisation tab: toggle selection.
+   If the tab is already active, deselect it (clear the panel).
+   If it's not active, load THAT class's settings into the panel. */
+function selectSavedTab(classId) {
+    const tab = document.querySelector(`.cz-saved-tab[data-class-id="${classId}"]`);
+    const isActive = tab ? tab.classList.contains('active') : false;
+    
+    if (isActive) {
+        // Deselect: clear selection, reset panel to defaults
+        selectedClassIds.clear();
+        document.querySelectorAll('.cz-class-chip').forEach(chip => {
+            chip.classList.remove('selected');
+        });
+        updateSelectedCount();
+        setActiveSavedTab(null);
+        
+        // Reset panel to template defaults
+        applySettingsToPanel({});
+        refreshPreviewNow();
+    } else {
+        // Select: load the class's settings
+        const entry = savedTabsCache.find(it => String(it.class_id) === String(classId));
+        if (!entry) return;
 
-            selectedClassIds.clear();
-            selectedClassIds.add(String(classId));
-            document.querySelectorAll('.cz-class-chip').forEach(chip => {
-                chip.classList.toggle('selected', chip.dataset.classId === String(classId));
-            });
-            updateSelectedCount();
+        selectedClassIds.clear();
+        selectedClassIds.add(String(classId));
+        document.querySelectorAll('.cz-class-chip').forEach(chip => {
+            chip.classList.toggle('selected', chip.dataset.classId === String(classId));
+        });
+        updateSelectedCount();
 
-            applySettingsToPanel(entry.settings || {});
-            refreshPreviewNow();
-            setActiveSavedTab(classId);
-        }
+        applySettingsToPanel(entry.settings || {});
+        refreshPreviewNow();
+        setActiveSavedTab(classId);
+    }
+}
 
         /* Delete a saved profile. Doesn't touch other classes' saved
            data — only the row for this one class. */
@@ -1200,42 +1270,53 @@ selected classes" is clicked. --}}
 
         fetchSavedList();
 
-        /* ── Save ── */
-        document.getElementById('czSaveBtn').addEventListener('click', function () {
-            const statusEl = document.getElementById('czSaveStatus');
-            if (selectedClassIds.size === 0) {
-                statusEl.style.color = '#c0392b';
-                statusEl.textContent = 'Select at least one class first.';
-                return;
-            }
-            statusEl.style.color = '#666';
-            statusEl.textContent = 'Saving…';
+/* ── Save ── */
+document.getElementById('czSaveBtn').addEventListener('click', function () {
+    const statusEl = document.getElementById('czSaveStatus');
+    const saveBtn = this;
+    
+    if (selectedClassIds.size === 0) {
+        statusEl.style.color = '#c0392b';
+        statusEl.textContent = 'Select at least one class first.';
+        return;
+    }
+    
+    // Disable button and show loading state
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+    statusEl.style.color = '#666';
+    statusEl.textContent = 'Saving…';
 
-            fetch(SAVE_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': CSRF_TOKEN,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    class_ids: Array.from(selectedClassIds).map(id => parseInt(id, 10)),
-                    settings: collectSettings(),
-                }),
-            })
-                .then(r => r.json())
-                .then(res => {
-                    statusEl.style.color = res.success ? '#1a7a4a' : '#c0392b';
-                    statusEl.textContent = res.success
-                        ? 'Saved for ' + selectedClassIds.size + ' class(es). ✓'
-                        : (res.message || 'Failed to save.');
-                    if (res.success) fetchSavedList();
-                })
-                .catch(() => {
-                    statusEl.style.color = '#c0392b';
-                    statusEl.textContent = 'Failed to save — check your connection.';
-                });
+    fetch(SAVE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            class_ids: Array.from(selectedClassIds).map(id => parseInt(id, 10)),
+            settings: collectSettings(),
+        }),
+    })
+        .then(r => r.json())
+        .then(res => {
+            statusEl.style.color = res.success ? '#1a7a4a' : '#c0392b';
+            statusEl.textContent = res.success
+                ? 'Saved for ' + selectedClassIds.size + ' class(es). ✓'
+                : (res.message || 'Failed to save.');
+            if (res.success) fetchSavedList();
+        })
+        .catch(() => {
+            statusEl.style.color = '#c0392b';
+            statusEl.textContent = 'Failed to save — check your connection.';
+        })
+        .finally(() => {
+            // Re-enable button and restore original text
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save for selected classes';
         });
+});
 
         // Initial paint: the slip comes up fully-featured (every toggle
         // starts checked in the HTML above) before any customisation —
@@ -1253,5 +1334,44 @@ selected classes" is clicked. --}}
         } else {
             refreshPreviewNow();
         }
+
+        // ── Persist selected preview class across page reloads ──
+(function() {
+    const previewSelect = document.getElementById('czPreviewClass');
+    const STORAGE_KEY = 'selectedPreviewClass_' + EXAM_ID; // Unique per exam
+    
+    // Load saved selection on page load
+    const savedValue = localStorage.getItem(STORAGE_KEY);
+    if (savedValue && previewSelect) {
+        // Check if the saved value still exists as an option
+        let optionExists = false;
+        for (let i = 0; i < previewSelect.options.length; i++) {
+            if (previewSelect.options[i].value === savedValue) {
+                optionExists = true;
+                break;
+            }
+        }
+        if (optionExists) {
+            previewSelect.value = savedValue;
+            // Trigger change event to load the class's customisation
+            const event = new Event('change');
+            previewSelect.dispatchEvent(event);
+        } else {
+            // If the saved value doesn't exist, clear it from storage
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    }
+    
+    // Save selection when it changes
+    if (previewSelect) {
+        previewSelect.addEventListener('change', function() {
+            if (this.value) {
+                localStorage.setItem(STORAGE_KEY, this.value);
+            } else {
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        });
+    }
+})();
     </script>
 @endsection

@@ -37,16 +37,6 @@ use Illuminate\Support\Facades\DB;
  */
 class DivisionBandSeeder extends Seeder
 {
-    private const PLE_POINTS = ['D1' => 1, 'D2' => 2, 'C3' => 3, 'C4' => 4, 'C5' => 5, 'C6' => 6, 'P7' => 7, 'P8' => 8, 'F9' => 9];
-
-    private const STANDARD_BANDS = [
-        [4, 12, 'Division 1', 'First Grade'],
-        [13, 23, 'Division 2', 'Second Grade'],
-        [24, 29, 'Division 3', 'Third Grade'],
-        [30, 34, 'Division 4', 'Fourth Grade'],
-        [35, 36, 'Ungraded (U)', 'Ungraded'],
-    ];
-
     public function run(): void
     {
         $seeded = 0;
@@ -57,29 +47,11 @@ class DivisionBandSeeder extends Seeder
                     continue;
                 }
 
-                $bandsByGrade = $scheme->bands->keyBy(fn($b) => strtoupper(trim($b->grade)));
-
-                $isPleShaped = collect(self::PLE_POINTS)->every(
-                    fn($points, $grade) => isset($bandsByGrade[$grade]) && (int) $bandsByGrade[$grade]->points === $points
-                );
-
-                if (!$isPleShaped) {
+                if (!DivisionBand::isPleShaped($scheme->bands)) {
                     continue;
                 }
 
-                DB::transaction(function () use ($scheme) {
-                    foreach (self::STANDARD_BANDS as $i => $band) {
-                        DivisionBand::create([
-                            'grading_scheme_id' => $scheme->id,
-                            'min_aggregate' => $band[0],
-                            'max_aggregate' => $band[1],
-                            'division' => $band[2],
-                            'remark' => $band[3],
-                            'sort_order' => $i,
-                        ]);
-                    }
-                    $scheme->update(['ungraded_on_fail' => true]);
-                });
+                DB::transaction(fn () => DivisionBand::seedStandardBandsFor($scheme));
 
                 $seeded++;
             }

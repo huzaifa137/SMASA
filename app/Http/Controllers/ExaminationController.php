@@ -2077,15 +2077,6 @@ class ExaminationController extends Controller
         // Multiple exams may theoretically use different schemes; the
         // combined report uses the scheme of the most recent exam in the set.
         $latestExam = $exams->last();
-        $gradingScale = $latestExam?->resolvedGradingBands() ?? collect();
-        $combinedScheme = $latestExam?->resolvedGradingScheme();
-
-        $scaleFor = function ($pct) use ($gradingScale) {
-            return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
-        };
-        $gradeFor = function ($pct) use ($scaleFor) {
-            return $scaleFor($pct)?->grade ?? '—';
-        };
 
         // Marks per exam, keyed by subject_id, plus figure out class/stream
         $perExamSubjectMarks = [];
@@ -2110,6 +2101,41 @@ class ExaminationController extends Controller
             }
         }
         $allSubjectIds = $allSubjectIds->unique()->values();
+
+        // 🔥 FIX: this has to happen AFTER $classId/$streamId are known
+        // above — it was previously resolved too early (before either was
+        // set), so it could only ever fall back to the exam-level scheme
+        // and silently ignored a class-specific grading-scheme override,
+        // even though buildPassslipData() (the single-exam path) already
+        // checks for exactly that override. Any class using a scheme
+        // override — most notably one with Division bands the exam-level
+        // scheme doesn't have — saw Division/grades resolve fine on a
+        // single-exam slip but always come back blank ('—') the moment
+        // 2+ exams were combined, since $combinedScheme was always the
+        // scheme-less exam-level default.
+        $examClassLatest = ($classId && $streamId && $latestExam)
+            ? ExaminationClass::where('examination_id', $latestExam->id)
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->first()
+            : null;
+
+        $hasSchemeOverride = $examClassLatest && $examClassLatest->grading_scheme_id && $examClassLatest->gradingScheme;
+
+        $gradingScale = $hasSchemeOverride
+            ? $examClassLatest->gradingScheme->bands
+            : ($latestExam?->resolvedGradingBands() ?? collect());
+        $combinedScheme = $hasSchemeOverride
+            ? $examClassLatest->gradingScheme
+            : $latestExam?->resolvedGradingScheme();
+
+        $scaleFor = function ($pct) use ($gradingScale) {
+            return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+        };
+        $gradeFor = function ($pct) use ($scaleFor) {
+            return $scaleFor($pct)?->grade ?? '—';
+        };
+
 
         if (!$student) {
             $student = DB::table('students')->where('id', $studentId)->first();

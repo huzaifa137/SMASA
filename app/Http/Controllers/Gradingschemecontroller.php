@@ -92,7 +92,21 @@ class GradingSchemeController extends Controller
             ]);
 
             $this->syncBands($scheme, $validated['bands']);
-            $this->syncDivisionBands($scheme, $validated['division_bands'] ?? []);
+
+            if (!empty($validated['division_bands'])) {
+                // User explicitly supplied their own division bands — respect them as-is.
+                $this->syncDivisionBands($scheme, $validated['division_bands']);
+            } elseif (DivisionBand::isPleShaped($scheme->bands()->get())) {
+                // No division bands were submitted, but the grade bands just
+                // saved match the standard D1..F9 (points 1-9) PLE shape —
+                // same shape DivisionBandSeeder backfills for existing
+                // schemes. Give a brand-new scheme the same standard
+                // Division 1-4 / Ungraded bands automatically, so it isn't
+                // silently missing Aggregate/Division reporting just
+                // because it was created after that seeder last ran.
+                // The user can still edit, add to, or delete these afterwards.
+                DivisionBand::seedStandardBandsFor($scheme);
+            }
 
             $problems = array_merge($scheme->validateBands(), $scheme->validateDivisionBands());
             if ($problems) {
