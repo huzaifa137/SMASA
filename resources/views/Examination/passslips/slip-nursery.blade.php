@@ -10,10 +10,70 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <?php use App\Http\Controllers\Helper; ?>
+
+    @php
+        /*
+        |─────────────────────────────────────────────────────────────
+        | CUSTOMISATION — Nursery Minimal ('nursery-minimal')
+        |
+        | Mirrors the exact accent/toggle mechanism the Primary designs
+        | (slip-classic/modern/minimal.blade.php) already use — see
+        | those files' identical $accent/$on blocks. Query-string always
+        | wins (so the "Customize this design" live preview keeps
+        | reacting instantly); failing that, falls back to this class's
+        | saved profile (Helper::getPassslipSettings); failing that, the
+        | hard default.
+        |
+        | Only 'show_border' and 'show_watermark' are wired here for
+        | now — that's the current capability list for 'nursery-minimal'
+        | in config/passslip_templates.php. This markup is still a
+        | static demo layout (not yet bound to real $student/$subjectMarks
+        | data — see the in-progress conversion work referenced in
+        | ExaminationController::resolveNurserySlipView()), so further
+        | toggles only get added here once the matching section of this
+        | file is converted to dynamic markup, same rule the config file
+        | states for the whole Nursery family.
+        |─────────────────────────────────────────────────────────────
+        */
+        $accent = request('accent', '#f0a500');
+        if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $accent)) {
+            $accent = '#f0a500';
+        }
+
+        $hexToDark = function (string $hex): string {
+            $hex = ltrim($hex, '#');
+            [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+            $r = max(0, (int) ($r * 0.82));
+            $g = max(0, (int) ($g * 0.82));
+            $b = max(0, (int) ($b * 0.82));
+            return sprintf('#%02x%02x%02x', $r, $g, $b);
+        };
+        $accentDark = $hexToDark($accent);
+
+        // Helper: treat '1' / 'true' / missing (falls back to saved
+        // per-class settings, then to $default) as ON. Query-string
+        // always wins so the live customisation preview keeps working.
+        $on = fn(string $key, bool $default = true, array $saved = []): bool =>
+            request()->has($key)
+            ? in_array(request($key), ['1', 'true', 1, true], true)
+            : ($saved[$key] ?? $default);
+
+        // Per-class saved customisation, same lookup Primary uses —
+        // $student is always passed into this view by
+        // passslipStudent()/passslipClass()/passslipAll()/passslipPreview().
+        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+
+        $cfg = [
+            'border' => $on('show_border', true, $savedCfg),
+            'watermark' => $on('show_watermark', true, $savedCfg),
+        ];
+    @endphp
+
     <style>
         :root {
-            --accent: #f0a500;
-            --accent-dark: #c48700;
+            --accent: {{ $accent }};
+            --accent-dark: {{ $accentDark }};
         }
 
         * {
@@ -550,9 +610,11 @@
     </div>
 
     <div class="page-wrap">
-        <div class="slip has-border">
+        <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
 
-            <div class="watermark-text" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:#000;opacity:.04;text-transform:uppercase;pointer-events:none;">BLUE BELL SCHOOLS</div>
+            @if($cfg['watermark'])
+                <div class="watermark-text" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:#000;opacity:.04;text-transform:uppercase;pointer-events:none;">BLUE BELL SCHOOLS</div>
+            @endif
 
             <div class="sch-header">
                 <div class="sch-logo-area">

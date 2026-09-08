@@ -835,10 +835,19 @@ class ExaminationController extends Controller
      * finished would print/show placeholder demo content instead of
      * that student's actual data — so callers other than the design
      * preview should keep resolving Nursery students to
-     * 'Examination.passslips.slip-nursery' ('nursery-minimal', which is
-     * already fully dynamic) regardless of which Nursery template was
-     * picked in the gallery, until each file's conversion is complete
-     * and this mapping is safe to reuse for live printing too.
+     * 'Examination.passslips.slip-nursery' ('nursery-minimal') regardless
+     * of which Nursery template was picked in the gallery, until each
+     * file's conversion is complete and this mapping is safe to reuse
+     * for live printing too.
+     *
+     * 'nursery-minimal' itself is STILL a static demo layout (no
+     * $student/$subjectMarks binding yet) — only its Appearance toggles
+     * (accent colour, 'show_border', 'show_watermark', matching
+     * config/passslip_templates.php's 'nursery-minimal' capability list)
+     * are wired to real request/saved-settings data so far, the same
+     * $accent/$on mechanism slip-classic/modern/minimal.blade.php use.
+     * As more of its markup gets bound to real data, add the
+     * corresponding capability keys and $cfg entries the same way.
      */
     public function resolveNurserySlipView(string $template, string $lang): string
     {
