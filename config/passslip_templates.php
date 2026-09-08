@@ -11,6 +11,12 @@
 | unused by all three, and "Total Score / Marks box" + "Average box"
 | only exist in Classic's markup, not Modern's or Minimal's.
 |
+| The 'nursery-classic' / 'nursery-modern' / 'nursery-minimal' keys
+| further down are the equivalent capability lists for the "Nursery
+| Design Template" gallery (a second, independent picker on the same
+| page — see the 'capabilities' array below for why theirs starts
+| deliberately small).
+|
 | This file is the single source of truth fixing that:
 |
 |   - 'toggles'      => every show_* switch the customise panel CAN
@@ -193,6 +199,35 @@ return [
             'show_sum_total_marks', 'show_sum_average_mark', 'show_sum_average_pct',
             'show_sum_grade', 'show_sum_grade_point', 'show_sum_aggregate', 'show_sum_division',
             'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
+        ],
+
+        // ── Nursery Design Templates ─────────────────────────────────
+        // Mirrors the Primary set above (Classic/Modern/Minimal), but
+        // for the "Nursery Design Template" gallery on the pass slips
+        // index. Deliberately starts with ONLY the toggles that are
+        // known to cut across every design regardless of layout —
+        // 'show_border' (decorative border & corners) and
+        // 'show_watermark' — same as Accent Colour, which applies
+        // unconditionally outside this list entirely.
+        //
+        // Each nursery-* markup (preview-kindergarten.blade.php /
+        // preview-kindergarten-2.blade.php / slip-nursery.blade.php) is
+        // still being converted section-by-section from static image
+        // panels into dynamic, data-bound HTML/CSS. As each section
+        // lands, measure its real $cfg['show_*'] usage the same way the
+        // Primary lists above were built, and add the corresponding
+        // keys here — do NOT add a key "ahead of time" just because it
+        // exists for Primary, or the panel will show switches that
+        // silently do nothing for that design, which is exactly the
+        // problem this file exists to prevent.
+        'nursery-classic' => [
+            'show_border', 'show_watermark',
+        ],
+        'nursery-modern' => [
+            'show_border', 'show_watermark',
+        ],
+        'nursery-minimal' => [
+            'show_border', 'show_watermark',
         ],
     ],
 

@@ -28,10 +28,16 @@
   .toolbar small{display:block; opacity:.75; font-size:.7rem;}
   .tbtn{background:var(--gold); color:#fff; border:none; padding:.5rem 1.1rem; border-radius:7px; font-weight:600; cursor:pointer;}
 
-  .page-wrap{max-width:850px; margin:1.5rem auto;}
-  .sheet{
-    width:210mm; min-height:297mm;
-    background:var(--cream);
+.page-wrap{max-width:850px; margin:1.5rem auto; padding:0 12px;}
+.sheet{
+  /* Fluid on screen — shrinks to fit narrow containers like the
+     "Customize this design" live-preview iframe — but never grows
+     past true A4 width. The @media print block further down pins
+     this back to an exact 210mm regardless of viewport, so printed
+     output is unaffected. */
+  width:100%; max-width:210mm; min-height:297mm;
+  margin:0 auto;
+  background:var(--cream);
     position:relative;
     padding:7mm 9mm 4mm;
     box-shadow:0 4px 30px rgba(0,0,0,.25);

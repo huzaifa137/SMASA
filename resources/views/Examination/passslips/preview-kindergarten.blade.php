@@ -59,17 +59,24 @@
             padding: 24px 0 60px;
         }
 
-        .sheet {
-            width: 210mm;
-            min-height: 297mm;
+.sheet {
+    /* Fluid on screen — shrinks to fit narrow containers like the
+       "Customize this design" live-preview iframe — but never
+       grows past true A4 width. @media print below pins this
+       back to an exact 210mm regardless of viewport, so printed
+       output is unaffected. */
+    width: 100%;
+    max-width: 210mm;
+    min-height: 297mm;
             background: var(--paper);
             position: relative;
             padding: 10mm 11mm 8mm;
             box-shadow: 0 4px 30px rgba(0, 0, 0, .25);
-            overflow: hidden;
-            border-radius: 8px;
-            border: 3px solid #6cc3e8;
-        }
+                overflow: hidden;
+    border-radius: 8px;
+    border: 3px solid #6cc3e8;
+    margin: 0 auto;
+}
 
         @media print {
             body {

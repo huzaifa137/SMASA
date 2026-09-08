@@ -1274,6 +1274,88 @@ use App\Http\Controllers\Helper;
                             <i class="fas fa-sliders-h me-1"></i> Customize this design
                         </a>
 
+                        {{-- ── GROUP: Nursery Design Template ──
+                        Separate gallery, separate selection state, and its
+                        own "Customize this design" link — deliberately NOT
+                        tied to the Primary gallery above. A school's
+                        Primary classes and Nursery classes (Baby/Middle/Top)
+                        can each be on a completely different design at the
+                        same time. Card thumbnails reuse the same
+                        .cp-tpl-thumb-classic/-modern/-minimal styling as
+                        the Primary gallery so the two stay visually
+                        consistent, since both sets are simply named
+                        Classic/Modern/Minimal within their own family. --}}
+                        <div class="cp-group-label"><i class="fas fa-child"></i>Nursery Design Template</div>
+                        <div class="small text-muted" style="font-size:.72rem;line-height:1.4;padding:0 .25rem .5rem;">
+                            Pick the overall design for Nursery (Baby / Middle / Top Class) report
+                            cards — independent of the Primary design above.
+                        </div>
+
+                        <div class="cp-template-gallery" id="cpNurseryTemplateGallery">
+                            <div class="cp-template-card selected" data-template="nursery-classic"
+                                onclick="selectNurseryTemplate('nursery-classic', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-classic">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                        <div class="dot"></div>
+                                    </div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <div class="cp-tpl-name">Classic</div>
+                                <div class="cp-tpl-desc">Ornate border, medallion logos, formal &amp; traditional</div>
+                            </div>
+
+                            <div class="cp-template-card" data-template="nursery-modern"
+                                onclick="selectNurseryTemplate('nursery-modern', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-modern">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                    </div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <div class="cp-tpl-name">Modern</div>
+                                <div class="cp-tpl-desc">Bold colour banner, playful icons, bright &amp; friendly</div>
+                            </div>
+
+                            <div class="cp-template-card" data-template="nursery-minimal"
+                                onclick="selectNurseryTemplate('nursery-minimal', this)">
+                                <div class="cp-tpl-thumb cp-tpl-thumb-minimal">
+                                    <span class="cp-tpl-badge"><i class="fas fa-check"></i> Selected</span>
+                                    <div class="tpl-hdr">
+                                        <div class="dot"></div>
+                                        <div class="bar"></div>
+                                    </div>
+                                    <div class="tpl-band"></div>
+                                    <div class="tpl-rows">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <div class="cp-tpl-name">Minimal</div>
+                                <div class="cp-tpl-desc">Hairline rules, quiet whitespace, editorial &amp; clean</div>
+                            </div>
+                        </div>
+
+                        <a href="#" id="cpNurseryCustomizeLink" class="cp-btn-sm w-100 d-block text-center"
+                            style="font-size:.75rem;padding:.5rem 1rem;background:#fff;color:#2f2ccb;border:1.5px solid #2f2ccb;border-radius:10px;font-weight:600;margin-bottom:1rem;text-decoration:none;">
+                            <i class="fas fa-sliders-h me-1"></i> Customize this design
+                        </a>
+
                     </div>{{-- /.custom-panel-body --}}
                 </div>{{-- /.custom-panel --}}
 
@@ -1713,7 +1795,11 @@ use App\Http\Controllers\Helper;
         }
 
         function selectTemplate(key, el) {
-            document.querySelectorAll('.cp-template-card').forEach(c => c.classList.remove('selected'));
+            // Scoped to the Primary gallery only — clearing every
+            // .cp-template-card would also unselect whichever Nursery
+            // card is currently chosen below, since both galleries share
+            // that class name for their thumbnail styling.
+            document.querySelectorAll('#cpTemplateGallery .cp-template-card').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
             templateExplicitlyChosen = true;
             updateCustomizeLink(key);
@@ -1729,7 +1815,31 @@ use App\Http\Controllers\Helper;
                 link.href = '{{ route('examination.passslips.customize', $exam->id) }}?template=' + encodeURIComponent(templateKey);
             }
         }
-        updateCustomizeLink(document.querySelector('.cp-template-card.selected')?.dataset.template || 'classic');
+        updateCustomizeLink(document.querySelector('#cpTemplateGallery .cp-template-card.selected')?.dataset.template || 'classic');
+
+        /* ── Nursery Design Template gallery — mirrors selectTemplate()/
+           updateCustomizeLink() above but is entirely independent: it
+           never touches templateExplicitlyChosen, buildQS(), or any
+           student "Print" link, since live Nursery report-card printing
+           still always uses the one fully data-bound layout
+           (slip-nursery.blade.php) regardless of which card is picked
+           here — see resolveNurserySlipView()'s docblock in
+           ExaminationController. Today this only decides what the
+           "Customize this design" page (and its live preview) opens to,
+           while each Nursery design's dynamic conversion is finished. ── */
+        function selectNurseryTemplate(key, el) {
+            document.querySelectorAll('#cpNurseryTemplateGallery .cp-template-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            updateNurseryCustomizeLink(key);
+        }
+
+        function updateNurseryCustomizeLink(templateKey) {
+            const link = document.getElementById('cpNurseryCustomizeLink');
+            if (link) {
+                link.href = '{{ route('examination.passslips.customize', $exam->id) }}?template=' + encodeURIComponent(templateKey);
+            }
+        }
+        updateNurseryCustomizeLink(document.querySelector('#cpNurseryTemplateGallery .cp-template-card.selected')?.dataset.template || 'nursery-minimal');
 
         /* ── Build query-string (template + lang + combined exams) ── */
         function buildQS() {
@@ -1749,7 +1859,10 @@ use App\Http\Controllers\Helper;
             const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
             p.set('lang', currentLang);
             if (templateExplicitlyChosen) {
-                const selectedTplCard = document.querySelector('.cp-template-card.selected');
+                // Scoped to the Primary gallery — the Nursery gallery below
+                // also has a '.selected' card at all times, and must never leak
+                // into the Primary print pipeline's 'template' param.
+                const selectedTplCard = document.querySelector('#cpTemplateGallery .cp-template-card.selected');
                 p.set('template', selectedTplCard ? selectedTplCard.dataset.template : 'classic');
             }
             // Combine Examinations — read straight from the checkboxes above,
@@ -1775,7 +1888,8 @@ use App\Http\Controllers\Helper;
             formEl.appendChild(langInp);
             // Add template — only if explicitly chosen this page-view
             if (templateExplicitlyChosen) {
-                const selectedTplCard = document.querySelector('.cp-template-card.selected');
+                // Scoped to the Primary gallery — see buildQS() above.
+                const selectedTplCard = document.querySelector('#cpTemplateGallery .cp-template-card.selected');
                 const tplInp = document.createElement('input');
                 tplInp.type = 'hidden';
                 tplInp.name = 'template';

@@ -793,6 +793,66 @@ class ExaminationController extends Controller
         };
     }
 
+    /**
+     * Every recognised "Design Template" key, across both families —
+     * Primary (classic/modern/minimal) and the newer Nursery mirror set
+     * (nursery-classic/nursery-modern/nursery-minimal). Single source of
+     * truth for validating a ?template= value anywhere in this
+     * controller, instead of re-typing the list at each call site.
+     */
+    public const PASSSLIP_TEMPLATE_KEYS = [
+        'classic', 'modern', 'minimal',
+        'nursery-classic', 'nursery-modern', 'nursery-minimal',
+    ];
+
+    /**
+     * Whether a Design Template key belongs to the Nursery gallery
+     * (the second set of cards on the pass slips index, under "Nursery
+     * Design Template") rather than the Primary one.
+     */
+    public static function isNurseryTemplateKey(?string $template): bool
+    {
+        return str_starts_with((string) $template, 'nursery-');
+    }
+
+    /**
+     * Resolve which Nursery pass-slip view to render for a given
+     * ?nursery_template= choice.
+     *
+     * NOTE — unlike resolvePrimarySlipView(), this is currently only
+     * wired into the read-only design-preview pipeline
+     * (passslipPreview(), used by the "Customize this design" page's
+     * live iframe), NOT into passslipStudent()/passslipClass()/
+     * passslipAll() — i.e. NOT into real report-card printing yet.
+     *
+     * 'nursery-classic' (preview-kindergarten.blade.php) and
+     * 'nursery-modern' (preview-kindergarten-2.blade.php) are still
+     * being converted, section by section, from static demo markup
+     * into the same dynamic $student/$subjectMarks/... contract every
+     * other slip-*.blade.php already uses (see the in-progress work
+     * replacing their static PNG sections with data-bound HTML/CSS).
+     * Routing real students through them before that conversion is
+     * finished would print/show placeholder demo content instead of
+     * that student's actual data — so callers other than the design
+     * preview should keep resolving Nursery students to
+     * 'Examination.passslips.slip-nursery' ('nursery-minimal', which is
+     * already fully dynamic) regardless of which Nursery template was
+     * picked in the gallery, until each file's conversion is complete
+     * and this mapping is safe to reuse for live printing too.
+     */
+    public function resolveNurserySlipView(string $template, string $lang): string
+    {
+        if ($lang === 'ar') {
+            return 'Examination.passslips.slip-nursery-ar';
+        }
+
+        return match ($template) {
+            'nursery-classic' => 'Examination.passslips.preview-kindergarten',
+            'nursery-modern' => 'Examination.passslips.preview-kindergarten-2',
+            default => 'Examination.passslips.slip-nursery',
+        };
+    }
+
     // ─── Discipline / Conduct Ratings ───────────────────────────────────────
     // Per-school configurable criteria (Punctuality, Behaviour, ...), rated
     // A/B/C by the class teacher per exam. Feeds the "Discipline" block on
@@ -1395,21 +1455,24 @@ class ExaminationController extends Controller
             ->firstOrFail();
 
         $template = $request->query('template', 'classic');
-        if (!in_array($template, ['classic', 'modern', 'minimal'], true)) {
+        if (!in_array($template, self::PASSSLIP_TEMPLATE_KEYS, true)) {
             $template = 'classic';
         }
 
-        // classic/modern/minimal are "Primary Design Template"s only —
-        // Nursery has its own single fixed layout (slip-nursery.blade.php,
-        // no template variants) — so Nursery classes (Baby/Middle/Top,
-        // resolved dynamically via Helper::isNurseryClass()) never belong
-        // in this page's class selector or "Preview with" dropdown, no
-        // matter what their md_id happens to be on this install.
+        // classic/modern/minimal are "Primary Design Template"s;
+        // nursery-classic/nursery-modern/nursery-minimal are the mirror
+        // set for "Nursery Design Template"s (see the second gallery on
+        // the pass slips index). Each family's class selector / "Preview
+        // with" dropdown must only ever list classes that family's
+        // templates actually apply to — Helper::isNurseryClass() is the
+        // single source of truth for which classes count as Nursery
+        // (Baby/Middle/Top), same as everywhere else in this controller.
+        $isNurseryTemplate = self::isNurseryTemplateKey($template);
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->get()
-            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id))
+            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
             ->values();
 
         // Same "combine examinations" list the main panel offers, so
@@ -1425,6 +1488,7 @@ class ExaminationController extends Controller
         return view('Examination.passslips.customize', compact(
             'exam',
             'template',
+            'isNurseryTemplate',
             'examClasses',
             'siblingExams',
             'toggleGroups'
@@ -1472,19 +1536,20 @@ class ExaminationController extends Controller
         $student = $studentQuery->first();
 
         // No student in that specific class (or no class chosen at all
-        // yet) — fall back to the first student in any (non-Nursery)
-        // class attached to this exam, so the preview is never just a
-        // blank error. This endpoint only ever renders the classic/
-        // modern/minimal "Primary Design Template"s, so the fallback
-        // must skip Nursery classes the same way the customise page's
-        // own class list already does — otherwise it could silently
-        // preview a Nursery student against a Primary-only template.
+        // yet) — fall back to the first student in a class from the
+        // SAME family as the requested template, so the preview is
+        // never just a blank error and never silently previews a
+        // Nursery student against a Primary-only template (or vice
+        // versa). classic/modern/minimal only ever apply to non-Nursery
+        // classes; nursery-classic/nursery-modern/nursery-minimal only
+        // ever apply to Nursery ones.
+        $wantsNurseryTemplate = self::isNurseryTemplateKey($request->query('template'));
         if (!$student) {
             $ec = DB::table('examination_classes')
                 ->where('examination_id', $examId)
                 ->where('school_id', $schoolId)
                 ->get()
-                ->reject(fn ($row) => Helper::isNurseryClass($row->class_id))
+                ->reject(fn ($row) => Helper::isNurseryClass($row->class_id) !== $wantsNurseryTemplate)
                 ->first();
 
             if ($ec) {
@@ -1533,7 +1598,12 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+            // See resolveNurserySlipView()'s docblock: this is the ONE
+            // place a 'nursery-classic'/'nursery-modern' choice is
+            // currently allowed to pick a different file — this is the
+            // read-only design-preview iframe, not a real report card.
+            $nurseryTemplate = $request->query('template', 'nursery-minimal');
+            $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
@@ -1593,7 +1663,7 @@ class ExaminationController extends Controller
             'class_ids' => 'required|array|min:1',
             'class_ids.*' => 'integer',
             'settings' => 'required|array',
-            'settings.template' => 'nullable|string|in:classic,modern,minimal',
+            'settings.template' => 'nullable|string|in:' . implode(',', self::PASSSLIP_TEMPLATE_KEYS),
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -1609,7 +1679,7 @@ class ExaminationController extends Controller
      * Customisations" tab strip so it only ever shows classes that
      * actually have something saved, not every class in the exam.
      */
-    public function listPassslipSettings($examId)
+    public function listPassslipSettings(Request $request, $examId)
     {
         PermissionHelper::denyUnlessFeature('generate_reports');
 
@@ -1619,13 +1689,24 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
+
+        // Scoped to whichever family (Primary vs Nursery) the customise
+        // page was opened for, same as passslipCustomize()'s own class
+        // list — otherwise a Primary class's saved tab would also show
+        // up (and be editable/deletable from) the Nursery page, and
+        // vice versa, even though the two are meant to be entirely
+        // separate customisation sets.
+        $template = $request->query('template', 'classic');
+        $isNurseryTemplate = self::isNurseryTemplateKey($template);
+
         $classIds = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
+            ->get()
+            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
             ->pluck('class_id')
             ->unique()
-            ->values()
-            ->all();
+            ->values();
 
         $saved = Helper::listPassslipSettings($schoolId, $classIds);
 

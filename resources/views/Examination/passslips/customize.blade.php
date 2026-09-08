@@ -640,9 +640,22 @@ selected classes" is clicked. --}}
             {{-- ══════════ LEFT: filtered customise panel ══════════ --}}
             <div class="cz-panel" id="czPanel">
 
-                <div class="cz-group-label" style="margin-top:0;"><i class="fas fa-swatchbook"></i> Design Template</div>
-                <div class="cz-tpl-mini" id="czTplMini">
-                    @foreach (['classic' => 'Classic', 'modern' => 'Modern', 'minimal' => 'Minimal'] as $key => $label)
+                <div class="cz-group-label" style="margin-top:0;">
+                    <i class="fas fa-swatchbook"></i> {{ $isNurseryTemplate ?? false ? 'Nursery' : 'Primary' }} Design Template
+                </div>
+                {{-- Only this template's own family (Primary or Nursery) is
+                offered here — switching families entirely (e.g. Classic
+                Primary → Classic Nursery) isn't a "swap the design" action
+                the way switching within a family is, since it also changes
+                which classes this page applies to; that's done from the
+                pass slips index's two separate galleries instead. --}}
+                <div class="cz-tpl-mini" id="czTplMini" data-family="{{ $isNurseryTemplate ?? false ? 'nursery' : 'primary' }}">
+                    @php
+                        $tplFamilyOptions = ($isNurseryTemplate ?? false)
+                            ? ['nursery-classic' => 'Classic', 'nursery-modern' => 'Modern', 'nursery-minimal' => 'Minimal']
+                            : ['classic' => 'Classic', 'modern' => 'Modern', 'minimal' => 'Minimal'];
+                    @endphp
+                    @foreach ($tplFamilyOptions as $key => $label)
                         <div class="cz-tpl-mini-card {{ $template === $key ? 'selected' : '' }}" data-template="{{ $key }}">
                             {{ $label }}
                         </div>
@@ -760,7 +773,12 @@ selected classes" is clicked. --}}
                     </div>
                 @endforeach
 
-                @if (isset($siblingExams) && $siblingExams->count() > 0)
+                {{-- "Combine Examinations" (BOT | MID | END averaging) is a
+Primary-only concept — Nursery report cards don't carry a
+numeric average across exams the same way, so this whole
+group is skipped entirely for the Nursery family instead
+of rendering empty/irrelevant checkboxes. --}}
+@if (!($isNurseryTemplate ?? false) && isset($siblingExams) && $siblingExams->count() > 0)
                     <div class="cz-group-label"><i class="fas fa-layer-group"></i> Combine Examinations</div>
                     @foreach ($siblingExams as $se)
                         <div class="cz-check-row">
@@ -798,11 +816,20 @@ selected classes" is clicked. --}}
 
                 <div id="czClassSelector"
                     style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem;background:#f8fafc;border-radius:12px;border:2px solid #e2e8f0;min-height:52px;margin-bottom:.6rem;">
-                    @foreach ($examClasses->unique('class_id') as $ec)
-                        <div class="cz-class-chip" data-class-id="{{ $ec->class_id }}">
-                            {{ Helper::recordMdname($ec->class_id) }}
-                        </div>
-                    @endforeach
+                    @forelse ($examClasses->unique('class_id') as $ec)
+    <div class="cz-class-chip" data-class-id="{{ $ec->class_id }}">
+        {{ Helper::recordMdname($ec->class_id) }}
+    </div>
+@empty
+    <div style="font-size:.72rem;color:#94a3b8;">
+        @if ($isNurseryTemplate ?? false)
+            No Nursery classes (Baby / Middle / Top Class) are attached to
+            this examination yet — add them to this exam first.
+        @else
+            No classes are attached to this examination yet.
+        @endif
+    </div>
+@endforelse
                 </div>
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
@@ -834,13 +861,14 @@ selected classes" is clicked. --}}
                     </div>
 
                     <select id="czPreviewClass" class="form-control">
-                        <!-- <option value="">Preview with: any available student</option> -->
-                        @foreach ($examClasses->unique('class_id') as $ec)
-                            <option value="{{ $ec->class_id }}|{{ $ec->stream_id }}">
-                                Preview with: {{ Helper::recordMdname($ec->class_id) }}
-                            </option>
-                        @endforeach
-                    </select>
+    @forelse ($examClasses->unique('class_id') as $ec)
+        <option value="{{ $ec->class_id }}|{{ $ec->stream_id }}">
+            Preview with: {{ Helper::recordMdname($ec->class_id) }}
+        </option>
+    @empty
+        <option value="" disabled selected>No classes available to preview</option>
+    @endforelse
+</select>
                 </div>
                 <div class="cz-iframe-shell">
                     <div class="cz-loading" id="czLoading">Updating preview…</div>
@@ -858,7 +886,11 @@ selected classes" is clicked. --}}
         const PREVIEW_URL = '{{ route('examination.passslips.preview', $exam->id) }}';
         const SAVE_URL = '{{ route('examination.passslips.settings.save', $exam->id) }}';
         const GET_URL = '{{ route('examination.passslips.settings.get', $exam->id) }}';
-        const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}';
+// "template" tells the backend which family (Primary vs Nursery)
+// of classes to list saved customisations for, so a Primary
+// class's saved profile never shows up as a tab on the Nursery
+// page, and vice versa.
+const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?template={{ $template }}';
         const DELETE_URL_BASE = '{{ url('examinations/'.$exam->id.'/passslips/settings') }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
         // Same per-template "off unless saved otherwise" keys the PHP side
@@ -873,7 +905,11 @@ selected classes" is clicked. --}}
 
         function currentTemplate() {
             const sel = document.querySelector('.cz-tpl-mini-card.selected');
-            return sel ? sel.dataset.template : 'classic';
+            if (sel) return sel.dataset.template;
+            // Fall back within whichever family this page was opened for,
+            // never across to the other family's default.
+            const family = document.getElementById('czTplMini')?.dataset.family;
+            return family === 'nursery' ? 'nursery-classic' : 'classic';
         }
 
         function currentPreviewClassId() {
