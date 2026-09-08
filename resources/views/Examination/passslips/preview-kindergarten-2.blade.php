@@ -40,13 +40,6 @@
   }
 
   /* ===== HERO HEADER OVERLAY (dynamic: logo, school name, motto, journey caption) ===== */
-  /* IMPORTANT: hero-wrap does NOT span the full 192mm page content width — it lives
-     inside .left-col of the 64% / 33% .mid-grid, so its rendered width is only
-     64% of 192mm = 122.88mm (with the image's 1234x864 aspect ratio giving it a
-     rendered height of ~86.02mm). All overlay children are positioned/sized in mm
-     scaled by that same 0.64 factor (192mm x 134.5mm reference -> 122.88mm x 86.08mm
-     actual) so they continue to line up precisely with the artwork underneath. */
-
   .hero-logo{
     position:absolute; left:0; top:0; width:30.4mm; height:33.28mm; z-index:6;
     background:linear-gradient(160deg,#1d4278 0%,#0f2947 75%);
@@ -57,7 +50,6 @@
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     text-align:center; color:#fff; overflow:hidden;
   }
-  /* Default placeholder badge (shown until a real logo is supplied) */
   .hero-logo-icon{ position:relative; width:14.72mm; height:14.72mm; margin-bottom:0.96mm; flex:none;}
   .hero-logo-icon .fa-star{ position:absolute; top:-0.64mm; left:50%; transform:translateX(-50%); font-size:3.84mm; color:#e9c477;}
   .hero-logo-icon .fa-shield-halved{ position:absolute; top:2.24mm; left:50%; transform:translateX(-50%); font-size:11.52mm; background:linear-gradient(160deg,#f0d49a,#a9762e); -webkit-background-clip:text; background-clip:text; color:transparent;}
@@ -68,7 +60,6 @@
   .hero-logo-title{ font-family:'Fredoka',sans-serif; font-weight:600; font-size:2.3mm; letter-spacing:.25px; line-height:1.2;}
   .hero-logo-sub{ font-family:'Poppins',sans-serif; font-weight:400; font-size:1.6mm; letter-spacing:.4px; opacity:.85; margin-top:0.32mm;}
 
-  /* Custom-logo variant: school has uploaded their own logo image */
   .hero-logo--custom .hero-logo-badge{
     width:16.64mm; height:16.64mm; border-radius:50%; background:#fff; margin-bottom:1.28mm;
     display:flex; align-items:center; justify-content:center; overflow:hidden;
@@ -115,7 +106,6 @@
   .profile-card{ flex:0 0 30mm; }
   .profile-card img{width:100%; display:block;}
 
-  /* ===== MY PROFILE card (HTML/CSS version) ===== */
   .pc{
     position:relative;
     background:var(--cream);
@@ -160,7 +150,6 @@
   .whoiam img{width:100%; display:block;}
   .whoiam-caption{ text-align:center; font-size:9.5px; font-style:italic; color:#555; margin-top:1.5mm;}
 
-  /* ===== WHO I AM badges (HTML/CSS version) ===== */
   .whoiam-badges{ display:flex; gap:1.6mm; }
   .wb{
     flex:1; min-width:0;
@@ -181,8 +170,39 @@
   .wb-orange{ --wb-bg:#fbe4cf; --wb-color:#e08a3c; --wb-text:#d97b2b; }
 
   .dev-title{ text-align:center; font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy); font-size:13px; letter-spacing:1px; margin:1.5mm 0 1mm;}
+
+  /* ===== AREAS OF DEVELOPMENT — card grid (icon image + dynamic HTML text) ===== */
   .dev-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.2mm;}
-  .dev-grid img{width:100%; display:block; border-radius:6px;}
+  .dev-card{
+    position:relative;
+    border-radius:9px;
+    border:1.4px solid var(--dc-color, #c7c2b3);
+    padding:2mm 1.6mm 2mm;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .dev-card--dashed{ border-style:dashed; }
+  .dev-card img{ width:82%; display:block; margin:0 auto 1mm; }
+  .dev-card-title{
+    margin:0; font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy);
+    font-size:6.6px; letter-spacing:.2px; line-height:1.25; text-transform:uppercase;
+  }
+  .dev-card-sub{
+    margin:0.8mm 0 0; font-family:'Poppins',sans-serif; font-weight:400; color:#333;
+    font-size:5.7px; line-height:1.35;
+  }
+  .dev-card-divider{ margin-top:1.2mm; display:flex; align-items:center; justify-content:center; gap:1mm; width:100%; }
+  .dev-card-divider .dcd-line{ height:1px; flex:1; background:var(--dc-color, #c7c2b3); max-width:7mm; }
+  .dev-card-divider i{ font-size:6px; color:var(--dc-color, #c7c2b3); flex:none; }
+
+  .dev-card--lang{ --dc-color:#8c8c86; }
+  .dev-card--social{ --dc-color:#f4a19c; }
+  .dev-card--cognitive{ --dc-color:#e9b95c; }
+  .dev-card--creative{ --dc-color:#dcc27f; }
+  .dev-card--physical{ --dc-color:#b9b9ae; }
+  .dev-card--approach{ --dc-color:#a9c78a; }
+  .dev-card--music{ --dc-color:#dcc27f; }
+  .dev-card--world{ --dc-color:#a9c78a; }
 
   .timeline{ display:flex; flex-direction:column; margin-bottom:3mm;}
   .tl-title-wrap{ text-align:center; margin-bottom:1mm;}
@@ -238,9 +258,6 @@
           <div class="hero-wrap">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/hero_learning_children.png" alt="">
 
-            {{-- LOGO: shows the school's uploaded logo when available, otherwise a
-                 default placeholder badge. Pass $schoolLogoUrl (and optionally
-                 $schoolFoundedYear) from the controller to make this fully dynamic. --}}
             @if(!empty($schoolLogoUrl))
               <div class="hero-logo hero-logo--custom">
                 <div class="hero-logo-badge">
@@ -264,8 +281,6 @@
               </div>
             @endif
 
-            {{-- SCHOOL NAME + MOTTO: fully dynamic, replaces what used to be baked
-                 into the image. Pass $schoolName / $schoolMotto from the controller. --}}
             <div class="hero-header-text">
               <div class="school-name-dynamic">{{ $schoolName ?? 'YOUR SCHOOL NAME' }}</div>
               <div class="school-motto-dynamic">
@@ -275,7 +290,6 @@
               </div>
             </div>
 
-            {{-- JOURNEY CAPTION: dynamic text sitting on the purple ribbon banner. --}}
             <div class="hero-ribbon-caption">
               <span>{{ $journeyCaption ?? 'Celebrating growth, discovery & little achievements' }}</span>
             </div>
@@ -312,15 +326,70 @@
           </div>
 
           <div class="dev-title">AREAS OF DEVELOPMENT</div>
+          {{--
+            AREAS OF DEVELOPMENT: each card now uses an icon-only image (the
+            heading + description text that used to be baked into the PNG has
+            been removed from the artwork and rebuilt as real HTML below the
+            image), so it can be made fully dynamic later — e.g. loop over a
+            $developmentAreas collection and print ->title / ->description
+            instead of the hardcoded text shown here.
+          --}}
           <div class="dev-grid">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
+            <div class="dev-card dev-card--lang">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
+              <h4 class="dev-card-title">Language &amp;<br>Communication</h4>
+              <p class="dev-card-sub">expressing ideas and<br>building vocabulary.</p>
+              <div class="dev-card-divider"><i class="fas fa-leaf"></i></div>
+            </div>
+
+            <div class="dev-card dev-card--social">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
+              <h4 class="dev-card-title">Social &amp; Emotional<br>Development</h4>
+              <p class="dev-card-sub">Shows empathy, builds positive<br>relationships and understands feelings.</p>
+              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
+            </div>
+
+            <div class="dev-card dev-card--cognitive dev-card--dashed">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
+              <h4 class="dev-card-title">Cognitive<br>Development</h4>
+              <p class="dev-card-sub">Shows curiosity, problem-solving<br>skills and enjoys learning new concepts.</p>
+              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-star"></i><span class="dcd-line"></span></div>
+            </div>
+
+            <div class="dev-card dev-card--creative">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
+              <h4 class="dev-card-title">Creative<br>Development</h4>
+              <p class="dev-card-sub">Enjoys art, imagination, drama,<br>music and creative self-expression.</p>
+              <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
+            </div>
+
+            <div class="dev-card dev-card--physical">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
+              <h4 class="dev-card-title">Physical<br>Development</h4>
+              <p class="dev-card-sub">Develops gross and fine motor<br>skills through active play and activities.</p>
+              <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
+            </div>
+
+            <div class="dev-card dev-card--approach">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
+              <h4 class="dev-card-title">Approach to<br>Learning</h4>
+              <p class="dev-card-sub">Shows independence, focus,<br>perseverance and positive learning habits.</p>
+              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
+            </div>
+
+            <div class="dev-card dev-card--music">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
+              <h4 class="dev-card-title">Music &amp;<br>Movement</h4>
+              <p class="dev-card-sub">Enjoys singing, rhythm, dancing<br>and moving to express feelings.</p>
+              <div class="dev-card-divider"><i class="fas fa-music"></i></div>
+            </div>
+
+            <div class="dev-card dev-card--world">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
+              <h4 class="dev-card-title">Understanding<br>the World</h4>
+              <p class="dev-card-sub">Explores nature, people, culture<br>and the world with interest.</p>
+              <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
+            </div>
           </div>
         </div>
 
