@@ -33,6 +33,7 @@ use App\Http\Controllers\UserRightsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ParentPortalController;
 use App\Http\Controllers\StudentConsolidationController;
+use App\Http\Controllers\StudentPhotoImportController;
 
 Route::get('/logout', function () {
     session()->flush();
@@ -397,6 +398,14 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                         Route::post('/bulk-import', 'bulkImportStudents')->name('students.bulk.import');
                         Route::get('/download-template', 'downloadStudentTemplate')->name('students.download.template');
 
+                    });
+
+                    // Student Bulk Photo Import
+                    Route::group(['middleware' => ['AdminAuth']], function () {
+                        Route::get('/bulk-photo-import', [StudentPhotoImportController::class, 'form'])
+                            ->name('students.bulk.photo.import.form');
+                        Route::post('/bulk-photo-import', [StudentPhotoImportController::class, 'process'])
+                            ->name('students.bulk.photo.import');
                     });
                 });
         });

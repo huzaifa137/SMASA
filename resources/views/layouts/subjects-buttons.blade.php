@@ -63,9 +63,10 @@
         </a>
     </div>
 
-    {{-- <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.all.students') }}" class="btn btn-white text-dark w-100 rounded">
-            <i class="fas fa-upload me-2"></i>Upload Images
+    <div class="col-12 col-sm-3 mb-2">
+        <a href="{{ route('students.bulk.photo.import.form') }}"
+            class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+            <i class="fas fa-portrait me-2"></i>Bulk Photo Import
         </a>
-    </div> --}}
+    </div>
 </div>

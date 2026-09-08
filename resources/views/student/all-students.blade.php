@@ -985,6 +985,12 @@ use App\Helpers\PermissionHelper;
                     onmouseout="this.style.background='rgba(255,255,255,.18)'">
                     <i class="fas fa-file-import"></i> Bulk Import
                 </a>
+                <a href="{{ route('students.bulk.photo.import.form') }}"
+                    style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,.3)'"
+                    onmouseout="this.style.background='rgba(255,255,255,.18)'">
+                    <i class="fas fa-portrait"></i> Bulk Photo Import
+                </a>
             @endif
             @if(PermissionHelper::canFeature('add_student'))
                 <a href="{{ route('students.add.new.student') }}"

@@ -438,10 +438,14 @@
                 </div>
             </div>
 
-            <a href="{{ route('students.all.students') }}" class="btn-outline"
-                style="margin-bottom:32px; display: inline-flex;">
-                <i class="fas fa-arrow-left"></i> Back to Students
-            </a>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+                <a href="{{ route('students.all.students') }}" class="btn-outline" style="display: inline-flex;">
+                    <i class="fas fa-arrow-left"></i> Back to Students
+                </a>
+                <a href="{{ route('students.bulk.photo.import.form') }}" class="btn-outline" style="display: inline-flex;">
+                    <i class="fas fa-portrait"></i> Bulk Photo Import
+                </a>
+            </div>
         </div>
     </div>
     </div>
