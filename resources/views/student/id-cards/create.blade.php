@@ -414,7 +414,7 @@ use App\Helpers\PermissionHelper;
                 <div class="form-group">
                     <label>Search Student</label>
                     <div style="display: flex; gap: .5rem;">
-                        <input type="text" id="studentSearch" placeholder="Enter student name or admission number..."
+                        <input type="text" id="studentSearch" placeholder="Enter student name or LIN Number..."
                             style="flex:1;" onkeyup="searchStudents()">
                         <button class="btn btn-outline" type="button" onclick="searchStudents()">
                             <i class="fas fa-search"></i> Search
@@ -427,7 +427,7 @@ use App\Helpers\PermissionHelper;
                         <table style="width:100%; font-size: .8rem;">
                             <thead>
                                 <tr style="background: var(--bg); position: sticky; top: 0;">
-                                    <th style="padding: .5rem .75rem;">Adm No.</th>
+                                    <th style="padding: .5rem .75rem;">LIN No.</th>
                                     <th style="padding: .5rem .75rem;">Name</th>
                                     <th style="padding: .5rem .75rem;">Class</th>
                                     <th style="padding: .5rem .75rem;">Stream</th>

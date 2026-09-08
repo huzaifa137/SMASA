@@ -1247,7 +1247,7 @@ input[type="radio"]:checked + .type-pill {
                     <div style="position:relative;margin-bottom:.5rem;">
                         <i class="fas fa-search" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:.75rem;"></i>
                         <input type="text" id="libStudentSearch" class="form-control"
-                            placeholder="Search student name or admission no..."
+                            placeholder="Search student name or LIN no..."
                             style="padding-left:2rem;" oninput="libFilterStudents(this.value)">
                     </div>
 

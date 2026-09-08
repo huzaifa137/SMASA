@@ -70,7 +70,7 @@ use App\Http\Controllers\Helper;
                                     <div class="form-group">
                                         <label>{{ trans('common.admission_number') }}</label>
                                         <input type="text" name="admission_number" class="form-control"
-                                            placeholder="Admission number">
+                                            placeholder="LIN Number">
                                     </div>
                                     <div class="form-group">
                                         <label>{{ trans('common.primary_contact') }}</label>

@@ -242,7 +242,7 @@ use App\Http\Controllers\Helper;
                         <dt class="col-sm-4">Gender</dt>
                         <dd class="col-sm-8" id="view_gender"></dd>
 
-                        <dt class="col-sm-4">Admission Number</dt>
+                        <dt class="col-sm-4">LIN Number</dt>
                         <dd class="col-sm-8" id="view_admission_number"></dd>
 
                         <dt class="col-sm-4">Class</dt>

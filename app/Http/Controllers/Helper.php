@@ -572,6 +572,55 @@ class Helper extends Controller
     }
 
     /**
+     * md_id values (master_datas rows) that currently count as "Nursery"
+     * classes — resolved dynamically every call against master_datas,
+     * scoped to the "Primary Secular" master code and matched by name
+     * (config('constants.nursery_class_names')), instead of a hardcoded
+     * id list. This way it keeps working no matter what md_id those rows
+     * happen to have on a given install/reseed, and if a school ever adds
+     * another early-years class, adding its name to the config is enough.
+     *
+     * Cached for the lifetime of the request since isNurseryClass() gets
+     * called inside loops (per class, per student) in ExaminationController.
+     */
+    public static function nurseryClassIds(): array
+    {
+        static $cached = null;
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $primarySecularCode = config('constants.options.PRIMARY_SECULAR_CLASSES');
+        $names = config('constants.nursery_class_names', ['Baby Class', 'Middle Class', 'Top Class']);
+
+        $cached = DB::table('master_datas')
+            ->where('md_master_code_id', $primarySecularCode)
+            ->whereIn('md_name', $names)
+            ->pluck('md_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $cached;
+    }
+
+    /**
+     * True if $classId (a master_datas md_id under Primary Secular) is
+     * one of the school's configured Nursery classes. Single source of
+     * truth — ExaminationController::isNurseryClass() just delegates here
+     * so every call site (passslips, parent portal, customize screen)
+     * stays in sync automatically.
+     */
+    public static function isNurseryClass($classId): bool
+    {
+        if (empty($classId)) {
+            return false;
+        }
+
+        return in_array((int) $classId, self::nurseryClassIds(), true);
+    }
+
+    /**
      * The 3 legacy system comment presets: marks (1-3), label, remark.
      * Used only as a fallback when no AssessmentScale is attached yet
      * (e.g. a fresh install before migrations have run the backfill).

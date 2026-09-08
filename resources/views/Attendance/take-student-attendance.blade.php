@@ -885,7 +885,7 @@
     <div class="toolbar-modern">
         <div class="search-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search by name or admission number...">
+            <input type="text" id="searchInput" placeholder="Search by name or LIN Number...">
         </div>
 
         @if($subjects->isNotEmpty())
@@ -942,7 +942,7 @@
                     <div class="student-details">
                         <div class="student-name">{{ $student->firstname }} {{ $student->lastname }}</div>
                         <div class="student-adm">
-                            <i class="fas fa-id-card"></i> {{ $student->admission_number ?? 'No admission number' }}
+                            <i class="fas fa-id-card"></i> {{ $student->admission_number ?? 'No LIN Number' }}
                         </div>
                         @if($studentHistory->isNotEmpty())
                         <div class="history-preview">

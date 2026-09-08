@@ -2322,7 +2322,7 @@
                                     </div>
                                 @endif
                                 @if($cfg['stu_admission'])
-                                    <div class="rc-stu-row"><span class="k">Admission No.:</span>
+                                    <div class="rc-stu-row"><span class="k">LIN No.:</span>
                                         <span>{{ $admissionNo }}</span>
                                     </div>
                                 @endif

@@ -223,7 +223,7 @@ body {
                 <div class="ival">{{ $payment->student->firstname ?? 'N/A' }} {{ $payment->student->lastname ?? '' }}</div>
             </td>
             <td>
-                <div class="ikey">Admission Number</div>
+                <div class="ikey">LIN Number</div>
                 <div class="ival">{{ $payment->student->admission_number ?? 'N/A' }}</div>
             </td>
         </tr>

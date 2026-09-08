@@ -1231,3 +1231,9 @@ Route::get('/dev/passslip-preview/kindergarten', function () {
         'dob' => '14 Mar 2021',
     ]);
 });
+
+Route::get('/dev/passslip-preview/kindergarten2', function () {
+    return view('Examination.passslips.preview-kindergarten-2', [
+        'academic_year' => '2026 – 2027',
+    ]);
+});

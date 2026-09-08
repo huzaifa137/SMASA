@@ -1399,10 +1399,18 @@ class ExaminationController extends Controller
             $template = 'classic';
         }
 
+        // classic/modern/minimal are "Primary Design Template"s only —
+        // Nursery has its own single fixed layout (slip-nursery.blade.php,
+        // no template variants) — so Nursery classes (Baby/Middle/Top,
+        // resolved dynamically via Helper::isNurseryClass()) never belong
+        // in this page's class selector or "Preview with" dropdown, no
+        // matter what their md_id happens to be on this install.
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
-            ->get();
+            ->get()
+            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id))
+            ->values();
 
         // Same "combine examinations" list the main panel offers, so
         // this page's Appearance-adjacent group stays consistent with it.
@@ -1464,12 +1472,19 @@ class ExaminationController extends Controller
         $student = $studentQuery->first();
 
         // No student in that specific class (or no class chosen at all
-        // yet) — fall back to the first student in any class attached
-        // to this exam, so the preview is never just a blank error.
+        // yet) — fall back to the first student in any (non-Nursery)
+        // class attached to this exam, so the preview is never just a
+        // blank error. This endpoint only ever renders the classic/
+        // modern/minimal "Primary Design Template"s, so the fallback
+        // must skip Nursery classes the same way the customise page's
+        // own class list already does — otherwise it could silently
+        // preview a Nursery student against a Primary-only template.
         if (!$student) {
             $ec = DB::table('examination_classes')
                 ->where('examination_id', $examId)
                 ->where('school_id', $schoolId)
+                ->get()
+                ->reject(fn ($row) => Helper::isNurseryClass($row->class_id))
                 ->first();
 
             if ($ec) {
@@ -3329,25 +3344,17 @@ class ExaminationController extends Controller
 
     /**
      * Check if a class is a nursery/early years class.
-     */
-    /**
-     * Check if a class is a nursery/early years class.
-     */
-    /**
-     * Check if a class is a nursery/early years class.
+     *
+     * Delegates to Helper::isNurseryClass(), which resolves the current
+     * Baby Class / Middle Class / Top Class md_ids dynamically from
+     * master_datas (config('constants.nursery_class_names')) instead of
+     * a hardcoded id list — so it stays correct even if those rows get
+     * re-seeded with different md_ids. Kept as a thin wrapper here since
+     * it's already called as $this->isNurseryClass(...) / via a controller
+     * instance (ParentPortalController) throughout this file.
      */
     public function isNurseryClass($classId): bool
     {
-        if (empty($classId)) {
-            return false;
-        }
-
-        // dd($classId);
-
-        // Direct check against known nursery class IDs
-        // These are the md_id values for Baby Class, Middle Class, Top Class
-        $nurseryClassIds = [279, 280, 281,]; // Adjust these to match your actual IDs
-
-        return in_array((int) $classId, $nurseryClassIds, true);
+        return Helper::isNurseryClass($classId);
     }
 }

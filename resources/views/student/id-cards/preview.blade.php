@@ -488,7 +488,7 @@
                 <div class="info-block">
                     <div class="student-name">{{ $student->firstname }} {{ $student->lastname }}</div>
                     <div class="info-row">
-                        <span class="info-label">Adm No.</span>
+                        <span class="info-label">LIN No.</span>
                         <span
                             class="info-val">{{ $student->admission_number ?? $student->registration_number ?? '—' }}</span>
                     </div>

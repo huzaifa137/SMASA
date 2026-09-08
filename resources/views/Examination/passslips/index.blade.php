@@ -1500,7 +1500,7 @@ use App\Http\Controllers\Helper;
                         {{-- Search box --}}
                         <div class="student-search-wrap mb-4">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="studentSearch" placeholder="Search by name, admission number, or class…"
+                            <input type="text" id="studentSearch" placeholder="Search by name, LIN Number, or class…"
                                 oninput="filterStudents(this.value)" autocomplete="off">
                             @if(count($allStudents) > 0)
                                 <span class="search-stats" id="searchStats">{{ count($allStudents) }} students</span>

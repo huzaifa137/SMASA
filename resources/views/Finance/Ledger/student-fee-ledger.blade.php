@@ -170,7 +170,7 @@
         </div>
         <form method="GET" class="filters">
             <div class="filter-group" style="flex:3;">
-                <label>Name or Admission Number</label>
+                <label>Name or LIN Number</label>
                 <input type="text" name="q" value="{{ $search }}" placeholder="Type at least 2 characters..." autofocus>
             </div>
             <div class="filter-actions">
@@ -189,7 +189,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Admission No.</th>
+                                <th>LIN No.</th>
                                 <th>Name</th>
                                 <th></th>
                             </tr>
@@ -213,7 +213,7 @@
         @else
             <div class="empty-state">
                 <i class="fas fa-search"></i>
-                <p>Start typing a student's name or admission number above.</p>
+                <p>Start typing a Student's Name or LIN Number above.</p>
             </div>
         @endif
     </div>

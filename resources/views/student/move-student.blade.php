@@ -168,7 +168,7 @@ use App\Http\Controllers\Helper;
                             </th>
                             <th style="width: 60px;">#</th>
                             <th>Name</th>
-                            <th>Admission No.</th>
+                            <th>LIN No.</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -28,7 +28,7 @@ use App\Http\Controllers\Helper;
                                 <label for="search_criteria">Select Search Criteria</label>
                                 <select id="search_criteria" class="form-control">
                                     <option value="" selected disabled>Select...</option>
-                                    <!-- <option value="admission_number">Admission Number</option> -->
+                                    <!-- <option value="admission_number">LIN Number</option> -->
                                     <option value="name">Name & Class</option>
                                     <!-- <option value="phone">Phone Number</option> -->
                                     <!-- <option value="student_id">Student ID</option> -->
@@ -75,8 +75,8 @@ use App\Http\Controllers\Helper;
             const searchInputs = {
                 admission_number: `
                                 <div class="form-group">
-                                    <label for="admission_number">Admission Number</label>
-                                    <input type="text" name="admission_number" class="form-control" placeholder="Enter admission number">
+                                    <label for="admission_number">LIN Number</label>
+                                    <input type="text" name="admission_number" class="form-control" placeholder="Enter LIN Number">
                                 </div>
                             `,
                 name: `

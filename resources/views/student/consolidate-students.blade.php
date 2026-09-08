@@ -413,7 +413,7 @@
                 <div>
                     <label>Primary record (keep this one as the master profile)</label>
                     <div class="search-wrap">
-                        <input type="text" id="manualSearchA" placeholder="Search by name or admission number…" autocomplete="off">
+                        <input type="text" id="manualSearchA" placeholder="Search by name or LIN Number…" autocomplete="off">
                         <div class="search-results" id="manualResultsA"></div>
                     </div>
                     <div class="picked-pill mt-2" id="pickedA"></div>
@@ -422,7 +422,7 @@
                 <div>
                     <label>Duplicate enrollment (the other program record)</label>
                     <div class="search-wrap">
-                        <input type="text" id="manualSearchB" placeholder="Search by name or admission number…" autocomplete="off">
+                        <input type="text" id="manualSearchB" placeholder="Search by name or LIN Number…" autocomplete="off">
                         <div class="search-results" id="manualResultsB"></div>
                     </div>
                     <div class="picked-pill mt-2" id="pickedB"></div>
@@ -449,7 +449,7 @@
             <form method="GET" action="{{ route('students.consolidation') }}" class="consolidated-search">
                 @if($classFilter) <input type="hidden" name="class" value="{{ $classFilter }}"> @endif
                 @if($streamFilter) <input type="hidden" name="stream" value="{{ $streamFilter }}"> @endif
-                <input type="text" name="q" value="{{ $consolidatedSearch }}" placeholder="Search consolidated students by name or admission number…">
+                <input type="text" name="q" value="{{ $consolidatedSearch }}" placeholder="Search consolidated students by name or LIN Number…">
                 <button type="submit"><i class="fas fa-search me-1"></i> Search</button>
                 @if($consolidatedSearch)
                     <a href="{{ route('students.consolidation', array_filter(['class' => $classFilter, 'stream' => $streamFilter])) }}" class="clear-search">

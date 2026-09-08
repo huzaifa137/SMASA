@@ -60,6 +60,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Nursery Classes (dynamic lookup, not hardcoded md_ids)
+    |--------------------------------------------------------------------------
+    | Which master_datas rows under the "Primary Secular" master code
+    | (options.PRIMARY_SECULAR_CLASSES) count as "Nursery" classes.
+    | Historically this was a hardcoded array of md_id numbers (279, 280,
+    | 281), which broke the moment the seed data changed. Since master_datas
+    | has no is_nursery flag, the class NAME is the only stable identifier
+    | — Helper::nurseryClassIds() resolves these names to whatever md_id
+    | they currently have, every time it's called (cached per-request).
+    |
+    | Custom Subjects (school.custom_subjects_active / CustomSubject model)
+    | only swap out the SUBJECT list for a class_type — they never add/rename
+    | classes themselves, so this list is unaffected by that feature.
+    */
+    'nursery_class_names' => ['Baby Class', 'Middle Class', 'Top Class'],
+
+    /*
+    |--------------------------------------------------------------------------
     | Early Years Grading (Nursery / Kindergarten / Pre-Primary)
     |--------------------------------------------------------------------------
     | These classes (Baby Class, Middle Class, Top Class in the current

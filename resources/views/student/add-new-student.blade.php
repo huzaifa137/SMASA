@@ -295,7 +295,7 @@ use App\Http\Controllers\Helper;
                                 </p>
                                 <div style="position:relative;max-width:480px;">
                                     <input type="text" id="linkExistingSearch" class="form-control"
-                                        placeholder="Search by name or admission number… (leave blank if this is a brand-new student)"
+                                        placeholder="Search by name or LIN Number… (leave blank if this is a brand-new student)"
                                         autocomplete="off">
                                     <div id="linkExistingResults"
                                         style="display:none;position:absolute;z-index:20;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);max-height:220px;overflow-y:auto;">
@@ -392,7 +392,7 @@ use App\Http\Controllers\Helper;
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Admission Number</label>
+                                    <label>LIN Number</label>
                                     <input type="text" name="admission_number" class="form-control">
                                 </div>
 

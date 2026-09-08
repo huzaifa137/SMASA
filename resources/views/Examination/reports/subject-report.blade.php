@@ -268,7 +268,7 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="d-block">Search Student</label>
-                    <input type="text" name="search" class="form-control w-100" placeholder="Name or Adm No."
+                    <input type="text" name="search" class="form-control w-100" placeholder="Name or LIN No."
                         value="{{ $filters['search'] ?? '' }}">
                 </div>
                 <div class="col-12 col-md-12 d-flex gap-2 justify-content-end">

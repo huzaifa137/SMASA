@@ -1095,7 +1095,7 @@ use App\Helpers\PermissionHelper;
                                         <th width="7%">Photo</th>
                                         <th>First Name</th>
                                         <th>Last Name</th>
-                                        <th width="12%">Adm No.</th>
+                                        <th width="12%">LIN No.</th>
                                         <th width="10%">Gender</th>
                                         <th width="12%">ID Card Status</th>
                                         <th width="18%">Actions</th>
@@ -1229,7 +1229,7 @@ use App\Helpers\PermissionHelper;
 
                                                 <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
                                                 <div class="info-grid">
-                                                    ${infoItem('Admission Number', s.admission_number)}
+                                                    ${infoItem('LIN Number', s.admission_number)}
                                                     ${infoItem('Registration Number', s.registration_number)}
                                                     ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
                                                     ${infoItem('Admission Year', s.admission_year)}
@@ -1328,7 +1328,7 @@ use App\Helpers\PermissionHelper;
                                             <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
                                             <div class="form-grid-3">
                                                 <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
-                                                <div class="form-group"><label class="form-label">Admission No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
+                                                <div class="form-group"><label class="form-label">LIN No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
                                                 <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
                                                 <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
                                                 <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>

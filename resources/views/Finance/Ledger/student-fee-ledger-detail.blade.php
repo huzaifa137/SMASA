@@ -149,7 +149,7 @@
         <div style="position:relative;z-index:1;">
             <div class="hero-badge"><i class="fas fa-file-invoice-dollar"></i> Finance — Student Fee Ledger</div>
             <h1>{{ $student->firstname }} {{ $student->lastname }}</h1>
-            <p>Admission No. {{ $student->admission_number }} — Statement of Account</p>
+            <p>LIN No. {{ $student->admission_number }} — Statement of Account</p>
         </div>
     </div>
 @endsection

@@ -184,7 +184,7 @@
 
         <div class="front-rows">
             <table>
-                <tr><td class="lbl">Adm No.</td><td class="val">{{ $student->admission_number ?? $student->registration_number ?? '—' }}</td></tr>
+                <tr><td class="lbl">LIN No.</td><td class="val">{{ $student->admission_number ?? $student->registration_number ?? '—' }}</td></tr>
                 <tr><td class="lbl">Class</td><td class="val">{{ $className }}</td></tr>
                 <tr><td class="lbl">Stream</td><td class="val">{{ $student->stream ?? '—' }}</td></tr>
             </table>
