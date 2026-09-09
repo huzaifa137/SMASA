@@ -228,6 +228,16 @@ return [
         ],
         'nursery-minimal' => [
             'show_border', 'show_watermark',
+
+            // School Header — dual independent logos (each can be
+            // removed on its own, same split as Primary Modern/Minimal),
+            // motto, and phone/email/location contact line.
+            'show_logo_left', 'show_logo_right', 'show_motto', 'show_contact',
+
+            // Student Block — photo, the whole NAME/CLASS/LIN text list
+            // (whole-block master), and its individual fields.
+            'show_photo', 'show_stu_details_block',
+            'show_stu_name', 'show_stu_class', 'show_stu_admission',
         ],
     ],
 

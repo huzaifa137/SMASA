@@ -25,15 +25,19 @@
         | saved profile (Helper::getPassslipSettings); failing that, the
         | hard default.
         |
-        | Only 'show_border' and 'show_watermark' are wired here for
-        | now — that's the current capability list for 'nursery-minimal'
-        | in config/passslip_templates.php. This markup is still a
-        | static demo layout (not yet bound to real $student/$subjectMarks
-        | data — see the in-progress conversion work referenced in
-        | ExaminationController::resolveNurserySlipView()), so further
-        | toggles only get added here once the matching section of this
-        | file is converted to dynamic markup, same rule the config file
-        | states for the whole Nursery family.
+        | 'show_border', 'show_watermark' plus the School Header / Student
+        | Block toggles below (logos, motto, contact, photo, name, class,
+        | LIN) are wired here — matching the capability list for
+        | 'nursery-minimal' in config/passslip_templates.php. This markup
+        | is still a static demo layout (not yet bound to real
+        | $student/$subjectMarks data — see the in-progress conversion
+        | work referenced in ExaminationController::resolveNurserySlipView()),
+        | so each toggle here only shows/hides the existing static demo
+        | content rather than swapping in live data — that data-binding
+        | conversion is a separate, later step. Any FURTHER toggle only
+        | gets added here once the matching section of this file is
+        | converted, same rule the config file states for the whole
+        | Nursery family.
         |─────────────────────────────────────────────────────────────
         */
         $accent = request('accent', '#f0a500');
@@ -51,6 +55,20 @@
         };
         $accentDark = $hexToDark($accent);
 
+        // Very light tint of the accent colour (mixed heavily with
+        // white) — used for the Cognitive/Social-Emotional Development
+        // column headings so their background follows whichever Accent
+        // Colour the user picks instead of the old fixed #f5f4ff.
+        $hexToTint = function (string $hex, float $mixWithWhite = 0.88): string {
+            $hex = ltrim($hex, '#');
+            [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+            $r = (int) ($r + (255 - $r) * $mixWithWhite);
+            $g = (int) ($g + (255 - $g) * $mixWithWhite);
+            $b = (int) ($b + (255 - $b) * $mixWithWhite);
+            return sprintf('#%02x%02x%02x', $r, $g, $b);
+        };
+        $accentTint = $hexToTint($accent);
+
         // Helper: treat '1' / 'true' / missing (falls back to saved
         // per-class settings, then to $default) as ON. Query-string
         // always wins so the live customisation preview keeps working.
@@ -67,6 +85,25 @@
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
             'watermark' => $on('show_watermark', true, $savedCfg),
+
+            // Two independent logos either side of the school name —
+            // each falls back to the legacy single 'show_logo' key
+            // first, same convention slip-modern/minimal use, so an old
+            // saved profile that predates this split still behaves the
+            // same until it's re-saved with the new granular keys.
+            'logo_left' => $on('show_logo_left', $on('show_logo', true, $savedCfg), $savedCfg),
+            'logo_right' => $on('show_logo_right', $on('show_logo', true, $savedCfg), $savedCfg),
+            'motto' => $on('show_motto', true, $savedCfg),
+            'contact' => $on('show_contact', true, $savedCfg),
+
+            'photo' => $on('show_photo', true, $savedCfg),
+            // Whole-block master for the NAME/CLASS/LIN text list next to
+            // the photo — independent of 'photo' so it can come off on
+            // its own, same as Modern/Minimal's 'show_stu_details_block'.
+            'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
+            'stu_name' => $on('show_stu_name', true, $savedCfg),
+            'stu_class' => $on('show_stu_class', true, $savedCfg),
+            'stu_admission' => $on('show_stu_admission', true, $savedCfg),
         ];
     @endphp
 
@@ -74,6 +111,7 @@
         :root {
             --accent: {{ $accent }};
             --accent-dark: {{ $accentDark }};
+            --accent-tint: {{ $accentTint }};
         }
 
         * {
@@ -378,7 +416,7 @@
             padding: 10px 4px;
             border-bottom: 1px solid #000;
             text-transform: uppercase;
-            background: #f5f4ff;
+            background: var(--accent-tint);
         }
 
         .nursery-subject-row {
@@ -617,23 +655,31 @@
             @endif
 
             <div class="sch-header">
-                <div class="sch-logo-area">
-                    <div class="sch-logo-box"><i class="fas fa-school"></i></div>
-                </div>
+                @if($cfg['logo_left'])
+                    <div class="sch-logo-area">
+                        <div class="sch-logo-box"><i class="fas fa-school"></i></div>
+                    </div>
+                @endif
 
                 <div class="sch-center">
                     <div class="sch-name">Blue Bell Schools</div>
-                    <div class="sch-details">
-                        <span>0783582960</span>
-                        <span> | bluebell2022.schools@gmail.com | </span> <br>
-                        <span>P.O BOX 80012</span>
-                    </div>
-                    <div class="sch-motto">MOTTO : "WE RING THE BELLS OF SUCCESS"</div>
+                    @if($cfg['contact'])
+                        <div class="sch-details">
+                            <span>0783582960</span>
+                            <span> | bluebell2022.schools@gmail.com | </span> <br>
+                            <span>P.O BOX 80012</span>
+                        </div>
+                    @endif
+                    @if($cfg['motto'])
+                        <div class="sch-motto">MOTTO : "WE RING THE BELLS OF SUCCESS"</div>
+                    @endif
                 </div>
 
-                <div class="sch-logo-area sch-logo-area-right">
-                    <div class="sch-logo-box"><i class="fas fa-school"></i></div>
-                </div>
+                @if($cfg['logo_right'])
+                    <div class="sch-logo-area sch-logo-area-right">
+                        <div class="sch-logo-box"><i class="fas fa-school"></i></div>
+                    </div>
+                @endif
             </div>
 
             <div class="title-band">
@@ -641,18 +687,28 @@
             </div>
 
             <div class="stu-row">
-                <div class="stu-photo">
-                    <div class="nophoto">
-                        <i class="fas fa-user"></i>
-                        <span>No Photo</span>
+                @if($cfg['photo'])
+                    <div class="stu-photo">
+                        <div class="nophoto">
+                            <i class="fas fa-user"></i>
+                            <span>No Photo</span>
+                        </div>
                     </div>
-                </div>
+                @endif
 
-                <div class="stu-details">
-                    <div class="stu-field"><strong>NAME:</strong> Aaron Kiberu</div>
-                    <div class="stu-field"><strong>CLASS:</strong> Baby Class — BROWN</div>
-                    <div class="stu-field"><strong>LIN:</strong> —</div>
-                </div>
+                @if($cfg['stu_details_block'])
+                    <div class="stu-details">
+                        @if($cfg['stu_name'])
+                            <div class="stu-field"><strong>NAME:</strong> Aaron Kiberu</div>
+                        @endif
+                        @if($cfg['stu_class'])
+                            <div class="stu-field"><strong>CLASS:</strong> Baby Class — BROWN</div>
+                        @endif
+                        @if($cfg['stu_admission'])
+                            <div class="stu-field"><strong>LIN:</strong> —</div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             <div class="nursery-dev-wrap">

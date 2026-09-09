@@ -841,13 +841,16 @@ class ExaminationController extends Controller
      * for live printing too.
      *
      * 'nursery-minimal' itself is STILL a static demo layout (no
-     * $student/$subjectMarks binding yet) — only its Appearance toggles
-     * (accent colour, 'show_border', 'show_watermark', matching
+     * $student/$subjectMarks binding yet) — but its show/hide toggles
+     * ('show_border', 'show_watermark', dual logos, motto, contact,
+     * photo, and the NAME/CLASS/LIN student fields, matching
      * config/passslip_templates.php's 'nursery-minimal' capability list)
-     * are wired to real request/saved-settings data so far, the same
-     * $accent/$on mechanism slip-classic/modern/minimal.blade.php use.
-     * As more of its markup gets bound to real data, add the
-     * corresponding capability keys and $cfg entries the same way.
+     * ARE wired to real request/saved-settings data, the same $accent/
+     * $on mechanism slip-classic/modern/minimal.blade.php use — each
+     * toggle just shows/hides the existing static demo content rather
+     * than swapping in live data. As more of its markup gets bound to
+     * real student/school data, add the corresponding capability keys
+     * and $cfg entries the same way.
      */
     public function resolveNurserySlipView(string $template, string $lang): string
     {
