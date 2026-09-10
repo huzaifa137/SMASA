@@ -69,6 +69,52 @@
         };
         $accentTint = $hexToTint($accent);
 
+                // ── School meta (same as modern template) ──────────────────────
+        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'School');
+        $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? '';
+        $schoolEmail = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('email');
+        $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
+        $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
+        $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+
+        // Resolve logo URL
+        $schoolLogoUrl = null;
+        if ($schoolLogo) {
+            $directPath = public_path('uploads/logos/' . $schoolLogo);
+            if (file_exists($directPath)) {
+                $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+            } else {
+                foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                    $fallback = public_path('storage/' . $schoolLogo);
+                    if (file_exists($fallback)) {
+                        $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                        break;
+                    }
+                    $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                    if (file_exists($fallback2)) {
+                        $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ── Student photo ────────────────────────────────────────────────
+        $photo = null;
+        if (!empty($student->student_photo)) {
+            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                $fp = str_replace(
+                    '/',
+                    DIRECTORY_SEPARATOR,
+                    public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
+                );
+                if (file_exists($fp)) {
+                    $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+                    break;
+                }
+            }
+        }
+
         // Helper: treat '1' / 'true' / missing (falls back to saved
         // per-class settings, then to $default) as ON. Query-string
         // always wins so the live customisation preview keeps working.
@@ -651,33 +697,45 @@
         <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
 
             @if($cfg['watermark'])
-                <div class="watermark-text" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:#000;opacity:.04;text-transform:uppercase;pointer-events:none;">BLUE BELL SCHOOLS</div>
+            <div class="watermark-text" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:#000;opacity:.04;text-transform:uppercase;pointer-events:none;">{{ $schoolName }}</div>
             @endif
 
             <div class="sch-header">
                 @if($cfg['logo_left'])
                     <div class="sch-logo-area">
-                        <div class="sch-logo-box"><i class="fas fa-school"></i></div>
+                        <div class="sch-logo-box">
+    @if($schoolLogoUrl)
+        <img src="{{ $schoolLogoUrl }}" alt="logo">
+    @else
+        <i class="fas fa-school"></i>
+    @endif
+</div>
                     </div>
                 @endif
 
                 <div class="sch-center">
-                    <div class="sch-name">Blue Bell Schools</div>
+                    <div class="sch-name">{{ $schoolName }}</div>
                     @if($cfg['contact'])
                         <div class="sch-details">
-                            <span>0783582960</span>
-                            <span> | bluebell2022.schools@gmail.com | </span> <br>
-                            <span>P.O BOX 80012</span>
-                        </div>
+    @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
+    @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
+    @if($schoolLocation)<span>{{ $schoolLocation }}</span>@endif
+</div>
                     @endif
                     @if($cfg['motto'])
-                        <div class="sch-motto">MOTTO : "WE RING THE BELLS OF SUCCESS"</div>
+                        <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
                     @endif
                 </div>
 
                 @if($cfg['logo_right'])
                     <div class="sch-logo-area sch-logo-area-right">
-                        <div class="sch-logo-box"><i class="fas fa-school"></i></div>
+                        <div class="sch-logo-box">
+    @if($schoolLogoUrl)
+        <img src="{{ $schoolLogoUrl }}" alt="logo">
+    @else
+        <i class="fas fa-school"></i>
+    @endif
+</div>
                     </div>
                 @endif
             </div>
@@ -689,23 +747,34 @@
             <div class="stu-row">
                 @if($cfg['photo'])
                     <div class="stu-photo">
-                        <div class="nophoto">
-                            <i class="fas fa-user"></i>
-                            <span>No Photo</span>
-                        </div>
-                    </div>
+    @if($photo)
+        <img src="{{ $photo }}" alt="{{ $student->firstname ?? 'Student' }} {{ $student->lastname ?? '' }}">
+    @else
+        <div class="nophoto">
+            <i class="fas fa-user"></i>
+            <span>No Photo</span>
+        </div>
+    @endif
+</div>
                 @endif
 
                 @if($cfg['stu_details_block'])
                     <div class="stu-details">
                         @if($cfg['stu_name'])
-                            <div class="stu-field"><strong>NAME:</strong> Aaron Kiberu</div>
+                            <div class="stu-field"><strong>NAME:</strong>
+    {{ $student->lastname ?? '' }} {{ $student->firstname ?? '' }} {{ $student->other_names ?? '' }}
+</div>
                         @endif
                         @if($cfg['stu_class'])
-                            <div class="stu-field"><strong>CLASS:</strong> Baby Class — BROWN</div>
+                            <div class="stu-field"><strong>CLASS:</strong>
+    {{ Helper::recordMdname($student->senior ?? null) }}
+    {{ ($student->stream ?? false) ? ' — ' . $student->stream : '' }}
+</div>
                         @endif
                         @if($cfg['stu_admission'])
-                            <div class="stu-field"><strong>LIN:</strong> —</div>
+                            <div class="stu-field"><strong>LIN:</strong>
+    {{ $student->adm_no ?? ($student->index_no ?? '—') }}
+</div>
                         @endif
                     </div>
                 @endif

@@ -8,6 +8,113 @@
         href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <?php use App\Http\Controllers\Helper; ?>
+
+    @php
+        /*
+        |─────────────────────────────────────────────────────────────
+        | CUSTOMISATION — Nursery Classic ('nursery-classic')
+        |
+        | Mirrors the exact accent/toggle mechanism the other pass-slip
+        | designs already use (see slip-classic/modern/minimal.blade.php
+        | and slip-nursery.blade.php's identical $accent/$on blocks).
+        | Query-string always wins (so the "Customize this design" live
+        | preview keeps reacting instantly); failing that, falls back to
+        | this class's saved profile (Helper::getPassslipSettings);
+        | failing that, the hard default.
+        |
+        | Only 'show_border' and 'show_watermark' are wired here, matching
+        | the 'nursery-classic' capability list in
+        | config/passslip_templates.php — this markup is still a static
+        | demo layout (not yet bound to real $student/$subjectMarks data),
+        | so both toggles just show/hide the existing static demo
+        | content/border rather than swapping in live data. Any FURTHER
+        | toggle only gets added here once the matching section of this
+        | file is converted, same rule the config file states for the
+        | whole Nursery family.
+        |─────────────────────────────────────────────────────────────
+        */
+        $accent = request('accent', '#f0a500');
+        if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $accent)) {
+            $accent = '#f0a500';
+        }
+
+        $hexToDark = function (string $hex): string {
+            $hex = ltrim($hex, '#');
+            [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+            $r = max(0, (int) ($r * 0.82));
+            $g = max(0, (int) ($g * 0.82));
+            $b = max(0, (int) ($b * 0.82));
+            return sprintf('#%02x%02x%02x', $r, $g, $b);
+        };
+        $accentDark = $hexToDark($accent);
+
+        // Helper: treat '1' / 'true' / missing (falls back to saved
+        // per-class settings, then to $default) as ON. Query-string
+        // always wins so the live customisation preview keeps working.
+        $on = fn(string $key, bool $default = true, array $saved = []): bool =>
+            request()->has($key)
+            ? in_array(request($key), ['1', 'true', 1, true], true)
+            : ($saved[$key] ?? $default);
+
+        // Per-class saved customisation, same lookup the other Nursery/
+        // Primary designs use. $student is passed into this view by
+        // ExaminationController::passslipPreview() — guard with null-safe
+        // access in case this file is ever rendered without it.
+        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+
+        $cfg = [
+            'border' => $on('show_border', true, $savedCfg),
+            'watermark' => $on('show_watermark', true, $savedCfg),
+        ];
+
+        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'Your School Name');
+
+        // ── School logo resolution (same as modern/nursery templates) ──
+        // ── Get watermark logo (reuse school logo) ──────────────────────
+        $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+
+        $schoolLogoUrl = null;
+        if ($schoolLogo) {
+            $directPath = public_path('uploads/logos/' . $schoolLogo);
+            if (file_exists($directPath)) {
+                $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+            } else {
+                foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                    $fallback = public_path('storage/' . $schoolLogo);
+                    if (file_exists($fallback)) {
+                        $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                        break;
+                    }
+                    $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                    if (file_exists($fallback2)) {
+                        $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ── Student photo resolution ────────────────────────────────────
+        $photo = null;
+        if (!empty($student->student_photo)) {
+            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                $fp = str_replace(
+                    '/',
+                    DIRECTORY_SEPARATOR,
+                    public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
+                );
+                if (file_exists($fp)) {
+                    $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+                    break;
+                }
+            }
+        }
+        $watermarkLogoUrl = $schoolLogoUrl;
+
+    @endphp
+
     <style>
         :root {
             --navy: #1c3f7c;
@@ -18,6 +125,12 @@
             --blue: #3aa8d8;
             --yellow: #f0b429;
             --paper: #fffdf7;
+            --accent:
+                {{ $accent }}
+            ;
+            --accent-dark:
+                {{ $accentDark }}
+            ;
         }
 
         * {
@@ -59,24 +172,96 @@
             padding: 24px 0 60px;
         }
 
-.sheet {
-    /* Fluid on screen — shrinks to fit narrow containers like the
+        .sheet {
+            /* Fluid on screen — shrinks to fit narrow containers like the
        "Customize this design" live-preview iframe — but never
        grows past true A4 width. @media print below pins this
        back to an exact 210mm regardless of viewport, so printed
        output is unaffected. */
-    width: 100%;
-    max-width: 210mm;
-    min-height: 297mm;
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
             background: var(--paper);
             position: relative;
             padding: 10mm 11mm 8mm;
             box-shadow: 0 4px 30px rgba(0, 0, 0, .25);
-                overflow: hidden;
-    border-radius: 8px;
-    border: 3px solid #6cc3e8;
-    margin: 0 auto;
+            overflow: hidden;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
+
+        /* ── Conditional border system (show_border toggle) ─────────
+   Mirrors the has-border pattern used by slip-classic/modern/
+   minimal/nursery — a coloured frame plus a thin inset line and
+   chunky corner brackets, all tied to the Accent Colour picker. */
+        .sheet.has-border {
+            border: 3px solid var(--accent);
+        }
+
+        .sheet.has-border::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid var(--accent);
+            opacity: .35;
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        .sheet.has-border::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background:
+                linear-gradient(var(--accent), var(--accent)) top left / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top left / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top right / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) top right / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom left / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom left / 3px 18px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom right / 18px 3px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) bottom right / 3px 18px no-repeat;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        /* ── Watermark (show_watermark toggle) ───────────────────────
+   A large, faint, rotated school-name stamp centred behind all the
+   sheet's content. Placed as the FIRST child of .sheet in the markup
+   with z-index:0 so header-scene (z-index:auto→0, but painted after
+   in DOM order) and .content (z-index:2) both layer on top of it. */
+.watermark-kg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+    opacity: 0.5;
+    pointer-events: none;
+    overflow: hidden;
 }
+
+.watermark-kg img {
+    width: 50%;
+    max-width: 350px;
+    opacity: 0.5;
+    object-fit: contain;
+}
+
+        .watermark-kg .wm-text {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 800;
+            font-size: 52px;
+            color: var(--navy);
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.15;
+            letter-spacing: .5px;
+            transform: rotate(-18deg);
+            white-space: nowrap;
+        }
 
         @media print {
             body {
@@ -96,6 +281,15 @@
                 width: 210mm;
                 min-height: 297mm;
                 border-radius: 0;
+            }
+
+            .sheet.has-border,
+            .sheet.has-border::before,
+            .sheet.has-border::after,
+            .watermark-kg {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
             }
         }
 
@@ -1070,6 +1264,100 @@
                 animation: none !important;
             }
         }
+
+        /* Student photo in info box - responsive */
+        .info-box .info-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px 22px;
+        }
+
+        @media (max-width: 600px) {
+            .info-box>div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .info-box .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* =========================================================
+   TERM & FEES INFORMATION
+   ========================================================= */
+
+        .term-fees-box {
+            background: #fff;
+            border: 2px solid #eef1f6;
+            border-radius: 14px;
+            padding: 8px 12px 10px;
+            margin-bottom: 3mm;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+        }
+
+        .term-fees-title {
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 12px;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .term-fees-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px 10px;
+        }
+
+        .term-fee-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fafbfd;
+            border: 1px solid #edf0f5;
+            border-radius: 10px;
+            padding: 6px 9px;
+            min-height: 35px;
+        }
+
+        .term-fee-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .term-fee-content {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .term-fee-label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 8.5px;
+            font-weight: 600;
+            color: #777;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .term-fee-value {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.25;
+            margin-top: 2px;
+        }
     </style>
 </head>
 
@@ -1087,7 +1375,17 @@
     </div>
 
     <div class="page-wrap">
-        <div class="sheet" id="sheet">
+        <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}" id="sheet">
+
+            @if($cfg['watermark'])
+                <div class="watermark-kg">
+                    @if($watermarkLogoUrl)
+                        <img src="{{ $watermarkLogoUrl }}" alt="watermark" style="width:60%;max-width:400px;opacity:0.15;">
+                    @else
+                        <div class="wm-text">{{ $schoolName }}</div>
+                    @endif
+                </div>
+            @endif
 
             <div class="header-scene">
 
@@ -1217,38 +1515,44 @@
 
                 <!-- Logo -->
                 <div class="shield-logo">
-                    <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M60 4 C50 14 30 18 16 18 C16 60 20 96 60 132 C100 96 104 60 104 18 C90 18 70 14 60 4Z"
-                            fill="#1c3f7c" stroke="#12274d" stroke-width="2" />
-                        <path d="M60 12 C51 20 34 24 22 24 C22 60 26 90 60 120 C94 90 98 60 98 24 C86 24 69 20 60 12Z"
-                            fill="none" stroke="#4d6fa8" stroke-width="1.4" />
-                        <path d="M60 26 l5 11 12 1.5 -9 8.5 2.5 12 -10.5 -6 -10.5 6 2.5 -12 -9 -8.5 12 -1.5z"
-                            fill="#ffffff" />
-                        <path d="M42 55 h36 v6 c0 9 -8 14 -18 17 c-10 -3 -18 -8 -18 -17z" fill="none" stroke="#fff"
-                            stroke-width="2.2" />
-                        <path d="M60 55 v22" stroke="#fff" stroke-width="2" />
-                        <text x="60" y="90" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
-                            font-weight="700" font-size="11">YOUR LOGO</text>
-                        <text x="60" y="103" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
-                            font-weight="700" font-size="11">HERE</text>
-                        <path
-                            d="M16 34 C10 44 9 58 13 70 M16 34 c-6 3 -9 8 -10 13 M16 34 c-7 -1 -12 2 -16 6 M13 70 c-5 2 -8 6 -10 11 M13 70 c-6 0 -10 3 -13 7"
-                            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                            transform="translate(4,20)" />
-                        <path
-                            d="M104 34 C110 44 111 58 107 70 M104 34 c6 3 9 8 10 13 M104 34 c7 -1 12 2 16 6 M107 70 c5 2 8 6 10 11 M107 70 c6 0 10 3 13 7"
-                            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                            transform="translate(-4,20)" />
-                    </svg>
+                    @if($schoolLogoUrl)
+                        <img src="{{ $schoolLogoUrl }}" alt="School Logo"
+                            style="width:100%;height:auto;display:block;border-radius:8px;">
+                    @else
+                        <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M60 4 C50 14 30 18 16 18 C16 60 20 96 60 132 C100 96 104 60 104 18 C90 18 70 14 60 4Z"
+                                fill="#1c3f7c" stroke="#12274d" stroke-width="2" />
+                            <path d="M60 12 C51 20 34 24 22 24 C22 60 26 90 60 120 C94 90 98 60 98 24 C86 24 69 20 60 12Z"
+                                fill="none" stroke="#4d6fa8" stroke-width="1.4" />
+                            <path d="M60 26 l5 11 12 1.5 -9 8.5 2.5 12 -10.5 -6 -10.5 6 2.5 -12 -9 -8.5 12 -1.5z"
+                                fill="#ffffff" />
+                            <path d="M42 55 h36 v6 c0 9 -8 14 -18 17 c-10 -3 -18 -8 -18 -17z" fill="none" stroke="#fff"
+                                stroke-width="2.2" />
+                            <path d="M60 55 v22" stroke="#fff" stroke-width="2" />
+                            <text x="60" y="90" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
+                                font-weight="700" font-size="11">YOUR LOGO</text>
+                            <text x="60" y="103" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif"
+                                font-weight="700" font-size="11">HERE</text>
+                            <path
+                                d="M16 34 C10 44 9 58 13 70 M16 34 c-6 3 -9 8 -10 13 M16 34 c-7 -1 -12 2 -16 6 M13 70 c-5 2 -8 6 -10 11 M13 70 c-6 0 -10 3 -13 7"
+                                fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                transform="translate(4,20)" />
+                            <path
+                                d="M104 34 C110 44 111 58 107 70 M104 34 c6 3 9 8 10 13 M104 34 c7 -1 12 2 16 6 M107 70 c5 2 8 6 10 11 M107 70 c6 0 10 3 13 7"
+                                fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                transform="translate(-4,20)" />
+                        </svg>
+                    @endif
                 </div>
 
                 <!-- Title Block -->
                 <div class="title-block">
-                    <div class="school-name">Victory Christian<br>Nursery School</div>
+                    <div class="school-name">{{ $schoolName }}</div>
                     <div class="banner"><i class="fa-solid fa-star"></i> KINDERGARTEN LEARNING JOURNEY <i
                             class="fa-solid fa-star"></i></div>
-                    <div class="academic-year"><i class="fa-solid fa-leaf"></i> Academic Year:
-                        {{ $academic_year ?? '20XX – 20XX' }} <i class="fa-solid fa-leaf"></i></div>
+                    <div class="academic-year"><i class="fa-solid fa-leaf"></i> Academic Year :
+                        {{ $academic_year ?? '20XX' }} <i class="fa-solid fa-leaf"></i>
+                    </div>
                 </div>
 
                 <!-- Sky Group -->
@@ -1285,42 +1589,52 @@
 
             <div class="content">
 
-                <!-- CHILD'S INFORMATION -->
-                <div class="info-box">
-                    <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i
-                            class="fa-solid fa-leaf"></i></div>
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i></div>
-                            <span class="label">Child's Name:</span><span class="value">{{ $child_name ?? '' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--orange)"><i class="fa-solid fa-book"></i>
-                            </div><span class="label">Stream:</span><span class="value">{{ $stream ?? '' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--green)"><i
-                                    class="fa-solid fa-calendar-days"></i></div><span class="label">Term:</span><span
-                                class="value">{{ $term ?? '' }}</span>
-                        </div>
-
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-user-large"></i>
-                            </div><span class="label">Class:</span><span class="value">{{ $class_name ?? '' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--purple)"><i class="fa-solid fa-clock"></i>
-                            </div><span class="label">Attendance:</span><span
-                                class="value">{{ $attendance ?? '' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-icon" style="background:var(--pink)"><i
-                                    class="fa-solid fa-chalkboard-teacher"></i></div><span
-                                class="label">Teacher:</span><span class="value">{{ $teacher ?? '' }}</span>
-                        </div>
-                        <div class="info-row" style="grid-column:span 2;"></div>
-                    </div>
+               <!-- CHILD'S INFORMATION - Option 2: Double Border -->
+<div class="info-box" style="border: 2px solid var(--accent); background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 8px 18px 10px; margin-bottom: 3.5mm; position: relative;">
+    <!-- Inner border -->
+    <div style="position: absolute; inset: 5px; border: 1px dashed var(--accent); border-radius: 12px; pointer-events: none; opacity: 0.5;"></div>
+    
+    <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i class="fa-solid fa-leaf"></i></div>
+    <div style="display:flex; gap:20px; align-items:center;">
+        <!-- Student Photo -->
+        <div style="flex-shrink:0; width:90px; height:110px; border:2px solid var(--accent); border-radius:12px; overflow:hidden; background:#f0f0f0; display:flex; align-items:center; justify-content:center;">
+            @if($photo)
+                <img src="{{ $photo }}" alt="Student Photo" style="width:100%;height:100%;object-fit:cover;">
+            @else
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#e8e8e8;color:#aaa;">
+                    <i class="fas fa-user" style="font-size:2rem;"></i>
+                    <span style="font-size:0.5rem;text-transform:uppercase;letter-spacing:0.04em;">No Photo</span>
                 </div>
+            @endif
+        </div>
+        <!-- Info Grid - 2 columns -->
+        <div class="info-grid" style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
+            <div class="info-row">
+                <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i></div>
+                <span class="label">Child's Name:</span>
+                <span class="value">{{ $child_name ?? '' }}</span>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-user-large"></i></div>
+                <span class="label">Class:</span>
+                <span class="value">{{ $class_name ?? '' }}</span>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon" style="background:var(--yellow)"><i class="fa-solid fa-chalkboard-teacher"></i></div>
+                <span class="label">Teacher:</span>
+                <span class="value">{{ $teacher ?? '' }}</span>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon" style="background:var(--green)"><i class="fa-solid fa-calendar-days"></i></div>
+                <span class="label">Term:</span>
+                <span class="value">{{ $term ?? '' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- DEVELOPMENT JOURNEY -->
                 <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i
@@ -1361,76 +1675,123 @@
                     </div>
                 </div>
 
-                <!-- FOUR BOTTOM PANELS -->
-                <div class="bottom-grid">
-                    <div class="panel">
-                        <h5 style="color:var(--navy)"><i class="fa-solid fa-pen"></i> Teacher's Observation</h5>
-                        <div class="lines">
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
+                <!-- TERM & FEES INFORMATION - Option 2: Border with Accent Left Bars -->
+                <div class="term-fees-box"
+                    style="background: #fff; border: 2px solid var(--accent); border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 0; margin-bottom: 3.5mm; overflow: hidden;">
+
+                    <!-- Accent header bar with background -->
+                    <div
+                        style="background: linear-gradient(135deg, var(--accent), var(--accent-dark)); padding: 10px 16px; position: relative;">
+                        <!-- Decorative leaf icons in background -->
+                        <div
+                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.15; font-size: 24px; color: #fff;">
+                            <i class="fa-solid fa-leaf"></i>
+                        </div>
+                        <div
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); opacity: 0.15; font-size: 24px; color: #fff;">
+                            <i class="fa-solid fa-leaf"></i>
+                        </div>
+
+                        <div
+                            style="text-align: center; font-family: 'Fredoka', sans-serif; font-weight: 700; color: #fff; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; position: relative; z-index: 1;">
+                            <i class="fa-solid fa-leaf" style="margin-right: 8px;"></i>
+                            Term & Fees Information
+                            <i class="fa-solid fa-leaf" style="margin-left: 8px;"></i>
                         </div>
                     </div>
 
-                    <div class="panel">
-                        <h5 style="color:var(--pink)"><i class="fa-solid fa-heart"></i> Child's Special Moments</h5>
-                        <div class="moment-item">
-                            <div class="moment-icon" style="background:var(--pink)"><i class="fa-solid fa-star"></i>
+                    <div style="padding: 12px 14px 14px;">
+                        <div class="term-fees-grid">
+                            <!-- This Term Ends -->
+                            <div class="term-fee-item"
+                                style="display:flex; align-items:center; gap:10px; background:#fafbfd; border:1px solid #edf0f5; border-left: 4px solid var(--accent); border-radius:10px; padding:8px 10px; min-height:35px;">
+                                <div class="term-fee-icon"
+                                    style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; flex-shrink:0; background:var(--blue);">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <div class="term-fee-content">
+                                    <span class="term-fee-label"
+                                        style="font-family:'Fredoka',sans-serif; font-size:8.5px; font-weight:600; color:#777; line-height:1.1; text-transform:uppercase;">This
+                                        Term Ends On</span>
+                                    <span class="term-fee-value"
+                                        style="font-family:'Fredoka',sans-serif; font-size:10.5px; font-weight:700; color:var(--navy); line-height:1.25; margin-top:2px;">{{ $term_ends_on ?? '20 December 2026' }}</span>
+                                </div>
                             </div>
-                            <div class="line" style="flex:1"></div>
-                        </div>
-                        <div class="moment-item">
-                            <div class="moment-icon" style="background:var(--purple)"><i
-                                    class="fa-solid fa-balloon"></i></div>
-                            <div class="line" style="flex:1"></div>
-                        </div>
-                        <div class="moment-item">
-                            <div class="moment-icon" style="background:var(--yellow)"><i class="fa-solid fa-trophy"></i>
+
+                            <!-- Next Term Starts -->
+                            <div class="term-fee-item"
+                                style="display:flex; align-items:center; gap:10px; background:#fafbfd; border:1px solid #edf0f5; border-left: 4px solid var(--accent); border-radius:10px; padding:8px 10px; min-height:35px;">
+                                <div class="term-fee-icon"
+                                    style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; flex-shrink:0; background:var(--green);">
+                                    <i class="fa-solid fa-calendar-plus"></i>
+                                </div>
+                                <div class="term-fee-content">
+                                    <span class="term-fee-label"
+                                        style="font-family:'Fredoka',sans-serif; font-size:8.5px; font-weight:600; color:#777; line-height:1.1; text-transform:uppercase;">Next
+                                        Term Starts On</span>
+                                    <span class="term-fee-value"
+                                        style="font-family:'Fredoka',sans-serif; font-size:10.5px; font-weight:700; color:var(--navy); line-height:1.25; margin-top:2px;">{{ $next_term_starts_on ?? '05 January 2027' }}</span>
+                                </div>
                             </div>
-                            <div class="line" style="flex:1"></div>
-                        </div>
-                    </div>
 
-                    <div class="panel">
-                        <h5 style="color:var(--green)"><i class="fa-solid fa-seedling"></i> Next Steps In Learning</h5>
-                        <ul class="steps">
-                            <li><i class="fa-solid fa-magnifying-glass"></i> Keep exploring and asking wonderful
-                                questions.</li>
-                            <li><i class="fa-solid fa-comments"></i> Continue building confidence in expressing ideas.
-                            </li>
-                            <li><i class="fa-solid fa-user-check"></i> Develop independence and responsibility.</li>
-                            <li><i class="fa-solid fa-star"></i> Keep practicing, trying and believing in yourself.</li>
-                        </ul>
-                    </div>
+                            <!-- Fees Balance -->
+                            <div class="term-fee-item"
+                                style="display:flex; align-items:center; gap:10px; background:#fafbfd; border:1px solid #edf0f5; border-left: 4px solid var(--accent); border-radius:10px; padding:8px 10px; min-height:35px;">
+                                <div class="term-fee-icon"
+                                    style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; flex-shrink:0; background:var(--orange);">
+                                    <i class="fa-solid fa-coins"></i>
+                                </div>
+                                <div class="term-fee-content">
+                                    <span class="term-fee-label"
+                                        style="font-family:'Fredoka',sans-serif; font-size:8.5px; font-weight:600; color:#777; line-height:1.1; text-transform:uppercase;">Fees
+                                        Balance</span>
+                                    <span class="term-fee-value"
+                                        style="font-family:'Fredoka',sans-serif; font-size:10.5px; font-weight:700; color:var(--navy); line-height:1.25; margin-top:2px;">{{ $fees_balance ?? 'UGX 150,000' }}</span>
+                                </div>
+                            </div>
 
-                    <div class="panel" style="display:flex; flex-direction:column; justify-content:center;">
-                        <h5 style="color:var(--purple); justify-content:center;"><i class="fa-solid fa-envelope"></i>
-                            Teacher's Message</h5>
-                        <div class="message-text">
-                            You are a wonderful learner with a bright future!
-                            Keep shining, keep smiling, and keep growing.
-                            We are proud of you!
+                            <!-- Next Term Fees -->
+                            <div class="term-fee-item"
+                                style="display:flex; align-items:center; gap:10px; background:#fafbfd; border:1px solid #edf0f5; border-left: 4px solid var(--accent); border-radius:10px; padding:8px 10px; min-height:35px;">
+                                <div class="term-fee-icon"
+                                    style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; flex-shrink:0; background:var(--purple);">
+                                    <i class="fa-solid fa-wallet"></i>
+                                </div>
+                                <div class="term-fee-content">
+                                    <span class="term-fee-label"
+                                        style="font-family:'Fredoka',sans-serif; font-size:8.5px; font-weight:600; color:#777; line-height:1.1; text-transform:uppercase;">Next
+                                        Term Fees</span>
+                                    <span class="term-fee-value"
+                                        style="font-family:'Fredoka',sans-serif; font-size:10.5px; font-weight:700; color:var(--navy); line-height:1.25; margin-top:2px;">{{ $next_term_fees ?? 'UGX 500,000' }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- SIGNATURES -->
-                <div class="sig-box">
-                    <div class="sig-col"><i class="fa-solid fa-pen-nib"></i>
-                        <div class="sig-line"></div><span>Class Teacher</span><br><small>Signature</small>
-                    </div>
-                    <div class="sig-col"><i class="fa-solid fa-award"></i>
-                        <div class="sig-line"></div><span>Head Teacher</span><br><small>Signature</small>
-                    </div>
-                    <div class="sig-col"><i class="fa-solid fa-people-roof"></i>
-                        <div class="sig-line"></div><span>Parent / Guardian</span><br><small>Signature</small>
-                    </div>
-                    <div class="sig-col"><i class="fa-regular fa-calendar"></i>
-                        <div class="sig-line"></div><span>Date</span>
-                    </div>
-                </div>
+<!-- SIGNATURES -->
+<div class="sig-box" style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
+    <div class="sig-col" style="text-align: center; font-size: 10px;">
+        <i class="fa-solid fa-pen-nib" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
+        <span style="font-weight: 600; color: #333;">Class Teacher</span><br><small style="color: #777;">Signature</small>
+    </div>
+    <div class="sig-col" style="text-align: center; font-size: 10px;">
+        <i class="fa-solid fa-award" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
+        <span style="font-weight: 600; color: #333;">Head Teacher</span><br><small style="color: #777;">Signature</small>
+    </div>
+    <div class="sig-col" style="text-align: center; font-size: 10px;">
+        <i class="fa-solid fa-people-roof" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
+        <span style="font-weight: 600; color: #333;">Parent / Guardian</span><br><small style="color: #777;">Signature</small>
+    </div>
+    <div class="sig-col" style="text-align: center; font-size: 10px;">
+        <i class="fa-regular fa-calendar" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
+        <span style="font-weight: 600; color: #333;">Date</span>
+    </div>
+</div>
 
             </div>
 

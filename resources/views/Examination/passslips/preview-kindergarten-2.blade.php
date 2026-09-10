@@ -175,7 +175,7 @@
   .wb-blue{ --wb-bg:#d9ecf2; --wb-color:#4fa0c7; --wb-text:#3d7ab5; }
   .wb-orange{ --wb-bg:#fbe4cf; --wb-color:#e08a3c; --wb-text:#d97b2b; }
 
-  .dev-title{ text-align:center; font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy); font-size:13px; letter-spacing:1px; margin:1.5mm 0 1mm;}
+  .dev-title{ text-align:center; font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy); font-size:13px; letter-spacing:1px; margin:2.5mm 0 1mm;}
 
   /* ===== AREAS OF DEVELOPMENT — card grid (icon image + dynamic HTML text) ===== */
   .dev-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.2mm;}
@@ -210,33 +210,75 @@
   .dev-card--music{ --dc-color:#dcc27f; }
   .dev-card--world{ --dc-color:#a9c78a; }
 
+  /* ===== TERM & FEES INFORMATION =====
+     Same visual language as the rest of the page (Fredoka headings,
+     navy/cream palette, the same rounded colour-badge pattern used by
+     the "Who I Am" badges) — values are ready to be swapped for real
+     $termEndsOn / $nextTermStartsOn / $feesBalance / $nextTermFees
+     variables instead of the placeholders shown here. */
+  .term-fees-wrap{ margin-top:1.5mm;}
+  .term-fees-title{ text-align:center; font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy); font-size:13px; letter-spacing:1px; margin:1.5mm 0 1.6mm;}
+  .term-fees-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.2mm;}
+  .term-fee-item{
+    display:flex; align-items:center; gap:2mm;
+    background:#fffdf7; border:1px solid var(--line); border-radius:8px;
+    padding:2mm 2.4mm;
+  }
+  .term-fee-icon{
+    width:8mm; height:8mm; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:8.5px; background:var(--tf-color, var(--navy));
+  }
+  .term-fee-content{ display:flex; flex-direction:column; min-width:0; }
+  .term-fee-label{ font-family:'Fredoka',sans-serif; font-size:6px; font-weight:600; color:#948f7e; text-transform:uppercase; letter-spacing:.2px; line-height:1.2;}
+  .term-fee-value{ font-family:'Fredoka',sans-serif; font-size:8.4px; font-weight:600; color:var(--navy); margin-top:0.6mm; line-height:1.2;}
+  .tf-blue{ --tf-color:#4fa0c7; }
+  .tf-green{ --tf-color:#7fa65c; }
+  .tf-gold{ --tf-color:#e0a83c; }
+  .tf-purple{ --tf-color:#8f6bc7; }
+
+  /* ===== MY LEARNING JOURNEY (timeline) =====
+     Heading is now a proper pointed ribbon (matches the "MY PROFILE"
+     ribbon language) with real breathing room before the first item —
+     it no longer sits jammed against the first icon. Each entry's
+     heading + description used to be baked into the PNG together with
+     three blank dotted lines; the lines are gone and the text is now
+     real HTML, ready to be looped/bound to dynamic data later. Only
+     the circular icon + connecting vine stay as artwork. */
   .timeline{ display:flex; flex-direction:column; margin-bottom:3mm;}
-  .tl-title-wrap{ text-align:center; margin-bottom:1mm;}
+  .tl-title-wrap{ text-align:center; margin-bottom:5mm;}
   .tl-title{
-    display:inline-block; background:var(--navy); color:#fff; font-family:'Fredoka',sans-serif; font-size:10.5px; font-weight:600;
-    padding:4px 10px; border-radius:3px; letter-spacing:.5px;
+    display:inline-block; background:var(--navy); color:#fff; font-family:'Fredoka',sans-serif; font-size:9.5px; font-weight:600;
+    padding:5px 15px 5px 11px; letter-spacing:.5px; text-transform:uppercase;
+    clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
   }
-  .tl-item{ margin-top:-6px; }
-  .tl-item img{width:72%; display:block; margin:0 auto;}
+  .tl-item{ display:flex; align-items:flex-start; gap:2mm;}
+  .tl-item + .tl-item{ margin-top:-7mm; }
+  .tl-item img{ width:22mm; flex:none; display:block;}
+  .tl-item-text{ padding-top:4mm; min-width:0;}
+  .tl-item-title{ margin:0 0 0.7mm; font-family:'Fredoka',sans-serif; font-weight:600; font-size:9px; letter-spacing:.3px; text-transform:uppercase;}
+  .tl-item-desc{ margin:0; font-family:'Poppins',sans-serif; font-size:7.2px; color:#444; line-height:1.35;}
 
-  /* ===== BOTTOM PANELS ===== */
-  .bottom-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.5mm; margin-top:1.5mm;}
-  .bottom-grid img{width:100%; display:block; border-radius:6px;}
-  .msg-panel{
-    background:#fffdf7; border:1px solid var(--line); border-radius:6px; overflow:hidden;
-    display:flex; flex-direction:column;
+  /* ===== FOOTER =====
+     Signature row now sits inside its own card (matches the dev-card /
+     term-fee-item visual language) so it reads as a clean, intentional
+     block rather than dotted lines floating on the page. Each slot has
+     a real blank sig-space above the dotted rule for a physical
+     signature, or to later bind a captured signature image / the real
+     $issueDate value into that space dynamically. */
+  .footer{ position:relative; margin-top:3mm;}
+  .sig-box{
+    background:#fffdf7; border:1px solid var(--line); border-radius:10px;
+    padding:3.5mm 5mm 3mm; box-shadow:0 2px 8px rgba(0,0,0,.05);
   }
-  .msg-header{ background:var(--navy); color:#fff; text-align:center; font-family:'Fredoka',sans-serif; font-size:10px; font-weight:600; padding:4px 2px; letter-spacing:.5px;}
-  .msg-body{ padding:6px 8px; font-size:9px; font-style:italic; color:#444; line-height:1.45; text-align:center; flex:1; display:flex; align-items:center;}
-
-  /* ===== FOOTER ===== */
-  .footer{ position:relative; margin-top:2mm; padding-top:2mm;}
-  .sig-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; text-align:center; padding:0 26mm;}
-  .sig-line{ border-top:1px dotted #999; padding-top:2px; font-size:9px; color:#333;}
-  .sig-line b{ font-size:9.5px; display:block; color:var(--navy);}
-  .footer-tagline{ text-align:center; font-style:italic; font-size:9.5px; color:#666; margin-top:4mm;}
-  .books-deco{ position:absolute; left:-2mm; bottom:-4mm; width:26mm; z-index:2;}
-  .backpack-deco{ position:absolute; right:-2mm; bottom:-4mm; width:26mm; z-index:2;}
+  .sig-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; text-align:center;}
+  .sig-slot{ display:flex; flex-direction:column; align-items:center;}
+  .sig-slot i{ color:var(--navy); font-size:12px; margin-bottom:2.5px; opacity:.8;}
+  .sig-slot .sig-space{ width:100%; min-height:7mm;}
+  .sig-slot .sig-rule{ width:88%; border-top:1px dotted #999;}
+  .sig-slot .sig-label{ margin-top:1.5px; padding-top:2px; font-size:9px; color:#333; line-height:1.3;}
+  .sig-slot .sig-label b{ font-size:9.5px; display:block; color:var(--navy);}
+  .footer-tagline{ text-align:center; font-style:italic; font-size:9.5px; color:#666; margin-top:3.5mm;}
 
   @media print{
     @page{ size:A4; margin:0; }
@@ -296,9 +338,9 @@
               </div>
             </div>
 
-            <div class="hero-ribbon-caption">
+            <!-- <div class="hero-ribbon-caption">
               <span>{{ $journeyCaption ?? 'Celebrating growth, discovery & little achievements' }}</span>
-            </div>
+            </div> -->
           </div>
           <div class="profile-row">
             <div class="profile-card">
@@ -330,106 +372,214 @@
               <div class="whoiam-caption">Characteristics I show every day in my own special way. ♡</div>
             </div>
           </div>
-
-          <div class="dev-title">AREAS OF DEVELOPMENT</div>
-          {{--
-            AREAS OF DEVELOPMENT: each card now uses an icon-only image (the
-            heading + description text that used to be baked into the PNG has
-            been removed from the artwork and rebuilt as real HTML below the
-            image), so it can be made fully dynamic later — e.g. loop over a
-            $developmentAreas collection and print ->title / ->description
-            instead of the hardcoded text shown here.
-          --}}
-          <div class="dev-grid">
-            <div class="dev-card dev-card--lang">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
-              <h4 class="dev-card-title">Language &amp;<br>Communication</h4>
-              <p class="dev-card-sub">expressing ideas and<br>building vocabulary.</p>
-              <div class="dev-card-divider"><i class="fas fa-leaf"></i></div>
-            </div>
-
-            <div class="dev-card dev-card--social">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
-              <h4 class="dev-card-title">Social &amp; Emotional<br>Development</h4>
-              <p class="dev-card-sub">Shows empathy, builds positive<br>relationships and understands feelings.</p>
-              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
-            </div>
-
-            <div class="dev-card dev-card--cognitive dev-card--dashed">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
-              <h4 class="dev-card-title">Cognitive<br>Development</h4>
-              <p class="dev-card-sub">Shows curiosity, problem-solving<br>skills and enjoys learning new concepts.</p>
-              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-star"></i><span class="dcd-line"></span></div>
-            </div>
-
-            <div class="dev-card dev-card--creative">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
-              <h4 class="dev-card-title">Creative<br>Development</h4>
-              <p class="dev-card-sub">Enjoys art, imagination, drama,<br>music and creative self-expression.</p>
-              <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
-            </div>
-
-            <div class="dev-card dev-card--physical">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
-              <h4 class="dev-card-title">Physical<br>Development</h4>
-              <p class="dev-card-sub">Develops gross and fine motor<br>skills through active play and activities.</p>
-              <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
-            </div>
-
-            <div class="dev-card dev-card--approach">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
-              <h4 class="dev-card-title">Approach to<br>Learning</h4>
-              <p class="dev-card-sub">Shows independence, focus,<br>perseverance and positive learning habits.</p>
-              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
-            </div>
-
-            <div class="dev-card dev-card--music">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
-              <h4 class="dev-card-title">Music &amp;<br>Movement</h4>
-              <p class="dev-card-sub">Enjoys singing, rhythm, dancing<br>and moving to express feelings.</p>
-              <div class="dev-card-divider"><i class="fas fa-music"></i></div>
-            </div>
-
-            <div class="dev-card dev-card--world">
-              <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
-              <h4 class="dev-card-title">Understanding<br>the World</h4>
-              <p class="dev-card-sub">Explores nature, people, culture<br>and the world with interest.</p>
-              <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
-            </div>
-          </div>
         </div>
 
         <div class="right-col">
+          {{--
+            MY LEARNING JOURNEY: only the circular icon + connecting vine
+            stay as artwork now. The heading, per-item title and
+            description are real HTML (previously baked into each PNG
+            together with three blank dotted lines, which have been
+            removed entirely). Ready to loop over a $learningJourney
+            collection later instead of the six hardcoded rows below.
+          --}}
           <div class="timeline">
-            <div class="tl-title-wrap"><span class="tl-title">MY LEARNING JOURNEY</span></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/discovery_magnifying_glass.png" alt=""></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/exploring_boat.png" alt=""></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/creating_palette.png" alt=""></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/communicating_speech_bubbles.png" alt=""></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/connecting_friends.png" alt=""></div>
-            <div class="tl-item"><img src="{{ asset('images/passslip/kindergarten2/') }}/growing_plant.png" alt=""></div>
+            <div class="tl-title-wrap"><span class="tl-title">My Learning Journey</span></div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/discovery_magnifying_glass.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#4f8a3d">Discovering</h5>
+                <p class="tl-item-desc">I explore the world around me with wonder and excitement.</p>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/exploring_boat.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#2f6fa8">Exploring</h5>
+                <p class="tl-item-desc">I investigate, ask questions and enjoy new experiences.</p>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/creating_palette.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#c1701f">Creating</h5>
+                <p class="tl-item-desc">I express my ideas through art, imagination and play.</p>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/communicating_speech_bubbles.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#6b4fa0">Communicating</h5>
+                <p class="tl-item-desc">I share my thoughts, listen to others and enjoy stories.</p>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/connecting_friends.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#c1443c">Connecting</h5>
+                <p class="tl-item-desc">I build friendships, show kindness and work together.</p>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <img src="{{ asset('images/passslip/kindergarten2/') }}/growing_plant.png" alt="">
+              <div class="tl-item-text">
+                <h5 class="tl-item-title" style="color:#3d7a3d">Growing</h5>
+                <p class="tl-item-desc">I develop my skills and become more confident each day.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="bottom-grid">
-        <img src="{{ asset('images/passslip/kindergarten2/') }}/teacher_observation_birds.png" alt="">
-        <img src="{{ asset('images/passslip/kindergarten2/') }}/special_moments_teddy.png" alt="">
-        <img src="{{ asset('images/passslip/kindergarten2/') }}/next_steps_icons.png" alt="">
-        <div class="msg-panel">
-          <div class="msg-header">TEACHER'S MESSAGE</div>
-          <div class="msg-body">You are a wonderful learner with a bright future! Keep dreaming, keep smiling and keep growing. We are so proud of you!</div>
+      {{--
+        AREAS OF DEVELOPMENT: full sheet width now (previously confined to
+        the 64% left column, which left a large empty gap on the right once
+        the shorter timeline column ran out of items). Each card uses an
+        icon-only image with the heading + description rebuilt as real HTML
+        below it, ready to loop over a $developmentAreas collection later
+        instead of the hardcoded text shown here.
+      --}}
+      <div class="dev-title">AREAS OF DEVELOPMENT</div>
+      <div class="dev-grid">
+        <div class="dev-card dev-card--lang">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
+          <h4 class="dev-card-title">Language &amp;<br>Communication</h4>
+          <p class="dev-card-sub">expressing ideas and<br>building vocabulary.</p>
+          <div class="dev-card-divider"><i class="fas fa-leaf"></i></div>
+        </div>
+
+        <div class="dev-card dev-card--social">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
+          <h4 class="dev-card-title">Social &amp; Emotional<br>Development</h4>
+          <p class="dev-card-sub">Shows empathy, builds positive<br>relationships and understands feelings.</p>
+          <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
+        </div>
+
+        <div class="dev-card dev-card--cognitive dev-card--dashed">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
+          <h4 class="dev-card-title">Cognitive<br>Development</h4>
+          <p class="dev-card-sub">Shows curiosity, problem-solving<br>skills and enjoys learning new concepts.</p>
+          <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-star"></i><span class="dcd-line"></span></div>
+        </div>
+
+        <div class="dev-card dev-card--creative">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
+          <h4 class="dev-card-title">Creative<br>Development</h4>
+          <p class="dev-card-sub">Enjoys art, imagination, drama,<br>music and creative self-expression.</p>
+          <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
+        </div>
+
+        <div class="dev-card dev-card--physical">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
+          <h4 class="dev-card-title">Physical<br>Development</h4>
+          <p class="dev-card-sub">Develops gross and fine motor<br>skills through active play and activities.</p>
+          <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
+        </div>
+
+        <div class="dev-card dev-card--approach">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
+          <h4 class="dev-card-title">Approach to<br>Learning</h4>
+          <p class="dev-card-sub">Shows independence, focus,<br>perseverance and positive learning habits.</p>
+          <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span class="dcd-line"></span></div>
+        </div>
+
+        <div class="dev-card dev-card--music">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
+          <h4 class="dev-card-title">Music &amp;<br>Movement</h4>
+          <p class="dev-card-sub">Enjoys singing, rhythm, dancing<br>and moving to express feelings.</p>
+          <div class="dev-card-divider"><i class="fas fa-music"></i></div>
+        </div>
+
+        <div class="dev-card dev-card--world">
+          <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
+          <h4 class="dev-card-title">Understanding<br>the World</h4>
+          <p class="dev-card-sub">Explores nature, people, culture<br>and the world with interest.</p>
+          <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
         </div>
       </div>
 
+      {{--
+        TERM & FEES INFORMATION: also full sheet width now, laid out as a
+        single row of 4 (rather than 2x2) since there's room — styled with
+        the same navy/cream/Fredoka language as the rest of the page. Swap
+        the four placeholder values below for real $termEndsOn /
+        $nextTermStartsOn / $feesBalance / $nextTermFees variables.
+      --}}
+      <div class="term-fees-wrap">
+        <div class="term-fees-title">TERM &amp; FEES INFORMATION</div>
+        <div class="term-fees-grid">
+          <div class="term-fee-item">
+            <span class="term-fee-icon tf-blue"><i class="fas fa-calendar-check"></i></span>
+            <span class="term-fee-content">
+              <span class="term-fee-label">This Term Ends On</span>
+              <span class="term-fee-value">{{ $termEndsOn ?? '20 December 2026' }}</span>
+            </span>
+          </div>
+          <div class="term-fee-item">
+            <span class="term-fee-icon tf-green"><i class="fas fa-calendar-plus"></i></span>
+            <span class="term-fee-content">
+              <span class="term-fee-label">Next Term Starts On</span>
+              <span class="term-fee-value">{{ $nextTermStartsOn ?? '05 January 2027' }}</span>
+            </span>
+          </div>
+          <div class="term-fee-item">
+            <span class="term-fee-icon tf-gold"><i class="fas fa-coins"></i></span>
+            <span class="term-fee-content">
+              <span class="term-fee-label">Fees Balance</span>
+              <span class="term-fee-value">{{ $feesBalance ?? 'UGX 150,000' }}</span>
+            </span>
+          </div>
+          <div class="term-fee-item">
+            <span class="term-fee-icon tf-purple"><i class="fas fa-wallet"></i></span>
+            <span class="term-fee-content">
+              <span class="term-fee-label">Next Term Fees</span>
+              <span class="term-fee-value">{{ $nextTermFees ?? 'UGX 500,000' }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {{--
+        SIGNATURE ROW: sits inside its own card now (instead of floating
+        dotted lines) and each signatory gets a real blank sig-space
+        above the dotted rule — room to physically sign when printed, or
+        to later bind a captured signature image / the real $issueDate
+        value into that space dynamically.
+      --}}
       <div class="footer">
-        <img class="books-deco" src="{{ asset('images/passslip/kindergarten2/') }}/footer_books.png" alt="">
-        <img class="backpack-deco" src="{{ asset('images/passslip/kindergarten2/') }}/backpack.png" alt="">
-        <div class="sig-row">
-          <div class="sig-line"><b>Class Teacher</b>Signature</div>
-          <div class="sig-line"><b>Head Teacher</b>Signature</div>
-          <div class="sig-line"><b>Parent / Guardian</b>Signature</div>
-          <div class="sig-line"><b>Date</b>&nbsp;</div>
+        <div class="sig-box">
+          <div class="sig-row">
+            <div class="sig-slot">
+              <i class="fas fa-pen-nib"></i>
+              <div class="sig-space"></div>
+              <div class="sig-rule"></div>
+              <div class="sig-label"><b>Class Teacher</b>Signature</div>
+            </div>
+            <div class="sig-slot">
+              <i class="fas fa-award"></i>
+              <div class="sig-space"></div>
+              <div class="sig-rule"></div>
+              <div class="sig-label"><b>Head Teacher</b>Signature</div>
+            </div>
+            <div class="sig-slot">
+              <i class="fas fa-people-roof"></i>
+              <div class="sig-space"></div>
+              <div class="sig-rule"></div>
+              <div class="sig-label"><b>Parent / Guardian</b>Signature</div>
+            </div>
+            <div class="sig-slot">
+              <i class="fas fa-calendar-day"></i>
+              <div class="sig-space"></div>
+              <div class="sig-rule"></div>
+              <div class="sig-label"><b>Date</b>{{ $issueDate ?? '' }}</div>
+            </div>
+          </div>
         </div>
         <div class="footer-tagline">Every child is a unique story of joy, hope and endless potential ♡</div>
       </div>
