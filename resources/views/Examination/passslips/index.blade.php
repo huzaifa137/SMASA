@@ -1626,52 +1626,6 @@ use App\Http\Controllers\Helper;
                                         }
                                     @endphp
                                     {{-- href is updated by JS with customisation params --}}
-                                    <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                        class="student-card student-link"
-                                        data-base-href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
-                                        data-name="{{ strtolower($fullName) }}"
-                                        data-adm="{{ strtolower($student->adm_no ?? '') }}"
-                                        data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
-                                        onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
-                                        target="_blank">
-
-                                        <div class="student-card-avatar"
-                                            style="background:linear-gradient(135deg,{{ $index % 2 == 0 ? 'var(--brand)' : 'var(--brand-mid)' }},var(--brand-light));">
-                                            {{ $initials }}
-                                        </div>
-
-                                        <div class="student-card-info">
-                                            <div class="student-card-name">
-                                                {{ $student->lastname }} {{ $student->firstname }}
-                                                @if(property_exists($student, 'other_names') && $student->other_names)
-                                                    <span class="other-names">{{ $student->other_names }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="student-card-meta">
-                                                <span class="meta-tag">
-                                                    <i class="fas fa-graduation-cap"></i>
-                                                    {{ Helper::recordMdname($student->class_id) }}
-                                                    {{ $student->stream_id ? '– ' . $student->stream_id : '' }}
-                                                </span>
-                                                @if($student->adm_no ?? false)
-                                                    <span class="meta-tag">
-                                                        <i class="fas fa-id-card"></i>{{ $student->adm_no }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <div class="student-card-action">
-                                            <i class="fas fa-print"></i>
-                                            <span>Print Slip</span>
-                                        </div>
-                                    </a>
-
-                                    {{--
-                                    REPLACE WITH (same card, wrapped, plus the new secondary link):
-                                    --}}
-
-                                    {{-- href is updated by JS with customisation params --}}
                                     <div class="student-card-wrap" style="position:relative;">
                                         <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}"
                                             class="student-card student-link"

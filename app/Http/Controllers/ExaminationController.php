@@ -1378,11 +1378,17 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
-        // All class-stream combos in this exam
+        // All class-stream combos in this exam. De-duplicated by
+        // class_id+stream_id: if the same combo somehow has more than
+        // one row in examination_classes (e.g. left over from a prior
+        // partial save), looping over it further below would otherwise
+        // pull in and list every student in that class/stream twice.
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
-            ->get();
+            ->get()
+            ->unique(fn ($ec) => $ec->class_id . '-' . $ec->stream_id)
+            ->values();
 
         $examFullyReleased = in_array($exam->status, ['closed', 'results_released']);
         $anyClassReleased = $examClasses->contains(fn($ec) => !is_null($ec->results_released_at));
@@ -1424,6 +1430,10 @@ class ExaminationController extends Controller
                 });
             $allStudents = $allStudents->merge($students);
         }
+
+        // Safety net: never list the same student twice even if the
+        // de-duplication above didn't catch every case.
+        $allStudents = $allStudents->unique('id')->values();
 
         // ✅ FIXED: Use sort() instead of sortByDesc().thenBy()
         $allStudents = $allStudents
@@ -1718,7 +1728,8 @@ class ExaminationController extends Controller
             ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
             ->pluck('class_id')
             ->unique()
-            ->values();
+            ->values()
+            ->all();
 
         $saved = Helper::listPassslipSettings($schoolId, $classIds);
 
