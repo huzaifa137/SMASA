@@ -80,6 +80,32 @@ $controller = new Controller();
                                             </div>
                                         </div>
                                     </div>
+
+                                    <hr class="my-3">
+
+                                    <div class="text-start">
+                                        <label class="form-label fw-semibold text-muted d-block mb-2">
+                                            <i class="fas fa-signature me-1"></i> Signature
+                                        </label>
+                                        <div class="mb-2">
+                                            @if(!empty($teacher->signature))
+                                                <img id="signaturePreview" src="{{ asset($teacher->signature) }}"
+                                                    alt="Signature"
+                                                    style="max-height:50px;max-width:160px;object-fit:contain;border:1px solid #e9ecef;border-radius:.4rem;padding:.3rem;background:#fff;">
+                                            @else
+                                                <img id="signaturePreview" src="" alt="Signature"
+                                                    style="max-height:50px;max-width:160px;object-fit:contain;border:1px solid #e9ecef;border-radius:.4rem;padding:.3rem;background:#fff;display:none;">
+                                                <span id="noSignatureText" class="text-muted" style="font-size:.85rem;">No
+                                                    signature uploaded yet.</span>
+                                            @endif
+                                        </div>
+                                        <input type="file" name="signature" id="signature_upload"
+                                            class="form-control form-control-sm" accept="image/*">
+                                        <small class="text-muted d-block mt-1" style="font-size:.75rem;">
+                                            Uploaded once and reused automatically on every report card this
+                                            teacher is the Class Teacher for.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -434,6 +460,18 @@ $controller = new Controller();
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         $('#logoPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            $('#signature_upload').on('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#signaturePreview').attr('src', e.target.result).show();
+                        $('#noSignatureText').hide();
                     };
                     reader.readAsDataURL(file);
                 }

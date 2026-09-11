@@ -1083,7 +1083,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
            leaving the panel as-is is the right call (existing chip
            behaviour, unchanged). */
         function loadClassCustomisation(classId, pending = false) {
-            fetch(GET_URL + '?class_id=' + classId, { headers: { 'Accept': 'application/json' } })
+            fetch(GET_URL + '?class_id=' + classId + '&template=' + encodeURIComponent(currentTemplate()), { headers: { 'Accept': 'application/json' } })
                 .then(r => r.json())
                 .then(res => {
                     const usable = res.success && res.settings && Object.keys(res.settings).length > 0
@@ -1207,7 +1207,7 @@ function selectSavedTab(classId) {
             });
             if (!result.isConfirmed) return;
 
-            fetch(DELETE_URL_BASE + '/' + classId, {
+            fetch(DELETE_URL_BASE + '/' + classId + '?template=' + encodeURIComponent(currentTemplate()), {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': CSRF_TOKEN,

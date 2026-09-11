@@ -24,15 +24,16 @@
         | this class's saved profile (Helper::getPassslipSettings);
         | failing that, the hard default.
         |
-        | Only 'show_border' and 'show_watermark' are wired here, matching
-        | the 'nursery-classic' capability list in
-        | config/passslip_templates.php — this markup is still a static
-        | demo layout (not yet bound to real $student/$subjectMarks data),
-        | so both toggles just show/hide the existing static demo
-        | content/border rather than swapping in live data. Any FURTHER
-        | toggle only gets added here once the matching section of this
-        | file is converted, same rule the config file states for the
-        | whole Nursery family.
+        | 'show_border' and 'show_watermark' are wired here, matching the
+        | 'nursery-classic' capability list in config/passslip_templates.php.
+        | The student-info fields (Child's Name/Class/Teacher/Term) and the
+        | Development Journey subject grid now read real $student/$exam/
+        | $subjectMarks data (each subject's System Comment comes from
+        | $subj->grade_remark, resolved server-side from whichever
+        | Assessment Scale is attached to that class+subject) — NOT static
+        | placeholder text. The Term & Fees box still shows placeholder
+        | dates/amounts until real $term_ends_on/$fees_balance/... values
+        | are wired up from the controller.
         |─────────────────────────────────────────────────────────────
         */
         $accent = request('accent', '#f0a500');
@@ -59,10 +60,15 @@
             : ($saved[$key] ?? $default);
 
         // Per-class saved customisation, same lookup the other Nursery/
-        // Primary designs use. $student is passed into this view by
-        // ExaminationController::passslipPreview() — guard with null-safe
-        // access in case this file is ever rendered without it.
-        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+        // Primary designs use, scoped to THIS template ('nursery-classic')
+        // specifically — see the passslip_settings migration adding a
+        // `template` column — so Classic's own saved accent/toggles never
+        // bleed into (or get silently overwritten by) Modern's or
+        // Minimal's. $student is passed into this view by
+        // ExaminationController::passslipPreview()/passslipStudent() —
+        // guard with null-safe access in case this file is ever rendered
+        // without it.
+        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null, 'nursery-classic');
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -114,25 +120,28 @@
         $watermarkLogoUrl = $schoolLogoUrl;
 
         // ── Development Journey cards ───────────────────────────────────
-        // The source artwork used to have each card's title ("SOCIAL &
-        // EMOTIONAL", "Music and Dance", etc.) plus a small heart/line
-        // divider baked directly into the PNG. Those PNGs have since been
-        // cropped down to just the illustration, so the label + divider
-        // are now rendered here as real markup instead — driven by this
-        // array — which makes the wording easy to change later without
-        // touching another image file. Each entry's accent colour ($c)
-        // matches the colour that was originally baked into that card's
-        // artwork, so the look is unchanged.
-        $devCards = [
-            ['img' => 'social_emotional.png', 'label' => 'Social Development', 'c' => '#4caf7d', 'desc' => 'Works with Minimum Supervision'],
-            ['img' => 'thinking_discovery.png', 'label' => 'Reading', 'c' => '#f2994a', 'desc' => 'Works with Minimum Supervision'],
-            ['img' => 'language_communication.png', 'label' => 'English', 'c' => '#ec6ea8', 'desc' => 'Works Independently'],
-            ['img' => 'creativity_expression.png', 'label' => 'Writting', 'c' => '#8a5fc7', 'desc' => 'Works Independently'],
-            ['img' => 'physical_development.png', 'label' => 'Physical Education', 'c' => '#3aa8d8', 'desc' => 'Works with Minimum Supervision'],
-            ['img' => 'cooperation_independence.png', 'label' => 'Numbers', 'c' => '#4caf7d', 'desc' => 'Works under Teachers Guidance'],
-            ['img' => 'music_movement.png', 'label' => 'Music and Dance', 'c' => '#f0b429', 'desc' => 'Works Independently'],
-            ['img' => 'exploring_world.png', 'label' => 'Health Habits', 'c' => '#4caf7d', 'desc' => 'Works with Minimum Supervision'],
-        ];
+        // Built from this student's REAL nursery subjects ($subjectMarks —
+        // the same collection slip-nursery.blade.php already renders),
+        // instead of 8 fixed placeholder subjects. 'desc' is
+        // $subj->grade_remark — the System Comment already resolved
+        // server-side (buildPassslipData → AssessmentScale::presetForScore())
+        // from whichever Assessment Scale is attached to that class+subject
+        // — e.g. "Works Independently" / "Works with Minimum Supervision" /
+        // "Works under Teacher's Guidance" — NOT static text. Accent colour
+        // cycles through the same palette the original static cards used,
+        // by position, so the grid keeps its varied, colourful look; 'img'
+        // is a full icon URL (Helper::nurserySubjectIconUrl()) rather than
+        // a images/passslip/kindergarten/ filename, with a null fallback
+        // handled by the @foreach below.
+        $devPalette = ['#4caf7d', '#f2994a', '#ec6ea8', '#8a5fc7', '#3aa8d8', '#4caf7d', '#f0b429', '#4caf7d'];
+        $devCards = collect($subjectMarks ?? [])->values()->map(function ($subj, $i) use ($devPalette) {
+            return [
+                'img' => Helper::nurserySubjectIconUrl($subj->subject_name ?? ''),
+                'label' => $subj->subject_name ?? '',
+                'c' => $devPalette[$i % count($devPalette)],
+                'desc' => $subj->grade_remark ?: 'Pending',
+            ];
+        })->all();
 
     @endphp
 
@@ -1684,28 +1693,28 @@
                                 <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i>
                                 </div>
                                 <span class="label">Child's Name:</span>
-                                <span class="value">{{ $child_name ?? '' }}</span>
+                                <span class="value">{{ trim(($student->lastname ?? '') . ' ' . ($student->firstname ?? '') . ' ' . ($student->other_names ?? '')) }}</span>
                             </div>
 
                             <div class="info-row">
                                 <div class="info-icon" style="background:var(--pink)"><i
                                         class="fa-solid fa-user-large"></i></div>
                                 <span class="label">Class:</span>
-                                <span class="value">{{ $class_name ?? '' }}</span>
+                                <span class="value">{{ Helper::recordMdname($student->senior ?? null) }}{{ ($student->stream ?? false) ? ' — ' . $student->stream : '' }}</span>
                             </div>
 
                             <div class="info-row">
                                 <div class="info-icon" style="background:var(--yellow)"><i
                                         class="fa-solid fa-chalkboard-teacher"></i></div>
                                 <span class="label">Teacher:</span>
-                                <span class="value">{{ $teacher ?? '' }}</span>
+                                <span class="value">{{ $student->class_teacher ?? '' }}</span>
                             </div>
 
                             <div class="info-row">
                                 <div class="info-icon" style="background:var(--green)"><i
                                         class="fa-solid fa-calendar-days"></i></div>
                                 <span class="label">Term:</span>
-                                <span class="value">{{ $term ?? '' }}</span>
+                                <span class="value">{{ trim(($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
                             </div>
                         </div>
                     </div>
@@ -1715,10 +1724,14 @@
                 <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i
                         class="fa-solid fa-seedling"></i></div>
                 <div class="dev-grid">
-                    @foreach($devCards as $card)
+                    @forelse($devCards as $card)
                         <div class="dev-card" style="--c: {{ $card['c'] }}">
-                            <img class="thumb" src="{{ asset('images/passslip/kindergarten/' . $card['img']) }}"
-                                alt="{{ $card['label'] }}">
+                            @if($card['img'])
+                                <img class="thumb" src="{{ $card['img'] }}" alt="{{ $card['label'] }}">
+                            @else
+                                <i class="fa-solid fa-seedling thumb"
+                                    style="display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:{{ $card['c'] }};"></i>
+                            @endif
                             <div class="dev-card-label">{{ $card['label'] }}</div>
                             <div class="dev-card-divider">
                                 <span class="line"></span>
@@ -1727,7 +1740,11 @@
                             </div>
                             <p>{{ $card['desc'] }}</p>
                         </div>
-                    @endforeach
+                    @empty
+                        <div class="dev-card">
+                            <p>No subjects recorded yet.</p>
+                        </div>
+                    @endforelse
                 </div>
 
                 <!-- TERM & FEES INFORMATION - Option 2: Border with Accent Left Bars -->

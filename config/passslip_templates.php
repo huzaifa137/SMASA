@@ -246,6 +246,7 @@ return [
             // MY PROFILE card — whole-section master + its own fields
             'show_section_profile', 'show_photo',
             'show_stu_name', 'show_stu_class', 'show_stu_stream',
+            'show_stu_class_teacher', 'show_stu_term',
 
             // WHO I AM badges — whole-section master
             'show_section_whoiam',

@@ -715,85 +715,127 @@ class Helper extends Controller
     */
 
     /**
-     * Saved toggle/accent settings for a class, or [] if none saved yet
-     * (callers should merge this with hard defaults).
+     * Saved toggle/accent settings for a class's ONE specific Design
+     * Template (e.g. just 'modern', or just 'nursery-classic'), or []
+     * if that template has never been saved for this class.
+     *
+     * Each Design Template keeps its own row — see the migration that
+     * added the `template` column — so switching from Modern to Classic
+     * and saving a different accent colour there no longer overwrites
+     * (or "bleeds into") Modern's own saved profile.
      */
-    public static function getPassslipSettings($schoolId, $classId): array
+    public static function getPassslipSettings($schoolId, $classId, ?string $template = null): array
     {
         if (empty($classId) || empty($schoolId)) {
             return [];
         }
 
-        $row = DB::table('passslip_settings')
+        $query = DB::table('passslip_settings')
             ->where('school_id', $schoolId)
-            ->where('class_id', $classId)
-            ->first();
+            ->where('class_id', $classId);
+
+        $row = $template
+            ? $query->where('template', $template)->first()
+            // No specific template asked for — used by real print routes
+            // (passslipStudent/Class) that don't already know which
+            // design a class last had saved. Whichever template's row
+            // was updated MOST RECENTLY for this class is the one
+            // that's currently "active" for it.
+            : $query->orderByDesc('updated_at')->first();
 
         if (!$row) {
             return [];
         }
 
         $decoded = json_decode($row->settings, true);
+        $decoded = is_array($decoded) ? $decoded : [];
 
-        return is_array($decoded) ? $decoded : [];
+        // Make sure the caller can always see which template this row
+        // belongs to, even for older rows saved before 'template' was
+        // reliably included inside the JSON blob itself.
+        $decoded['template'] = $decoded['template'] ?? $row->template;
+
+        return $decoded;
     }
 
     /**
-     * Save the same settings JSON against one or more classes.
-     * Idempotent — safe to call repeatedly (updateOrInsert per class).
+     * Save the same settings JSON against one or more classes, scoped to
+     * the ONE Design Template the settings belong to
+     * ($settings['template'] — required, same key the customize panel
+     * already sends). Idempotent — safe to call repeatedly
+     * (updateOrInsert per class+template).
      */
     public static function savePassslipSettings($schoolId, array $classIds, array $settings): void
     {
+        $template = $settings['template'] ?? 'classic';
+
         foreach ($classIds as $classId) {
             if (empty($classId)) {
                 continue;
             }
 
             DB::table('passslip_settings')->updateOrInsert(
-                ['school_id' => $schoolId, 'class_id' => $classId],
+                ['school_id' => $schoolId, 'class_id' => $classId, 'template' => $template],
                 ['settings' => json_encode($settings), 'updated_at' => now(), 'created_at' => now()]
             );
         }
     }
 
     /**
-     * All SAVED customisation rows (school + one of the given class ids),
-     * keyed by class_id → decoded settings array. Only classes that
-     * actually have a row come back — this is what powers the
-     * "Saved Customisations" tab strip, so a class with nothing saved
-     * simply doesn't get a tab.
+     * All SAVED customisation rows for ONE Design Template (school + one
+     * of the given class ids + that template), keyed by class_id →
+     * decoded settings array. Only classes that have a row for THIS
+     * template come back — this is what powers the "Saved
+     * Customisations" tab strip on a given template's customise page, so
+     * a class that only ever saved a different template doesn't show up
+     * here (each template keeps its own tab strip, same as its own
+     * accent colour).
      */
-    public static function listPassslipSettings($schoolId, array $classIds): array
+    public static function listPassslipSettings($schoolId, array $classIds, ?string $template = null): array
     {
         if (empty($schoolId) || empty($classIds)) {
             return [];
         }
 
-        return DB::table('passslip_settings')
+        $query = DB::table('passslip_settings')
             ->where('school_id', $schoolId)
-            ->whereIn('class_id', $classIds)
-            ->get()
+            ->whereIn('class_id', $classIds);
+
+        if ($template) {
+            $query->where('template', $template);
+        }
+
+        return $query->get()
             ->mapWithKeys(function ($row) {
                 $decoded = json_decode($row->settings, true);
-                return [$row->class_id => is_array($decoded) ? $decoded : []];
+                $decoded = is_array($decoded) ? $decoded : [];
+                $decoded['template'] = $decoded['template'] ?? $row->template;
+                return [$row->class_id => $decoded];
             })
             ->toArray();
     }
 
     /**
-     * Delete the saved customisation for a single class, reverting its
-     * real pass slips back to DEFAULTS on next print.
+     * Delete the saved customisation for a single class' ONE template,
+     * reverting just that template's real pass slips back to DEFAULTS on
+     * next print. Other templates already saved for the same class are
+     * untouched.
      */
-    public static function deletePassslipSettings($schoolId, $classId): bool
+    public static function deletePassslipSettings($schoolId, $classId, ?string $template = null): bool
     {
         if (empty($schoolId) || empty($classId)) {
             return false;
         }
 
-        return DB::table('passslip_settings')
+        $query = DB::table('passslip_settings')
             ->where('school_id', $schoolId)
-            ->where('class_id', $classId)
-            ->delete() > 0;
+            ->where('class_id', $classId);
+
+        if ($template) {
+            $query->where('template', $template);
+        }
+
+        return $query->delete() > 0;
     }
 
     /**
@@ -1265,14 +1307,22 @@ class Helper extends Controller
     }
 
     /**
-     * Resolve a stored signature path (Storage::disk('public')) to a
-     * public URL, the same "does the file actually exist" convention
-     * schoolLogoUrl/photo resolution already use elsewhere.
+     * Resolve a stored signature path to a public URL.
+     *
+     * Signatures are uploaded via public_path('uploads/...') — the same
+     * convention already used for the school logo and teacher profile
+     * photo. This also falls back to checking Storage::disk('public')
+     * (an earlier convention some already-uploaded signatures may still
+     * be stored under) so nothing already uploaded breaks.
      */
     public static function signatureUrl(?string $path): ?string
     {
         if (empty($path)) {
             return null;
+        }
+
+        if (file_exists(public_path($path))) {
+            return asset($path);
         }
 
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {

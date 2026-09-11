@@ -392,6 +392,7 @@ class UserRightsAndPreviledges extends Controller
             'employee_number',
             'group_teacher',
             'teacher_profile',
+            'signature',
         ];
 
         // Get only the fields you want
@@ -411,6 +412,7 @@ class UserRightsAndPreviledges extends Controller
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer|between:1,5',
             'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             'school_id' => 'required|exists:schools,id',
             'staff_number' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
@@ -434,6 +436,25 @@ class UserRightsAndPreviledges extends Controller
             $file->move($destinationPath, $filename);
 
             $data['teacher_profile'] = 'uploads/teacherProfiles/' . $filename;
+        }
+
+        // Handle signature upload — stored once here, then reused
+        // automatically on every report card this teacher is the Class
+        // Teacher for (see Helper::classTeacherFor() / attachRemarksAndSignatures()).
+        if ($request->hasFile('signature')) {
+            if ($teacher->signature && file_exists(public_path($teacher->signature))) {
+                unlink(public_path($teacher->signature));
+            }
+
+            $sigFile = $request->file('signature');
+            $sigDestinationPath = public_path('uploads/teacherSignatures');
+            if (!file_exists($sigDestinationPath)) {
+                mkdir($sigDestinationPath, 0755, true);
+            }
+            $sigFilename = time() . '_' . $sigFile->getClientOriginalName();
+            $sigFile->move($sigDestinationPath, $sigFilename);
+
+            $data['signature'] = 'uploads/teacherSignatures/' . $sigFilename;
         }
 
         // Handle password update if provided

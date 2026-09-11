@@ -81,9 +81,13 @@
       ? in_array(request($key), ['1', 'true', 1, true], true)
       : ($saved[$key] ?? $default);
 
-    // $student is always passed into this view by passslipPreview() (and,
-    // once wired for live printing, passslipStudent()/Class()/All() too).
-    $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+    // $student is always passed into this view by passslipPreview() (and
+    // now passslipStudent()/Class()/All() too). Scoped to THIS template
+    // ('nursery-modern') specifically — see the passslip_settings
+    // migration adding a `template` column — so Modern's own saved
+    // accent/toggles never bleed into (or get overwritten by) Classic's
+    // or Minimal's.
+    $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null, 'nursery-modern');
 
     $cfg = [
       'border' => $on('show_border', true, $savedCfg),
@@ -99,6 +103,8 @@
       'stu_name' => $on('show_stu_name', true, $savedCfg),
       'stu_class' => $on('show_stu_class', true, $savedCfg),
       'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+      'stu_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
+      'stu_term' => $on('show_stu_term', true, $savedCfg),
 
       // ── WHO I AM badges (whole-section master) ────────────────────
       'section_whoiam' => $on('show_section_whoiam', true, $savedCfg),
@@ -1229,21 +1235,25 @@
                     <ul class="pc-fields">
                       @if($cfg['stu_name'])
                         <li><i class="fas fa-user"></i><span class="pc-label">Name</span><span
-                            class="pc-value">{{ $student->name ?? '' }}</span></li>
+                            class="pc-value">{{ trim(($student->lastname ?? '') . ' ' . ($student->firstname ?? '') . ' ' . ($student->other_names ?? '')) }}</span></li>
                       @endif
                       @if($cfg['stu_class'])
                         <li><i class="fas fa-graduation-cap"></i><span class="pc-label">Class</span><span
-                            class="pc-value">{{ $student->class ?? '' }}</span></li>
+                            class="pc-value">{{ Helper::recordMdname($student->senior ?? null) }}</span></li>
                       @endif
                       @if($cfg['stu_stream'])
                         <li><i class="fas fa-book-open"></i><span class="pc-label">Stream</span><span
                             class="pc-value">{{ $student->stream ?? '' }}</span></li>
                       @endif
-                      @if($cfg['stu_stream'])
+                      @if($cfg['stu_teacher'])
+                        <li><i class="fas fa-chalkboard-user"></i><span class="pc-label">Teacher</span><span
+                            class="pc-value">{{ $student->class_teacher ?? '' }}</span></li>
+                      @endif
+                      @if($cfg['stu_term'])
                         <li>
-                          <i class="fas fa-graduation-cap"></i>
-                          <span class="pc-label">Exam</span>
-                          <span class="pc-value">{{ 'BOT' ?? '' }}</span>
+                          <i class="fas fa-calendar-days"></i>
+                          <span class="pc-label">Term</span>
+                          <span class="pc-value">{{ $exam->term ?? '' }} {{ $exam->academic_year ?? '' }}</span>
                       </li> @endif
                     </ul>
                     <div class="pc-heart"><i class="fas fa-heart"></i></div>
@@ -1335,88 +1345,52 @@
 
       @if($cfg['section_dev_areas'])
         {{--
-        AREAS OF DEVELOPMENT: full sheet width now (previously confined to
-        the 64% left column, which left a large empty gap on the right once
-        the shorter timeline column ran out of items). Each card uses an
-        icon-only image with the heading + description rebuilt as real HTML
-        below it, ready to loop over a $developmentAreas collection later
-        instead of the hardcoded text shown here.
+        AREAS OF DEVELOPMENT: loops over the student's real nursery
+        subjects ($subjectMarks — the same collection slip-nursery.blade.php
+        already renders), instead of 8 fixed development-domain cards.
+        Each card's description is $subj->grade_remark — the System
+        Comment already resolved server-side (buildPassslipData →
+        AssessmentScale::presetForScore()) from whichever Assessment
+        Scale is attached to that class+subject, e.g. "Works
+        Independently" / "Works with Minimum Supervision" / "Works under
+        Teacher's Guidance" — NOT static text. The icon + accent colour
+        cycle through a fixed palette by position so the grid keeps the
+        same varied, colourful look the original static cards had.
         --}}
+        @php
+          $devPalette = [
+            ['color' => '#8c8c86', 'icon' => 'fa-leaf'],
+            ['color' => '#f4a19c', 'icon' => 'fa-heart'],
+            ['color' => '#e9b95c', 'icon' => 'fa-star'],
+            ['color' => '#dcc27f', 'icon' => 'fa-seedling'],
+            ['color' => '#b9b9ae', 'icon' => 'fa-shoe-prints'],
+            ['color' => '#a9c78a', 'icon' => 'fa-lightbulb'],
+            ['color' => '#dcc27f', 'icon' => 'fa-music'],
+            ['color' => '#a9c78a', 'icon' => 'fa-earth-americas'],
+          ];
+        @endphp
         <div class="dev-title">AREAS OF DEVELOPMENT</div>
         <div class="dev-grid">
-          <div class="dev-card dev-card--lang">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
-            <h4 class="dev-card-title">Reading</h4>
-            <p class="dev-card-sub">Works with Minimum Supervision
-            </p>
-            <div class="dev-card-divider"><i class="fas fa-leaf"></i></div>
-          </div>
-
-          <div class="dev-card dev-card--social">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
-            <h4 class="dev-card-title">Social Development</h4>
-            <p class="dev-card-sub">Works with Minimum Supervision
-
-            </p>
-            <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span
-                class="dcd-line"></span></div>
-          </div>
-
-          <div class="dev-card dev-card--cognitive dev-card--dashed">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
-            <h4 class="dev-card-title">Numbers</h4>
-            <p class="dev-card-sub">Works under Teachers Guidance
-
-            </p>
-            <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-star"></i><span
-                class="dcd-line"></span></div>
-          </div>
-
-          <div class="dev-card dev-card--creative">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
-            <h4 class="dev-card-title">Writting</h4>
-            <p class="dev-card-sub">Works Independently
-
-            </p>
-            <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
-          </div>
-
-          <div class="dev-card dev-card--physical">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
-            <h4 class="dev-card-title">Physical Education</h4>
-            <p class="dev-card-sub">Works with Minimum Supervision
-
-            </p>
-            <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
-          </div>
-
-          <div class="dev-card dev-card--approach">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
-            <h4 class="dev-card-title">English</h4>
-            <p class="dev-card-sub">Works Independently
-
-            </p>
-            <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span
-                class="dcd-line"></span></div>
-          </div>
-
-          <div class="dev-card dev-card--music">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
-            <h4 class="dev-card-title">Music and Dance</h4>
-            <p class="dev-card-sub">Works Independently
-
-            </p>
-            <div class="dev-card-divider"><i class="fas fa-music"></i></div>
-          </div>
-
-          <div class="dev-card dev-card--world">
-            <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
-            <h4 class="dev-card-title">Health Habits</h4>
-            <p class="dev-card-sub">Works with Minimum Supervision
-
-            </p>
-            <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
-          </div>
+          @forelse(($subjectMarks ?? collect()) as $i => $subj)
+            @php
+              $dp = $devPalette[$i % count($devPalette)];
+              $iconUrl = Helper::nurserySubjectIconUrl($subj->subject_name ?? '');
+            @endphp
+            <div class="dev-card" style="--dc-color:{{ $dp['color'] }}">
+              @if($iconUrl)
+                <img src="{{ $iconUrl }}" alt="{{ $subj->subject_name ?? '' }}">
+              @else
+                <i class="fas {{ $dp['icon'] }}" style="font-size:5.5mm;color:{{ $dp['color'] }};margin-bottom:1mm;"></i>
+              @endif
+              <h4 class="dev-card-title">{{ $subj->subject_name ?? '' }}</h4>
+              <p class="dev-card-sub">{{ $subj->grade_remark ?: 'Pending' }}</p>
+              <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas {{ $dp['icon'] }}"></i><span class="dcd-line"></span></div>
+            </div>
+          @empty
+            <div class="dev-card" style="--dc-color:#c7c2b3">
+              <p class="dev-card-sub">No subjects recorded yet.</p>
+            </div>
+          @endforelse
         </div>
       @endif
 

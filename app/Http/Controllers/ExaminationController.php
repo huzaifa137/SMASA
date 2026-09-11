@@ -818,40 +818,27 @@ class ExaminationController extends Controller
 
     /**
      * Resolve which Nursery pass-slip view to render for a given
-     * ?nursery_template= choice.
+     * ?template= choice — same job resolvePrimarySlipView() does for
+     * Primary. Wired into passslipStudent() (single-student print) and
+     * passslipPreview() (the "Customize this design" live preview), via
+     * applySavedPassslipSettings() merging the class's saved 'template'
+     * into request() beforehand.
      *
-     * NOTE — unlike resolvePrimarySlipView(), this is currently only
-     * wired into the read-only design-preview pipeline
-     * (passslipPreview(), used by the "Customize this design" page's
-     * live iframe), NOT into passslipStudent()/passslipClass()/
-     * passslipAll() — i.e. NOT into real report-card printing yet.
+     * NOT yet used by passslipClass()/passslipAll() (bulk printing) —
+     * those still hard-route Nursery students to 'nursery-minimal'
+     * (slip-nursery.blade.php) regardless of the saved template, because
+     * 'nursery-classic'/'nursery-modern' don't yet support the
+     * multi-student $renderSlips loop slip-nursery.blade.php already
+     * normalises 'single' vs 'class' vs 'all' mode into. Add that same
+     * loop to preview-kindergarten(-2).blade.php, then switch those two
+     * call sites over the same way passslipStudent() already is.
      *
      * 'nursery-classic' (preview-kindergarten.blade.php) and
-     * 'nursery-modern' (preview-kindergarten-2.blade.php) are still
-     * being converted, section by section, from static demo markup
-     * into the same dynamic $student/$subjectMarks/... contract every
-     * other slip-*.blade.php already uses (see the in-progress work
-     * replacing their static PNG sections with data-bound HTML/CSS).
-     * Routing real students through them before that conversion is
-     * finished would print/show placeholder demo content instead of
-     * that student's actual data — so callers other than the design
-     * preview should keep resolving Nursery students to
-     * 'Examination.passslips.slip-nursery' ('nursery-minimal') regardless
-     * of which Nursery template was picked in the gallery, until each
-     * file's conversion is complete and this mapping is safe to reuse
-     * for live printing too.
-     *
-     * 'nursery-minimal' itself is STILL a static demo layout (no
-     * $student/$subjectMarks binding yet) — but its show/hide toggles
-     * ('show_border', 'show_watermark', dual logos, motto, contact,
-     * photo, and the NAME/CLASS/LIN student fields, matching
-     * config/passslip_templates.php's 'nursery-minimal' capability list)
-     * ARE wired to real request/saved-settings data, the same $accent/
-     * $on mechanism slip-classic/modern/minimal.blade.php use — each
-     * toggle just shows/hides the existing static demo content rather
-     * than swapping in live data. As more of its markup gets bound to
-     * real student/school data, add the corresponding capability keys
-     * and $cfg entries the same way.
+     * 'nursery-modern' (preview-kindergarten-2.blade.php) — like
+     * 'nursery-minimal' — read real $student/$subjectMarks/$exam data
+     * (including each subject's assessment-scale-driven System Comment,
+     * via $subj->grade_remark) and their own show/hide toggles, matching
+     * config/passslip_templates.php's capability list for each key.
      */
     public function resolveNurserySlipView(string $template, string $lang): string
     {
@@ -1272,9 +1259,20 @@ class ExaminationController extends Controller
 
         $lang = request('lang', 'en');
 
-        // Use nursery layout if applicable
+        // Use nursery layout if applicable. applySavedPassslipSettings()
+        // above already merged this class's saved 'template' (whichever
+        // Nursery design — minimal/classic/modern — was last saved for
+        // it) into request() when no explicit ?template= was given, so
+        // this now picks the SAME file the "Customize this design" page
+        // would show for that class, instead of always hard-falling
+        // back to nursery-minimal (slip-nursery.blade.php) regardless of
+        // what was actually saved.
         if ($isNursery) {
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+            $template = request('template', 'nursery-minimal');
+            if (!self::isNurseryTemplateKey($template)) {
+                $template = 'nursery-minimal';
+            }
+            $view = $this->resolveNurserySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
@@ -1392,6 +1390,15 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
+            // NOTE: unlike passslipStudent(), this stays on
+            // 'nursery-minimal' (slip-nursery.blade.php) regardless of
+            // which Nursery design was saved for the class —
+            // preview-kindergarten.blade.php ('nursery-classic') and
+            // preview-kindergarten-2.blade.php ('nursery-modern') only
+            // support a single student per render so far (no $slips
+            // multi-student loop yet, the same one slip-nursery.blade.php
+            // already normalises via $renderSlips). Route bulk class
+            // printing through them too once that loop is added.
             $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
         } else {
             $view = $this->resolvePrimarySlipView($lang);
@@ -1502,6 +1509,9 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
+            // See the same note in passslipClass() — nursery-classic/
+            // nursery-modern don't support the multi-student bulk loop
+            // yet, so bulk "all" printing stays on nursery-minimal.
             $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
         } else {
             $view = $this->resolvePrimarySlipView($lang);
@@ -1768,10 +1778,6 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
-            // See resolveNurserySlipView()'s docblock: this is the ONE
-            // place a 'nursery-classic'/'nursery-modern' choice is
-            // currently allowed to pick a different file — this is the
-            // read-only design-preview iframe, not a real report card.
             $nurseryTemplate = $request->query('template', 'nursery-minimal');
             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
         } else {
@@ -1815,8 +1821,9 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
         $classId = $request->query('class_id');
+        $template = $request->query('template');
 
-        $settings = Helper::getPassslipSettings($schoolId, $classId);
+        $settings = Helper::getPassslipSettings($schoolId, $classId, $template);
 
         return response()->json(['success' => true, 'settings' => $settings]);
     }
@@ -1880,7 +1887,7 @@ class ExaminationController extends Controller
             ->values()
             ->all();
 
-        $saved = Helper::listPassslipSettings($schoolId, $classIds);
+        $saved = Helper::listPassslipSettings($schoolId, $classIds, $template);
 
         $items = collect($saved)->map(function ($settings, $classId) {
             return [
@@ -1894,16 +1901,19 @@ class ExaminationController extends Controller
     }
 
     /**
-     * Remove the saved customisation for one class — its real pass
-     * slips fall back to DEFAULTS on the next print.
+     * Remove the saved customisation for one class' ONE Design Template
+     * — that template's real pass slips fall back to DEFAULTS on the
+     * next print; any other template already saved for the same class
+     * is untouched.
      */
     public function deletePassslipSettings(Request $request, $examId, $classId)
     {
         PermissionHelper::denyUnlessFeature('generate_reports');
 
         $schoolId = Session('LoggedSchool');
+        $template = $request->query('template');
 
-        $deleted = Helper::deletePassslipSettings($schoolId, $classId);
+        $deleted = Helper::deletePassslipSettings($schoolId, $classId, $template);
 
         return response()->json([
             'success' => true,
