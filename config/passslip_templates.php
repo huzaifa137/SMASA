@@ -124,6 +124,19 @@ return [
 
         'show_footer_timestamp' => ['label' => 'Generation timestamp', 'icon' => 'fa-clock', 'group' => 'Footer'],
         'show_confidential' => ['label' => 'CONFIDENTIAL stamp', 'icon' => 'fa-lock', 'group' => 'Footer'],
+        'show_footer_tagline' => ['label' => 'Closing tagline', 'icon' => 'fa-heart', 'group' => 'Footer'],
+
+        // ── Nursery Modern ('nursery-modern') — whole-section masters ──
+        // Same "OFF hides the box completely" behaviour as the Primary
+        // masters above; the surrounding layout (mid-grid columns, the
+        // MY PROFILE / WHO I AM row) reflows to fill the freed space
+        // instead of leaving a gap — see preview-kindergarten-2.blade.php.
+        'show_section_profile' => ['label' => 'My Profile card (entire section)', 'icon' => 'fa-id-card', 'group' => 'Sections'],
+        'show_section_whoiam' => ['label' => 'Who I Am badges (entire section)', 'icon' => 'fa-face-smile', 'group' => 'Sections'],
+        'show_section_timeline' => ['label' => 'My Learning Journey (entire section)', 'icon' => 'fa-timeline', 'group' => 'Sections'],
+        'show_section_dev_areas' => ['label' => 'Areas of Development (entire section)', 'icon' => 'fa-seedling', 'group' => 'Sections'],
+        'show_section_term_fees' => ['label' => 'Term & Fees Information (entire section)', 'icon' => 'fa-coins', 'group' => 'Sections'],
+        'show_section_signatures' => ['label' => 'Signature row (entire section)', 'icon' => 'fa-signature', 'group' => 'Sections'],
     ],
 
     // Colour/accent is intentionally NOT in 'toggles' above — it applies
@@ -225,6 +238,28 @@ return [
         ],
         'nursery-modern' => [
             'show_border', 'show_watermark',
+
+            // School Header
+            'show_logo', 'show_motto',
+
+            // MY PROFILE card — whole-section master + its own fields
+            'show_section_profile', 'show_photo',
+            'show_stu_name', 'show_stu_class', 'show_stu_stream',
+
+            // WHO I AM badges — whole-section master
+            'show_section_whoiam',
+
+            // MY LEARNING JOURNEY — whole-section master
+            'show_section_timeline',
+
+            // AREAS OF DEVELOPMENT — whole-section master
+            'show_section_dev_areas',
+
+            // TERM & FEES INFORMATION — whole-section master
+            'show_section_term_fees',
+
+            // Footer
+            'show_section_signatures', 'show_footer_tagline',
         ],
         'nursery-minimal' => [
             'show_border', 'show_watermark',

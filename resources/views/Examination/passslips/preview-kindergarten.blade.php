@@ -231,24 +231,24 @@
    sheet's content. Placed as the FIRST child of .sheet in the markup
    with z-index:0 so header-scene (z-index:auto→0, but painted after
    in DOM order) and .content (z-index:2) both layer on top of it. */
-.watermark-kg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 0;
-    opacity: 0.5;
-    pointer-events: none;
-    overflow: hidden;
-}
+        .watermark-kg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+            opacity: 0.5;
+            pointer-events: none;
+            overflow: hidden;
+        }
 
-.watermark-kg img {
-    width: 50%;
-    max-width: 350px;
-    opacity: 0.5;
-    object-fit: contain;
-}
+        .watermark-kg img {
+            width: 50%;
+            max-width: 350px;
+            opacity: 0.5;
+            object-fit: contain;
+        }
 
         .watermark-kg .wm-text {
             font-family: 'Fredoka', sans-serif;
@@ -1589,52 +1589,65 @@
 
             <div class="content">
 
-               <!-- CHILD'S INFORMATION - Option 2: Double Border -->
-<div class="info-box" style="border: 2px solid var(--accent); background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 8px 18px 10px; margin-bottom: 3.5mm; position: relative;">
-    <!-- Inner border -->
-    <div style="position: absolute; inset: 5px; border: 1px dashed var(--accent); border-radius: 12px; pointer-events: none; opacity: 0.5;"></div>
-    
-    <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i class="fa-solid fa-leaf"></i></div>
-    <div style="display:flex; gap:20px; align-items:center;">
-        <!-- Student Photo -->
-        <div style="flex-shrink:0; width:90px; height:110px; border:2px solid var(--accent); border-radius:12px; overflow:hidden; background:#f0f0f0; display:flex; align-items:center; justify-content:center;">
-            @if($photo)
-                <img src="{{ $photo }}" alt="Student Photo" style="width:100%;height:100%;object-fit:cover;">
-            @else
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#e8e8e8;color:#aaa;">
-                    <i class="fas fa-user" style="font-size:2rem;"></i>
-                    <span style="font-size:0.5rem;text-transform:uppercase;letter-spacing:0.04em;">No Photo</span>
+                <!-- CHILD'S INFORMATION - Option 2: Double Border -->
+                <div class="info-box"
+                    style="border: 2px solid var(--accent); background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 8px 18px 10px; margin-bottom: 3.5mm; position: relative;">
+                    <!-- Inner border -->
+                    <div
+                        style="position: absolute; inset: 5px; border: 1px dashed var(--accent); border-radius: 12px; pointer-events: none; opacity: 0.5;">
+                    </div>
+
+                    <div class="info-title"><i class="fa-solid fa-leaf"></i> Child's Information <i
+                            class="fa-solid fa-leaf"></i></div>
+                    <div style="display:flex; gap:20px; align-items:center;">
+                        <!-- Student Photo -->
+                        <div
+                            style="flex-shrink:0; width:90px; height:110px; border:2px solid var(--accent); border-radius:12px; overflow:hidden; background:#f0f0f0; display:flex; align-items:center; justify-content:center;">
+                            @if($photo)
+                                <img src="{{ $photo }}" alt="Student Photo"
+                                    style="width:100%;height:100%;object-fit:cover;">
+                            @else
+                                <div
+                                    style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#e8e8e8;color:#aaa;">
+                                    <i class="fas fa-user" style="font-size:2rem;"></i>
+                                    <span style="font-size:0.5rem;text-transform:uppercase;letter-spacing:0.04em;">No
+                                        Photo</span>
+                                </div>
+                            @endif
+                        </div>
+                        <!-- Info Grid - 2 columns -->
+                        <div class="info-grid"
+                            style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
+                            <div class="info-row">
+                                <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i>
+                                </div>
+                                <span class="label">Child's Name:</span>
+                                <span class="value">{{ $child_name ?? '' }}</span>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-icon" style="background:var(--pink)"><i
+                                        class="fa-solid fa-user-large"></i></div>
+                                <span class="label">Class:</span>
+                                <span class="value">{{ $class_name ?? '' }}</span>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-icon" style="background:var(--yellow)"><i
+                                        class="fa-solid fa-chalkboard-teacher"></i></div>
+                                <span class="label">Teacher:</span>
+                                <span class="value">{{ $teacher ?? '' }}</span>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-icon" style="background:var(--green)"><i
+                                        class="fa-solid fa-calendar-days"></i></div>
+                                <span class="label">Term:</span>
+                                <span class="value">{{ $term ?? '' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            @endif
-        </div>
-        <!-- Info Grid - 2 columns -->
-        <div class="info-grid" style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
-            <div class="info-row">
-                <div class="info-icon" style="background:var(--blue)"><i class="fa-solid fa-user"></i></div>
-                <span class="label">Child's Name:</span>
-                <span class="value">{{ $child_name ?? '' }}</span>
-            </div>
-
-            <div class="info-row">
-                <div class="info-icon" style="background:var(--pink)"><i class="fa-solid fa-user-large"></i></div>
-                <span class="label">Class:</span>
-                <span class="value">{{ $class_name ?? '' }}</span>
-            </div>
-
-            <div class="info-row">
-                <div class="info-icon" style="background:var(--yellow)"><i class="fa-solid fa-chalkboard-teacher"></i></div>
-                <span class="label">Teacher:</span>
-                <span class="value">{{ $teacher ?? '' }}</span>
-            </div>
-
-            <div class="info-row">
-                <div class="info-icon" style="background:var(--green)"><i class="fa-solid fa-calendar-days"></i></div>
-                <span class="label">Term:</span>
-                <span class="value">{{ $term ?? '' }}</span>
-            </div>
-        </div>
-    </div>
-</div>
 
                 <!-- DEVELOPMENT JOURNEY -->
                 <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i
@@ -1769,29 +1782,41 @@
                     </div>
                 </div>
 
-<!-- SIGNATURES -->
-<div class="sig-box" style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
-    <div class="sig-col" style="text-align: center; font-size: 10px;">
-        <i class="fa-solid fa-pen-nib" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
-        <span style="font-weight: 600; color: #333;">Class Teacher</span><br><small style="color: #777;">Signature</small>
-    </div>
-    <div class="sig-col" style="text-align: center; font-size: 10px;">
-        <i class="fa-solid fa-award" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
-        <span style="font-weight: 600; color: #333;">Head Teacher</span><br><small style="color: #777;">Signature</small>
-    </div>
-    <div class="sig-col" style="text-align: center; font-size: 10px;">
-        <i class="fa-solid fa-people-roof" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
-        <span style="font-weight: 600; color: #333;">Parent / Guardian</span><br><small style="color: #777;">Signature</small>
-    </div>
-    <div class="sig-col" style="text-align: center; font-size: 10px;">
-        <i class="fa-regular fa-calendar" style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;"></div>
-        <span style="font-weight: 600; color: #333;">Date</span>
-    </div>
-</div>
+                <!-- SIGNATURES -->
+                <div class="sig-box"
+                    style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
+                    <div class="sig-col" style="text-align: center; font-size: 10px;">
+                        <i class="fa-solid fa-pen-nib"
+                            style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        </div>
+                        <span style="font-weight: 600; color: #333;">Class Teacher</span><br><small
+                            style="color: #777;">Signature</small>
+                    </div>
+                    <div class="sig-col" style="text-align: center; font-size: 10px;">
+                        <i class="fa-solid fa-award"
+                            style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        </div>
+                        <span style="font-weight: 600; color: #333;">Head Teacher</span><br><small
+                            style="color: #777;">Signature</small>
+                    </div>
+                    <div class="sig-col" style="text-align: center; font-size: 10px;">
+                        <i class="fa-solid fa-people-roof"
+                            style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        </div>
+                        <span style="font-weight: 600; color: #333;">Parent / Guardian</span><br><small
+                            style="color: #777;">Signature</small>
+                    </div>
+                    <div class="sig-col" style="text-align: center; font-size: 10px;">
+                        <i class="fa-regular fa-calendar"
+                            style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
+                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        </div>
+                        <span style="font-weight: 600; color: #333;">Date</span>
+                    </div>
+                </div>
 
             </div>
 

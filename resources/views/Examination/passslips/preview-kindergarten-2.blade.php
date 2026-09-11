@@ -5,12 +5,126 @@
 <title>Kindergarten Learning Journey — Design 2 Preview</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<?php use App\Http\Controllers\Helper; ?>
+
+@php
+    /*
+    |─────────────────────────────────────────────────────────────
+    | CUSTOMISATION — Nursery Modern ('nursery-modern')
+    |
+    | Mirrors the exact accent/toggle mechanism the Primary designs
+    | (slip-classic/modern/minimal.blade.php) already use. Query-string
+    | always wins (so the "Customize this design" live preview keeps
+    | reacting instantly); failing that, falls back to this class's
+    | saved profile (Helper::getPassslipSettings); failing that, the
+    | hard default.
+    |─────────────────────────────────────────────────────────────
+    */
+    $accent = request('accent', '#f0a500');
+    if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $accent)) {
+        $accent = '#f0a500';
+    }
+
+    $hexToDark = function (string $hex): string {
+        $hex = ltrim($hex, '#');
+        [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+        $r = max(0, (int) ($r * 0.82));
+        $g = max(0, (int) ($g * 0.82));
+        $b = max(0, (int) ($b * 0.82));
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    };
+    $accentDark = $hexToDark($accent);
+
+    $accentAlpha = function (string $hex, float $a): string {
+        $hex = ltrim($hex, '#');
+        [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+        return "rgba({$r},{$g},{$b},{$a})";
+    };
+    $accentA08 = $accentAlpha($accent, 0.08);
+    $accentA35 = $accentAlpha($accent, 0.35);
+
+    // ── School meta (same lookup slip-nursery.blade.php uses) ──────────
+    $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'School');
+    $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
+    $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+
+    $schoolLogoUrl = null;
+    if ($schoolLogo) {
+        $directPath = public_path('uploads/logos/' . $schoolLogo);
+        if (file_exists($directPath)) {
+            $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+        } else {
+            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                $fallback = public_path('storage/' . $schoolLogo);
+                if (file_exists($fallback)) {
+                    $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                    break;
+                }
+                $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                if (file_exists($fallback2)) {
+                    $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Helper: treat '1' / 'true' / missing (falls back to saved
+    // per-class settings, then to $default) as ON. Query-string always
+    // wins so the live customisation preview keeps working.
+    $on = fn(string $key, bool $default = true, array $saved = []): bool =>
+        request()->has($key)
+        ? in_array(request($key), ['1', 'true', 1, true], true)
+        : ($saved[$key] ?? $default);
+
+    // $student is always passed into this view by passslipPreview() (and,
+    // once wired for live printing, passslipStudent()/Class()/All() too).
+    $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+
+    $cfg = [
+        'border' => $on('show_border', true, $savedCfg),
+        'watermark' => $on('show_watermark', true, $savedCfg),
+
+        // ── School Header ────────────────────────────────────────────
+        'logo' => $on('show_logo', true, $savedCfg),
+        'motto' => $on('show_motto', true, $savedCfg),
+
+        // ── MY PROFILE card (whole-section master) + its own fields ──
+        'section_profile' => $on('show_section_profile', true, $savedCfg),
+        'photo' => $on('show_photo', true, $savedCfg),
+        'stu_name' => $on('show_stu_name', true, $savedCfg),
+        'stu_class' => $on('show_stu_class', true, $savedCfg),
+        'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+
+        // ── WHO I AM badges (whole-section master) ────────────────────
+        'section_whoiam' => $on('show_section_whoiam', true, $savedCfg),
+
+        // ── MY LEARNING JOURNEY timeline (whole-section master) ───────
+        'section_timeline' => $on('show_section_timeline', true, $savedCfg),
+
+        // ── AREAS OF DEVELOPMENT grid (whole-section master) ───────────
+        'section_dev_areas' => $on('show_section_dev_areas', true, $savedCfg),
+
+        // ── TERM & FEES INFORMATION (whole-section master) ─────────────
+        'section_term_fees' => $on('show_section_term_fees', true, $savedCfg),
+
+        // ── Footer ──────────────────────────────────────────────────
+        'section_signatures' => $on('show_section_signatures', true, $savedCfg),
+        'footer_tagline' => $on('show_footer_tagline', true, $savedCfg),
+    ];
+@endphp
+
 <style>
   :root{
     --navy:#173a63;
     --gold:#c9973f;
     --cream:#fdfaf0;
     --line:#d8cfb8;
+    --accent: {{ $accent }};
+    --accent-dark: {{ $accentDark }};
+    --accent-a08: {{ $accentA08 }};
+    --accent-a35: {{ $accentA35 }};
   }
   *{box-sizing:border-box;}
   body{
@@ -44,6 +158,54 @@
     border:2px solid #b9c9da;
     overflow:hidden;
   }
+
+  /* ── Conditional decorative border (driven by Accent Colour) ────── */
+  .sheet.has-border{
+    border:3px solid var(--accent);
+    outline:1px solid var(--accent-dark);
+    outline-offset:-6px;
+  }
+  .sheet.has-border::before{
+    content:'';
+    position:absolute; inset:8px;
+    border:1px solid var(--accent-a35);
+    border-radius:1px;
+    pointer-events:none; z-index:2;
+  }
+  .sheet.has-border::after{
+    content:'';
+    position:absolute; inset:4px;
+    background:
+      linear-gradient(var(--accent), var(--accent)) top left / 18px 3px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) top left / 3px 18px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) top right / 18px 3px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) top right / 3px 18px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) bottom left / 18px 3px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) bottom left / 3px 18px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) bottom right / 18px 3px no-repeat,
+      linear-gradient(var(--accent), var(--accent)) bottom right / 3px 18px no-repeat;
+    pointer-events:none; z-index:2;
+  }
+
+  /* ── Watermark stamp ──────────────────────────────────────────────── */
+  .watermark{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    pointer-events:none; opacity:.07; z-index:0;
+    width:55%; max-width:120mm;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .watermark img{ width:100%; height:auto; object-fit:contain; filter:grayscale(100%); }
+  .watermark-text{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    pointer-events:none; opacity:.06; z-index:0;
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:5.2rem; letter-spacing:.05em;
+    text-transform:uppercase; color:#000; white-space:nowrap; text-align:center; line-height:1.2;
+  }
+  .sheet > *:not(.watermark):not(.watermark-text){ position:relative; z-index:1; }
+
+  /* ── Reflow helpers: fill the space a removed section leaves behind ── */
+  .profile-card.profile-card--full{ flex:1; }
+  .mid-grid.mid-grid--single{ grid-template-columns:100%; }
 
   /* ===== HERO HEADER OVERLAY (dynamic: logo, school name, motto, journey caption) ===== */
   .hero-logo{
@@ -299,66 +461,90 @@
   </div>
 
   <div class="page-wrap">
-    <div class="sheet">
+    <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}">
 
-      <div class="mid-grid">
+      @if($cfg['watermark'])
+        @if($schoolLogoUrl)
+          <div class="watermark"><img src="{{ $schoolLogoUrl }}" alt="watermark"></div>
+        @else
+          <div class="watermark-text">{{ $schoolName }}</div>
+        @endif
+      @endif
+
+      <div class="mid-grid {{ !$cfg['section_timeline'] ? 'mid-grid--single' : '' }}">
         <div class="left-col">
           <div class="hero-wrap">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/hero_learning_children.png" alt="">
 
-            @if(!empty($schoolLogoUrl))
-              <div class="hero-logo hero-logo--custom">
-                <div class="hero-logo-badge">
-                  <img src="{{ $schoolLogoUrl }}" alt="{{ $schoolName ?? 'School' }} logo">
+            @if($cfg['logo'])
+              @if(!empty($schoolLogoUrl))
+                <div class="hero-logo hero-logo--custom">
+                  <div class="hero-logo-badge">
+                    <img src="{{ $schoolLogoUrl }}" alt="{{ $schoolName ?? 'School' }} logo">
+                  </div>
+                  @if(!empty($schoolFoundedYear))
+                    <div class="hero-logo-sub">SINCE {{ $schoolFoundedYear }}</div>
+                  @endif
                 </div>
-                @if(!empty($schoolFoundedYear))
-                  <div class="hero-logo-sub">SINCE {{ $schoolFoundedYear }}</div>
-                @endif
-              </div>
-            @else
-              <div class="hero-logo">
-                <div class="hero-logo-icon">
-                  <i class="fas fa-wheat-awn left"></i>
-                  <i class="fas fa-shield-halved"></i>
-                  <i class="fas fa-book-open"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-wheat-awn right"></i>
+              @else
+                <div class="hero-logo">
+                  <div class="hero-logo-icon">
+                    <i class="fas fa-wheat-awn left"></i>
+                    <i class="fas fa-shield-halved"></i>
+                    <i class="fas fa-book-open"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-wheat-awn right"></i>
+                  </div>
+                  <div class="hero-logo-title">{{ $schoolLogoText ?? 'YOUR LOGO' }}</div>
+                  <div class="hero-logo-sub">SINCE {{ $schoolFoundedYear ?? date('Y') }}</div>
                 </div>
-                <div class="hero-logo-title">{{ $schoolLogoText ?? 'YOUR LOGO' }}</div>
-                <div class="hero-logo-sub">SINCE {{ $schoolFoundedYear ?? date('Y') }}</div>
-              </div>
+              @endif
             @endif
 
             <div class="hero-header-text">
               <div class="school-name-dynamic">{{ $schoolName ?? 'YOUR SCHOOL NAME' }}</div>
-              <div class="school-motto-dynamic">
-                <span class="dot"></span><span class="ln"></span>
-                <span>{{ $schoolMotto ?? 'In God We Trust' }}</span>
-                <span class="ln"></span><span class="dot"></span>
-              </div>
+              @if($cfg['motto'])
+                <div class="school-motto-dynamic">
+                  <span class="dot"></span><span class="ln"></span>
+                  <span>{{ $schoolMotto ?? 'In God We Trust' }}</span>
+                  <span class="ln"></span><span class="dot"></span>
+                </div>
+              @endif
             </div>
 
             <!-- <div class="hero-ribbon-caption">
               <span>{{ $journeyCaption ?? 'Celebrating growth, discovery & little achievements' }}</span>
             </div> -->
           </div>
+          @if($cfg['section_profile'] || $cfg['section_whoiam'])
           <div class="profile-row">
-            <div class="profile-card">
+            @if($cfg['section_profile'])
+            <div class="profile-card {{ !$cfg['section_whoiam'] ? 'profile-card--full' : '' }}">
               <div class="pc">
                 <div class="pc-ribbon">MY PROFILE</div>
+                @if($cfg['photo'])
                 <div class="pc-avatar-wrap">
                   <div class="pc-avatar"><i class="fas fa-child"></i></div>
                   <span class="pc-deco pc-deco-left"><i class="fas fa-leaf"></i></span>
                   <span class="pc-deco pc-deco-right"><i class="fas fa-spa"></i></span>
                 </div>
+                @endif
                 <ul class="pc-fields">
+                  @if($cfg['stu_name'])
                   <li><i class="fas fa-user"></i><span class="pc-label">Name</span><span class="pc-value">{{ $student->name ?? '' }}</span></li>
+                  @endif
+                  @if($cfg['stu_class'])
                   <li><i class="fas fa-graduation-cap"></i><span class="pc-label">Class</span><span class="pc-value">{{ $student->class ?? '' }}</span></li>
+                  @endif
+                  @if($cfg['stu_stream'])
                   <li><i class="fas fa-book-open"></i><span class="pc-label">Stream</span><span class="pc-value">{{ $student->stream ?? '' }}</span></li>
+                  @endif
                 </ul>
                 <div class="pc-heart"><i class="fas fa-heart"></i></div>
               </div>
             </div>
+            @endif
+            @if($cfg['section_whoiam'])
             <div class="whoiam">
               <div class="whoiam-title">WHO I AM</div>
               <div class="whoiam-badges">
@@ -371,9 +557,12 @@
               </div>
               <div class="whoiam-caption">Characteristics I show every day in my own special way. ♡</div>
             </div>
+            @endif
           </div>
+          @endif
         </div>
 
+        @if($cfg['section_timeline'])
         <div class="right-col">
           {{--
             MY LEARNING JOURNEY: only the circular icon + connecting vine
@@ -435,8 +624,10 @@
             </div>
           </div>
         </div>
+        @endif
       </div>
 
+      @if($cfg['section_dev_areas'])
       {{--
         AREAS OF DEVELOPMENT: full sheet width now (previously confined to
         the 64% left column, which left a large empty gap on the right once
@@ -503,7 +694,9 @@
           <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
         </div>
       </div>
+      @endif
 
+      @if($cfg['section_term_fees'])
       {{--
         TERM & FEES INFORMATION: also full sheet width now, laid out as a
         single row of 4 (rather than 2x2) since there's room — styled with
@@ -544,6 +737,7 @@
           </div>
         </div>
       </div>
+      @endif
 
       {{--
         SIGNATURE ROW: sits inside its own card now (instead of floating
@@ -552,7 +746,9 @@
         to later bind a captured signature image / the real $issueDate
         value into that space dynamically.
       --}}
+      @if($cfg['section_signatures'] || $cfg['footer_tagline'])
       <div class="footer">
+        @if($cfg['section_signatures'])
         <div class="sig-box">
           <div class="sig-row">
             <div class="sig-slot">
@@ -581,8 +777,12 @@
             </div>
           </div>
         </div>
+        @endif
+        @if($cfg['footer_tagline'])
         <div class="footer-tagline">Every child is a unique story of joy, hope and endless potential ♡</div>
+        @endif
       </div>
+      @endif
 
     </div>
   </div>
