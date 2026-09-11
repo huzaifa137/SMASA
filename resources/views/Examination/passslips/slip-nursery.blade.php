@@ -706,7 +706,8 @@
             @if($cfg['watermark'])
                 <div class="watermark-text"
                     style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:#000;opacity:.04;text-transform:uppercase;pointer-events:none;">
-                    {{ $schoolName }}</div>
+                    {{ $schoolName }}
+                </div>
             @endif
 
             <div class="sch-header">

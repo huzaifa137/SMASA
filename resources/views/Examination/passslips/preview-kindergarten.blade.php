@@ -1550,8 +1550,11 @@
                     <div class="school-name">{{ $schoolName }}</div>
                     <div class="banner"><i class="fa-solid fa-star"></i> KINDERGARTEN LEARNING JOURNEY <i
                             class="fa-solid fa-star"></i></div>
-                    <div class="academic-year"><i class="fa-solid fa-leaf"></i> Academic Year :
-                        {{ $academic_year ?? '20XX' }} <i class="fa-solid fa-leaf"></i>
+                    <div class="academic-year"><i class="fas fa-graduation-cap"></i> Examination : {{ '' ?? '' }} <i
+                            class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="academic-year"><i class="fa-solid fa-leaf"></i>
+                        Academic Year : {{ $academic_year ?? '20XX' }} <i class="fa-solid fa-leaf"></i>
                     </div>
                 </div>
 
