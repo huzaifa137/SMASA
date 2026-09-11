@@ -121,7 +121,7 @@ class TeacherController extends Controller
 
     public function updateteacherProfile($id)
     {
-
+        
         PermissionHelper::denyUnlessFeature('edit_teacher');
         Helper::requireSchool();
 
@@ -164,6 +164,7 @@ class TeacherController extends Controller
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer|between:1,5',
             'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
 
         $profile = Teacher::where('id', $teacher->id)->first();
@@ -181,6 +182,22 @@ class TeacherController extends Controller
             $validated['teacher_profile'] = $profile->teacher_profile;
         } else {
             $validated['teacher_profile'] = null;
+        }
+
+        // Signature: uploaded once here, then reused automatically on
+        // every report card this teacher is the Class Teacher for
+        // (see Helper::classTeacherFor()).
+        if ($request->hasFile('signature')) {
+            if ($profile && $profile->signature) {
+                Storage::disk('public')->delete($profile->signature);
+            }
+
+            $sigFile = $request->file('signature');
+            $validated['signature'] = $sigFile->store('teacherSignatures', 'public');
+        } elseif ($profile) {
+            $validated['signature'] = $profile->signature;
+        } else {
+            $validated['signature'] = null;
         }
 
         $teacher->update($validated);

@@ -121,6 +121,7 @@ return [
         'show_remarks' => ['label' => 'Remarks section', 'icon' => 'fa-comment-alt', 'group' => 'Bottom Section'],
         'show_discipline' => ['label' => 'Discipline section', 'icon' => 'fa-user-shield', 'group' => 'Bottom Section'],
         'show_signatures' => ['label' => 'Signature column', 'icon' => 'fa-signature', 'group' => 'Bottom Section'],
+        'show_term_dates' => ['label' => 'Term dates', 'icon' => 'fa-calendar-alt', 'group' => 'Bottom Section'],
 
         'show_footer_timestamp' => ['label' => 'Generation timestamp', 'icon' => 'fa-clock', 'group' => 'Footer'],
         'show_confidential' => ['label' => 'CONFIDENTIAL stamp', 'icon' => 'fa-lock', 'group' => 'Footer'],
@@ -149,7 +150,7 @@ return [
             'show_logo', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters
@@ -170,7 +171,7 @@ return [
             'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters
@@ -196,7 +197,7 @@ return [
             'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters

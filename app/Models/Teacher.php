@@ -26,6 +26,7 @@ class Teacher extends Model
         'employee_number',
         'group_teacher',
         'teacher_profile',
+        'signature',
         'teacher_role',
         'account_status',
         'status_reason',

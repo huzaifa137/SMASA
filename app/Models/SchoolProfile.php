@@ -24,6 +24,8 @@ class SchoolProfile extends Model
         'admission_start',
         'admission_suffix',
         'logo',
+        'head_teacher_name',
+        'head_teacher_signature',
     ];
 
     // public function school()

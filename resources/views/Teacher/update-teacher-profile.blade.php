@@ -53,6 +53,24 @@ $controller = new Controller();
                                                 class="form-control" accept="image/*" onchange="previewLogo(event)">
                                         </div>
 
+                                        <div class="form-group mb-4">
+                                            <label class="form-label">Signature</label>
+                                            <div class="mb-2">
+                                                @if(!empty($teacher->signature))
+                                                    <img src="{{ asset('storage/' . $teacher->signature) }}" alt="Signature"
+                                                        style="max-height:50px;max-width:160px;object-fit:contain;border:1px solid #e0e0e0;border-radius:.4rem;padding:.3rem;background:#fff;">
+                                                @else
+                                                    <span class="text-muted" style="font-size:.85rem;">No signature uploaded yet.</span>
+                                                @endif
+                                            </div>
+                                            <input type="file" name="signature" id="SignatureUpload"
+                                                class="form-control" accept="image/*">
+                                            <small class="text-muted">
+                                                Uploaded once here and reused automatically on every report card
+                                                this teacher is the Class Teacher for.
+                                            </small>
+                                        </div>
+
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">

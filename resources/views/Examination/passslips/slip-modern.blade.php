@@ -1419,6 +1419,7 @@
                     'remarks' => $on('show_remarks', true, $savedCfg),
                     'discipline' => $on('show_discipline', true, $savedCfg),
                     'signatures' => $on('show_signatures', true, $savedCfg),
+                    'term_dates' => $on('show_term_dates', true, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     'score_col' => $on('show_score_col', true, $savedCfg),
@@ -2196,9 +2197,9 @@
                                 <div class="remarks-section-title">Remarks</div>
 
                                 @php
-                                    $classTeacher = $subjMarks->first()?->class_teacher ?? null;
-                                    $classTeacherName = $classTeacher ?? ($s->class_teacher ?? 'Class Teacher');
+                                    $classTeacherName = $s->class_teacher ?? 'Class Teacher';
                                     $ctRemark = $s->class_teacher_remark ?? '';
+                                    $headTeacherNameM = $s->head_teacher ?? 'Head Teacher';
                                 @endphp
                                 <div class="remark-block">
                                     <div class="remark-teacher">
@@ -2212,7 +2213,7 @@
 
                                 <div class="remark-block">
                                     <div class="remark-teacher">
-                                        {{ $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher') }}
+                                        {{ $headTeacherNameM }}
                                     </div>
                                     <div class="remark-text">{{ $s->head_teacher_remark ?? '' }}</div>
                                 </div>
@@ -2240,14 +2241,24 @@
 
                         {{-- Signatures --}}
                         @if($cfg['signatures'])
+                            @php
+                                $ctSigUrlM = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                                $htSigUrlM = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
+                            @endphp
                             <div class="sig-col-right">
                                 <div class="sig-col-title">Signature</div>
                                 <div style="width:100%;margin-top:.5rem;">
-                                    <div class="sig-slot">Class Teacher</div>
+                                    <div class="sig-slot has-sig">
+                                        @if($ctSigUrlM)
+                                            <img src="{{ $ctSigUrlM }}"
+                                                style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
+                                        @endif
+                                        Class Teacher
+                                    </div>
                                     <div class="sig-slot" style="margin-top:1.4rem;">House Teacher</div>
                                     <div class="sig-slot has-sig" style="margin-top:1.4rem;">
-                                        @if(!empty($s->head_teacher_signature))
-                                            <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
+                                        @if($htSigUrlM)
+                                            <img src="{{ $htSigUrlM }}"
                                                 style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
                                         @endif
                                         Head Teacher
@@ -2258,6 +2269,22 @@
                         @endif
 
                     </div>
+                @endif
+
+                {{-- ══ TERM DATES ═══════════════════════════════════════════════════ --}}
+                @if($cfg['term_dates'] ?? true)
+                    @php
+                        $termEndsOnM = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
+                            ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
+                        $nextTermStartsOnM = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
+                            ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
+                    @endphp
+                    @if($termEndsOnM || $nextTermStartsOnM)
+                        <div class="sig-col-right" style="display:flex;width:100%;justify-content:space-between;margin-top:.5rem;">
+                            <div><strong>This Term Ends On:</strong> {{ $termEndsOnM ?? '—' }}</div>
+                            <div><strong>Next Term Starts On:</strong> {{ $nextTermStartsOnM ?? '—' }}</div>
+                        </div>
+                    @endif
                 @endif
 
                 {{-- ══ FOOTER ════════════════════════════════════════════════════════ --}}

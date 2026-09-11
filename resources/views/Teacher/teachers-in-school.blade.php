@@ -256,6 +256,110 @@ $controller = new Controller();
                 margin-right: 4px !important;
             }
         }
+
+        /* ─── Teacher Search Bar ─────────────────────────────────────────── */
+        .teacher-search-wrapper {
+            padding: 16px 20px 8px;
+            background: #fff;
+            border-bottom: 1px solid #eef0f4;
+        }
+
+        .teacher-search-box {
+            position: relative;
+            max-width: 420px;
+        }
+
+        .teacher-search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9aa3b2;
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: color 0.2s ease;
+        }
+
+        .teacher-search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 40px;
+            border: 1.5px solid #e2e6ee;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #1e293b;
+            background: #f8fafc;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .teacher-search-box input::placeholder {
+            color: #9aa3b2;
+        }
+
+        .teacher-search-box input:focus {
+            border-color: #5351e4;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.12);
+        }
+
+        .teacher-search-box input:focus + .search-icon,
+        .teacher-search-box input:not(:placeholder-shown) + .search-icon {
+            color: #5351e4;
+        }
+
+        .teacher-search-box .search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: #eef0f4;
+            color: #64748b;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .teacher-search-box .search-clear:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .teacher-search-box.has-value .search-clear {
+            display: flex;
+        }
+
+        .teacher-search-meta {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-top: 8px;
+            min-height: 16px;
+        }
+
+        .teacher-search-meta strong {
+            color: #5351e4;
+        }
+
+        .teacher-no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .teacher-no-results i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            color: #cbd5e1;
+        }
     </style>
 @endsection
 
@@ -307,6 +411,19 @@ $controller = new Controller();
                             </div>
                         @endif
                     @endif
+
+                    {{-- ─── Teacher Search Bar ───────────────────────────────────────── --}}
+                    <div class="teacher-search-wrapper">
+                        <div class="teacher-search-box" id="teacherSearchBox">
+                            <input type="text" id="teacherSearchInput" autocomplete="off"
+                                placeholder="Search by name, phone number, role…">
+                            <i class="fas fa-search search-icon"></i>
+                            <button type="button" class="search-clear" id="teacherSearchClear" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="teacher-search-meta" id="teacherSearchMeta"></div>
+                    </div>
 
                     <style>
                         /* Full-width teacher bulk selection bar */
@@ -668,6 +785,7 @@ $controller = new Controller();
                     applyRoleColor(select);
                 });
                 sortTeachersTable();
+                updateTeacherSearchMeta();
             }, 300);
 
         });
@@ -928,6 +1046,104 @@ $controller = new Controller();
                 }
             });
         });
+
+        // ─── Teacher Search ──────────────────────────────────────────────────────────
+
+        function getTeacherRowSearchText(row) {
+            const $row = $(row);
+            const surname = $row.find('td').eq(3).text().trim(); // Adjust index based on your columns
+            const firstname = $row.find('td').eq(4).text().trim();
+            const phone = $row.find('td').eq(5).text().trim();
+            const roleText = $row.find('td').eq(6).text().trim();
+            const statusText = $row.find('td').eq(7).text().trim();
+
+            // Include the select2 rendered text for role if available
+            const $roleSelect = $row.find('.role-select');
+            const selectedRoleText = $roleSelect.find('option:selected').text().trim();
+
+            return `${surname} ${firstname} ${phone} ${roleText} ${statusText} ${selectedRoleText}`.toLowerCase();
+        }
+
+        function filterTeachersTable() {
+            const query = $('#teacherSearchInput').val().trim().toLowerCase();
+            const $rows = $('#teachersTable tbody tr[data-id]'); // only real teacher rows
+            let visibleCount = 0;
+
+            $rows.each(function () {
+                const $row = $(this);
+                const haystack = getTeacherRowSearchText(this);
+                const match = query === '' || haystack.indexOf(query) !== -1;
+                $row.toggle(match);
+                if (match) visibleCount++;
+            });
+
+            // Handle empty state
+            const $emptyRow = $('#teachersTable tbody tr.teacher-no-results-row');
+            if (visibleCount === 0 && query !== '') {
+                if ($emptyRow.length === 0) {
+                    const colspan = $('#teachersTable thead th').length;
+                    $('#teachersTable tbody').append(`
+                        <tr class="teacher-no-results-row">
+                            <td colspan="${colspan}" class="teacher-no-results">
+                                <i class="fas fa-search"></i>
+                                <h5 class="mb-1">No teachers found</h5>
+                                <p class="mb-0">Try a different name, phone number, or role.</p>
+                            </td>
+                        </tr>
+                    `);
+                }
+            } else {
+                $emptyRow.remove();
+            }
+
+            // Update meta info
+            updateTeacherSearchMeta(visibleCount, $rows.length);
+        }
+
+        function updateTeacherSearchMeta(visibleCount, totalCount) {
+            const $meta = $('#teacherSearchMeta');
+            const query = $('#teacherSearchInput').val().trim();
+
+            if (!$meta.length) return;
+
+            if (query === '') {
+                // Show total count when no search is active
+                if (totalCount === undefined) {
+                    totalCount = $('#teachersTable tbody tr[data-id]').length;
+                }
+                $meta.html(totalCount > 0 ? `Showing all <strong>${totalCount}</strong> teachers` : '');
+                return;
+            }
+
+            if (visibleCount === undefined) {
+                visibleCount = $('#teachersTable tbody tr[data-id]:visible').length;
+            }
+            if (totalCount === undefined) {
+                totalCount = $('#teachersTable tbody tr[data-id]').length;
+            }
+
+            $meta.html(`Showing <strong>${visibleCount}</strong> of <strong>${totalCount}</strong> teachers`);
+        }
+
+        // Search input handler
+        $(document).on('input', '#teacherSearchInput', function () {
+            const $box = $('#teacherSearchBox');
+            $box.toggleClass('has-value', $(this).val().length > 0);
+            filterTeachersTable();
+        });
+
+        // Clear search
+        $(document).on('click', '#teacherSearchClear', function () {
+            $('#teacherSearchInput').val('').trigger('input').focus();
+        });
+
+        // Also clear search on Escape key
+        $(document).on('keydown', '#teacherSearchInput', function (e) {
+            if (e.key === 'Escape') {
+                $(this).val('').trigger('input').blur();
+            }
+        });
+
     </script>
 @endsection
 

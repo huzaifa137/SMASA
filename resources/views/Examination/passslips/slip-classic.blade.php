@@ -1967,6 +1967,7 @@
                     // everything else in Classic is unchanged. Still
                     // available any time via its toggle.
                     'signatures' => $on('show_signatures', false, $savedCfg),
+                    'term_dates' => $on('show_term_dates', true, $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     // New toggles
@@ -2203,7 +2204,7 @@
                     ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
                     : '—';
 
-                $headTeacherName = $s->head_teacher ?? (Session('HeadTeacherName') ?? 'Head Teacher');
+                $headTeacherName = $s->head_teacher ?? 'Head Teacher';
 
                 /*
                 |──────────────────────────────────────────────────────────────
@@ -2863,20 +2864,31 @@
                                 <div class="rc-section">
                                     <div class="rc-section-hd">Class Teacher's Remarks</div>
                                     @php
-                                        $classTeacher = $subjMarks->first()?->class_teacher ?? null;
-                                        $classTeacherName = $classTeacher ?? ($s->class_teacher ?? 'Class Teacher');
+                                        $classTeacherName = $s->class_teacher ?? 'Class Teacher';
                                         $ctRemark = $s->class_teacher_remark ?? '';
+                                        $ctSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                                        $htSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
                                     @endphp
                                     <div class="rc-remarks-box">
                                         <div class="rc-remark-line">
                                             <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
-                                            <div class="sig-line" style="margin-top:.4rem;"></div>
+                                            <div class="sig-line" style="margin-top:.4rem;">
+                                                @if($ctSigUrl)
+                                                    <img src="{{ $ctSigUrl }}" alt="signature"
+                                                        style="max-width:80px;max-height:20px;object-fit:contain;">
+                                                @endif
+                                            </div>
                                             <div class="who">{{ $classTeacherName }}</div>
                                         </div>
 
                                         <div class="rc-remark-line" style="margin-bottom:0;">
                                             <div>{{ $s->head_teacher_remark ?? '' }}</div>
-                                            <div class="sig-line" style="margin-top:.4rem;"></div>
+                                            <div class="sig-line" style="margin-top:.4rem;">
+                                                @if($htSigUrl)
+                                                    <img src="{{ $htSigUrl }}" alt="signature"
+                                                        style="max-width:80px;max-height:20px;object-fit:contain;">
+                                                @endif
+                                            </div>
                                             <div class="who">{{ $headTeacherName }}</div>
                                         </div>
                                     </div>
@@ -2890,11 +2902,22 @@
 
                     {{-- ══ SIGNATURES ══════════════════════════════════════════════════ --}}
                     @if($cfg['signatures'])
+                        @php
+                            $classTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                            $headTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
+                        @endphp
                         <div class="rc-sig-row">
                             <div class="rc-sig-cell">
                                 <div class="lbl">Class Teacher</div>
-                                <div class="rc-sig-line">Name: </div>
-                                <div class="rc-sig-line">Signature: </div>
+                                <div class="rc-sig-line">Name: {{ $s->class_teacher ?? '' }}</div>
+                                <div class="rc-sig-line">
+                                    Signature:
+                                    @if($classTeacherSigUrl)
+                                        <img src="{{ $classTeacherSigUrl }}"
+                                            style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;"
+                                            alt="sig">
+                                    @endif
+                                </div>
                                 <div class="rc-sig-line">Date: </div>
                             </div>
 
@@ -2905,17 +2928,37 @@
                                 </div>
                                 <div class="rc-sig-line">
                                     Signature:
-                                    @if(!empty($s->head_teacher_signature))
-                                        <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
+                                    @if($headTeacherSigUrl)
+                                        <img src="{{ $headTeacherSigUrl }}"
                                             style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;"
                                             alt="sig">
-                                    @else
-                                        
                                     @endif
                                 </div>
                                 <div class="rc-sig-line">Date: </div>
                             </div>
                         </div>
+                    @endif
+
+                    {{-- ══ TERM DATES ═══════════════════════════════════════════════════ --}}
+                    @if($cfg['term_dates'] ?? true)
+                        @php
+                            $termEndsOn = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
+                                ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
+                            $nextTermStartsOn = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
+                                ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
+                        @endphp
+                        @if($termEndsOn || $nextTermStartsOn)
+                            <div class="rc-sig-row" style="margin-top:.5rem;">
+                                <div class="rc-sig-cell">
+                                    <div class="lbl">This Term Ends On</div>
+                                    <div class="rc-sig-line">{{ $termEndsOn ?? '—' }}</div>
+                                </div>
+                                <div class="rc-sig-cell">
+                                    <div class="lbl">Next Term Starts On</div>
+                                    <div class="rc-sig-line">{{ $nextTermStartsOn ?? '—' }}</div>
+                                </div>
+                            </div>
+                        @endif
                     @endif
 
 

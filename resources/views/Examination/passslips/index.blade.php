@@ -7,7 +7,7 @@ use App\Http\Controllers\Helper;
 @section('css')
     <style>
         /* ── Design tokens (unchanged from the previous layout — only the
-        structure below changed, not the palette) ── */
+            structure below changed, not the palette) ── */
         :root {
             --brand: #2C29CA;
             --brand-mid: #5351e4;
@@ -25,7 +25,9 @@ use App\Http\Controllers\Helper;
             --shadow-card: 0 4px 24px rgba(44, 41, 202, .10);
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         #ps-bento-app {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -52,7 +54,9 @@ use App\Http\Controllers\Helper;
             gap: .4rem;
         }
 
-        .ps-back:hover { color: var(--brand); }
+        .ps-back:hover {
+            color: var(--brand);
+        }
 
         .ps-lang-switch {
             display: flex;
@@ -106,10 +110,25 @@ use App\Http\Controllers\Helper;
             display: inline-block;
         }
 
-        .status-closed { background: #fde8e8; color: #c0392b; }
-        .status-results_released { background: #d4f5e2; color: #1a7a4a; }
-        .status-marks_entry { background: #fff3cd; color: #856404; }
-        .status-active { background: #cfe2ff; color: #0a4191; }
+        .status-closed {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+
+        .status-results_released {
+            background: #d4f5e2;
+            color: #1a7a4a;
+        }
+
+        .status-marks_entry {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background: #cfe2ff;
+            color: #0a4191;
+        }
 
         .kpi-row {
             display: grid;
@@ -118,7 +137,11 @@ use App\Http\Controllers\Helper;
             margin-bottom: 1.15rem;
         }
 
-        @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
         .kpi {
             background: #fff;
@@ -143,12 +166,23 @@ use App\Http\Controllers\Helper;
             font-size: 1rem;
         }
 
-        .kpi .v { font-weight: 800; font-size: 1.05rem; line-height: 1.1; }
-        .kpi .l { font-size: .66rem; color: var(--sub); margin-top: .2rem; text-transform: uppercase; letter-spacing: .03em; }
+        .kpi .v {
+            font-weight: 800;
+            font-size: 1.05rem;
+            line-height: 1.1;
+        }
+
+        .kpi .l {
+            font-size: .66rem;
+            color: var(--sub);
+            margin-top: .2rem;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
 
         /* ── Bento grid: an asymmetric dashboard instead of a left
-        sidebar + right column split — the Student Directory owns the
-        visual weight the old page spent across four stacked cards. ── */
+            sidebar + right column split — the Student Directory owns the
+            visual weight the old page spent across four stacked cards. ── */
         .ps-bento {
             display: grid;
             grid-template-columns: 1.6fr 1fr;
@@ -156,7 +190,11 @@ use App\Http\Controllers\Helper;
             gap: 1.1rem;
         }
 
-        @media (max-width: 992px) { .ps-bento { grid-template-columns: 1fr; } }
+        @media (max-width: 992px) {
+            .ps-bento {
+                grid-template-columns: 1fr;
+            }
+        }
 
         .ps-cell {
             background: #fff;
@@ -166,7 +204,9 @@ use App\Http\Controllers\Helper;
             padding: 1.35rem;
         }
 
-        .ps-cell-directory { grid-row: 1 / 3; }
+        .ps-cell-directory {
+            grid-row: 1 / 3;
+        }
 
         .ps-cell h3 {
             margin: 0 0 .2rem;
@@ -177,11 +217,21 @@ use App\Http\Controllers\Helper;
             gap: .5rem;
         }
 
-        .ps-cell h3 i { color: var(--brand); }
-        .ps-cell .desc { font-size: .78rem; color: var(--sub); margin: 0 0 1rem; }
+        .ps-cell h3 i {
+            color: var(--brand);
+        }
+
+        .ps-cell .desc {
+            font-size: .78rem;
+            color: var(--sub);
+            margin: 0 0 1rem;
+        }
 
         /* ── Directory: search + class filter chips + list ── */
-        .student-search-wrap { position: relative; margin-bottom: .85rem; }
+        .student-search-wrap {
+            position: relative;
+            margin-bottom: .85rem;
+        }
 
         .student-search-wrap .search-icon {
             position: absolute;
@@ -221,7 +271,10 @@ use App\Http\Controllers\Helper;
             transition: all .15s ease;
         }
 
-        .class-filter-chip:hover { border-color: var(--brand-light); background: var(--brand-ultra); }
+        .class-filter-chip:hover {
+            border-color: var(--brand-light);
+            background: var(--brand-ultra);
+        }
 
         .class-filter-chip.active {
             background: linear-gradient(135deg, var(--brand), var(--brand-mid));
@@ -229,7 +282,12 @@ use App\Http\Controllers\Helper;
             color: white;
         }
 
-        .chip-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
 
         .student-list-container {
             border: 1.5px solid var(--brand-pale);
@@ -258,11 +316,23 @@ use App\Http\Controllers\Helper;
             font-weight: 700;
         }
 
-        .student-list { max-height: 480px; overflow-y: auto; }
+        .student-list {
+            max-height: 480px;
+            overflow-y: auto;
+        }
 
-        .student-list::-webkit-scrollbar { width: 6px; }
-        .student-list::-webkit-scrollbar-track { background: var(--brand-ultra); }
-        .student-list::-webkit-scrollbar-thumb { background: var(--brand-light); border-radius: 3px; }
+        .student-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .student-list::-webkit-scrollbar-track {
+            background: var(--brand-ultra);
+        }
+
+        .student-list::-webkit-scrollbar-thumb {
+            background: var(--brand-light);
+            border-radius: 3px;
+        }
 
         .student-card {
             display: flex;
@@ -276,8 +346,13 @@ use App\Http\Controllers\Helper;
             background: white;
         }
 
-        .student-card:hover { background: var(--brand-ultra); }
-        .student-card:last-child { border-bottom: none; }
+        .student-card:hover {
+            background: var(--brand-ultra);
+        }
+
+        .student-card:last-child {
+            border-bottom: none;
+        }
 
         .student-card-avatar {
             width: 40px;
@@ -292,14 +367,42 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .student-card-info { flex: 1; min-width: 0; }
-        .student-card-name { font-weight: 700; font-size: .86rem; color: var(--ink); }
-        .other-names { font-weight: 400; color: var(--sub); font-size: .78rem; }
+        .student-card-info {
+            flex: 1;
+            min-width: 0;
+        }
 
-        .student-card-meta { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .1rem; }
+        .student-card-name {
+            font-weight: 700;
+            font-size: .86rem;
+            color: var(--ink);
+        }
 
-        .meta-tag { font-size: .68rem; color: var(--sub); display: inline-flex; align-items: center; gap: .3rem; }
-        .meta-tag i { font-size: .62rem; color: var(--brand-light); }
+        .other-names {
+            font-weight: 400;
+            color: var(--sub);
+            font-size: .78rem;
+        }
+
+        .student-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .65rem;
+            margin-top: .1rem;
+        }
+
+        .meta-tag {
+            font-size: .68rem;
+            color: var(--sub);
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .meta-tag i {
+            font-size: .62rem;
+            color: var(--brand-light);
+        }
 
         .student-card-action {
             margin-left: auto;
@@ -315,15 +418,41 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .student-card:hover .student-card-action { background: var(--brand); color: #fff; }
+        .student-card:hover .student-card-action {
+            background: var(--brand);
+            color: #fff;
+        }
 
-        .empty-state { text-align: center; padding: 2.5rem 1.5rem; color: #9ca3af; }
-        .empty-state i { font-size: 2.5rem; margin-bottom: .85rem; opacity: .5; }
-        .empty-state h4 { font-size: .92rem; font-weight: 600; color: #6b7280; margin-bottom: .35rem; }
-        .empty-state p { font-size: .8rem; margin: 0; }
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            color: #9ca3af;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: .85rem;
+            opacity: .5;
+        }
+
+        .empty-state h4 {
+            font-size: .92rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: .35rem;
+        }
+
+        .empty-state p {
+            font-size: .8rem;
+            margin: 0;
+        }
 
         /* ── Print by Class: compact card grid ── */
-        .class-mini-grid { display: grid; grid-template-columns: 1fr; gap: .65rem; }
+        .class-mini-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .65rem;
+        }
 
         .class-mini {
             border: 1.5px solid var(--brand-pale);
@@ -339,7 +468,8 @@ use App\Http\Controllers\Helper;
             gap: .75rem;
         }
 
-        .class-mini:hover, .class-mini.selected {
+        .class-mini:hover,
+        .class-mini.selected {
             border-color: var(--brand);
             background: linear-gradient(135deg, #fff, var(--brand-ultra));
             box-shadow: 0 6px 18px rgba(44, 41, 202, .12);
@@ -357,9 +487,21 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .class-mini .body { flex: 1; min-width: 0; }
-        .class-mini .name { font-weight: 700; font-size: .84rem; }
-        .class-mini .sub { font-size: .7rem; color: var(--sub); margin-top: .1rem; }
+        .class-mini .body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .class-mini .name {
+            font-weight: 700;
+            font-size: .84rem;
+        }
+
+        .class-mini .sub {
+            font-size: .7rem;
+            color: var(--sub);
+            margin-top: .1rem;
+        }
 
         .class-mini .go {
             font-size: .7rem;
@@ -377,8 +519,16 @@ use App\Http\Controllers\Helper;
             color: #9ca3af;
         }
 
-        .class-empty i { font-size: 2rem; opacity: .5; margin-bottom: .6rem; }
-        .class-empty p { font-size: .75rem; margin: 0; }
+        .class-empty i {
+            font-size: 2rem;
+            opacity: .5;
+            margin-bottom: .6rem;
+        }
+
+        .class-empty p {
+            font-size: .75rem;
+            margin: 0;
+        }
 
         /* ── More Actions: stacked link rows ── */
         .stack-btn {
@@ -396,8 +546,13 @@ use App\Http\Controllers\Helper;
             color: inherit;
         }
 
-        .stack-btn:last-child { margin-bottom: 0; }
-        .stack-btn:hover { background: var(--brand-pale); }
+        .stack-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .stack-btn:hover {
+            background: var(--brand-pale);
+        }
 
         .stack-btn .ic {
             width: 34px;
@@ -411,9 +566,22 @@ use App\Http\Controllers\Helper;
             flex-shrink: 0;
         }
 
-        .stack-btn .t { font-weight: 700; font-size: .82rem; color: var(--ink); }
-        .stack-btn .d { font-size: .7rem; color: var(--sub); }
-        .stack-btn .chev { margin-left: auto; color: var(--brand); font-size: .78rem; }
+        .stack-btn .t {
+            font-weight: 700;
+            font-size: .82rem;
+            color: var(--ink);
+        }
+
+        .stack-btn .d {
+            font-size: .7rem;
+            color: var(--sub);
+        }
+
+        .stack-btn .chev {
+            margin-left: auto;
+            color: var(--brand);
+            font-size: .78rem;
+        }
 
         /* ── Loading overlay (unchanged behaviour) ── */
         #loadingOverlay {
@@ -426,7 +594,9 @@ use App\Http\Controllers\Helper;
             justify-content: center;
         }
 
-        #loadingOverlay.active { display: flex; }
+        #loadingOverlay.active {
+            display: flex;
+        }
 
         .spinner-ring {
             width: 56px;
@@ -437,11 +607,22 @@ use App\Http\Controllers\Helper;
             animation: spin .7s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        #loadingText { color: var(--brand) !important; font-weight: 600; }
+        #loadingText {
+            color: var(--brand) !important;
+            font-weight: 600;
+        }
 
-        @media print { body { display: none; } }
+        @media print {
+            body {
+                display: none;
+            }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -499,20 +680,36 @@ use App\Http\Controllers\Helper;
         {{-- ── KPI strip ── --}}
         <div class="kpi-row">
             <div class="kpi">
-                <div class="ic" style="background:linear-gradient(135deg,var(--brand),var(--brand-mid));"><i class="fas fa-layer-group"></i></div>
-                <div><div class="v">{{ $examClasses->count() }}</div><div class="l">Class(es)</div></div>
+                <div class="ic" style="background:linear-gradient(135deg,var(--brand),var(--brand-mid));"><i
+                        class="fas fa-layer-group"></i></div>
+                <div>
+                    <div class="v">{{ $examClasses->count() }}</div>
+                    <div class="l">Class(es)</div>
+                </div>
             </div>
             <div class="kpi">
-                <div class="ic" style="background:linear-gradient(135deg,#10b981,#34d399);"><i class="fas fa-users"></i></div>
-                <div><div class="v">{{ count($allStudents) }}</div><div class="l">Students</div></div>
+                <div class="ic" style="background:linear-gradient(135deg,#10b981,#34d399);"><i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <div class="v">{{ count($allStudents) }}</div>
+                    <div class="l">Students</div>
+                </div>
             </div>
             <div class="kpi">
-                <div class="ic" style="background:linear-gradient(135deg,#0a4191,#2563eb);"><i class="fas fa-calendar"></i></div>
-                <div><div class="v">{{ $exam->term }}</div><div class="l">{{ $exam->academic_year }}</div></div>
+                <div class="ic" style="background:linear-gradient(135deg,#0a4191,#2563eb);"><i class="fas fa-calendar"></i>
+                </div>
+                <div>
+                    <div class="v">{{ $exam->term }}</div>
+                    <div class="l">{{ $exam->academic_year }}</div>
+                </div>
             </div>
             <div class="kpi">
-                <div class="ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><i class="fas fa-hashtag"></i></div>
-                <div><div class="v">{{ $exam->exam_code }}</div><div class="l">Exam Code</div></div>
+                <div class="ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><i class="fas fa-hashtag"></i>
+                </div>
+                <div>
+                    <div class="v">{{ $exam->exam_code }}</div>
+                    <div class="l">Exam Code</div>
+                </div>
             </div>
         </div>
 
@@ -589,8 +786,7 @@ use App\Http\Controllers\Helper;
                                 }
                             @endphp
                             <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}?lang={{ $currentLang }}"
-                                class="student-card student-link"
-                                data-name="{{ strtolower($fullName) }}"
+                                class="student-card student-link" data-name="{{ strtolower($fullName) }}"
                                 data-adm="{{ strtolower($student->adm_no ?? '') }}"
                                 data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
                                 onclick="showLoading('Generating pass slip for {{ addslashes($student->firstname) }}…')"
@@ -676,8 +872,8 @@ use App\Http\Controllers\Helper;
                             (template, toggles, combined exams) is resolved
                             per-class server-side from its saved
                             passslip_settings row (applySavedPassslipSettings). --}}
-                            <form id="{{ $formId }}" action="{{ route('examination.passslips.class', $exam->id) }}"
-                                method="GET" target="_blank" style="display:none;">
+                            <form id="{{ $formId }}" action="{{ route('examination.passslips.class', $exam->id) }}" method="GET"
+                                target="_blank" style="display:none;">
                                 <input type="hidden" name="class_id" value="{{ $ec->class_id }}">
                                 <input type="hidden" name="stream_id" value="{{ $safeStream }}">
                                 <input type="hidden" name="lang" value="{{ $currentLang }}">
@@ -697,13 +893,22 @@ use App\Http\Controllers\Helper;
             └──────────────────────────────────┘ --}}
             <div class="ps-cell">
                 <h3><i class="fas fa-th-large"></i> More Actions</h3>
-                <div class="desc">Discipline ratings &amp; design templates.</div>
+                <div class="desc">Discipline ratings, remarks &amp; design templates.</div>
 
                 <a href="{{ route('examination.discipline.entry', $exam->id) }}" class="stack-btn">
                     <div class="ic"><i class="fas fa-user-shield"></i></div>
                     <div>
                         <div class="t">Discipline Entry</div>
                         <div class="d">Rate punctuality, behaviour &amp; conduct</div>
+                    </div>
+                    <i class="fas fa-chevron-right chev"></i>
+                </a>
+
+                <a href="{{ route('examination.remarks.entry', $exam->id) }}" class="stack-btn">
+                    <div class="ic"><i class="fas fa-comment-alt"></i></div>
+                    <div>
+                        <div class="t">Remarks Entry</div>
+                        <div class="d">Class &amp; Head Teacher remarks per student</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
@@ -717,7 +922,8 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
 
-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-minimal" class="stack-btn">
+                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-minimal"
+                    class="stack-btn">
                     <div class="ic"><i class="fas fa-child"></i></div>
                     <div>
                         <div class="t">Customize Nursery</div>
@@ -729,9 +935,10 @@ use App\Http\Controllers\Helper;
 
         </div>{{-- /.ps-bento --}}
     </div>{{-- /.side-app --}}
-</div>
-                </div>
-            </div>
+    </div>
+    </div>
+    </div>
+    
     {{-- ═══════════════════════════════════════════════════════════
     JAVASCRIPT — trimmed down to what this page still actually owns:
     language switching (a real navigation, not a client-side patch),

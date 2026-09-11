@@ -1181,6 +1181,107 @@ class Helper extends Controller
         return self::recordMdname(self::activeTerm());
     }
 
+    /**
+     * Resolve "This Term Ends On" / "Next Term Starts On" for a school's
+     * report cards, straight from the term_dates table the school
+     * maintains under Settings → Term Dates (see SchoolController).
+     *
+     * "This term" is whichever TermDate row is flagged is_active = 1.
+     * "Next term" is the soonest TermDate row that starts after the
+     * active term ends — first tried within the same academic year, then
+     * (so the very last term of a year still shows a "Next Term Starts
+     * On" date) across all academic years for the school.
+     *
+     * Returns raw Y-m-d strings (or null if not configured yet) — display
+     * formatting is left to the caller/view.
+     */
+    public static function passslipTermDates($schoolId): array
+    {
+        $current = TermDate::where('school_id', $schoolId)
+            ->where('is_active', 1)
+            ->first();
+
+        if (!$current) {
+            return ['term_ends_on' => null, 'next_term_starts_on' => null];
+        }
+
+        $next = TermDate::where('school_id', $schoolId)
+            ->where('academic_year_id', $current->academic_year_id)
+            ->where('start_date', '>', $current->end_date)
+            ->orderBy('start_date')
+            ->first();
+
+        if (!$next) {
+            $next = TermDate::where('school_id', $schoolId)
+                ->where('start_date', '>', $current->end_date)
+                ->orderBy('start_date')
+                ->first();
+        }
+
+        return [
+            'term_ends_on' => $current->end_date,
+            'next_term_starts_on' => $next->start_date ?? null,
+        ];
+    }
+
+    /**
+     * The Class Teacher assigned to a class/stream (streams.class_teacher),
+     * with their name and uploaded signature — used to fill in the
+     * report card's Class Teacher remark/signature block dynamically
+     * instead of the previous static "Class Teacher" / blank line.
+     */
+    public static function classTeacherFor($schoolId, $classId, $streamId): array
+    {
+        $teacherId = Stream::where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->value('class_teacher');
+
+        if (!$teacherId) {
+            return ['id' => null, 'name' => null, 'signature' => null];
+        }
+
+        $teacher = DB::table('teachers')->where('id', $teacherId)->first();
+
+        return [
+            'id' => $teacherId,
+            'name' => $teacher ? trim(($teacher->surname ?? '') . ' ' . ($teacher->firstname ?? '')) ?: null : null,
+            'signature' => $teacher->signature ?? null,
+        ];
+    }
+
+    /**
+     * The Head Teacher / Principal signatory for a school — one per
+     * school, stored on school_profiles (see SchoolProfile model).
+     */
+    public static function headTeacherFor($schoolId): array
+    {
+        $profile = DB::table('school_profiles')->where('school_id', $schoolId)->first();
+
+        return [
+            'name' => $profile->head_teacher_name ?? null,
+            'signature' => $profile->head_teacher_signature ?? null,
+        ];
+    }
+
+    /**
+     * Resolve a stored signature path (Storage::disk('public')) to a
+     * public URL, the same "does the file actually exist" convention
+     * schoolLogoUrl/photo resolution already use elsewhere.
+     */
+    public static function signatureUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            return asset('storage/' . $path);
+        }
+
+        return null;
+    }
+
     public static function systemActiveYear()
     {
         return AcademicYear::where('is_active', 1)

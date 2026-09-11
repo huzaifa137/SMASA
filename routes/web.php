@@ -610,6 +610,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/discipline/criteria', 'saveDisciplineCriteria')->name('discipline.criteria.save');
             Route::delete('/discipline/criteria/{criteriaId}', 'deleteDisciplineCriteria')->name('discipline.criteria.delete');
 
+            // Report Card Remarks (Class Teacher / Head Teacher)
+            Route::get('/{id}/remarks', 'remarksEntry')->name('remarks.entry');
+            Route::post('/{id}/remarks/save', 'saveRemarks')->name('remarks.save');
+
             // Examination Details and Status
             Route::get('/{exam}/details', 'getDetails')->name('details');
             Route::get('/{examination}/status', 'getStatus')->name('status');

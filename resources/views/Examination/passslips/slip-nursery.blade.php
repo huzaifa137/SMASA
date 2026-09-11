@@ -903,23 +903,39 @@
             </div>
 
             <div class="nursery-comments-wrap">
+                @php
+                    $nurseryCtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->class_teacher_signature ?? null);
+                    $nurseryHtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->head_teacher_signature ?? null);
+                @endphp
                 <div class="nursery-comments-left">
                     <div class="nursery-comment-line">
                         <div class="label">Class Teacher's Comments</div>
-                        <div class="value"></div>
+                        <div class="value">{{ $student->class_teacher_remark ?? '' }}</div>
                     </div>
                     <div class="nursery-comment-line">
                         <div class="label">Head Teacher's Comments</div>
-                        <div class="value head"></div>
+                        <div class="value head">{{ $student->head_teacher_remark ?? '' }}</div>
                     </div>
                 </div>
 
                 <div class="nursery-comments-right">
-                    <div class="nursery-sig-line"><span class="lbl">Name:</span></div>
-                    <div class="nursery-sig-line"><span class="lbl">Signature:</span> <span class="scribble"></span>
+                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->class_teacher ?? '' }}</div>
+                    <div class="nursery-sig-line">
+                        <span class="lbl">Signature:</span>
+                        @if($nurseryCtSigUrl)
+                            <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+                        @else
+                            <span class="scribble"></span>
+                        @endif
                     </div>
-                    <div class="nursery-sig-line"><span class="lbl">Name:</span> Tr.</div>
-                    <div class="nursery-sig-line"><span class="lbl">Signature:</span> <span class="scribble"></span>
+                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
+                    <div class="nursery-sig-line">
+                        <span class="lbl">Signature:</span>
+                        @if($nurseryHtSigUrl)
+                            <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+                        @else
+                            <span class="scribble"></span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -927,9 +943,17 @@
             <table class="nursery-footer-table">
                 <tr>
                     <td class="flabel">This Term Ends On</td>
-                    <td></td>
+                    <td>
+                        @if(!empty($termDates['term_ends_on']))
+                            {{ \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') }}
+                        @endif
+                    </td>
                     <td class="flabel">Next Term Starts On</td>
-                    <td></td>
+                    <td>
+                        @if(!empty($termDates['next_term_starts_on']))
+                            {{ \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') }}
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <td class="flabel">Fees Balance</td>

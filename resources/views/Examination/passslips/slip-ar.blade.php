@@ -48,6 +48,7 @@
             'perf_chart' => $on('show_perf_chart'),
             'remarks' => $on('show_remarks'),
             'signatures' => $on('show_signatures'),
+            'term_dates' => $on('show_term_dates'),
             'footer_timestamp' => $on('show_footer_timestamp'),
             'confidential' => $on('show_confidential'),
         ];
@@ -132,6 +133,8 @@
             // footer
             'generated' => 'تاريخ الإصدار',
             'confidential' => 'سري',
+            'term_ends' => 'ينتهي هذا الفصل في',
+            'next_term_starts' => 'يبدأ الفصل القادم في',
 
             // ordinal suffix (Arabic uses different grammar)
             'rank_label' => 'المرتبة',
@@ -1547,14 +1550,24 @@
 
                         {{-- Signatures (rightmost in RTL) --}}
                         @if($cfg['signatures'])
+                            @php
+                                $ctSigUrlAr = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                                $htSigUrlAr = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
+                            @endphp
                             <div class="sig-col-right">
                                 <div class="sig-col-title">{{ $ar['signature'] }}</div>
                                 <div style="width:100%;margin-top:.5rem;">
-                                    <div class="sig-slot">{{ $ar['class_teacher'] }}</div>
+                                    <div class="sig-slot has-sig">
+                                        @if($ctSigUrlAr)
+                                            <img src="{{ $ctSigUrlAr }}"
+                                                style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
+                                        @endif
+                                        {{ $ar['class_teacher'] }}
+                                    </div>
                                     <div class="sig-slot" style="margin-top:1.4rem;">{{ $ar['house_teacher'] }}</div>
                                     <div class="sig-slot has-sig" style="margin-top:1.4rem;">
-                                        @if(!empty($s->head_teacher_signature))
-                                            <img src="{{ asset('signatures/' . $s->head_teacher_signature) }}"
+                                        @if($htSigUrlAr)
+                                            <img src="{{ $htSigUrlAr }}"
                                                 style="max-width:90px;max-height:22px;object-fit:contain;" alt="sig">
                                         @endif
                                         {{ $ar['head_teacher'] }}
@@ -1598,6 +1611,22 @@
                         @endif
 
                     </div>
+                @endif
+
+                {{-- ══ TERM DATES ══ --}}
+                @if($cfg['term_dates'] ?? true)
+                    @php
+                        $termEndsOnAr = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
+                            ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
+                        $nextTermStartsOnAr = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
+                            ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
+                    @endphp
+                    @if($termEndsOnAr || $nextTermStartsOnAr)
+                        <div class="sig-col-right" style="display:flex;width:100%;justify-content:space-between;margin-top:.5rem;">
+                            <div><strong>{{ $ar['term_ends'] }}:</strong> {{ $termEndsOnAr ?? '—' }}</div>
+                            <div><strong>{{ $ar['next_term_starts'] }}:</strong> {{ $nextTermStartsOnAr ?? '—' }}</div>
+                        </div>
+                    @endif
                 @endif
 
                 {{-- ══ FOOTER ══ --}}

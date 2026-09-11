@@ -14,6 +14,7 @@ use App\Models\Stream;
 use App\Models\ClassSubject;
 use App\Models\DisciplineCriteria;
 use App\Models\StudentDisciplineRating;
+use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
 use Carbon\Carbon;
 
@@ -1004,6 +1005,148 @@ class ExaminationController extends Controller
         }
     }
 
+    // ─── Report Card Remarks (Class Teacher / Head Teacher) ─────────────────
+    // Per-exam, per-student written remarks shown on the pass slip's
+    // Remarks section (see attachRemarksAndSignatures()). Mirrors the
+    // Discipline Ratings feature above: a teacher-facing class/stream
+    // entry grid, saved in one bulk request.
+
+    /**
+     * Teacher-facing entry screen: pick a class/stream, write a Class
+     * Teacher remark (and, for Head Teachers / admins, a Head Teacher
+     * remark) for every student for this exam.
+     */
+    public function remarksEntry(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        // Same class picker source as Discipline Ratings, so the two
+        // entry screens always offer the same class/stream list.
+        $classOptions = ExaminationMark::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->select('class_id', 'stream_id')
+            ->distinct()
+            ->get()
+            ->map(fn($row) => (object) [
+                'class_id' => $row->class_id,
+                'stream_id' => $row->stream_id,
+                'class_name' => Helper::recordMdname($row->class_id),
+                'stream_name' => $row->stream_id,
+            ])
+            ->sortBy('class_name')
+            ->values();
+
+        $classId = $request->get('class_id', $classOptions->first()->class_id ?? null);
+        $streamId = $request->get('stream_id', $classOptions->first()->stream_id ?? null);
+
+        $students = collect();
+        $remarks = collect();
+        $classTeacher = ['id' => null, 'name' => null, 'signature' => null];
+
+        if ($classId !== null) {
+            $students = DB::table('students')
+                ->where('school_id', $schoolId)
+                ->where('senior', $classId)
+                ->where('stream', $streamId)
+                ->orderBy('firstname')
+                ->get();
+
+            $remarks = ReportCardRemark::where('examination_id', $examId)
+                ->where('school_id', $schoolId)
+                ->whereIn('student_id', $students->pluck('id'))
+                ->get()
+                ->keyBy('student_id');
+
+            $classTeacher = Helper::classTeacherFor($schoolId, $classId, $streamId);
+        }
+
+        $headTeacher = Helper::headTeacherFor($schoolId);
+        $canEditHeadTeacherRemark = PermissionHelper::canFeature('edit_exam');
+
+        return view('Examination.remarks.entry', compact(
+            'exam',
+            'classOptions',
+            'classId',
+            'streamId',
+            'students',
+            'remarks',
+            'classTeacher',
+            'headTeacher',
+            'canEditHeadTeacherRemark'
+        ));
+    }
+
+    /**
+     * Save a whole grid of remarks (all students × class/head teacher) in
+     * one go — same request shape/contract as saveDisciplineRatings().
+     */
+    public function saveRemarks(Request $request, $examId)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to enter remarks.'], 403);
+        }
+
+        $request->validate([
+            'class_id' => 'required',
+            'stream_id' => 'nullable|string|max:20',
+            'remarks' => 'required|array',
+            'remarks.*.student_id' => 'required|integer',
+            'remarks.*.class_teacher_remark' => 'nullable|string|max:2000',
+            'remarks.*.head_teacher_remark' => 'nullable|string|max:2000',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $exam = Examination::where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->remarks as $entry) {
+                $ctRemark = trim((string) ($entry['class_teacher_remark'] ?? ''));
+                $htRemark = trim((string) ($entry['head_teacher_remark'] ?? ''));
+
+                if ($ctRemark === '' && $htRemark === '') {
+                    // Nothing entered for this student — clear any
+                    // previously saved row rather than writing a blank one.
+                    ReportCardRemark::where('examination_id', $examId)
+                        ->where('school_id', $schoolId)
+                        ->where('student_id', $entry['student_id'])
+                        ->delete();
+                    continue;
+                }
+
+                ReportCardRemark::updateOrCreate(
+                    [
+                        'examination_id' => $examId,
+                        'school_id' => $schoolId,
+                        'student_id' => $entry['student_id'],
+                    ],
+                    [
+                        'class_teacher_remark' => $ctRemark !== '' ? $ctRemark : null,
+                        'head_teacher_remark' => $htRemark !== '' ? $htRemark : null,
+                        'entered_by' => $teacherId,
+                        'entered_at' => now(),
+                    ]
+                );
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Remarks saved.']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
+        }
+    }
+
     /**
      * Add / rename / deactivate / reorder a school's discipline criteria.
      * Kept lightweight (one JSON endpoint) rather than a full CRUD page,
@@ -1124,8 +1267,7 @@ class ExaminationController extends Controller
         $examSummary = $passslipData['examSummary'] ?? [];
         $avgSummary = $passslipData['avgSummary'] ?? null;
         $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
-
-        // After getting student info, check if nursery
+        $termDates = Helper::passslipTermDates($schoolId);
         $isNursery = $this->isNurseryClass($student->senior);
 
         $lang = request('lang', 'en');
@@ -1158,7 +1300,8 @@ class ExaminationController extends Controller
             'useAvg',
             'examSummary',
             'avgSummary',
-            'disciplineRatings'
+            'disciplineRatings',
+            'termDates'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
@@ -1254,7 +1397,9 @@ class ExaminationController extends Controller
             $view = $this->resolvePrimarySlipView($lang);
         }
 
-        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
+        $termDates = Helper::passslipTermDates($schoolId);
+
+        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg', 'termDates') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
     }
 
     // ─── METHOD 2: passslipAll ────────────────────────────────────────────────
@@ -1362,7 +1507,9 @@ class ExaminationController extends Controller
             $view = $this->resolvePrimarySlipView($lang);
         }
 
-        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
+        $termDates = Helper::passslipTermDates($schoolId);
+
+        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg', 'termDates') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
     }
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
@@ -1615,6 +1762,7 @@ class ExaminationController extends Controller
         $examSummary = $passslipData['examSummary'] ?? [];
         $avgSummary = $passslipData['avgSummary'] ?? null;
         $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
+        $termDates = Helper::passslipTermDates($schoolId);
 
         $isNursery = $this->isNurseryClass($student->senior);
         $lang = request('lang', 'en');
@@ -1651,7 +1799,8 @@ class ExaminationController extends Controller
             'useAvg',
             'examSummary',
             'avgSummary',
-            'disciplineRatings'
+            'disciplineRatings',
+            'termDates'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
@@ -1769,6 +1918,45 @@ class ExaminationController extends Controller
     /**
      * Build all data needed for a single student's passslip.
      */
+    /**
+     * Resolve this student's Class Teacher (name + signature), the school's
+     * Head Teacher (name + signature), and any remarks recorded for this
+     * exam — then attach them onto the $student object as the same
+     * properties the pass-slip templates already expect
+     * ($class_teacher / $class_teacher_signature / $head_teacher /
+     * $head_teacher_signature / $class_teacher_remark / $head_teacher_remark).
+     *
+     * $student is a plain stdClass row (from DB::table('students')) shared
+     * by reference with every caller — mutating its properties here is
+     * exactly how student_photo etc. already flow into the Blade views, so
+     * no changes are needed at any of the three call sites
+     * (passslipStudent / passslipClass / passslipAll) that already do
+     * 'student' => $student.
+     */
+    private function attachRemarksAndSignatures($student, $examId, $schoolId, $classId = null, $streamId = null): void
+    {
+        if (!$student) {
+            return;
+        }
+
+        $classId = $classId ?? ($student->senior ?? null);
+        $streamId = $streamId ?? ($student->stream ?? null);
+
+        $classTeacher = Helper::classTeacherFor($schoolId, $classId, $streamId);
+        $headTeacher = Helper::headTeacherFor($schoolId);
+
+        $remark = ReportCardRemark::where('examination_id', $examId)
+            ->where('student_id', $student->id)
+            ->first();
+
+        $student->class_teacher = $classTeacher['name'];
+        $student->class_teacher_signature = $classTeacher['signature'];
+        $student->head_teacher = $headTeacher['name'];
+        $student->head_teacher_signature = $headTeacher['signature'];
+        $student->class_teacher_remark = $remark->class_teacher_remark ?? null;
+        $student->head_teacher_remark = $remark->head_teacher_remark ?? null;
+    }
+
     public function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
     {
         // This student's marks
@@ -1778,6 +1966,11 @@ class ExaminationController extends Controller
             ->get();
 
         if ($marks->isEmpty()) {
+            if (!$student) {
+                $student = DB::table('students')->where('id', $studentId)->first();
+            }
+            $this->attachRemarksAndSignatures($student, $examId, $schoolId);
+
             return [
                 'subjectMarks' => collect(),
                 'totalObtained' => 0,
@@ -2063,6 +2256,8 @@ class ExaminationController extends Controller
             $student = DB::table('students')->where('id', $studentId)->first();
         }
 
+        $this->attachRemarksAndSignatures($student, $examId, $schoolId, $classId, $streamId);
+
         $studentName = trim(
             (($student->lastname ?? '') . ' ' . ($student->firstname ?? ''))
         );
@@ -2259,6 +2454,10 @@ class ExaminationController extends Controller
         if (!$student) {
             $student = DB::table('students')->where('id', $studentId)->first();
         }
+
+        // Remarks/signatures follow the same "most recent exam in the set"
+        // convention already used for discipline ratings just below.
+        $this->attachRemarksAndSignatures($student, $latestExam?->id ?? end($examIds), $schoolId, $classId, $streamId);
 
         // ── Discipline ratings for a combined/multi-exam slip ────────────────
         // Discipline is recorded per single examination, so a combined report

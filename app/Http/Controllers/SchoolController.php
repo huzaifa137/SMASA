@@ -458,6 +458,8 @@ class SchoolController extends Controller
             'admission_start' => 'nullable|string|max:50',
             'admission_suffix' => 'nullable|string|max:50',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'head_teacher_name' => 'nullable|string|max:255',
+            'head_teacher_signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
 
         $profile = SchoolProfile::where('school_id', $validated['school_id'])->first();
@@ -483,6 +485,19 @@ class SchoolController extends Controller
 
             $logoFile->move($destinationPath, $filename);
             $validated['logo'] = $filename;
+        }
+
+        // Head Teacher signature — the one signatory shared by every
+        // report card school-wide (see Helper::headTeacherFor()).
+        if ($request->hasFile('head_teacher_signature')) {
+            if ($profile && $profile->head_teacher_signature) {
+                Storage::disk('public')->delete($profile->head_teacher_signature);
+            }
+
+            $validated['head_teacher_signature'] = $request->file('head_teacher_signature')
+                ->store('headTeacherSignatures', 'public');
+        } elseif ($profile) {
+            $validated['head_teacher_signature'] = $profile->head_teacher_signature;
         }
 
         $validated['updated_at'] = now();

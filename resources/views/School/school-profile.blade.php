@@ -144,6 +144,32 @@ $controller = new Controller();
                                                         maxlength="300"
                                                         placeholder="Enter your vision here...">{{ !empty($profile) ? $profile->vision : '' }}</textarea>
                                                 </div>
+
+                                                <div class="form-group">
+                                                    <label for="headTeacherName" class="form-label">Head Teacher Name</label>
+                                                    <input type="text" name="head_teacher_name" id="headTeacherName"
+                                                        class="form-control" placeholder="e.g. Mr. John Mukasa"
+                                                        value="{{ !empty($profile) ? $profile->head_teacher_name : '' }}">
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label">Head Teacher Signature</label>
+                                                    <div class="mb-2">
+                                                        @if(!empty($profile) && !empty($profile->head_teacher_signature))
+                                                            <img src="{{ asset('storage/' . $profile->head_teacher_signature) }}"
+                                                                alt="Head Teacher Signature"
+                                                                style="max-height:50px;max-width:160px;object-fit:contain;border:1px solid #e0e0e0;border-radius:.4rem;padding:.3rem;background:#fff;">
+                                                        @else
+                                                            <span class="text-muted" style="font-size:.85rem;">No signature uploaded yet.</span>
+                                                        @endif
+                                                    </div>
+                                                    <input type="file" name="head_teacher_signature" class="form-control"
+                                                        accept="image/*">
+                                                    <small class="text-muted">
+                                                        Appears automatically on every report card's Head
+                                                        Teacher signature line once uploaded.
+                                                    </small>
+                                                </div>
                                             </div>
 
                                             <div class="col-md-12">
