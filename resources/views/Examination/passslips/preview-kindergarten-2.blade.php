@@ -329,7 +329,7 @@
       clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
       border: 1px dashed rgba(255, 255, 255, .4);
       box-sizing: border-box;
-      padding: 5mm 2.5mm 5mm;
+      padding: 2mm 2.5mm 5mm;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -544,6 +544,26 @@
       display: block;
     }
 
+    /* When "My Learning Journey" is off, .left-col (and so .hero-wrap)
+    becomes the full sheet width instead of ~64% of it. The hero image's
+    fixed aspect ratio then makes it render ~50mm taller than in the
+    two-column layout — enough on its own to push the whole slip onto a
+    second printed page. Cap its height in that mode and crop the
+    illustration (rather than letting it dictate the page height), kept
+    top-anchored so the title/characters stay fully visible and only the
+    empty grass/sky at the very bottom is trimmed. */
+    .mid-grid--single .hero-wrap {
+      max-height: 92mm;
+      overflow: hidden;
+    }
+
+    .mid-grid--single .hero-wrap > img {
+      height: 92mm;
+      width: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
     /* ===== MIDDLE: profile + who-i-am + areas (left) | timeline (right) ===== */
     .mid-grid {
       display: grid;
@@ -704,7 +724,7 @@
 
     .whoiam {
       flex: 1;
-      padding-top: 2mm;
+      padding-top: 1mm;
     }
 
     .whoiam-title {
@@ -806,7 +826,7 @@
       color: var(--navy);
       font-size: 13px;
       letter-spacing: 1px;
-      margin: 2.5mm 0 1mm;
+      margin: 1.5mm 0 1mm;
     }
 
     /* ===== AREAS OF DEVELOPMENT — card grid (icon image + dynamic HTML text) ===== */
@@ -928,7 +948,7 @@
       color: var(--navy);
       font-size: 13px;
       letter-spacing: 1px;
-      margin: 1.5mm 0 1.6mm;
+      margin: 1mm 0 1.2mm;
     }
 
     .term-fees-grid {
@@ -1080,14 +1100,14 @@
      $issueDate value into that space dynamically. */
     .footer {
       position: relative;
-      margin-top: 3mm;
+      margin-top: 2mm;
     }
 
     .sig-box {
       background: #fffdf7;
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 3.5mm 5mm 3mm;
+      padding: 2.5mm 5mm 2mm;
       box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
     }
 
@@ -1113,7 +1133,7 @@
 
     .sig-slot .sig-space {
       width: 100%;
-      min-height: 7mm;
+      min-height: 5mm;
     }
 
     .sig-slot .sig-rule {
@@ -1140,7 +1160,7 @@
       font-style: italic;
       font-size: 9.5px;
       color: #666;
-      margin-top: 3.5mm;
+      margin-top: 2mm;
     }
 
     @media print {
@@ -1166,7 +1186,9 @@
         box-shadow: none;
         border: none;
         width: 210mm;
-        min-height: 297mm;
+        height: 297mm;
+        max-height: 297mm;
+        overflow: hidden;
       }
     }
   </style>
