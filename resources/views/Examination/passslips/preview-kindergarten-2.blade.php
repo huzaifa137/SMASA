@@ -302,19 +302,34 @@
       grid-template-columns: 100%;
     }
 
+    /* With "My Learning Journey" hidden, .left-col spans the full sheet
+  width instead of ~64% of it. The heading offsets and profile-row
+  below were tuned for that narrower width, so without these overrides
+  the school name/motto sit off to one side and "WHO I AM" stretches
+  awkwardly wide instead of staying centered on the page. */
+    .mid-grid.mid-grid--single .hero-header-text {
+      left: 0;
+      width: 100%;
+    }
+
+    .mid-grid.mid-grid--single .profile-row {
+      max-width: 150mm;
+      margin: 0 auto;
+    }
+
     /* ===== HERO HEADER OVERLAY (dynamic: logo, school name, motto, journey caption) ===== */
     .hero-logo {
       position: absolute;
       left: 0;
       top: 0;
-      width: 30.4mm;
-      height: 33.28mm;
+      width: 36mm;
+      height: 40mm;
       z-index: 6;
       background: linear-gradient(160deg, #1d4278 0%, #0f2947 75%);
       clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
       border: 1px dashed rgba(255, 255, 255, .4);
       box-sizing: border-box;
-      padding: 3.52mm 2.24mm 5.12mm;
+      padding: 5mm 2.5mm 5mm;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -326,9 +341,9 @@
 
     .hero-logo-icon {
       position: relative;
-      width: 14.72mm;
-      height: 14.72mm;
-      margin-bottom: 0.96mm;
+      width: 17.5mm;
+      height: 17.5mm;
+      margin-bottom: 1.2mm;
       flex: none;
     }
 
@@ -382,7 +397,7 @@
     .hero-logo-title {
       font-family: 'Fredoka', sans-serif;
       font-weight: 600;
-      font-size: 2.3mm;
+      font-size: 2.6mm;
       letter-spacing: .25px;
       line-height: 1.2;
     }
@@ -390,18 +405,18 @@
     .hero-logo-sub {
       font-family: 'Poppins', sans-serif;
       font-weight: 400;
-      font-size: 1.6mm;
+      font-size: 1.8mm;
       letter-spacing: .4px;
       opacity: .85;
       margin-top: 0.32mm;
     }
 
     .hero-logo--custom .hero-logo-badge {
-      width: 16.64mm;
-      height: 16.64mm;
+      width: 21.5mm;
+      height: 21.5mm;
       border-radius: 50%;
       background: #fff;
-      margin-bottom: 1.28mm;
+      margin-bottom: 1.6mm;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -436,9 +451,9 @@
 
     .hero-header-text {
       position: absolute;
-      left: 33.86mm;
+      left: 39mm;
       top: 0.64mm;
-      width: 67.2mm;
+      width: 64mm;
       text-align: center;
       z-index: 6;
     }
@@ -553,7 +568,7 @@
     }
 
     .profile-card {
-      flex: 0 0 30mm;
+      flex: 0 0 36mm;
     }
 
     .profile-card img {
@@ -641,7 +656,7 @@
     .pc-fields li {
       display: flex;
       align-items: baseline;
-      gap: 1.3mm;
+      gap: 1mm;
       padding: 0.7mm 0;
       border-bottom: 1px dotted #cfc4a6;
       font-size: 7.6px;
@@ -655,7 +670,7 @@
     .pc-fields i {
       color: var(--navy);
       font-size: 7.5px;
-      width: 3mm;
+      width: 2.6mm;
       text-align: center;
       flex: none;
     }
@@ -673,6 +688,9 @@
     .pc-value {
       flex: 1;
       min-width: 0;
+      font-size: 7px;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .pc-heart {
