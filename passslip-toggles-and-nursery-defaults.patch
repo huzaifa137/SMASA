@@ -1,0 +1,420 @@
+diff --git a/app/Http/Controllers/ExaminationController.php b/app/Http/Controllers/ExaminationController.php
+index 3b4eb9d..9f98d41 100644
+--- a/app/Http/Controllers/ExaminationController.php
++++ b/app/Http/Controllers/ExaminationController.php
+@@ -1268,9 +1268,9 @@ class ExaminationController extends Controller
+         // back to nursery-minimal (slip-nursery.blade.php) regardless of
+         // what was actually saved.
+         if ($isNursery) {
+-            $template = request('template', 'nursery-minimal');
++            $template = request('template', 'nursery-classic');
+             if (!self::isNurseryTemplateKey($template)) {
+-                $template = 'nursery-minimal';
++                $template = 'nursery-classic';
+             }
+             $view = $this->resolveNurserySlipView($template, $lang);
+         } else {
+@@ -1402,9 +1402,9 @@ class ExaminationController extends Controller
+             // and preview-kindergarten-2.blade.php ('nursery-modern') both
+             // now support the multi-student $renderSlips loop, same as
+             // slip-nursery.blade.php.
+-            $template = request('template', 'nursery-minimal');
++            $template = request('template', 'nursery-classic');
+             if (!self::isNurseryTemplateKey($template)) {
+-                $template = 'nursery-minimal';
++                $template = 'nursery-classic';
+             }
+             $view = $this->resolveNurserySlipView($template, $lang);
+         } else {
+@@ -1522,9 +1522,9 @@ class ExaminationController extends Controller
+             // routes through the SAME nursery-classic/nursery-modern/
+             // nursery-minimal file that was actually saved, instead of
+             // always hard-falling back to nursery-minimal.
+-            $template = request('template', 'nursery-minimal');
++            $template = request('template', 'nursery-classic');
+             if (!self::isNurseryTemplateKey($template)) {
+-                $template = 'nursery-minimal';
++                $template = 'nursery-classic';
+             }
+             $view = $this->resolveNurserySlipView($template, $lang);
+         } else {
+@@ -1792,7 +1792,7 @@ class ExaminationController extends Controller
+         $lang = request('lang', 'en');
+ 
+         if ($isNursery) {
+-            $nurseryTemplate = $request->query('template', 'nursery-minimal');
++            $nurseryTemplate = $request->query('template', 'nursery-classic');
+             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
+         } else {
+             $view = $this->resolvePrimarySlipView($lang);
+diff --git a/config/passslip_templates.php b/config/passslip_templates.php
+index 0750cf5..5c1ee3e 100644
+--- a/config/passslip_templates.php
++++ b/config/passslip_templates.php
+@@ -159,7 +159,7 @@ return [
+ 
+             // Student Information — per-field
+             'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
+-            'show_stu_academic_year', 'show_stu_term', 'show_stu_dob', 'show_stu_gender',
++            'show_stu_academic_year', 'show_stu_term', 'show_stu_exam', 'show_stu_dob', 'show_stu_gender',
+             'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
+ 
+             // Summary Bar — per-field
+@@ -181,7 +181,7 @@ return [
+             // Student Information — per-field (Modern's info row only
+             // shows this subset; Stream/DOB/etc. aren't part of its
+             // design, so those keys are simply left off this list).
+-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
++            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
+ 
+             // Summary Bar — per-field (new section for Modern, mirrors
+             // Classic's Performance Summary strip using the same keys).
+@@ -206,7 +206,7 @@ return [
+ 
+             // Student Information — per-field (Minimal's ledger only
+             // ever showed this subset of fields, mirrors Modern's list).
+-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
++            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
+ 
+             // Summary Bar — per-field (new section for Minimal; the CSS
+             // already existed but was never actually rendered — mirrors
+@@ -237,6 +237,18 @@ return [
+         // problem this file exists to prevent.
+         'nursery-classic' => [
+             'show_border', 'show_watermark',
++
++            // Student Info card — Exam field (Teacher:/Term:/Exam: rows)
++            'show_stu_exam',
++
++            // TERM & FEES INFORMATION — whole-section master (same combined
++            // term-dates + fees box as nursery-modern's, see preview-kindergarten-2)
++            'show_section_term_fees',
++
++            // SIGNATURES — whole-section master for the Class Teacher /
++            // Head Teacher / Date sig-box, same convention as nursery-modern's
++            // 'show_section_signatures'.
++            'show_section_signatures',
+         ],
+         'nursery-modern' => [
+             'show_border', 'show_watermark',
+@@ -275,7 +287,19 @@ return [
+             // Student Block — photo, the whole NAME/CLASS/LIN text list
+             // (whole-block master), and its individual fields.
+             'show_photo', 'show_stu_details_block',
+-            'show_stu_name', 'show_stu_class', 'show_stu_admission',
++            'show_stu_name', 'show_stu_class', 'show_stu_admission', 'show_stu_exam',
++
++            // Comments / Signatures — reuses Primary's exact keys since
++            // nursery-minimal's comments-wrap is structurally the same
++            // ledger layout as Primary Minimal's (not the card-based
++            // nursery-modern layout), just with early-years remark text.
++            'show_remarks', 'show_signatures',
++
++            // TERM & FEES INFORMATION — whole-section master covering the
++            // combined This Term Ends On / Next Term Starts On / Fees
++            // Balance / Next Term Fees footer table, same key as
++            // nursery-classic/nursery-modern's equivalent section.
++            'show_section_term_fees',
+         ],
+     ],
+ 
+diff --git a/resources/views/Examination/passslips/index.blade.php b/resources/views/Examination/passslips/index.blade.php
+index bb3764c..93b40f7 100644
+--- a/resources/views/Examination/passslips/index.blade.php
++++ b/resources/views/Examination/passslips/index.blade.php
+@@ -922,7 +922,7 @@ use App\Http\Controllers\Helper;
+                     <i class="fas fa-chevron-right chev"></i>
+                 </a>
+ 
+-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-minimal"
++                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-classic"
+                     class="stack-btn">
+                     <div class="ic"><i class="fas fa-child"></i></div>
+                     <div>
+diff --git a/resources/views/Examination/passslips/preview-kindergarten.blade.php b/resources/views/Examination/passslips/preview-kindergarten.blade.php
+index 5885256..1296c35 100644
+--- a/resources/views/Examination/passslips/preview-kindergarten.blade.php
++++ b/resources/views/Examination/passslips/preview-kindergarten.blade.php
+@@ -75,6 +75,9 @@
+         $cfg = [
+             'border' => $on('show_border', true, $savedCfg),
+             'watermark' => $on('show_watermark', true, $savedCfg),
++            'stu_exam' => $on('show_stu_exam', true, $savedCfg),
++            'section_term_fees' => $on('show_section_term_fees', true, $savedCfg),
++            'section_signatures' => $on('show_section_signatures', true, $savedCfg),
+         ];
+ 
+         $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'Your School Name');
+@@ -1764,12 +1767,14 @@
+                                 <span class="value">{{ trim(($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
+                             </div>
+ 
+-                            <div class="info-row">
+-                                <div class="info-icon" style="background:var(--blue)"><i
+-                                        class="fa-solid fa-file-lines"></i></div>
+-                                <span class="label">Exam:</span>
+-                                <span class="value">{{ $examShortLabel }}</span>
+-                            </div>
++                            @if($cfg['stu_exam'])
++                                <div class="info-row">
++                                    <div class="info-icon" style="background:var(--blue)"><i
++                                            class="fa-solid fa-file-lines"></i></div>
++                                    <span class="label">Exam:</span>
++                                    <span class="value">{{ $examShortLabel }}</span>
++                                </div>
++                            @endif
+                         </div>
+                     </div>
+                 </div>
+@@ -1802,6 +1807,7 @@
+                 </div>
+ 
+                 <!-- TERM & FEES INFORMATION - Option 2: Border with Accent Left Bars -->
++                @if($cfg['section_term_fees'])
+                 <div class="term-fees-box"
+                     style="background: #fff; border: 2px solid var(--accent); border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 0; margin-bottom: 3.5mm; overflow: hidden;">
+ 
+@@ -1894,8 +1900,10 @@
+                         </div>
+                     </div>
+                 </div>
++                @endif
+ 
+                 <!-- SIGNATURES -->
++                @if($cfg['section_signatures'])
+                 <div class="sig-box"
+                     style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
+                     <div class="sig-col" style="text-align: center; font-size: 10px;">
+@@ -1930,6 +1938,7 @@
+                         <span style="font-weight: 600; color: #333;">Date</span>
+                     </div>
+                 </div>
++                @endif
+ 
+             </div>
+ 
+diff --git a/resources/views/Examination/passslips/slip-classic.blade.php b/resources/views/Examination/passslips/slip-classic.blade.php
+index 4943aca..e581c43 100644
+--- a/resources/views/Examination/passslips/slip-classic.blade.php
++++ b/resources/views/Examination/passslips/slip-classic.blade.php
+@@ -1983,6 +1983,7 @@
+                     // Student Information — per-field
+                     'stu_name' => $on('show_stu_name', true, $savedCfg),
+                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
++                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+                     'stu_class' => $on('show_stu_class', true, $savedCfg),
+                     'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+                     'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
+@@ -2347,6 +2348,11 @@
+                                         <span>{{ $exam->term }}</span>
+                                     </div>
+                                 @endif
++                                @if($cfg['stu_exam'])
++                                    <div class="rc-stu-row"><span class="k">Exam:</span>
++                                        <span>{{ $exam->exam_name }}</span>
++                                    </div>
++                                @endif
+                                 @if($cfg['stu_dob'])
+                                     <div class="rc-stu-row"><span class="k">Date of Birth:</span>
+                                         <span>{{ $dobFormatted }}</span>
+diff --git a/resources/views/Examination/passslips/slip-minimal.blade.php b/resources/views/Examination/passslips/slip-minimal.blade.php
+index e1f5477..43e66d3 100644
+--- a/resources/views/Examination/passslips/slip-minimal.blade.php
++++ b/resources/views/Examination/passslips/slip-minimal.blade.php
+@@ -1508,6 +1508,7 @@
+                     'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
+                     'stu_name' => $on('show_stu_name', true, $savedCfg),
+                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
++                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+                     'stu_class' => $on('show_stu_class', true, $savedCfg),
+                     'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                     'stu_status' => $on('show_stu_status', true, $savedCfg),
+@@ -1837,6 +1838,11 @@
+                                         {{ $s->adm_no ?? ($s->index_no ?? '—') }}
+                                     </div>
+                                 @endif
++                                @if($cfg['stu_exam'])
++                                    <div class="stu-field"><strong>EXAM:</strong>
++                                        {{ $exam->exam_name }}
++                                    </div>
++                                @endif
+                                 @if($cfg['rank'] && is_numeric($rank))
+                                     <div class="stu-field" style="margin-top:.2rem;">
+                                         <strong>POSITION:</strong>
+diff --git a/resources/views/Examination/passslips/slip-modern.blade.php b/resources/views/Examination/passslips/slip-modern.blade.php
+index 60f97c9..cf53bd3 100644
+--- a/resources/views/Examination/passslips/slip-modern.blade.php
++++ b/resources/views/Examination/passslips/slip-modern.blade.php
+@@ -1442,6 +1442,7 @@
+                     'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
+                     'stu_name' => $on('show_stu_name', true, $savedCfg),
+                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
++                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+                     'stu_class' => $on('show_stu_class', true, $savedCfg),
+                     'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                     'stu_status' => $on('show_stu_status', true, $savedCfg),
+@@ -1769,6 +1770,11 @@
+                                         {{ $s->adm_no ?? ($s->index_no ?? '—') }}
+                                     </div>
+                                 @endif
++                                @if($cfg['stu_exam'])
++                                    <div class="stu-field"><strong>EXAM:</strong>
++                                        {{ $exam->exam_name }}
++                                    </div>
++                                @endif
+                                 @if($cfg['rank'] && is_numeric($rank))
+                                     <div class="stu-field" style="margin-top:.2rem;">
+                                         <strong>POSITION:</strong>
+diff --git a/resources/views/Examination/passslips/slip-nursery.blade.php b/resources/views/Examination/passslips/slip-nursery.blade.php
+index 3d0f628..37de32f 100644
+--- a/resources/views/Examination/passslips/slip-nursery.blade.php
++++ b/resources/views/Examination/passslips/slip-nursery.blade.php
+@@ -150,6 +150,20 @@
+             'stu_name' => $on('show_stu_name', true, $savedCfg),
+             'stu_class' => $on('show_stu_class', true, $savedCfg),
+             'stu_admission' => $on('show_stu_admission', true, $savedCfg),
++            'stu_exam' => $on('show_stu_exam', true, $savedCfg),
++
++            // Class Teacher's/Head Teacher's Comments + Signature block —
++            // reuses Primary's exact 'show_remarks'/'show_signatures' keys
++            // since this ledger-style layout mirrors Primary Minimal's,
++            // just with early-years remark text instead of marks-based ones.
++            'remarks' => $on('show_remarks', true, $savedCfg),
++            'signatures' => $on('show_signatures', true, $savedCfg),
++
++            // TERM & FEES INFORMATION — whole-section master covering the
++            // combined This Term Ends On / Next Term Starts On / Fees
++            // Balance / Next Term Fees footer table, same key nursery-classic
++            // and nursery-modern use for their equivalent section.
++            'section_term_fees' => $on('show_section_term_fees', true, $savedCfg),
+         ];
+     @endphp
+ 
+@@ -844,7 +858,8 @@
+                             <div class="stu-field"><strong>LIN:</strong>
+                                 {{ $student->adm_no ?? ($student->index_no ?? '—') }}
+                             </div>
+-
++                        @endif
++                        @if($cfg['stu_exam'])
+                             <div class="stu-field"><strong>EXAM:</strong>
+                                 {{ trim(($exam->exam_name ?? '') . (($exam->term ?? null) ? ' - ' . $exam->term : '') . (($exam->academic_year ?? null) ? ' - ' . $exam->academic_year : ''), ' -') }}
+                             </div>
+@@ -910,61 +925,67 @@
+                     $nurseryCtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->class_teacher_signature ?? null);
+                     $nurseryHtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->head_teacher_signature ?? null);
+                 @endphp
+-                <div class="nursery-comments-left">
+-                    <div class="nursery-comment-line">
+-                        <div class="label">Class Teacher's Comments</div>
+-                        <div class="value">{{ $student->class_teacher_remark ?? '' }}</div>
+-                    </div>
+-                    <div class="nursery-comment-line">
+-                        <div class="label">Head Teacher's Comments</div>
+-                        <div class="value head">{{ $student->head_teacher_remark ?? '' }}</div>
++                @if($cfg['remarks'])
++                    <div class="nursery-comments-left">
++                        <div class="nursery-comment-line">
++                            <div class="label">Class Teacher's Comments</div>
++                            <div class="value">{{ $student->class_teacher_remark ?? '' }}</div>
++                        </div>
++                        <div class="nursery-comment-line">
++                            <div class="label">Head Teacher's Comments</div>
++                            <div class="value head">{{ $student->head_teacher_remark ?? '' }}</div>
++                        </div>
+                     </div>
+-                </div>
++                @endif
+ 
+-                <div class="nursery-comments-right">
+-                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->class_teacher ?? '' }}</div>
+-                    <div class="nursery-sig-line">
+-                        <span class="lbl">Signature:</span>
+-                        @if($nurseryCtSigUrl)
+-                            <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+-                        @else
+-                            <span class="scribble"></span>
+-                        @endif
+-                    </div>
+-                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
+-                    <div class="nursery-sig-line">
+-                        <span class="lbl">Signature:</span>
+-                        @if($nurseryHtSigUrl)
+-                            <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+-                        @else
+-                            <span class="scribble"></span>
+-                        @endif
++                @if($cfg['signatures'])
++                    <div class="nursery-comments-right">
++                        <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->class_teacher ?? '' }}</div>
++                        <div class="nursery-sig-line">
++                            <span class="lbl">Signature:</span>
++                            @if($nurseryCtSigUrl)
++                                <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
++                            @else
++                                <span class="scribble"></span>
++                            @endif
++                        </div>
++                        <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
++                        <div class="nursery-sig-line">
++                            <span class="lbl">Signature:</span>
++                            @if($nurseryHtSigUrl)
++                                <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
++                            @else
++                                <span class="scribble"></span>
++                            @endif
++                        </div>
+                     </div>
+-                </div>
++                @endif
+             </div>
+ 
+-            <table class="nursery-footer-table">
+-                <tr>
+-                    <td class="flabel">This Term Ends On</td>
+-                    <td>
+-                        @if(!empty($termDates['term_ends_on']))
+-                            {{ \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') }}
+-                        @endif
+-                    </td>
+-                    <td class="flabel">Next Term Starts On</td>
+-                    <td>
+-                        @if(!empty($termDates['next_term_starts_on']))
+-                            {{ \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') }}
+-                        @endif
+-                    </td>
+-                </tr>
+-                <tr>
+-                    <td class="flabel">Fees Balance</td>
+-                    <td>&nbsp;</td>
+-                    <td class="flabel">Next Term Fees</td>
+-                    <td>&nbsp;</td>
+-                </tr>
+-            </table>
++            @if($cfg['section_term_fees'])
++                <table class="nursery-footer-table">
++                    <tr>
++                        <td class="flabel">This Term Ends On</td>
++                        <td>
++                            @if(!empty($termDates['term_ends_on']))
++                                {{ \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') }}
++                            @endif
++                        </td>
++                        <td class="flabel">Next Term Starts On</td>
++                        <td>
++                            @if(!empty($termDates['next_term_starts_on']))
++                                {{ \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') }}
++                            @endif
++                        </td>
++                    </tr>
++                    <tr>
++                        <td class="flabel">Fees Balance</td>
++                        <td>&nbsp;</td>
++                        <td class="flabel">Next Term Fees</td>
++                        <td>&nbsp;</td>
++                    </tr>
++                </table>
++            @endif
+ 
+             <div class="nursery-stamp-notice">This report is invalid without School Stamp</div>
+ 

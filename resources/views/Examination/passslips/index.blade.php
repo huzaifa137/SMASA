@@ -922,7 +922,7 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
 
-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-minimal"
+                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-classic"
                     class="stack-btn">
                     <div class="ic"><i class="fas fa-child"></i></div>
                     <div>

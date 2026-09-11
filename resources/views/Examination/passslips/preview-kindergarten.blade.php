@@ -75,6 +75,9 @@
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
             'watermark' => $on('show_watermark', true, $savedCfg),
+            'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+            'section_term_fees' => $on('show_section_term_fees', true, $savedCfg),
+            'section_signatures' => $on('show_section_signatures', true, $savedCfg),
         ];
 
         $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'Your School Name');
@@ -1764,12 +1767,14 @@
                                 <span class="value">{{ trim(($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
                             </div>
 
-                            <div class="info-row">
-                                <div class="info-icon" style="background:var(--blue)"><i
-                                        class="fa-solid fa-file-lines"></i></div>
-                                <span class="label">Exam:</span>
-                                <span class="value">{{ $examShortLabel }}</span>
-                            </div>
+                            @if($cfg['stu_exam'])
+                                <div class="info-row">
+                                    <div class="info-icon" style="background:var(--blue)"><i
+                                            class="fa-solid fa-file-lines"></i></div>
+                                    <span class="label">Exam:</span>
+                                    <span class="value">{{ $examShortLabel }}</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -1802,6 +1807,7 @@
                 </div>
 
                 <!-- TERM & FEES INFORMATION - Option 2: Border with Accent Left Bars -->
+                @if($cfg['section_term_fees'])
                 <div class="term-fees-box"
                     style="background: #fff; border: 2px solid var(--accent); border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.06); padding: 0; margin-bottom: 3.5mm; overflow: hidden;">
 
@@ -1894,8 +1900,10 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <!-- SIGNATURES -->
+                @if($cfg['section_signatures'])
                 <div class="sig-box"
                     style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
@@ -1930,6 +1938,7 @@
                         <span style="font-weight: 600; color: #333;">Date</span>
                     </div>
                 </div>
+                @endif
 
             </div>
 

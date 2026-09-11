@@ -1268,9 +1268,9 @@ class ExaminationController extends Controller
         // back to nursery-minimal (slip-nursery.blade.php) regardless of
         // what was actually saved.
         if ($isNursery) {
-            $template = request('template', 'nursery-minimal');
+            $template = request('template', 'nursery-classic');
             if (!self::isNurseryTemplateKey($template)) {
-                $template = 'nursery-minimal';
+                $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
         } else {
@@ -1402,9 +1402,9 @@ class ExaminationController extends Controller
             // and preview-kindergarten-2.blade.php ('nursery-modern') both
             // now support the multi-student $renderSlips loop, same as
             // slip-nursery.blade.php.
-            $template = request('template', 'nursery-minimal');
+            $template = request('template', 'nursery-classic');
             if (!self::isNurseryTemplateKey($template)) {
-                $template = 'nursery-minimal';
+                $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
         } else {
@@ -1522,9 +1522,9 @@ class ExaminationController extends Controller
             // routes through the SAME nursery-classic/nursery-modern/
             // nursery-minimal file that was actually saved, instead of
             // always hard-falling back to nursery-minimal.
-            $template = request('template', 'nursery-minimal');
+            $template = request('template', 'nursery-classic');
             if (!self::isNurseryTemplateKey($template)) {
-                $template = 'nursery-minimal';
+                $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
         } else {
@@ -1792,7 +1792,7 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
-            $nurseryTemplate = $request->query('template', 'nursery-minimal');
+            $nurseryTemplate = $request->query('template', 'nursery-classic');
             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);

@@ -150,6 +150,20 @@
             'stu_name' => $on('show_stu_name', true, $savedCfg),
             'stu_class' => $on('show_stu_class', true, $savedCfg),
             'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+            'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+
+            // Class Teacher's/Head Teacher's Comments + Signature block —
+            // reuses Primary's exact 'show_remarks'/'show_signatures' keys
+            // since this ledger-style layout mirrors Primary Minimal's,
+            // just with early-years remark text instead of marks-based ones.
+            'remarks' => $on('show_remarks', true, $savedCfg),
+            'signatures' => $on('show_signatures', true, $savedCfg),
+
+            // TERM & FEES INFORMATION — whole-section master covering the
+            // combined This Term Ends On / Next Term Starts On / Fees
+            // Balance / Next Term Fees footer table, same key nursery-classic
+            // and nursery-modern use for their equivalent section.
+            'section_term_fees' => $on('show_section_term_fees', true, $savedCfg),
         ];
     @endphp
 
@@ -844,7 +858,8 @@
                             <div class="stu-field"><strong>LIN:</strong>
                                 {{ $student->adm_no ?? ($student->index_no ?? '—') }}
                             </div>
-
+                        @endif
+                        @if($cfg['stu_exam'])
                             <div class="stu-field"><strong>EXAM:</strong>
                                 {{ trim(($exam->exam_name ?? '') . (($exam->term ?? null) ? ' - ' . $exam->term : '') . (($exam->academic_year ?? null) ? ' - ' . $exam->academic_year : ''), ' -') }}
                             </div>
@@ -910,61 +925,67 @@
                     $nurseryCtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->class_teacher_signature ?? null);
                     $nurseryHtSigUrl = \App\Http\Controllers\Helper::signatureUrl($student->head_teacher_signature ?? null);
                 @endphp
-                <div class="nursery-comments-left">
-                    <div class="nursery-comment-line">
-                        <div class="label">Class Teacher's Comments</div>
-                        <div class="value">{{ $student->class_teacher_remark ?? '' }}</div>
+                @if($cfg['remarks'])
+                    <div class="nursery-comments-left">
+                        <div class="nursery-comment-line">
+                            <div class="label">Class Teacher's Comments</div>
+                            <div class="value">{{ $student->class_teacher_remark ?? '' }}</div>
+                        </div>
+                        <div class="nursery-comment-line">
+                            <div class="label">Head Teacher's Comments</div>
+                            <div class="value head">{{ $student->head_teacher_remark ?? '' }}</div>
+                        </div>
                     </div>
-                    <div class="nursery-comment-line">
-                        <div class="label">Head Teacher's Comments</div>
-                        <div class="value head">{{ $student->head_teacher_remark ?? '' }}</div>
-                    </div>
-                </div>
+                @endif
 
-                <div class="nursery-comments-right">
-                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->class_teacher ?? '' }}</div>
-                    <div class="nursery-sig-line">
-                        <span class="lbl">Signature:</span>
-                        @if($nurseryCtSigUrl)
-                            <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
-                        @else
-                            <span class="scribble"></span>
-                        @endif
+                @if($cfg['signatures'])
+                    <div class="nursery-comments-right">
+                        <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->class_teacher ?? '' }}</div>
+                        <div class="nursery-sig-line">
+                            <span class="lbl">Signature:</span>
+                            @if($nurseryCtSigUrl)
+                                <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+                            @else
+                                <span class="scribble"></span>
+                            @endif
+                        </div>
+                        <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
+                        <div class="nursery-sig-line">
+                            <span class="lbl">Signature:</span>
+                            @if($nurseryHtSigUrl)
+                                <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
+                            @else
+                                <span class="scribble"></span>
+                            @endif
+                        </div>
                     </div>
-                    <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
-                    <div class="nursery-sig-line">
-                        <span class="lbl">Signature:</span>
-                        @if($nurseryHtSigUrl)
-                            <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:20px;max-width:80px;object-fit:contain;vertical-align:middle;">
-                        @else
-                            <span class="scribble"></span>
-                        @endif
-                    </div>
-                </div>
+                @endif
             </div>
 
-            <table class="nursery-footer-table">
-                <tr>
-                    <td class="flabel">This Term Ends On</td>
-                    <td>
-                        @if(!empty($termDates['term_ends_on']))
-                            {{ \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') }}
-                        @endif
-                    </td>
-                    <td class="flabel">Next Term Starts On</td>
-                    <td>
-                        @if(!empty($termDates['next_term_starts_on']))
-                            {{ \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') }}
-                        @endif
-                    </td>
-                </tr>
-                <tr>
-                    <td class="flabel">Fees Balance</td>
-                    <td>&nbsp;</td>
-                    <td class="flabel">Next Term Fees</td>
-                    <td>&nbsp;</td>
-                </tr>
-            </table>
+            @if($cfg['section_term_fees'])
+                <table class="nursery-footer-table">
+                    <tr>
+                        <td class="flabel">This Term Ends On</td>
+                        <td>
+                            @if(!empty($termDates['term_ends_on']))
+                                {{ \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') }}
+                            @endif
+                        </td>
+                        <td class="flabel">Next Term Starts On</td>
+                        <td>
+                            @if(!empty($termDates['next_term_starts_on']))
+                                {{ \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') }}
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="flabel">Fees Balance</td>
+                        <td>&nbsp;</td>
+                        <td class="flabel">Next Term Fees</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+            @endif
 
             <div class="nursery-stamp-notice">This report is invalid without School Stamp</div>
 

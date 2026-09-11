@@ -159,7 +159,7 @@ return [
 
             // Student Information — per-field
             'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
-            'show_stu_academic_year', 'show_stu_term', 'show_stu_dob', 'show_stu_gender',
+            'show_stu_academic_year', 'show_stu_term', 'show_stu_exam', 'show_stu_dob', 'show_stu_gender',
             'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
 
             // Summary Bar — per-field
@@ -181,7 +181,7 @@ return [
             // Student Information — per-field (Modern's info row only
             // shows this subset; Stream/DOB/etc. aren't part of its
             // design, so those keys are simply left off this list).
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
 
             // Summary Bar — per-field (new section for Modern, mirrors
             // Classic's Performance Summary strip using the same keys).
@@ -206,7 +206,7 @@ return [
 
             // Student Information — per-field (Minimal's ledger only
             // ever showed this subset of fields, mirrors Modern's list).
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_gender', 'show_stu_status',
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
 
             // Summary Bar — per-field (new section for Minimal; the CSS
             // already existed but was never actually rendered — mirrors
@@ -237,6 +237,18 @@ return [
         // problem this file exists to prevent.
         'nursery-classic' => [
             'show_border', 'show_watermark',
+
+            // Student Info card — Exam field (Teacher:/Term:/Exam: rows)
+            'show_stu_exam',
+
+            // TERM & FEES INFORMATION — whole-section master (same combined
+            // term-dates + fees box as nursery-modern's, see preview-kindergarten-2)
+            'show_section_term_fees',
+
+            // SIGNATURES — whole-section master for the Class Teacher /
+            // Head Teacher / Date sig-box, same convention as nursery-modern's
+            // 'show_section_signatures'.
+            'show_section_signatures',
         ],
         'nursery-modern' => [
             'show_border', 'show_watermark',
@@ -275,7 +287,19 @@ return [
             // Student Block — photo, the whole NAME/CLASS/LIN text list
             // (whole-block master), and its individual fields.
             'show_photo', 'show_stu_details_block',
-            'show_stu_name', 'show_stu_class', 'show_stu_admission',
+            'show_stu_name', 'show_stu_class', 'show_stu_admission', 'show_stu_exam',
+
+            // Comments / Signatures — reuses Primary's exact keys since
+            // nursery-minimal's comments-wrap is structurally the same
+            // ledger layout as Primary Minimal's (not the card-based
+            // nursery-modern layout), just with early-years remark text.
+            'show_remarks', 'show_signatures',
+
+            // TERM & FEES INFORMATION — whole-section master covering the
+            // combined This Term Ends On / Next Term Starts On / Fees
+            // Balance / Next Term Fees footer table, same key as
+            // nursery-classic/nursery-modern's equivalent section.
+            'show_section_term_fees',
         ],
     ],
 

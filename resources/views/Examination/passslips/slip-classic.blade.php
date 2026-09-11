@@ -1983,6 +1983,7 @@
                     // Student Information — per-field
                     'stu_name' => $on('show_stu_name', true, $savedCfg),
                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
                     'stu_class' => $on('show_stu_class', true, $savedCfg),
                     'stu_stream' => $on('show_stu_stream', true, $savedCfg),
                     'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
@@ -2345,6 +2346,11 @@
                                 @if($cfg['stu_term'])
                                     <div class="rc-stu-row"><span class="k">Term:</span>
                                         <span>{{ $exam->term }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_exam'])
+                                    <div class="rc-stu-row"><span class="k">Exam:</span>
+                                        <span>{{ $exam->exam_name }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_dob'])
