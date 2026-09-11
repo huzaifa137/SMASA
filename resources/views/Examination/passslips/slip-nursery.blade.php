@@ -99,21 +99,17 @@
             }
         }
 
-        // ── Student photo ────────────────────────────────────────────────
-        $photo = null;
-        if (!empty($student->student_photo)) {
-            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                $fp = str_replace(
-                    '/',
-                    DIRECTORY_SEPARATOR,
-                    public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
-                );
-                if (file_exists($fp)) {
-                    $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
-                    break;
-                }
-            }
-        }
+        // ── Normalise to one-or-many render list ─────────────────────────
+        // passslipStudent() passes a single $student (mode 'single'), while
+        // passslipClass()/passslipAll() instead pass a $slips collection
+        // (mode 'class'/'all') — one entry per student in that class. This
+        // mirrors the exact $renderSlips pattern slip-classic/modern/
+        // minimal.blade.php already use, so the loop further down prints
+        // one .slip per student instead of just a single (blank, since
+        // $student was never even defined) one regardless of how many
+        // students are actually in the class.
+        $mode = $mode ?? 'single';
+        $renderSlips = $mode === 'single' ? [['student' => $student]] : $slips;
 
         // Helper: treat '1' / 'true' / missing (falls back to saved
         // per-class settings, then to $default) as ON. Query-string
@@ -123,10 +119,14 @@
             ? in_array(request($key), ['1', 'true', 1, true], true)
             : ($saved[$key] ?? $default);
 
-        // Per-class saved customisation, same lookup Primary uses —
-        // $student is always passed into this view by
-        // passslipStudent()/passslipClass()/passslipAll()/passslipPreview().
-        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null);
+        // Per-class saved customisation, same lookup Primary uses. Resolved
+        // from $classId (class mode) / $student->senior (single mode)
+        // rather than always reading the single $student — every student
+        // in $renderSlips belongs to the same class here, so one lookup
+        // covers all of them; the per-student photo below is the only
+        // thing that still needs to be resolved separately for each one.
+        $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($renderSlips[0]['student']->senior ?? null));
+        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $settingsClassId);
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -701,6 +701,28 @@
     </div>
 
     <div class="page-wrap">
+        @foreach($renderSlips as $slipData)
+            @php
+                $student = $slipData['student'];
+
+                // ── Student photo (per-student — resolved fresh on every
+                // loop iteration, since each student in $renderSlips has
+                // their own) ────────────────────────────────────────────
+                $photo = null;
+                if (!empty($student->student_photo)) {
+                    foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                        $fp = str_replace(
+                            '/',
+                            DIRECTORY_SEPARATOR,
+                            public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
+                        );
+                        if (file_exists($fp)) {
+                            $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+                            break;
+                        }
+                    }
+                }
+            @endphp
         <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
 
             @if($cfg['watermark'])
@@ -966,6 +988,7 @@
             <div class="nursery-stamp-notice">This report is invalid without School Stamp</div>
 
         </div>
+        @endforeach
     </div>
 
 </body>

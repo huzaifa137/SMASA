@@ -113,6 +113,27 @@
         }
         $watermarkLogoUrl = $schoolLogoUrl;
 
+        // ── Development Journey cards ───────────────────────────────────
+        // The source artwork used to have each card's title ("SOCIAL &
+        // EMOTIONAL", "MUSIC & MOVEMENT", etc.) plus a small heart/line
+        // divider baked directly into the PNG. Those PNGs have since been
+        // cropped down to just the illustration, so the label + divider
+        // are now rendered here as real markup instead — driven by this
+        // array — which makes the wording easy to change later without
+        // touching another image file. Each entry's accent colour ($c)
+        // matches the colour that was originally baked into that card's
+        // artwork, so the look is unchanged.
+        $devCards = [
+            ['img' => 'social_emotional.png', 'label' => 'Social & Emotional', 'c' => '#4caf7d', 'desc' => 'Growing positive relationships and understanding feelings.'],
+            ['img' => 'thinking_discovery.png', 'label' => 'Thinking & Discovery', 'c' => '#f2994a', 'desc' => 'Shows curiosity, explores, and enjoys learning new things.'],
+            ['img' => 'language_communication.png', 'label' => 'Language & Communication', 'c' => '#ec6ea8', 'desc' => 'Enjoys stories, expresses ideas, and is developing confidence.'],
+            ['img' => 'creativity_expression.png', 'label' => 'Creativity & Expression', 'c' => '#8a5fc7', 'desc' => 'Enjoys art, imagination, and expressing ideas in many ways.'],
+            ['img' => 'physical_development.png', 'label' => 'Physical Development', 'c' => '#3aa8d8', 'desc' => 'Developing strength, coordination and healthy movement habits.'],
+            ['img' => 'cooperation_independence.png', 'label' => 'Cooperation & Independence', 'c' => '#4caf7d', 'desc' => 'Works well with others and is becoming more independent.'],
+            ['img' => 'music_movement.png', 'label' => 'Music & Movement', 'c' => '#f0b429', 'desc' => 'Enjoys singing, rhythm, movement and creative musical activities.'],
+            ['img' => 'exploring_world.png', 'label' => 'Exploring the World', 'c' => '#4caf7d', 'desc' => 'Shows interest in nature, people, places and the world.'],
+        ];
+
     @endphp
 
     <style>
@@ -689,6 +710,44 @@
             display: block;
             margin: 0 auto;
             height: auto;
+            border-radius: 10px;
+        }
+
+        /* Card title — replaces the wording that used to be baked into
+   the PNG artwork. Coloured with each card's own --c so the look
+   stays identical to the original baked-in labels. */
+        .dev-card .dev-card-label {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 9.5px;
+            line-height: 1.25;
+            letter-spacing: .2px;
+            text-transform: uppercase;
+            color: var(--c, var(--navy));
+            padding: 6px 6px 0;
+        }
+
+        /* Small heart + line divider — also used to be baked into the
+   PNG artwork, now rendered live so both label and divider can be
+   restyled or re-worded from this file alone. */
+        .dev-card .dev-card-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 5px 10px 0;
+        }
+
+        .dev-card .dev-card-divider .line {
+            flex: 1;
+            height: 1px;
+            background: var(--c, var(--navy));
+            opacity: .55;
+        }
+
+        .dev-card .dev-card-divider i {
+            color: var(--c, var(--navy));
+            font-size: 9px;
         }
 
         .dev-card p {
@@ -1656,39 +1715,19 @@
                 <div class="dev-title"><i class="fa-solid fa-seedling"></i> My Development Journey <i
                         class="fa-solid fa-seedling"></i></div>
                 <div class="dev-grid">
-                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/social_emotional.png">
-                        <p>Growing positive relationships and understanding feelings.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#f2994a"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/thinking_discovery.png">
-                        <p>Shows curiosity, explores, and enjoys learning new things.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#ec6ea8"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/language_communication.png">
-                        <p>Enjoys stories, expresses ideas, and is developing confidence.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#8a5fc7"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/creativity_expression.png">
-                        <p>Enjoys art, imagination, and expressing ideas in many ways.</p>
-                    </div>
-
-                    <div class="dev-card" style="--c:#3aa8d8"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/physical_development.png">
-                        <p>Developing strength, coordination and healthy movement habits.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/cooperation_independence.png">
-                        <p>Works well with others and is becoming more independent.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#f0b429"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/music_movement.png">
-                        <p>Enjoys singing, rhythm, movement and creative musical activities.</p>
-                    </div>
-                    <div class="dev-card" style="--c:#4caf7d"><img class="thumb"
-                            src="{{ asset('images/passslip/kindergarten/') }}/exploring_world.png">
-                        <p>Shows interest in nature, people, places and the world.</p>
-                    </div>
+                    @foreach($devCards as $card)
+                        <div class="dev-card" style="--c: {{ $card['c'] }}">
+                            <img class="thumb" src="{{ asset('images/passslip/kindergarten/' . $card['img']) }}"
+                                alt="{{ $card['label'] }}">
+                            <div class="dev-card-label">{{ $card['label'] }}</div>
+                            <div class="dev-card-divider">
+                                <span class="line"></span>
+                                <i class="fa-solid fa-heart"></i>
+                                <span class="line"></span>
+                            </div>
+                            <p>{{ $card['desc'] }}</p>
+                        </div>
+                    @endforeach
                 </div>
 
                 <!-- TERM & FEES INFORMATION - Option 2: Border with Accent Left Bars -->
