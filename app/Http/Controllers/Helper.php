@@ -1282,6 +1282,85 @@ class Helper extends Controller
         return null;
     }
 
+    /**
+     * Resolve a Nursery subject's icon image for the pass slip's
+     * Cognitive/Social-Emotional Development grid, from
+     * public/images/subject-icons. Schools are free to rename or add
+     * Nursery subjects (ClassSubject rows), so this is NOT a rigid 1:1
+     * lookup against a fixed subject list — resolution order, first
+     * match wins:
+     *
+     *   1) A file named exactly after the subject (a few common case
+     *      variants are tried) — the simplest override: a school drops
+     *      "Numeracy.png" (or whatever they call it) straight into
+     *      public/images/subject-icons and it's picked up immediately,
+     *      no code change needed.
+     *   2) A keyword match against the icon set that already ships in
+     *      that folder (Health Habits, Music and Dance, Numbers,
+     *      Physical Education, Reading, Social Development, Wtritting
+     *      [sic — matches the shipped filename], english) — covers
+     *      common renames automatically, e.g. "Numeracy" or "Number
+     *      Work" → Numbers.png, "Handwriting" → Wtritting.png, "PE" →
+     *      Physical Education.png, "Literacy" → english.png.
+     *   3) null (no icon) if neither resolves — never falls back to an
+     *      emoji or placeholder graphic for this design.
+     *
+     * Returns a public URL, or null.
+     */
+    public static function nurserySubjectIconUrl(?string $subjectName): ?string
+    {
+        $subjectName = trim((string) $subjectName);
+        if ($subjectName === '') {
+            return null;
+        }
+
+        $dir = public_path('images/subject-icons');
+        $extensions = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
+
+        $findFile = function (string $baseName) use ($dir, $extensions): ?string {
+            $variants = array_unique([$baseName, ucwords(strtolower($baseName)), strtolower($baseName), strtoupper($baseName)]);
+            foreach ($variants as $variant) {
+                foreach ($extensions as $ext) {
+                    if (is_file($dir . DIRECTORY_SEPARATOR . $variant . '.' . $ext)) {
+                        return $variant . '.' . $ext;
+                    }
+                }
+            }
+            return null;
+        };
+
+        // 1) Exact match against the subject's own name.
+        if ($file = $findFile($subjectName)) {
+            return asset('images/subject-icons/' . rawurlencode($file));
+        }
+
+        // 2) Keyword/alias match against the shipped icon set. Keys are
+        // the exact filenames already sitting in public/images/subject-icons
+        // (kept as-is, including the "Wtritting"/lowercase "english"
+        // quirks, rather than silently renaming files on disk).
+        $aliases = [
+            'english.png' => ['english', 'literacy', 'language'],
+            'Reading.png' => ['reading', 'phonics', 'story'],
+            'Wtritting.png' => ['writ', 'handwriting', 'penmanship'], // covers Writing/Writting
+            'Numbers.png' => ['number', 'numeracy', 'math', 'counting'],
+            'Music and Dance.png' => ['music', 'dance', 'singing', 'rhythm'],
+            'Physical Education.png' => ['physical', 'p.e', ' pe', 'sport', 'gross motor', 'movement'],
+            'Health Habits.png' => ['health', 'hygiene', 'self help', 'self-help', 'wellbeing', 'well-being'],
+            'Social Development.png' => ['social', 'emotional', 'life skills', 'values'],
+        ];
+
+        $needle = strtolower($subjectName);
+        foreach ($aliases as $file => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($needle, $keyword) && is_file($dir . DIRECTORY_SEPARATOR . $file)) {
+                    return asset('images/subject-icons/' . rawurlencode($file));
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static function systemActiveYear()
     {
         return AcademicYear::where('is_active', 1)

@@ -115,7 +115,7 @@
 
         // ── Development Journey cards ───────────────────────────────────
         // The source artwork used to have each card's title ("SOCIAL &
-        // EMOTIONAL", "MUSIC & MOVEMENT", etc.) plus a small heart/line
+        // EMOTIONAL", "Music and Dance", etc.) plus a small heart/line
         // divider baked directly into the PNG. Those PNGs have since been
         // cropped down to just the illustration, so the label + divider
         // are now rendered here as real markup instead — driven by this
@@ -124,14 +124,14 @@
         // matches the colour that was originally baked into that card's
         // artwork, so the look is unchanged.
         $devCards = [
-            ['img' => 'social_emotional.png', 'label' => 'Social & Emotional', 'c' => '#4caf7d', 'desc' => 'Growing positive relationships and understanding feelings.'],
-            ['img' => 'thinking_discovery.png', 'label' => 'Thinking & Discovery', 'c' => '#f2994a', 'desc' => 'Shows curiosity, explores, and enjoys learning new things.'],
-            ['img' => 'language_communication.png', 'label' => 'Language & Communication', 'c' => '#ec6ea8', 'desc' => 'Enjoys stories, expresses ideas, and is developing confidence.'],
-            ['img' => 'creativity_expression.png', 'label' => 'Creativity & Expression', 'c' => '#8a5fc7', 'desc' => 'Enjoys art, imagination, and expressing ideas in many ways.'],
-            ['img' => 'physical_development.png', 'label' => 'Physical Development', 'c' => '#3aa8d8', 'desc' => 'Developing strength, coordination and healthy movement habits.'],
-            ['img' => 'cooperation_independence.png', 'label' => 'Cooperation & Independence', 'c' => '#4caf7d', 'desc' => 'Works well with others and is becoming more independent.'],
-            ['img' => 'music_movement.png', 'label' => 'Music & Movement', 'c' => '#f0b429', 'desc' => 'Enjoys singing, rhythm, movement and creative musical activities.'],
-            ['img' => 'exploring_world.png', 'label' => 'Exploring the World', 'c' => '#4caf7d', 'desc' => 'Shows interest in nature, people, places and the world.'],
+            ['img' => 'social_emotional.png', 'label' => 'Social Development', 'c' => '#4caf7d', 'desc' => 'Works with Minimum Supervision'],
+            ['img' => 'thinking_discovery.png', 'label' => 'Reading', 'c' => '#f2994a', 'desc' => 'Works with Minimum Supervision'],
+            ['img' => 'language_communication.png', 'label' => 'English', 'c' => '#ec6ea8', 'desc' => 'Works Independently'],
+            ['img' => 'creativity_expression.png', 'label' => 'Writting', 'c' => '#8a5fc7', 'desc' => 'Works Independently'],
+            ['img' => 'physical_development.png', 'label' => 'Physical Education', 'c' => '#3aa8d8', 'desc' => 'Works with Minimum Supervision'],
+            ['img' => 'cooperation_independence.png', 'label' => 'Numbers', 'c' => '#4caf7d', 'desc' => 'Works under Teachers Guidance'],
+            ['img' => 'music_movement.png', 'label' => 'Music and Dance', 'c' => '#f0b429', 'desc' => 'Works Independently'],
+            ['img' => 'exploring_world.png', 'label' => 'Health Habits', 'c' => '#4caf7d', 'desc' => 'Works with Minimum Supervision'],
         ];
 
     @endphp

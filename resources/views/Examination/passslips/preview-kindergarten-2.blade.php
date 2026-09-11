@@ -1346,60 +1346,75 @@
         <div class="dev-grid">
           <div class="dev-card dev-card--lang">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/language_communication.png" alt="">
-            <h4 class="dev-card-title">Language &amp;<br>Communication</h4>
-            <p class="dev-card-sub">expressing ideas and<br>building vocabulary.</p>
+            <h4 class="dev-card-title">Reading</h4>
+            <p class="dev-card-sub">Works with Minimum Supervision
+            </p>
             <div class="dev-card-divider"><i class="fas fa-leaf"></i></div>
           </div>
 
           <div class="dev-card dev-card--social">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/social_emotional.png" alt="">
-            <h4 class="dev-card-title">Social &amp; Emotional<br>Development</h4>
-            <p class="dev-card-sub">Shows empathy, builds positive<br>relationships and understands feelings.</p>
+            <h4 class="dev-card-title">Social Development</h4>
+            <p class="dev-card-sub">Works with Minimum Supervision
+
+            </p>
             <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span
                 class="dcd-line"></span></div>
           </div>
 
           <div class="dev-card dev-card--cognitive dev-card--dashed">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/cognitive_development.png" alt="">
-            <h4 class="dev-card-title">Cognitive<br>Development</h4>
-            <p class="dev-card-sub">Shows curiosity, problem-solving<br>skills and enjoys learning new concepts.</p>
+            <h4 class="dev-card-title">Numbers</h4>
+            <p class="dev-card-sub">Works under Teachers Guidance
+
+            </p>
             <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-star"></i><span
                 class="dcd-line"></span></div>
           </div>
 
           <div class="dev-card dev-card--creative">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/creative_development.png" alt="">
-            <h4 class="dev-card-title">Creative<br>Development</h4>
-            <p class="dev-card-sub">Enjoys art, imagination, drama,<br>music and creative self-expression.</p>
+            <h4 class="dev-card-title">Writting</h4>
+            <p class="dev-card-sub">Works Independently
+
+            </p>
             <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
           </div>
 
           <div class="dev-card dev-card--physical">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/physical_development.png" alt="">
-            <h4 class="dev-card-title">Physical<br>Development</h4>
-            <p class="dev-card-sub">Develops gross and fine motor<br>skills through active play and activities.</p>
+            <h4 class="dev-card-title">Physical Education</h4>
+            <p class="dev-card-sub">Works with Minimum Supervision
+
+            </p>
             <div class="dev-card-divider"><i class="fas fa-seedling"></i></div>
           </div>
 
           <div class="dev-card dev-card--approach">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/approach_to_learning.png" alt="">
-            <h4 class="dev-card-title">Approach to<br>Learning</h4>
-            <p class="dev-card-sub">Shows independence, focus,<br>perseverance and positive learning habits.</p>
+            <h4 class="dev-card-title">English</h4>
+            <p class="dev-card-sub">Works Independently
+
+            </p>
             <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas fa-heart"></i><span
                 class="dcd-line"></span></div>
           </div>
 
           <div class="dev-card dev-card--music">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/music_movement.png" alt="">
-            <h4 class="dev-card-title">Music &amp;<br>Movement</h4>
-            <p class="dev-card-sub">Enjoys singing, rhythm, dancing<br>and moving to express feelings.</p>
+            <h4 class="dev-card-title">Music and Dance</h4>
+            <p class="dev-card-sub">Works Independently
+
+            </p>
             <div class="dev-card-divider"><i class="fas fa-music"></i></div>
           </div>
 
           <div class="dev-card dev-card--world">
             <img src="{{ asset('images/passslip/kindergarten2/') }}/understanding_world.png" alt="">
-            <h4 class="dev-card-title">Understanding<br>the World</h4>
-            <p class="dev-card-sub">Explores nature, people, culture<br>and the world with interest.</p>
+            <h4 class="dev-card-title">Health Habits</h4>
+            <p class="dev-card-sub">Works with Minimum Supervision
+
+            </p>
             <div class="dev-card-divider"><i class="fas fa-earth-americas"></i></div>
           </div>
         </div>
