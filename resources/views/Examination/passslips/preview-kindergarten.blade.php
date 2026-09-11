@@ -1843,7 +1843,7 @@
 
                 <!-- SIGNATURES -->
                 <div class="sig-box"
-                    style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
+                    style="background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; margin-bottom: 4mm;">
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
                         <i class="fa-solid fa-pen-nib"
                             style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
@@ -1858,14 +1858,6 @@
                         <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
                         </div>
                         <span style="font-weight: 600; color: #333;">Head Teacher</span><br><small
-                            style="color: #777;">Signature</small>
-                    </div>
-                    <div class="sig-col" style="text-align: center; font-size: 10px;">
-                        <i class="fa-solid fa-people-roof"
-                            style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
-                        </div>
-                        <span style="font-weight: 600; color: #333;">Parent / Guardian</span><br><small
                             style="color: #777;">Signature</small>
                     </div>
                     <div class="sig-col" style="text-align: center; font-size: 10px;">

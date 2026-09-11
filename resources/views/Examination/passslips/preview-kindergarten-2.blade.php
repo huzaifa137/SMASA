@@ -1075,7 +1075,7 @@
 
     .sig-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 4mm;
       text-align: center;
     }
@@ -1460,12 +1460,6 @@
                   <div class="sig-space"></div>
                   <div class="sig-rule"></div>
                   <div class="sig-label"><b>Head Teacher</b>Signature</div>
-                </div>
-                <div class="sig-slot">
-                  <i class="fas fa-people-roof"></i>
-                  <div class="sig-space"></div>
-                  <div class="sig-rule"></div>
-                  <div class="sig-label"><b>Parent / Guardian</b>Signature</div>
                 </div>
                 <div class="sig-slot">
                   <i class="fas fa-calendar-day"></i>

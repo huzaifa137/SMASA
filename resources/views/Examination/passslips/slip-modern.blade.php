@@ -2208,9 +2208,6 @@
                                     <div class="remark-text">{{ $ctRemark ?: 'No remarks recorded.' }}</div>
                                 </div>
 
-                                <div class="sig-dashes" style="font-weight:Bold;">House Teacher</div>
-                                <div style="height:18px;border-bottom:1.5px dashed #444;margin-bottom:.4rem;"></div>
-
                                 <div class="remark-block">
                                     <div class="remark-teacher">
                                         {{ $headTeacherNameM }}
@@ -2255,7 +2252,6 @@
                                         @endif
                                         Class Teacher
                                     </div>
-                                    <div class="sig-slot" style="margin-top:1.4rem;">House Teacher</div>
                                     <div class="sig-slot has-sig" style="margin-top:1.4rem;">
                                         @if($htSigUrlM)
                                             <img src="{{ $htSigUrlM }}"
@@ -2263,7 +2259,6 @@
                                         @endif
                                         Head Teacher
                                     </div>
-                                    <div class="sig-slot" style="margin-top:1.4rem;">Parent / Guardian</div>
                                 </div>
                             </div>
                         @endif
