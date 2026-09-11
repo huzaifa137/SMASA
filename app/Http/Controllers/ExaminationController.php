@@ -824,14 +824,14 @@ class ExaminationController extends Controller
      * applySavedPassslipSettings() merging the class's saved 'template'
      * into request() beforehand.
      *
-     * NOT yet used by passslipClass()/passslipAll() (bulk printing) —
-     * those still hard-route Nursery students to 'nursery-minimal'
-     * (slip-nursery.blade.php) regardless of the saved template, because
-     * 'nursery-classic'/'nursery-modern' don't yet support the
-     * multi-student $renderSlips loop slip-nursery.blade.php already
-     * normalises 'single' vs 'class' vs 'all' mode into. Add that same
-     * loop to preview-kindergarten(-2).blade.php, then switch those two
-     * call sites over the same way passslipStudent() already is.
+     * Also used by passslipClass()/passslipAll() (bulk printing) now that
+     * preview-kindergarten.blade.php ('nursery-classic') and
+     * preview-kindergarten-2.blade.php ('nursery-modern') both support the
+     * same multi-student $renderSlips loop slip-nursery.blade.php already
+     * normalises 'single' vs 'class' vs 'all' mode into — so bulk printing
+     * a Nursery class/exam now renders whichever design was actually
+     * saved for it, instead of always hard-falling back to
+     * 'nursery-minimal'.
      *
      * 'nursery-classic' (preview-kindergarten.blade.php) and
      * 'nursery-modern' (preview-kindergarten-2.blade.php) — like
@@ -1390,16 +1390,23 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
-            // NOTE: unlike passslipStudent(), this stays on
-            // 'nursery-minimal' (slip-nursery.blade.php) regardless of
-            // which Nursery design was saved for the class —
-            // preview-kindergarten.blade.php ('nursery-classic') and
-            // preview-kindergarten-2.blade.php ('nursery-modern') only
-            // support a single student per render so far (no $slips
-            // multi-student loop yet, the same one slip-nursery.blade.php
-            // already normalises via $renderSlips). Route bulk class
-            // printing through them too once that loop is added.
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+            // Now routes through the same $renderSlips-aware
+            // resolveNurserySlipView() passslipStudent() already uses,
+            // instead of always hard-falling back to 'nursery-minimal'
+            // (slip-nursery.blade.php) regardless of which Nursery design
+            // was actually saved for the class. applySavedPassslipSettings()
+            // above already merged this class's saved 'template' into
+            // request() when no explicit ?template= was given, so this
+            // now prints the SAME design the "Customize this design" page
+            // would show. preview-kindergarten.blade.php ('nursery-classic')
+            // and preview-kindergarten-2.blade.php ('nursery-modern') both
+            // now support the multi-student $renderSlips loop, same as
+            // slip-nursery.blade.php.
+            $template = request('template', 'nursery-minimal');
+            if (!self::isNurseryTemplateKey($template)) {
+                $template = 'nursery-minimal';
+            }
+            $view = $this->resolveNurserySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
@@ -1509,10 +1516,17 @@ class ExaminationController extends Controller
         $lang = request('lang', 'en');
 
         if ($isNursery) {
-            // See the same note in passslipClass() — nursery-classic/
-            // nursery-modern don't support the multi-student bulk loop
-            // yet, so bulk "all" printing stays on nursery-minimal.
-            $view = $lang === 'ar' ? 'Examination.passslips.slip-nursery-ar' : 'Examination.passslips.slip-nursery';
+            // Same fix as passslipClass() — resolveBulkPassslipTemplate()
+            // above already merged the first class's saved 'template' into
+            // request() when no explicit ?template= was given, so this now
+            // routes through the SAME nursery-classic/nursery-modern/
+            // nursery-minimal file that was actually saved, instead of
+            // always hard-falling back to nursery-minimal.
+            $template = request('template', 'nursery-minimal');
+            if (!self::isNurseryTemplateKey($template)) {
+                $template = 'nursery-minimal';
+            }
+            $view = $this->resolveNurserySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }

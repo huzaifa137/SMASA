@@ -59,16 +59,18 @@
             ? in_array(request($key), ['1', 'true', 1, true], true)
             : ($saved[$key] ?? $default);
 
-        // Per-class saved customisation, same lookup the other Nursery/
-        // Primary designs use, scoped to THIS template ('nursery-classic')
-        // specifically — see the passslip_settings migration adding a
-        // `template` column — so Classic's own saved accent/toggles never
-        // bleed into (or get silently overwritten by) Modern's or
-        // Minimal's. $student is passed into this view by
-        // ExaminationController::passslipPreview()/passslipStudent() —
-        // guard with null-safe access in case this file is ever rendered
-        // without it.
-        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null, 'nursery-classic');
+        // Per-class saved customisation, same lookup slip-nursery.blade.php
+        // uses, scoped to THIS template ('nursery-classic') specifically —
+        // see the passslip_settings migration adding a `template` column —
+        // so Classic's own saved accent/toggles never bleed into (or get
+        // silently overwritten by) Modern's or Minimal's. Resolved from
+        // $classId (bulk 'class'/'all' modes) rather than always reading a
+        // single top-level $student, since passslipClass()/passslipAll()
+        // pass a $slips collection instead — see the $renderSlips
+        // normalisation below.
+        $mode = $mode ?? 'single';
+        $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($slips[0]['student']->senior ?? null));
+        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $settingsClassId, 'nursery-classic');
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -103,45 +105,34 @@
         }
 
         // ── Student photo resolution ────────────────────────────────────
-        $photo = null;
-        if (!empty($student->student_photo)) {
-            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                $fp = str_replace(
-                    '/',
-                    DIRECTORY_SEPARATOR,
-                    public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
-                );
-                if (file_exists($fp)) {
-                    $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
-                    break;
-                }
-            }
-        }
+        // Moved inside the @foreach below (one photo per student) — see
+        // the $renderSlips normalisation.
         $watermarkLogoUrl = $schoolLogoUrl;
 
-        // ── Development Journey cards ───────────────────────────────────
-        // Built from this student's REAL nursery subjects ($subjectMarks —
-        // the same collection slip-nursery.blade.php already renders),
-        // instead of 8 fixed placeholder subjects. 'desc' is
-        // $subj->grade_remark — the System Comment already resolved
-        // server-side (buildPassslipData → AssessmentScale::presetForScore())
-        // from whichever Assessment Scale is attached to that class+subject
-        // — e.g. "Works Independently" / "Works with Minimum Supervision" /
-        // "Works under Teacher's Guidance" — NOT static text. Accent colour
-        // cycles through the same palette the original static cards used,
-        // by position, so the grid keeps its varied, colourful look; 'img'
-        // is a full icon URL (Helper::nurserySubjectIconUrl()) rather than
-        // a images/passslip/kindergarten/ filename, with a null fallback
-        // handled by the @foreach below.
-        $devPalette = ['#4caf7d', '#f2994a', '#ec6ea8', '#8a5fc7', '#3aa8d8', '#4caf7d', '#f0b429', '#4caf7d'];
-        $devCards = collect($subjectMarks ?? [])->values()->map(function ($subj, $i) use ($devPalette) {
-            return [
-                'img' => Helper::nurserySubjectIconUrl($subj->subject_name ?? ''),
-                'label' => $subj->subject_name ?? '',
-                'c' => $devPalette[$i % count($devPalette)],
-                'desc' => $subj->grade_remark ?: 'Pending',
-            ];
-        })->all();
+        // Short exam-type label (BOT / MOT / EOT / CA) shown in the new
+        // "Exam:" field — same $examLabels convention slip-classic/modern/
+        // minimal.blade.php already use for their BOT|MID|EOT comparison
+        // table, so a school sees the same abbreviation everywhere rather
+        // than nursery-minimal's full exam name and this template
+        // disagreeing on terminology.
+        $examLabels = [
+            'Beginning-of-Term' => 'BOT',
+            'Mid-Term' => 'MOT',
+            'End-of-Term' => 'EOT',
+            'Continuous Assessment' => 'CA',
+        ];
+        $examShortLabel = $examLabels[$exam->exam_type ?? null] ?? strtoupper($exam->term ?? $exam->exam_name ?? '');
+
+        // ── Normalise to one-or-many render list ──────────────────────────
+        // passslipPreview()/passslipStudent() pass a single $student (mode
+        // 'single'), while passslipClass()/passslipAll() instead pass a
+        // $slips collection (mode 'class'/'all') — one entry per student.
+        // Mirrors the exact $renderSlips pattern slip-nursery.blade.php
+        // already uses, so the one @foreach further down prints one sheet
+        // per student instead of assuming a single top-level $student.
+        $renderSlips = $mode === 'single'
+            ? [['student' => $student, 'subjectMarks' => $subjectMarks ?? collect()]]
+            : ($slips ?? []);
 
     @endphp
 
@@ -1443,6 +1434,62 @@
     </div>
 
     <div class="page-wrap">
+        @foreach($renderSlips as $slipData)
+            @php
+                $student = $slipData['student'];
+                $subjectMarks = collect($slipData['subjectMarks'] ?? []);
+
+                // ── Student photo (per-student) ─────────────────────────
+                $photo = null;
+                if (!empty($student->student_photo)) {
+                    foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                        $fp = str_replace(
+                            '/',
+                            DIRECTORY_SEPARATOR,
+                            public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
+                        );
+                        if (file_exists($fp)) {
+                            $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+                            break;
+                        }
+                    }
+                }
+
+                // ── Development Journey cards (per-student) ─────────────
+                // Built from this student's REAL nursery subjects
+                // ($subjectMarks — the same collection slip-nursery.blade.php
+                // already renders), instead of 8 fixed placeholder subjects.
+                // 'desc' is $subj->grade_remark — the System Comment already
+                // resolved server-side (buildPassslipData →
+                // AssessmentScale::presetForScore()) from whichever
+                // Assessment Scale is attached to that class+subject — e.g.
+                // "Works Independently" / "Works with Minimum Supervision" /
+                // "Works under Teacher's Guidance" — NOT static text. Accent
+                // colour cycles through the same palette the original static
+                // cards used, by position, so the grid keeps its varied,
+                // colourful look; 'img' is a full icon URL
+                // (Helper::nurserySubjectIconUrl()) with a null fallback
+                // handled by the @forelse below.
+                $devPalette = ['#4caf7d', '#f2994a', '#ec6ea8', '#8a5fc7', '#3aa8d8', '#4caf7d', '#f0b429', '#4caf7d'];
+                $devCards = $subjectMarks->values()->map(function ($subj, $i) use ($devPalette) {
+                    return [
+                        'img' => Helper::nurserySubjectIconUrl($subj->subject_name ?? ''),
+                        'label' => $subj->subject_name ?? '',
+                        'c' => $devPalette[$i % count($devPalette)],
+                        'desc' => $subj->grade_remark ?: 'Pending',
+                    ];
+                })->all();
+
+                // ── Class/Head Teacher signatures (per-student) ─────────
+                // $student->class_teacher / head_teacher / *_remark /
+                // *_signature are populated by buildPassslipData() →
+                // attachRemarksAndSignatures(), the same real data
+                // slip-nursery.blade.php's signature block already reads
+                // — this template's SIGNATURES row was still just static
+                // "Class Teacher"/"Head Teacher" labels with a blank line.
+                $nurseryCtSigUrl = Helper::signatureUrl($student->class_teacher_signature ?? null);
+                $nurseryHtSigUrl = Helper::signatureUrl($student->head_teacher_signature ?? null);
+            @endphp
         <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}" id="sheet">
 
             @if($cfg['watermark'])
@@ -1716,6 +1763,13 @@
                                 <span class="label">Term:</span>
                                 <span class="value">{{ trim(($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
                             </div>
+
+                            <div class="info-row">
+                                <div class="info-icon" style="background:var(--blue)"><i
+                                        class="fa-solid fa-file-lines"></i></div>
+                                <span class="label">Exam:</span>
+                                <span class="value">{{ $examShortLabel }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1847,18 +1901,26 @@
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
                         <i class="fa-solid fa-pen-nib"
                             style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        <div class="sig-line"
+                            style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px; display:flex; align-items:flex-end; justify-content:center;">
+                            @if($nurseryCtSigUrl)
+                                <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:16px;max-width:70px;object-fit:contain;">
+                            @endif
                         </div>
-                        <span style="font-weight: 600; color: #333;">Class Teacher</span><br><small
-                            style="color: #777;">Signature</small>
+                        <span style="font-weight: 600; color: #333;">{{ $student->class_teacher ?? 'Class Teacher' }}</span><br><small
+                            style="color: #777;">Class Teacher</small>
                     </div>
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
                         <i class="fa-solid fa-award"
                             style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        <div class="sig-line"
+                            style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px; display:flex; align-items:flex-end; justify-content:center;">
+                            @if($nurseryHtSigUrl)
+                                <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:16px;max-width:70px;object-fit:contain;">
+                            @endif
                         </div>
-                        <span style="font-weight: 600; color: #333;">Head Teacher</span><br><small
-                            style="color: #777;">Signature</small>
+                        <span style="font-weight: 600; color: #333;">{{ $student->head_teacher ?? 'Head Teacher' }}</span><br><small
+                            style="color: #777;">Head Teacher</small>
                     </div>
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
                         <i class="fa-regular fa-calendar"
@@ -1875,6 +1937,7 @@
             <img class="backpack-deco" src="{{ asset('images/passslip/kindergarten/') }}/backpack.png" alt="">
             <img class="pencils-deco" src="{{ asset('images/passslip/kindergarten/') }}/pencils.png" alt="">
         </div>
+        @endforeach
     </div>
 </body>
 

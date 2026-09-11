@@ -65,6 +65,7 @@ return [
         'show_stu_stream' => ['label' => 'Stream', 'icon' => 'fa-diagram-project', 'group' => 'Student Information Fields'],
         'show_stu_academic_year' => ['label' => 'Academic Year', 'icon' => 'fa-calendar', 'group' => 'Student Information Fields'],
         'show_stu_term' => ['label' => 'Term', 'icon' => 'fa-calendar-days', 'group' => 'Student Information Fields'],
+        'show_stu_exam' => ['label' => 'Exam', 'icon' => 'fa-file-lines', 'group' => 'Student Information Fields'],
         'show_stu_dob' => ['label' => 'Date of Birth', 'icon' => 'fa-cake-candles', 'group' => 'Student Information Fields'],
         'show_stu_gender' => ['label' => 'Gender', 'icon' => 'fa-venus-mars', 'group' => 'Student Information Fields'],
         'show_stu_class_teacher' => ['label' => 'Class Teacher', 'icon' => 'fa-chalkboard-teacher', 'group' => 'Student Information Fields'],
@@ -246,7 +247,7 @@ return [
             // MY PROFILE card — whole-section master + its own fields
             'show_section_profile', 'show_photo',
             'show_stu_name', 'show_stu_class', 'show_stu_stream',
-            'show_stu_class_teacher', 'show_stu_term',
+            'show_stu_class_teacher', 'show_stu_term', 'show_stu_exam',
 
             // WHO I AM badges — whole-section master
             'show_section_whoiam',

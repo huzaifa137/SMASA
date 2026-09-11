@@ -846,7 +846,7 @@
                             </div>
 
                             <div class="stu-field"><strong>EXAM:</strong>
-                                {{ $student->adm_no ?? ($student->index_no ?? '—') }}
+                                {{ trim(($exam->exam_name ?? '') . (($exam->term ?? null) ? ' - ' . $exam->term : '') . (($exam->academic_year ?? null) ? ' - ' . $exam->academic_year : ''), ' -') }}
                             </div>
                         @endif
                     </div>

@@ -86,8 +86,13 @@
     // ('nursery-modern') specifically — see the passslip_settings
     // migration adding a `template` column — so Modern's own saved
     // accent/toggles never bleed into (or get overwritten by) Classic's
-    // or Minimal's.
-    $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $student->senior ?? null, 'nursery-modern');
+    // or Minimal's. Resolved from $classId (bulk 'class'/'all' modes)
+    // rather than always reading a single top-level $student, since
+    // passslipClass()/passslipAll() pass a $slips collection instead —
+    // see the $renderSlips normalisation below.
+    $mode = $mode ?? 'single';
+    $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($slips[0]['student']->senior ?? null));
+    $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $settingsClassId, 'nursery-modern');
 
     $cfg = [
       'border' => $on('show_border', true, $savedCfg),
@@ -105,6 +110,7 @@
       'stu_stream' => $on('show_stu_stream', true, $savedCfg),
       'stu_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
       'stu_term' => $on('show_stu_term', true, $savedCfg),
+      'stu_exam' => $on('show_stu_exam', true, $savedCfg),
 
       // ── WHO I AM badges (whole-section master) ────────────────────
       'section_whoiam' => $on('show_section_whoiam', true, $savedCfg),
@@ -122,6 +128,31 @@
       'section_signatures' => $on('show_section_signatures', true, $savedCfg),
       'footer_tagline' => $on('show_footer_tagline', true, $savedCfg),
     ];
+
+    // Short exam-type label (BOT / MOT / EOT / CA) for the new "Exam:"
+    // field — same $examLabels convention slip-classic/modern/minimal.blade.php
+    // already use for their BOT|MID|EOT comparison table, so a school sees
+    // the same abbreviation everywhere rather than nursery-minimal's full
+    // exam name and this template disagreeing on terminology.
+    $examLabels = [
+      'Beginning-of-Term' => 'BOT',
+      'Mid-Term' => 'MOT',
+      'End-of-Term' => 'EOT',
+      'Continuous Assessment' => 'CA',
+    ];
+    $examShortLabel = $examLabels[$exam->exam_type ?? null] ?? strtoupper($exam->term ?? $exam->exam_name ?? '');
+
+    // ── Normalise to one-or-many render list ────────────────────────────
+    // passslipPreview()/passslipStudent() pass a single $student (mode
+    // 'single'), while passslipClass()/passslipAll() instead pass a
+    // $slips collection (mode 'class'/'all') — one entry per student.
+    // Mirrors the exact $renderSlips pattern slip-nursery.blade.php/
+    // preview-kindergarten.blade.php already use, so the one @foreach
+    // further down prints one card per student instead of assuming a
+    // single top-level $student.
+    $renderSlips = $mode === 'single'
+      ? [['student' => $student, 'subjectMarks' => $subjectMarks ?? collect()]]
+      : ($slips ?? []);
   @endphp
 
   <style>
@@ -1204,6 +1235,40 @@
   </div>
 
   <div class="page-wrap">
+    @foreach($renderSlips as $slipData)
+      @php
+        $student = $slipData['student'];
+        $subjectMarks = collect($slipData['subjectMarks'] ?? []);
+
+        // ── Student photo (per-student) ───────────────────────────────
+        // The MY PROFILE avatar was always just a generic child icon —
+        // never bound to a real photo, unlike the other pass-slip
+        // designs. Same resolution logic slip-nursery.blade.php/
+        // preview-kindergarten.blade.php already use.
+        $photo = null;
+        if (!empty($student->student_photo)) {
+          foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+            $fp = str_replace(
+              '/',
+              DIRECTORY_SEPARATOR,
+              public_path('uploads/studentPhotos/' . $student->student_photo . '.' . $ext)
+            );
+            if (file_exists($fp)) {
+              $photo = asset('uploads/studentPhotos/' . $student->student_photo . '.' . $ext);
+              break;
+            }
+          }
+        }
+
+        // ── Class/Head Teacher signatures (per-student) ────────────────
+        // $student->class_teacher / head_teacher / *_signature are
+        // populated by buildPassslipData() → attachRemarksAndSignatures()
+        // — the same real data slip-nursery.blade.php's signature block
+        // already reads — this template's footer signature row was still
+        // just static "Class Teacher"/"Head Teacher" labels with a blank line.
+        $nurseryCtSigUrl = Helper::signatureUrl($student->class_teacher_signature ?? null);
+        $nurseryHtSigUrl = Helper::signatureUrl($student->head_teacher_signature ?? null);
+      @endphp
     <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}">
 
       @if($cfg['watermark'])
@@ -1267,7 +1332,13 @@
                     <div class="pc-ribbon">MY PROFILE</div>
                     @if($cfg['photo'])
                       <div class="pc-avatar-wrap">
-                        <div class="pc-avatar"><i class="fas fa-child"></i></div>
+                        <div class="pc-avatar">
+                            @if($photo)
+                                <img src="{{ $photo }}" alt="{{ $student->firstname ?? 'Student' }}" style="width:100%;height:100%;object-fit:cover;">
+                            @else
+                                <i class="fas fa-child"></i>
+                            @endif
+                        </div>
                         <span class="pc-deco pc-deco-left"><i class="fas fa-leaf"></i></span>
                         <span class="pc-deco pc-deco-right"><i class="fas fa-spa"></i></span>
                       </div>
@@ -1294,6 +1365,12 @@
                           <i class="fas fa-calendar-days"></i>
                           <span class="pc-label">Term</span>
                           <span class="pc-value">{{ $exam->term ?? '' }} {{ $exam->academic_year ?? '' }}</span>
+                      </li> @endif
+                      @if($cfg['stu_exam'])
+                        <li>
+                          <i class="fas fa-file-lines"></i>
+                          <span class="pc-label">Exam</span>
+                          <span class="pc-value">{{ $examShortLabel }}</span>
                       </li> @endif
                     </ul>
                     <div class="pc-heart"><i class="fas fa-heart"></i></div>
@@ -1491,15 +1568,23 @@
               <div class="sig-row">
                 <div class="sig-slot">
                   <i class="fas fa-pen-nib"></i>
-                  <div class="sig-space"></div>
+                  <div class="sig-space" style="display:flex;align-items:flex-end;justify-content:center;">
+                    @if($nurseryCtSigUrl)
+                      <img src="{{ $nurseryCtSigUrl }}" alt="signature" style="max-height:5mm;max-width:90%;object-fit:contain;">
+                    @endif
+                  </div>
                   <div class="sig-rule"></div>
-                  <div class="sig-label"><b>Class Teacher</b>Signature</div>
+                  <div class="sig-label"><b>{{ $student->class_teacher ?? 'Class Teacher' }}</b>Class Teacher</div>
                 </div>
                 <div class="sig-slot">
                   <i class="fas fa-award"></i>
-                  <div class="sig-space"></div>
+                  <div class="sig-space" style="display:flex;align-items:flex-end;justify-content:center;">
+                    @if($nurseryHtSigUrl)
+                      <img src="{{ $nurseryHtSigUrl }}" alt="signature" style="max-height:5mm;max-width:90%;object-fit:contain;">
+                    @endif
+                  </div>
                   <div class="sig-rule"></div>
-                  <div class="sig-label"><b>Head Teacher</b>Signature</div>
+                  <div class="sig-label"><b>{{ $student->head_teacher ?? 'Head Teacher' }}</b>Head Teacher</div>
                 </div>
                 <div class="sig-slot">
                   <i class="fas fa-calendar-day"></i>
@@ -1517,6 +1602,7 @@
       @endif
 
     </div>
+    @endforeach
   </div>
 </body>
 
