@@ -1102,7 +1102,17 @@
             };
         };
 
-        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'School');
+        // Session('LoggedSchool') is only set for the School/Admin portal
+        // session; the Parent Portal identifies people by phone number
+        // instead (see ParentPortalController's class docblock) and never
+        // sets it, so every lookup below that used to key off it directly
+        // was silently resolving nothing and falling back to the generic
+        // config('app.name') placeholder. $exam is passed into this view
+        // in every render path and always belongs to exactly one school,
+        // so it's a reliable fallback when there's no session to read.
+        $schoolId = Session('LoggedSchool') ?: ($exam->school_id ?? ($student->school_id ?? null));
+
+        $schoolName = Helper::schoolNameBySchoolID($schoolId) ?? config('app.name', 'School');
         $slipCounter = 0;
     @endphp
 
@@ -1164,29 +1174,29 @@
                 $qrId = 'qr_ar_' . $slipCounter;
 
                 /* School meta */
-                $schoolNameArabic = Helper::schoolNameArabic(Session('LoggedSchool')) ?? '';
+                $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
                 $schoolPhone = Helper::toArabicNumberDate(
-                    Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? ''
+                    Helper::schoolPhoneBySchoolID($schoolId) ?? ''
                 );
 
                 $schoolEmail = Helper::toArabicLettersCountriesAndWordsPackage(
                     DB::table('school_profiles')
-                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('school_id', $schoolId)
                         ->value('email') ?? ''
                 );
 
                 $schoolMotto = Helper::toArabicLettersCountriesAndWordsPackage(
                     DB::table('school_profiles')
-                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('school_id', $schoolId)
                         ->value('motto') ?? ''
                 );
 
                 $schoolLocation = Helper::toArabicLettersCountriesAndWordsPackage(
                     DB::table('school_profiles')
-                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('school_id', $schoolId)
                         ->value('school_type') ?? ''
                 );
-                $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+                $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
                // Resolve logo URL the same way student photos are resolved
                 $schoolLogoUrl = null;

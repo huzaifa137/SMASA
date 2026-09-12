@@ -70,7 +70,20 @@
         // normalisation below.
         $mode = $mode ?? 'single';
         $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($slips[0]['student']->senior ?? null));
-        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $settingsClassId, 'nursery-classic');
+        // ── School identity ────────────────────────────────────────────
+        // Session('LoggedSchool') is only set for the School/Admin portal
+        // session; the Parent Portal identifies people by phone number
+        // instead (see ParentPortalController's class docblock) and never
+        // sets it, so every lookup below that used to key off it directly
+        // — including this class's saved toggles above — was silently
+        // resolving nothing and falling back to the generic
+        // config('app.name') placeholder. $exam is passed into this view
+        // in every render path (single/class/all, school portal and
+        // parent portal alike) and always belongs to exactly one school,
+        // so it's a reliable fallback when there's no session to read.
+        $schoolId = Session('LoggedSchool') ?: ($exam->school_id ?? ($student->school_id ?? null));
+
+        $savedCfg = Helper::getPassslipSettings($schoolId, $settingsClassId, 'nursery-classic');
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -80,11 +93,11 @@
             'section_signatures' => $on('show_section_signatures', true, $savedCfg),
         ];
 
-        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'Your School Name');
+        $schoolName = Helper::schoolNameBySchoolID($schoolId) ?? config('app.name', 'Your School Name');
 
         // ── School logo resolution (same as modern/nursery templates) ──
         // ── Get watermark logo (reuse school logo) ──────────────────────
-        $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+        $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
         $schoolLogoUrl = null;
         if ($schoolLogo) {

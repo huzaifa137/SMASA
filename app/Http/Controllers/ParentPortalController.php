@@ -228,8 +228,31 @@ class ParentPortalController extends Controller
         $examSummary = $passslipData['examSummary'] ?? [];
         $avgSummary = $passslipData['avgSummary'] ?? null;
 
+        $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
+        $termDates = Helper::passslipTermDates($student->school_id);
+
+        $lang = request('lang', 'en');
         $isNursery = $examController->isNurseryClass($student->senior);
-        $view = $isNursery ? 'Examination.passslips.slip-nursery' : 'Examination.passslips.slip';
+
+        // Same resolution passslipStudent() uses for the school portal —
+        // applySavedPassslipSettings() above already merged this class's
+        // saved 'template' into request() when no explicit ?template= was
+        // given, so this picks the exact same file (Primary classic/
+        // modern/minimal, or the matching saved Nursery design) the
+        // school portal shows for this class, instead of the previous
+        // hardcoded 'slip-nursery' (always Nursery Minimal, ignoring
+        // whatever was actually saved) and 'Examination.passslips.slip'
+        // (not a real view — this is what caused the "View
+        // [Examination.passslips.slip] not found" error for Primary).
+        if ($isNursery) {
+            $template = request('template', 'nursery-classic');
+            if (!ExaminationController::isNurseryTemplateKey($template)) {
+                $template = 'nursery-classic';
+            }
+            $view = $examController->resolveNurserySlipView($template, $lang);
+        } else {
+            $view = $examController->resolvePrimarySlipView($lang);
+        }
 
         return view($view, compact(
             'exam',
@@ -251,7 +274,9 @@ class ParentPortalController extends Controller
             'examsList',
             'useAvg',
             'examSummary',
-            'avgSummary'
+            'avgSummary',
+            'disciplineRatings',
+            'termDates'
         ) + ['mode' => 'single', 'multiExam' => $multiExam, 'parentView' => true]);
     }
 

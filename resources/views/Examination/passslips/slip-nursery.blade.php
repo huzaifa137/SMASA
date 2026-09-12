@@ -70,12 +70,23 @@
         $accentTint = $hexToTint($accent);
 
         // ── School meta (same as modern template) ──────────────────────
-        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'School');
-        $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? '';
-        $schoolEmail = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('email');
-        $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
-        $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
-        $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+        // Session('LoggedSchool') is only set for the School/Admin portal
+        // session; the Parent Portal identifies people by phone number
+        // instead (see ParentPortalController's class docblock) and never
+        // sets it, so every lookup below that used to key off it directly
+        // was silently resolving nothing and falling back to the generic
+        // config('app.name') placeholder. $exam is passed into this view
+        // in every render path (single/class/all, school portal and
+        // parent portal alike) and always belongs to exactly one school,
+        // so it's a reliable fallback when there's no session to read.
+        $schoolId = Session('LoggedSchool') ?: ($exam->school_id ?? ($student->school_id ?? null));
+
+        $schoolName = Helper::schoolNameBySchoolID($schoolId) ?? config('app.name', 'School');
+        $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
+        $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+        $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
+        $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
+        $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
         // Resolve logo URL
         $schoolLogoUrl = null;
@@ -126,7 +137,7 @@
         // covers all of them; the per-student photo below is the only
         // thing that still needs to be resolved separately for each one.
         $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($renderSlips[0]['student']->senior ?? null));
-        $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $settingsClassId);
+        $savedCfg = Helper::getPassslipSettings($schoolId, $settingsClassId);
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),

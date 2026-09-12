@@ -1397,7 +1397,21 @@
             };
         };
 
-        $schoolName = Helper::schoolNameBySchoolID(Session('LoggedSchool')) ?? config('app.name', 'School');
+        // ── School identity ────────────────────────────────────────────
+        // Session('LoggedSchool') is only set for the School/Admin portal
+        // session; the Parent Portal identifies people by phone number
+        // instead (see ParentPortalController's class docblock) and never
+        // sets it, so every lookup below that used to key off it directly
+        // was silently resolving nothing and falling back to the generic
+        // config('app.name') placeholder — school name, logo, phone,
+        // email, motto and even this class's saved toggles. $exam is
+        // passed into this view in every render path (single/class/all,
+        // school portal and parent portal alike) and always belongs to
+        // exactly one school, so it's a reliable fallback when there's no
+        // session to read.
+        $schoolId = Session('LoggedSchool') ?: ($exam->school_id ?? ($student->school_id ?? null));
+
+        $schoolName = Helper::schoolNameBySchoolID($schoolId) ?? config('app.name', 'School');
         $slipCounter = 0;
     @endphp
 
@@ -1448,7 +1462,7 @@
                 // Each student's class can carry its own saved show/hide
                 // profile (e.g. Baby Class vs S.4). Query-string params
                 // (from the live preview toggles) still override these.
-                $savedCfg = Helper::getPassslipSettings(Session('LoggedSchool'), $s->senior ?? null);
+                $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
 
                 $cfg = [
                     'border' => $on('show_border', true, $savedCfg),
@@ -1573,12 +1587,12 @@
                 $qrId = 'qr_canvas_' . $slipCounter;
 
                 /* School meta */
-                $schoolPhone = Helper::schoolPhoneBySchoolID(Session('LoggedSchool')) ?? '';
-                $schoolNameArabic = Helper::schoolNameArabic(Session('LoggedSchool')) ?? '';
-                $schoolEmail = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('email');
-                $schoolMotto = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('motto');
-                $schoolLocation = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('school_type');
-                $schoolLogo = DB::table('school_profiles')->where('school_id', Session('LoggedSchool'))->value('logo');
+                $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
+                $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
+                $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+                $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
+                $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
+                $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
                 // Resolve logo URL the same way student photos are resolved
                 $schoolLogoUrl = null;
@@ -1660,7 +1674,7 @@
                         ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
                         ->count();
                     $attDaysOpened = DB::table('student_attendances')
-                        ->where('school_id', Session('LoggedSchool'))
+                        ->where('school_id', $schoolId)
                         ->where('class_id', $s->senior)
                         ->where('stream_id', $s->stream)
                         ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
