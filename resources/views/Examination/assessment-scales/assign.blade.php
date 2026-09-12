@@ -721,61 +721,61 @@
                     <span class="aa-count" id="selectedCount">{{ $onThisScaleCount }} selected</span>
                 </div>
 
-<!-- ── Updated HTML ── -->
-<div id="classAccordion">
-    @foreach ($classesData as $entry)
-        @php
-            $classroom = $entry['classroom'];
-            $streams = $entry['streams'];
-            $subjectCount = $streams->sum(fn($s) => $s->subjects->count());
-            $onThisScaleCountClass = $streams->sum(fn($s) => $s->subjects->where('assessment_scale_id', $scale->id)->count());
-        @endphp
-        <div class="class-card" data-class-card>
-            <div class="class-card-head" data-toggle>
-                <div class="class-title">
-                    <i class="fas fa-chevron-right"></i>
-                    {{ Helper::recordMdname($classroom->class_name) }}
-                </div>
-                <div class="class-meta">
-                    <i class="fas fa-check-circle"></i>
-                    {{ $onThisScaleCountClass }}/{{ $subjectCount }} subject(s) on this scale
-                </div>
-            </div>
-            <div class="class-card-body">
-                <label class="select-all-row">
-                    <input type="checkbox" class="select-all-in-class" data-class-card-checkbox>
-                    <span>Select all subjects in this class</span>
-                </label>
-
-                @foreach ($streams as $stream)
-                    @if ($stream->subjects->isNotEmpty())
-                        <div class="stream-block">
-                            <div class="stream-label">
-                                <i class="fas fa-layer-group"></i>
-                                {{ $stream->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $stream->stream_id }}
-                            </div>
-                            @foreach ($stream->subjects as $subject)
-                                <div class="subject-row" data-subject-row data-search="{{ strtolower(Helper::recordMdname($classroom->class_name) . ' ' . $stream->stream_id . ' ' . $subject->display_name) }}">
-                                    <label>
-                                        <input type="checkbox" class="subject-checkbox"
-                                            value="{{ $subject->id }}"
-                                            {{ $subject->assessment_scale_id == $scale->id ? 'checked' : '' }}>
-                                        {{ $subject->display_name }}
-                                    </label>
-                                    @if ($subject->assessment_scale_id == $scale->id)
-                                        <span class="badge-current badge-this-scale"><i class="fas fa-check"></i> This scale</span>
-                                    @elseif ($subject->assessmentScale)
-                                        <span class="badge-current badge-other-scale"><i class="fas fa-exchange-alt"></i> {{ $subject->assessmentScale->name }}</span>
-                                    @endif
+                <!-- ── Updated HTML ── -->
+                <div id="classAccordion">
+                    @foreach ($classesData as $entry)
+                        @php
+                            $classroom = $entry['classroom'];
+                            $streams = $entry['streams'];
+                            $subjectCount = $streams->sum(fn($s) => $s->subjects->count());
+                            $onThisScaleCountClass = $streams->sum(fn($s) => $s->subjects->where('assessment_scale_id', $scale->id)->count());
+                        @endphp
+                        <div class="class-card" data-class-card>
+                            <div class="class-card-head" data-toggle>
+                                <div class="class-title">
+                                    <i class="fas fa-chevron-right"></i>
+                                    {{ Helper::recordMdname($classroom->class_name) }}
                                 </div>
-                            @endforeach
+                                <div class="class-meta">
+                                    <i class="fas fa-check-circle"></i>
+                                    {{ $onThisScaleCountClass }}/{{ $subjectCount }} subject(s) on this scale
+                                </div>
+                            </div>
+                            <div class="class-card-body">
+                                <label class="select-all-row">
+                                    <input type="checkbox" class="select-all-in-class" data-class-card-checkbox>
+                                    <span>Select all subjects in this class</span>
+                                </label>
+
+                                @foreach ($streams as $stream)
+                                    @if ($stream->subjects->isNotEmpty())
+                                        <div class="stream-block">
+                                            <div class="stream-label">
+                                                <i class="fas fa-layer-group"></i>
+                                                {{ $stream->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $stream->stream_id }}
+                                            </div>
+                                            @foreach ($stream->subjects as $subject)
+                                                <div class="subject-row" data-subject-row data-search="{{ strtolower(Helper::recordMdname($classroom->class_name) . ' ' . $stream->stream_id . ' ' . $subject->display_name) }}">
+                                                    <label>
+                                                        <input type="checkbox" class="subject-checkbox"
+                                                            value="{{ $subject->id }}"
+                                                            {{ $subject->assessment_scale_id == $scale->id ? 'checked' : '' }}>
+                                                        {{ $subject->display_name }}
+                                                    </label>
+                                                    @if ($subject->assessment_scale_id == $scale->id)
+                                                        <span class="badge-current badge-this-scale"><i class="fas fa-check"></i> This scale</span>
+                                                    @elseif ($subject->assessmentScale)
+                                                        <span class="badge-current badge-other-scale"><i class="fas fa-exchange-alt"></i> {{ $subject->assessmentScale->name }}</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    @endforeach
-</div>
+                    @endforeach
+                </div>
 
                 <!-- Save Bar -->
                 <div class="aa-save-bar">
@@ -786,6 +786,8 @@
                 </div>
             @endif
 
+        </div>
+    </div>
         </div>
     </div>
 
