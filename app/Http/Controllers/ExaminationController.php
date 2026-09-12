@@ -2774,10 +2774,13 @@ class ExaminationController extends Controller
             'results_released' => $examinations->where('status', 'results_released')->count(),
         ];
 
-        // Get released examinations (with optional pass rate calculation)
-        $releasedExams = $examinations->where('status', 'results_released')->map(function ($exam) {
-            // Calculate pass rate if needed
-            // $exam->pass_rate = $this->calculatePassRate($exam->id);
+        // Get released examinations (with real pass rate, matching the
+        // same calculation getResultsSummary() uses for the "View
+        // Results" popup) — this used to be commented out, which is why
+        // the Released Examinations cards always showed "N/A% Pass Rate"
+        // regardless of how many exams had actually been released.
+        $releasedExams = $examinations->where('status', 'results_released')->map(function ($exam) use ($schoolId) {
+            $exam->pass_rate = $this->calculatePassRate($exam, $schoolId);
             return $exam;
         });
 
@@ -3585,6 +3588,44 @@ class ExaminationController extends Controller
     }
 
     // Add this method to your ExaminationController
+    /**
+     * Pass rate (%) for one exam, or null when there's no marks data yet
+     * to calculate it from. Same calculation getResultsSummary() already
+     * used for the "View Results" popup — pulled out here so
+     * dashboard()'s Released Examinations cards can show the real figure
+     * too instead of a permanent "N/A".
+     */
+    private function calculatePassRate($exam, $schoolId): ?int
+    {
+        $marks = ExaminationMark::where('examination_id', $exam->id)
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->get();
+
+        if ($marks->isEmpty()) {
+            return null;
+        }
+
+        $students = $marks->groupBy('student_id');
+        $totalStudents = $students->count();
+
+        if ($totalStudents === 0) {
+            return null;
+        }
+
+        $passedCount = 0;
+        foreach ($students as $studentMarks) {
+            $totalObtained = $studentMarks->sum('marks_obtained');
+            $totalMax = $studentMarks->sum('total_marks');
+            $percentage = $totalMax > 0 ? ($totalObtained / $totalMax) * 100 : 0;
+            if ($percentage >= ($exam->pass_mark ?? 0)) {
+                $passedCount++;
+            }
+        }
+
+        return (int) round(($passedCount / $totalStudents) * 100);
+    }
+
     public function getResultsSummary($examId)
     {
         if (!PermissionHelper::canFeature('generate_reports')) {
@@ -3614,7 +3655,9 @@ class ExaminationController extends Controller
         $students = $marks->groupBy('student_id');
         $totalStudents = $students->count();
 
-        // Calculate per-student totals
+        // Calculate per-student totals (kept for the average-score figure
+        // below; pass rate itself now comes from calculatePassRate() so
+        // this popup and the dashboard cards can never disagree).
         $studentTotals = [];
         foreach ($students as $studentId => $studentMarks) {
             $totalObtained = $studentMarks->sum('marks_obtained');
@@ -3628,8 +3671,7 @@ class ExaminationController extends Controller
         }
 
         // Calculate pass rate
-        $passedCount = collect($studentTotals)->where('passed', true)->count();
-        $passRate = $totalStudents > 0 ? round(($passedCount / $totalStudents) * 100) : 0;
+        $passRate = $this->calculatePassRate($exam, $schoolId) ?? 0;
 
         // Calculate average score
         $avgPercentage = collect($studentTotals)->avg('percentage');

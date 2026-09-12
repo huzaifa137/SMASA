@@ -108,7 +108,7 @@
         }
 
         // ── Student photo resolution ────────────────────────────────────
-        // Moved inside the @foreach below (one photo per student) — see
+        // Moved inside the @@foreach below (one photo per student) — see
         // the $renderSlips normalisation.
         $watermarkLogoUrl = $schoolLogoUrl;
 
@@ -131,7 +131,7 @@
         // 'single'), while passslipClass()/passslipAll() instead pass a
         // $slips collection (mode 'class'/'all') — one entry per student.
         // Mirrors the exact $renderSlips pattern slip-nursery.blade.php
-        // already uses, so the one @foreach further down prints one sheet
+        // already uses, so the one @@foreach further down prints one sheet
         // per student instead of assuming a single top-level $student.
         $renderSlips = $mode === 'single'
             ? [['student' => $student, 'subjectMarks' => $subjectMarks ?? collect()]]
@@ -196,7 +196,7 @@
        (always exactly one student) but silently laid MULTIPLE .sheet
        elements out as flex-row siblings — side-by-side horizontally —
        the moment this same template rendered a whole class via
-       "Print by Class" (@foreach($renderSlips...) below produces one
+       "Print by Class" (the @@foreach($renderSlips...) loop below produces one
        .sheet per student). Dropped the flex row entirely and rely on
        .sheet's own `margin: 0 auto` for centering instead — the exact
        same block-stacking approach slip-nursery.blade.php already uses
@@ -1959,7 +1959,9 @@
                     <div class="sig-col" style="text-align: center; font-size: 10px;">
                         <i class="fa-regular fa-calendar"
                             style="color: var(--accent); font-size: 14px; margin-bottom: 6px; display: block;"></i>
-                        <div class="sig-line" style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px;">
+                        <div class="sig-line"
+                            style="border-bottom: 1px dotted #999; height: 18px; margin-bottom: 3px; display:flex; align-items:flex-end; justify-content:center;">
+                            <span style="font-weight: 700; color: var(--navy); font-size: 11px;">{{ now()->format('d M Y') }}</span>
                         </div>
                         <span style="font-weight: 600; color: #333;">Date</span>
                     </div>

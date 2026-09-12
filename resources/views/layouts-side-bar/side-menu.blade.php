@@ -64,7 +64,7 @@ use App\Helpers\PermissionHelper;
                 {{-- Current Role Tag --}}
                 @php $roleName = PermissionHelper::currentRoleName(); @endphp
                 @if($roleName !== 'System Administrator')
-                    <li class="slide px-3 pb-1" style="pointer-events:none;">
+                    <li class="slide px-3 pb-1 sidebar-role-badge" style="pointer-events:none;">
                         <div
                             style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
                             Role
@@ -115,7 +115,7 @@ use App\Helpers\PermissionHelper;
                     <li class="slide has-sub">
                         <a class="side-menu__item" href="#" data-toggle="submenu">
                             <i class="fas fa-id-card fa-2x mr-3"></i>
-                            <span>ID Cards</span>
+                            <span style="white-space:nowrap;">ID Cards</span>
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
                         <ul class="sub-menu">
@@ -543,7 +543,7 @@ use App\Helpers\PermissionHelper;
                 {{-- Current Role Tag --}}
                 @php $roleName = PermissionHelper::currentRoleName(); @endphp
                 @if($roleName !== 'System Administrator')
-                    <li class="slide px-3 pb-1" style="pointer-events:none;">
+                    <li class="slide px-3 pb-1 sidebar-role-badge" style="pointer-events:none;">
                         <div
                             style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:.4rem .5rem .1rem;">
                             Role
@@ -594,7 +594,7 @@ use App\Helpers\PermissionHelper;
                     <li class="slide has-sub">
                         <a class="side-menu__item" href="#" data-toggle="submenu">
                             <i class="fas fa-id-card fa-2x mr-3"></i>
-                            <span>ID Cards</span>
+                            <span style="white-space:nowrap;">ID Cards</span>
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
                         <ul class="sub-menu">
@@ -1293,5 +1293,15 @@ use App\Helpers\PermissionHelper;
         height: 30px !important;
         line-height: 30px !important;
         font-size: 12px !important;
+    }
+
+    /* ── Minimised sidebar ──
+    The "ROLE / <role name>" badge is a plain <li> (not a
+    .side-menu__item), so the theme's own sidebar-mini rules never
+    touched it — it stayed at full width and got visually clipped in
+    half by the narrow collapsed rail. Hide it outright once collapsed;
+    the role is still shown in full once the sidebar is expanded again. */
+    .sidebar-mini.sidenav-toggled .sidebar-role-badge {
+        display: none !important;
     }
 </style>

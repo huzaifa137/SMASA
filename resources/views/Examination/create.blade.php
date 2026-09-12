@@ -624,7 +624,7 @@ use App\Http\Controllers\Helper;
             </p>
             <div class="exam-hero-v2-stats">
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number">{{ 67 }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ $schoolExaminations }}</div>
                     <div class="exam-hero-v2-stat-label">Total Exams</div>
                 </div>
                 <div class="exam-hero-v2-stat-divider"></div>
@@ -634,7 +634,7 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="exam-hero-v2-stat-divider"></div>
                 <div class="exam-hero-v2-stat">
-                    <div class="exam-hero-v2-stat-number">{{ 12 }}</div>
+                    <div class="exam-hero-v2-stat-number">{{ $schoolClasses }}</div>
                     <div class="exam-hero-v2-stat-label">Active Classes</div>
                 </div>
             </div>

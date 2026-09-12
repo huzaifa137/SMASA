@@ -147,7 +147,7 @@
     // 'single'), while passslipClass()/passslipAll() instead pass a
     // $slips collection (mode 'class'/'all') — one entry per student.
     // Mirrors the exact $renderSlips pattern slip-nursery.blade.php/
-    // preview-kindergarten.blade.php already use, so the one @foreach
+    // preview-kindergarten.blade.php already use, so the one @@foreach
     // further down prints one card per student instead of assuming a
     // single top-level $student.
     $renderSlips = $mode === 'single'
@@ -1590,7 +1590,7 @@
                   <i class="fas fa-calendar-day"></i>
                   <div class="sig-space"></div>
                   <div class="sig-rule"></div>
-                  <div class="sig-label"><b>Date</b>{{ $issueDate ?? '' }}</div>
+                  <div class="sig-label"><b>Date</b>{{ now()->format('d M Y') }}</div>
                 </div>
               </div>
             </div>

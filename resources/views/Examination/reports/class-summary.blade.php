@@ -352,7 +352,10 @@ use App\Http\Controllers\Helper;
                                         <td>
                                             @if ($cell)
                                                 {{ $cell->marks }}/{{ $cell->total }}
-                                                <div style="font-size:.65rem;color:#8b8fa3;">{{ $cell->percentage }}% · {{ $cell->grade }}</div>
+                                                @php
+                                                    $cellColor = $cell->percentage >= 80 ? '#0d9668' : ($cell->percentage >= 50 ? '#b45309' : '#dc2626');
+                                                @endphp
+                                                <div style="font-size:.65rem;font-weight:600;color:{{ $cellColor }};">{{ $cell->percentage }}% · {{ $cell->grade }}</div>
                                             @else
                                                 <span class="rpt-cell-empty">—</span>
                                             @endif

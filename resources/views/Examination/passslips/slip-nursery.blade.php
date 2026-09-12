@@ -725,7 +725,7 @@
         |     per student and pass it as $slips.
         | Wrapping both into the same $renderSlips shape here — the exact
         | pattern slip-classic/modern/minimal.blade.php already use for
-        | this — is what lets the one @foreach below serve every mode.
+        | this — is what lets the one @@foreach below serve every mode.
         |──────────────────────────────────────────────────────────────── */
         if (($mode ?? 'single') === 'single') {
             $renderSlips = [

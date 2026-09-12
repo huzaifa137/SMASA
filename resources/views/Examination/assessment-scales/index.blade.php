@@ -1367,6 +1367,8 @@
 
         </div>
     </div>
+     </div>
+    </div>
 
     {{-- ── Create / Edit Modal (hidden template, injected via SweetAlert) ── --}}
     <template id="scaleFormTemplate">

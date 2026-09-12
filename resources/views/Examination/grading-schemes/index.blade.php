@@ -2596,12 +2596,9 @@
     @endphp
 
     <script>
-        // Embed the full scheme+bands payload so "Edit" can populate the
-        // modal without another round trip.
         window.__schemesById = {!! json_encode($schemesData) !!};
     </script>
 
-    // Add this script at the end of your content section, after your existing scripts
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
