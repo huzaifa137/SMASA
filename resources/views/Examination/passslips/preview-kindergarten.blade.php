@@ -191,8 +191,17 @@
         }
 
         .page-wrap {
-            display: flex;
-            justify-content: center;
+            /* NOTE: this used to be `display:flex; justify-content:center;`,
+       which centred a single .sheet fine for the live-preview iframe
+       (always exactly one student) but silently laid MULTIPLE .sheet
+       elements out as flex-row siblings — side-by-side horizontally —
+       the moment this same template rendered a whole class via
+       "Print by Class" (@foreach($renderSlips...) below produces one
+       .sheet per student). Dropped the flex row entirely and rely on
+       .sheet's own `margin: 0 auto` for centering instead — the exact
+       same block-stacking approach slip-nursery.blade.php already uses
+       for its .page-wrap/.slip, so multiple students stack vertically,
+       one per page, same as every other template. */
             padding: 24px 0 60px;
         }
 
@@ -211,7 +220,18 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, .25);
             overflow: hidden;
             border-radius: 8px;
-            margin: 0 auto;
+            margin: 0 auto 2.5rem;
+            /* One student per printed page in bulk ("Print by Class"/"Print
+       All") mode — same page-break-after:always / :last-child:avoid
+       pairing slip-nursery.blade.php's .slip already uses. Harmless
+       for the single-student live-preview iframe since there's only
+       ever one .sheet there. */
+            page-break-after: always;
+        }
+
+        .sheet:last-child {
+            page-break-after: avoid;
+            margin-bottom: 0;
         }
 
         /* ── Conditional border system (show_border toggle) ─────────
@@ -305,6 +325,12 @@
                 width: 210mm;
                 min-height: 297mm;
                 border-radius: 0;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            .sheet:last-child {
+                page-break-after: avoid;
             }
 
             .sheet.has-border,
@@ -1493,7 +1519,7 @@
                 $nurseryCtSigUrl = Helper::signatureUrl($student->class_teacher_signature ?? null);
                 $nurseryHtSigUrl = Helper::signatureUrl($student->head_teacher_signature ?? null);
             @endphp
-        <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}" id="sheet">
+        <div class="sheet {{ $cfg['border'] ? 'has-border' : '' }}">
 
             @if($cfg['watermark'])
                 <div class="watermark-kg">

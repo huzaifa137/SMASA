@@ -949,6 +949,7 @@
                                 <span class="scribble"></span>
                             @endif
                         </div>
+                        <div class="nursery-sig-line"><span class="lbl">Date:</span> {{ now()->format('d M Y') }}</div>
                         <div class="nursery-sig-line"><span class="lbl">Name:</span> {{ $student->head_teacher ?? 'Head Teacher' }}</div>
                         <div class="nursery-sig-line">
                             <span class="lbl">Signature:</span>
@@ -958,6 +959,7 @@
                                 <span class="scribble"></span>
                             @endif
                         </div>
+                        <div class="nursery-sig-line"><span class="lbl">Date:</span> {{ now()->format('d M Y') }}</div>
                     </div>
                 @endif
             </div>
