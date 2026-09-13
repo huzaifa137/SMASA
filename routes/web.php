@@ -339,6 +339,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('a-level-combinations', 'entry')->name('alevel.combinations.entry');
         Route::post('a-level-combinations/save', 'save')->name('alevel.combinations.save');
         Route::post('a-level-combinations/subjects', 'addSchoolSubject')->name('alevel.combinations.add-subject');
+        Route::put('a-level-combinations/subjects/{id}', 'updateSchoolSubject')->name('alevel.combinations.update-subject');
+        Route::delete('a-level-combinations/subjects/{id}', 'deleteSchoolSubject')->name('alevel.combinations.delete-subject');
     });
 
     Route::controller(UserRightsAndPreviledges::class)

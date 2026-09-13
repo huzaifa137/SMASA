@@ -113,6 +113,15 @@ class ALevelCombinationController extends Controller
             $schoolSubjects->filter(fn($s) => $s->md_misc1 === 'Subsidiary')
         )->values();
 
+        // This school's own subjects again, but as real Eloquent rows (with
+        // a real ->id, not just the synthetic id) — for the "Manage Your
+        // Subjects" edit/delete list further down the page. Deliberately a
+        // separate query from $schoolSubjects above rather than reusing it:
+        // that one already dropped is_active=false rows and reshaped every
+        // row into a plain {md_id, md_name, md_misc1} object to match the
+        // master_datas shape, neither of which this list wants.
+        $mySchoolSubjects = SchoolALevelSubject::forSchool($schoolId)->orderBy('subject_group')->orderBy('subject_name')->get();
+
         return view('Class.alevel-combinations', compact(
             'classOptions',
             'selectedClassId',
@@ -120,7 +129,8 @@ class ALevelCombinationController extends Controller
             'students',
             'combinations',
             'principalSubjects',
-            'subsidiarySubjects'
+            'subsidiarySubjects',
+            'mySchoolSubjects'
         ));
     }
 
@@ -161,11 +171,98 @@ class ALevelCombinationController extends Controller
         return response()->json([
             'success' => true,
             'subject' => [
+                'id' => $subject->id,
                 'md_id' => $subject->syntheticId(),
                 'md_name' => $subject->subject_name,
                 'md_misc1' => $subject->subject_group,
             ],
         ]);
+    }
+
+    /**
+     * Rename (and/or re-group) one of this school's own subjects.
+     * Scoped with forSchool() so a school can never touch another
+     * school's row just by guessing an id.
+     */
+    public function updateSchoolSubject(Request $request, $id)
+    {
+        PermissionHelper::denyUnlessFeature('add_class');
+
+        $request->validate([
+            'subject_group' => 'required|in:Principal - Arts,Principal - Sciences,Subsidiary',
+            'subject_name' => 'required|string|max:255',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        $subject = SchoolALevelSubject::forSchool($schoolId)->find($id);
+        if (!$subject) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        $duplicate = SchoolALevelSubject::forSchool($schoolId)
+            ->where('subject_group', $request->subject_group)
+            ->where('subject_name', $request->subject_name)
+            ->where('id', '!=', $subject->id)
+            ->exists();
+
+        if ($duplicate) {
+            return response()->json(['success' => false, 'message' => 'You already have a subject with that name in this group.'], 422);
+        }
+
+        $subject->update([
+            'subject_name' => $request->subject_name,
+            'subject_group' => $request->subject_group,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subject' => [
+                'id' => $subject->id,
+                'md_id' => $subject->syntheticId(),
+                'md_name' => $subject->subject_name,
+                'md_misc1' => $subject->subject_group,
+            ],
+        ]);
+    }
+
+    /**
+     * Remove one of this school's own subjects — blocked if any student
+     * currently has it in their saved combination, same "in use" guard
+     * MasterDataController::deleteSecondaryALevelSubject() uses for the
+     * global list, so deleting a subject never silently corrupts an
+     * already-built combination.
+     */
+    public function deleteSchoolSubject($id)
+    {
+        PermissionHelper::denyUnlessFeature('add_class');
+
+        $schoolId = Session('LoggedSchool');
+
+        $subject = SchoolALevelSubject::forSchool($schoolId)->find($id);
+        if (!$subject) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        $syntheticId = $subject->syntheticId();
+
+        $inUse = StudentALevelCombination::where('school_id', $schoolId)
+            ->where(function ($q) use ($syntheticId) {
+                $q->whereJsonContains('principal_subject_ids', $syntheticId)
+                    ->orWhere('subsidiary_subject_id', $syntheticId);
+            })
+            ->exists();
+
+        if ($inUse) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already part of one or more students\' combinations, so it cannot be deleted. Remove it from their combinations first.',
+            ], 422);
+        }
+
+        $subject->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -181,7 +278,7 @@ class ALevelCombinationController extends Controller
         $request->validate([
             'combinations' => 'required|array',
             'combinations.*.student_id' => 'required|integer',
-            'combinations.*.principal_subject_ids' => 'nullable|array',
+            'combinations.*.principal_subject_ids' => 'nullable|array|max:3',
             'combinations.*.subsidiary_subject_id' => 'nullable|integer',
         ]);
 

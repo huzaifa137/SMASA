@@ -520,68 +520,42 @@
                             </div>
 
                             {{-- ═══════════════════════════════════════════════
-                            SECONDARY A-LEVEL SUBJECTS — this is the POOL of
-                            subjects offered to this class/stream, not one
-                            student's combination. A given Senior 5/6 class
-                            normally has students on several different
-                            combinations (e.g. PCM and HEG in the same
-                            stream), each picking their own 3 principals from
-                            whatever the class offers — that per-student
-                            pairing happens separately, wherever this school
-                            builds student combinations. All this step needs
-                            to guarantee is that General Paper (compulsory
-                            for every A-Level student regardless of
-                            combination) is part of the pool — so it's
-                            auto-checked and locked below rather than being
-                            just another optional checkbox.
+                            SECONDARY A-LEVEL — this step only needs to
+                            guarantee General Paper (compulsory for every
+                            A-Level student, regardless of combination) is
+                            part of the class/stream's subject pool. Which
+                            principal subjects (max 3) and optional
+                            subsidiary (max 1) each individual student takes
+                            is now built entirely on the dedicated A-Level
+                            Combinations page — not here, and not per class/
+                            stream — so that picker has been removed from
+                            this form; only the locked, compulsory General
+                            Paper chip remains.
                             ════════════════════════════════════════════════ --}}
                             <div id="secondary-alevel-subjects" style="display: none;">
                                 <div class="subject-section-card">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="section-title mb-0">A - LEVEL SUBJECTS (SECONDARY)</h5>
-                                        <div class="subject-control-buttons">
-                                            <button type="button" class="btn btn-sm btn-check-all"
-                                                onclick="checkAllSecondaryALevelSubjects()">
-                                                <i class="fas fa-check-double"></i> Check All
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-uncheck-all"
-                                                onclick="uncheckAllSecondaryALevelSubjects()">
-                                                <i class="fas fa-times-circle"></i> Uncheck All
-                                            </button>
+                                    <h5 class="section-title mb-3">A - LEVEL SUBJECTS (SECONDARY)</h5>
+
+                                    @php $generalPaper = ($SECONDARY_ALEVEL_SUBJECTS_GROUPED['General'] ?? collect())->first(); @endphp
+                                    @if ($generalPaper)
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input secondary-alevel-subject secondary-alevel-general"
+                                                type="checkbox"
+                                                id="secondary-alevel-{{ $generalPaper->md_id }}" value="{{ $generalPaper->md_id }}"
+                                                data-group="General" checked disabled>
+                                            <label class="form-check-label" for="secondary-alevel-{{ $generalPaper->md_id }}">
+                                                <strong>{{ $generalPaper->md_name }} (compulsory)</strong>
+                                            </label>
                                         </div>
-                                    </div>
+                                    @endif
 
-                                    <div id="secondary-alevel-combo-status" class="alert alert-secondary py-2 px-3 mb-3" style="font-size: 0.9rem;">
-                                        Select every subject this class/stream should offer. <strong>General Paper</strong> is compulsory and included automatically.
-                                        Each student's own 3 principal subjects (plus, optionally, one subsidiary) are chosen separately when building that student's combination.
+                                    <div class="alert alert-secondary py-2 px-3 mb-0" style="font-size: 0.9rem; background-color:#2C29CA; border-color:#FFF; color:#FFF; border-left:4px solid #FFF;">
+                                        Every A-Level student gets General Paper automatically — it's the only subject
+                                        chosen here. Each student's own principal subjects (up to 3) and, optionally,
+                                        one subsidiary are chosen separately on the
+                                        <a href="{{ route('alevel.combinations.entry') }}" style="color:#fff; text-decoration:underline;">A-Level Combinations</a>
+                                        page once this class has been created.
                                     </div>
-
-                                    @foreach ([
-                                        'General' => 'General Paper (compulsory)',
-                                        'Principal - Arts' => 'Principal Subjects — Arts',
-                                        'Principal - Sciences' => 'Principal Subjects — Sciences',
-                                        'Subsidiary' => 'Subsidiary Subjects',
-                                    ] as $groupKey => $groupLabel)
-                                        @php $groupSubjects = ($SECONDARY_ALEVEL_SUBJECTS_GROUPED[$groupKey] ?? collect()); @endphp
-                                        @if ($groupSubjects->isNotEmpty())
-                                            <h6 class="text-muted mt-3 mb-2">{{ $groupLabel }}</h6>
-                                            <div class="row">
-                                                @foreach ($groupSubjects as $subject)
-                                                    <div class="col-lg-4 col-md-12">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input secondary-alevel-subject secondary-alevel-{{ str_replace(['Principal - ', ' '], ['', '-'], strtolower($groupKey)) }}"
-                                                                type="checkbox"
-                                                                id="secondary-alevel-{{ $subject->md_id }}" value="{{ $subject->md_id }}"
-                                                                data-group="{{ $groupKey }}"
-                                                                @if ($groupKey === 'General') checked disabled @endif>
-                                                            <label class="form-check-label"
-                                                                for="secondary-alevel-{{ $subject->md_id }}">{{ $subject->md_name }}</label>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    @endforeach
                                 </div>
                             </div>
 
@@ -651,51 +625,10 @@
             showToast('All Secondary O-Level subjects have been deselected', 'info');
         }
 
-        function checkAllSecondaryALevelSubjects() {
-            $('.secondary-alevel-subject:not(:disabled)').prop('checked', true);
-            updateSecondaryALevelComboStatus();
-            showToast('All Secondary A-Level subjects have been selected', 'success');
-        }
-        function uncheckAllSecondaryALevelSubjects() {
-            // General Paper is compulsory and locked — leave it checked even
-            // on "Uncheck All", same as it can't be unchecked individually.
-            $('.secondary-alevel-subject:not(:disabled)').prop('checked', false);
-            updateSecondaryALevelComboStatus();
-            showToast('All Secondary A-Level subjects have been deselected (General Paper stays, it\'s compulsory)', 'info');
-        }
-
-        // This picker builds the class/stream's subject POOL, not one
-        // student's combination — a class normally offers several
-        // combinations at once (e.g. PCM and HEG in the same Senior 5
-        // stream), so there's no "exactly 3" count to enforce here. Each
-        // student's own principal subjects (and optional subsidiary) are
-        // chosen separately when building that student's combination. This
-        // just reflects how many subjects are currently selected for the
-        // pool, and confirms General Paper (always locked on) is included.
-        function updateSecondaryALevelComboStatus() {
-            const $status = $('#secondary-alevel-combo-status');
-            if ($status.length === 0) return;
-
-            const principalCount = $('.secondary-alevel-subject[data-group^="Principal"]:checked').length;
-            const subsidiaryCount = $('.secondary-alevel-subject[data-group="Subsidiary"]:checked').length;
-
-$status.removeClass('alert-secondary alert-success alert-warning alert-primary').html(
-    'General Paper is compulsory and included automatically. ' +
-    principalCount + ' principal subject' + (principalCount === 1 ? '' : 's') + ' and ' +
-    subsidiaryCount + ' subsidiary subject' + (subsidiaryCount === 1 ? '' : 's') +
-    ' currently offered to this class — students pick their own 3 principals (plus, optionally, one subsidiary) when their individual combination is built.'
-);
-
-// Apply your brand color as a soft, readable alert style
-$status.css({
-    'background-color': '#2C29CA',
-    'border-color': '#FFF',
-    'color': '#FFF',
-    'border-left': '4px solid #FFF'
-});
-        }
-
-        $(document).on('change', '.secondary-alevel-subject', updateSecondaryALevelComboStatus);
+        // Secondary A-Level's picker is now just the locked General Paper
+        // checkbox — no Check All/Uncheck All/status needed; principal +
+        // subsidiary subjects are chosen per-student on the A-Level
+        // Combinations page instead of here.
 
         function showToast(message, type = 'success') {
             Swal.fire({
@@ -755,7 +688,6 @@ $status.css({
                     // The bulk uncheck above also unchecks disabled inputs —
                     // General Paper is compulsory, so lock it back on.
                     $('.secondary-alevel-subject[data-group="General"]').prop('checked', true);
-                    updateSecondaryALevelComboStatus();
                 }
             });
 
