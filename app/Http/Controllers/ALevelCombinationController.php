@@ -37,18 +37,27 @@ class ALevelCombinationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $classId = (int) config('constants.options.SECONDARY_ALEVEL_CLASSES');
+        // config('constants.options.SECONDARY_ALEVEL_CLASSES') is the
+        // master_code id for the "Secondary A-Level Classes" GROUP (Senior 5
+        // and Senior 6 live under it) — not a class id itself. Streams are
+        // stored against the actual class ids, so those need resolving
+        // first before streams can be looked up.
+        $secondaryALevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'))
+            ->pluck('md_id')
+            ->all();
 
         $classOptions = DB::table('streams')
             ->where('school_id', $schoolId)
-            ->where('class_id', $classId)
+            ->whereIn('class_id', $secondaryALevelClassIds)
             ->get()
             ->map(function ($row) {
                 return (object) [
                     'class_id' => $row->class_id,
                     'stream_id' => $row->stream_id,
                     'class_name' => Helper::recordMdname($row->class_id),
-                    'stream_name' => $row->stream_id,
+                    'stream_name' => $row->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL
+                        ? null
+                        : $row->stream_id,
                 ];
             })
             ->sortBy(fn($o) => $o->class_name . $o->stream_name)

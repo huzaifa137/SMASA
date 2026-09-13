@@ -135,22 +135,97 @@
             padding: 2rem 1rem;
             color: #a3a0c9;
         }
+
+.alc-hero {
+    background: linear-gradient(135deg, #0a0a0f 0%, #14143a 40%, #1e1b8a 75%, #2C29CA 100%);
+    border-radius: 1.75rem 1.75rem 1.75rem 1.75rem;
+    padding: 1.5rem 2rem 2rem;
+    margin-bottom: -1rem;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #2C29CA;
+}
+
+/* Subtle glow accent */
+.alc-hero::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(44, 41, 202, 0.45) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.alc-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -5%;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(107, 105, 232, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.alc-hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+.alc-hero .hero-badge {
+    background: rgba(44, 41, 202, 0.25);
+    border: 1px solid rgba(107, 105, 232, 0.5);
+    color: #c7c5ff;
+    padding: .3rem .9rem;
+    border-radius: 999px;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
+}
+
+.alc-hero .hero-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.02em;
+    margin-bottom: .25rem;
+    text-shadow: 0 2px 12px rgba(44, 41, 202, 0.4);
+}
+
+.alc-hero .hero-subtitle {
+    color: rgba(255, 255, 255, .65);
+    font-size: .82rem;
+    line-height: 1.5;
+    max-width: 720px;
+}
     </style>
 @endsection
 
 @section('content')
     <div class="side-app">
 
-        <div class="alc-hero mb-4">
-            <div class="d-flex flex-wrap align-items-center justify-content-between">
-                <div>
-                    <span class="hero-badge"><i class="fas fa-graduation-cap me-1"></i> A-Level Combinations</span>
-                    <h1 class="hero-title mt-2">Build Student Combinations</h1>
-                    <p class="hero-subtitle mb-0">Each student's own principal subjects + optional subsidiary. General
-                        Paper is compulsory for every student — it's implied automatically, not chosen here.</p>
+ <div class="row px-3 px-md-4">
+            <div class="col-12">
+
+                {{-- ===== HERO ===== --}}
+                <div class="alc-hero mb-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                        <div>
+                            <span class="hero-badge">
+                                <i class="fas fa-graduation-cap me-1"></i> A-Level Combinations
+                            </span>
+                            <h1 class="hero-title mt-1">Build Student Combinations</h1>
+                            <p class="hero-subtitle mb-0">
+                                Each student's own principal subjects + optional subsidiary. General
+                                Paper is compulsory for every student — it's implied automatically, not chosen here.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
         <div class="row px-3 px-md-4">
             <div class="col-12">
@@ -214,7 +289,7 @@
                                                 @endforeach
                                             </td>
                                             <td>
-                                                <select class="form-select form-select-sm subsidiary-select">
+                                                <select class="form-select form-control-sm subsidiary-select">
                                                     <option value="">None</option>
                                                     @foreach($subsidiarySubjects as $sub)
                                                         <option value="{{ $sub->md_id }}" @if((string) $existingSubsidiary === (string) $sub->md_id) selected @endif>
@@ -248,7 +323,11 @@
             </div>
         </div>
     </div>
-
+ </div>
+        </div>
+    </div>
+    </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

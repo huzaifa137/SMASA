@@ -34,6 +34,11 @@
     }
 </style>
 
+@php
+    use App\Http\Controllers\Helper;
+    use App\Helpers\PermissionHelper;
+@endphp
+
 <div class="row w-100 g-2">
     <div class="col-12 col-sm-3 mb-2">
         <a href="{{ route('students.individual.search') }}"
@@ -50,15 +55,13 @@
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.all.students') }}"
-            class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+        <a href="{{ route('students.all.students') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-users me-2"></i>All Students
         </a>
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.consolidation') }}"
-            class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+        <a href="{{ route('students.consolidation') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-code-branch me-2"></i>Consolidate Students
         </a>
     </div>
@@ -69,4 +72,12 @@
             <i class="fas fa-portrait me-2"></i>Bulk Photo Import
         </a>
     </div>
+
+    @if(PermissionHelper::canFeature('add_class') && in_array('Secondary A-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+        <div class="col-12 col-sm-3 mb-2">
+            <a href="{{ route('alevel.combinations.entry') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+                <i class="fas fa-graduation-cap me-2"></i> A-Level Combinations
+            </a>
+        </div>
+    @endif
 </div>
