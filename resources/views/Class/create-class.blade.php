@@ -123,6 +123,12 @@
                                         <label class="form-label">Stream</label>
                                         <input type="text" name="class_stream" id="class_stream" class="form-control"
                                             value="{{ old('class_stream') }}" placeholder="Enter Class Stream">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="no_stream" name="no_stream" value="1">
+                                            <label class="form-check-label" for="no_stream">
+                                                This class has no streams
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -475,6 +481,97 @@
                                 </div>
                             </div>
 
+                            {{-- ═══════════════════════════════════════════════
+                            SECONDARY O-LEVEL SUBJECTS
+                            ════════════════════════════════════════════════ --}}
+                            <div id="secondary-olevel-subjects" style="display: none;">
+                                <div class="subject-section-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="section-title mb-0">O - LEVEL SUBJECTS (SECONDARY)</h5>
+                                        <div class="subject-control-buttons">
+                                            <button type="button" class="btn btn-sm btn-check-all"
+                                                onclick="checkAllSecondaryOLevelSubjects()">
+                                                <i class="fas fa-check-double"></i> Check All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-uncheck-all"
+                                                onclick="uncheckAllSecondaryOLevelSubjects()">
+                                                <i class="fas fa-times-circle"></i> Uncheck All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        @foreach ($SECONDARY_OLEVEL_SUBJECTS ?? [] as $subject)
+                                            <div class="col-lg-4 col-md-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input secondary-olevel-subject" type="checkbox"
+                                                        id="secondary-olevel-{{ $loop->index }}" value="{{ $subject->md_id }}"
+                                                        data-group="secondary-olevel">
+                                                    <label class="form-check-label"
+                                                        for="secondary-olevel-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ═══════════════════════════════════════════════
+                            SECONDARY A-LEVEL SUBJECTS — grouped the way every
+                            UACE combination is built: General Paper
+                            (compulsory), 3 Principal subjects (Arts and/or
+                            Sciences — which specific ones is this school's
+                            call, same as every other subject list here),
+                            and at most 1 Subsidiary.
+                            ════════════════════════════════════════════════ --}}
+                            <div id="secondary-alevel-subjects" style="display: none;">
+                                <div class="subject-section-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="section-title mb-0">A - LEVEL SUBJECTS (SECONDARY)</h5>
+                                        <div class="subject-control-buttons">
+                                            <button type="button" class="btn btn-sm btn-check-all"
+                                                onclick="checkAllSecondaryALevelSubjects()">
+                                                <i class="fas fa-check-double"></i> Check All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-uncheck-all"
+                                                onclick="uncheckAllSecondaryALevelSubjects()">
+                                                <i class="fas fa-times-circle"></i> Uncheck All
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="secondary-alevel-combo-status" class="alert alert-secondary py-2 px-3 mb-3" style="font-size: 0.9rem;">
+                                        Pick exactly <strong>3 principal subjects</strong> and at most <strong>1 subsidiary</strong>.
+                                        General Paper is compulsory.
+                                    </div>
+
+                                    @foreach ([
+                                        'General' => 'General Paper (compulsory)',
+                                        'Principal - Arts' => 'Principal Subjects — Arts',
+                                        'Principal - Sciences' => 'Principal Subjects — Sciences',
+                                        'Subsidiary' => 'Subsidiary Subjects (pick at most 1)',
+                                    ] as $groupKey => $groupLabel)
+                                        @php $groupSubjects = ($SECONDARY_ALEVEL_SUBJECTS_GROUPED[$groupKey] ?? collect()); @endphp
+                                        @if ($groupSubjects->isNotEmpty())
+                                            <h6 class="text-muted mt-3 mb-2">{{ $groupLabel }}</h6>
+                                            <div class="row">
+                                                @foreach ($groupSubjects as $subject)
+                                                    <div class="col-lg-4 col-md-12">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input secondary-alevel-subject secondary-alevel-{{ str_replace(['Principal - ', ' '], ['', '-'], strtolower($groupKey)) }}"
+                                                                type="checkbox"
+                                                                id="secondary-alevel-{{ $subject->md_id }}" value="{{ $subject->md_id }}"
+                                                                data-group="{{ $groupKey }}">
+                                                            <label class="form-check-label"
+                                                                for="secondary-alevel-{{ $subject->md_id }}">{{ $subject->md_name }}</label>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="mt-4 text-left">
                                     <button type="submit" class="btn btn-primary">
@@ -532,6 +629,50 @@
             showToast('All Primary Secular subjects have been deselected', 'info');
         }
 
+        function checkAllSecondaryOLevelSubjects() {
+            $('.secondary-olevel-subject').prop('checked', true);
+            showToast('All Secondary O-Level subjects have been selected', 'success');
+        }
+        function uncheckAllSecondaryOLevelSubjects() {
+            $('.secondary-olevel-subject').prop('checked', false);
+            showToast('All Secondary O-Level subjects have been deselected', 'info');
+        }
+
+        function checkAllSecondaryALevelSubjects() {
+            $('.secondary-alevel-subject').prop('checked', true);
+            updateSecondaryALevelComboStatus();
+            showToast('All Secondary A-Level subjects have been selected', 'success');
+        }
+        function uncheckAllSecondaryALevelSubjects() {
+            $('.secondary-alevel-subject').prop('checked', false);
+            updateSecondaryALevelComboStatus();
+            showToast('All Secondary A-Level subjects have been deselected', 'info');
+        }
+
+        // Live "3 principals, at most 1 subsidiary" combination status —
+        // same rule storeClass() enforces server-side, surfaced here so the
+        // user finds out before submitting rather than after.
+        function updateSecondaryALevelComboStatus() {
+            const $status = $('#secondary-alevel-combo-status');
+            if ($status.length === 0) return;
+
+            const principalCount = $('.secondary-alevel-subject[data-group^="Principal"]:checked').length;
+            const subsidiaryCount = $('.secondary-alevel-subject[data-group="Subsidiary"]:checked').length;
+            const generalChecked = $('.secondary-alevel-subject[data-group="General"]:checked').length > 0;
+
+            let ok = principalCount === 3 && subsidiaryCount <= 1;
+            let parts = [];
+            parts.push(principalCount === 3 ? '✓ 3 principal subjects selected' : (principalCount + ' of 3 principal subjects selected'));
+            if (subsidiaryCount > 1) parts.push('✗ only 1 subsidiary allowed (picked ' + subsidiaryCount + ')');
+            if (!generalChecked) parts.push('General Paper not yet selected');
+
+            $status.removeClass('alert-secondary alert-success alert-warning')
+                .addClass(ok && generalChecked ? 'alert-success' : 'alert-warning')
+                .html(parts.join(' &nbsp;·&nbsp; '));
+        }
+
+        $(document).on('change', '.secondary-alevel-subject', updateSecondaryALevelComboStatus);
+
         function showToast(message, type = 'success') {
             Swal.fire({
                 icon: type,
@@ -556,13 +697,15 @@
             $('#thanawi-subjects').hide();
             $('#primary-theology-subjects').hide();
             $('#primary-secular-subjects').hide();
+            $('#secondary-olevel-subjects').hide();
+            $('#secondary-alevel-subjects').hide();
 
             // Handle class selection change
             $('#class_id').on('change', function () {
                 let selectedClassId = $(this).val();
 
                 if (!selectedClassId) {
-                    $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects').hide();
+                    $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects, #secondary-olevel-subjects, #secondary-alevel-subjects').hide();
                     return;
                 }
 
@@ -570,8 +713,8 @@
                 console.log('Selected class:', selectedClassId, 'Type:', classType);
 
                 // Hide all first, then show the right one
-                $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects').hide();
-                $('input[type="checkbox"]').prop('checked', false);
+                $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects, #secondary-olevel-subjects, #secondary-alevel-subjects').hide();
+                $('input[type="checkbox"]:not(#no_stream)').prop('checked', false);
 
                 if (classType === 'O-Level') {
                     $('#idaad-subjects').show();
@@ -581,6 +724,21 @@
                     $('#primary-theology-subjects').show();
                 } else if (classType === 'Primary Secular') {
                     $('#primary-secular-subjects').show();
+                } else if (classType === 'Secondary O-Level') {
+                    $('#secondary-olevel-subjects').show();
+                } else if (classType === 'Secondary A-Level') {
+                    $('#secondary-alevel-subjects').show();
+                    updateSecondaryALevelComboStatus();
+                }
+            });
+
+            // "This class has no streams" — disable/clear the stream input
+            // while checked, same behavior create-class-custom.blade.php uses.
+            $('#no_stream').on('change', function () {
+                const checked = $(this).is(':checked');
+                $('#class_stream').prop('disabled', checked);
+                if (checked) {
+                    $('#class_stream').removeClass('is-invalid').val('');
                 }
             });
 
@@ -606,14 +764,18 @@
                     isValid = false;
                 }
 
-                // Validate stream
-                let $streamGroup = $('#class_stream').closest('.form-group');
-                if (!$('#class_stream').val().trim()) {
-                    $('#class_stream').addClass('is-invalid');
-                    if ($streamGroup.find('.invalid-feedback').length === 0) {
-                        $streamGroup.append('<div class="invalid-feedback d-block">Please enter class stream.</div>');
+                // Validate stream (unless this class has been marked as
+                // having no streams)
+                const noStream = $('#no_stream').is(':checked');
+                if (!noStream) {
+                    let $streamGroup = $('#class_stream').closest('.form-group');
+                    if (!$('#class_stream').val().trim()) {
+                        $('#class_stream').addClass('is-invalid');
+                        if ($streamGroup.find('.invalid-feedback').length === 0) {
+                            $streamGroup.append('<div class="invalid-feedback d-block">Please enter class stream, or tick "This class has no streams".</div>');
+                        }
+                        isValid = false;
                     }
-                    isValid = false;
                 }
 
                 // Collect subjects based on selected class type
@@ -629,6 +791,10 @@
                     $('.primary-theology-subject:checked').each(function () { selectedSubjects.push($(this).val()); });
                 } else if (classType === 'Primary Secular') {
                     $('.primary-secular-subject:checked').each(function () { selectedSubjects.push($(this).val()); });
+                } else if (classType === 'Secondary O-Level') {
+                    $('.secondary-olevel-subject:checked').each(function () { selectedSubjects.push($(this).val()); });
+                } else if (classType === 'Secondary A-Level') {
+                    $('.secondary-alevel-subject:checked').each(function () { selectedSubjects.push($(this).val()); });
                 }
 
                 if (!isValid) {
@@ -639,6 +805,20 @@
                 if (selectedSubjects.length === 0) {
                     Swal.fire({ icon: 'error', title: 'No Subjects Selected', text: 'Please select at least one subject before submitting.' });
                     return;
+                }
+
+                if (classType === 'Secondary A-Level') {
+                    const principalCount = $('.secondary-alevel-subject[data-group^="Principal"]:checked').length;
+                    const subsidiaryCount = $('.secondary-alevel-subject[data-group="Subsidiary"]:checked').length;
+
+                    if (principalCount !== 3) {
+                        Swal.fire({ icon: 'error', title: 'Invalid Combination', text: 'A-Level combinations need exactly 3 principal subjects (you selected ' + principalCount + ').' });
+                        return;
+                    }
+                    if (subsidiaryCount > 1) {
+                        Swal.fire({ icon: 'error', title: 'Invalid Combination', text: 'Choose at most one subsidiary subject (Subsidiary Mathematics or Subsidiary ICT), not both.' });
+                        return;
+                    }
                 }
 
                 Swal.fire({
@@ -656,7 +836,8 @@
 
                         let dataToSend = {
                             class_id: $('#class_id').val(),
-                            class_stream: $('#class_stream').val(),
+                            class_stream: noStream ? '' : $('#class_stream').val(),
+                            no_stream: noStream ? 1 : 0,
                             subjects: selectedSubjects,
                             class_type: classType,
                             _token: '{{ csrf_token() }}'
@@ -683,7 +864,7 @@
 
                                     $form[0].reset();
                                     $('input[type="checkbox"]').prop('checked', false);
-                                    $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects').hide();
+                                    $('#idaad-subjects, #thanawi-subjects, #primary-theology-subjects, #primary-secular-subjects, #secondary-olevel-subjects, #secondary-alevel-subjects').hide();
                                     $('.is-invalid').removeClass('is-invalid');
                                     $('.invalid-feedback').remove();
                                 }

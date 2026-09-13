@@ -47,6 +47,14 @@ return [
         'PRIMARY_THEOLOGY_CLASSES' => 34,
         'PRIMARY_SECULAR_CLASSES' => 42,
 
+        // SECONDARY (secular O-Level / A-Level — distinct from the Islamic
+        // Idaad/Thanawi curriculum which already occupies O_LEVEL/A_LEVEL
+        // above) — see database/migrations/2026_09_13_090000_add_secondary_school_product.php
+        'SECONDARY_OLEVEL_CLASSES' => 44,
+        'SECONDARY_ALEVEL_CLASSES' => 45,
+        'SECONDARY_OLEVEL_SUBJECTS' => 46,
+        'SECONDARY_ALEVEL_SUBJECTS' => 47,
+
         // SYSTEM SECTIONS
 
         // 1.SCHOOOL
@@ -124,6 +132,7 @@ return [
         'Primary Theology' => ['Primary Theology'],
         'Primary Secular' => ['Primary Secular'],
         'Both Primary Theology and Secular' => ['Primary Theology', 'Primary Secular'],
+        'Secondary' => ['Secondary O-Level', 'Secondary A-Level'],
     ],
 
     // Which config('constants.options.*') master-code holds the class list
@@ -133,6 +142,8 @@ return [
         'A-Level' => 'A_LEVEL',
         'Primary Theology' => 'PRIMARY_THEOLOGY_CLASSES',
         'Primary Secular' => 'PRIMARY_SECULAR_CLASSES',
+        'Secondary O-Level' => 'SECONDARY_OLEVEL_CLASSES',
+        'Secondary A-Level' => 'SECONDARY_ALEVEL_CLASSES',
     ],
 
     // The custom_subjects.class_type / class_subjects.subject_type value
@@ -142,6 +153,8 @@ return [
         'A-Level' => 'thanawi',
         'Primary Theology' => 'primary_theology',
         'Primary Secular' => 'primary_secular',
+        'Secondary O-Level' => 'secondary_olevel',
+        'Secondary A-Level' => 'secondary_alevel',
     ],
 ];
 

@@ -335,6 +335,9 @@ use App\Http\Controllers\Helper;
                                             <option value="PRS">Primary Secular - PRS</option>
                                         @elseif($schoolProduct === 'Both Primary Theology and Secular')
                                             <option value="BPT-BPS">Both Primary Theology and Secular - BPT-BPS</option>
+                                        @elseif($schoolProduct === 'Secondary')
+                                            <option value="SEC-OL">Secondary O-Level - SEC-OL</option>
+                                            <option value="SEC-AL">Secondary A-Level - SEC-AL</option>
                                         @endif
                                     </select>
                                 </div>
@@ -535,6 +538,8 @@ use App\Http\Controllers\Helper;
                 const aLevel = @json($aLevel ?? []);
                 const primaryTheologyClasses = @json($primaryTheologyClasses ?? []);
                 const primarySecularClasses = @json($primarySecularClasses ?? []);
+                const secondaryOLevelClasses = @json($secondaryOLevelClasses ?? []);
+                const secondaryALevelClasses = @json($secondaryALevelClasses ?? []);
                 const schoolClasses = @json($schoolClasses ?? []);
 
                 // Use the UNIVERSAL classNameMap from PHP (includes ALL classes)
@@ -608,6 +613,13 @@ use App\Http\Controllers\Helper;
                         if (val === 'BPT-BPS') {
                             const combined = primaryTheologyClasses.concat(primarySecularClasses);
                             populateSeniorOptions(filterClassesBySchoolAndCategory(combined));
+                        }
+
+                    } else if (schoolProduct === 'Secondary') {
+                        if (val === 'SEC-OL') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(secondaryOLevelClasses));
+                        } else if (val === 'SEC-AL') {
+                            populateSeniorOptions(filterClassesBySchoolAndCategory(secondaryALevelClasses));
                         }
                     }
                 });

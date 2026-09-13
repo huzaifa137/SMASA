@@ -305,6 +305,8 @@ class StudentController extends Controller
         $oLevel = collect();
         $primaryTheologyClasses = collect();
         $primarySecularClasses = collect();
+        $secondaryOLevelClasses = collect();
+        $secondaryALevelClasses = collect();
 
         // Union of every class type across every School Product this
         // school currently belongs to, so a school with merged categories
@@ -324,16 +326,24 @@ class StudentController extends Controller
         if (in_array('Primary Secular', $classTypes, true)) {
             $primarySecularClasses = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
         }
+        if (in_array('Secondary O-Level', $classTypes, true)) {
+            $secondaryOLevelClasses = Helper::MasterDataRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'));
+        }
+        if (in_array('Secondary A-Level', $classTypes, true)) {
+            $secondaryALevelClasses = Helper::MasterDataRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'));
+        }
 
         // Load ALL possible class types for the nameMap (regardless of school_product)
         $allOLvel = Helper::MasterDataRecords(config('constants.options.O_LEVEL'));
         $allALevel = Helper::MasterDataRecords(config('constants.options.A_LEVEL'));
         $allPrimaryTheology = Helper::MasterDataRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
         $allPrimarySecular = Helper::MasterDataRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+        $allSecondaryOLevel = Helper::MasterDataRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'));
+        $allSecondaryALevel = Helper::MasterDataRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'));
 
         // Build a UNIVERSAL nameMap (md_id => md_name)
         $classNameMap = [];
-        foreach ([$allOLvel, $allALevel, $allPrimaryTheology, $allPrimarySecular] as $classes) {
+        foreach ([$allOLvel, $allALevel, $allPrimaryTheology, $allPrimarySecular, $allSecondaryOLevel, $allSecondaryALevel] as $classes) {
             foreach ($classes as $class) {
                 $classNameMap[$class->md_id] = $class->md_name;
             }
@@ -352,6 +362,8 @@ class StudentController extends Controller
             'oLevel',
             'primaryTheologyClasses',
             'primarySecularClasses',
+            'secondaryOLevelClasses',
+            'secondaryALevelClasses',
             'schoolClasses',
             'classNameMap',
         ));

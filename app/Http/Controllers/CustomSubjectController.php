@@ -20,6 +20,8 @@ class CustomSubjectController extends Controller
         'thanawi'          => 'A-LEVEL (Thanawi)',
         'primary_theology' => 'Primary Theology',
         'primary_secular'  => 'Primary Secular',
+        'secondary_olevel' => 'O-LEVEL (Secondary)',
+        'secondary_alevel' => 'A-LEVEL (Secondary)',
     ];
 
     /**

@@ -140,6 +140,8 @@
                                 'thanawi' => ['A-Level', 'A-LEVEL SUBJECTS (THANAWI)'],
                                 'primary_theology' => ['Primary Theology', 'PRIMARY THEOLOGY SUBJECTS'],
                                 'primary_secular' => ['Primary Secular', 'PRIMARY SECULAR SUBJECTS'],
+                                'secondary_olevel' => ['Secondary O-Level', 'O-LEVEL SUBJECTS (SECONDARY)'],
+                                'secondary_alevel' => ['Secondary A-Level', 'A-LEVEL SUBJECTS (SECONDARY)'],
                             ] as $bucketKey => [$label, $title])
                                 <div id="{{ str_replace('_', '-', $bucketKey) }}-subjects" style="display: none;">
                                     <div class="subject-section-card">
@@ -209,7 +211,9 @@
             'O-Level': 'idaad',
             'A-Level': 'thanawi',
             'Primary Theology': 'primary_theology',
-            'Primary Secular': 'primary_secular'
+            'Primary Secular': 'primary_secular',
+            'Secondary O-Level': 'secondary_olevel',
+            'Secondary A-Level': 'secondary_alevel'
         };
 
         function toggleBucket(bucketKey, state) {
@@ -231,7 +235,7 @@
 
         $(document).ready(function () {
             let classTypes = @json($classTypeMap ?? []);
-            const allBuckets = ['idaad', 'thanawi', 'primary_theology', 'primary_secular'];
+            const allBuckets = ['idaad', 'thanawi', 'primary_theology', 'primary_secular', 'secondary_olevel', 'secondary_alevel'];
 
             function hideAllBuckets() {
                 allBuckets.forEach(b => $('#' + b.replace('_', '-') + '-subjects').hide());

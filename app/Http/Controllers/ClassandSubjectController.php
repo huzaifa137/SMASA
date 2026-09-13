@@ -88,6 +88,23 @@ class ClassandSubjectController extends Controller
             ];
         }
 
+        // Secondary (secular O-Level/A-Level) — separate from the Idaad/
+        // Thanawi Islamic curriculum above. A-Level subjects are grouped by
+        // md_misc1 (General / Principal - Arts / Principal - Sciences /
+        // Subsidiary — see 2026_09_13_120000_add_secondary_alevel_principal_subjects.php)
+        // so the view can show Arts/Sciences as their own sections instead
+        // of one flat list, and so storeClass() can enforce the standard
+        // "exactly 3 principals, at most 1 subsidiary" combination rule.
+        if (in_array('Secondary O-Level', $classTypes, true) || in_array('Secondary A-Level', $classTypes, true)) {
+            $viewData += [
+                'SECONDARY_OLEVEL_SUBJECTS' => Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_SUBJECTS')),
+                'SECONDARY_ALEVEL_SUBJECTS' => Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_SUBJECTS')),
+                'SECONDARY_ALEVEL_SUBJECTS_GROUPED' => Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_SUBJECTS'))->groupBy(function ($subject) {
+                    return $subject->md_misc1 ?: 'Principal - Arts';
+                }),
+            ];
+        }
+
         return view('Class.create-class', $viewData);
     }
 
@@ -137,21 +154,33 @@ class ClassandSubjectController extends Controller
 
         $wantsOLevel = in_array('O-Level', $classTypes, true);
         $wantsALevel = in_array('A-Level', $classTypes, true);
+        $wantsSecondaryOLevel = in_array('Secondary O-Level', $classTypes, true);
+        $wantsSecondaryALevel = in_array('Secondary A-Level', $classTypes, true);
 
-        if ($wantsOLevel || $wantsALevel) {
+        if ($wantsOLevel || $wantsALevel || $wantsSecondaryOLevel || $wantsSecondaryALevel) {
             $oLevelClasses = $wantsOLevel ? Helper::MasterRecords(config('constants.options.O_LEVEL')) : collect();
             $aLevelClasses = $wantsALevel ? Helper::MasterRecords(config('constants.options.A_LEVEL')) : collect();
+            $secondaryOLevelClasses = $wantsSecondaryOLevel ? Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES')) : collect();
+            $secondaryALevelClasses = $wantsSecondaryALevel ? Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES')) : collect();
 
-            $SecondaryClasses = $oLevelClasses->merge($aLevelClasses);
+            $SecondaryClasses = $oLevelClasses->merge($aLevelClasses)
+                ->merge($secondaryOLevelClasses)
+                ->merge($secondaryALevelClasses);
 
             $oLevelIds = $oLevelClasses->pluck('md_id')->toArray();
             $aLevelIds = $aLevelClasses->pluck('md_id')->toArray();
+            $secondaryOLevelIds = $secondaryOLevelClasses->pluck('md_id')->toArray();
+            $secondaryALevelIds = $secondaryALevelClasses->pluck('md_id')->toArray();
 
             foreach ($SecondaryClasses as $class) {
                 if (in_array($class->md_id, $oLevelIds, true)) {
                     $classTypeMap[$class->md_id] = 'O-Level';
                 } elseif (in_array($class->md_id, $aLevelIds, true)) {
                     $classTypeMap[$class->md_id] = 'A-Level';
+                } elseif (in_array($class->md_id, $secondaryOLevelIds, true)) {
+                    $classTypeMap[$class->md_id] = 'Secondary O-Level';
+                } elseif (in_array($class->md_id, $secondaryALevelIds, true)) {
+                    $classTypeMap[$class->md_id] = 'Secondary A-Level';
                 } else {
                     $classTypeMap[$class->md_id] = 'Unknown';
                 }
@@ -192,7 +221,7 @@ class ClassandSubjectController extends Controller
             'no_stream' => 'nullable|boolean',
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'required',
-            'class_type' => 'required|in:O-Level,A-Level,Primary Theology,Primary Secular'
+            'class_type' => 'required|in:O-Level,A-Level,Primary Theology,Primary Secular,Secondary O-Level,Secondary A-Level'
         ]);
 
         // A class can be created without any streams. We still store a real
@@ -203,6 +232,38 @@ class ClassandSubjectController extends Controller
 
         $school = School::find(Session('LoggedSchool'));
         $usesCustomSubjects = $school && $school->usesCustomSubjects();
+
+        // A-Level combination rule (Secondary, master-subjects only — schools
+        // on custom subjects define their own freeform subject names with no
+        // Arts/Sciences/Subsidiary classification to check against). This is
+        // the one rule that holds across every UACE combination regardless
+        // of school: exactly 3 principal subjects, at most 1 subsidiary.
+        // Which specific principals a school allows together (PCM, HEG, etc.)
+        // is left to them, same as O-Level/Idaad/Thanawi subject choices
+        // already are.
+        if ($request->class_type === 'Secondary A-Level' && !$usesCustomSubjects) {
+            $subjectGroups = DB::table('master_datas')
+                ->where('md_master_code_id', config('constants.options.SECONDARY_ALEVEL_SUBJECTS'))
+                ->whereIn('md_id', $request->subjects)
+                ->pluck('md_misc1', 'md_id');
+
+            $principalCount = $subjectGroups->filter(fn($group) => str_starts_with((string) $group, 'Principal'))->count();
+            $subsidiaryCount = $subjectGroups->filter(fn($group) => $group === 'Subsidiary')->count();
+
+            if ($principalCount !== 3) {
+                return response()->json([
+                    'fail' => true,
+                    'message' => "A-Level combinations need exactly 3 principal subjects (you selected {$principalCount}).",
+                ]);
+            }
+
+            if ($subsidiaryCount > 1) {
+                return response()->json([
+                    'fail' => true,
+                    'message' => 'Choose at most one subsidiary subject (Subsidiary Mathematics or Subsidiary ICT), not both.',
+                ]);
+            }
+        }
 
         $classRecord = Classroom::where('class_name', $request->class_id)
             ->where('school_id', Session('LoggedSchool'))
@@ -250,6 +311,10 @@ class ClassandSubjectController extends Controller
                     $subjectType = 'primary_theology';
                 } elseif ($request->class_type === 'Primary Secular') {
                     $subjectType = 'primary_secular';
+                } elseif ($request->class_type === 'Secondary O-Level') {
+                    $subjectType = 'secondary_olevel';
+                } elseif ($request->class_type === 'Secondary A-Level') {
+                    $subjectType = 'secondary_alevel';
                 }
 
                 if ($usesCustomSubjects) {
@@ -747,17 +812,27 @@ class ClassandSubjectController extends Controller
             $assignedSubjects[] = $classSubject->subject_id;
         }
 
-        // Get class type (O-Level, A-Level, Primary Theology, or Primary Secular)
+        // Get class type (O-Level, A-Level, Primary Theology, Primary Secular,
+        // Secondary O-Level, or Secondary A-Level)
         $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
+        $aLevelIds = Helper::MasterRecords(config('constants.options.A_LEVEL'))->pluck('md_id')->toArray();
         $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
         $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+        $secondaryOLevelIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->toArray();
+        $secondaryALevelIds = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'))->pluck('md_id')->toArray();
 
         if (in_array($classId, $oLevelIds)) {
             $classType = 'O-Level';
+        } elseif (in_array($classId, $aLevelIds)) {
+            $classType = 'A-Level';
         } elseif (in_array($classId, $primaryTheologyIds)) {
             $classType = 'Primary Theology';
         } elseif (in_array($classId, $primarySecularIds)) {
             $classType = 'Primary Secular';
+        } elseif (in_array($classId, $secondaryOLevelIds)) {
+            $classType = 'Secondary O-Level';
+        } elseif (in_array($classId, $secondaryALevelIds)) {
+            $classType = 'Secondary A-Level';
         } else {
             $classType = 'A-Level';
         }
@@ -765,10 +840,16 @@ class ClassandSubjectController extends Controller
         $SecondaryClasses = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
             config('constants.options.A_LEVEL')
-        );
+        )->merge(Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES')))
+            ->merge(Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES')));
 
         $PrimaryClasses = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'));
         $PrimarySecularClasses = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'));
+
+        // SECONDARY Subjects (secular O-Level / A-Level — defaults only for
+        // A-Level: General Paper + the two subsidiaries)
+        $SECONDARY_OLEVEL_SUBJECTS = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_SUBJECTS'));
+        $SECONDARY_ALEVEL_SUBJECTS = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_SUBJECTS'));
 
         // IDAAD Subjects (O-Level)
         $IDAAD_ARABIC_LANGUAGE = Helper::MasterRecords(config('constants.options.IDAAD_ARABIC_LANGUAGE'));
@@ -816,7 +897,9 @@ class ClassandSubjectController extends Controller
             'THANAWI_PROPHETIC_TRADITIONS',
             'THANAWI_QURAN_ITS_SCIENCES',
             'primaryTheology',
-            'primarySecularSubjects'
+            'primarySecularSubjects',
+            'SECONDARY_OLEVEL_SUBJECTS',
+            'SECONDARY_ALEVEL_SUBJECTS'
         ));
     }
 
