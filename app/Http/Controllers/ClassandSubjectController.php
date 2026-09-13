@@ -236,29 +236,21 @@ class ClassandSubjectController extends Controller
         // This picker builds the class/stream's SUBJECT POOL, not one
         // student's combination — a class normally offers several
         // combinations at once (e.g. PCM and HEG in the same Senior 5
-        // stream), so there's no "exactly 3 principals" count to enforce at
-        // this level. Each student's own principal subjects (and optional
-        // subsidiary) are chosen separately when that student's combination
-        // is built. The only two things worth guaranteeing here: General
-        // Paper — compulsory for every A-Level student regardless of
-        // combination — is part of the pool (the UI locks its checkbox on,
-        // but this re-adds it server-side too as a safety net rather than
-        // trusting the client), and the pool isn't left with nothing but
-        // General Paper to offer.
+        // stream), so there's nothing to require here beyond General Paper
+        // itself. Each student's own principal subjects and optional
+        // subsidiary are chosen separately later, when that student's own
+        // combination is built — it can't be enforced on the whole
+        // class/stream at once. The only thing worth guaranteeing here:
+        // General Paper — compulsory for every A-Level student regardless
+        // of combination — is part of the pool (the UI locks its checkbox
+        // on, but this re-adds it server-side too as a safety net rather
+        // than trusting the client).
         if ($request->class_type === 'Secondary A-Level' && !$usesCustomSubjects) {
             $subjectGroups = DB::table('master_datas')
                 ->where('md_master_code_id', config('constants.options.SECONDARY_ALEVEL_SUBJECTS'))
                 ->pluck('md_misc1', 'md_id');
 
             $submittedSubjects = collect($request->subjects);
-            $principalCount = $submittedSubjects->filter(fn($id) => str_starts_with((string) ($subjectGroups[$id] ?? ''), 'Principal'))->count();
-
-            if ($principalCount === 0) {
-                return response()->json([
-                    'fail' => true,
-                    'message' => 'Select at least one principal subject for this class to offer, alongside General Paper.',
-                ]);
-            }
 
             $generalPaperId = $subjectGroups->search('General');
             if ($generalPaperId !== false && !$submittedSubjects->contains((string) $generalPaperId) && !$submittedSubjects->contains($generalPaperId)) {

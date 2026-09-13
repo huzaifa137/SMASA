@@ -33,6 +33,14 @@
                 </div>
             @endif
 
+            @if(PermissionHelper::canFeature('add_class') && in_array('Secondary A-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+                <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <a href="{{ route('alevel.combinations.entry') }}" class="btn btn-white text-dark w-100 rounded">
+                        <i class="fas fa-graduation-cap me-2"></i> A-Level Combinations
+                    </a>
+                </div>
+            @endif
+
             @if ($customSubjectsSchool && $customSubjectsSchool->custom_subjects_enabled)
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
                     @if ($customSubjectsSchool->custom_subjects_active)

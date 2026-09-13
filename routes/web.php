@@ -318,6 +318,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     });
 
+    // A-Level (Secondary) student subject combinations — separate from the
+    // class-level subject pool above, since it's a per-student choice.
+    Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:classes'])->group(function () {
+        Route::get('a-level-combinations', 'entry')->name('alevel.combinations.entry');
+        Route::post('a-level-combinations/save', 'save')->name('alevel.combinations.save');
+    });
+
     Route::controller(UserRightsAndPreviledges::class)
         ->group(function () {
             Route::post('/update-user-information', 'updateUserInformation')->name('users.update.information');

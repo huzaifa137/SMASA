@@ -826,19 +826,13 @@
                     return;
                 }
 
-                if (classType === 'Secondary A-Level') {
-                    // General Paper is locked on automatically; the only
-                    // thing worth guarding here is that the class isn't
-                    // left with nothing but General Paper to offer. Exactly
-                    // which principal subjects a student takes is decided
-                    // per-student when that student's combination is built,
-                    // not here.
-                    const principalCount = $('.secondary-alevel-subject[data-group^="Principal"]:checked').length;
-                    if (principalCount === 0) {
-                        Swal.fire({ icon: 'error', title: 'No Principal Subjects', text: 'Select at least one principal subject for this class to offer, alongside General Paper.' });
-                        return;
-                    }
-                }
+                // Note: Secondary A-Level intentionally has no "must pick a
+                // principal subject" requirement here. General Paper is the
+                // only thing compulsory for the class itself (it's locked on
+                // above); which principal subjects and subsidiary each
+                // student takes is a per-student decision made later when
+                // that student's own combination is built — it can't be
+                // enforced on the whole class/stream at once.
 
                 Swal.fire({
                     title: 'Are you sure?',
