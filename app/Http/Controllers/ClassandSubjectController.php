@@ -233,35 +233,36 @@ class ClassandSubjectController extends Controller
         $school = School::find(Session('LoggedSchool'));
         $usesCustomSubjects = $school && $school->usesCustomSubjects();
 
-        // A-Level combination rule (Secondary, master-subjects only — schools
-        // on custom subjects define their own freeform subject names with no
-        // Arts/Sciences/Subsidiary classification to check against). This is
-        // the one rule that holds across every UACE combination regardless
-        // of school: exactly 3 principal subjects, at most 1 subsidiary.
-        // Which specific principals a school allows together (PCM, HEG, etc.)
-        // is left to them, same as O-Level/Idaad/Thanawi subject choices
-        // already are.
+        // This picker builds the class/stream's SUBJECT POOL, not one
+        // student's combination — a class normally offers several
+        // combinations at once (e.g. PCM and HEG in the same Senior 5
+        // stream), so there's no "exactly 3 principals" count to enforce at
+        // this level. Each student's own principal subjects (and optional
+        // subsidiary) are chosen separately when that student's combination
+        // is built. The only two things worth guaranteeing here: General
+        // Paper — compulsory for every A-Level student regardless of
+        // combination — is part of the pool (the UI locks its checkbox on,
+        // but this re-adds it server-side too as a safety net rather than
+        // trusting the client), and the pool isn't left with nothing but
+        // General Paper to offer.
         if ($request->class_type === 'Secondary A-Level' && !$usesCustomSubjects) {
             $subjectGroups = DB::table('master_datas')
                 ->where('md_master_code_id', config('constants.options.SECONDARY_ALEVEL_SUBJECTS'))
-                ->whereIn('md_id', $request->subjects)
                 ->pluck('md_misc1', 'md_id');
 
-            $principalCount = $subjectGroups->filter(fn($group) => str_starts_with((string) $group, 'Principal'))->count();
-            $subsidiaryCount = $subjectGroups->filter(fn($group) => $group === 'Subsidiary')->count();
+            $submittedSubjects = collect($request->subjects);
+            $principalCount = $submittedSubjects->filter(fn($id) => str_starts_with((string) ($subjectGroups[$id] ?? ''), 'Principal'))->count();
 
-            if ($principalCount !== 3) {
+            if ($principalCount === 0) {
                 return response()->json([
                     'fail' => true,
-                    'message' => "A-Level combinations need exactly 3 principal subjects (you selected {$principalCount}).",
+                    'message' => 'Select at least one principal subject for this class to offer, alongside General Paper.',
                 ]);
             }
 
-            if ($subsidiaryCount > 1) {
-                return response()->json([
-                    'fail' => true,
-                    'message' => 'Choose at most one subsidiary subject (Subsidiary Mathematics or Subsidiary ICT), not both.',
-                ]);
+            $generalPaperId = $subjectGroups->search('General');
+            if ($generalPaperId !== false && !$submittedSubjects->contains((string) $generalPaperId) && !$submittedSubjects->contains($generalPaperId)) {
+                $request->merge(['subjects' => [...$request->subjects, $generalPaperId]]);
             }
         }
 
