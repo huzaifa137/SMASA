@@ -250,8 +250,8 @@
             /* slightly taller + wider padding */
             line-height: 1;
             /* Optical centering nudge — text sits a hair low by default
-                                           because of the font's ascent/descent asymmetry. Pulling the
-                                           padding-top down pushes the text visually to the middle. */
+                                               because of the font's ascent/descent asymmetry. Pulling the
+                                               padding-top down pushes the text visually to the middle. */
             padding-top: .6rem;
             padding-bottom: .5rem;
         }
@@ -279,6 +279,38 @@
 
         .combo-row .combo-shortform.is-visible {
             display: inline-flex;
+        }
+
+        /* Warning badge for a saved combination that isn't actually
+            complete — fewer than 3 principal subjects, no subsidiary, or
+            (most subtly) built on a subject that's since been deleted. Kept
+            visually distinct from the amber "Unsaved" chip: that one just
+            means "not saved yet", this one means "saved, but wrong". */
+        .combo-row .combo-flag {
+            display: none;
+            align-items: center;
+            gap: .35rem;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            color: #b3261e;
+            background: #fdecea;
+            border: 1px solid #f6c4c0;
+            border-radius: 999px;
+            padding: .35rem .75rem;
+            min-height: 34px;
+            line-height: 1.2;
+            white-space: normal;
+            max-width: 260px;
+        }
+
+        .combo-row .combo-flag.is-visible {
+            display: inline-flex;
+        }
+
+        .combo-row .combo-flag i {
+            font-size: .72rem;
+            flex: none;
         }
 
         /* ===== Per-row subject search ===== */
@@ -322,104 +354,335 @@
         }
 
         /* Hide filtered-out subject checkboxes */
-        .subject-search-wrap~[data-principal-group] .form-check.is-filtered-out {
+        .subject-search-row~[data-principal-group] .form-check.is-filtered-out {
             display: none;
         }
 
         /* Optional: subtle highlight for matches — remove if you don't want it */
-        .subject-search-wrap~[data-principal-group] .form-check.is-match .form-check-label {
+        .subject-search-row~[data-principal-group] .form-check.is-match .form-check-label {
             color: #2C29CA;
             font-weight: 700;
         }
 
+        /* ===== "Apply a saved combination" quick-picker ===== */
+        .combo-template-wrap {
+            position: relative;
+            margin-bottom: .75rem;
+            max-width: 260px;
+        }
+
+        .combo-template-icon {
+            position: absolute;
+            top: 50%;
+            left: .75rem;
+            transform: translateY(-50%);
+            color: #9a97c9;
+            font-size: .72rem;
+            pointer-events: none;
+        }
+
+        .combo-template-input {
+            width: 100%;
+            height: 34px;
+            padding: 0 .75rem 0 1.85rem;
+            border: 1.5px dashed #d7d4f7;
+            border-radius: .6rem;
+            background: #fafaff;
+            font-size: .8rem;
+            color: #1e1b4b;
+            outline: none;
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
+
+        .combo-template-input::placeholder {
+            color: #b3b0d4;
+        }
+
+        .combo-template-input:focus {
+            border-style: solid;
+            border-color: #2C29CA;
+            background: #fff;
+            box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
+        }
+
+        .combo-template-panel {
+            display: none;
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + .3rem);
+            left: 0;
+            right: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1.5px solid #e4e2ff;
+            border-radius: .6rem;
+            box-shadow: 0 10px 30px rgba(44, 41, 202, .16);
+            padding: .35rem;
+        }
+
+        .combo-template-panel.is-open {
+            display: block;
+        }
+
+        .combo-template-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            padding: .5rem .6rem;
+            border-radius: .45rem;
+            cursor: pointer;
+            font-size: .8rem;
+        }
+
+        .combo-template-option:hover,
+        .combo-template-option.is-active {
+            background: #f2f1ff;
+        }
+
+        .combo-template-option .combo-template-option-label {
+            font-weight: 700;
+            color: #1e1b4b;
+        }
+
+        .combo-template-option .combo-template-option-full {
+            display: block;
+            font-weight: 400;
+            font-size: .7rem;
+            color: #736f9e;
+            margin-top: .1rem;
+        }
+
+        .combo-template-option .combo-template-option-count {
+            flex: none;
+            font-size: .68rem;
+            font-weight: 700;
+            color: #2C29CA;
+            background: #eef0ff;
+            border-radius: 999px;
+            padding: .2rem .5rem;
+            white-space: nowrap;
+        }
+
+        .combo-template-empty {
+            padding: .6rem;
+            font-size: .78rem;
+            color: #9a97c9;
+            text-align: center;
+        }
+
         /* ===== Unsaved chip (sits next to the short-form badge) ===== */
-.combo-row .pending-chip {
-    display: none;
+        .combo-row .pending-chip {
+            display: none;
+            align-items: center;
+            gap: .35rem;
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #9a6b00;
+            background: #fff3cd;
+            border: 1px solid #ffe8a3;
+            border-radius: 999px;
+            padding: .35rem .75rem;
+            min-height: 34px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .combo-row .pending-chip i {
+            font-size: .45rem;
+        }
+
+        .combo-row .pending-chip.is-visible {
+            display: inline-flex;
+        }
+
+        /* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
+        /* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
+        .subsidiary-select {
+            width: 100%;
+            height: 44px;
+            padding: 0 2.25rem 0 .9rem;
+            border: 1.5px solid #e4e2ff;
+            border-radius: .7rem;
+            background-color: #fff;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right .9rem center;
+            background-size: 12px;
+            font-size: .85rem;
+            font-weight: 600;
+            color: #1e1b4b;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            /* line-height removed — let the fixed height center the text */
+            transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+            /* Let the browser center the selected option text vertically */
+            vertical-align: middle;
+        }
+
+        .subsidiary-select:hover {
+            border-color: #cfccff;
+            background-color: #fafaff;
+        }
+
+        .subsidiary-select:focus {
+            border-color: #2C29CA;
+            background-color: #fff;
+            box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
+        }
+
+        /* Dropdown list options — keep readable, browser controls their own height */
+        .subsidiary-select option {
+            color: #1e1b4b;
+            background: #fff;
+            font-weight: 500;
+            padding: .5rem;
+        }
+
+        /* ===== Manage Your Own Subjects — center the edit/delete icons ===== */
+        .my-subject-row .my-subject-edit,
+        .my-subject-row .my-subject-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            /* kill Bootstrap .btn-sm padding */
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+
+        .my-subject-row .my-subject-edit i,
+        .my-subject-row .my-subject-delete i {
+            display: block;
+            line-height: 1;
+            font-size: .82rem;
+        }
+
+        /* ===== Row wrapper: subject search + saved-combination picker ===== */
+        .subject-search-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: .75rem;
+            align-items: flex-start;
+        }
+
+        /* Each picker shares the row, growing to fill available space */
+        .subject-search-row .subject-search-wrap,
+        .subject-search-row .combo-template-wrap {
+            position: relative;
+            margin-bottom: 0;
+            /* margin moved to the row wrapper */
+            flex: 1 1 200px;
+            /* grow evenly, wrap when < 200px each */
+            min-width: 0;
+            /* lets the input shrink instead of overflowing */
+            max-width: none;
+            /* remove the old 260px cap */
+        }
+
+        /* ===== Student name search (above the combinations table) ===== */
+.student-search-bar {
+    display: flex;
     align-items: center;
-    gap: .35rem;
-    font-size: .68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: #9a6b00;
-    background: #fff3cd;
-    border: 1px solid #ffe8a3;
-    border-radius: 999px;
-    padding: .35rem .75rem;
-    min-height: 34px;
-    line-height: 1;
-    white-space: nowrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.75rem;
+    border-bottom: 2px solid #f0eeff;
+    background: linear-gradient(135deg, #fafaff 0%, #f7f6ff 100%);
+    flex-wrap: wrap;
 }
 
-.combo-row .pending-chip i {
-    font-size: .45rem;
-}
+        .student-search-wrap {
+            position: relative;
+            flex: 1 1 260px;
+            max-width: 420px;
+        }
 
-.combo-row .pending-chip.is-visible {
-    display: inline-flex;
-}
-/* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
-/* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
-.subsidiary-select {
-    width: 100%;
-    height: 44px;
-    padding: 0 2.25rem 0 .9rem;
-    border: 1.5px solid #e4e2ff;
-    border-radius: .7rem;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right .9rem center;
-    background-size: 12px;
+.student-search-icon {
+    position: absolute;
+    top: 50%;
+    left: .9rem;
+    transform: translateY(-50%);
+    color: #2C29CA;                 /* brand blue by default */
     font-size: .85rem;
-    font-weight: 600;
+    pointer-events: none;
+    transition: color .18s;
+}
+
+.student-search-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 2.4rem 0 2.4rem;
+    border: 1.5px solid #2C29CA;              /* brand blue by default */
+    border-radius: .7rem;
+    background: #fff;
+    font-size: .85rem;
     color: #1e1b4b;
     outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-    /* line-height removed — let the fixed height center the text */
-    transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-    /* Let the browser center the selected option text vertically */
-    vertical-align: middle;
+    box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);   /* soft ring by default */
+    transition: border-color .18s, box-shadow .18s, background .18s;
 }
 
-.subsidiary-select:hover {
-    border-color: #cfccff;
-    background-color: #fafaff;
+.student-search-input::placeholder {
+    color: #b3b0d4;
 }
 
-.subsidiary-select:focus {
+.student-search-input:focus {
     border-color: #2C29CA;
-    background-color: #fff;
-    box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
-}
-
-/* Dropdown list options — keep readable, browser controls their own height */
-.subsidiary-select option {
-    color: #1e1b4b;
     background: #fff;
-    font-weight: 500;
-    padding: .5rem;
-}   
-/* ===== Manage Your Own Subjects — center the edit/delete icons ===== */
-.my-subject-row .my-subject-edit,
-.my-subject-row .my-subject-delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;                    /* kill Bootstrap .btn-sm padding */
-    line-height: 1;
-    flex: 0 0 auto;
+    box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);   /* stronger on focus */
 }
 
-.my-subject-row .my-subject-edit i,
-.my-subject-row .my-subject-delete i {
-    display: block;
-    line-height: 1;
-    font-size: .82rem;
-}
+        .student-search-clear {
+            position: absolute;
+            top: 50%;
+            right: .55rem;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #9a97c9;
+            cursor: pointer;
+            display: none;
+            /* shown only when input has text */
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, color .15s;
+        }
+
+        .student-search-clear:hover {
+            background: #eef0ff;
+            color: #2C29CA;
+        }
+
+        .student-search-clear.is-visible {
+            display: inline-flex;
+        }
+
+        .student-search-count {
+            font-size: .78rem;
+            font-weight: 700;
+            color: #6b6899;
+            white-space: nowrap;
+        }
+
+        .student-search-count b {
+            color: #2C29CA;
+        }
+
+        /* Hidden row when filtered out */
+        tr[data-student-id].is-filtered-out {
+            display: none;
+        }
     </style>
 @endsection
 
@@ -429,7 +692,11 @@
         <div class="row px-3 px-md-4">
             <div class="col-12">
 
-                {{-- ===== HERO ===== --}}
+                <div class="row px-3 px-md-4">
+                    
+                    <div class="col-12">
+
+                                    {{-- ===== HERO ===== --}}
                 <div class="alc-hero mb-4">
                     <div class="d-flex flex-wrap align-items-center justify-content-between">
                         <div>
@@ -444,9 +711,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row px-3 px-md-4">
-                    <div class="col-12">
 
                         {{-- ===== CLASS/STREAM PICKER ===== --}}
                         <div class="alc-card mb-4">
@@ -577,7 +841,38 @@
 
                         {{-- ===== COMBINATIONS GRID ===== --}}
                         @if($students->count())
+                            @php
+                                // Every subject id a checkbox/option actually exists
+                                // for right now — used below to catch a saved
+                                // combination that still references a subject
+                                // (school-added or global) which has since been
+                                // deleted. Without this, a deleted subject just
+                                // silently disappears from the count with no
+                                // indication anything is wrong.
+                                $allValidSubjectIds = collect();
+                                foreach ($principalSubjects as $subjectsInGroup) {
+                                    $allValidSubjectIds = $allValidSubjectIds->concat($subjectsInGroup->pluck('md_id'));
+                                }
+                                $allValidSubjectIds = $allValidSubjectIds
+                                    ->concat($subsidiarySubjects->pluck('md_id'))
+                                    ->map(fn($v) => (string) $v)
+                                    ->all();
+                            @endphp
                             <div class="alc-card mb-4">
+                                {{-- Student-name search: filters the table rows live as you type. --}}
+                                <div class="student-search-bar">
+                                    <div class="student-search-wrap">
+                                        <i class="fas fa-user-search student-search-icon"></i>
+                                        <input type="text" id="studentSearchInput" class="student-search-input"
+                                            placeholder="Search students by name…" autocomplete="off">
+                                        <button type="button" id="studentSearchClear" class="student-search-clear"
+                                            title="Clear">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <span id="studentSearchCount" class="student-search-count"></span>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table alc-table">
                                         <thead>
@@ -585,7 +880,7 @@
                                                 <th>Student</th>
                                                 <th>General Paper</th>
                                                 <th>Principal Subjects</th>
-                                                <th>Subsidiary (optional)</th>
+                                                <th>Subsidiary</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -594,19 +889,47 @@
                                                     $existing = $combinations->get($stu->id);
                                                     $existingPrincipals = $existing->principal_subject_ids ?? [];
                                                     $existingSubsidiary = $existing->subsidiary_subject_id ?? null;
+
+                                                    // Did the saved combination reference a subject
+                                                    // that no longer exists (deleted since it was
+                                                    // saved)? Once deleted its checkbox/option is
+                                                    // simply gone, so this is the only way to tell
+                                                    // "the teacher only ever picked 2" apart from
+                                                    // "this used to be 3 until one was removed".
+                                                    $hadDeletedSubjects = false;
+                                                    foreach ($existingPrincipals as $pid) {
+                                                        if (!in_array((string) $pid, $allValidSubjectIds, true)) {
+                                                            $hadDeletedSubjects = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (!$hadDeletedSubjects && $existingSubsidiary && !in_array((string) $existingSubsidiary, $allValidSubjectIds, true)) {
+                                                        $hadDeletedSubjects = true;
+                                                    }
                                                 @endphp
                                                 <tr data-student-id="{{ $stu->id }}"
-                                                    data-initial-principals='@json(array_values($existingPrincipals))'>
-                                                   <td>{{ $stu->lastname }} {{ $stu->firstname }}</td>
+                                                    data-initial-principals='@json(array_values($existingPrincipals))'
+                                                    data-had-deleted-subjects="{{ $hadDeletedSubjects ? '1' : '0' }}">
+                                                    <td>{{ $stu->lastname }} {{ $stu->firstname }}</td>
                                                     <td><span class="gp-chip">GP — compulsory</span></td>
 
                                                     <td>
-                                                        {{-- Per-student subject search: filters both Principal - Arts
-                                                        and Principal - Sciences checkboxes live as the user types. --}}
-                                                        <div class="subject-search-wrap">
-                                                            <i class="fas fa-search subject-search-icon"></i>
-                                                            <input type="text" class="subject-search-input"
-                                                                placeholder="Search subjects…" autocomplete="off">
+                                                        {{-- Both pickers on one row: subject filter on the left,
+                                                        saved-combination quick-apply on the right. --}}
+                                                        <div class="subject-search-row">
+                                                            <div class="subject-search-wrap">
+                                                                <i class="fas fa-search subject-search-icon"></i>
+                                                                <input type="text" class="subject-search-input"
+                                                                    placeholder="Search subjects…" autocomplete="off">
+                                                            </div>
+
+                                                            <div class="combo-template-wrap">
+                                                                <i class="fas fa-layer-group combo-template-icon"></i>
+                                                                <input type="text" class="combo-template-input"
+                                                                    placeholder="Apply a saved combination…" autocomplete="off">
+                                                                <div class="combo-template-panel" data-role="combo-template-panel">
+                                                                </div>
+                                                            </div>
                                                         </div>
 
                                                         @foreach($principalSubjects as $group => $subjectsInGroup)
@@ -623,15 +946,19 @@
                                                                     </label>
                                                                 @endforeach
                                                             </div>
-                                                           @if($group === 'Principal - Sciences')
-    <div class="combo-row">
-        <span class="combo-preview" data-role="combo-preview">—</span>
-        <span class="combo-shortform" data-role="combo-shortform"></span>
-        <span class="pending-chip" data-role="pending-chip">
-            <i class="fas fa-circle"></i> Unsaved
-        </span>
-    </div>
-@endif
+                                                            @if($group === 'Principal - Sciences')
+                                                                <div class="combo-row">
+                                                                    <span class="combo-preview" data-role="combo-preview">—</span>
+                                                                    <span class="combo-shortform" data-role="combo-shortform"></span>
+                                                                    <span class="combo-flag" data-role="combo-flag" title="">
+                                                                        <i class="fas fa-triangle-exclamation"></i>
+                                                                        <span data-role="combo-flag-text"></span>
+                                                                    </span>
+                                                                    <span class="pending-chip" data-role="pending-chip">
+                                                                        <i class="fas fa-circle"></i> Unsaved
+                                                                    </span>
+                                                                </div>
+                                                            @endif
                                                         @endforeach
                                                     </td>
                                                     <td>
@@ -711,12 +1038,21 @@
             subjectNameMap['{{ $sub->md_id }}'] = @json($sub->md_name);
         @endforeach
 
-                                // Each row's principal subjects, in the order the user actually
-                                // checked them (or, on first load, the order they were originally
-                                // saved in) — NOT DOM/render order, which is fixed by subject-list
-                                // position and would otherwise silently reorder an already-saved
-                                // combination every time this page is reopened.
-                                const rowPrincipalOrder = new WeakMap();
+            // Distinct combinations already saved somewhere in this school —
+            // see ALevelCombinationController::entry()'s $savedCombinationOptions
+            // — offered as one-click templates via the "Apply a saved
+            // combination" picker below. Raw ids only; display labels are
+            // built lazily (once principalInitial()/subsidiaryShortform() are
+            // available further down) so this can stay right next to
+            // subjectNameMap regardless of declaration order.
+            const savedCombinationOptions = @json($savedCombinationOptions);
+
+        // Each row's principal subjects, in the order the user actually
+        // checked them (or, on first load, the order they were originally
+        // saved in) — NOT DOM/render order, which is fixed by subject-list
+        // position and would otherwise silently reorder an already-saved
+        // combination every time this page is reopened.
+        const rowPrincipalOrder = new WeakMap();
 
         // Rows with a change made this session that hasn't been sent to
         // Save yet — drives the per-row "Unsaved" chip and the Save
@@ -752,6 +1088,7 @@
             }
 
             updateComboShortform(row);
+            updateComboFlag(row);
         }
 
         // "Physics" / "Chemistry" / "Mathematics" -> "P" / "C" / "M".
@@ -798,19 +1135,73 @@
             badge.style.display = short ? 'inline-block' : 'none';
         }
 
-function markRowDirty(row) {
-    dirtyRows.add(row);
-    const chip = row.querySelector('[data-role="pending-chip"]');
-    if (chip) chip.classList.add('is-visible');
-    updatePendingSummary();
-}
+        // A complete A-Level combination is exactly 3 principal subjects
+        // plus 1 subsidiary — anything else that isn't simply untouched
+        // ("No combination selected yet") is flagged right next to the
+        // short-form badge, so a class teacher scanning the list spots a
+        // gap without having to open every row. This is also what catches
+        // a subject that was deleted after the combination was saved: its
+        // checkbox is just gone, so the checked count quietly drops below
+        // 3 — exactly the same state as never having picked a third
+        // subject, and caught by the same check.
+        function updateComboFlag(row) {
+            const flag = row.querySelector('[data-role="combo-flag"]');
+            if (!flag) return;
+            const textEl = flag.querySelector('[data-role="combo-flag-text"]');
 
-function markRowClean(row) {
-    dirtyRows.delete(row);
-    const chip = row.querySelector('[data-role="pending-chip"]');
-    if (chip) chip.classList.remove('is-visible');
-    updatePendingSummary();
-}
+            const principalCount = principalOrderFor(row).length;
+            const hasSubsidiary = !!(row.querySelector('.subsidiary-select')?.value);
+            const isUntouched = principalCount === 0 && !hasSubsidiary;
+            const isComplete = principalCount === PRINCIPAL_LIMIT && hasSubsidiary;
+
+            if (isUntouched || isComplete) {
+                flag.classList.remove('is-visible');
+                flag.title = '';
+                if (textEl) textEl.textContent = '';
+                return;
+            }
+
+            const reasons = [];
+            if (row.dataset.hadDeletedSubjects === '1') {
+                reasons.push('a subject in this combination was deleted');
+            }
+            if (principalCount < PRINCIPAL_LIMIT) {
+                const missing = PRINCIPAL_LIMIT - principalCount;
+                reasons.push(`needs ${missing} more principal subject${missing > 1 ? 's' : ''}`);
+            } else if (principalCount > PRINCIPAL_LIMIT) {
+                reasons.push(`has ${principalCount} principal subjects (only ${PRINCIPAL_LIMIT} allowed)`);
+            }
+            if (!hasSubsidiary) {
+                reasons.push('missing a subsidiary subject');
+            }
+
+            const shortLabel = principalCount < PRINCIPAL_LIMIT || principalCount > PRINCIPAL_LIMIT
+                ? `${principalCount}/${PRINCIPAL_LIMIT} principals`
+                : 'no subsidiary';
+
+            if (textEl) textEl.textContent = `Incomplete — ${shortLabel}`;
+            flag.title = 'Incomplete combination: ' + reasons.join('; ') + '.';
+            flag.classList.add('is-visible');
+        }
+
+        function markRowDirty(row) {
+            dirtyRows.add(row);
+            // The "a subject was deleted" hint only makes sense against the
+            // originally-saved data — once the teacher starts editing this row
+            // themselves, fall back to the plain "incomplete" wording instead of
+            // still blaming a deletion that may no longer be the reason.
+            row.dataset.hadDeletedSubjects = '0';
+            const chip = row.querySelector('[data-role="pending-chip"]');
+            if (chip) chip.classList.add('is-visible');
+            updatePendingSummary();
+        }
+
+        function markRowClean(row) {
+            dirtyRows.delete(row);
+            const chip = row.querySelector('[data-role="pending-chip"]');
+            if (chip) chip.classList.remove('is-visible');
+            updatePendingSummary();
+        }
 
         function updatePendingSummary() {
             const summary = document.getElementById('pendingSummary');
@@ -966,9 +1357,9 @@ function markRowClean(row) {
                         label.className = 'form-check form-check-inline';
                         label.style.marginRight = '.75rem';
                         label.innerHTML = `
-                                            <input type="checkbox" class="form-check-input principal-checkbox" value="${subject.md_id}">
-                                            <span class="form-check-label" style="font-size:.8rem;">${subject.md_name}</span>
-                                        `;
+                                                <input type="checkbox" class="form-check-input principal-checkbox" value="${subject.md_id}">
+                                                <span class="form-check-label" style="font-size:.8rem;">${subject.md_name}</span>
+                                            `;
                         group.appendChild(label);
                         wirePrincipalCheckbox(label.querySelector('.principal-checkbox'), row);
                         applyPrincipalLimit(row);
@@ -1025,11 +1416,11 @@ function markRowClean(row) {
             row.dataset.mdId = subject.md_id;
             row.style.cssText = 'display:flex; align-items:center; gap:.75rem; padding:.6rem .9rem; border:1.5px solid #e4e2ff; border-radius:.7rem;';
             row.innerHTML = `
-                                        <span class="badge" style="background:#eef0ff; color:#3a37b8; font-weight:700; font-size:.68rem; padding:.4rem .6rem; white-space:nowrap;">${subject.md_misc1}</span>
-                                        <span class="my-subject-name" style="flex:1; font-weight:600; color:#1e1b4b; font-size:.88rem;">${subject.md_name}</span>
-                                        <button type="button" class="btn btn-sm my-subject-edit" title="Rename" style="background:transparent; border:1px solid #e4e2ff; border-radius:.5rem; color:#2C29CA; width:32px; height:32px;"><i class="fas fa-pen"></i></button>
-                                        <button type="button" class="btn btn-sm my-subject-delete" title="Delete" style="background:transparent; border:1px solid #ffd9d9; border-radius:.5rem; color:#dc3545; width:32px; height:32px;"><i class="fas fa-trash"></i></button>
-                                    `;
+                                            <span class="badge" style="background:#eef0ff; color:#3a37b8; font-weight:700; font-size:.68rem; padding:.4rem .6rem; white-space:nowrap;">${subject.md_misc1}</span>
+                                            <span class="my-subject-name" style="flex:1; font-weight:600; color:#1e1b4b; font-size:.88rem;">${subject.md_name}</span>
+                                            <button type="button" class="btn btn-sm my-subject-edit" title="Rename" style="background:transparent; border:1px solid #e4e2ff; border-radius:.5rem; color:#2C29CA; width:32px; height:32px;"><i class="fas fa-pen"></i></button>
+                                            <button type="button" class="btn btn-sm my-subject-delete" title="Delete" style="background:transparent; border:1px solid #ffd9d9; border-radius:.5rem; color:#dc3545; width:32px; height:32px;"><i class="fas fa-trash"></i></button>
+                                        `;
             list.appendChild(row);
             wireManageRow(row);
         }
@@ -1245,5 +1636,180 @@ function markRowClean(row) {
                 });
             });
         });
+
+        // ===== Student name search =====
+        // Filters table rows live as the user types — matches against the
+        // student name in the first cell (surname + first name), case-
+        // insensitive substring. Also shows a live "x of y" counter so a
+        // teacher can tell whether the list is currently filtered.
+        (function () {
+            const input = document.getElementById('studentSearchInput');
+            const clearBtn = document.getElementById('studentSearchClear');
+            const countEl = document.getElementById('studentSearchCount');
+            if (!input) return;
+
+            const rows = Array.from(document.querySelectorAll('tr[data-student-id]'));
+            const total = rows.length;
+
+            // Cache each row's lowercase name once, so typing doesn't have to
+            // re-read the DOM for every keystroke.
+            const rowNameCache = new WeakMap();
+            rows.forEach(row => {
+                const cell = row.querySelector('td');
+                rowNameCache.set(row, (cell ? cell.textContent : '').trim().toLowerCase());
+            });
+
+            function applyFilter() {
+                const q = input.value.trim().toLowerCase();
+                let visible = 0;
+
+                rows.forEach(row => {
+                    const name = rowNameCache.get(row) || '';
+                    const match = q === '' || name.includes(q);
+                    row.classList.toggle('is-filtered-out', !match);
+                    if (match) visible++;
+                });
+
+                // Clear button visibility
+                clearBtn.classList.toggle('is-visible', q !== '');
+
+                // Count label
+                if (q === '') {
+                    countEl.textContent = '';
+                } else {
+                    countEl.innerHTML = 'Showing <b>' + visible + '</b> of ' + total + ' student' +
+                        (total === 1 ? '' : 's');
+                }
+            }
+
+            input.addEventListener('input', applyFilter);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    input.value = '';
+                    applyFilter();
+                }
+            });
+
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                input.focus();
+                applyFilter();
+            });
+
+            // Initial render (in case the input has a value, e.g. browser
+            // restored it on back-navigation)
+            applyFilter();
+        })();
+
+        // ===== "Apply a saved combination" quick-picker =====
+        // Turns each already-saved combination into a one-click template:
+        // typing filters by short form (e.g. "pcm") or full subject names,
+        // clicking a result checks this row's boxes and sets its
+        // subsidiary to match, then leaves it as a normal pending edit —
+        // Save/Change works exactly as if the boxes had been ticked by
+        // hand. If nothing has ever been saved in this school yet, the
+        // whole picker is hidden rather than showing an always-empty box.
+        function comboOptionLabel(opt) {
+            const principalNames = (opt.principal_subject_ids || []).map(id => subjectNameMap[id] || id);
+            const subsidiaryName = opt.subsidiary_subject_id
+                ? (subjectNameMap[opt.subsidiary_subject_id] || opt.subsidiary_subject_id)
+                : '';
+
+            let short = principalNames.map(principalInitial).join('');
+            if (subsidiaryName) {
+                short = short ? `${short}/${subsidiaryShortform(subsidiaryName)}` : subsidiaryShortform(subsidiaryName);
+            }
+
+            let full = principalNames.join(', ');
+            if (subsidiaryName) {
+                full = full ? `${full} / ${subsidiaryName}` : subsidiaryName;
+            }
+
+            return { short: short || full, full };
+        }
+
+        const comboOptionLabels = savedCombinationOptions.map(opt => Object.assign({}, opt, comboOptionLabel(opt)));
+
+        function applyComboTemplate(row, opt) {
+            const order = principalOrderFor(row);
+            order.length = 0;
+            (opt.principal_subject_ids || []).forEach(id => order.push(String(id)));
+
+            row.querySelectorAll('.principal-checkbox').forEach(cb => {
+                cb.checked = order.includes(cb.value);
+            });
+
+            const subsidiarySelect = row.querySelector('.subsidiary-select');
+            if (subsidiarySelect) {
+                subsidiarySelect.value = opt.subsidiary_subject_id ? String(opt.subsidiary_subject_id) : '';
+            }
+
+            applyPrincipalLimit(row);
+            updateComboPreview(row);
+            markRowDirty(row);
+        }
+
+        function renderComboTemplatePanel(row, query) {
+            const panel = row.querySelector('[data-role="combo-template-panel"]');
+            if (!panel) return;
+
+            const q = (query || '').trim().toLowerCase();
+            const matches = comboOptionLabels.filter(opt => (
+                !q || opt.short.toLowerCase().includes(q) || opt.full.toLowerCase().includes(q)
+            ));
+
+            if (matches.length === 0) {
+                panel.innerHTML = '<div class="combo-template-empty">No matching saved combinations</div>';
+            } else {
+                panel.innerHTML = matches.map((opt, i) => `
+                        <div class="combo-template-option" data-index="${i}">
+                            <span>
+                                <span class="combo-template-option-label"></span>
+                                <span class="combo-template-option-full"></span>
+                            </span>
+                            <span class="combo-template-option-count"></span>
+                        </div>
+                    `).join('');
+
+                // Text content set via DOM (not template-interpolated into
+                // the HTML string above) so a subject name can never be
+                // parsed as markup.
+                panel.querySelectorAll('.combo-template-option').forEach((el, i) => {
+                    const opt = matches[i];
+                    el.querySelector('.combo-template-option-label').textContent = opt.short;
+                    el.querySelector('.combo-template-option-full').textContent = opt.full;
+                    el.querySelector('.combo-template-option-count').textContent =
+                        `${opt.count} student${opt.count > 1 ? 's' : ''}`;
+
+                    el.addEventListener('mousedown', (e) => {
+                        // mousedown (fires before the input's blur closes
+                        // the panel) rather than click.
+                        e.preventDefault();
+                        applyComboTemplate(row, opt);
+                        const input = row.querySelector('.combo-template-input');
+                        if (input) input.value = '';
+                        panel.classList.remove('is-open');
+                    });
+                });
+            }
+
+            panel.classList.add('is-open');
+        }
+
+        if (comboOptionLabels.length === 0) {
+            document.querySelectorAll('.combo-template-wrap').forEach(el => el.style.display = 'none');
+        } else {
+            document.querySelectorAll('tr[data-student-id]').forEach(row => {
+                const input = row.querySelector('.combo-template-input');
+                const panel = row.querySelector('[data-role="combo-template-panel"]');
+                if (!input || !panel) return;
+
+                input.addEventListener('focus', () => renderComboTemplatePanel(row, input.value));
+                input.addEventListener('input', () => renderComboTemplatePanel(row, input.value));
+                input.addEventListener('blur', () => {
+                    setTimeout(() => panel.classList.remove('is-open'), 120);
+                });
+            });
+        }
     </script>
 @endsection

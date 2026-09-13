@@ -122,6 +122,51 @@ class ALevelCombinationController extends Controller
         // master_datas shape, neither of which this list wants.
         $mySchoolSubjects = SchoolALevelSubject::forSchool($schoolId)->orderBy('subject_group')->orderBy('subject_name')->get();
 
+        // Every distinct combination already saved anywhere in the school
+        // (not just this class/stream — the same PCM or HEG combination is
+        // normally shared across several streams and even year groups), so
+        // it can be offered as a one-click starting point for a student
+        // who hasn't picked one yet, instead of re-checking the same 3
+        // boxes one at a time. Two combinations count as "the same" when
+        // they have the same principal subjects (regardless of order) and
+        // the same subsidiary. Only combinations built entirely from
+        // subjects that still exist are offered — one referencing a
+        // deleted subject would just silently apply nothing for that
+        // subject, which is more confusing than helpful as a template.
+        $allSubjectIds = collect();
+        foreach ($principalSubjects as $group) {
+            $allSubjectIds = $allSubjectIds->concat($group->pluck('md_id'));
+        }
+        $allSubjectIds = $allSubjectIds->concat($subsidiarySubjects->pluck('md_id'))->map(fn($v) => (string) $v)->all();
+
+        $savedCombinationOptions = StudentALevelCombination::where('school_id', $schoolId)
+            ->get()
+            ->filter(function ($c) use ($allSubjectIds) {
+                $principals = collect($c->principal_subject_ids ?? []);
+                if ($principals->isEmpty()) {
+                    return false;
+                }
+                $allValid = $principals->every(fn($id) => in_array((string) $id, $allSubjectIds, true));
+                if (!$allValid) {
+                    return false;
+                }
+                return !$c->subsidiary_subject_id || in_array((string) $c->subsidiary_subject_id, $allSubjectIds, true);
+            })
+            ->groupBy(function ($c) {
+                $sorted = collect($c->principal_subject_ids)->map(fn($v) => (string) $v)->sort()->values()->all();
+                return implode(',', $sorted) . '|' . ($c->subsidiary_subject_id ?? '');
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'principal_subject_ids' => array_values($first->principal_subject_ids),
+                    'subsidiary_subject_id' => $first->subsidiary_subject_id,
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
         return view('Class.alevel-combinations', compact(
             'classOptions',
             'selectedClassId',
@@ -130,7 +175,8 @@ class ALevelCombinationController extends Controller
             'combinations',
             'principalSubjects',
             'subsidiarySubjects',
-            'mySchoolSubjects'
+            'mySchoolSubjects',
+            'savedCombinationOptions'
         ));
     }
 

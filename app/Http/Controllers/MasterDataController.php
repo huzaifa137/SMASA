@@ -830,6 +830,29 @@ public function dropDown($links)
             ], 422);
         }
 
+        // Also block deleting a subject that's already baked into a
+        // student's saved A-Level combination (principal_subject_ids /
+        // subsidiary_subject_id on student_alevel_combinations) — the
+        // check above only covers whether a CLASS still offers it, which
+        // isn't the same thing: a subject can be dropped from every
+        // class's offered list yet still be exactly what a student saved
+        // months ago. Deleting it out from under that combination leaves
+        // the student silently short a principal subject with nothing
+        // anywhere to say why.
+        $inUseByCombination = DB::table('student_alevel_combinations')
+            ->where(function ($q) use ($md_id) {
+                $q->whereJsonContains('principal_subject_ids', (int) $md_id)
+                    ->orWhere('subsidiary_subject_id', $md_id);
+            })
+            ->exists();
+
+        if ($inUseByCombination) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already part of one or more students\' saved combinations, so it cannot be deleted. Remove it from their combinations first.',
+            ], 422);
+        }
+
         DB::table('master_datas')->where('md_id', $md_id)->delete();
 
         return response()->json(['success' => true]);
