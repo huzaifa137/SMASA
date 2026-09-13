@@ -395,8 +395,8 @@
                                     @elseif($schoolProduct === 'Both Primary Theology and Secular')
                                         <option value="BPT-BPS">Both Primary Theology and Secular - BPT-BPS</option>
                                     @elseif($schoolProduct === 'Secondary')
-                                        <option value="SEC-OL">Secondary O-Level - SEC-OL</option>
-                                        <option value="SEC-AL">Secondary A-Level - SEC-AL</option>
+                                        <option value="SEC-OL" data-secondary-level="olevel">Secondary O-Level - SEC-OL</option>
+                                        <option value="SEC-AL" data-secondary-level="alevel">Secondary A-Level - SEC-AL</option>
                                     @endif
                                 </select>
                             </div>
@@ -480,6 +480,48 @@
                     });
                 });
         });
+
+        // Secondary O-Level (Senior 1-4) vs A-Level (Senior 5/6) — narrow
+        // the Category dropdown down to just the one option that actually
+        // applies to whichever class was picked, instead of always
+        // offering both regardless of class. Only relevant for schools on
+        // the 'Secondary' product — every category select option is
+        // tagged data-secondary-level="olevel"/"alevel" for that product
+        // only (see bulk-import-students.blade.php's @elseif above), so
+        // every other product's options are left untouched.
+        const secondaryOLevelClassIds = @json($secondaryOLevelClassIds ?? []);
+        const secondaryALevelClassIds = @json($secondaryALevelClassIds ?? []);
+        (function () {
+            const categorySelect = document.getElementById('category');
+            const secondaryOptions = categorySelect
+                ? Array.from(categorySelect.querySelectorAll('option[data-secondary-level]'))
+                : [];
+
+            if (!categorySelect || secondaryOptions.length === 0) {
+                return; // not a 'Secondary' product school — nothing to filter
+            }
+
+            document.getElementById('class_id').addEventListener('change', function () {
+                const classId = this.value;
+                const isOLevel = secondaryOLevelClassIds.some(id => String(id) === String(classId));
+                const isALevel = secondaryALevelClassIds.some(id => String(id) === String(classId));
+
+                secondaryOptions.forEach(opt => {
+                    const level = opt.dataset.secondaryLevel;
+                    const shouldShow = !classId || (level === 'olevel' && isOLevel) || (level === 'alevel' && isALevel);
+                    opt.hidden = !shouldShow;
+                    opt.disabled = !shouldShow;
+                });
+
+                // If the currently selected category no longer applies to
+                // this class, clear it so the school can't accidentally
+                // submit a mismatched category/class pair.
+                const selectedOption = categorySelect.selectedOptions[0];
+                if (selectedOption && selectedOption.dataset.secondaryLevel && selectedOption.disabled) {
+                    categorySelect.value = '';
+                }
+            });
+        })();
 
         // Download template
         document.getElementById('btn-download-template').addEventListener('click', function () {

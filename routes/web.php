@@ -170,6 +170,21 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/select-current-school', 'selectCurrentSchool')->name('select.current.school');
     });
 
+    // Global Secondary A-Level subject list (Principal - Arts/Sciences,
+    // Subsidiary) — the super-admin-managed counterpart to what a school
+    // can already add for itself on /a-level-combinations. See
+    // MasterDataController::secondaryALevelSubjectsIndex().
+    Route::controller(\App\Http\Controllers\MasterDataController::class)
+        ->middleware(['AdminAuth'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/secondary-alevel-subjects', 'secondaryALevelSubjectsIndex')->name('secondary-alevel-subjects');
+            Route::post('/secondary-alevel-subjects', 'storeSecondaryALevelSubject')->name('secondary-alevel-subjects.store');
+            Route::put('/secondary-alevel-subjects/{md_id}', 'updateSecondaryALevelSubject')->name('secondary-alevel-subjects.update');
+            Route::delete('/secondary-alevel-subjects/{md_id}', 'deleteSecondaryALevelSubject')->name('secondary-alevel-subjects.delete');
+        });
+
     // ─── PARENT / GUARDIAN PORTAL ───────────────────────────────────────
     // Identity here is a phone number (matched against Student.primary_contact),
     // not a school session — one login can surface children at more than
@@ -323,6 +338,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:classes'])->group(function () {
         Route::get('a-level-combinations', 'entry')->name('alevel.combinations.entry');
         Route::post('a-level-combinations/save', 'save')->name('alevel.combinations.save');
+        Route::post('a-level-combinations/subjects', 'addSchoolSubject')->name('alevel.combinations.add-subject');
     });
 
     Route::controller(UserRightsAndPreviledges::class)

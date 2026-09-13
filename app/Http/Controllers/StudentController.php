@@ -1286,13 +1286,22 @@ class StudentController extends Controller
 
         $classrooms = Classroom::where('school_id', $schoolId)->get();
 
+        // Senior 5/Senior 6 (Secondary A-Level) vs Senior 1-4 (Secondary
+        // O-Level) — so the Category dropdown can be narrowed down to just
+        // the one that actually applies to whichever class was picked,
+        // instead of always offering both regardless of class.
+        $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+        $secondaryALevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'))->pluck('md_id')->all();
+
         return view(
             'student.bulk-import-students',
             compact(
                 'schoolId',
                 'school',
                 'classrooms',
-                'schoolProduct'
+                'schoolProduct',
+                'secondaryOLevelClassIds',
+                'secondaryALevelClassIds'
             )
         );
     }

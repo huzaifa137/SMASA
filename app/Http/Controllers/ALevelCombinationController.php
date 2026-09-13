@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PermissionHelper;
+use App\Models\SchoolALevelSubject;
 use App\Models\StudentALevelCombination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,6 +89,30 @@ class ALevelCombinationController extends Controller
             ->groupBy('md_misc1');
         $subsidiarySubjects = $subjects->filter(fn($s) => ($s->md_misc1 ?? '') === 'Subsidiary')->values();
 
+        // This school's OWN additions on top of the global list above —
+        // e.g. a Sciences principal subject not in the standard UACE list.
+        // Reshaped into the exact same {md_id, md_name, md_misc1} shape as
+        // the master_datas rows (using each row's synthetic offset id —
+        // see SchoolALevelSubject::syntheticId()) so alevel-combinations.blade.php's
+        // existing loops render both without any special-casing, and merged
+        // in AFTER the master rows so a school's own subjects always show
+        // last within their group.
+        $schoolSubjects = SchoolALevelSubject::forSchool($schoolId)->active()->get()
+            ->map(fn($s) => (object) [
+                'md_id' => $s->syntheticId(),
+                'md_name' => $s->subject_name,
+                'md_misc1' => $s->subject_group,
+                'is_school_added' => true,
+            ]);
+
+        $schoolPrincipals = $schoolSubjects->filter(fn($s) => str_starts_with($s->md_misc1, 'Principal'))->groupBy('md_misc1');
+        foreach ($schoolPrincipals as $group => $items) {
+            $principalSubjects->put($group, $principalSubjects->get($group, collect())->concat($items));
+        }
+        $subsidiarySubjects = $subsidiarySubjects->concat(
+            $schoolSubjects->filter(fn($s) => $s->md_misc1 === 'Subsidiary')
+        )->values();
+
         return view('Class.alevel-combinations', compact(
             'classOptions',
             'selectedClassId',
@@ -97,6 +122,50 @@ class ALevelCombinationController extends Controller
             'principalSubjects',
             'subsidiarySubjects'
         ));
+    }
+
+    /**
+     * A school adding its own principal/subsidiary subject, on top of the
+     * global master_datas list — visible to this school alone. Returned as
+     * JSON (synthetic id + name + group) so the combinations page can drop
+     * a new checkbox/option straight into every student's row without a
+     * full page reload.
+     */
+    public function addSchoolSubject(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('add_class');
+
+        $request->validate([
+            'subject_group' => 'required|in:Principal - Arts,Principal - Sciences,Subsidiary',
+            'subject_name' => 'required|string|max:255',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        $exists = SchoolALevelSubject::forSchool($schoolId)
+            ->where('subject_group', $request->subject_group)
+            ->where('subject_name', $request->subject_name)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'You already have a subject with that name in this group.'], 422);
+        }
+
+        $subject = SchoolALevelSubject::create([
+            'school_id' => $schoolId,
+            'subject_name' => $request->subject_name,
+            'subject_group' => $request->subject_group,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subject' => [
+                'md_id' => $subject->syntheticId(),
+                'md_name' => $subject->subject_name,
+                'md_misc1' => $subject->subject_group,
+            ],
+        ]);
     }
 
     /**

@@ -679,12 +679,20 @@
             const principalCount = $('.secondary-alevel-subject[data-group^="Principal"]:checked').length;
             const subsidiaryCount = $('.secondary-alevel-subject[data-group="Subsidiary"]:checked').length;
 
-            $status.removeClass('alert-secondary alert-success alert-warning').addClass('alert-secondary').html(
-                'General Paper is compulsory and included automatically. ' +
-                principalCount + ' principal subject' + (principalCount === 1 ? '' : 's') + ' and ' +
-                subsidiaryCount + ' subsidiary subject' + (subsidiaryCount === 1 ? '' : 's') +
-                ' currently offered to this class — students pick their own 3 principals (plus, optionally, one subsidiary) when their individual combination is built.'
-            );
+$status.removeClass('alert-secondary alert-success alert-warning alert-primary').html(
+    'General Paper is compulsory and included automatically. ' +
+    principalCount + ' principal subject' + (principalCount === 1 ? '' : 's') + ' and ' +
+    subsidiaryCount + ' subsidiary subject' + (subsidiaryCount === 1 ? '' : 's') +
+    ' currently offered to this class — students pick their own 3 principals (plus, optionally, one subsidiary) when their individual combination is built.'
+);
+
+// Apply your brand color as a soft, readable alert style
+$status.css({
+    'background-color': '#2C29CA',
+    'border-color': '#FFF',
+    'color': '#FFF',
+    'border-left': '4px solid #FFF'
+});
         }
 
         $(document).on('change', '.secondary-alevel-subject', updateSecondaryALevelComboStatus);

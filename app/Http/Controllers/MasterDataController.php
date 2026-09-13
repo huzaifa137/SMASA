@@ -686,4 +686,152 @@ public function dropDown($links)
         Alert::success('Success', 'New Document has been added successfully');
         return back();
     }
+
+    /**
+     * ── Secondary A-Level Subjects (admin) ──────────────────────────────
+     * The GLOBAL Principal - Arts / Principal - Sciences / Subsidiary /
+     * General list every school starts with (master_datas, code 47 —
+     * config('constants.options.SECONDARY_ALEVEL_SUBJECTS')), managed by
+     * the super admin here. This mirrors what an individual school can
+     * already do for itself on /a-level-combinations (see
+     * ALevelCombinationController::addSchoolSubject() and
+     * school_alevel_subjects) — same 3 selectable groups, same "one flat
+     * list a school ticks from" shape — except changes made HERE are
+     * visible to every school, not just one.
+     *
+     * Deliberately a handful of small, dedicated methods rather than
+     * reusing addNewRecord()/editRecord()/updateMasterrecord()/
+     * deleteRecord() above: those don't know about md_misc1 at all (it
+     * predates this feature and was previously unused), and retrofitting
+     * the generic dynamic_form_elements flow they share risked breaking
+     * every OTHER master_code that already depends on that exact form
+     * shape. General Paper (md_id 336) is intentionally never editable or
+     * deletable here — every A-Level student gets it automatically
+     * ("always there, never a choice", same as the class-creation picker
+     * already treats it).
+     */
+    private const SECONDARY_ALEVEL_SUBJECTS_GROUPS = ['Principal - Arts', 'Principal - Sciences', 'Subsidiary'];
+
+    public function secondaryALevelSubjectsIndex()
+    {
+        PermissionHelper::denyUnlessFeature('view_master_data');
+
+        $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
+
+        $subjects = DB::table('master_datas')
+            ->where('md_master_code_id', $masterCodeId)
+            ->orderBy('md_name')
+            ->get();
+
+        $generalPaper = $subjects->firstWhere('md_misc1', 'General');
+        $groupedSubjects = $subjects->filter(
+            fn($s) => in_array($s->md_misc1, self::SECONDARY_ALEVEL_SUBJECTS_GROUPS, true)
+        )->groupBy('md_misc1');
+
+        return view('master-logic.secondary-alevel-subjects', [
+            'generalPaper' => $generalPaper,
+            'groupedSubjects' => $groupedSubjects,
+            'groups' => self::SECONDARY_ALEVEL_SUBJECTS_GROUPS,
+        ]);
+    }
+
+    public function storeSecondaryALevelSubject(Request $request)
+    {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'subject_group' => 'required|in:' . implode(',', self::SECONDARY_ALEVEL_SUBJECTS_GROUPS),
+            'subject_name' => 'required|string|max:255',
+        ]);
+
+        $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
+
+        $exists = DB::table('master_datas')
+            ->where('md_master_code_id', $masterCodeId)
+            ->where('md_misc1', $request->subject_group)
+            ->where('md_name', $request->subject_name)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'A subject with that name already exists in this group.'], 422);
+        }
+
+        $mdId = DB::table('master_datas')->insertGetId([
+            'md_master_code_id' => $masterCodeId,
+            'md_code' => $request->subject_name,
+            'md_name' => $request->subject_name,
+            'md_description' => $request->subject_name,
+            'md_date_added' => (string) time(),
+            'md_added_by' => (string) Helper::user_id(),
+            'md_misc1' => $request->subject_group,
+        ], 'md_id');
+
+        return response()->json([
+            'success' => true,
+            'subject' => ['md_id' => $mdId, 'md_name' => $request->subject_name, 'md_misc1' => $request->subject_group],
+        ]);
+    }
+
+    public function updateSecondaryALevelSubject(Request $request, $md_id)
+    {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
+        $record = DB::table('master_datas')->where('md_id', $md_id)->where('md_master_code_id', $masterCodeId)->first();
+
+        if (!$record) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        if ($record->md_misc1 === 'General') {
+            return response()->json(['success' => false, 'message' => 'General Paper is compulsory for every A-Level student and cannot be renamed here.'], 422);
+        }
+
+        $request->validate([
+            'subject_name' => 'required|string|max:255',
+        ]);
+
+        DB::table('master_datas')->where('md_id', $md_id)->update([
+            'md_code' => $request->subject_name,
+            'md_name' => $request->subject_name,
+            'md_description' => $request->subject_name,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteSecondaryALevelSubject($md_id)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
+        $record = DB::table('master_datas')->where('md_id', $md_id)->where('md_master_code_id', $masterCodeId)->first();
+
+        if (!$record) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        if ($record->md_misc1 === 'General') {
+            return response()->json(['success' => false, 'message' => 'General Paper is compulsory for every A-Level student and cannot be deleted.'], 422);
+        }
+
+        $inUse = DB::table('class_subjects')->where('subject_id', $md_id)->exists();
+
+        if ($inUse) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already assigned to one or more classes, so it cannot be deleted. Remove it from those classes first.',
+            ], 422);
+        }
+
+        DB::table('master_datas')->where('md_id', $md_id)->delete();
+
+        return response()->json(['success' => true]);
+    }
 }
