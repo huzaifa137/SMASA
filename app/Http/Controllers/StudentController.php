@@ -27,6 +27,8 @@ use Mail;
 use App\Helpers\PermissionHelper;
 use App\Exports\StudentBulkTemplate;
 use App\Imports\StudentBulkImport;
+use App\Models\SchoolALevelSubject;
+use App\Models\SchoolOLevelElective;
 
 
 class StudentController extends Controller
@@ -1293,6 +1295,15 @@ class StudentController extends Controller
         $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
         $secondaryALevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'))->pluck('md_id')->all();
 
+        // Both level's subject lists are the same regardless of which
+        // specific class/stream ends up picked (Senior 5 and Senior 6
+        // share one A-Level subject list; Senior 1-4 share one O-Level
+        // elective list) — so resolve both once here and let the page's
+        // JS show/hide the right one based on the Category dropdown,
+        // rather than round-tripping to the server on every class change.
+        $aLevelSubjectOptions = $this->resolveALevelSubjectOptions($schoolId);
+        $oLevelSubjectOptions = $this->resolveOLevelSubjectOptions($schoolId);
+
         return view(
             'student.bulk-import-students',
             compact(
@@ -1301,9 +1312,92 @@ class StudentController extends Controller
                 'classrooms',
                 'schoolProduct',
                 'secondaryOLevelClassIds',
-                'secondaryALevelClassIds'
+                'secondaryALevelClassIds',
+                'aLevelSubjectOptions',
+                'oLevelSubjectOptions'
             )
         );
+    }
+
+    /**
+     * Merge master_datas Principal/Subsidiary A-Level subjects with this
+     * school's own SchoolALevelSubject additions — the exact same merged
+     * list alevel-combinations.blade.php builds (see
+     * ALevelCombinationController::entry()) — reshaped into a flat
+     * {id, name, group} shape the bulk-import template/importer can both
+     * use directly for the "Valid Subjects" reference sheet and for
+     * matching typed-in names back to a real subject id.
+     */
+    private function resolveALevelSubjectOptions($schoolId): array
+    {
+        $subjects = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_SUBJECTS'));
+
+        $principals = $subjects->filter(fn($s) => str_starts_with((string) ($s->md_misc1 ?? ''), 'Principal'))
+            ->map(fn($s) => ['id' => (int) $s->md_id, 'name' => $s->md_name, 'group' => $s->md_misc1]);
+
+        $subsidiaries = $subjects->filter(fn($s) => ($s->md_misc1 ?? '') === 'Subsidiary')
+            ->map(fn($s) => ['id' => (int) $s->md_id, 'name' => $s->md_name]);
+
+        $schoolSubjects = SchoolALevelSubject::forSchool($schoolId)->active()->get();
+
+        $principals = $principals->concat(
+            $schoolSubjects->filter(fn($s) => str_starts_with($s->subject_group, 'Principal'))
+                ->map(fn($s) => ['id' => $s->syntheticId(), 'name' => $s->subject_name, 'group' => $s->subject_group])
+        )->values();
+
+        $subsidiaries = $subsidiaries->concat(
+            $schoolSubjects->filter(fn($s) => $s->subject_group === 'Subsidiary')
+                ->map(fn($s) => ['id' => $s->syntheticId(), 'name' => $s->subject_name])
+        )->values();
+
+        return [
+            'principals' => $principals->all(),
+            'subsidiaries' => $subsidiaries->all(),
+        ];
+    }
+
+    /**
+     * Same idea as resolveALevelSubjectOptions(), but for O-Level
+     * electives — merges master_datas Elective subjects with this
+     * school's own SchoolOLevelElective additions (see
+     * OLevelElectiveController::entry()).
+     */
+    private function resolveOLevelSubjectOptions($schoolId): array
+    {
+        $subjects = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_SUBJECTS'));
+
+        $electives = $subjects->filter(fn($s) => ($s->md_misc1 ?? '') === 'Elective')
+            ->map(fn($s) => ['id' => (int) $s->md_id, 'name' => $s->md_name]);
+
+        $schoolSubjects = SchoolOLevelElective::forSchool($schoolId)->active()->get()
+            ->map(fn($s) => ['id' => $s->syntheticId(), 'name' => $s->subject_name]);
+
+        return [
+            'electives' => $electives->concat($schoolSubjects)->values()->all(),
+        ];
+    }
+
+    /**
+     * Which level (if any) a given class md_id belongs to — same
+     * SECONDARY_OLEVEL_CLASSES / SECONDARY_ALEVEL_CLASSES lookup every
+     * other A-Level/O-Level screen already uses. Returns null for every
+     * other class (Nursery, Primary, etc.), which just falls back to the
+     * plain 3-column template/import.
+     */
+    private function resolveSecondaryLevel($classId): ?string
+    {
+        $secondaryALevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_ALEVEL_CLASSES'))->pluck('md_id')->map(fn($v) => (string) $v)->all();
+        $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->map(fn($v) => (string) $v)->all();
+
+        if (in_array((string) $classId, $secondaryALevelClassIds, true)) {
+            return 'alevel';
+        }
+
+        if (in_array((string) $classId, $secondaryOLevelClassIds, true)) {
+            return 'olevel';
+        }
+
+        return null;
     }
 
     public function downloadStudentTemplate(Request $request)
@@ -1324,6 +1418,15 @@ class StudentController extends Controller
             ->where('id', $schoolId)
             ->value('name') ?? 'School';
 
+        $level = $this->resolveSecondaryLevel($classId);
+        $subjectOptions = ['level' => $level];
+
+        if ($level === 'alevel') {
+            $subjectOptions = array_merge($subjectOptions, $this->resolveALevelSubjectOptions($schoolId));
+        } elseif ($level === 'olevel') {
+            $subjectOptions = array_merge($subjectOptions, $this->resolveOLevelSubjectOptions($schoolId));
+        }
+
         $filename =
             'students_import_' .
             preg_replace('/\\s+/', '_', $className) . '_' .
@@ -1336,7 +1439,8 @@ class StudentController extends Controller
                 $streamName,
                 $year,
                 $schoolName,
-                $category
+                $category,
+                $subjectOptions
             ),
             $filename
         );
@@ -1386,13 +1490,30 @@ class StudentController extends Controller
             session('LoggedTeacher')
             ?? session('LoggedAdmin');
 
+        $level = $this->resolveSecondaryLevel($request->class_id);
+        $principalSubjects = [];
+        $subsidiarySubjects = [];
+        $electiveSubjects = [];
+
+        if ($level === 'alevel') {
+            $options = $this->resolveALevelSubjectOptions($schoolId);
+            $principalSubjects = $options['principals'];
+            $subsidiarySubjects = $options['subsidiaries'];
+        } elseif ($level === 'olevel') {
+            $electiveSubjects = $this->resolveOLevelSubjectOptions($schoolId)['electives'];
+        }
+
         $importer = new StudentBulkImport(
             $schoolId,
             $request->class_id,
             $request->stream_id,
             $request->year,
             $category,
-            $addedBy
+            $addedBy,
+            $level,
+            $principalSubjects,
+            $subsidiarySubjects,
+            $electiveSubjects
         );
 
         Excel::import(

@@ -404,6 +404,44 @@
                     </div>
                 </div>
 
+                {{-- ===== A-LEVEL / O-LEVEL SUBJECT GUIDANCE =====
+                Shown only when the selected Category is Secondary A-Level
+                or O-Level — explains the extra template columns
+                StudentBulkTemplate adds for those levels, and lists the
+                exact subject names StudentBulkImport will match against
+                (master_datas + this school's own alevel-combinations /
+                o-level-electives additions). Hidden otherwise. --}}
+                <div id="aLevelGuidance" style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;">
+                        <i class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing A-Level students
+                    </div>
+                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">
+                        The template will include <strong>principal_1</strong>, <strong>principal_2</strong>,
+                        <strong>principal_3</strong> and <strong>subsidiary</strong> columns. Fill each with the exact
+                        subject name (see the "Valid Subjects" tab in the downloaded file) and every student's
+                        combination will be assigned automatically — no separate trip to
+                        <a href="{{ route('alevel.combinations.entry') }}" target="_blank">A-Level Combinations</a> needed.
+                        General Paper is compulsory and doesn't need a column. Leave subsidiary blank if not applicable.
+                    </p>
+                    <div id="aLevelSubjectPills" style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
+                </div>
+
+                <div id="oLevelGuidance" style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;">
+                        <i class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing O-Level students
+                    </div>
+                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">
+                        The template will include <strong>elective_1</strong> and <strong>elective_2</strong> columns
+                        (up to 2 electives per student, on top of the class's compulsory subjects set on
+                        <a href="{{ route('school.create-class') }}" target="_blank">Create Class</a>). Fill in
+                        the exact elective name (see the "Valid Subjects" tab in the downloaded file) and each
+                        student's electives will be assigned automatically — no separate trip to
+                        <a href="{{ route('olevel.electives.entry') }}" target="_blank">O-Level Electives</a> needed.
+                        Leave blank if a student hasn't decided yet.
+                    </p>
+                    <div id="oLevelSubjectPills" style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
+                </div>
+
                 <hr class="divider">
 
                 {{-- Download Template --}}
@@ -521,6 +559,51 @@
                     categorySelect.value = '';
                 }
             });
+        })();
+
+        // ===== A-Level / O-Level subject guidance panel =====
+        // Shows the right panel (with the exact subject names
+        // StudentBulkImport will match against) once the school picks
+        // Secondary A-Level / O-Level as the Category — see
+        // StudentController::resolveALevelSubjectOptions() /
+        // resolveOLevelSubjectOptions() for where this data comes from.
+        (function () {
+            const aLevelSubjects = @json($aLevelSubjectOptions ?? ['principals' => [], 'subsidiaries' => []]);
+            const oLevelSubjects = @json($oLevelSubjectOptions ?? ['electives' => []]);
+
+            const aLevelGuidance = document.getElementById('aLevelGuidance');
+            const oLevelGuidance = document.getElementById('oLevelGuidance');
+            const aLevelPills = document.getElementById('aLevelSubjectPills');
+            const oLevelPills = document.getElementById('oLevelSubjectPills');
+            const categorySelect = document.getElementById('category');
+            if (!categorySelect || !aLevelGuidance || !oLevelGuidance) return;
+
+            function pill(name) {
+                const span = document.createElement('span');
+                span.textContent = name;
+                span.style.cssText = 'background:#fff; border:1px solid #d6d9ff; color:#2C29CA; font-size:.72rem; font-weight:600; padding:.2rem .6rem; border-radius:999px;';
+                return span;
+            }
+
+            function renderPills(container, names) {
+                container.innerHTML = '';
+                names.forEach(name => container.appendChild(pill(name)));
+            }
+
+            renderPills(aLevelPills, [
+                ...aLevelSubjects.principals.map(s => s.name),
+                ...aLevelSubjects.subsidiaries.map(s => s.name),
+            ]);
+            renderPills(oLevelPills, oLevelSubjects.electives.map(s => s.name));
+
+            function updateGuidance() {
+                const level = categorySelect.selectedOptions[0]?.dataset.secondaryLevel || '';
+                aLevelGuidance.style.display = level === 'alevel' ? 'block' : 'none';
+                oLevelGuidance.style.display = level === 'olevel' ? 'block' : 'none';
+            }
+
+            categorySelect.addEventListener('change', updateGuidance);
+            updateGuidance();
         })();
 
         // Download template
