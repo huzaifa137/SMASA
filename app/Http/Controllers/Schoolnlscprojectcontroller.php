@@ -99,6 +99,18 @@ class SchoolNlscProjectController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // Nothing to clone yet (the admin hasn't added anything for this
+        // Senior/Subject) — leave the log unwritten so the NEXT visit
+        // checks again instead of being locked out forever. Without this,
+        // a school whose very first visit happened to land on an empty
+        // admin catalogue (e.g. right after the admin deleted their only
+        // project) would get the clone marked "done" with nothing in it,
+        // and would never see ANY admin project for this Senior/Subject
+        // again — including ones added afterwards.
+        if ($adminAreas->isEmpty()) {
+            return;
+        }
+
         DB::transaction(function () use ($adminAreas, $schoolId, $seniorClassId, $subjectId) {
             foreach ($adminAreas as $adminArea) {
                 $schoolArea = SchoolNlscProjectArea::create([
@@ -260,6 +272,40 @@ class SchoolNlscProjectController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Rename this school's own copy of a Project Area — see
+     * NlscProjectController::updateProjectArea()'s docblock; same idea,
+     * scoped to this school's own school_nlsc_project_areas row.
+     */
+    public function updateProjectArea(Request $request, $id)
+    {
+        if (!PermissionHelper::canFeature('edit_class')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $area = SchoolNlscProjectArea::where('school_id', Session('LoggedSchool'))->find($id);
+        if (!$area) {
+            return response()->json(['success' => false, 'message' => 'Project Area not found.'], 404);
+        }
+
+        $request->validate(['area_name' => 'required|string|max:255']);
+
+        $duplicate = SchoolNlscProjectArea::where('school_id', Session('LoggedSchool'))
+            ->where('senior_class_id', $area->senior_class_id)
+            ->where('subject_id', $area->subject_id)
+            ->where('area_name', $request->area_name)
+            ->where('id', '!=', $area->id)
+            ->exists();
+
+        if ($duplicate) {
+            return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
+        }
+
+        $area->update(['area_name' => $request->area_name]);
+
+        return response()->json(['success' => true, 'area_name' => $area->area_name]);
     }
 
     public function destroy($id)

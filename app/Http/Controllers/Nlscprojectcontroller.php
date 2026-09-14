@@ -189,6 +189,40 @@ class NlscProjectController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Rename a Project Area — the one thing add-a-project's "type a name"
+     * flow can create but never fix a typo in afterwards. Renaming here
+     * updates every project already filed under it (they all still point
+     * at the same nlsc_project_area_id), so nothing needs to move.
+     */
+    public function updateProjectArea(Request $request, $id)
+    {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $area = NlscProjectArea::find($id);
+        if (!$area) {
+            return response()->json(['success' => false, 'message' => 'Project Area not found.'], 404);
+        }
+
+        $request->validate(['area_name' => 'required|string|max:255']);
+
+        $duplicate = NlscProjectArea::where('senior_class_id', $area->senior_class_id)
+            ->where('subject_id', $area->subject_id)
+            ->where('area_name', $request->area_name)
+            ->where('id', '!=', $area->id)
+            ->exists();
+
+        if ($duplicate) {
+            return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
+        }
+
+        $area->update(['area_name' => $request->area_name]);
+
+        return response()->json(['success' => true, 'area_name' => $area->area_name]);
+    }
+
     public function bulkImport(Request $request)
     {
         if (!PermissionHelper::canFeature('create_master_data')) {

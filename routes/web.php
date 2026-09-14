@@ -224,6 +224,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/nlsc-projects', 'store')->name('nlsc-projects.store');
             Route::post('/nlsc-projects/bulk-import', 'bulkImport')->name('nlsc-projects.bulk-import');
             Route::put('/nlsc-projects/{id}', 'update')->name('nlsc-projects.update');
+            Route::put('/nlsc-project-areas/{id}', 'updateProjectArea')->name('nlsc-project-areas.update');
             Route::delete('/nlsc-projects-all', 'destroyAllProjects')->name('nlsc-projects.delete-all');
             Route::delete('/nlsc-projects/{id}', 'destroy')->name('nlsc-projects.delete');
             Route::get('/nlsc-projects/{id}/competency-areas', 'competencyAreas')->name('nlsc-projects.competency-areas');
@@ -262,6 +263,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/nlsc-projects', 'index')->name('nlsc-projects');
             Route::post('/nlsc-projects', 'store')->name('nlsc-projects.store');
             Route::put('/nlsc-projects/{id}', 'update')->name('nlsc-projects.update');
+            Route::put('/nlsc-project-areas/{id}', 'updateProjectArea')->name('nlsc-project-areas.update');
             Route::delete('/nlsc-projects-all', 'destroyAllProjects')->name('nlsc-projects.delete-all');
             Route::delete('/nlsc-projects/{id}', 'destroy')->name('nlsc-projects.delete');
             Route::get('/nlsc-projects/{id}/competency-areas', 'competencyAreas')->name('nlsc-projects.competency-areas');

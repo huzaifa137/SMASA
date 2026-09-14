@@ -333,7 +333,12 @@
                         @forelse ($projects as $index => $project)
                             <tr data-id="{{ $project->id }}">
                                 <td>{{ $index + 1 }}</td>
-                                <td><span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span>
+                                <td>
+                                    <span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span>
+                                    <button type="button" class="nt-action-btn btn-edit-sm edit-area-btn"
+                                        data-area-id="{{ optional($project->area)->id }}"
+                                        title="Rename this Project Area" style="padding:.25rem .5rem;margin-left:.25rem;"><i
+                                            class="fas fa-pen" style="font-size:.62rem;"></i></button>
                                 </td>
                                 <td class="project-name-cell">{{ $project->project_name }}</td>
                                 <td><span class="nt-desc-preview description-cell"
@@ -597,6 +602,47 @@
                             window.location.reload();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
+                });
+            });
+        });
+
+        // ===== Rename Project Area =====
+        // One Project Area can have several Project rows under it (one
+        // per project sharing that area), so a rename here reloads the
+        // page rather than patching just this row's pill in place —
+        // otherwise the other rows for the same area would keep showing
+        // the old name until the next refresh.
+        document.querySelectorAll('.edit-area-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const areaId = this.dataset.areaId;
+                if (!areaId) return;
+                const current = this.closest('td').querySelector('.area-name-cell').textContent.trim();
+
+                Swal.fire({
+                    title: 'Rename Project Area',
+                    input: 'text',
+                    inputValue: current,
+                    inputValidator: (value) => !value?.trim() ? 'Enter a name' : undefined,
+                    showCancelButton: true,
+                    confirmButtonColor: '#2C29CA',
+                    confirmButtonText: 'Save',
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    fetch(`{{ url('admin/nlsc-project-areas') }}/${areaId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify({ area_name: result.value.trim() }),
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (!res.success) {
+                                Swal.fire('Error', res.message || 'Failed to rename.', 'error');
+                                return;
+                            }
+                            window.location.reload();
+                        })
+                        .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
                 });
             });
         });
