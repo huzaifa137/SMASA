@@ -343,6 +343,18 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::delete('a-level-combinations/subjects/{id}', 'deleteSchoolSubject')->name('alevel.combinations.delete-subject');
     });
 
+    // O-Level (Secondary) student electives — same "class sets the
+    // compulsory pool, student picks their own extras on top" split as
+    // A-Level combinations above, just capped at 2 electives instead of a
+    // 3-principal/1-subsidiary combination.
+    Route::controller(\App\Http\Controllers\OLevelElectiveController::class)->middleware(['module:classes'])->group(function () {
+        Route::get('o-level-electives', 'entry')->name('olevel.electives.entry');
+        Route::post('o-level-electives/save', 'save')->name('olevel.electives.save');
+        Route::post('o-level-electives/subjects', 'addSchoolSubject')->name('olevel.electives.add-subject');
+        Route::put('o-level-electives/subjects/{id}', 'updateSchoolSubject')->name('olevel.electives.update-subject');
+        Route::delete('o-level-electives/subjects/{id}', 'deleteSchoolSubject')->name('olevel.electives.delete-subject');
+    });
+
     Route::controller(UserRightsAndPreviledges::class)
         ->group(function () {
             Route::post('/update-user-information', 'updateUserInformation')->name('users.update.information');
