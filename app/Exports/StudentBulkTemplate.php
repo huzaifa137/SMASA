@@ -175,6 +175,18 @@ class StudentBulkTemplate implements
      * from the list, and the importer itself (StudentBulkImport) does
      * the real, authoritative matching and reports anything unrecognised
      * back to the school after import.
+     *
+     * Two ways to actually search a long subject list once opened in
+     * Excel/LibreOffice — no add-ins needed, both work out of the box:
+     *   1. On the "Valid Subjects" tab itself: AutoFilter is turned on,
+     *      so clicking the funnel icon on the header opens Excel's
+     *      built-in filter panel, which has a real search box.
+     *   2. On the subject columns of the "Students" sheet: with the
+     *      dropdown's List validation in place, clicking a cell and just
+     *      typing jumps/filters to matching entries — this is native
+     *      Excel/LibreOffice behaviour for list-validated cells, so no
+     *      extra wiring is needed for it, just names sorted alphabetically
+     *      so the jump-to-match behaves predictably.
      */
     public function registerEvents(): array
     {
@@ -192,9 +204,9 @@ class StudentBulkTemplate implements
 
                 if ($level === 'alevel') {
                     $principalNames = collect($this->subjectOptions['principals'])
-                        ->pluck('name')->unique()->values();
+                        ->pluck('name')->unique()->sort()->values();
                     $subsidiaryNames = collect($this->subjectOptions['subsidiaries'])
-                        ->pluck('name')->unique()->values();
+                        ->pluck('name')->unique()->sort()->values();
 
                     $refSheet->setCellValue('A1', 'Principal Subjects');
                     $refSheet->setCellValue('B1', 'Subsidiary Subjects');
@@ -207,11 +219,14 @@ class StudentBulkTemplate implements
                     $refSheet->getColumnDimension('A')->setWidth(28);
                     $refSheet->getColumnDimension('B')->setWidth(28);
 
+                    $lastRow = max($principalNames->count(), $subsidiaryNames->count()) + 1;
+                    $refSheet->setAutoFilter('A1:B' . max(2, $lastRow));
+
                     $this->applyDropdown($event->sheet->getDelegate(), ['D', 'E', 'F'], "'Valid Subjects'!\$A\$2:\$A\$" . max(2, $principalNames->count() + 1));
                     $this->applyDropdown($event->sheet->getDelegate(), ['G'], "'Valid Subjects'!\$B\$2:\$B\$" . max(2, $subsidiaryNames->count() + 1));
                 } else {
                     $electiveNames = collect($this->subjectOptions['electives'])
-                        ->pluck('name')->unique()->values();
+                        ->pluck('name')->unique()->sort()->values();
 
                     $refSheet->setCellValue('A1', 'Elective Subjects');
                     foreach ($electiveNames as $i => $name) {
@@ -219,8 +234,14 @@ class StudentBulkTemplate implements
                     }
                     $refSheet->getColumnDimension('A')->setWidth(28);
 
+                    $refSheet->setAutoFilter('A1:A' . max(2, $electiveNames->count() + 1));
+
                     $this->applyDropdown($event->sheet->getDelegate(), ['D', 'E'], "'Valid Subjects'!\$A\$2:\$A\$" . max(2, $electiveNames->count() + 1));
                 }
+
+                // Keep the header (and its filter arrows) visible while
+                // scrolling a long subject list.
+                $refSheet->freezePane('A2');
 
                 $refSheet->getStyle('A1:B1')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -249,7 +270,7 @@ class StudentBulkTemplate implements
                 $validation->setShowErrorMessage(true);
                 $validation->setShowDropDown(true);
                 $validation->setPromptTitle('Pick a subject');
-                $validation->setPrompt('Choose from the list, or type the exact name from the "Valid Subjects" tab.');
+                $validation->setPrompt("Tip: click this cell and just start typing to jump to a matching subject, or open the \"Valid Subjects\" tab and use its filter icon to search the full list.");
                 $validation->setErrorTitle('Not on the list');
                 $validation->setError('This name isn\'t on the "Valid Subjects" tab — double check the spelling, or leave it out.');
                 $validation->setFormula1($formula);
