@@ -499,7 +499,10 @@ use App\Helpers\PermissionHelper;
                         <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
                     @endif
                     @if(PermissionHelper::canFeature('view_master_data'))
-                        <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i class="fas fa-graduation-cap mr-2"></i>Secondary A-Level Subjects</a></li>
+                        <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
+                    @endif
+                    @if(PermissionHelper::canFeature('view_master_data'))
+                        <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp; Competency Areas</a></li>
                     @endif
                 </ul>
             </li>

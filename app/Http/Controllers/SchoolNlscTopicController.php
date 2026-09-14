@@ -227,6 +227,40 @@ class SchoolNlscTopicController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Delete every one of THIS SCHOOL's topics (and their competency
+     * areas) for one Senior/Subject — never touches the admin's master
+     * list or any other school's copy. Since school_nlsc_clone_log
+     * already has this Senior/Subject marked as cloned, nothing gets
+     * silently re-seeded back in afterwards (same as deleting each topic
+     * one at a time already behaved).
+     */
+    public function destroyAllTopics(Request $request)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'senior_class_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        $count = SchoolNlscTopic::where('school_id', $schoolId)
+            ->where('senior_class_id', $request->senior_class_id)
+            ->where('subject_id', $request->subject_id)
+            ->count();
+
+        SchoolNlscTopic::where('school_id', $schoolId)
+            ->where('senior_class_id', $request->senior_class_id)
+            ->where('subject_id', $request->subject_id)
+            ->delete();
+
+        return response()->json(['success' => true, 'deleted' => $count]);
+    }
+
     public function storeCompetencyArea(Request $request, $topicId)
     {
         if (!PermissionHelper::canFeature('create_master_data')) {
@@ -288,5 +322,26 @@ class SchoolNlscTopicController extends Controller
         $area->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Clear every competency area under one of THIS SCHOOL's topics — the
+     * topic itself stays, just empty.
+     */
+    public function destroyAllCompetencyAreas($topicId)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $topic = SchoolNlscTopic::where('school_id', Session('LoggedSchool'))->find($topicId);
+        if (!$topic) {
+            return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
+        }
+
+        $count = $topic->competencyAreas()->count();
+        $topic->competencyAreas()->delete();
+
+        return response()->json(['success' => true, 'deleted' => $count]);
     }
 }

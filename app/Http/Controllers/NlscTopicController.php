@@ -195,6 +195,34 @@ class NlscTopicController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Delete every topic (and, via cascade, every competency area under
+     * them) for one Senior/Subject in a single action — "delete a subject
+     * and all its attached topics/competency areas", scoped to whichever
+     * Senior/Subject the admin currently has the page filtered to.
+     */
+    public function destroyAllTopics(Request $request)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'senior_class_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+        ]);
+
+        $count = NlscTopic::where('senior_class_id', $request->senior_class_id)
+            ->where('subject_id', $request->subject_id)
+            ->count();
+
+        NlscTopic::where('senior_class_id', $request->senior_class_id)
+            ->where('subject_id', $request->subject_id)
+            ->delete();
+
+        return response()->json(['success' => true, 'deleted' => $count]);
+    }
+
     public function storeCompetencyArea(Request $request, $topicId)
     {
         if (!PermissionHelper::canFeature('create_master_data')) {
@@ -255,5 +283,26 @@ class NlscTopicController extends Controller
         $area->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Clear every competency area under one topic in a single action —
+     * the topic itself stays, just empty (count badge back to 0).
+     */
+    public function destroyAllCompetencyAreas($topicId)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $topic = NlscTopic::find($topicId);
+        if (!$topic) {
+            return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
+        }
+
+        $count = $topic->competencyAreas()->count();
+        $topic->competencyAreas()->delete();
+
+        return response()->json(['success' => true, 'deleted' => $count]);
     }
 }

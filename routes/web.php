@@ -201,9 +201,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/nlsc-topics', 'store')->name('nlsc-topics.store');
             Route::post('/nlsc-topics/bulk-import', 'bulkImport')->name('nlsc-topics.bulk-import');
             Route::put('/nlsc-topics/{id}', 'update')->name('nlsc-topics.update');
+            Route::delete('/nlsc-topics-all', 'destroyAllTopics')->name('nlsc-topics.delete-all');
             Route::delete('/nlsc-topics/{id}', 'destroy')->name('nlsc-topics.delete');
             Route::get('/nlsc-topics/{id}/competency-areas', 'competencyAreas')->name('nlsc-topics.competency-areas');
             Route::post('/nlsc-topics/{id}/competency-areas', 'storeCompetencyArea')->name('nlsc-topics.competency-areas.store');
+            Route::delete('/nlsc-topics/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-topics.competency-areas.delete-all');
             Route::put('/nlsc-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-competency-areas.update');
             Route::delete('/nlsc-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-competency-areas.delete');
         });
@@ -219,9 +221,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/nlsc-topics', 'index')->name('nlsc-topics');
             Route::post('/nlsc-topics', 'store')->name('nlsc-topics.store');
             Route::put('/nlsc-topics/{id}', 'update')->name('nlsc-topics.update');
+            Route::delete('/nlsc-topics-all', 'destroyAllTopics')->name('nlsc-topics.delete-all');
             Route::delete('/nlsc-topics/{id}', 'destroy')->name('nlsc-topics.delete');
             Route::get('/nlsc-topics/{id}/competency-areas', 'competencyAreas')->name('nlsc-topics.competency-areas');
             Route::post('/nlsc-topics/{id}/competency-areas', 'storeCompetencyArea')->name('nlsc-topics.competency-areas.store');
+            Route::delete('/nlsc-topics/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-topics.competency-areas.delete-all');
             Route::put('/nlsc-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-competency-areas.update');
             Route::delete('/nlsc-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-competency-areas.delete');
         });

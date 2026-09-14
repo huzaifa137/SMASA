@@ -89,6 +89,338 @@
             font-size: .8rem;
             font-weight: 700;
         }
+
+        /* =========================================================
+   SUBJECT ITEMS
+   ========================================================= */
+
+.sas-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    padding: .65rem .85rem;
+    margin-bottom: .6rem;
+
+    border: 1px solid #eef0ff;
+    border-radius: .75rem;
+
+    background: linear-gradient(135deg, #fafaff 0%, #f6f7ff 100%);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease,
+        background .2s ease;
+}
+
+/* Beautiful hover effect */
+.sas-item:hover {
+    transform: translateX(4px);
+    border-color: rgba(44, 41, 202, .22);
+
+    background: linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f5f5ff 100%
+    );
+
+    box-shadow:
+        0 6px 18px rgba(44, 41, 202, .10),
+        0 2px 5px rgba(0, 0, 0, .03);
+}
+
+/* =========================================================
+   SUBJECT NAME INPUT
+   ========================================================= */
+
+.sas-item input.sas-name-input {
+    flex: 1;
+
+    min-width: 0;
+    width: 100%;
+
+    border: 1px solid transparent;
+    border-radius: .55rem;
+
+    background: transparent;
+
+    padding: .5rem .65rem;
+
+    font-size: .9rem;
+    font-weight: 600;
+
+    color: #1e1b4b;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease,
+        color .2s ease;
+}
+
+/* Input hover */
+.sas-item input.sas-name-input:hover {
+    background: #fff;
+    border-color: #e4e3ff;
+}
+
+/* Input focus */
+.sas-item input.sas-name-input:focus {
+    outline: none;
+
+    background: #fff;
+
+    border-color: rgba(44, 41, 202, .45);
+
+    box-shadow:
+        0 0 0 3px rgba(44, 41, 202, .08),
+        0 4px 12px rgba(44, 41, 202, .06);
+
+    color: #151344;
+}
+
+/* =========================================================
+   ADD SUBJECT AREA
+   ========================================================= */
+
+.sas-card .d-flex.gap-2.mt-3 {
+    gap: .75rem !important;
+    align-items: stretch;
+}
+
+/* New subject input */
+.sas-new-name {
+    height: 42px;
+
+    border: 1px solid #e2e3f5 !important;
+    border-radius: .7rem !important;
+
+    background: #fafaff !important;
+
+    padding: .55rem .85rem !important;
+
+    font-size: .88rem;
+    font-weight: 500;
+
+    color: #1e1b4b;
+
+    box-shadow: inset 0 1px 2px rgba(44, 41, 202, .03);
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+}
+
+/* Placeholder */
+.sas-new-name::placeholder {
+    color: #a09fba;
+    font-weight: 500;
+}
+
+/* Hover */
+.sas-new-name:hover {
+    background: #fff !important;
+    border-color: #cfcdf5 !important;
+}
+
+/* Focus */
+.sas-new-name:focus {
+    outline: none !important;
+
+    background: #fff !important;
+
+    border-color: #2C29CA !important;
+
+    box-shadow:
+        0 0 0 3px rgba(44, 41, 202, .10),
+        0 5px 15px rgba(44, 41, 202, .07) !important;
+
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   ADD BUTTON
+   ========================================================= */
+
+.sas-add {
+    height: 42px;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    gap: .45rem;
+
+    padding: .55rem 1rem !important;
+
+    border: none !important;
+    border-radius: .7rem !important;
+
+    background: linear-gradient(
+        135deg,
+        #2C29CA 0%,
+        #4542df 100%
+    ) !important;
+
+    color: #fff !important;
+
+    font-size: .82rem;
+    font-weight: 700;
+
+    box-shadow:
+        0 5px 14px rgba(44, 41, 202, .22);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        filter .2s ease;
+}
+
+/* Add button hover */
+.sas-add:hover {
+    color: #fff !important;
+
+    transform: translateY(-2px);
+
+    filter: brightness(1.05);
+
+    box-shadow:
+        0 8px 20px rgba(44, 41, 202, .30);
+}
+
+/* Add button click */
+.sas-add:active {
+    transform: translateY(0);
+    box-shadow:
+        0 3px 8px rgba(44, 41, 202, .20);
+}
+
+/* Plus icon */
+.sas-add i {
+    font-size: .75rem;
+
+    transition:
+        transform .2s ease;
+}
+
+.sas-add:hover i {
+    transform: rotate(90deg);
+}
+
+/* =========================================================
+   SAVE / DELETE ACTIONS
+   ========================================================= */
+
+.sas-actions {
+    display: flex;
+    align-items: center;
+
+    gap: .35rem;
+
+    flex-shrink: 0;
+}
+
+/* Base action button */
+.sas-actions button {
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: .55rem;
+
+    background: transparent;
+
+    padding: 0;
+
+    transition:
+        background .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+/* =========================================================
+   CHECK / SAVE
+   ========================================================= */
+
+.sas-actions button.sas-save {
+    color: #2C29CA !important;
+}
+
+.sas-actions button.sas-save i {
+    color: #2C29CA !important;
+    font-size: 1rem;
+}
+
+/* Save hover */
+.sas-actions button.sas-save:hover {
+    background: rgba(44, 41, 202, .09);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 4px 10px rgba(44, 41, 202, .10);
+}
+
+/* =========================================================
+   DELETE / BIN
+   ========================================================= */
+
+.sas-actions button.sas-delete {
+    color: #dc3545 !important;
+}
+
+.sas-actions button.sas-delete i {
+    color: #dc3545 !important;
+    font-size: 1rem;
+}
+
+/* Delete hover */
+.sas-actions button.sas-delete:hover {
+    background: rgba(220, 53, 69, .09);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 4px 10px rgba(220, 53, 69, .10);
+}
+
+/* =========================================================
+   SUBJECT LIST ANIMATION
+   ========================================================= */
+
+.sas-item {
+    animation: sasItemIn .3s ease both;
+}
+
+@keyframes sasItemIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* When hovering over a subject, slightly soften others */
+.sas-item-list:hover .sas-item:not(:hover) {
+    opacity: .72;
+}
+
+/* Keep the hovered item prominent */
+.sas-item-list:hover .sas-item:hover {
+    opacity: 1;
+}
     </style>
 @endsection
 
@@ -143,9 +475,9 @@
 
                             <div class="d-flex gap-2 mt-3">
                                 <input type="text" class="form-control form-control-sm sas-new-name" placeholder="e.g. {{ $group === 'Subsidiary' ? 'Subsidiary Geography' : 'New subject name' }}">
-                                <button type="button" class="btn btn-sm sas-add" style="background:#2C29CA;color:#fff;white-space:nowrap;">
-                                    <i class="fas fa-plus"></i> Add
-                                </button>
+                               <button type="button" class="btn btn-sm sas-add">
+    <i class="fas fa-plus"></i> Add
+</button>
                             </div>
                         </div>
                     </div>
@@ -154,7 +486,9 @@
             </div>
         </div>
     </div>
-
+</div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const csrfToken = '{{ csrf_token() }}';

@@ -166,6 +166,9 @@
                 <button type="button" id="bulkImportBtn" class="btn btn-outline-primary">
                     <i class="fas fa-file-upload me-1"></i> Bulk Import
                 </button>
+                <button type="button" id="deleteAllTopicsBtn" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Delete All Topics
+                </button>
             </div>
         </div>
 
@@ -258,7 +261,10 @@
                     </button>
                 </div>
             </div>
-            <div class="nt-modal-ft">
+            <div class="nt-modal-ft" style="justify-content:space-between;">
+                <button class="btn btn-outline-danger" id="clearAllCompetencyBtn">
+                    <i class="fas fa-broom me-1"></i> Clear All Competency Areas
+                </button>
                 <button class="btn btn-secondary" onclick="closeNtModal('viewTopicModal')">Close</button>
             </div>
         </div>
@@ -297,7 +303,9 @@
             </div>
         </div>
     </div>
-
+</div>
+        </div>
+    </div>
     <script>
         const CSRF = '{{ csrf_token() }}';
         const SELECTED_SENIOR = '{{ $selectedSenior }}';
@@ -320,7 +328,7 @@
         document.querySelectorAll('.edit-topic-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
-                document.getElementById('topicModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i>Edit Topic';
+                document.getElementById('topicModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Topic';
                 document.getElementById('topicIdInput').value = row.dataset.id;
                 document.getElementById('topicNameInput').value = row.querySelector('.topic-name-cell').textContent.trim();
                 openNtModal('topicModal');
@@ -399,6 +407,41 @@
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
+            });
+        });
+
+        // ===== Delete ALL Topics (this Senior/Subject) =====
+        document.getElementById('deleteAllTopicsBtn').addEventListener('click', function () {
+            const topicCount = document.querySelectorAll('#topicsTbody tr[data-id]').length;
+            if (topicCount === 0) {
+                Swal.fire('Nothing to delete', 'There are no topics for this Senior/Subject yet.', 'info');
+                return;
+            }
+
+            Swal.fire({
+                title: `Delete all ${topicCount} topic(s)?`,
+                text: 'Every topic AND its competency areas, for this Senior/Subject only, will be permanently deleted. This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Delete All',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                fetch(`{{ url('admin/nlsc-topics-all') }}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({ senior_class_id: SELECTED_SENIOR, subject_id: SELECTED_SUBJECT }),
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            Swal.fire('Error', res.message || 'Failed to delete.', 'error');
+                            return;
+                        }
+                        window.location.reload();
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
             });
         });
 
@@ -542,6 +585,42 @@
                     }
                 })
                 .catch(() => Swal.fire('Error', 'Failed to add — check your connection.', 'error'));
+        });
+
+        // ===== Clear ALL Competency Areas (this topic) =====
+        document.getElementById('clearAllCompetencyBtn').addEventListener('click', function () {
+            const topicId = document.getElementById('viewTopicIdInput').value;
+
+            Swal.fire({
+                title: 'Clear all competency areas?',
+                text: 'The topic itself stays — only its competency areas are removed. This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Clear All',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                fetch(`{{ url('admin/nlsc-topics') }}/${topicId}/competency-areas-all`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            Swal.fire('Error', res.message || 'Failed to clear.', 'error');
+                            return;
+                        }
+                        openViewTopicModal(topicId);
+                        const mainRow = document.querySelector(`#topicsTbody tr[data-id="${topicId}"]`);
+                        if (mainRow) {
+                            const badge = mainRow.querySelector('.nt-count-badge');
+                            badge.innerHTML = '<i class="fas fa-list-check"></i> 0';
+                            badge.classList.add('is-zero');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to clear — check your connection.', 'error'));
+            });
         });
 
         // ===== Bulk Import =====
