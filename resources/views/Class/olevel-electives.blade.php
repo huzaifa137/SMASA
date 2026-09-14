@@ -206,12 +206,6 @@
             display: inline-flex;
         }
 
-        .elective-checkbox-label {
-            display: inline-flex;
-            align-items: center;
-            margin: 0 .75rem .4rem 0;
-        }
-
         .elective-checkbox-label.is-filtered-out {
             display: none;
         }
@@ -228,7 +222,7 @@
             top: 50%;
             left: .75rem;
             transform: translateY(-50%);
-            color: #9a97c9;
+            color: #2C29CA;
             font-size: .75rem;
             pointer-events: none;
         }
@@ -237,10 +231,24 @@
             width: 100%;
             height: 34px;
             padding: 0 .75rem 0 1.85rem;
-            border: 1.5px solid #e4e2ff;
+            border: 1.5px solid #FFF;
             border-radius: .6rem;
-            background: #fafaff;
+            background: #fff;
             font-size: .8rem;
+            color: #1e1b4b;
+            outline: none;
+            box-shadow: 0 0 0 .14rem rgba(44, 41, 202, .10);
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
+
+        .subject-search-input::placeholder {
+            color: #b3b0d4;
+        }
+
+        .subject-search-input:focus {
+            border-color: #2C29CA;
+            background: #fff;
+            box-shadow: 0 0 0 .22rem rgba(44, 41, 202, .18);
         }
 
         /* ===== Student name search ===== */
@@ -258,46 +266,98 @@
             max-width: 340px;
         }
 
-        .student-search-icon {
-            position: absolute;
-            top: 50%;
-            left: .85rem;
-            transform: translateY(-50%);
-            color: #9a97c9;
-            font-size: .8rem;
-            pointer-events: none;
-        }
+.student-search-icon {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #2C29CA;              /* brand blue by default */
+    font-size: .8rem;
+    pointer-events: none;
+    transition: color .18s;
+}
 
-        .student-search-input {
-            width: 100%;
-            height: 40px;
-            padding: 0 2.2rem 0 2.1rem;
-            border: 1.5px solid #e4e2ff;
-            border-radius: .7rem;
-            background: #fafaff;
-            font-size: .85rem;
-        }
+.student-search-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 2.2rem 0 2.1rem;
+    border: 1.5px solid #2C29CA;                       /* blue by default */
+    border-radius: .7rem;
+    background: #fff;
+    font-size: .85rem;
+    color: #1e1b4b;
+    outline: none;
+    box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);  /* soft ring by default */
+    transition: border-color .18s, box-shadow .18s, background .18s;
+}
 
-        .student-search-clear {
-            display: none;
-            position: absolute;
-            top: 50%;
-            right: .6rem;
-            transform: translateY(-50%);
-            border: none;
-            background: transparent;
-            color: #9a97c9;
-            cursor: pointer;
-        }
+.student-search-input::placeholder {
+    color: #b3b0d4;
+}
 
-        .student-search-clear.is-visible {
-            display: block;
-        }
+.student-search-input:focus {
+    border-color: #2C29CA;
+    background: #fff;
+    box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);  /* stronger on focus */
+}
+
+.student-search-clear {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: .6rem;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #2C29CA;                /* brand blue when visible */
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+}
+
+.student-search-clear:hover {
+    background: #eef0ff;
+    color: #2C29CA;
+}
+
+.student-search-clear.is-visible {
+    display: inline-flex;
+}
 
         .student-search-count {
             font-size: .78rem;
             color: #6b6899;
         }
+
+        /* ===== Manage Your Own Electives — center the edit/delete icons ===== */
+.my-subject-row .my-subject-edit,
+.my-subject-row .my-subject-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;                    /* kill Bootstrap .btn-sm padding */
+    line-height: 1;
+    flex: 0 0 auto;
+}
+
+.my-subject-row .my-subject-edit i,
+.my-subject-row .my-subject-delete i {
+    display: block;
+    line-height: 1;
+    font-size: .82rem;
+}
+
+.elective-count.is-empty {
+    color: #dc3545;
+    font-weight: 500;
+    font-style: italic;
+    border-color: #f6c4c0;
+    background: #fdecea;
+}
     </style>
 @endsection
 
@@ -475,14 +535,15 @@
                                                                 placeholder="Search electives…" autocomplete="off">
                                                         </div>
 
-                                                        <div>
+                                                        <div class="d-flex flex-wrap gap-2 mb-2 elective-checkbox-list">
                                                             @foreach($electiveSubjects as $subject)
-                                                                <label class="elective-checkbox-label"
+                                                                <label class="form-check form-check-inline elective-checkbox-label"
+                                                                    style="margin-right:.75rem;"
                                                                     data-subject-name="{{ strtolower($subject->md_name) }}">
                                                                     <input type="checkbox" class="form-check-input elective-checkbox"
                                                                         value="{{ $subject->md_id }}"
                                                                         @if(in_array($subject->md_id, $existingElectiveIds)) checked @endif>
-                                                                    <span class="form-check-label ms-1"
+                                                                    <span class="form-check-label"
                                                                         style="font-size:.8rem;">{{ $subject->md_name }}</span>
                                                                 </label>
                                                             @endforeach
@@ -717,15 +778,16 @@
 
                     // Drop the new checkbox into every student row.
                     document.querySelectorAll('tr[data-student-id]').forEach(row => {
-                        const list = row.querySelector('td:nth-child(2) > div:nth-of-type(1)');
+                        const list = row.querySelector('.elective-checkbox-list');
                         if (!list) return;
 
                         const label = document.createElement('label');
-                        label.className = 'elective-checkbox-label';
+                        label.className = 'form-check form-check-inline elective-checkbox-label';
+                        label.style.marginRight = '.75rem';
                         label.dataset.subjectName = subject.md_name.toLowerCase();
                         label.innerHTML = `
                             <input type="checkbox" class="form-check-input elective-checkbox" value="${subject.md_id}">
-                            <span class="form-check-label ms-1" style="font-size:.8rem;">${subject.md_name}</span>
+                            <span class="form-check-label" style="font-size:.8rem;">${subject.md_name}</span>
                         `;
                         list.appendChild(label);
                         wireElectiveCheckbox(label.querySelector('.elective-checkbox'), row);
