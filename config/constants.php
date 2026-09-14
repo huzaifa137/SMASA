@@ -54,6 +54,20 @@ return [
         'SECONDARY_ALEVEL_CLASSES' => 45,
         'SECONDARY_OLEVEL_SUBJECTS' => 46,
         'SECONDARY_ALEVEL_SUBJECTS' => 47,
+        // Standard NLSC (New Lower Secondary Curriculum) subject list — just
+        // the 35 subject NAMES NCDC's Senior 1-4 menu offers (English,
+        // Mathematics, ... Runyoro-Rutooro, Runyankore-Rukiga), used only to
+        // populate the Subject dropdown on the admin NLSC Topics screen
+        // (see NlscTopicController). Deliberately separate from
+        // SECONDARY_OLEVEL_SUBJECTS above: that list is UCE's *examinable*
+        // O-Level subjects (what a class/student offers for UNEB), while
+        // this is NLSC's own subject menu — overlapping but not identical
+        // (e.g. NLSC's "History and Political Education" and local
+        // languages aren't UCE exam subjects). A plain list of standard
+        // subject titles like this is administrative fact, not the
+        // syllabus's own expressive content, so seeding it carries none of
+        // the copyright concern actual topic/competency text would.
+        'NLSC_SUBJECTS' => 48,
 
         // SYSTEM SECTIONS
 

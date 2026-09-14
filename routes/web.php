@@ -185,6 +185,28 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/secondary-alevel-subjects/{md_id}', 'deleteSecondaryALevelSubject')->name('secondary-alevel-subjects.delete');
         });
 
+    // NLSC (New Lower Secondary Curriculum, Senior 1-4) Topic catalogue —
+    // platform-wide, super-admin-managed, same shape as the A-Level
+    // subject list above but for Topics + their Competency Areas. See
+    // NlscTopicController's own docblock for why this is admin-managed
+    // rather than per-school, and why it's an empty-by-default screen for
+    // an admin to type NCDC's syllabus content into themselves rather than
+    // something this migration pre-seeds.
+    Route::controller(\App\Http\Controllers\NlscTopicController::class)
+        ->middleware(['AdminAuth'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/nlsc-topics', 'index')->name('nlsc-topics');
+            Route::post('/nlsc-topics', 'store')->name('nlsc-topics.store');
+            Route::put('/nlsc-topics/{id}', 'update')->name('nlsc-topics.update');
+            Route::delete('/nlsc-topics/{id}', 'destroy')->name('nlsc-topics.delete');
+            Route::get('/nlsc-topics/{id}/competency-areas', 'competencyAreas')->name('nlsc-topics.competency-areas');
+            Route::post('/nlsc-topics/{id}/competency-areas', 'storeCompetencyArea')->name('nlsc-topics.competency-areas.store');
+            Route::put('/nlsc-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-competency-areas.update');
+            Route::delete('/nlsc-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-competency-areas.delete');
+        });
+
     // ─── PARENT / GUARDIAN PORTAL ───────────────────────────────────────
     // Identity here is a phone number (matched against Student.primary_contact),
     // not a school session — one login can surface children at more than
