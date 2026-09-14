@@ -20,8 +20,7 @@ use Illuminate\Support\Facades\Schema;
  * foreign keys, so deleting an admin row later never cascades into a
  * school's own copy.
  */
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('school_nlsc_project_areas', function (Blueprint $table) {
@@ -35,8 +34,15 @@ return new class extends Migration
             $table->unsignedBigInteger('added_by')->nullable();
             $table->timestamps();
 
-            $table->index(['school_id', 'senior_class_id', 'subject_id']);
-            $table->unique(['school_id', 'senior_class_id', 'subject_id', 'area_name'], 'school_nlsc_project_areas_unique');
+            $table->index(
+                ['school_id', 'senior_class_id', 'subject_id'],
+                'school_nlsc_project_areas_scope_idx'
+            );
+
+            $table->unique(
+                ['school_id', 'senior_class_id', 'subject_id', 'area_name'],
+                'school_nlsc_project_areas_unique'
+            );
         });
 
         Schema::create('school_nlsc_projects', function (Blueprint $table) {
