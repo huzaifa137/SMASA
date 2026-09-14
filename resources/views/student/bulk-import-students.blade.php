@@ -487,7 +487,7 @@
         // offering both regardless of class. Only relevant for schools on
         // the 'Secondary' product — every category select option is
         // tagged data-secondary-level="olevel"/"alevel" for that product
-        // only (see bulk-import-students.blade.php's @elseif above), so
+        // only (see bulk-import-students.blade.php's @@elseif above), so
         // every other product's options are left untouched.
         const secondaryOLevelClassIds = @json($secondaryOLevelClassIds ?? []);
         const secondaryALevelClassIds = @json($secondaryALevelClassIds ?? []);
