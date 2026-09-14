@@ -367,7 +367,8 @@
             </div>
         </div>
     </div>
-
+</div>
+    </div>
     {{-- ===== Add / Edit Project modal ===== --}}
     <div class="nt-modal-overlay" id="projectModal">
         <div class="nt-modal-box">

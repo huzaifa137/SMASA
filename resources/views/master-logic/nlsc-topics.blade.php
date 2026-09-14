@@ -143,6 +143,15 @@
         <div class="nt-card">
             <div class="card-body-custom" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                 <form method="GET" action="{{ route('admin.nlsc-topics') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
+                    {{-- Assessment Type — switches to the Projects (Project
+                    Work) screen, carrying the current Senior/Subject over. --}}
+                    <div style="min-width:220px;">
+                        <label class="form-label">Assessment Type</label>
+                        <select id="assessmentTypeSelect" class="form-control">
+                            <option value="{{ route('admin.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Activities of Integration</option>
+                            <option value="{{ route('admin.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Projects</option>
+                        </select>
+                    </div>
                     <div style="min-width:200px;">
                         <label class="form-label">Senior</label>
                         <select name="senior" class="form-control" onchange="document.getElementById('filterForm').submit()">
@@ -310,6 +319,10 @@
         const CSRF = '{{ csrf_token() }}';
         const SELECTED_SENIOR = '{{ $selectedSenior }}';
         const SELECTED_SUBJECT = '{{ $selectedSubject }}';
+
+        document.getElementById('assessmentTypeSelect').addEventListener('change', function () {
+            window.location.href = this.value;
+        });
 
         function openNtModal(id) { document.getElementById(id).classList.add('open'); }
         function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }

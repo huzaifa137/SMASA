@@ -95,5 +95,10 @@
                 <i class="fas fa-book-open me-2"></i> Topics &amp; Competency Areas
             </a>
         </div>
+        <div class="col-12 col-sm-3 mb-2">
+            <a href="{{ route('school.nlsc-projects') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+                <i class="fas fa-diagram-project me-2"></i> Projects (Project Work)
+            </a>
+        </div>
     @endif
 </div>

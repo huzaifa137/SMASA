@@ -63,6 +63,26 @@
 
         .nt-table tbody td { vertical-align: middle; padding: .85rem .9rem; border-bottom: 1px solid #f0eeff; }
 
+        .nt-area-pill {
+            display: inline-block;
+            background: #fff2e0;
+            color: #a15c00;
+            border-radius: .5rem;
+            padding: .25rem .6rem;
+            font-size: .74rem;
+            font-weight: 700;
+        }
+
+        .nt-desc-preview {
+            color: #7a7894;
+            font-size: .78rem;
+            max-width: 260px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .nt-count-badge {
             display: inline-flex;
             align-items: center;
@@ -131,8 +151,8 @@
 @section('content')
     <div class="side-app">
         <div class="nt-hero">
-            <span class="hero-badge"><i class="fas fa-layer-group me-1"></i> Your School's NLSC Topics</span>
-            <div class="hero-title">Topics — {{ $seniorLabel }}</div>
+            <span class="hero-badge"><i class="fas fa-diagram-project me-1"></i> Your School's NLSC Projects</span>
+            <div class="hero-title">Projects — {{ $seniorLabel }}</div>
             <div class="hero-subtitle">
                 This is your school's own copy — starts from the platform's starter set the first
                 time you open a Senior/Subject, then it's entirely yours: add or delete
@@ -142,14 +162,14 @@
 
         <div class="nt-card">
             <div class="card-body-custom" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                <form method="GET" action="{{ route('school.nlsc-topics') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
-                    {{-- Assessment Type — switches to the Projects (Project
-                    Work) screen, carrying the current Senior/Subject over. --}}
+                <form method="GET" action="{{ route('school.nlsc-projects') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
+                    {{-- Assessment Type — switches to the Topics (Activities of
+                    Integration) screen, carrying the current Senior/Subject over. --}}
                     <div style="min-width:220px;">
                         <label class="form-label">Assessment Type</label>
                         <select id="assessmentTypeSelect" class="form-control">
-                            <option value="{{ route('school.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Activities of Integration</option>
-                            <option value="{{ route('school.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Projects</option>
+                            <option value="{{ route('school.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Activities of Integration</option>
+                            <option value="{{ route('school.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Projects</option>
                         </select>
                     </div>
                     <div style="min-width:200px;">
@@ -169,55 +189,55 @@
                         </select>
                     </div>
                 </form>
-                <button type="button" id="addTopicBtn" class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i> Add Topic
+                <button type="button" id="addProjectBtn" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Project
                 </button>
-                <button type="button" id="deleteAllTopicsBtn" class="btn btn-danger">
-                    <i class="fas fa-trash me-1"></i> Delete All Topics
+                <button type="button" id="deleteAllProjectsBtn" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Delete All Projects
                 </button>
             </div>
         </div>
 
         <div class="nt-card">
             <div class="card-header-custom">
-                <span><i class="fas fa-list-check me-1"></i> Topics</span>
+                <span><i class="fas fa-diagram-project me-1"></i> Projects</span>
             </div>
             <div class="table-responsive">
                 <table class="table nt-table">
                     <thead>
                         <tr>
                             <th style="width:4%;">#</th>
-                            <th>Topic</th>
-                            {{-- Count of this topic's own Competency Areas — click
-                            "View" to see them individually. Header names the
-                            Senior currently filtered to, since that's the
-                            context every row in this table shares. --}}
+                            <th>Project Area</th>
+                            <th>Project</th>
+                            <th>Description</th>
                             <th>{{ $seniorLabel }} — Competency Areas</th>
                             <th style="width:22%;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="topicsTbody">
-                        @forelse ($topics as $index => $topic)
-                            <tr data-id="{{ $topic->id }}">
+                    <tbody id="projectsTbody">
+                        @forelse ($projects as $index => $project)
+                            <tr data-id="{{ $project->id }}">
                                 <td>{{ $index + 1 }}</td>
-                                <td class="topic-name-cell">{{ $topic->topic_name }}</td>
+                                <td><span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span></td>
+                                <td class="project-name-cell">{{ $project->project_name }}</td>
+                                <td><span class="nt-desc-preview description-cell" title="{{ $project->description }}">{{ $project->description ?: '—' }}</span></td>
                                 <td>
-                                    <span class="nt-count-badge {{ $topic->competency_areas_count == 0 ? 'is-zero' : '' }}">
-                                        <i class="fas fa-list-check"></i> {{ $topic->competency_areas_count }}
+                                    <span class="nt-count-badge {{ $project->competency_areas_count == 0 ? 'is-zero' : '' }}">
+                                        <i class="fas fa-list-check"></i> {{ $project->competency_areas_count }}
                                     </span>
                                 </td>
                                 <td>
-                                    <button type="button" class="nt-action-btn btn-view-sm view-topic-btn"><i class="fas fa-eye"></i> View</button>
-                                    <button type="button" class="nt-action-btn btn-edit-sm edit-topic-btn"><i class="fas fa-pen"></i> Edit</button>
-                                    <button type="button" class="nt-action-btn btn-del-sm delete-topic-btn"><i class="fas fa-trash"></i> Delete</button>
+                                    <button type="button" class="nt-action-btn btn-view-sm view-project-btn"><i class="fas fa-eye"></i> View</button>
+                                    <button type="button" class="nt-action-btn btn-edit-sm edit-project-btn"><i class="fas fa-pen"></i> Edit</button>
+                                    <button type="button" class="nt-action-btn btn-del-sm delete-project-btn"><i class="fas fa-trash"></i> Delete</button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4">
+                                <td colspan="6">
                                     <div class="empty-state">
                                         <i class="fas fa-folder-open d-block mb-2" style="font-size:1.8rem;"></i>
-                                        No topics added yet for {{ $seniorLabel }} — click "Add Topic" to add the first one.
+                                        No projects added yet for {{ $seniorLabel }} — click "Add Project" to add the first one.
                                     </div>
                                 </td>
                             </tr>
@@ -227,37 +247,53 @@
             </div>
         </div>
     </div>
-
-    {{-- ===== Add / Edit Topic modal ===== --}}
-    <div class="nt-modal-overlay" id="topicModal">
+</div>
+    </div>
+    {{-- ===== Add / Edit Project modal ===== --}}
+    <div class="nt-modal-overlay" id="projectModal">
         <div class="nt-modal-box">
             <div class="nt-modal-hd">
-                <h4 id="topicModalTitle"><i class="fas fa-plus me-2"></i>Add Topic</h4>
-                <button class="nt-modal-close" onclick="closeNtModal('topicModal')"><i class="fas fa-times"></i></button>
+                <h4 id="projectModalTitle"><i class="fas fa-plus me-2"></i>Add Project</h4>
+                <button class="nt-modal-close" onclick="closeNtModal('projectModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="nt-modal-body">
-                <input type="hidden" id="topicIdInput">
+                <input type="hidden" id="projectIdInput">
                 <div class="form-group">
-                    <label class="form-label">Topic Name</label>
-                    <input type="text" id="topicNameInput" class="form-control" placeholder="e.g. Food">
+                    <label class="form-label">Project Area</label>
+                    <input type="text" id="projectAreaInput" class="form-control" list="existingAreasList" placeholder="e.g. Communication">
+                    <datalist id="existingAreasList">
+                        @foreach($existingAreaNames as $areaName)
+                            <option value="{{ $areaName }}"></option>
+                        @endforeach
+                    </datalist>
+                    <small class="text-muted">Type an existing Project Area to add to it, or a new name to create one.</small>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" id="projectNameInput" class="form-control" placeholder="e.g. School Communication Campaign">
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Description</label>
+                    <textarea id="projectDescriptionInput" class="form-control" rows="3" placeholder="e.g. Learners design a communication campaign addressing an issue affecting learners in their school."></textarea>
                 </div>
             </div>
             <div class="nt-modal-ft">
-                <button class="btn btn-secondary" onclick="closeNtModal('topicModal')">Cancel</button>
-                <button class="btn btn-primary" id="saveTopicBtn"><i class="fas fa-save me-1"></i> Save</button>
+                <button class="btn btn-secondary" onclick="closeNtModal('projectModal')">Cancel</button>
+                <button class="btn btn-primary" id="saveProjectBtn"><i class="fas fa-save me-1"></i> Save</button>
             </div>
         </div>
     </div>
 
-    {{-- ===== View Topic — Competency Areas modal ===== --}}
-    <div class="nt-modal-overlay" id="viewTopicModal">
+    {{-- ===== View Project — Competency Areas modal ===== --}}
+    <div class="nt-modal-overlay" id="viewProjectModal">
         <div class="nt-modal-box" style="max-width:640px;">
             <div class="nt-modal-hd">
-                <h4><i class="fas fa-list-check me-2"></i> Competency Areas — <span id="viewTopicName"></span></h4>
-                <button class="nt-modal-close" onclick="closeNtModal('viewTopicModal')"><i class="fas fa-times"></i></button>
+                <h4><i class="fas fa-list-check me-2"></i> Competency Areas — <span id="viewProjectName"></span></h4>
+                <button class="nt-modal-close" onclick="closeNtModal('viewProjectModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="nt-modal-body">
-                <input type="hidden" id="viewTopicIdInput">
+                <input type="hidden" id="viewProjectIdInput">
+                <div id="viewProjectMeta" style="font-size:.82rem; color:#5a5875; margin-bottom:1rem;"></div>
                 <div id="competencyAreasList"></div>
 
                 <div style="display:flex; gap:.6rem; margin-top:1rem;">
@@ -271,15 +307,11 @@
                 <button class="btn btn-outline-danger" id="clearAllCompetencyBtn">
                     <i class="fas fa-broom me-1"></i> Clear All Competency Areas
                 </button>
-                <button class="btn btn-secondary" onclick="closeNtModal('viewTopicModal')">Close</button>
+                <button class="btn btn-secondary" onclick="closeNtModal('viewProjectModal')">Close</button>
             </div>
         </div>
     </div>
 
-     </div>
-    </div>
-     </div>
-    </div>
     <script>
         const CSRF = '{{ csrf_token() }}';
         const SELECTED_SENIOR = '{{ $selectedSenior }}';
@@ -295,36 +327,52 @@
             m.addEventListener('click', e => { if (e.target === m) closeNtModal(m.id); });
         });
 
-        // ===== Add / Edit Topic =====
-        document.getElementById('addTopicBtn').addEventListener('click', () => {
-            document.getElementById('topicModalTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add Topic';
-            document.getElementById('topicIdInput').value = '';
-            document.getElementById('topicNameInput').value = '';
-            openNtModal('topicModal');
+        // ===== Add / Edit Project =====
+        document.getElementById('addProjectBtn').addEventListener('click', () => {
+            document.getElementById('projectModalTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add Project';
+            document.getElementById('projectIdInput').value = '';
+            document.getElementById('projectAreaInput').value = '';
+            document.getElementById('projectAreaInput').disabled = false;
+            document.getElementById('projectNameInput').value = '';
+            document.getElementById('projectDescriptionInput').value = '';
+            openNtModal('projectModal');
         });
 
-        document.querySelectorAll('.edit-topic-btn').forEach(btn => {
+        document.querySelectorAll('.edit-project-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
-                document.getElementById('topicModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i>Edit Topic';
-                document.getElementById('topicIdInput').value = row.dataset.id;
-                document.getElementById('topicNameInput').value = row.querySelector('.topic-name-cell').textContent.trim();
-                openNtModal('topicModal');
+                document.getElementById('projectModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Project';
+                document.getElementById('projectIdInput').value = row.dataset.id;
+                document.getElementById('projectAreaInput').value = row.querySelector('.area-name-cell').textContent.trim();
+                // Editing never moves a project to a different area — only its
+                // own name/description change here.
+                document.getElementById('projectAreaInput').disabled = true;
+                document.getElementById('projectNameInput').value = row.querySelector('.project-name-cell').textContent.trim();
+                const desc = row.querySelector('.description-cell').getAttribute('title') || '';
+                document.getElementById('projectDescriptionInput').value = desc;
+                openNtModal('projectModal');
             });
         });
 
-        document.getElementById('saveTopicBtn').addEventListener('click', function () {
-            const id = document.getElementById('topicIdInput').value;
-            const name = document.getElementById('topicNameInput').value.trim();
+        document.getElementById('saveProjectBtn').addEventListener('click', function () {
+            const id = document.getElementById('projectIdInput').value;
+            const areaName = document.getElementById('projectAreaInput').value.trim();
+            const name = document.getElementById('projectNameInput').value.trim();
+            const description = document.getElementById('projectDescriptionInput').value.trim();
+
+            if (!id && !areaName) {
+                Swal.fire('Missing Project Area', 'Please type a Project Area name first.', 'warning');
+                return;
+            }
             if (!name) {
-                Swal.fire('Missing name', 'Please type a topic name first.', 'warning');
+                Swal.fire('Missing name', 'Please type a project name first.', 'warning');
                 return;
             }
 
             const isEdit = !!id;
             const url = isEdit
-                ? `{{ url('nlsc-topics') }}/${id}`
-                : `{{ route('school.nlsc-topics.store') }}`;
+                ? `{{ url('nlsc-projects') }}/${id}`
+                : `{{ route('school.nlsc-projects.store') }}`;
 
             const $btn = this;
             $btn.disabled = true;
@@ -336,7 +384,9 @@
                 body: JSON.stringify({
                     senior_class_id: SELECTED_SENIOR,
                     subject_id: SELECTED_SUBJECT,
-                    topic_name: name,
+                    project_area_name: areaName,
+                    project_name: name,
+                    description: description,
                 }),
             })
                 .then(r => r.json())
@@ -356,13 +406,13 @@
                 });
         });
 
-        // ===== Delete Topic =====
-        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+        // ===== Delete Project =====
+        document.querySelectorAll('.delete-project-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const id = row.dataset.id;
                 Swal.fire({
-                    title: 'Delete this topic?',
+                    title: 'Delete this project?',
                     text: 'Its Competency Areas will be deleted too. This cannot be undone.',
                     icon: 'warning',
                     showCancelButton: true,
@@ -371,7 +421,7 @@
                 }).then(result => {
                     if (!result.isConfirmed) return;
 
-                    fetch(`{{ url('nlsc-topics') }}/${id}`, {
+                    fetch(`{{ url('nlsc-projects') }}/${id}`, {
                         method: 'DELETE',
                         headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     })
@@ -388,17 +438,17 @@
             });
         });
 
-        // ===== Delete ALL Topics (this Senior/Subject) =====
-        document.getElementById('deleteAllTopicsBtn').addEventListener('click', function () {
-            const topicCount = document.querySelectorAll('#topicsTbody tr[data-id]').length;
-            if (topicCount === 0) {
-                Swal.fire('Nothing to delete', 'There are no topics for this Senior/Subject yet.', 'info');
+        // ===== Delete ALL Projects (this Senior/Subject) =====
+        document.getElementById('deleteAllProjectsBtn').addEventListener('click', function () {
+            const projectCount = document.querySelectorAll('#projectsTbody tr[data-id]').length;
+            if (projectCount === 0) {
+                Swal.fire('Nothing to delete', 'There are no projects for this Senior/Subject yet.', 'info');
                 return;
             }
 
             Swal.fire({
-                title: `Delete all ${topicCount} topic(s)?`,
-                text: 'Every topic AND its competency areas, for this Senior/Subject only, will be permanently deleted. This cannot be undone.',
+                title: `Delete all ${projectCount} project(s)?`,
+                text: 'Every Project Area, Project AND its competency areas, for this Senior/Subject only, will be permanently deleted. This cannot be undone.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -406,7 +456,7 @@
             }).then(result => {
                 if (!result.isConfirmed) return;
 
-                fetch(`{{ url('nlsc-topics-all') }}`, {
+                fetch(`{{ url('nlsc-projects-all') }}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     body: JSON.stringify({ senior_class_id: SELECTED_SENIOR, subject_id: SELECTED_SUBJECT }),
@@ -423,7 +473,7 @@
             });
         });
 
-        // ===== View Topic — Competency Areas =====
+        // ===== View Project — Competency Areas =====
         function renderCompetencyAreas(areas) {
             const list = document.getElementById('competencyAreasList');
             if (!areas.length) {
@@ -453,7 +503,7 @@
                     }).then(result => {
                         if (!result.isConfirmed || !result.value?.trim()) return;
 
-                        fetch(`{{ url('nlsc-competency-areas') }}/${id}`, {
+                        fetch(`{{ url('nlsc-project-competency-areas') }}/${id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                             body: JSON.stringify({ description: result.value.trim() }),
@@ -464,7 +514,7 @@
                                     Swal.fire('Error', res.message || 'Failed to update.', 'error');
                                     return;
                                 }
-                                openViewTopicModal(document.getElementById('viewTopicIdInput').value);
+                                openViewProjectModal(document.getElementById('viewProjectIdInput').value);
                             })
                             .catch(() => Swal.fire('Error', 'Failed to update — check your connection.', 'error'));
                     });
@@ -484,7 +534,7 @@
                     }).then(result => {
                         if (!result.isConfirmed) return;
 
-                        fetch(`{{ url('nlsc-competency-areas') }}/${id}`, {
+                        fetch(`{{ url('nlsc-project-competency-areas') }}/${id}`, {
                             method: 'DELETE',
                             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                         })
@@ -494,10 +544,8 @@
                                     Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                     return;
                                 }
-                                openViewTopicModal(document.getElementById('viewTopicIdInput').value);
-                                // Keep the row's own count badge in sync without a
-                                // full page reload.
-                                const mainRow = document.querySelector(`#topicsTbody tr[data-id="${document.getElementById('viewTopicIdInput').value}"]`);
+                                openViewProjectModal(document.getElementById('viewProjectIdInput').value);
+                                const mainRow = document.querySelector(`#projectsTbody tr[data-id="${document.getElementById('viewProjectIdInput').value}"]`);
                                 if (mainRow) {
                                     const badge = mainRow.querySelector('.nt-count-badge');
                                     const newCount = Math.max(0, parseInt(badge.textContent.trim(), 10) - 1);
@@ -511,8 +559,8 @@
             });
         }
 
-        function openViewTopicModal(topicId) {
-            fetch(`{{ url('nlsc-topics') }}/${topicId}/competency-areas`, {
+        function openViewProjectModal(projectId) {
+            fetch(`{{ url('nlsc-projects') }}/${projectId}/competency-areas`, {
                 headers: { 'Accept': 'application/json' },
             })
                 .then(r => r.json())
@@ -521,27 +569,30 @@
                         Swal.fire('Error', res.message || 'Failed to load.', 'error');
                         return;
                     }
-                    document.getElementById('viewTopicIdInput').value = topicId;
-                    document.getElementById('viewTopicName').textContent = res.topic.topic_name;
+                    document.getElementById('viewProjectIdInput').value = projectId;
+                    document.getElementById('viewProjectName').textContent = res.project.project_name;
+                    document.getElementById('viewProjectMeta').innerHTML =
+                        `<strong>Project Area:</strong> ${res.project.area_name || '—'}` +
+                        (res.project.description ? `<br><strong>Description:</strong> ${res.project.description}` : '');
                     renderCompetencyAreas(res.competency_areas);
-                    openNtModal('viewTopicModal');
+                    openNtModal('viewProjectModal');
                 })
                 .catch(() => Swal.fire('Error', 'Failed to load — check your connection.', 'error'));
         }
 
-        document.querySelectorAll('.view-topic-btn').forEach(btn => {
+        document.querySelectorAll('.view-project-btn').forEach(btn => {
             btn.addEventListener('click', function () {
-                openViewTopicModal(this.closest('tr').dataset.id);
+                openViewProjectModal(this.closest('tr').dataset.id);
             });
         });
 
         document.getElementById('addCompetencyBtn').addEventListener('click', function () {
-            const topicId = document.getElementById('viewTopicIdInput').value;
+            const projectId = document.getElementById('viewProjectIdInput').value;
             const input = document.getElementById('newCompetencyInput');
             const description = input.value.trim();
             if (!description) return;
 
-            fetch(`{{ url('nlsc-topics') }}/${topicId}/competency-areas`, {
+            fetch(`{{ url('nlsc-projects') }}/${projectId}/competency-areas`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 body: JSON.stringify({ description }),
@@ -553,8 +604,8 @@
                         return;
                     }
                     input.value = '';
-                    openViewTopicModal(topicId);
-                    const mainRow = document.querySelector(`#topicsTbody tr[data-id="${topicId}"]`);
+                    openViewProjectModal(projectId);
+                    const mainRow = document.querySelector(`#projectsTbody tr[data-id="${projectId}"]`);
                     if (mainRow) {
                         const badge = mainRow.querySelector('.nt-count-badge');
                         const newCount = parseInt(badge.textContent.trim(), 10) + 1;
@@ -565,13 +616,13 @@
                 .catch(() => Swal.fire('Error', 'Failed to add — check your connection.', 'error'));
         });
 
-        // ===== Clear ALL Competency Areas (this topic) =====
+        // ===== Clear ALL Competency Areas (this project) =====
         document.getElementById('clearAllCompetencyBtn').addEventListener('click', function () {
-            const topicId = document.getElementById('viewTopicIdInput').value;
+            const projectId = document.getElementById('viewProjectIdInput').value;
 
             Swal.fire({
                 title: 'Clear all competency areas?',
-                text: 'The topic itself stays — only its competency areas are removed. This cannot be undone.',
+                text: 'The project itself stays — only its competency areas are removed. This cannot be undone.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -579,7 +630,7 @@
             }).then(result => {
                 if (!result.isConfirmed) return;
 
-                fetch(`{{ url('nlsc-topics') }}/${topicId}/competency-areas-all`, {
+                fetch(`{{ url('nlsc-projects') }}/${projectId}/competency-areas-all`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 })
@@ -589,8 +640,8 @@
                             Swal.fire('Error', res.message || 'Failed to clear.', 'error');
                             return;
                         }
-                        openViewTopicModal(topicId);
-                        const mainRow = document.querySelector(`#topicsTbody tr[data-id="${topicId}"]`);
+                        openViewProjectModal(projectId);
+                        const mainRow = document.querySelector(`#projectsTbody tr[data-id="${projectId}"]`);
                         if (mainRow) {
                             const badge = mainRow.querySelector('.nt-count-badge');
                             badge.innerHTML = '<i class="fas fa-list-check"></i> 0';
