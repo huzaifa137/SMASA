@@ -1023,6 +1023,45 @@ use App\Helpers\PermissionHelper;
         <div class="stat-pill"><i class="fas fa-chalkboard" style="color:var(--a);"></i> {{ $totalClasses }} Classes</div>
     </div>
 
+    {{-- ── Class / Stream filter ──
+    Every class/stream still renders below exactly as before (each keeps
+    its own independent AJAX-paginated table) — this only shows/hides
+    which of those already-rendered sections are visible, so there's no
+    change to how students are fetched or paginated. Picking a class
+    narrows the Stream dropdown down to just that class's own streams
+    (built from the class/stream sections already in the page, via
+    data-class/data-stream below — not a second server round-trip).
+    Selection is mirrored into the URL (?class=&stream=) via
+    history.replaceState so it survives a real page reload — including
+    the location.reload() that Save/Delete already trigger further down
+    this file — without turning this filter into a real navigation. --}}
+    @if(!empty($groupedStudents))
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div class="card-body-custom" style="padding:1.1rem 1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+                <div style="min-width:220px;">
+                    <label class="form-label" for="filterClassSelect">Class</label>
+                    <select id="filterClassSelect" class="form-control">
+                        <option value="">All Classes</option>
+                        @foreach($groupedStudents as $senior => $streams)
+                            <option value="{{ $senior }}">{{ \App\Http\Controllers\Helper::item_md_name($senior) ?? $senior }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="min-width:220px;">
+                    <label class="form-label" for="filterStreamSelect">Stream</label>
+                    <select id="filterStreamSelect" class="form-control">
+                        <option value="">All Streams</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="button" id="filterResetBtn" class="btn btn-primary">
+                        <i class="fas fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(empty($groupedStudents))
         <div class="card">
             <div class="empty-state">
@@ -1033,7 +1072,7 @@ use App\Helpers\PermissionHelper;
         </div>
     @else
         @foreach($groupedStudents as $senior => $streams)
-            <div class="card" style="margin-bottom:2rem;">
+            <div class="card class-filter-card" data-class="{{ $senior }}" style="margin-bottom:2rem;">
                 <div class="card-hd">
                     <div class="card-hd-left">
                         <i class="fas fa-chalkboard-teacher" style="color:var(--b);font-size:1rem;"></i>
@@ -1044,10 +1083,11 @@ use App\Helpers\PermissionHelper;
 
                 <div style="padding:1.25rem 1.5rem;">
                     @foreach($streams as $stream => $students)
-                        <div style="margin-bottom:2rem;">
+                        <div class="stream-filter-block" data-class="{{ $senior }}" data-stream="{{ $stream }}" style="margin-bottom:2rem;">
                             {{-- Stream header --}}
                             <div class="stream-header">
                                 <div style="display:flex;align-items:center;gap:.6rem;">
+
                                     <i class="fas fa-code-branch" style="color:var(--b);font-size:.85rem;"></i>
                                     <h5>Stream: {{ \App\Http\Controllers\Helper::recordMdname($stream) ?? $stream }}</h5>
                                 </div>
@@ -1112,7 +1152,7 @@ use App\Helpers\PermissionHelper;
                                 </tbody>
                             </table>
 
-                            <div id="pagination-{{ $senior }}-{{ $stream }}">
+                            <div id="pagination-{{ $senior }}-{{ $stream }}" data-senior="{{ $senior }}" data-stream="{{ $stream }}">
                                 @include('student.partials.student-pagination', ['students' => $students])
                             </div>
                         </div>
@@ -1832,6 +1872,19 @@ use App\Helpers\PermissionHelper;
                     if (data.total === 0) {
                         tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon-wrap"><i class="fas fa-user-slash"></i></div><p style="margin:0;font-size:.85rem;">No students match your search.</p></div></td></tr>`;
                     }
+
+                    // The page itself is a different height once the new
+                    // rows/pagination are in (fewer/more rows, a wrapped
+                    // "Showing x–y of z" line, etc.) — at a fixed scroll
+                    // position that shift can land the viewport on a
+                    // completely different class/stream's table, reading
+                    // as "clicking page 2 jumped me to a different table".
+                    // Re-anchoring the viewport on the table just paged,
+                    // right after its content settles, keeps whatever the
+                    // user was looking at actually in view regardless of
+                    // how much the page's overall height just changed.
+                    const table = tbody.closest('.stream-filter-block') || tbody;
+                    table.scrollIntoView({ block: 'nearest' });
                 })
                 .catch(() => {
                     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--r);padding:1.5rem;">Failed to load results.</td></tr>`;
@@ -1849,17 +1902,117 @@ use App\Helpers\PermissionHelper;
                     const url = new URL(this.href);
                     const page = url.searchParams.get(`page_${senior}_${stream}`) || 1;
                     const searchInput = document.querySelector(
-                        `.stream-search-input[data-senior="${senior}"][data-stream="${stream}"]`
+                        `.stream-search-input[data-senior="${CSS.escape(senior)}"][data-stream="${CSS.escape(stream)}"]`
                     );
                     loadStreamPage(senior, stream, searchInput ? searchInput.value.trim() : '', page);
                 });
             });
         }
 
-        // Wire up pagination handlers on initial page load too
+        // Wire up pagination handlers on initial page load too. Reads the
+        // real senior/stream values straight from data-senior/data-stream
+        // (set alongside id="pagination-{senior}-{stream}" in the Blade
+        // template) instead of splitting the id string itself — a
+        // senior/stream value that contains its own hyphen (e.g. a class
+        // or stream named "S.1-A") used to split into the wrong pieces
+        // here, so pagination on one stream's table could silently end up
+        // reading/writing a completely different stream's tbody.
         document.querySelectorAll('[id^="pagination-"]').forEach(wrap => {
-            const [_, senior, stream] = wrap.id.split('-');
+            const senior = wrap.dataset.senior;
+            const stream = wrap.dataset.stream;
+            if (!senior && senior !== '0') return;
             attachPaginationHandlers(senior, stream);
         });
+
+        // ── CLASS / STREAM FILTER ────────────────────────────────────────
+        (function () {
+            const classSelect = document.getElementById('filterClassSelect');
+            const streamSelect = document.getElementById('filterStreamSelect');
+            const resetBtn = document.getElementById('filterResetBtn');
+            if (!classSelect || !streamSelect) return;
+
+            // { [senior]: [stream, stream, ...] }, built from the
+            // class/stream sections already rendered below — no extra
+            // request needed just to know what a class's own streams are.
+            const streamsByClass = {};
+            document.querySelectorAll('.stream-filter-block').forEach(block => {
+                const cls = block.dataset.class;
+                const stream = block.dataset.stream;
+                if (!streamsByClass[cls]) streamsByClass[cls] = [];
+                streamsByClass[cls].push(stream);
+            });
+
+            function streamLabel(block) {
+                return block.querySelector('.stream-header h5')?.textContent.replace('Stream:', '').trim() || block.dataset.stream;
+            }
+
+            function populateStreamOptions(senior) {
+                streamSelect.innerHTML = '<option value="">All Streams</option>';
+                (streamsByClass[senior] || []).forEach(stream => {
+                    const block = document.querySelector(
+                        `.stream-filter-block[data-class="${CSS.escape(senior)}"][data-stream="${CSS.escape(stream)}"]`
+                    );
+                    const opt = document.createElement('option');
+                    opt.value = stream;
+                    opt.textContent = block ? streamLabel(block) : stream;
+                    streamSelect.appendChild(opt);
+                });
+            }
+
+            function applyFilter(senior, stream) {
+                document.querySelectorAll('.class-filter-card').forEach(card => {
+                    card.style.display = (!senior || card.dataset.class === senior) ? '' : 'none';
+                });
+                document.querySelectorAll('.stream-filter-block').forEach(block => {
+                    const classMatches = !senior || block.dataset.class === senior;
+                    const streamMatches = !stream || block.dataset.stream === stream;
+                    block.style.display = (classMatches && streamMatches) ? '' : 'none';
+                });
+            }
+
+            // Mirrors the current filter into the URL without ever
+            // triggering a real navigation — so pagination (which never
+            // reloads the page anyway) simply never disturbs it, and so a
+            // real reload (Save/Delete's location.reload(), or a manual
+            // refresh) restores the exact same filtered view instead of
+            // silently resetting back to "All Classes".
+            function syncUrl(senior, stream) {
+                const url = new URL(window.location.href);
+                senior ? url.searchParams.set('class', senior) : url.searchParams.delete('class');
+                stream ? url.searchParams.set('stream', stream) : url.searchParams.delete('stream');
+                window.history.replaceState({}, '', url);
+            }
+
+            classSelect.addEventListener('change', function () {
+                const senior = this.value;
+                populateStreamOptions(senior);
+                syncUrl(senior, '');
+                applyFilter(senior, '');
+            });
+
+            streamSelect.addEventListener('change', function () {
+                syncUrl(classSelect.value, this.value);
+                applyFilter(classSelect.value, this.value);
+            });
+
+            resetBtn?.addEventListener('click', function () {
+                classSelect.value = '';
+                streamSelect.innerHTML = '<option value="">All Streams</option>';
+                syncUrl('', '');
+                applyFilter('', '');
+            });
+
+            // Restore from the URL on load (covers a manual refresh and
+            // the location.reload() calls elsewhere on this page).
+            const initial = new URLSearchParams(window.location.search);
+            const initialClass = initial.get('class') || '';
+            const initialStream = initial.get('stream') || '';
+            if (initialClass) {
+                classSelect.value = initialClass;
+                populateStreamOptions(initialClass);
+                if (initialStream) streamSelect.value = initialStream;
+            }
+            applyFilter(initialClass, initialStream);
+        })();
     </script>
 @endsection
