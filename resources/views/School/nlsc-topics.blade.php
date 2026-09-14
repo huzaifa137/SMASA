@@ -131,18 +131,18 @@
 @section('content')
     <div class="side-app">
         <div class="nt-hero">
-            <span class="hero-badge"><i class="fas fa-layer-group me-1"></i> NLSC Topics</span>
+            <span class="hero-badge"><i class="fas fa-layer-group me-1"></i> Your School's NLSC Topics</span>
             <div class="hero-title">Topics — {{ $seniorLabel }}</div>
             <div class="hero-subtitle">
-                Manage the Activity-of-Integration Topics and their Competency Areas for each
-                Senior/Subject. Type these in from your own copy of the NCDC syllabus — nothing
-                here is pre-loaded for you.
+                This is your school's own copy — starts from the platform's starter set the first
+                time you open a Senior/Subject, then it's entirely yours: add or delete
+                whatever you like, it never affects other schools or the platform's master list.
             </div>
         </div>
 
         <div class="nt-card">
             <div class="card-body-custom" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                <form method="GET" action="{{ route('admin.nlsc-topics') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
+                <form method="GET" action="{{ route('school.nlsc-topics') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
                     <div style="min-width:200px;">
                         <label class="form-label">Senior</label>
                         <select name="senior" class="form-control" onchange="document.getElementById('filterForm').submit()">
@@ -162,9 +162,6 @@
                 </form>
                 <button type="button" id="addTopicBtn" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i> Add Topic
-                </button>
-                <button type="button" id="bulkImportBtn" class="btn btn-outline-primary">
-                    <i class="fas fa-file-upload me-1"></i> Bulk Import
                 </button>
             </div>
         </div>
@@ -264,40 +261,10 @@
         </div>
     </div>
 
-    {{-- ===== Bulk Import modal ===== --}}
-    <div class="nt-modal-overlay" id="bulkImportModal">
-        <div class="nt-modal-box" style="max-width:560px;">
-            <div class="nt-modal-hd">
-                <h4><i class="fas fa-file-upload me-2"></i> Bulk Import Topics</h4>
-                <button class="nt-modal-close" onclick="closeNtModal('bulkImportModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="nt-modal-body">
-                <p style="font-size:.85rem; color:#5a5875; line-height:1.5;">
-                    Upload a spreadsheet (.xlsx, .xls or .csv) with these columns:
-                </p>
-                <div style="background:#f8f7ff; border:1.5px solid #e4e2ff; border-radius:.7rem; padding:.8rem 1rem; font-size:.78rem; margin-bottom:1rem;">
-                    <code>senior</code> — e.g. "Senior 1"<br>
-                    <code>subject</code> — e.g. "English"<br>
-                    <code>topic</code> — the topic name<br>
-                    <code>competency_area</code> — optional. Separate more than one with a
-                    <strong> | </strong> (pipe) character. Leave blank to add just the topic —
-                    competency areas can always be added later from "View".
-                </div>
-                <p style="font-size:.8rem; color:#8f8cae;">
-                    Rows that repeat the same Senior/Subject/Topic reuse the existing topic
-                    rather than duplicating it — useful for adding more competency areas to a
-                    topic already on the list.
-                </p>
-                <input type="file" id="bulkImportFileInput" class="form-control" accept=".xlsx,.xls,.csv">
-                <div id="bulkImportResult" style="margin-top:1rem; font-size:.82rem;"></div>
-            </div>
-            <div class="nt-modal-ft">
-                <button class="btn btn-secondary" onclick="closeNtModal('bulkImportModal')">Cancel</button>
-                <button class="btn btn-primary" id="submitBulkImportBtn"><i class="fas fa-upload me-1"></i> Upload &amp; Import</button>
-            </div>
-        </div>
+     </div>
     </div>
-
+     </div>
+    </div>
     <script>
         const CSRF = '{{ csrf_token() }}';
         const SELECTED_SENIOR = '{{ $selectedSenior }}';
@@ -337,8 +304,8 @@
 
             const isEdit = !!id;
             const url = isEdit
-                ? `{{ url('admin/nlsc-topics') }}/${id}`
-                : `{{ route('admin.nlsc-topics.store') }}`;
+                ? `{{ url('nlsc-topics') }}/${id}`
+                : `{{ route('school.nlsc-topics.store') }}`;
 
             const $btn = this;
             $btn.disabled = true;
@@ -385,7 +352,7 @@
                 }).then(result => {
                     if (!result.isConfirmed) return;
 
-                    fetch(`{{ url('admin/nlsc-topics') }}/${id}`, {
+                    fetch(`{{ url('nlsc-topics') }}/${id}`, {
                         method: 'DELETE',
                         headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     })
@@ -432,7 +399,7 @@
                     }).then(result => {
                         if (!result.isConfirmed || !result.value?.trim()) return;
 
-                        fetch(`{{ url('admin/nlsc-competency-areas') }}/${id}`, {
+                        fetch(`{{ url('nlsc-competency-areas') }}/${id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                             body: JSON.stringify({ description: result.value.trim() }),
@@ -463,7 +430,7 @@
                     }).then(result => {
                         if (!result.isConfirmed) return;
 
-                        fetch(`{{ url('admin/nlsc-competency-areas') }}/${id}`, {
+                        fetch(`{{ url('nlsc-competency-areas') }}/${id}`, {
                             method: 'DELETE',
                             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                         })
@@ -491,7 +458,7 @@
         }
 
         function openViewTopicModal(topicId) {
-            fetch(`{{ url('admin/nlsc-topics') }}/${topicId}/competency-areas`, {
+            fetch(`{{ url('nlsc-topics') }}/${topicId}/competency-areas`, {
                 headers: { 'Accept': 'application/json' },
             })
                 .then(r => r.json())
@@ -520,7 +487,7 @@
             const description = input.value.trim();
             if (!description) return;
 
-            fetch(`{{ url('admin/nlsc-topics') }}/${topicId}/competency-areas`, {
+            fetch(`{{ url('nlsc-topics') }}/${topicId}/competency-areas`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 body: JSON.stringify({ description }),
@@ -542,64 +509,6 @@
                     }
                 })
                 .catch(() => Swal.fire('Error', 'Failed to add — check your connection.', 'error'));
-        });
-
-        // ===== Bulk Import =====
-        document.getElementById('bulkImportBtn').addEventListener('click', () => {
-            document.getElementById('bulkImportFileInput').value = '';
-            document.getElementById('bulkImportResult').innerHTML = '';
-            openNtModal('bulkImportModal');
-        });
-
-        document.getElementById('submitBulkImportBtn').addEventListener('click', function () {
-            const fileInput = document.getElementById('bulkImportFileInput');
-            const resultBox = document.getElementById('bulkImportResult');
-
-            if (!fileInput.files.length) {
-                Swal.fire('No file selected', 'Please choose a spreadsheet first.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            const $btn = this;
-            $btn.disabled = true;
-            $btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Importing...';
-            resultBox.innerHTML = '';
-
-            fetch(`{{ route('admin.nlsc-topics.bulk-import') }}`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                body: formData,
-            })
-                .then(r => r.json())
-                .then(res => {
-                    $btn.disabled = false;
-                    $btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload &amp; Import';
-
-                    if (!res.success) {
-                        Swal.fire('Error', res.message || 'Import failed.', 'error');
-                        return;
-                    }
-
-                    let html = `<div style="color:#1e8e4f; font-weight:600;">${res.message}</div>`;
-                    if (res.errors && res.errors.length) {
-                        html += '<div style="margin-top:.6rem; max-height:160px; overflow-y:auto; background:#fff5f5; border:1.5px solid #ffd7d7; border-radius:.6rem; padding:.6rem .8rem;">';
-                        html += res.errors.map(e => `<div style="color:#b3212f; font-size:.76rem; margin-bottom:.3rem;">${e}</div>`).join('');
-                        html += '</div>';
-                    }
-                    resultBox.innerHTML = html;
-
-                    if (res.topics_imported > 0 || res.competency_areas_imported > 0) {
-                        setTimeout(() => window.location.reload(), 1800);
-                    }
-                })
-                .catch(() => {
-                    $btn.disabled = false;
-                    $btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload &amp; Import';
-                    Swal.fire('Error', 'Import failed — check your connection.', 'error');
-                });
         });
     </script>
 @endsection

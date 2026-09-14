@@ -5,32 +5,28 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\NlscCompetencyArea;
 use App\Models\NlscTopic;
+use App\Models\SchoolNlscCompetencyArea;
+use App\Models\SchoolNlscTopic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Session;
 
 /**
- * Super-admin (AdminAuth) management of the NLSC (New Lower Secondary
- * Curriculum, Senior 1-4) Topic catalogue — one platform-wide list, same
- * pattern as MasterDataController::secondaryALevelSubjectsIndex() for the
- * global A-Level subject list, just for Topics + their Competency Areas
- * instead of subjects.
- *
- * Deliberately NOT pre-loaded with NCDC's own topic/competency wording —
- * this only builds the screen an admin uses to type that content in
- * themselves (from their own copy of the official NCDC syllabus), since
- * NCDC's syllabus text itself is copyrighted and this project doesn't
- * reproduce it. See the "Senior 1 — NLSC Topic Catalogue" conversation
- * this was scoped from for the reasoning.
+ * The school-facing counterpart to NlscTopicController (the super-admin
+ * screen). A school's Topics/Competency Areas are its OWN copy — cloned
+ * once from the admin's platform-wide starter set the first time a
+ * teacher opens a given Senior/Subject, then completely independent from
+ * that point on: a school can delete a topic (or all of them) or add its
+ * own without it ever touching the admin's master list or any other
+ * school's copy.
  */
-class NlscTopicController extends Controller
+class SchoolNlscTopicController extends Controller
 {
-    /**
-     * The Topics list, filtered to one Senior + one Subject at a time —
-     * mirrors the "Senior / Subject" dropdown filter already shown in the
-     * admin mockup this was built from.
-     */
     public function index(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_master_data');
+
+        $schoolId = Session('LoggedSchool');
 
         $seniorOptions = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->sortBy('md_id')->values();
         $subjectOptions = Helper::MasterRecords(config('constants.options.NLSC_SUBJECTS'))->sortBy('md_id')->values();
@@ -38,7 +34,10 @@ class NlscTopicController extends Controller
         $selectedSenior = (int) $request->get('senior', $seniorOptions->first()->md_id ?? 0);
         $selectedSubject = (int) $request->get('subject', $subjectOptions->first()->md_id ?? 0);
 
-        $topics = NlscTopic::withCount('competencyAreas')
+        $this->cloneFromAdminIfNeeded($schoolId, $selectedSenior, $selectedSubject);
+
+        $topics = SchoolNlscTopic::withCount('competencyAreas')
+            ->where('school_id', $schoolId)
             ->where('senior_class_id', $selectedSenior)
             ->where('subject_id', $selectedSubject)
             ->orderBy('sort_order')
@@ -47,7 +46,7 @@ class NlscTopicController extends Controller
 
         $seniorLabel = optional($seniorOptions->firstWhere('md_id', $selectedSenior))->md_name ?? 'Senior';
 
-        return view('master-logic.nlsc-topics', compact(
+        return view('School.nlsc-topics', compact(
             'seniorOptions',
             'subjectOptions',
             'selectedSenior',
@@ -58,23 +57,76 @@ class NlscTopicController extends Controller
     }
 
     /**
-     * A single topic's own Competency Areas — what the "View" action opens.
+     * The one-time clone: copies every admin nlsc_topics row (and its
+     * competency areas) for this Senior/Subject into the school's own
+     * tables — but only the very first time, tracked via
+     * school_nlsc_clone_log, so a school that has deliberately deleted
+     * everything doesn't get it silently re-added on the next visit.
      */
+    private function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
+    {
+        if (!$seniorClassId || !$subjectId) {
+            return;
+        }
+
+        $alreadyCloned = DB::table('school_nlsc_clone_log')
+            ->where('school_id', $schoolId)
+            ->where('senior_class_id', $seniorClassId)
+            ->where('subject_id', $subjectId)
+            ->exists();
+
+        if ($alreadyCloned) {
+            return;
+        }
+
+        $adminTopics = NlscTopic::with('competencyAreas')
+            ->where('senior_class_id', $seniorClassId)
+            ->where('subject_id', $subjectId)
+            ->orderBy('sort_order')
+            ->get();
+
+        DB::transaction(function () use ($adminTopics, $schoolId, $seniorClassId, $subjectId) {
+            foreach ($adminTopics as $adminTopic) {
+                $schoolTopic = SchoolNlscTopic::create([
+                    'school_id' => $schoolId,
+                    'senior_class_id' => $seniorClassId,
+                    'subject_id' => $subjectId,
+                    'topic_name' => $adminTopic->topic_name,
+                    'sort_order' => $adminTopic->sort_order,
+                    'source_topic_id' => $adminTopic->id,
+                ]);
+
+                foreach ($adminTopic->competencyAreas as $adminArea) {
+                    SchoolNlscCompetencyArea::create([
+                        'school_nlsc_topic_id' => $schoolTopic->id,
+                        'description' => $adminArea->description,
+                        'sort_order' => $adminArea->sort_order,
+                    ]);
+                }
+            }
+
+            DB::table('school_nlsc_clone_log')->updateOrInsert(
+                ['school_id' => $schoolId, 'senior_class_id' => $seniorClassId, 'subject_id' => $subjectId],
+                ['cloned_at' => now()]
+            );
+        });
+    }
+
     public function competencyAreas($id)
     {
         PermissionHelper::denyUnlessFeature('view_master_data');
 
-        $topic = NlscTopic::with('competencyAreas')->find($id);
+        $topic = SchoolNlscTopic::with('competencyAreas')
+            ->where('school_id', Session('LoggedSchool'))
+            ->find($id);
+
         if (!$topic) {
             return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'topic' => [
-                'id' => $topic->id,
-                'topic_name' => $topic->topic_name,
-            ],
+            'topic' => ['id' => $topic->id, 'topic_name' => $topic->topic_name],
             'competency_areas' => $topic->competencyAreas->map(fn($c) => [
                 'id' => $c->id,
                 'description' => $c->description,
@@ -88,13 +140,22 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
+        $schoolId = Session('LoggedSchool');
+
         $request->validate([
             'senior_class_id' => 'required|integer',
             'subject_id' => 'required|integer',
             'topic_name' => 'required|string|max:255',
         ]);
 
-        $exists = NlscTopic::where('senior_class_id', $request->senior_class_id)
+        // Make sure the starter set has already been cloned in (or this
+        // school deliberately has none) before adding to it, so a
+        // never-visited Senior/Subject doesn't end up with just this one
+        // topic when the admin's set should have been the starting point.
+        $this->cloneFromAdminIfNeeded($schoolId, $request->senior_class_id, $request->subject_id);
+
+        $exists = SchoolNlscTopic::where('school_id', $schoolId)
+            ->where('senior_class_id', $request->senior_class_id)
             ->where('subject_id', $request->subject_id)
             ->where('topic_name', $request->topic_name)
             ->exists();
@@ -103,16 +164,18 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'That topic already exists for this Senior/Subject.'], 422);
         }
 
-        $nextOrder = 1 + (int) NlscTopic::where('senior_class_id', $request->senior_class_id)
+        $nextOrder = 1 + (int) SchoolNlscTopic::where('school_id', $schoolId)
+            ->where('senior_class_id', $request->senior_class_id)
             ->where('subject_id', $request->subject_id)
             ->max('sort_order');
 
-        $topic = NlscTopic::create([
+        $topic = SchoolNlscTopic::create([
+            'school_id' => $schoolId,
             'senior_class_id' => $request->senior_class_id,
             'subject_id' => $request->subject_id,
             'topic_name' => $request->topic_name,
             'sort_order' => $nextOrder,
-            'added_by' => Helper::user_id(),
+            'added_by' => Session('LoggedTeacher'),
         ]);
 
         return response()->json(['success' => true, 'topic' => $topic]);
@@ -124,16 +187,16 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $topic = NlscTopic::find($id);
+        $schoolId = Session('LoggedSchool');
+        $topic = SchoolNlscTopic::where('school_id', $schoolId)->find($id);
         if (!$topic) {
             return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
         }
 
-        $request->validate([
-            'topic_name' => 'required|string|max:255',
-        ]);
+        $request->validate(['topic_name' => 'required|string|max:255']);
 
-        $duplicate = NlscTopic::where('senior_class_id', $topic->senior_class_id)
+        $duplicate = SchoolNlscTopic::where('school_id', $schoolId)
+            ->where('senior_class_id', $topic->senior_class_id)
             ->where('subject_id', $topic->subject_id)
             ->where('topic_name', $request->topic_name)
             ->where('id', '!=', $topic->id)
@@ -154,17 +217,11 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $topic = NlscTopic::find($id);
+        $topic = SchoolNlscTopic::where('school_id', Session('LoggedSchool'))->find($id);
         if (!$topic) {
             return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
         }
 
-        // Competency areas cascade-delete with it (nlsc_competency_areas'
-        // foreign key is onDelete('cascade')) — no separate "in use" guard
-        // needed yet, since nothing outside this table references a topic
-        // row today (that comes with the future per-student AoI scoring
-        // feature, at which point this will need the same "in use, can't
-        // delete" guard the subject-management screens already have).
         $topic->delete();
 
         return response()->json(['success' => true]);
@@ -176,19 +233,17 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $topic = NlscTopic::find($topicId);
+        $topic = SchoolNlscTopic::where('school_id', Session('LoggedSchool'))->find($topicId);
         if (!$topic) {
             return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
         }
 
-        $request->validate([
-            'description' => 'required|string',
-        ]);
+        $request->validate(['description' => 'required|string']);
 
-        $nextOrder = 1 + (int) NlscCompetencyArea::where('nlsc_topic_id', $topic->id)->max('sort_order');
+        $nextOrder = 1 + (int) SchoolNlscCompetencyArea::where('school_nlsc_topic_id', $topic->id)->max('sort_order');
 
-        $area = NlscCompetencyArea::create([
-            'nlsc_topic_id' => $topic->id,
+        $area = SchoolNlscCompetencyArea::create([
+            'school_nlsc_topic_id' => $topic->id,
             'description' => $request->description,
             'sort_order' => $nextOrder,
         ]);
@@ -202,15 +257,15 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $area = NlscCompetencyArea::find($id);
+        $area = SchoolNlscCompetencyArea::whereHas('topic', function ($q) {
+            $q->where('school_id', Session('LoggedSchool'));
+        })->find($id);
+
         if (!$area) {
             return response()->json(['success' => false, 'message' => 'Competency area not found.'], 404);
         }
 
-        $request->validate([
-            'description' => 'required|string',
-        ]);
-
+        $request->validate(['description' => 'required|string']);
         $area->update(['description' => $request->description]);
 
         return response()->json(['success' => true]);
@@ -222,7 +277,10 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $area = NlscCompetencyArea::find($id);
+        $area = SchoolNlscCompetencyArea::whereHas('topic', function ($q) {
+            $q->where('school_id', Session('LoggedSchool'));
+        })->find($id);
+
         if (!$area) {
             return response()->json(['success' => false, 'message' => 'Competency area not found.'], 404);
         }

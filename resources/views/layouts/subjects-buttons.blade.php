@@ -88,4 +88,12 @@
             </a>
         </div>
     @endif
+
+    @if(PermissionHelper::canFeature('add_class') && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+        <div class="col-12 col-sm-3 mb-2">
+            <a href="{{ route('school.nlsc-topics') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+                <i class="fas fa-book-open me-2"></i> Topics &amp; Competency Areas
+            </a>
+        </div>
+    @endif
 </div>

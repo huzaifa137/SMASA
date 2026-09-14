@@ -7,7 +7,7 @@ use App\Services\GradingSchemeDefaults;
 use Illuminate\Database\Seeder;
 
 /**
- * php artisan db:seed --class=Gradingschemeseeder
+ * php artisan db:seed --class=GradingSchemeSeeder
  *
  * Grading schemes are per-school (no global/system schemes). This seeder
  * gives every existing school its own starter set of schemes to begin with —
