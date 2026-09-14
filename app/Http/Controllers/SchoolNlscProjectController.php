@@ -16,9 +16,13 @@ use Session;
  * The school-facing counterpart to NlscProjectController (the super-admin
  * screen), same relationship SchoolNlscTopicController has to
  * NlscTopicController. A school's Project Areas/Projects/Competency Areas
- * are its OWN copy — cloned once from the admin's platform-wide starter
- * set the first time a teacher opens a given Senior/Subject, then
- * completely independent from that point on.
+ * are its OWN copy — synced in from the admin's platform-wide starter set
+ * incrementally, one admin project at a time, the first time each one is
+ * seen — then completely independent: a school can delete or edit its
+ * own copy without it ever touching the admin's master list or any other
+ * school's copy, and an admin project added later still reaches the
+ * school on its next visit, since "already synced" is tracked per-project
+ * (school_nlsc_project_sync_log), not as a single per-Senior/Subject flag.
  *
  * Gated on the 'classes' module's own features (view_classes/add_class/
  * edit_class/delete_class), NOT view_master_data/create_master_data/etc
@@ -71,11 +75,28 @@ class SchoolNlscProjectController extends Controller
     }
 
     /**
-     * The one-time clone: copies every admin Project Area/Project (and
-     * its competency areas) for this Senior/Subject into the school's own
-     * tables — but only the very first time, tracked via
-     * school_nlsc_project_clone_log, so a school that has deliberately
-     * deleted everything doesn't get it silently re-added on the next visit.
+     * Syncs in any admin Project for this Senior/Subject that hasn't
+     * already been introduced to this school — tracked in
+     * school_nlsc_project_sync_log by source_project_id, not by a single
+     * per-Senior/Subject flag. Runs on every visit (not just the first),
+     * so a project the admin adds after a school has already been using
+     * Projects for this Senior/Subject still reaches that school — while
+     * a project the school deleted stays deleted, since it's already
+     * logged as handled and is never reconsidered.
+     *
+     * The school's own Project Area is found-or-created by area_name
+     * (same as store() already does) rather than by source_project_area_id
+     * — so this also correctly re-materializes an area the school had
+     * deleted (because its last project was removed) if the admin later
+     * adds a new project that belongs under it.
+     *
+     * (Previously this only ever ran once per Senior/Subject, gated by
+     * school_nlsc_project_clone_log — which meant any admin project
+     * added after that first visit could never reach a school that had
+     * already started using Projects for that Senior/Subject, however
+     * long ago — and deleting a school's only project under an area,
+     * which also removes that now-empty area, made the gap obvious since
+     * the list then stayed empty for good.)
      */
     private function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
     {
@@ -83,44 +104,37 @@ class SchoolNlscProjectController extends Controller
             return;
         }
 
-        $alreadyCloned = DB::table('school_nlsc_project_clone_log')
+        $alreadySyncedIds = DB::table('school_nlsc_project_sync_log')
             ->where('school_id', $schoolId)
-            ->where('senior_class_id', $seniorClassId)
-            ->where('subject_id', $subjectId)
-            ->exists();
+            ->pluck('source_project_id');
 
-        if ($alreadyCloned) {
-            return;
-        }
-
-        $adminAreas = NlscProjectArea::with('projects.competencyAreas')
+        $adminAreas = NlscProjectArea::with(['projects' => function ($q) use ($alreadySyncedIds) {
+                $q->whereNotIn('id', $alreadySyncedIds)->with('competencyAreas');
+            }])
             ->where('senior_class_id', $seniorClassId)
             ->where('subject_id', $subjectId)
             ->orderBy('sort_order')
-            ->get();
+            ->get()
+            ->filter(fn($area) => $area->projects->isNotEmpty());
 
-        // Nothing to clone yet (the admin hasn't added anything for this
-        // Senior/Subject) — leave the log unwritten so the NEXT visit
-        // checks again instead of being locked out forever. Without this,
-        // a school whose very first visit happened to land on an empty
-        // admin catalogue (e.g. right after the admin deleted their only
-        // project) would get the clone marked "done" with nothing in it,
-        // and would never see ANY admin project for this Senior/Subject
-        // again — including ones added afterwards.
         if ($adminAreas->isEmpty()) {
             return;
         }
 
         DB::transaction(function () use ($adminAreas, $schoolId, $seniorClassId, $subjectId) {
             foreach ($adminAreas as $adminArea) {
-                $schoolArea = SchoolNlscProjectArea::create([
-                    'school_id' => $schoolId,
-                    'senior_class_id' => $seniorClassId,
-                    'subject_id' => $subjectId,
-                    'area_name' => $adminArea->area_name,
-                    'sort_order' => $adminArea->sort_order,
-                    'source_project_area_id' => $adminArea->id,
-                ]);
+                $schoolArea = SchoolNlscProjectArea::firstOrCreate(
+                    [
+                        'school_id' => $schoolId,
+                        'senior_class_id' => $seniorClassId,
+                        'subject_id' => $subjectId,
+                        'area_name' => $adminArea->area_name,
+                    ],
+                    [
+                        'sort_order' => $adminArea->sort_order,
+                        'source_project_area_id' => $adminArea->id,
+                    ]
+                );
 
                 foreach ($adminArea->projects as $adminProject) {
                     $schoolProject = SchoolNlscProject::create([
@@ -138,13 +152,13 @@ class SchoolNlscProjectController extends Controller
                             'sort_order' => $adminCompetency->sort_order,
                         ]);
                     }
+
+                    DB::table('school_nlsc_project_sync_log')->updateOrInsert(
+                        ['school_id' => $schoolId, 'source_project_id' => $adminProject->id],
+                        ['synced_at' => now()]
+                    );
                 }
             }
-
-            DB::table('school_nlsc_project_clone_log')->updateOrInsert(
-                ['school_id' => $schoolId, 'senior_class_id' => $seniorClassId, 'subject_id' => $subjectId],
-                ['cloned_at' => now()]
-            );
         });
     }
 
@@ -191,8 +205,8 @@ class SchoolNlscProjectController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        // Make sure the starter set has already been cloned in (or this
-        // school deliberately has none) before adding to it.
+        // Sync in any admin project this school hasn't seen yet before
+        // adding to its own list.
         $this->cloneFromAdminIfNeeded($schoolId, $request->senior_class_id, $request->subject_id);
 
         $area = SchoolNlscProjectArea::firstOrCreate(
@@ -255,6 +269,7 @@ class SchoolNlscProjectController extends Controller
         $request->validate([
             'project_name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'project_area_name' => 'nullable|string|max:255',
         ]);
 
         $duplicate = SchoolNlscProject::where('school_nlsc_project_area_id', $project->school_nlsc_project_area_id)
@@ -264,6 +279,28 @@ class SchoolNlscProjectController extends Controller
 
         if ($duplicate) {
             return response()->json(['success' => false, 'message' => 'That project already exists under this Project Area.'], 422);
+        }
+
+        // The Edit Project modal's "Project Area" field doubles as a
+        // rename-this-area action now — there's no separate small pencil
+        // button next to the area pill anymore. Renaming here affects
+        // EVERY project under that area, not just this one, same as the
+        // old dedicated button did — and only touches this school's own
+        // copy, same as before.
+        $newAreaName = trim((string) $request->project_area_name);
+        if ($newAreaName !== '' && $newAreaName !== $project->area->area_name) {
+            $duplicateArea = SchoolNlscProjectArea::where('school_id', Session('LoggedSchool'))
+                ->where('senior_class_id', $project->area->senior_class_id)
+                ->where('subject_id', $project->area->subject_id)
+                ->where('area_name', $newAreaName)
+                ->where('id', '!=', $project->area->id)
+                ->exists();
+
+            if ($duplicateArea) {
+                return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
+            }
+
+            $project->area->update(['area_name' => $newAreaName]);
         }
 
         $project->update([
@@ -332,9 +369,10 @@ class SchoolNlscProjectController extends Controller
     /**
      * Delete every one of THIS SCHOOL's Project Areas/Projects for one
      * Senior/Subject — never touches the admin's master list or any other
-     * school's copy. Since school_nlsc_project_clone_log already has this
-     * Senior/Subject marked as cloned, nothing gets silently re-seeded
-     * back in afterwards.
+     * school's copy. Every deleted project stays logged in
+     * school_nlsc_project_sync_log as already-handled, so none of them
+     * gets silently re-added on the next visit — only admin projects
+     * this school has genuinely never seen before will sync in.
      */
     public function destroyAllProjects(Request $request)
     {

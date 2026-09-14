@@ -1,0 +1,270 @@
+diff --git a/app/Http/Controllers/Nlscprojectcontroller.php b/app/Http/Controllers/Nlscprojectcontroller.php
+index 6ee3b28..9d0123b 100644
+--- a/app/Http/Controllers/Nlscprojectcontroller.php
++++ b/app/Http/Controllers/Nlscprojectcontroller.php
+@@ -170,6 +170,7 @@ class NlscProjectController extends Controller
+         $request->validate([
+             'project_name' => 'required|string|max:255',
+             'description' => 'nullable|string',
++            'project_area_name' => 'nullable|string|max:255',
+         ]);
+ 
+         $duplicate = NlscProject::where('nlsc_project_area_id', $project->nlsc_project_area_id)
+@@ -181,6 +182,26 @@ class NlscProjectController extends Controller
+             return response()->json(['success' => false, 'message' => 'That project already exists under this Project Area.'], 422);
+         }
+ 
++        // The Edit Project modal's "Project Area" field doubles as a
++        // rename-this-area action now — there's no separate small pencil
++        // button next to the area pill anymore. Renaming here affects
++        // EVERY project under that area, not just this one, same as the
++        // old dedicated button did.
++        $newAreaName = trim((string) $request->project_area_name);
++        if ($newAreaName !== '' && $newAreaName !== $project->area->area_name) {
++            $duplicateArea = NlscProjectArea::where('senior_class_id', $project->area->senior_class_id)
++                ->where('subject_id', $project->area->subject_id)
++                ->where('area_name', $newAreaName)
++                ->where('id', '!=', $project->area->id)
++                ->exists();
++
++            if ($duplicateArea) {
++                return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
++            }
++
++            $project->area->update(['area_name' => $newAreaName]);
++        }
++
+         $project->update([
+             'project_name' => $request->project_name,
+             'description' => $request->description,
+diff --git a/app/Http/Controllers/Schoolnlscprojectcontroller.php b/app/Http/Controllers/Schoolnlscprojectcontroller.php
+index 8bca4d0..4142f96 100644
+--- a/app/Http/Controllers/Schoolnlscprojectcontroller.php
++++ b/app/Http/Controllers/Schoolnlscprojectcontroller.php
+@@ -255,6 +255,7 @@ class SchoolNlscProjectController extends Controller
+         $request->validate([
+             'project_name' => 'required|string|max:255',
+             'description' => 'nullable|string',
++            'project_area_name' => 'nullable|string|max:255',
+         ]);
+ 
+         $duplicate = SchoolNlscProject::where('school_nlsc_project_area_id', $project->school_nlsc_project_area_id)
+@@ -266,6 +267,28 @@ class SchoolNlscProjectController extends Controller
+             return response()->json(['success' => false, 'message' => 'That project already exists under this Project Area.'], 422);
+         }
+ 
++        // The Edit Project modal's "Project Area" field doubles as a
++        // rename-this-area action now — there's no separate small pencil
++        // button next to the area pill anymore. Renaming here affects
++        // EVERY project under that area, not just this one, same as the
++        // old dedicated button did — and only touches this school's own
++        // copy, same as before.
++        $newAreaName = trim((string) $request->project_area_name);
++        if ($newAreaName !== '' && $newAreaName !== $project->area->area_name) {
++            $duplicateArea = SchoolNlscProjectArea::where('school_id', Session('LoggedSchool'))
++                ->where('senior_class_id', $project->area->senior_class_id)
++                ->where('subject_id', $project->area->subject_id)
++                ->where('area_name', $newAreaName)
++                ->where('id', '!=', $project->area->id)
++                ->exists();
++
++            if ($duplicateArea) {
++                return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
++            }
++
++            $project->area->update(['area_name' => $newAreaName]);
++        }
++
+         $project->update([
+             'project_name' => $request->project_name,
+             'description' => $request->description,
+diff --git a/resources/views/School/nlsc-projects.blade.php b/resources/views/School/nlsc-projects.blade.php
+index 1841ae9..ccfa5ff 100644
+--- a/resources/views/School/nlsc-projects.blade.php
++++ b/resources/views/School/nlsc-projects.blade.php
+@@ -220,10 +220,6 @@
+                                 <td>{{ $index + 1 }}</td>
+                                 <td>
+                                     <span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span>
+-                                    <button type="button" class="nt-action-btn btn-edit-sm edit-area-btn"
+-                                        data-area-id="{{ optional($project->area)->id }}"
+-                                        title="Rename this Project Area" style="padding:.25rem .5rem;margin-left:.25rem;"><i
+-                                            class="fas fa-pen" style="font-size:.62rem;"></i></button>
+                                 </td>
+                                 <td class="project-name-cell">{{ $project->project_name }}</td>
+                                 <td><span class="nt-desc-preview description-cell" title="{{ $project->description }}">{{ $project->description ?: '—' }}</span></td>
+@@ -272,7 +268,7 @@
+                             <option value="{{ $areaName }}"></option>
+                         @endforeach
+                     </datalist>
+-                    <small class="text-muted">Type an existing Project Area to add to it, or a new name to create one.</small>
++                    <small class="text-muted" id="projectAreaHelp">Type an existing Project Area to add to it, or a new name to create one.</small>
+                 </div>
+                 <div class="form-group mt-2">
+                     <label class="form-label">Project Name</label>
+@@ -339,6 +335,7 @@
+             document.getElementById('projectIdInput').value = '';
+             document.getElementById('projectAreaInput').value = '';
+             document.getElementById('projectAreaInput').disabled = false;
++            document.getElementById('projectAreaHelp').textContent = 'Type an existing Project Area to add to it, or a new name to create one.';
+             document.getElementById('projectNameInput').value = '';
+             document.getElementById('projectDescriptionInput').value = '';
+             openNtModal('projectModal');
+@@ -350,9 +347,13 @@
+                 document.getElementById('projectModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Project';
+                 document.getElementById('projectIdInput').value = row.dataset.id;
+                 document.getElementById('projectAreaInput').value = row.querySelector('.area-name-cell').textContent.trim();
+-                // Editing never moves a project to a different area — only its
+-                // own name/description change here.
+-                document.getElementById('projectAreaInput').disabled = true;
++                // Editing the Project Area name here renames the whole
++                // Project Area — every other project under it changes
++                // too. There's no separate "rename area" button anymore;
++                // this field does double duty (see the Save handler
++                // below).
++                document.getElementById('projectAreaInput').disabled = false;
++                document.getElementById('projectAreaHelp').textContent = 'Renaming this renames the whole Project Area — every project under it changes too, not just this one.';
+                 document.getElementById('projectNameInput').value = row.querySelector('.project-name-cell').textContent.trim();
+                 const desc = row.querySelector('.description-cell').getAttribute('title') || '';
+                 document.getElementById('projectDescriptionInput').value = desc;
+@@ -412,42 +413,6 @@
+                 });
+         });
+ 
+-        // ===== Rename Project Area =====
+-        document.querySelectorAll('.edit-area-btn').forEach(btn => {
+-            btn.addEventListener('click', function () {
+-                const areaId = this.dataset.areaId;
+-                if (!areaId) return;
+-                const current = this.closest('td').querySelector('.area-name-cell').textContent.trim();
+-
+-                Swal.fire({
+-                    title: 'Rename Project Area',
+-                    input: 'text',
+-                    inputValue: current,
+-                    inputValidator: (value) => !value?.trim() ? 'Enter a name' : undefined,
+-                    showCancelButton: true,
+-                    confirmButtonColor: '#2C29CA',
+-                    confirmButtonText: 'Save',
+-                }).then(result => {
+-                    if (!result.isConfirmed) return;
+-
+-                    fetch(`{{ url('nlsc-project-areas') }}/${areaId}`, {
+-                        method: 'PUT',
+-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+-                        body: JSON.stringify({ area_name: result.value.trim() }),
+-                    })
+-                        .then(r => r.json())
+-                        .then(res => {
+-                            if (!res.success) {
+-                                Swal.fire('Error', res.message || 'Failed to rename.', 'error');
+-                                return;
+-                            }
+-                            window.location.reload();
+-                        })
+-                        .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
+-                });
+-            });
+-        });
+-
+         // ===== Delete Project =====
+         document.querySelectorAll('.delete-project-btn').forEach(btn => {
+             btn.addEventListener('click', function () {
+diff --git a/resources/views/master-logic/nlsc-projects.blade.php b/resources/views/master-logic/nlsc-projects.blade.php
+index 210f79d..1bb2b39 100644
+--- a/resources/views/master-logic/nlsc-projects.blade.php
++++ b/resources/views/master-logic/nlsc-projects.blade.php
+@@ -335,10 +335,6 @@
+                                 <td>{{ $index + 1 }}</td>
+                                 <td>
+                                     <span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span>
+-                                    <button type="button" class="nt-action-btn btn-edit-sm edit-area-btn"
+-                                        data-area-id="{{ optional($project->area)->id }}"
+-                                        title="Rename this Project Area" style="padding:.25rem .5rem;margin-left:.25rem;"><i
+-                                            class="fas fa-pen" style="font-size:.62rem;"></i></button>
+                                 </td>
+                                 <td class="project-name-cell">{{ $project->project_name }}</td>
+                                 <td><span class="nt-desc-preview description-cell"
+@@ -392,7 +388,7 @@
+                             <option value="{{ $areaName }}"></option>
+                         @endforeach
+                     </datalist>
+-                    <small class="text-muted">Type an existing Project Area to add to it, or a new name to create
++                    <small class="text-muted" id="projectAreaHelp">Type an existing Project Area to add to it, or a new name to create
+                         one.</small>
+                 </div>
+                 <div class="form-group mt-2">
+@@ -501,6 +497,7 @@
+             document.getElementById('projectIdInput').value = '';
+             document.getElementById('projectAreaInput').value = '';
+             document.getElementById('projectAreaInput').disabled = false;
++            document.getElementById('projectAreaHelp').textContent = 'Type an existing Project Area to add to it, or a new name to create one.';
+             document.getElementById('projectNameInput').value = '';
+             document.getElementById('projectDescriptionInput').value = '';
+             openNtModal('projectModal');
+@@ -512,9 +509,14 @@
+                 document.getElementById('projectModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Project';
+                 document.getElementById('projectIdInput').value = row.dataset.id;
+                 document.getElementById('projectAreaInput').value = row.querySelector('.area-name-cell').textContent.trim();
+-                // Editing never moves a project to a different area — only its
+-                // own name/description change here.
+-                document.getElementById('projectAreaInput').disabled = true;
++                // Editing the Project Area name here renames the whole
++                // Project Area — every other project under it changes
++                // too. There's no separate "rename area" button anymore;
++                // this field does double duty (see the Save handler
++                // below), matching the same "just use the Edit modal"
++                // pattern on the school side.
++                document.getElementById('projectAreaInput').disabled = false;
++                document.getElementById('projectAreaHelp').textContent = 'Renaming this renames the whole Project Area — every project under it changes too, not just this one.';
+                 document.getElementById('projectNameInput').value = row.querySelector('.project-name-cell').textContent.trim();
+                 const desc = row.querySelector('.description-cell').getAttribute('title') || '';
+                 document.getElementById('projectDescriptionInput').value = desc;
+@@ -606,47 +608,6 @@
+             });
+         });
+ 
+-        // ===== Rename Project Area =====
+-        // One Project Area can have several Project rows under it (one
+-        // per project sharing that area), so a rename here reloads the
+-        // page rather than patching just this row's pill in place —
+-        // otherwise the other rows for the same area would keep showing
+-        // the old name until the next refresh.
+-        document.querySelectorAll('.edit-area-btn').forEach(btn => {
+-            btn.addEventListener('click', function () {
+-                const areaId = this.dataset.areaId;
+-                if (!areaId) return;
+-                const current = this.closest('td').querySelector('.area-name-cell').textContent.trim();
+-
+-                Swal.fire({
+-                    title: 'Rename Project Area',
+-                    input: 'text',
+-                    inputValue: current,
+-                    inputValidator: (value) => !value?.trim() ? 'Enter a name' : undefined,
+-                    showCancelButton: true,
+-                    confirmButtonColor: '#2C29CA',
+-                    confirmButtonText: 'Save',
+-                }).then(result => {
+-                    if (!result.isConfirmed) return;
+-
+-                    fetch(`{{ url('admin/nlsc-project-areas') }}/${areaId}`, {
+-                        method: 'PUT',
+-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+-                        body: JSON.stringify({ area_name: result.value.trim() }),
+-                    })
+-                        .then(r => r.json())
+-                        .then(res => {
+-                            if (!res.success) {
+-                                Swal.fire('Error', res.message || 'Failed to rename.', 'error');
+-                                return;
+-                            }
+-                            window.location.reload();
+-                        })
+-                        .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
+-                });
+-            });
+-        });
+-
+         // ===== Delete ALL Projects (this Senior/Subject) =====
+         document.getElementById('deleteAllProjectsBtn').addEventListener('click', function () {
+             const projectCount = document.querySelectorAll('#projectsTbody tr[data-id]').length;

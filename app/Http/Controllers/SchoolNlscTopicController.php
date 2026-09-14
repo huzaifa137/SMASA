@@ -13,12 +13,14 @@ use Session;
 
 /**
  * The school-facing counterpart to NlscTopicController (the super-admin
- * screen). A school's Topics/Competency Areas are its OWN copy — cloned
- * once from the admin's platform-wide starter set the first time a
- * teacher opens a given Senior/Subject, then completely independent from
- * that point on: a school can delete a topic (or all of them) or add its
- * own without it ever touching the admin's master list or any other
- * school's copy.
+ * screen). A school's Topics/Competency Areas are its OWN copy — synced
+ * in from the admin's platform-wide starter set incrementally, one admin
+ * topic at a time, the first time each one is seen. A school can delete
+ * a topic (or all of them) or add its own without it ever touching the
+ * admin's master list or any other school's copy — and an admin topic
+ * added later still reaches the school on its next visit, since "already
+ * synced" is tracked per-topic (school_nlsc_topic_sync_log), not as a
+ * single per-Senior/Subject flag.
  *
  * Gated on the 'classes' module's own features (view_classes/add_class/
  * edit_class/delete_class) — NOT view_master_data/create_master_data/etc.
@@ -64,11 +66,19 @@ class SchoolNlscTopicController extends Controller
     }
 
     /**
-     * The one-time clone: copies every admin nlsc_topics row (and its
-     * competency areas) for this Senior/Subject into the school's own
-     * tables — but only the very first time, tracked via
-     * school_nlsc_clone_log, so a school that has deliberately deleted
-     * everything doesn't get it silently re-added on the next visit.
+     * Syncs in any admin nlsc_topics row for this Senior/Subject that
+     * hasn't already been introduced to this school — tracked in
+     * school_nlsc_topic_sync_log by source_topic_id, not by a single
+     * per-Senior/Subject flag. Runs on every visit (not just the first),
+     * so a topic the admin adds after a school has already been using
+     * Topics for this Senior/Subject still reaches that school — while a
+     * topic the school deleted stays deleted, since it's already logged
+     * as handled and is never reconsidered.
+     *
+     * (Previously this only ever ran once per Senior/Subject, gated by
+     * school_nlsc_clone_log — which meant any admin topic added after
+     * that first visit could never reach a school that had already
+     * started using Topics for that Senior/Subject, however long ago.)
      */
     private function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
     {
@@ -76,24 +86,23 @@ class SchoolNlscTopicController extends Controller
             return;
         }
 
-        $alreadyCloned = DB::table('school_nlsc_clone_log')
+        $alreadySyncedIds = DB::table('school_nlsc_topic_sync_log')
             ->where('school_id', $schoolId)
+            ->pluck('source_topic_id');
+
+        $newAdminTopics = NlscTopic::with('competencyAreas')
             ->where('senior_class_id', $seniorClassId)
             ->where('subject_id', $subjectId)
-            ->exists();
-
-        if ($alreadyCloned) {
-            return;
-        }
-
-        $adminTopics = NlscTopic::with('competencyAreas')
-            ->where('senior_class_id', $seniorClassId)
-            ->where('subject_id', $subjectId)
+            ->whereNotIn('id', $alreadySyncedIds)
             ->orderBy('sort_order')
             ->get();
 
-        DB::transaction(function () use ($adminTopics, $schoolId, $seniorClassId, $subjectId) {
-            foreach ($adminTopics as $adminTopic) {
+        if ($newAdminTopics->isEmpty()) {
+            return;
+        }
+
+        DB::transaction(function () use ($newAdminTopics, $schoolId, $seniorClassId, $subjectId) {
+            foreach ($newAdminTopics as $adminTopic) {
                 $schoolTopic = SchoolNlscTopic::create([
                     'school_id' => $schoolId,
                     'senior_class_id' => $seniorClassId,
@@ -110,12 +119,12 @@ class SchoolNlscTopicController extends Controller
                         'sort_order' => $adminArea->sort_order,
                     ]);
                 }
-            }
 
-            DB::table('school_nlsc_clone_log')->updateOrInsert(
-                ['school_id' => $schoolId, 'senior_class_id' => $seniorClassId, 'subject_id' => $subjectId],
-                ['cloned_at' => now()]
-            );
+                DB::table('school_nlsc_topic_sync_log')->updateOrInsert(
+                    ['school_id' => $schoolId, 'source_topic_id' => $adminTopic->id],
+                    ['synced_at' => now()]
+                );
+            }
         });
     }
 
@@ -155,10 +164,12 @@ class SchoolNlscTopicController extends Controller
             'topic_name' => 'required|string|max:255',
         ]);
 
-        // Make sure the starter set has already been cloned in (or this
-        // school deliberately has none) before adding to it, so a
-        // never-visited Senior/Subject doesn't end up with just this one
-        // topic when the admin's set should have been the starting point.
+        // Sync in any admin topic this school hasn't seen yet before
+        // adding to its own list — so a never-visited Senior/Subject
+        // doesn't end up with just this one topic when the admin's set
+        // should have been the starting point, and a school that's
+        // already been using this Senior/Subject for a while still picks
+        // up anything the admin has added since.
         $this->cloneFromAdminIfNeeded($schoolId, $request->senior_class_id, $request->subject_id);
 
         $exists = SchoolNlscTopic::where('school_id', $schoolId)
@@ -237,10 +248,10 @@ class SchoolNlscTopicController extends Controller
     /**
      * Delete every one of THIS SCHOOL's topics (and their competency
      * areas) for one Senior/Subject — never touches the admin's master
-     * list or any other school's copy. Since school_nlsc_clone_log
-     * already has this Senior/Subject marked as cloned, nothing gets
-     * silently re-seeded back in afterwards (same as deleting each topic
-     * one at a time already behaved).
+     * list or any other school's copy. Every deleted topic stays logged
+     * in school_nlsc_topic_sync_log as already-handled, so none of them
+     * gets silently re-added on the next visit — only admin topics this
+     * school has genuinely never seen before will sync in.
      */
     public function destroyAllTopics(Request $request)
     {

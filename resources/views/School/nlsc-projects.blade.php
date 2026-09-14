@@ -220,10 +220,6 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>
                                     <span class="nt-area-pill area-name-cell">{{ optional($project->area)->area_name }}</span>
-                                    <button type="button" class="nt-action-btn btn-edit-sm edit-area-btn"
-                                        data-area-id="{{ optional($project->area)->id }}"
-                                        title="Rename this Project Area" style="padding:.25rem .5rem;margin-left:.25rem;"><i
-                                            class="fas fa-pen" style="font-size:.62rem;"></i></button>
                                 </td>
                                 <td class="project-name-cell">{{ $project->project_name }}</td>
                                 <td><span class="nt-desc-preview description-cell" title="{{ $project->description }}">{{ $project->description ?: '—' }}</span></td>
@@ -272,7 +268,7 @@
                             <option value="{{ $areaName }}"></option>
                         @endforeach
                     </datalist>
-                    <small class="text-muted">Type an existing Project Area to add to it, or a new name to create one.</small>
+                    <small class="text-muted" id="projectAreaHelp">Type an existing Project Area to add to it, or a new name to create one.</small>
                 </div>
                 <div class="form-group mt-2">
                     <label class="form-label">Project Name</label>
@@ -339,6 +335,7 @@
             document.getElementById('projectIdInput').value = '';
             document.getElementById('projectAreaInput').value = '';
             document.getElementById('projectAreaInput').disabled = false;
+            document.getElementById('projectAreaHelp').textContent = 'Type an existing Project Area to add to it, or a new name to create one.';
             document.getElementById('projectNameInput').value = '';
             document.getElementById('projectDescriptionInput').value = '';
             openNtModal('projectModal');
@@ -350,9 +347,13 @@
                 document.getElementById('projectModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Project';
                 document.getElementById('projectIdInput').value = row.dataset.id;
                 document.getElementById('projectAreaInput').value = row.querySelector('.area-name-cell').textContent.trim();
-                // Editing never moves a project to a different area — only its
-                // own name/description change here.
-                document.getElementById('projectAreaInput').disabled = true;
+                // Editing the Project Area name here renames the whole
+                // Project Area — every other project under it changes
+                // too. There's no separate "rename area" button anymore;
+                // this field does double duty (see the Save handler
+                // below).
+                document.getElementById('projectAreaInput').disabled = false;
+                document.getElementById('projectAreaHelp').textContent = 'Renaming this renames the whole Project Area — every project under it changes too, not just this one.';
                 document.getElementById('projectNameInput').value = row.querySelector('.project-name-cell').textContent.trim();
                 const desc = row.querySelector('.description-cell').getAttribute('title') || '';
                 document.getElementById('projectDescriptionInput').value = desc;
@@ -410,42 +411,6 @@
                     $btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
                     Swal.fire('Error', 'Failed to save — check your connection.', 'error');
                 });
-        });
-
-        // ===== Rename Project Area =====
-        document.querySelectorAll('.edit-area-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const areaId = this.dataset.areaId;
-                if (!areaId) return;
-                const current = this.closest('td').querySelector('.area-name-cell').textContent.trim();
-
-                Swal.fire({
-                    title: 'Rename Project Area',
-                    input: 'text',
-                    inputValue: current,
-                    inputValidator: (value) => !value?.trim() ? 'Enter a name' : undefined,
-                    showCancelButton: true,
-                    confirmButtonColor: '#2C29CA',
-                    confirmButtonText: 'Save',
-                }).then(result => {
-                    if (!result.isConfirmed) return;
-
-                    fetch(`{{ url('nlsc-project-areas') }}/${areaId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: JSON.stringify({ area_name: result.value.trim() }),
-                    })
-                        .then(r => r.json())
-                        .then(res => {
-                            if (!res.success) {
-                                Swal.fire('Error', res.message || 'Failed to rename.', 'error');
-                                return;
-                            }
-                            window.location.reload();
-                        })
-                        .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
-                });
-            });
         });
 
         // ===== Delete Project =====

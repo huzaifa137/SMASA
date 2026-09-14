@@ -6,6 +6,9 @@ use App\Helpers\PermissionHelper;
 use App\Models\NlscProject;
 use App\Models\NlscProjectArea;
 use App\Models\NlscProjectCompetencyArea;
+use App\Models\SchoolNlscProject;
+use App\Models\SchoolNlscProjectArea;
+use App\Models\SchoolNlscProjectCompetencyArea;
 use Illuminate\Http\Request;
 
 /**
@@ -170,6 +173,7 @@ class NlscProjectController extends Controller
         $request->validate([
             'project_name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'project_area_name' => 'nullable|string|max:255',
         ]);
 
         $duplicate = NlscProject::where('nlsc_project_area_id', $project->nlsc_project_area_id)
@@ -179,6 +183,26 @@ class NlscProjectController extends Controller
 
         if ($duplicate) {
             return response()->json(['success' => false, 'message' => 'That project already exists under this Project Area.'], 422);
+        }
+
+        // The Edit Project modal's "Project Area" field doubles as a
+        // rename-this-area action now — there's no separate small pencil
+        // button next to the area pill anymore. Renaming here affects
+        // EVERY project under that area, not just this one, same as the
+        // old dedicated button did.
+        $newAreaName = trim((string) $request->project_area_name);
+        if ($newAreaName !== '' && $newAreaName !== $project->area->area_name) {
+            $duplicateArea = NlscProjectArea::where('senior_class_id', $project->area->senior_class_id)
+                ->where('subject_id', $project->area->subject_id)
+                ->where('area_name', $newAreaName)
+                ->where('id', '!=', $project->area->id)
+                ->exists();
+
+            if ($duplicateArea) {
+                return response()->json(['success' => false, 'message' => 'A Project Area with that name already exists for this Senior/Subject.'], 422);
+            }
+
+            $project->area->update(['area_name' => $newAreaName]);
         }
 
         $project->update([
