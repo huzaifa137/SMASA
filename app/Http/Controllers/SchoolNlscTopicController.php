@@ -19,12 +19,19 @@ use Session;
  * that point on: a school can delete a topic (or all of them) or add its
  * own without it ever touching the admin's master list or any other
  * school's copy.
+ *
+ * Gated on the 'classes' module's own features (view_classes/add_class/
+ * edit_class/delete_class) — NOT view_master_data/create_master_data/etc.
+ * Those are the 'master_data' module's features, which only ever gets
+ * assigned on ADMIN roles (see SetupUserRightsModule.php) — a school
+ * role has no way to be granted them, so gating a school-facing
+ * controller on them would deny every non-system-admin teacher outright.
  */
 class SchoolNlscTopicController extends Controller
 {
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        PermissionHelper::denyUnlessFeature('view_classes');
 
         $schoolId = Session('LoggedSchool');
 
@@ -114,7 +121,7 @@ class SchoolNlscTopicController extends Controller
 
     public function competencyAreas($id)
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        PermissionHelper::denyUnlessFeature('view_classes');
 
         $topic = SchoolNlscTopic::with('competencyAreas')
             ->where('school_id', Session('LoggedSchool'))
@@ -136,7 +143,7 @@ class SchoolNlscTopicController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!PermissionHelper::canFeature('add_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -183,7 +190,7 @@ class SchoolNlscTopicController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!PermissionHelper::canFeature('edit_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -213,7 +220,7 @@ class SchoolNlscTopicController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -237,7 +244,7 @@ class SchoolNlscTopicController extends Controller
      */
     public function destroyAllTopics(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -263,7 +270,7 @@ class SchoolNlscTopicController extends Controller
 
     public function storeCompetencyArea(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!PermissionHelper::canFeature('add_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -287,7 +294,7 @@ class SchoolNlscTopicController extends Controller
 
     public function updateCompetencyArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!PermissionHelper::canFeature('edit_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -307,7 +314,7 @@ class SchoolNlscTopicController extends Controller
 
     public function destroyCompetencyArea($id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -330,7 +337,7 @@ class SchoolNlscTopicController extends Controller
      */
     public function destroyAllCompetencyAreas($topicId)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_class')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

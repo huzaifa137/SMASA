@@ -210,6 +210,29 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/nlsc-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-competency-areas.delete');
         });
 
+    // "Projects" (Project Work) — the second NLSC Assessment Type,
+    // alongside "Activities of Integration" (Topics) above. Same
+    // super-admin-managed, platform-wide shape, one level deeper (Project
+    // Area -> Project -> Competency Areas). See NlscProjectController's
+    // own docblock.
+    Route::controller(\App\Http\Controllers\NlscProjectController::class)
+        ->middleware(['AdminAuth'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/nlsc-projects', 'index')->name('nlsc-projects');
+            Route::post('/nlsc-projects', 'store')->name('nlsc-projects.store');
+            Route::post('/nlsc-projects/bulk-import', 'bulkImport')->name('nlsc-projects.bulk-import');
+            Route::put('/nlsc-projects/{id}', 'update')->name('nlsc-projects.update');
+            Route::delete('/nlsc-projects-all', 'destroyAllProjects')->name('nlsc-projects.delete-all');
+            Route::delete('/nlsc-projects/{id}', 'destroy')->name('nlsc-projects.delete');
+            Route::get('/nlsc-projects/{id}/competency-areas', 'competencyAreas')->name('nlsc-projects.competency-areas');
+            Route::post('/nlsc-projects/{id}/competency-areas', 'storeCompetencyArea')->name('nlsc-projects.competency-areas.store');
+            Route::delete('/nlsc-projects/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-projects.competency-areas.delete-all');
+            Route::put('/nlsc-project-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-project-competency-areas.update');
+            Route::delete('/nlsc-project-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-project-competency-areas.delete');
+        });
+
     // A school's OWN copy of NLSC Topics/Competency Areas — separate
     // tables/controller from the admin ones above (see
     // SchoolNlscTopicController), so a school editing or deleting its
@@ -228,6 +251,24 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/nlsc-topics/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-topics.competency-areas.delete-all');
             Route::put('/nlsc-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-competency-areas.update');
             Route::delete('/nlsc-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-competency-areas.delete');
+        });
+
+    // A school's OWN copy of Projects (Project Work) — see
+    // SchoolNlscProjectController.
+    Route::controller(\App\Http\Controllers\SchoolNlscProjectController::class)
+        ->middleware(['module:classes'])
+        ->name('school.')
+        ->group(function () {
+            Route::get('/nlsc-projects', 'index')->name('nlsc-projects');
+            Route::post('/nlsc-projects', 'store')->name('nlsc-projects.store');
+            Route::put('/nlsc-projects/{id}', 'update')->name('nlsc-projects.update');
+            Route::delete('/nlsc-projects-all', 'destroyAllProjects')->name('nlsc-projects.delete-all');
+            Route::delete('/nlsc-projects/{id}', 'destroy')->name('nlsc-projects.delete');
+            Route::get('/nlsc-projects/{id}/competency-areas', 'competencyAreas')->name('nlsc-projects.competency-areas');
+            Route::post('/nlsc-projects/{id}/competency-areas', 'storeCompetencyArea')->name('nlsc-projects.competency-areas.store');
+            Route::delete('/nlsc-projects/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-projects.competency-areas.delete-all');
+            Route::put('/nlsc-project-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-project-competency-areas.update');
+            Route::delete('/nlsc-project-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-project-competency-areas.delete');
         });
 
     // ─── PARENT / GUARDIAN PORTAL ───────────────────────────────────────
