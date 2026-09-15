@@ -71,14 +71,6 @@
         .nt-table tbody td { vertical-align: top; padding: .85rem .9rem; border-bottom: 1px solid #f0eeff; }
         .nt-table tbody td:first-child { font-weight: 700; color: #1e1b4b; white-space: nowrap; }
 
-        .achievement-text { font-size: .84rem; color: #34325c; line-height: 1.5; }
-        .achievement-empty { font-size: .82rem; color: #a3a0c9; font-style: italic; }
-
-        .achievement-textarea {
-            width: 100%; min-height: 70px; border: 1.5px solid #e4e2ff; border-radius: .6rem;
-            padding: .5rem .7rem; font-size: .84rem; resize: vertical;
-        }
-
         .btn-edit-sm { background: #2C29CA; color: #fff; }
         .btn-edit-sm:hover { background: #211ea3; color: #fff; }
         .btn-view-sm { background: #1e1b4b; color: #fff; }
@@ -95,23 +87,25 @@
             margin: .15rem .3rem .15rem 0;
         }
 
-        .topic-name-text { font-weight: 700; color: #1e1b4b; display: block; margin-bottom: .4rem; }
+        .topic-name-text { font-weight: 700; color: #1e1b4b; display: block; }
 
-        .achievement-flag {
-            display: inline-flex; align-items: center; gap: .4rem;
-            font-size: .74rem; font-weight: 700; color: #b3261e;
-            background: #fdecea; border: 1px solid #f6c4c0; border-radius: 999px;
-            padding: .35rem .75rem;
+        /* Count badge — identical to Activities of Integration's
+        Competency Areas count, so both screens read the same way: a
+        topic can have as many Subject Achievement statements as needed,
+        "View" opens the list. */
+        .nt-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            font-size: .74rem;
+            font-weight: 700;
+            padding: .3rem .7rem;
+            border-radius: .6rem;
+            background: #eef0ff;
+            color: #3a37b8;
         }
 
-        .achievement-summary-pill {
-            display: inline-flex; align-items: center; gap: .4rem;
-            font-size: .72rem; font-weight: 700; border-radius: 999px;
-            padding: .3rem .8rem; margin-left: .5rem;
-        }
-
-        .achievement-summary-pill.is-complete { background: #eafaf0; color: #16a34a; }
-        .achievement-summary-pill.is-incomplete { background: #fdecea; color: #b3261e; }
+        .nt-count-badge.is-zero { background: #f1f5f9; color: #64748b; }
 
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: #a3a0c9; }
 
@@ -141,6 +135,13 @@
 
         .nt-modal-body { padding: 1.4rem; overflow-y: auto; flex: 1; }
         .nt-modal-ft { padding: 1rem 1.4rem; border-top: 1px solid #f0eeff; display: flex; gap: .6rem; justify-content: flex-end; }
+
+        .nt-ach-row {
+            display: flex; align-items: flex-start; gap: .6rem;
+            padding: .7rem .8rem; border: 1.5px solid #e4e2ff; border-radius: .7rem; margin-bottom: .6rem;
+        }
+
+        .nt-ach-row .desc { flex: 1; font-size: .84rem; color: #1e1b4b; line-height: 1.45; }
 
         /* ===== Filter bar: keeps Assessment Type | Senior | Subject on one line ===== */
         .nt-filter-bar {
@@ -367,25 +368,12 @@
             <span class="hero-badge"><i class="fas fa-bullseye me-1"></i> Subject Achievement</span>
             <div class="hero-title">
                 Subject Achievement — {{ $seniorLabel }}
-                @php
-                    $achievedCount = $topics->filter(fn($t) => $t->subjectAchievement)->count();
-                    $totalTopics = $topics->count();
-                @endphp
-                @if($totalTopics > 0)
-                    <span class="achievement-summary-pill {{ $achievedCount === $totalTopics ? 'is-complete' : 'is-incomplete' }}">
-                        @if($achievedCount === $totalTopics)
-                            <i class="fas fa-circle-check"></i> All {{ $totalTopics }} topics set
-                        @else
-                            <i class="fas fa-triangle-exclamation"></i> {{ $achievedCount }}/{{ $totalTopics }} topics set
-                        @endif
-                    </span>
-                @endif
             </div>
             <div class="hero-subtitle">
-                Your school's own achievement statement per Topic — the same Topics already
-                managed from Activities of Integration. An admin's edit or new achievement
-                reaches your copy automatically; deleting or editing yours here only ever
-                affects your school.
+                Your school's own Subject Achievement statements per Topic — a topic can have as
+                many as needed, the same Topics already managed from Activities of Integration. An
+                admin's edit or new achievement reaches your copy automatically; deleting or
+                editing yours here only ever affects your school.
             </div>
         </div>
 
@@ -449,9 +437,6 @@
                 <button type="button" id="addTopicBtn" class="btn btn-outline-primary flex-shrink-0">
                     <i class="fas fa-plus me-1"></i> Add Topic
                 </button>
-                <button type="button" id="addAchievementBtn" class="btn btn-primary flex-shrink-0">
-                    <i class="fas fa-plus me-1"></i> Add Subject Achievement
-                </button>
                 <button type="button" id="deleteAllAchievementsBtn" class="btn btn-danger flex-shrink-0">
                     <i class="fas fa-trash me-1"></i> Delete All Subject Achievements
                 </button>
@@ -466,35 +451,26 @@
                 <table class="table nt-table">
                     <thead>
                         <tr>
-                            <th style="width:40px;">#</th>
-                            <th style="width:220px;">Topic</th>
-                            <th>Subject Achievement</th>
-                            <th style="width:180px;">Actions</th>
+                            <th style="width:4%;">#</th>
+                            <th>Topic</th>
+                            <th>{{ $seniorLabel }} — Subject Achievements</th>
+                            <th style="width:22%;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="achievementsTbody">
                         @forelse ($topics as $i => $topic)
-                            <tr data-topic-id="{{ $topic->id }}" data-achievement-id="{{ $topic->subjectAchievement->id ?? '' }}">
+                            <tr data-topic-id="{{ $topic->id }}">
                                 <td>{{ $i + 1 }}</td>
+                                <td class="topic-name-cell"><span class="topic-name-text">{{ $topic->topic_name }}</span></td>
                                 <td>
-                                    <span class="topic-name-text">{{ $topic->topic_name }}</span>
+                                    <span class="nt-count-badge {{ $topic->subject_achievements_count == 0 ? 'is-zero' : '' }}">
+                                        <i class="fas fa-bullseye"></i> {{ $topic->subject_achievements_count }}
+                                    </span>
+                                </td>
+                                <td>
                                     <button type="button" class="nt-action-btn btn-view-sm view-topic-btn"><i class="fas fa-eye"></i> View</button>
                                     <button type="button" class="nt-action-btn btn-edit-sm rename-topic-btn"><i class="fas fa-pen"></i> Edit</button>
                                     <button type="button" class="nt-action-btn btn-del-sm delete-topic-btn"><i class="fas fa-trash"></i> Delete</button>
-                                </td>
-                                <td>
-                                    <div class="achievement-view" @if(!$topic->subjectAchievement) style="display:none;" @endif>
-                                        <div class="achievement-text">{{ $topic->subjectAchievement->achievement_text ?? '' }}</div>
-                                    </div>
-                                    <div class="achievement-empty" @if($topic->subjectAchievement) style="display:none;" @endif>
-                                        <span class="achievement-flag"><i class="fas fa-triangle-exclamation"></i> Missing — every topic needs one</span>
-                                    </div>
-                                    <textarea class="achievement-textarea achievement-edit" style="display:none;">{{ $topic->subjectAchievement->achievement_text ?? '' }}</textarea>
-                                </td>
-                                <td>
-                                    <button type="button" class="nt-action-btn btn-edit-sm edit-achievement-btn"><i class="fas fa-pen"></i> Edit</button>
-                                    <button type="button" class="nt-action-btn btn-save-sm save-achievement-btn" style="display:none;"><i class="fas fa-check"></i> Save</button>
-                                    <button type="button" class="nt-action-btn btn-del-sm delete-achievement-btn" @if(!$topic->subjectAchievement) style="display:none;" @endif><i class="fas fa-trash"></i> Delete</button>
                                 </td>
                             </tr>
                         @empty
@@ -529,48 +505,31 @@
         </div>
     </div>
 
-    {{-- ===== Add Subject Achievement modal ===== —a quicker entry point
-    matching Add Topic/Add Project's modal pattern, picking from whichever
-    topics don't have a statement yet (topics that already have one are
-    edited inline in the table instead). --}}
-    <div class="nt-modal-overlay" id="addAchievementModal">
-        <div class="nt-modal-box">
-            <div class="nt-modal-hd">
-                <h4><i class="fas fa-plus me-2"></i>Add Subject Achievement</h4>
-                <button class="nt-modal-close" onclick="closeNtModal('addAchievementModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="nt-modal-body">
-                <div class="form-group">
-                    <label class="form-label">Topic</label>
-                    <select id="addAchievementTopicSelect" class="form-control"></select>
-                </div>
-                <div class="form-group mt-2">
-                    <label class="form-label">Subject Achievement</label>
-                    <textarea id="addAchievementTextInput" class="form-control" rows="4" placeholder="e.g. Communicates confidently about personal identity, family members, relationships, routines and responsibilities using appropriate spoken and written English."></textarea>
-                </div>
-            </div>
-            <div class="nt-modal-ft">
-                <button class="btn btn-secondary" onclick="closeNtModal('addAchievementModal')">Cancel</button>
-                <button class="btn btn-primary" id="saveNewAchievementBtn"><i class="fas fa-save me-1"></i> Save</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ===== View Topic modal ===== --}}
+    {{-- ===== View Topic — Subject Achievement statements modal =====
+    Mirrors Activities of Integration's "View Topic — Competency Areas"
+    modal exactly: a topic can carry as many statements as needed, each
+    independently addable/editable/deletable here. --}}
     <div class="nt-modal-overlay" id="viewAchievementModal">
-        <div class="nt-modal-box">
+        <div class="nt-modal-box" style="max-width:640px;">
             <div class="nt-modal-hd">
-                <h4><i class="fas fa-eye me-2"></i><span id="viewAchievementTopicName">Topic</span></h4>
+                <h4><i class="fas fa-bullseye me-2"></i> Subject Achievements — <span id="viewAchievementTopicName"></span></h4>
                 <button class="nt-modal-close" onclick="closeNtModal('viewAchievementModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="nt-modal-body">
-                <label class="form-label">Subject Achievement</label>
-                <div id="viewAchievementText" class="achievement-text"></div>
-                <div id="viewAchievementMissing" class="achievement-flag" style="display:none;">
-                    <i class="fas fa-triangle-exclamation"></i> Missing — every topic needs one
+                <input type="hidden" id="viewAchievementTopicIdInput">
+                <div id="achievementsList"></div>
+
+                <div style="display:flex; gap:.6rem; margin-top:1rem;">
+                    <textarea id="newAchievementInput" class="form-control" rows="3" placeholder="Add a subject achievement statement…"></textarea>
+                    <button type="button" id="addAchievementBtnInModal" class="btn btn-primary" style="white-space:nowrap; align-self:flex-start;">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
                 </div>
             </div>
-            <div class="nt-modal-ft">
+            <div class="nt-modal-ft" style="justify-content:space-between;">
+                <button class="btn btn-outline-danger" id="clearAllAchievementsForTopicBtn">
+                    <i class="fas fa-broom me-1"></i> Clear All for this Topic
+                </button>
                 <button class="btn btn-secondary" onclick="closeNtModal('viewAchievementModal')">Close</button>
             </div>
         </div>
@@ -586,14 +545,10 @@
         const SELECTED_SENIOR = '{{ $selectedSenior }}';
         const SELECTED_SUBJECT = '{{ $selectedSubject }}';
 
-        // {id, name, hasAchievement} for every topic currently on this
-        // page — drives the Add modal's "only topics without one yet"
-        // dropdown without another round-trip.
-        const ALL_TOPICS = [
-            @foreach ($topics as $topic)
-                { id: '{{ $topic->id }}', name: @json($topic->topic_name), hasAchievement: {{ $topic->subjectAchievement ? 'true' : 'false' }} },
-            @endforeach
-        ];
+        // Total Subject Achievement statements currently on this page —
+        // used only to short-circuit "Delete All" when there's nothing to
+        // delete, without another round-trip.
+        const TOTAL_ACHIEVEMENTS_COUNT = {{ $topics->sum('subject_achievements_count') }};
 
         function openNtModal(id) { document.getElementById(id).classList.add('open'); }
         function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -766,19 +721,184 @@
             applyFilter();
         })();
 
-        // ===== View Topic (name + its Subject Achievement statement) =====
+        // ===== View Topic — Subject Achievement statements =====
+        function renderAchievements(achievements) {
+            const list = document.getElementById('achievementsList');
+            if (!achievements.length) {
+                list.innerHTML = '<div class="text-muted" style="font-size:.85rem;">No subject achievement statements added yet.</div>';
+                return;
+            }
+            list.innerHTML = achievements.map(a => `
+                <div class="nt-ach-row" data-id="${a.id}">
+                    <span class="desc">${a.achievement_text}</span>
+                    <button type="button" class="nt-action-btn btn-edit-sm ach-edit-btn" style="padding:.3rem .6rem;"><i class="fas fa-pen"></i></button>
+                    <button type="button" class="nt-action-btn btn-del-sm ach-del-btn" style="padding:.3rem .6rem;"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            list.querySelectorAll('.ach-edit-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const row = this.closest('.nt-ach-row');
+                    const id = row.dataset.id;
+                    const current = row.querySelector('.desc').textContent;
+                    Swal.fire({
+                        title: 'Edit Subject Achievement',
+                        input: 'textarea',
+                        inputValue: current,
+                        showCancelButton: true,
+                        confirmButtonColor: '#2C29CA',
+                        confirmButtonText: 'Save',
+                    }).then(result => {
+                        if (!result.isConfirmed || !result.value?.trim()) return;
+
+                        fetch(`{{ url('nlsc-subject-achievements') }}/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: JSON.stringify({ achievement_text: result.value.trim() }),
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (!res.success) {
+                                    Swal.fire('Error', res.message || 'Failed to update.', 'error');
+                                    return;
+                                }
+                                openViewAchievementModal(document.getElementById('viewAchievementTopicIdInput').value);
+                            })
+                            .catch(() => Swal.fire('Error', 'Failed to update — check your connection.', 'error'));
+                    });
+                });
+            });
+
+            list.querySelectorAll('.ach-del-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const row = this.closest('.nt-ach-row');
+                    const id = row.dataset.id;
+                    Swal.fire({
+                        title: 'Delete this statement?',
+                        text: 'This cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Delete',
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+
+                        fetch(`{{ url('nlsc-subject-achievements') }}/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (!res.success) {
+                                    Swal.fire('Error', res.message || 'Failed to delete.', 'error');
+                                    return;
+                                }
+                                const topicId = document.getElementById('viewAchievementTopicIdInput').value;
+                                openViewAchievementModal(topicId);
+                                // Keep the row's own count badge in sync without a
+                                // full page reload.
+                                const mainRow = document.querySelector(`#achievementsTbody tr[data-topic-id="${topicId}"]`);
+                                if (mainRow) {
+                                    const badge = mainRow.querySelector('.nt-count-badge');
+                                    const newCount = Math.max(0, parseInt(badge.textContent.trim(), 10) - 1);
+                                    badge.innerHTML = `<i class="fas fa-bullseye"></i> ${newCount}`;
+                                    badge.classList.toggle('is-zero', newCount === 0);
+                                }
+                            })
+                            .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
+                    });
+                });
+            });
+        }
+
+        function openViewAchievementModal(topicId) {
+            fetch(`{{ url('nlsc-topics') }}/${topicId}/subject-achievements`, {
+                headers: { 'Accept': 'application/json' },
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) {
+                        Swal.fire('Error', res.message || 'Failed to load.', 'error');
+                        return;
+                    }
+                    document.getElementById('viewAchievementTopicIdInput').value = topicId;
+                    document.getElementById('viewAchievementTopicName').textContent = res.topic.topic_name;
+                    document.getElementById('newAchievementInput').value = '';
+                    renderAchievements(res.achievements);
+                    openNtModal('viewAchievementModal');
+                })
+                .catch(() => Swal.fire('Error', 'Failed to load — check your connection.', 'error'));
+        }
+
         document.querySelectorAll('.view-topic-btn').forEach(btn => {
             btn.addEventListener('click', function () {
-                const row = this.closest('tr');
-                const name = row.querySelector('.topic-name-text').textContent.trim();
-                const achievementEl = row.querySelector('.achievement-view .achievement-text');
-                const hasAchievement = row.querySelector('.achievement-view').style.display !== 'none';
+                openViewAchievementModal(this.closest('tr').dataset.topicId);
+            });
+        });
 
-                document.getElementById('viewAchievementTopicName').textContent = name;
-                document.getElementById('viewAchievementText').style.display = hasAchievement ? 'block' : 'none';
-                document.getElementById('viewAchievementText').textContent = hasAchievement ? achievementEl.textContent.trim() : '';
-                document.getElementById('viewAchievementMissing').style.display = hasAchievement ? 'none' : 'inline-flex';
-                openNtModal('viewAchievementModal');
+        document.getElementById('addAchievementBtnInModal').addEventListener('click', function () {
+            const topicId = document.getElementById('viewAchievementTopicIdInput').value;
+            const input = document.getElementById('newAchievementInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            fetch(`{{ route('school.nlsc-subject-achievements.store') }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify({ school_nlsc_topic_id: topicId, achievement_text: text }),
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) {
+                        Swal.fire('Error', res.message || 'Failed to add.', 'error');
+                        return;
+                    }
+                    input.value = '';
+                    openViewAchievementModal(topicId);
+                    const mainRow = document.querySelector(`#achievementsTbody tr[data-topic-id="${topicId}"]`);
+                    if (mainRow) {
+                        const badge = mainRow.querySelector('.nt-count-badge');
+                        const newCount = parseInt(badge.textContent.trim(), 10) + 1;
+                        badge.innerHTML = `<i class="fas fa-bullseye"></i> ${newCount}`;
+                        badge.classList.remove('is-zero');
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'Failed to add — check your connection.', 'error'));
+        });
+
+        // ===== Clear ALL Subject Achievements (this topic only) =====
+        document.getElementById('clearAllAchievementsForTopicBtn').addEventListener('click', function () {
+            const topicId = document.getElementById('viewAchievementTopicIdInput').value;
+
+            Swal.fire({
+                title: 'Clear all statements for this topic?',
+                text: 'The topic itself stays — only its Subject Achievement statements are removed. This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Clear All',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                fetch(`{{ url('nlsc-topics') }}/${topicId}/subject-achievements-all`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            Swal.fire('Error', res.message || 'Failed to clear.', 'error');
+                            return;
+                        }
+                        openViewAchievementModal(topicId);
+                        const mainRow = document.querySelector(`#achievementsTbody tr[data-topic-id="${topicId}"]`);
+                        if (mainRow) {
+                            const badge = mainRow.querySelector('.nt-count-badge');
+                            badge.innerHTML = '<i class="fas fa-bullseye"></i> 0';
+                            badge.classList.add('is-zero');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to clear — check your connection.', 'error'));
             });
         });
 
