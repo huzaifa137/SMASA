@@ -245,6 +245,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
             Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::delete('/nlsc-subject-achievements-all', 'destroyAll')->name('nlsc-subject-achievements.delete-all');
             Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
         });
 
@@ -295,6 +296,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
             Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::delete('/nlsc-subject-achievements-all', 'destroyAll')->name('nlsc-subject-achievements.delete-all');
             Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
         });
 

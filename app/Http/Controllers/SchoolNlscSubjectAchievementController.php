@@ -104,4 +104,40 @@ class SchoolNlscSubjectAchievementController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Delete every one of THIS SCHOOL's achievement statements for one
+     * Senior/Subject — mirrors SchoolNlscTopicController::
+     * destroyAllTopics()/SchoolNlscProjectController::destroyAllProjects()'s
+     * "Delete All" button. The topics themselves are untouched — only
+     * their Subject Achievement text is cleared, and never touches the
+     * admin's master list or any other school's copy.
+     */
+    public function destroyAll(Request $request)
+    {
+        if (!PermissionHelper::canFeature('delete_class')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'senior_class_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        $count = SchoolNlscSubjectAchievement::whereHas('topic', function ($q) use ($schoolId, $request) {
+            $q->where('school_id', $schoolId)
+                ->where('senior_class_id', $request->senior_class_id)
+                ->where('subject_id', $request->subject_id);
+        })->count();
+
+        SchoolNlscSubjectAchievement::whereHas('topic', function ($q) use ($schoolId, $request) {
+            $q->where('school_id', $schoolId)
+                ->where('senior_class_id', $request->senior_class_id)
+                ->where('subject_id', $request->subject_id);
+        })->delete();
+
+        return response()->json(['success' => true, 'deleted' => $count]);
+    }
 }

@@ -86,6 +86,33 @@
         }
 
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: #a3a0c9; }
+
+        .nt-modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+            z-index: 9000; display: none; align-items: center; justify-content: center; padding: 1rem;
+        }
+
+        .nt-modal-overlay.open { display: flex; }
+
+        .nt-modal-box {
+            background: #fff; border-radius: 1.25rem; width: 100%; max-width: 560px;
+            max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .nt-modal-hd {
+            padding: 1.1rem 1.4rem; background: linear-gradient(135deg, #0a0a0f 0%, #14143a 40%, #1e1b8a 75%, #2C29CA 100%);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .nt-modal-hd h4 { margin: 0; font-size: .98rem; font-weight: 700; color: #fff; }
+
+        .nt-modal-close {
+            width: 30px; height: 30px; border-radius: .5rem; background: rgba(255,255,255,.15);
+            border: none; color: #fff; cursor: pointer;
+        }
+
+        .nt-modal-body { padding: 1.4rem; overflow-y: auto; flex: 1; }
+        .nt-modal-ft { padding: 1rem 1.4rem; border-top: 1px solid #f0eeff; display: flex; gap: .6rem; justify-content: flex-end; }
     </style>
 @endsection
 
@@ -132,6 +159,12 @@
                         </select>
                     </div>
                 </form>
+                <button type="button" id="addAchievementBtn" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Subject Achievement
+                </button>
+                <button type="button" id="deleteAllAchievementsBtn" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Delete All Subject Achievements
+                </button>
             </div>
         </div>
 
@@ -177,6 +210,33 @@
             </div>
         </div>
     </div>
+
+    {{-- ===== Add Subject Achievement modal ===== —a quicker entry point
+    matching Add Topic/Add Project's modal pattern, picking from whichever
+    topics don't have a statement yet (topics that already have one are
+    edited inline in the table instead). --}}
+    <div class="nt-modal-overlay" id="addAchievementModal">
+        <div class="nt-modal-box">
+            <div class="nt-modal-hd">
+                <h4><i class="fas fa-plus me-2"></i>Add Subject Achievement</h4>
+                <button class="nt-modal-close" onclick="closeNtModal('addAchievementModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="nt-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Topic</label>
+                    <select id="addAchievementTopicSelect" class="form-control"></select>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Subject Achievement</label>
+                    <textarea id="addAchievementTextInput" class="form-control" rows="4" placeholder="e.g. Communicates confidently about personal identity, family members, relationships, routines and responsibilities using appropriate spoken and written English."></textarea>
+                </div>
+            </div>
+            <div class="nt-modal-ft">
+                <button class="btn btn-secondary" onclick="closeNtModal('addAchievementModal')">Cancel</button>
+                <button class="btn btn-primary" id="saveNewAchievementBtn"><i class="fas fa-save me-1"></i> Save</button>
+            </div>
+        </div>
+    </div>
 </div>
         </div>
     </div>
@@ -185,9 +245,120 @@
 
     <script>
         const CSRF = '{{ csrf_token() }}';
+        const SELECTED_SENIOR = '{{ $selectedSenior }}';
+        const SELECTED_SUBJECT = '{{ $selectedSubject }}';
+
+        // {id, name, hasAchievement} for every topic currently on this
+        // page — drives the Add modal's "only topics without one yet"
+        // dropdown without another round-trip.
+        const ALL_TOPICS = [
+            @foreach ($topics as $topic)
+                { id: '{{ $topic->id }}', name: @json($topic->topic_name), hasAchievement: {{ $topic->subjectAchievement ? 'true' : 'false' }} },
+            @endforeach
+        ];
+
+        function openNtModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }
+        document.querySelectorAll('.nt-modal-overlay').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) closeNtModal(m.id); });
+        });
 
         document.getElementById('assessmentTypeSelect').addEventListener('change', function () {
             window.location.href = this.value;
+        });
+
+        // ===== Add Subject Achievement =====
+        document.getElementById('addAchievementBtn').addEventListener('click', () => {
+            const available = ALL_TOPICS.filter(t => !t.hasAchievement);
+            if (available.length === 0) {
+                Swal.fire('All set', 'Every topic already has an achievement statement — edit any row directly to change it.', 'info');
+                return;
+            }
+
+            const select = document.getElementById('addAchievementTopicSelect');
+            select.innerHTML = available.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            document.getElementById('addAchievementTextInput').value = '';
+            openNtModal('addAchievementModal');
+        });
+
+        document.getElementById('saveNewAchievementBtn').addEventListener('click', function () {
+            const topicId = document.getElementById('addAchievementTopicSelect').value;
+            const text = document.getElementById('addAchievementTextInput').value.trim();
+
+            if (!text) {
+                Swal.fire('Missing text', 'Please type an achievement statement first.', 'warning');
+                return;
+            }
+
+            const $btn = this;
+            $btn.disabled = true;
+            $btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+            fetch(`{{ route('admin.nlsc-subject-achievements.store') }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify({ nlsc_topic_id: topicId, achievement_text: text }),
+            })
+                .then(r => r.json())
+                .then(res => {
+                    $btn.disabled = false;
+                    $btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    if (!res.success) {
+                        Swal.fire('Error', res.message || 'Failed to save.', 'error');
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(() => {
+                    $btn.disabled = false;
+                    $btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    Swal.fire('Error', 'Failed to save — check your connection.', 'error');
+                });
+        });
+
+        // ===== Delete ALL Subject Achievements (this Senior/Subject) =====
+        document.getElementById('deleteAllAchievementsBtn').addEventListener('click', function () {
+            const setCount = ALL_TOPICS.filter(t => t.hasAchievement).length;
+            if (setCount === 0) {
+                Swal.fire('Nothing to delete', 'No topics have an achievement statement yet for this Senior/Subject.', 'info');
+                return;
+            }
+
+            Swal.fire({
+                title: `Delete all ${setCount} achievement statement(s)?`,
+                html: 'The topics themselves are untouched — only their Subject Achievement text is removed. This cannot be undone.'
+                    + '<div style="margin-top:1rem; text-align:left;">'
+                    + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
+                    + '<input type="checkbox" id="swalCascadeSchoolsAll" style="width:16px; height:16px;">'
+                    + 'Also remove these from schools that already have them in their own copy'
+                    + '</label></div>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Delete All',
+                preConfirm: () => document.getElementById('swalCascadeSchoolsAll').checked,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                fetch(`{{ route('admin.nlsc-subject-achievements.delete-all') }}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        senior_class_id: SELECTED_SENIOR,
+                        subject_id: SELECTED_SUBJECT,
+                        cascade_to_schools: result.value,
+                    }),
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            Swal.fire('Error', res.message || 'Failed to delete.', 'error');
+                            return;
+                        }
+                        window.location.reload();
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
+            });
         });
 
         document.querySelectorAll('.edit-achievement-btn').forEach(btn => {

@@ -100,5 +100,10 @@
                 <i class="fas fa-diagram-project me-2"></i> Projects (Project Work)
             </a>
         </div>
+        <div class="col-12 col-sm-3 mb-2">
+            <a href="{{ route('school.nlsc-subject-achievements') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+                <i class="fas fa-bullseye me-2"></i> Subject Achievement
+            </a>
+        </div>
     @endif
 </div>

@@ -98,4 +98,40 @@ class NlscSubjectAchievementController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Delete every achievement statement for one Senior/Subject in one
+     * go — mirrors NlscTopicController::destroyAllTopics()/
+     * NlscProjectController::destroyAllProjects()'s "Delete All" button.
+     * The topics themselves are untouched (they belong to Activities of
+     * Integration) — only their Subject Achievement text is cleared.
+     */
+    public function destroyAll(Request $request)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'senior_class_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+        ]);
+
+        $cascade = $request->boolean('cascade_to_schools');
+
+        $achievements = NlscSubjectAchievement::whereHas('topic', function ($q) use ($request) {
+            $q->where('senior_class_id', $request->senior_class_id)
+                ->where('subject_id', $request->subject_id);
+        })->get();
+
+        $count = $achievements->count();
+
+        foreach ($achievements as $achievement) {
+            $id = $achievement->id;
+            $achievement->delete();
+            NlscSyncService::propagateSubjectAchievementDeletion($id, $cascade);
+        }
+
+        return response()->json(['success' => true, 'deleted' => $count]);
+    }
 }
