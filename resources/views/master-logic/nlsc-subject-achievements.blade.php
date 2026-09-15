@@ -1016,14 +1016,14 @@
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',
                     confirmButtonText: 'Delete',
-                    preConfirm: () => document.getElementById('swalCascadeSchoolsTopic').checked,
+                    preConfirm: () => ({ cascade: document.getElementById('swalCascadeSchoolsTopic').checked }),
                 }).then(result => {
                     if (!result.isConfirmed) return;
 
                     fetch(`{{ url('admin/nlsc-topics') }}/${topicId}`, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: JSON.stringify({ cascade_to_schools: result.value }),
+                        body: JSON.stringify({ cascade_to_schools: result.value.cascade }),
                     })
                         .then(r => r.json())
                         .then(res => {
@@ -1057,7 +1057,7 @@
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 confirmButtonText: 'Delete All',
-                preConfirm: () => document.getElementById('swalCascadeSchoolsAll').checked,
+                preConfirm: () => ({ cascade: document.getElementById('swalCascadeSchoolsAll').checked }),
             }).then(result => {
                 if (!result.isConfirmed) return;
 
@@ -1067,7 +1067,7 @@
                     body: JSON.stringify({
                         senior_class_id: SELECTED_SENIOR,
                         subject_id: SELECTED_SUBJECT,
-                        cascade_to_schools: result.value,
+                        cascade_to_schools: result.value.cascade,
                     }),
                 })
                     .then(r => r.json())
