@@ -95,24 +95,25 @@
             <span class="hero-badge"><i class="fas fa-bullseye me-1"></i> Subject Achievement</span>
             <div class="hero-title">Subject Achievement — {{ $seniorLabel }}</div>
             <div class="hero-subtitle">
-                One achievement statement per Topic — the same Topics already managed from
-                Activities of Integration. Type these in from your own copy of the NCDC
-                syllabus; nothing here is pre-loaded for you.
+                Your school's own achievement statement per Topic — the same Topics already
+                managed from Activities of Integration. An admin's edit or new achievement
+                reaches your copy automatically; deleting or editing yours here only ever
+                affects your school.
             </div>
         </div>
 
         <div class="nt-card">
             <div class="card-body-custom" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                <form method="GET" action="{{ route('admin.nlsc-subject-achievements') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
+                <form method="GET" action="{{ route('school.nlsc-subject-achievements') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
                     {{-- Assessment Type — switches to Topics (Activities of
                     Integration) or Projects (Project Work), carrying the
                     current Senior/Subject over. --}}
                     <div style="min-width:220px;">
                         <label class="form-label">Assessment Type</label>
                         <select id="assessmentTypeSelect" class="form-control">
-                            <option value="{{ route('admin.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Activities of Integration</option>
-                            <option value="{{ route('admin.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Projects</option>
-                            <option value="{{ route('admin.nlsc-subject-achievements', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Subject Achievement</option>
+                            <option value="{{ route('school.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Activities of Integration</option>
+                            <option value="{{ route('school.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Projects</option>
+                            <option value="{{ route('school.nlsc-subject-achievements', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Subject Achievement</option>
                         </select>
                     </div>
                     <div style="min-width:200px;">
@@ -212,10 +213,10 @@
                     return;
                 }
 
-                fetch(`{{ route('admin.nlsc-subject-achievements.store') }}`, {
+                fetch(`{{ route('school.nlsc-subject-achievements.store') }}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                    body: JSON.stringify({ nlsc_topic_id: topicId, achievement_text: text }),
+                    body: JSON.stringify({ school_nlsc_topic_id: topicId, achievement_text: text }),
                 })
                     .then(r => r.json())
                     .then(res => {
@@ -229,6 +230,9 @@
             });
         });
 
+        // No cascade-to-schools option here — a school only ever deletes its
+        // OWN copy (see SchoolNlscSubjectAchievementController::destroy()),
+        // that concept only exists on the admin screen.
         document.querySelectorAll('.delete-achievement-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
@@ -237,24 +241,17 @@
 
                 Swal.fire({
                     title: 'Delete this achievement statement?',
-                    html: 'This cannot be undone.'
-                        + '<div style="margin-top:1rem; text-align:left;">'
-                        + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
-                        + '<input type="checkbox" id="swalCascadeSchools" style="width:16px; height:16px;">'
-                        + 'Also remove this from schools that already have it in their own copy'
-                        + '</label></div>',
+                    text: 'This cannot be undone.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',
                     confirmButtonText: 'Delete',
-                    preConfirm: () => document.getElementById('swalCascadeSchools').checked,
                 }).then(result => {
                     if (!result.isConfirmed) return;
 
-                    fetch(`{{ url('admin/nlsc-subject-achievements') }}/${achievementId}`, {
+                    fetch(`{{ url('nlsc-subject-achievements') }}/${achievementId}`, {
                         method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: JSON.stringify({ cascade_to_schools: result.value }),
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     })
                         .then(r => r.json())
                         .then(res => {

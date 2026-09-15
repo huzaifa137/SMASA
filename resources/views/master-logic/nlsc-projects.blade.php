@@ -455,6 +455,9 @@
                             <option
                                 value="{{ route('admin.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}"
                                 selected>Projects</option>
+                            <option
+                                value="{{ route('admin.nlsc-subject-achievements', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">
+                                Subject Achievement</option>
                         </select>
                     </div>
                     <div style="min-width:200px;">

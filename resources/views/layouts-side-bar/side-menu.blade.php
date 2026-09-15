@@ -120,6 +120,8 @@ use App\Helpers\PermissionHelper;
                                         Competency Areas</a></li>
                                 <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects
                                         (Project Work)</a></li>
+                                <li><a href="{{ route('school.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject
+                                        Achievement</a></li>
                             @endif
                         </ul>
                     </li>
@@ -522,6 +524,8 @@ use App\Helpers\PermissionHelper;
                                 Competency Areas</a></li>
                         <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects
                                 (Project Work)</a></li>
+                        <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject
+                                Achievement</a></li>
                     @endif
                 </ul>
             </li>
@@ -625,6 +629,8 @@ use App\Helpers\PermissionHelper;
                                         Competency Areas</a></li>
                                 <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects
                                         (Project Work)</a></li>
+                                <li><a href="{{ route('school.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject
+                                        Achievement</a></li>
                             @endif
                         </ul>
                     </li>

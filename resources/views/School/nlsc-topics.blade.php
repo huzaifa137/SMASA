@@ -327,6 +327,7 @@
                         <select id="assessmentTypeSelect" class="form-control">
                             <option value="{{ route('school.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Activities of Integration</option>
                             <option value="{{ route('school.nlsc-projects', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Projects</option>
+                            <option value="{{ route('school.nlsc-subject-achievements', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Subject Achievement</option>
                         </select>
                     </div>
                     <div style="min-width:200px;">
