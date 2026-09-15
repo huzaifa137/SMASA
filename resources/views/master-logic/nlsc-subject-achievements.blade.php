@@ -74,6 +74,8 @@
 
         .btn-edit-sm { background: #2C29CA; color: #fff; }
         .btn-edit-sm:hover { background: #211ea3; color: #fff; }
+        .btn-view-sm { background: #1e1b4b; color: #fff; }
+        .btn-view-sm:hover { background: #14123a; color: #fff; }
         .btn-del-sm { background: #dc3545; color: #fff; }
         .btn-del-sm:hover { background: #b3212f; color: #fff; }
         .btn-save-sm { background: #16a34a; color: #fff; }
@@ -83,19 +85,31 @@
             display: inline-flex; align-items: center; gap: .35rem;
             border: none; border-radius: .55rem; padding: .4rem .8rem;
             font-size: .76rem; font-weight: 700; cursor: pointer;
+            margin: .15rem .3rem .15rem 0;
         }
 
-        .topic-name-text { font-weight: 700; color: #1e1b4b; }
+        .topic-name-text { font-weight: 700; color: #1e1b4b; display: block; margin-bottom: .4rem; }
 
-        .nt-icon-btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 24px; height: 24px; border: none; border-radius: .4rem;
-            background: #f1f0ff; color: #5a57c9; font-size: .68rem; cursor: pointer;
-            margin-left: .35rem; vertical-align: middle;
+        /* Every Topic needs exactly one Subject Achievement statement —
+        this replaces the old plain-italic "Not set yet." with an actual
+        warning pill, the same visual language as the "incomplete" flag on
+        the A-Level combinations screen, so a gap here reads as something
+        to fix rather than just an FYI. */
+        .achievement-flag {
+            display: inline-flex; align-items: center; gap: .4rem;
+            font-size: .74rem; font-weight: 700; color: #b3261e;
+            background: #fdecea; border: 1px solid #f6c4c0; border-radius: 999px;
+            padding: .35rem .75rem;
         }
 
-        .nt-icon-btn.icon-btn-danger { background: #fdecec; color: #dc3545; }
-        .nt-icon-btn:hover { filter: brightness(0.95); }
+        .achievement-summary-pill {
+            display: inline-flex; align-items: center; gap: .4rem;
+            font-size: .72rem; font-weight: 700; border-radius: 999px;
+            padding: .3rem .8rem; margin-left: .5rem;
+        }
+
+        .achievement-summary-pill.is-complete { background: #eafaf0; color: #16a34a; }
+        .achievement-summary-pill.is-incomplete { background: #fdecea; color: #b3261e; }
 
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: #a3a0c9; }
 
@@ -125,6 +139,180 @@
 
         .nt-modal-body { padding: 1.4rem; overflow-y: auto; flex: 1; }
         .nt-modal-ft { padding: 1rem 1.4rem; border-top: 1px solid #f0eeff; display: flex; gap: .6rem; justify-content: flex-end; }
+
+        /* ===== Searchable Subject dropdown — identical to the one on
+        Activities of Integration / Projects, copied verbatim so all three
+        Assessment Type screens look and behave the same. ===== */
+        .nt-select { position: relative; }
+
+        .nt-select-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            background: #fff;
+            border: 1.5px solid #e4e2ff;
+            border-radius: .65rem;
+            padding: .55rem .85rem;
+            font-size: .875rem;
+            color: #1e1b4b;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .nt-select-trigger:hover { border-color: #b9b6f0; }
+
+        .nt-select-trigger:focus-visible {
+            outline: none;
+            border-color: #2C29CA;
+            box-shadow: 0 0 0 3.5px rgba(44, 41, 202, .14);
+        }
+
+        .nt-select.open .nt-select-trigger {
+            border-color: #2C29CA;
+            box-shadow: 0 0 0 3.5px rgba(44, 41, 202, .14);
+        }
+
+        .nt-select-value {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nt-select-value.is-placeholder { color: #a3a0c9; }
+
+        .nt-select-caret {
+            color: #7a7894;
+            font-size: .72rem;
+            transition: transform .22s ease, color .22s ease;
+        }
+
+        .nt-select.open .nt-select-caret { transform: rotate(180deg); color: #2C29CA; }
+
+        .nt-select-panel {
+            position: absolute;
+            top: calc(100% + .45rem);
+            left: 0;
+            right: 0;
+            min-width: 220px;
+            background: #fff;
+            border: 1.5px solid #e4e2ff;
+            border-radius: .9rem;
+            box-shadow: 0 14px 40px rgba(30, 27, 75, .16), 0 2px 8px rgba(30, 27, 75, .06);
+            z-index: 1200;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-6px) scale(.98);
+            transform-origin: top center;
+            pointer-events: none;
+            transition: opacity .16s ease, transform .16s ease;
+        }
+
+        .nt-select.open .nt-select-panel {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .nt-select-search {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: .6rem .85rem;
+            background: #fbfaff;
+            border-bottom: 1px solid #f0eeff;
+        }
+
+        .nt-select-search > i.fa-search { color: #a3a0c9; font-size: .78rem; }
+
+        .nt-select-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: .85rem;
+            color: #1e1b4b;
+            min-width: 0;
+        }
+
+        .nt-select-search-input::placeholder { color: #b3b0d4; }
+
+        .nt-select-clear {
+            display: none;
+            border: none;
+            background: transparent;
+            color: #b3b0d4;
+            cursor: pointer;
+            padding: 0 .15rem;
+            font-size: .78rem;
+            line-height: 1;
+        }
+
+        .nt-select.has-query .nt-select-clear { display: block; }
+        .nt-select-clear:hover { color: #dc3545; }
+
+        .nt-select-list {
+            list-style: none;
+            margin: 0;
+            padding: .35rem;
+            max-height: 230px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .nt-select-list::-webkit-scrollbar { width: 6px; }
+        .nt-select-list::-webkit-scrollbar-thumb { background: #d9d6f5; border-radius: 99px; }
+        .nt-select-list::-webkit-scrollbar-thumb:hover { background: #b9b6f0; }
+
+        .nt-select-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .6rem;
+            padding: .5rem .7rem;
+            border-radius: .55rem;
+            font-size: .85rem;
+            color: #34325c;
+            cursor: pointer;
+            transition: background .12s ease, color .12s ease;
+        }
+
+        .nt-select-option:hover,
+        .nt-select-option.is-active { background: #eef0ff; color: #1e1b4b; }
+
+        .nt-select-option.is-selected {
+            background: #2C29CA;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .nt-select-option.is-selected.is-active { background: #211ea3; }
+
+        .nt-select-tick { opacity: 0; font-size: .72rem; }
+        .nt-select-option.is-selected .nt-select-tick { opacity: 1; }
+
+        .nt-select-option mark {
+            background: rgba(255, 214, 0, .45);
+            color: inherit;
+            padding: 0 1px;
+            border-radius: 3px;
+        }
+
+        .nt-select-option.is-selected mark { background: rgba(255, 255, 255, .3); }
+
+        .nt-select-empty {
+            display: none;
+            padding: 1.1rem 1rem;
+            text-align: center;
+            font-size: .8rem;
+            color: #a3a0c9;
+        }
+
+        .nt-select.no-match .nt-select-list { display: none; }
+        .nt-select.no-match .nt-select-empty { display: block; }
     </style>
 @endsection
 
@@ -132,11 +320,26 @@
     <div class="side-app">
         <div class="nt-hero">
             <span class="hero-badge"><i class="fas fa-bullseye me-1"></i> Subject Achievement</span>
-            <div class="hero-title">Subject Achievement — {{ $seniorLabel }}</div>
+            <div class="hero-title">
+                Subject Achievement — {{ $seniorLabel }}
+                @php
+                    $achievedCount = $topics->filter(fn($t) => $t->subjectAchievement)->count();
+                    $totalTopics = $topics->count();
+                @endphp
+                @if($totalTopics > 0)
+                    <span class="achievement-summary-pill {{ $achievedCount === $totalTopics ? 'is-complete' : 'is-incomplete' }}">
+                        @if($achievedCount === $totalTopics)
+                            <i class="fas fa-circle-check"></i> All {{ $totalTopics }} topics set
+                        @else
+                            <i class="fas fa-triangle-exclamation"></i> {{ $achievedCount }}/{{ $totalTopics }} topics set
+                        @endif
+                    </span>
+                @endif
+            </div>
             <div class="hero-subtitle">
-                One achievement statement per Topic — the same Topics already managed from
-                Activities of Integration. Type these in from your own copy of the NCDC
-                syllabus; nothing here is pre-loaded for you.
+                Every Topic must have exactly one Subject Achievement statement — the same Topics
+                already managed from Activities of Integration. Type these in from your own copy
+                of the NCDC syllabus; nothing here is pre-loaded for you.
             </div>
         </div>
 
@@ -164,11 +367,37 @@
                     </div>
                     <div style="min-width:220px;">
                         <label class="form-label">Subject</label>
-                        <select name="subject" class="form-control" onchange="document.getElementById('filterForm').submit()">
+                        {{-- Real <select> is hidden but still submitted with the form,
+                             so the backend and onchange-submit behaviour are unchanged. --}}
+                        <select name="subject" id="subjectNativeSelect" class="d-none" tabindex="-1" aria-hidden="true">
                             @foreach ($subjectOptions as $opt)
                                 <option value="{{ $opt->md_id }}" @if((int) $opt->md_id === (int) $selectedSubject) selected @endif>{{ $opt->md_name }}</option>
                             @endforeach
                         </select>
+
+                        {{-- Searchable Subject dropdown --}}
+                        <div class="nt-select" id="subjectSelect" data-native="subjectNativeSelect">
+                            <button type="button" class="nt-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="nt-select-value is-placeholder">Select a subject…</span>
+                                <i class="fas fa-chevron-down nt-select-caret"></i>
+                            </button>
+
+                            <div class="nt-select-panel" role="dialog">
+                                <div class="nt-select-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="nt-select-search-input" placeholder="Search subject…" autocomplete="off">
+                                    <button type="button" class="nt-select-clear" aria-label="Clear search">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </div>
+
+                                <ul class="nt-select-list" role="listbox"></ul>
+                                <div class="nt-select-empty">
+                                    <i class="fas fa-search-minus d-block mb-1"></i>
+                                    No subject matches that search.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
                 <button type="button" id="addTopicBtn" class="btn btn-outline-primary">
@@ -203,15 +432,16 @@
                                 <td>{{ $i + 1 }}</td>
                                 <td>
                                     <span class="topic-name-text">{{ $topic->topic_name }}</span>
-                                    <button type="button" class="nt-icon-btn rename-topic-btn" title="Rename topic"><i class="fas fa-pen"></i></button>
-                                    <button type="button" class="nt-icon-btn icon-btn-danger delete-topic-btn" title="Delete topic"><i class="fas fa-trash"></i></button>
+                                    <button type="button" class="nt-action-btn btn-view-sm view-topic-btn"><i class="fas fa-eye"></i> View</button>
+                                    <button type="button" class="nt-action-btn btn-edit-sm rename-topic-btn"><i class="fas fa-pen"></i> Edit</button>
+                                    <button type="button" class="nt-action-btn btn-del-sm delete-topic-btn"><i class="fas fa-trash"></i> Delete</button>
                                 </td>
                                 <td>
                                     <div class="achievement-view" @if(!$topic->subjectAchievement) style="display:none;" @endif>
                                         <div class="achievement-text">{{ $topic->subjectAchievement->achievement_text ?? '' }}</div>
                                     </div>
                                     <div class="achievement-empty" @if($topic->subjectAchievement) style="display:none;" @endif>
-                                        Not set yet.
+                                        <span class="achievement-flag"><i class="fas fa-triangle-exclamation"></i> Missing — every topic needs one</span>
                                     </div>
                                     <textarea class="achievement-textarea achievement-edit" style="display:none;">{{ $topic->subjectAchievement->achievement_text ?? '' }}</textarea>
                                 </td>
@@ -279,6 +509,28 @@
             </div>
         </div>
     </div>
+    {{-- ===== View Topic modal ===== — read-only: topic name + its
+    Subject Achievement statement (or a prompt to add one). Competency
+    Areas aren't shown here — those belong to Activities of Integration's
+    own View modal for this same topic. --}}
+    <div class="nt-modal-overlay" id="viewAchievementModal">
+        <div class="nt-modal-box">
+            <div class="nt-modal-hd">
+                <h4><i class="fas fa-eye me-2"></i><span id="viewAchievementTopicName">Topic</span></h4>
+                <button class="nt-modal-close" onclick="closeNtModal('viewAchievementModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="nt-modal-body">
+                <label class="form-label">Subject Achievement</label>
+                <div id="viewAchievementText" class="achievement-text"></div>
+                <div id="viewAchievementMissing" class="achievement-flag" style="display:none;">
+                    <i class="fas fa-triangle-exclamation"></i> Missing — every topic needs one
+                </div>
+            </div>
+            <div class="nt-modal-ft">
+                <button class="btn btn-secondary" onclick="closeNtModal('viewAchievementModal')">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
         </div>
     </div>
@@ -307,6 +559,183 @@
 
         document.getElementById('assessmentTypeSelect').addEventListener('change', function () {
             window.location.href = this.value;
+        });
+
+        // ===== Searchable Subject dropdown ===== (identical widget to
+        // Activities of Integration / Projects)
+        (function () {
+            const root = document.getElementById('subjectSelect');
+            if (!root) return;
+
+            const nativeSelect = document.getElementById(root.dataset.native);
+            const trigger     = root.querySelector('.nt-select-trigger');
+            const valueLabel  = root.querySelector('.nt-select-value');
+            const list        = root.querySelector('.nt-select-list');
+            const searchInput = root.querySelector('.nt-select-search-input');
+            const clearBtn    = root.querySelector('.nt-select-clear');
+
+            const options = Array.from(nativeSelect.options).map(o => ({
+                value: o.value,
+                label: o.textContent.trim(),
+                selected: o.selected,
+            }));
+
+            let activeIndex = options.findIndex(o => o.selected);
+            let filtered    = options.slice();
+
+            const escapeHtml = s => s.replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+
+            const highlight = (label, query) => {
+                if (!query) return escapeHtml(label);
+                const idx = label.toLowerCase().indexOf(query.toLowerCase());
+                if (idx === -1) return escapeHtml(label);
+                return escapeHtml(label.slice(0, idx))
+                    + '<mark>' + escapeHtml(label.slice(idx, idx + query.length)) + '</mark>'
+                    + escapeHtml(label.slice(idx + query.length));
+            };
+
+            const renderList = () => {
+                const query = searchInput.value.trim();
+
+                list.innerHTML = filtered.map((opt, i) => {
+                    const isSelected = opt.value === nativeSelect.value;
+                    const isActive   = i === activeIndex;
+                    return `<li class="nt-select-option${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}"
+                                role="option" data-value="${escapeHtml(opt.value)}" data-index="${i}"
+                                aria-selected="${isSelected}">
+                                <span>${highlight(opt.label, query)}</span>
+                                <i class="fas fa-check nt-select-tick"></i>
+                            </li>`;
+                }).join('');
+
+                root.classList.toggle('no-match', filtered.length === 0);
+            };
+
+            const syncTrigger = () => {
+                const sel = options.find(o => o.value === nativeSelect.value);
+                if (sel) {
+                    valueLabel.textContent = sel.label;
+                    valueLabel.classList.remove('is-placeholder');
+                } else {
+                    valueLabel.textContent = 'Select a subject…';
+                    valueLabel.classList.add('is-placeholder');
+                }
+            };
+
+            const applyFilter = () => {
+                const q = searchInput.value.trim().toLowerCase();
+                filtered = q
+                    ? options.filter(o => o.label.toLowerCase().includes(q))
+                    : options.slice();
+
+                const selIdx = filtered.findIndex(o => o.value === nativeSelect.value);
+                activeIndex = selIdx !== -1 ? selIdx : (filtered.length ? 0 : -1);
+
+                renderList();
+            };
+
+            const open = () => {
+                root.classList.add('open');
+                trigger.setAttribute('aria-expanded', 'true');
+                searchInput.value = '';
+                root.classList.remove('has-query');
+                applyFilter();
+                requestAnimationFrame(() => searchInput.focus());
+            };
+
+            const close = () => {
+                root.classList.remove('open');
+                trigger.setAttribute('aria-expanded', 'false');
+            };
+
+            const choose = (value) => {
+                nativeSelect.value = value;
+                syncTrigger();
+                close();
+                document.getElementById('filterForm').submit();
+            };
+
+            const moveActive = (delta) => {
+                if (!filtered.length) return;
+                activeIndex = (activeIndex + delta + filtered.length) % filtered.length;
+                renderList();
+                const activeEl = list.querySelector('.nt-select-option.is-active');
+                if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+            };
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                root.classList.contains('open') ? close() : open();
+            });
+
+            searchInput.addEventListener('input', () => {
+                root.classList.toggle('has-query', searchInput.value.length > 0);
+                applyFilter();
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+                else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeIndex >= 0 && filtered[activeIndex]) {
+                        choose(filtered[activeIndex].value);
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    close();
+                    trigger.focus();
+                }
+            });
+
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                searchInput.value = '';
+                root.classList.remove('has-query');
+                applyFilter();
+                searchInput.focus();
+            });
+
+            list.addEventListener('click', (e) => {
+                const opt = e.target.closest('.nt-select-option');
+                if (!opt) return;
+                choose(opt.dataset.value);
+            });
+
+            list.addEventListener('mousemove', (e) => {
+                const opt = e.target.closest('.nt-select-option');
+                if (!opt) return;
+                const idx = parseInt(opt.dataset.index, 10);
+                if (idx !== activeIndex) {
+                    activeIndex = idx;
+                    renderList();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!root.contains(e.target)) close();
+            });
+
+            syncTrigger();
+            applyFilter();
+        })();
+
+        // ===== View Topic (name + its Subject Achievement statement) =====
+        document.querySelectorAll('.view-topic-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const name = row.querySelector('.topic-name-text').textContent.trim();
+                const achievementEl = row.querySelector('.achievement-view .achievement-text');
+                const hasAchievement = row.querySelector('.achievement-view').style.display !== 'none';
+
+                document.getElementById('viewAchievementTopicName').textContent = name;
+                document.getElementById('viewAchievementText').style.display = hasAchievement ? 'block' : 'none';
+                document.getElementById('viewAchievementText').textContent = hasAchievement ? achievementEl.textContent.trim() : '';
+                document.getElementById('viewAchievementMissing').style.display = hasAchievement ? 'none' : 'inline-flex';
+                openNtModal('viewAchievementModal');
+            });
         });
 
         // ===== Add Topic ===== (same nlsc_topics row Activities of
