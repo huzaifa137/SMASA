@@ -28,8 +28,15 @@
             background: #fff;
             border-radius: 1.25rem;
             box-shadow: 0 4px 28px rgba(44, 41, 202, .08);
-            overflow: hidden;
+            /* NOTE: overflow:hidden intentionally NOT set here — it was
+               clipping the searchable Subject dropdown. Scoped below. */
             margin-bottom: 1.5rem;
+        }
+
+        /* Only cards that don't contain overflowing dropdowns get clipped
+           (e.g. the table card, for its rounded header top). */
+        .nt-card.nt-card--clip {
+            overflow: hidden;
         }
 
         .nt-card .card-header-custom {
@@ -140,6 +147,44 @@
         .nt-modal-body { padding: 1.4rem; overflow-y: auto; flex: 1; }
         .nt-modal-ft { padding: 1rem 1.4rem; border-top: 1px solid #f0eeff; display: flex; gap: .6rem; justify-content: flex-end; }
 
+        /* ===== Filter bar: keeps Assessment Type | Senior | Subject on one line ===== */
+        .nt-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .nt-filter-form {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 1rem;
+            align-items: flex-end;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .nt-filter-field {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .nt-filter-field .form-label {
+            display: block;
+            margin-bottom: .35rem;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #1e1b4b;
+            white-space: nowrap;
+        }
+
+        /* Filter card: must not clip its overflowing dropdown panel, and
+           needs to paint above the table card below while it's open. */
+        .nt-filter-card {
+            position: relative;
+            z-index: 50;
+        }
+
         /* ===== Searchable Subject dropdown — identical to the one on
         Activities of Integration / Projects, copied verbatim so all three
         Assessment Type screens look and behave the same. ===== */
@@ -202,7 +247,7 @@
             border: 1.5px solid #e4e2ff;
             border-radius: .9rem;
             box-shadow: 0 14px 40px rgba(30, 27, 75, .16), 0 2px 8px rgba(30, 27, 75, .06);
-            z-index: 1200;
+            z-index: 2000;
             overflow: hidden;
             opacity: 0;
             transform: translateY(-6px) scale(.98);
@@ -313,6 +358,11 @@
 
         .nt-select.no-match .nt-select-list { display: none; }
         .nt-select.no-match .nt-select-empty { display: block; }
+
+        @media (max-width: 768px) {
+            .nt-filter-form { flex-wrap: wrap; }
+            .nt-filter-field { flex: 1 1 100%; }
+        }
     </style>
 @endsection
 
@@ -343,13 +393,13 @@
             </div>
         </div>
 
-        <div class="nt-card">
-            <div class="card-body-custom" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                <form method="GET" action="{{ route('admin.nlsc-subject-achievements') }}" id="filterForm" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; flex:1;">
+        <div class="nt-card nt-filter-card">
+            <div class="card-body-custom nt-filter-bar">
+                <form method="GET" action="{{ route('admin.nlsc-subject-achievements') }}" id="filterForm" class="nt-filter-form">
                     {{-- Assessment Type — switches to Topics (Activities of
                     Integration) or Projects (Project Work), carrying the
                     current Senior/Subject over. --}}
-                    <div style="min-width:220px;">
+                    <div class="nt-filter-field">
                         <label class="form-label">Assessment Type</label>
                         <select id="assessmentTypeSelect" class="form-control">
                             <option value="{{ route('admin.nlsc-topics', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}">Activities of Integration</option>
@@ -357,7 +407,7 @@
                             <option value="{{ route('admin.nlsc-subject-achievements', ['senior' => $selectedSenior, 'subject' => $selectedSubject]) }}" selected>Subject Achievement</option>
                         </select>
                     </div>
-                    <div style="min-width:200px;">
+                    <div class="nt-filter-field">
                         <label class="form-label">Senior</label>
                         <select name="senior" class="form-control" onchange="document.getElementById('filterForm').submit()">
                             @foreach ($seniorOptions as $opt)
@@ -365,7 +415,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div style="min-width:220px;">
+                    <div class="nt-filter-field">
                         <label class="form-label">Subject</label>
                         {{-- Real <select> is hidden but still submitted with the form,
                              so the backend and onchange-submit behaviour are unchanged. --}}
@@ -400,19 +450,19 @@
                         </div>
                     </div>
                 </form>
-                <button type="button" id="addTopicBtn" class="btn btn-outline-primary">
+                <button type="button" id="addTopicBtn" class="btn btn-outline-primary flex-shrink-0">
                     <i class="fas fa-plus me-1"></i> Add Topic
                 </button>
-                <button type="button" id="addAchievementBtn" class="btn btn-primary">
+                <button type="button" id="addAchievementBtn" class="btn btn-primary flex-shrink-0">
                     <i class="fas fa-plus me-1"></i> Add Subject Achievement
                 </button>
-                <button type="button" id="deleteAllAchievementsBtn" class="btn btn-danger">
+                <button type="button" id="deleteAllAchievementsBtn" class="btn btn-danger flex-shrink-0">
                     <i class="fas fa-trash me-1"></i> Delete All Subject Achievements
                 </button>
             </div>
         </div>
 
-        <div class="nt-card">
+        <div class="nt-card nt-card--clip">
             <div class="card-header-custom">
                 <span><i class="fas fa-bullseye me-2"></i> Topics ({{ $topics->count() }})</span>
             </div>
@@ -459,6 +509,10 @@
             </div>
         </div>
     </div>
+     </div>
+        </div>
+    </div>
+
 
     {{-- ===== Add Topic modal ===== — same topic that Activities of
     Integration manages (nlsc_topics); adding, renaming or deleting a
@@ -529,9 +583,6 @@
             <div class="nt-modal-ft">
                 <button class="btn btn-secondary" onclick="closeNtModal('viewAchievementModal')">Close</button>
             </div>
-        </div>
-    </div>
-</div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
