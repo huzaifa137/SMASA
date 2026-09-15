@@ -234,6 +234,20 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/nlsc-project-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-project-competency-areas.delete');
         });
 
+    // "Subject Achievement" — the third NLSC Assessment Type, alongside
+    // Topics and Projects above. See NlscSubjectAchievementController's
+    // own docblock for why it reuses NlscTopicController's Topics rather
+    // than managing its own topic list.
+    Route::controller(\App\Http\Controllers\NlscSubjectAchievementController::class)
+        ->middleware(['AdminAuth'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
+            Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
+        });
+
     // A school's OWN copy of NLSC Topics/Competency Areas — separate
     // tables/controller from the admin ones above (see
     // SchoolNlscTopicController), so a school editing or deleting its
@@ -271,6 +285,17 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/nlsc-projects/{id}/competency-areas-all', 'destroyAllCompetencyAreas')->name('nlsc-projects.competency-areas.delete-all');
             Route::put('/nlsc-project-competency-areas/{id}', 'updateCompetencyArea')->name('nlsc-project-competency-areas.update');
             Route::delete('/nlsc-project-competency-areas/{id}', 'destroyCompetencyArea')->name('nlsc-project-competency-areas.delete');
+        });
+
+    // A school's OWN copy of Subject Achievement — see
+    // SchoolNlscSubjectAchievementController.
+    Route::controller(\App\Http\Controllers\SchoolNlscSubjectAchievementController::class)
+        ->middleware(['module:classes'])
+        ->name('school.')
+        ->group(function () {
+            Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
+            Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
         });
 
     // ─── PARENT / GUARDIAN PORTAL ───────────────────────────────────────

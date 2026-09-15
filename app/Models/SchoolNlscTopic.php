@@ -22,4 +22,9 @@ class SchoolNlscTopic extends Model
     {
         return $this->hasMany(SchoolNlscCompetencyArea::class, 'school_nlsc_topic_id')->orderBy('sort_order');
     }
+
+    public function subjectAchievement()
+    {
+        return $this->hasOne(SchoolNlscSubjectAchievement::class, 'school_nlsc_topic_id');
+    }
 }

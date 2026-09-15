@@ -6,6 +6,7 @@ use App\Helpers\PermissionHelper;
 use App\Models\NlscCompetencyArea;
 use App\Models\NlscTopic;
 use App\Models\SchoolNlscCompetencyArea;
+use App\Models\SchoolNlscSubjectAchievement;
 use App\Models\SchoolNlscTopic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -79,8 +80,13 @@ class SchoolNlscTopicController extends Controller
      * school_nlsc_clone_log — which meant any admin topic added after
      * that first visit could never reach a school that had already
      * started using Topics for that Senior/Subject, however long ago.)
+     *
+     * Public (not private) so SchoolNlscSubjectAchievementController can
+     * call it too — Subject Achievement reads the same school-cloned
+     * topics this controller owns, so opening either screen first is
+     * enough to sync a school in.
      */
-    private function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
+    public function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
     {
         if (!$seniorClassId || !$subjectId) {
             return;
@@ -90,7 +96,7 @@ class SchoolNlscTopicController extends Controller
             ->where('school_id', $schoolId)
             ->pluck('source_topic_id');
 
-        $newAdminTopics = NlscTopic::with('competencyAreas')
+        $newAdminTopics = NlscTopic::with(['competencyAreas', 'subjectAchievement'])
             ->where('senior_class_id', $seniorClassId)
             ->where('subject_id', $subjectId)
             ->whereNotIn('id', $alreadySyncedIds)
@@ -118,6 +124,14 @@ class SchoolNlscTopicController extends Controller
                         'description' => $adminArea->description,
                         'sort_order' => $adminArea->sort_order,
                         'source_competency_area_id' => $adminArea->id,
+                    ]);
+                }
+
+                if ($adminTopic->subjectAchievement) {
+                    SchoolNlscSubjectAchievement::create([
+                        'school_nlsc_topic_id' => $schoolTopic->id,
+                        'achievement_text' => $adminTopic->subjectAchievement->achievement_text,
+                        'source_subject_achievement_id' => $adminTopic->subjectAchievement->id,
                     ]);
                 }
 

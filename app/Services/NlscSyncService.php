@@ -6,11 +6,13 @@ use App\Models\NlscCompetencyArea;
 use App\Models\NlscProject;
 use App\Models\NlscProjectArea;
 use App\Models\NlscProjectCompetencyArea;
+use App\Models\NlscSubjectAchievement;
 use App\Models\NlscTopic;
 use App\Models\SchoolNlscCompetencyArea;
 use App\Models\SchoolNlscProject;
 use App\Models\SchoolNlscProjectArea;
 use App\Models\SchoolNlscProjectCompetencyArea;
+use App\Models\SchoolNlscSubjectAchievement;
 use App\Models\SchoolNlscTopic;
 
 /**
@@ -271,5 +273,41 @@ class NlscSyncService
         }
 
         SchoolNlscProjectCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
+    }
+
+    // ======================= Subject Achievement ========================
+
+    /**
+     * An admin Topic's Subject Achievement statement was added or edited
+     * — push the current wording to every school that already has that
+     * Topic synced in (upsert, since it's one achievement per topic —
+     * unlike competency areas, there's nothing to skip-if-duplicate here).
+     */
+    public static function propagateSubjectAchievementUpsert(NlscSubjectAchievement $achievement): void
+    {
+        $schoolTopics = SchoolNlscTopic::where('source_topic_id', $achievement->nlsc_topic_id)->get();
+
+        foreach ($schoolTopics as $schoolTopic) {
+            SchoolNlscSubjectAchievement::updateOrCreate(
+                ['school_nlsc_topic_id' => $schoolTopic->id],
+                [
+                    'achievement_text' => $achievement->achievement_text,
+                    'source_subject_achievement_id' => $achievement->id,
+                ]
+            );
+        }
+    }
+
+    /**
+     * An admin Topic's Subject Achievement statement was deleted — if the
+     * admin chose to, remove every school's copy of it too.
+     */
+    public static function propagateSubjectAchievementDeletion(int $achievementId, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools) {
+            return;
+        }
+
+        SchoolNlscSubjectAchievement::where('source_subject_achievement_id', $achievementId)->delete();
     }
 }
