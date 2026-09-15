@@ -85,6 +85,18 @@
             font-size: .76rem; font-weight: 700; cursor: pointer;
         }
 
+        .topic-name-text { font-weight: 700; color: #1e1b4b; }
+
+        .nt-icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px; border: none; border-radius: .4rem;
+            background: #f1f0ff; color: #5a57c9; font-size: .68rem; cursor: pointer;
+            margin-left: .35rem; vertical-align: middle;
+        }
+
+        .nt-icon-btn.icon-btn-danger { background: #fdecec; color: #dc3545; }
+        .nt-icon-btn:hover { filter: brightness(0.95); }
+
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: #a3a0c9; }
 
         .nt-modal-overlay {
@@ -160,6 +172,9 @@
                         </select>
                     </div>
                 </form>
+                <button type="button" id="addTopicBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i> Add Topic
+                </button>
                 <button type="button" id="addAchievementBtn" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i> Add Subject Achievement
                 </button>
@@ -187,7 +202,11 @@
                         @forelse ($topics as $i => $topic)
                             <tr data-topic-id="{{ $topic->id }}" data-achievement-id="{{ $topic->subjectAchievement->id ?? '' }}">
                                 <td>{{ $i + 1 }}</td>
-                                <td>{{ $topic->topic_name }}</td>
+                                <td>
+                                    <span class="topic-name-text">{{ $topic->topic_name }}</span>
+                                    <button type="button" class="nt-icon-btn rename-topic-btn" title="Rename topic"><i class="fas fa-pen"></i></button>
+                                    <button type="button" class="nt-icon-btn icon-btn-danger delete-topic-btn" title="Delete topic"><i class="fas fa-trash"></i></button>
+                                </td>
                                 <td>
                                     <div class="achievement-view" @if(!$topic->subjectAchievement) style="display:none;" @endif>
                                         <div class="achievement-text">{{ $topic->subjectAchievement->achievement_text ?? '' }}</div>
@@ -208,6 +227,29 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Add Topic modal ===== — same topic that Activities of
+    Integration manages (school_nlsc_topics); adding, renaming or deleting
+    a topic here uses the exact same endpoints that screen does, so both
+    stay in sync automatically (it's the same row). --}}
+    <div class="nt-modal-overlay" id="addTopicModal">
+        <div class="nt-modal-box">
+            <div class="nt-modal-hd">
+                <h4><i class="fas fa-plus me-2"></i>Add Topic</h4>
+                <button class="nt-modal-close" onclick="closeNtModal('addTopicModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="nt-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Topic Name</label>
+                    <input type="text" id="newTopicNameInput" class="form-control" placeholder="e.g. Personal Life and Family">
+                </div>
+            </div>
+            <div class="nt-modal-ft">
+                <button class="btn btn-secondary" onclick="closeNtModal('addTopicModal')">Cancel</button>
+                <button class="btn btn-primary" id="saveNewTopicBtn"><i class="fas fa-save me-1"></i> Save</button>
             </div>
         </div>
     </div>
@@ -268,8 +310,126 @@
             window.location.href = this.value;
         });
 
+        // ===== Add Topic ===== (same school_nlsc_topics row Activities
+        // of Integration manages — see SchoolNlscTopicController::store()).
+        document.getElementById('addTopicBtn').addEventListener('click', () => {
+            document.getElementById('newTopicNameInput').value = '';
+            openNtModal('addTopicModal');
+        });
+
+        document.getElementById('saveNewTopicBtn').addEventListener('click', function () {
+            const name = document.getElementById('newTopicNameInput').value.trim();
+            if (!name) {
+                Swal.fire('Missing name', 'Please type a topic name first.', 'warning');
+                return;
+            }
+
+            const $btn = this;
+            $btn.disabled = true;
+            $btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+            fetch(`{{ route('school.nlsc-topics.store') }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify({ senior_class_id: SELECTED_SENIOR, subject_id: SELECTED_SUBJECT, topic_name: name }),
+            })
+                .then(r => r.json())
+                .then(res => {
+                    $btn.disabled = false;
+                    $btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    if (!res.success) {
+                        Swal.fire('Error', res.message || 'Failed to add.', 'error');
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(() => {
+                    $btn.disabled = false;
+                    $btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    Swal.fire('Error', 'Failed to add — check your connection.', 'error');
+                });
+        });
+
+        // ===== Rename Topic =====
+        document.querySelectorAll('.rename-topic-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const topicId = row.dataset.topicId;
+                const currentName = row.querySelector('.topic-name-text').textContent.trim();
+
+                Swal.fire({
+                    title: 'Rename topic',
+                    input: 'text',
+                    inputValue: currentName,
+                    showCancelButton: true,
+                    confirmButtonColor: '#2C29CA',
+                    confirmButtonText: 'Save',
+                    inputValidator: (value) => (!value || !value.trim()) ? 'Please enter a topic name.' : undefined,
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    fetch(`{{ url('nlsc-topics') }}/${topicId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify({ topic_name: result.value.trim() }),
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (!res.success) {
+                                Swal.fire('Error', res.message || 'Failed to rename.', 'error');
+                                return;
+                            }
+                            window.location.reload();
+                        })
+                        .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
+                });
+            });
+        });
+
+        // ===== Delete Topic ===== (also removes its Subject Achievement,
+        // and any Competency Areas under Activities of Integration — both
+        // cascade-delete at the DB level with the topic). No cascade-to-
+        // schools option here — a school only ever deletes its OWN copy.
+        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const topicId = row.dataset.topicId;
+                const topicName = row.querySelector('.topic-name-text').textContent.trim();
+
+                Swal.fire({
+                    title: `Delete topic "${topicName}"?`,
+                    text: 'This also deletes its Subject Achievement statement and any Competency Areas under Activities of Integration. This cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Delete',
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    fetch(`{{ url('nlsc-topics') }}/${topicId}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (!res.success) {
+                                Swal.fire('Error', res.message || 'Failed to delete.', 'error');
+                                return;
+                            }
+                            window.location.reload();
+                        })
+                        .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
+                });
+            });
+        });
+
         // ===== Add Subject Achievement =====
         document.getElementById('addAchievementBtn').addEventListener('click', () => {
+            if (ALL_TOPICS.length === 0) {
+                Swal.fire('No topics yet', '{{ addslashes($seniorLabel) }} has no topics yet for this subject — add some first from Activities of Integration, then come back here to add their achievement statements.', 'info');
+                return;
+            }
+
             const available = ALL_TOPICS.filter(t => !t.hasAchievement);
             if (available.length === 0) {
                 Swal.fire('All set', 'Every topic already has an achievement statement — edit any row directly to change it.', 'info');
