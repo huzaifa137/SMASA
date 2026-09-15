@@ -21,8 +21,8 @@ class NlscTopic extends Model
         return $this->hasMany(NlscCompetencyArea::class, 'nlsc_topic_id')->orderBy('sort_order')->orderBy('id');
     }
 
-    public function subjectAchievement()
+    public function subjectAchievements()
     {
-        return $this->hasOne(NlscSubjectAchievement::class, 'nlsc_topic_id');
+        return $this->hasMany(NlscSubjectAchievement::class, 'nlsc_topic_id')->orderBy('id');
     }
 }

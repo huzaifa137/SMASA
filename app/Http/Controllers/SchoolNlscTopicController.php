@@ -96,7 +96,7 @@ class SchoolNlscTopicController extends Controller
             ->where('school_id', $schoolId)
             ->pluck('source_topic_id');
 
-        $newAdminTopics = NlscTopic::with(['competencyAreas', 'subjectAchievement'])
+        $newAdminTopics = NlscTopic::with(['competencyAreas', 'subjectAchievements'])
             ->where('senior_class_id', $seniorClassId)
             ->where('subject_id', $subjectId)
             ->whereNotIn('id', $alreadySyncedIds)
@@ -127,11 +127,11 @@ class SchoolNlscTopicController extends Controller
                     ]);
                 }
 
-                if ($adminTopic->subjectAchievement) {
+                foreach ($adminTopic->subjectAchievements as $adminAchievement) {
                     SchoolNlscSubjectAchievement::create([
                         'school_nlsc_topic_id' => $schoolTopic->id,
-                        'achievement_text' => $adminTopic->subjectAchievement->achievement_text,
-                        'source_subject_achievement_id' => $adminTopic->subjectAchievement->id,
+                        'achievement_text' => $adminAchievement->achievement_text,
+                        'source_subject_achievement_id' => $adminAchievement->id,
                     ]);
                 }
 

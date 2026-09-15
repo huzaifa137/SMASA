@@ -283,19 +283,42 @@ class NlscSyncService
      * Topic synced in (upsert, since it's one achievement per topic —
      * unlike competency areas, there's nothing to skip-if-duplicate here).
      */
-    public static function propagateSubjectAchievementUpsert(NlscSubjectAchievement $achievement): void
+    /**
+     * A new Subject Achievement statement was added under an admin
+     * Topic — push it to every school copy already synced from that
+     * topic. Mirrors propagateNewTopicCompetencyArea() exactly, now that
+     * a topic can have more than one achievement statement the same way
+     * it can have more than one competency area.
+     */
+    public static function propagateNewSubjectAchievement(NlscTopic $topic, NlscSubjectAchievement $achievement): void
     {
-        $schoolTopics = SchoolNlscTopic::where('source_topic_id', $achievement->nlsc_topic_id)->get();
+        $schoolTopics = SchoolNlscTopic::where('source_topic_id', $topic->id)->get();
 
         foreach ($schoolTopics as $schoolTopic) {
-            SchoolNlscSubjectAchievement::updateOrCreate(
-                ['school_nlsc_topic_id' => $schoolTopic->id],
-                [
-                    'achievement_text' => $achievement->achievement_text,
-                    'source_subject_achievement_id' => $achievement->id,
-                ]
-            );
+            $exists = SchoolNlscSubjectAchievement::where('school_nlsc_topic_id', $schoolTopic->id)
+                ->where('achievement_text', $achievement->achievement_text)
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            SchoolNlscSubjectAchievement::create([
+                'school_nlsc_topic_id' => $schoolTopic->id,
+                'achievement_text' => $achievement->achievement_text,
+                'source_subject_achievement_id' => $achievement->id,
+            ]);
         }
+    }
+
+    /**
+     * An admin Topic's Subject Achievement statement was edited — push
+     * the new wording to every school copy synced from it.
+     */
+    public static function propagateSubjectAchievementUpdate(NlscSubjectAchievement $achievement): void
+    {
+        SchoolNlscSubjectAchievement::where('source_subject_achievement_id', $achievement->id)
+            ->update(['achievement_text' => $achievement->achievement_text]);
     }
 
     /**
@@ -309,5 +332,19 @@ class NlscSyncService
         }
 
         SchoolNlscSubjectAchievement::where('source_subject_achievement_id', $achievementId)->delete();
+    }
+
+    /**
+     * Every Subject Achievement statement under one admin Topic (or one
+     * whole Senior/Subject) was deleted in bulk — same as
+     * propagateAllTopicCompetencyAreasDeletion() but for achievements.
+     */
+    public static function propagateAllSubjectAchievementsDeletion(array $achievementIds, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools || empty($achievementIds)) {
+            return;
+        }
+
+        SchoolNlscSubjectAchievement::whereIn('source_subject_achievement_id', $achievementIds)->delete();
     }
 }

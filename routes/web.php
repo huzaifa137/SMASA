@@ -244,8 +244,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->name('admin.')
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
+            Route::get('/nlsc-topics/{id}/subject-achievements', 'forTopic')->name('nlsc-topics.subject-achievements');
             Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::put('/nlsc-subject-achievements/{id}', 'update')->name('nlsc-subject-achievements.update');
             Route::delete('/nlsc-subject-achievements-all', 'destroyAll')->name('nlsc-subject-achievements.delete-all');
+            Route::delete('/nlsc-topics/{id}/subject-achievements-all', 'destroyAllForTopic')->name('nlsc-topics.subject-achievements.delete-all');
             Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
         });
 
@@ -295,8 +298,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
+            Route::get('/nlsc-topics/{id}/subject-achievements', 'forTopic')->name('nlsc-topics.subject-achievements');
             Route::post('/nlsc-subject-achievements', 'store')->name('nlsc-subject-achievements.store');
+            Route::put('/nlsc-subject-achievements/{id}', 'update')->name('nlsc-subject-achievements.update');
             Route::delete('/nlsc-subject-achievements-all', 'destroyAll')->name('nlsc-subject-achievements.delete-all');
+            Route::delete('/nlsc-topics/{id}/subject-achievements-all', 'destroyAllForTopic')->name('nlsc-topics.subject-achievements.delete-all');
             Route::delete('/nlsc-subject-achievements/{id}', 'destroy')->name('nlsc-subject-achievements.delete');
         });
 

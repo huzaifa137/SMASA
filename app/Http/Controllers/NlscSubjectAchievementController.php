@@ -13,14 +13,19 @@ use Illuminate\Http\Request;
  * third NLSC Assessment Type, alongside Topics ("Activities of
  * Integration") and Projects ("Project Work").
  *
- * Unlike those two, this doesn't manage its own topic list — it reuses
- * NlscTopicController's Topics (the NCDC catalogue lists identical topic
- * names for both Activities of Integration and Subject Achievement), and
- * just attaches one achievement statement to each. A topic that doesn't
- * have one yet simply shows as "not set" here — add it whenever it's
- * ready, same "type it in yourself" approach every other NLSC screen
- * takes (see NlscTopicController's own docblock for why nothing here is
- * pre-loaded from NCDC's copyrighted syllabus text).
+ * Like those two, a Topic can carry more than one Subject Achievement
+ * statement — this used to be capped at exactly one per topic (a unique
+ * constraint on nlsc_topic_id), which meant a topic that already had a
+ * statement could never get a second one; that cap has been removed
+ * (see 2026_09_18_090000_make_subject_achievements_many_per_topic.php),
+ * and this screen now works exactly like NlscTopicController's own
+ * Competency Areas — a "View" per topic opens a list of that topic's
+ * achievement statements, each independently addable/editable/deletable.
+ *
+ * Still doesn't manage its own topic list — it reuses NlscTopicController's
+ * Topics (the NCDC catalogue lists identical topic names for both
+ * Activities of Integration and Subject Achievement); topic add/rename/
+ * delete stays exclusively on that screen.
  */
 class NlscSubjectAchievementController extends Controller
 {
@@ -34,7 +39,7 @@ class NlscSubjectAchievementController extends Controller
         $selectedSenior = (int) $request->get('senior', $seniorOptions->first()->md_id ?? 0);
         $selectedSubject = (int) $request->get('subject', $subjectOptions->first()->md_id ?? 0);
 
-        $topics = NlscTopic::with('subjectAchievement')
+        $topics = NlscTopic::withCount('subjectAchievements')
             ->where('senior_class_id', $selectedSenior)
             ->where('subject_id', $selectedSubject)
             ->orderBy('sort_order')
@@ -54,8 +59,32 @@ class NlscSubjectAchievementController extends Controller
     }
 
     /**
-     * Add or edit the achievement statement for one topic — a single
-     * upsert, since there's only ever one per topic.
+     * One topic's own Subject Achievement statements — what "View" opens.
+     * Mirrors NlscTopicController::competencyAreas().
+     */
+    public function forTopic($topicId)
+    {
+        PermissionHelper::denyUnlessFeature('view_master_data');
+
+        $topic = NlscTopic::with('subjectAchievements')->find($topicId);
+        if (!$topic) {
+            return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'topic' => ['id' => $topic->id, 'topic_name' => $topic->topic_name],
+            'achievements' => $topic->subjectAchievements->map(fn($a) => [
+                'id' => $a->id,
+                'achievement_text' => $a->achievement_text,
+            ]),
+        ]);
+    }
+
+    /**
+     * Add a new achievement statement under a topic — a topic can now
+     * have as many as needed, so this always creates a new row rather
+     * than upserting a single one.
      */
     public function store(Request $request)
     {
@@ -68,17 +97,45 @@ class NlscSubjectAchievementController extends Controller
             'achievement_text' => 'required|string',
         ]);
 
-        $achievement = NlscSubjectAchievement::updateOrCreate(
-            ['nlsc_topic_id' => $request->nlsc_topic_id],
-            ['achievement_text' => $request->achievement_text, 'added_by' => Helper::user_id()]
-        );
+        $topic = NlscTopic::find($request->nlsc_topic_id);
 
-        NlscSyncService::propagateSubjectAchievementUpsert($achievement);
+        $achievement = NlscSubjectAchievement::create([
+            'nlsc_topic_id' => $request->nlsc_topic_id,
+            'achievement_text' => $request->achievement_text,
+            'added_by' => Helper::user_id(),
+        ]);
+
+        NlscSyncService::propagateNewSubjectAchievement($topic, $achievement);
 
         return response()->json(['success' => true, 'achievement' => [
             'id' => $achievement->id,
             'achievement_text' => $achievement->achievement_text,
         ]]);
+    }
+
+    /**
+     * Edit one specific achievement statement's wording.
+     */
+    public function update(Request $request, $id)
+    {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $achievement = NlscSubjectAchievement::find($id);
+        if (!$achievement) {
+            return response()->json(['success' => false, 'message' => 'Subject Achievement not found.'], 404);
+        }
+
+        $request->validate([
+            'achievement_text' => 'required|string',
+        ]);
+
+        $achievement->update(['achievement_text' => $request->achievement_text]);
+
+        NlscSyncService::propagateSubjectAchievementUpdate($achievement);
+
+        return response()->json(['success' => true]);
     }
 
     public function destroy(Request $request, $id)
@@ -100,11 +157,39 @@ class NlscSubjectAchievementController extends Controller
     }
 
     /**
+     * Clear every achievement statement under one topic — the topic
+     * itself, and its Activities of Integration data, are untouched.
+     * Mirrors NlscTopicController::destroyAllCompetencyAreas().
+     */
+    public function destroyAllForTopic(Request $request, $topicId)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $topic = NlscTopic::find($topicId);
+        if (!$topic) {
+            return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
+        }
+
+        $cascade = $request->boolean('cascade_to_schools');
+        $ids = $topic->subjectAchievements()->pluck('id')->all();
+        $count = count($ids);
+
+        $topic->subjectAchievements()->delete();
+
+        NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
+
+        return response()->json(['success' => true, 'deleted' => $count]);
+    }
+
+    /**
      * Delete every achievement statement for one Senior/Subject in one
      * go — mirrors NlscTopicController::destroyAllTopics()/
-     * NlscProjectController::destroyAllProjects()'s "Delete All" button.
-     * The topics themselves are untouched (they belong to Activities of
-     * Integration) — only their Subject Achievement text is cleared.
+     * NlscProjectController's own "Delete All" button. The topics
+     * themselves are untouched (they belong to Activities of
+     * Integration) — only their Subject Achievement statements are
+     * cleared.
      */
     public function destroyAll(Request $request)
     {
@@ -124,13 +209,12 @@ class NlscSubjectAchievementController extends Controller
                 ->where('subject_id', $request->subject_id);
         })->get();
 
-        $count = $achievements->count();
+        $ids = $achievements->pluck('id')->all();
+        $count = count($ids);
 
-        foreach ($achievements as $achievement) {
-            $id = $achievement->id;
-            $achievement->delete();
-            NlscSyncService::propagateSubjectAchievementDeletion($id, $cascade);
-        }
+        NlscSubjectAchievement::whereIn('id', $ids)->delete();
+
+        NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
