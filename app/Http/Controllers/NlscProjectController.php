@@ -290,7 +290,7 @@ class NlscProjectController extends Controller
      * was the last project in its Project Area, the now-empty area is
      * deleted too, so areas never pile up with nothing under them.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -303,6 +303,8 @@ class NlscProjectController extends Controller
 
         $areaId = $project->nlsc_project_area_id;
         $project->delete();
+
+        NlscSyncService::propagateProjectDeletion($id, $request->boolean('cascade_to_schools'));
 
         if (NlscProject::where('nlsc_project_area_id', $areaId)->doesntExist()) {
             NlscProjectArea::where('id', $areaId)->delete();
@@ -330,9 +332,12 @@ class NlscProjectController extends Controller
             ->where('subject_id', $request->subject_id)
             ->pluck('id');
 
-        $count = NlscProject::whereIn('nlsc_project_area_id', $areaIds)->count();
+        $projectIds = NlscProject::whereIn('nlsc_project_area_id', $areaIds)->pluck('id')->all();
+        $count = count($projectIds);
 
         NlscProjectArea::whereIn('id', $areaIds)->delete(); // cascades to projects -> competency areas
+
+        NlscSyncService::propagateAllProjectsDeletion($projectIds, $request->boolean('cascade_to_schools'));
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
@@ -385,7 +390,7 @@ class NlscProjectController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function destroyCompetencyArea($id)
+    public function destroyCompetencyArea(Request $request, $id)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -398,10 +403,12 @@ class NlscProjectController extends Controller
 
         $area->delete();
 
+        NlscSyncService::propagateProjectCompetencyAreaDeletion($id, $request->boolean('cascade_to_schools'));
+
         return response()->json(['success' => true]);
     }
 
-    public function destroyAllCompetencyAreas($projectId)
+    public function destroyAllCompetencyAreas(Request $request, $projectId)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -412,8 +419,11 @@ class NlscProjectController extends Controller
             return response()->json(['success' => false, 'message' => 'Project not found.'], 404);
         }
 
-        $count = $project->competencyAreas()->count();
+        $areaIds = $project->competencyAreas()->pluck('id')->all();
+        $count = count($areaIds);
         $project->competencyAreas()->delete();
+
+        NlscSyncService::propagateAllProjectCompetencyAreasDeletion($areaIds, $request->boolean('cascade_to_schools'));
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }

@@ -179,7 +179,7 @@ class NlscTopicController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -197,6 +197,8 @@ class NlscTopicController extends Controller
         // feature, at which point this will need the same "in use, can't
         // delete" guard the subject-management screens already have).
         $topic->delete();
+
+        NlscSyncService::propagateTopicDeletion($id, $request->boolean('cascade_to_schools'));
 
         return response()->json(['success' => true]);
     }
@@ -222,9 +224,16 @@ class NlscTopicController extends Controller
             ->where('subject_id', $request->subject_id)
             ->count();
 
+        $topicIds = NlscTopic::where('senior_class_id', $request->senior_class_id)
+            ->where('subject_id', $request->subject_id)
+            ->pluck('id')
+            ->all();
+
         NlscTopic::where('senior_class_id', $request->senior_class_id)
             ->where('subject_id', $request->subject_id)
             ->delete();
+
+        NlscSyncService::propagateAllTopicsDeletion($topicIds, $request->boolean('cascade_to_schools'));
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
@@ -286,7 +295,7 @@ class NlscTopicController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function destroyCompetencyArea($id)
+    public function destroyCompetencyArea(Request $request, $id)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -299,6 +308,8 @@ class NlscTopicController extends Controller
 
         $area->delete();
 
+        NlscSyncService::propagateTopicCompetencyAreaDeletion($id, $request->boolean('cascade_to_schools'));
+
         return response()->json(['success' => true]);
     }
 
@@ -306,7 +317,7 @@ class NlscTopicController extends Controller
      * Clear every competency area under one topic in a single action —
      * the topic itself stays, just empty (count badge back to 0).
      */
-    public function destroyAllCompetencyAreas($topicId)
+    public function destroyAllCompetencyAreas(Request $request, $topicId)
     {
         if (!PermissionHelper::canFeature('delete_master_data')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
@@ -317,8 +328,11 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Topic not found.'], 404);
         }
 
-        $count = $topic->competencyAreas()->count();
+        $areaIds = $topic->competencyAreas()->pluck('id')->all();
+        $count = count($areaIds);
         $topic->competencyAreas()->delete();
+
+        NlscSyncService::propagateAllTopicCompetencyAreasDeletion($areaIds, $request->boolean('cascade_to_schools'));
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }

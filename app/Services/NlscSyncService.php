@@ -35,14 +35,15 @@ use App\Models\SchoolNlscTopic;
  * (NlscTopicBulkImport, NlscProjectBulkImport), so there's exactly one
  * place this logic lives.
  *
- * What's deliberately NOT touched: deletions, and brand-new
- * topics/Project Areas/Projects. A school that already deleted its own
- * copy of something is left alone (matches the "deliberately not a
- * foreign key" reasoning already documented on the school_nlsc_* clone
- * columns) — this service only ever updates or adds, never deletes. And
- * a brand-new admin Topic/Project doesn't need a push from here at all:
- * the incremental sync log already brings those in the next time each
- * school visits that Senior/Subject.
+ * Deletion is opt-in per action, not automatic: every propagate*Deletion()
+ * method below takes an explicit $cascadeToSchools flag and does nothing
+ * unless it's true. The admin screens ask "also remove this from schools
+ * that already have it?" before every delete (single item, or "delete
+ * all") and pass the admin's answer straight through here — so a school
+ * that would rather keep its own copy of something the admin removed can
+ * still end up with that outcome (admin says no), while an admin who
+ * really does want a takedown to reach every school can make that happen
+ * explicitly instead of it being silently impossible either way.
  */
 class NlscSyncService
 {
@@ -56,6 +57,32 @@ class NlscSyncService
     {
         SchoolNlscTopic::where('source_topic_id', $topic->id)
             ->update(['topic_name' => $topic->topic_name]);
+    }
+
+    /**
+     * An admin Topic was deleted — if the admin chose to, remove every
+     * school's copy of it too (competency areas cascade via FK).
+     */
+    public static function propagateTopicDeletion(int $topicId, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools) {
+            return;
+        }
+
+        SchoolNlscTopic::where('source_topic_id', $topicId)->delete();
+    }
+
+    /**
+     * Every admin Topic for one Senior/Subject was deleted — same as
+     * propagateTopicDeletion() but for the "delete all" bulk action.
+     */
+    public static function propagateAllTopicsDeletion(array $topicIds, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools || empty($topicIds)) {
+            return;
+        }
+
+        SchoolNlscTopic::whereIn('source_topic_id', $topicIds)->delete();
     }
 
     /**
@@ -99,6 +126,33 @@ class NlscSyncService
             ->update(['description' => $area->description]);
     }
 
+    /**
+     * An admin Topic's Competency Area was deleted — if the admin chose
+     * to, remove every school's copy of it too.
+     */
+    public static function propagateTopicCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools) {
+            return;
+        }
+
+        SchoolNlscCompetencyArea::where('source_competency_area_id', $areaId)->delete();
+    }
+
+    /**
+     * Every Competency Area under one admin Topic was deleted — same as
+     * propagateTopicCompetencyAreaDeletion() but for the "delete all"
+     * bulk action.
+     */
+    public static function propagateAllTopicCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools || empty($areaIds)) {
+            return;
+        }
+
+        SchoolNlscCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
+    }
+
     // ============================ Projects =============================
 
     /**
@@ -122,6 +176,36 @@ class NlscSyncService
                 'project_name' => $project->project_name,
                 'description' => $project->description,
             ]);
+    }
+
+    /**
+     * An admin Project was deleted — if the admin chose to, remove every
+     * school's copy of it too (competency areas cascade via FK). The now-
+     * empty Project Area on the school side is left in place even though
+     * the admin one is auto-removed when empty — a school may still have
+     * its own extra projects under that same area, so it isn't safe to
+     * assume the area itself should disappear too.
+     */
+    public static function propagateProjectDeletion(int $projectId, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools) {
+            return;
+        }
+
+        SchoolNlscProject::where('source_project_id', $projectId)->delete();
+    }
+
+    /**
+     * Every admin Project for one Senior/Subject was deleted — same as
+     * propagateProjectDeletion() but for the "delete all" bulk action.
+     */
+    public static function propagateAllProjectsDeletion(array $projectIds, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools || empty($projectIds)) {
+            return;
+        }
+
+        SchoolNlscProject::whereIn('source_project_id', $projectIds)->delete();
     }
 
     /**
@@ -154,11 +238,38 @@ class NlscSyncService
 
     /**
      * An admin Project's Competency Area description was edited — push
-     * the new wording to every school copy already synced from it.
+     * the new wording to every school copy synced from it.
      */
     public static function propagateProjectCompetencyAreaUpdate(NlscProjectCompetencyArea $area): void
     {
         SchoolNlscProjectCompetencyArea::where('source_competency_area_id', $area->id)
             ->update(['description' => $area->description]);
+    }
+
+    /**
+     * An admin Project's Competency Area was deleted — if the admin chose
+     * to, remove every school's copy of it too.
+     */
+    public static function propagateProjectCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools) {
+            return;
+        }
+
+        SchoolNlscProjectCompetencyArea::where('source_competency_area_id', $areaId)->delete();
+    }
+
+    /**
+     * Every Competency Area under one admin Project was deleted — same as
+     * propagateProjectCompetencyAreaDeletion() but for the "delete all"
+     * bulk action.
+     */
+    public static function propagateAllProjectCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): void
+    {
+        if (!$cascadeToSchools || empty($areaIds)) {
+            return;
+        }
+
+        SchoolNlscProjectCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
     }
 }
