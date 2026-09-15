@@ -17,19 +17,38 @@ use Illuminate\Support\Facades\Schema;
  * Nothing here touches existing data — any achievement statement already
  * saved stays exactly as it is, just no longer the only one its topic is
  * allowed to have.
+ *
+ * MySQL/MariaDB won't drop a unique index while a foreign key still
+ * depends on it as its backing index (error 1553) — every FK column
+ * needs SOME index at all times, and the unique one was doing that job
+ * here. So each table needs the FK dropped first, then the unique index
+ * swapped for a plain one, then the FK rebuilt on top of that — three
+ * separate ALTER statements in that exact order, not one.
  */
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::table('nlsc_subject_achievements', function (Blueprint $table) {
+            $table->dropForeign(['nlsc_topic_id']);
+        });
+        Schema::table('nlsc_subject_achievements', function (Blueprint $table) {
             $table->dropUnique(['nlsc_topic_id']);
             $table->index('nlsc_topic_id');
         });
+        Schema::table('nlsc_subject_achievements', function (Blueprint $table) {
+            $table->foreign('nlsc_topic_id')->references('id')->on('nlsc_topics')->onDelete('cascade');
+        });
 
+        Schema::table('school_nlsc_subject_achievements', function (Blueprint $table) {
+            $table->dropForeign(['school_nlsc_topic_id']);
+        });
         Schema::table('school_nlsc_subject_achievements', function (Blueprint $table) {
             $table->dropUnique(['school_nlsc_topic_id']);
             $table->index('school_nlsc_topic_id');
+        });
+        Schema::table('school_nlsc_subject_achievements', function (Blueprint $table) {
+            $table->foreign('school_nlsc_topic_id')->references('id')->on('school_nlsc_topics')->onDelete('cascade');
         });
     }
 
