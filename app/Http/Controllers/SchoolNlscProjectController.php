@@ -150,6 +150,7 @@ class SchoolNlscProjectController extends Controller
                             'school_nlsc_project_id' => $schoolProject->id,
                             'description' => $adminCompetency->description,
                             'sort_order' => $adminCompetency->sort_order,
+                            'source_competency_area_id' => $adminCompetency->id,
                         ]);
                     }
 

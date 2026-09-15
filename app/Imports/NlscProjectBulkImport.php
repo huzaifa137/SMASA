@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\NlscProject;
 use App\Models\NlscProjectArea;
 use App\Models\NlscProjectCompetencyArea;
+use App\Services\NlscSyncService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -123,6 +124,7 @@ class NlscProjectBulkImport implements ToCollection, WithHeadingRow
                     } else {
                         if ($description !== '' && empty($project->description)) {
                             $project->update(['description' => $description]);
+                            NlscSyncService::propagateProjectUpdate($project);
                         }
                         $this->skippedCount++;
                     }
@@ -140,11 +142,15 @@ class NlscProjectBulkImport implements ToCollection, WithHeadingRow
                             continue;
                         }
 
-                        NlscProjectCompetencyArea::create([
+                        $newArea = NlscProjectCompetencyArea::create([
                             'nlsc_project_id' => $project->id,
                             'description' => $desc,
                             'sort_order' => $nextAreaOrder2++,
                         ]);
+
+                        // Reach schools that already have this project
+                        // synced in — see NlscSyncService's docblock.
+                        NlscSyncService::propagateNewProjectCompetencyArea($project, $newArea);
 
                         $existingDescriptions[] = strtolower($desc);
                         $this->competencyAreasImported++;

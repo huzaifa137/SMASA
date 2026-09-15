@@ -12,6 +12,7 @@ class SchoolNlscProjectCompetencyArea extends Model
         'school_nlsc_project_id',
         'description',
         'sort_order',
+        'source_competency_area_id',
     ];
 
     public function project()

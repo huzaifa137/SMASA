@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\NlscCompetencyArea;
 use App\Models\NlscTopic;
+use App\Services\NlscSyncService;
 use Illuminate\Http\Request;
 
 /**
@@ -145,6 +146,11 @@ class NlscTopicController extends Controller
 
         $topic->update(['topic_name' => $request->topic_name]);
 
+        // Push the rename to every school's copy already synced from
+        // this topic — without this they're stuck showing the old name
+        // forever, since a synced copy otherwise never changes again.
+        NlscSyncService::propagateTopicRename($topic);
+
         return response()->json(['success' => true]);
     }
 
@@ -246,6 +252,13 @@ class NlscTopicController extends Controller
             'sort_order' => $nextOrder,
         ]);
 
+        // Push a copy to every school that already has this topic synced
+        // in — the incremental sync log only checks whether a school has
+        // seen the TOPIC before, not whether a competency area was added
+        // to it since, so without this a competency area added after a
+        // school's first sync would never reach them.
+        NlscSyncService::propagateNewTopicCompetencyArea($topic, $area);
+
         return response()->json(['success' => true, 'competency_area' => ['id' => $area->id, 'description' => $area->description]]);
     }
 
@@ -265,6 +278,10 @@ class NlscTopicController extends Controller
         ]);
 
         $area->update(['description' => $request->description]);
+
+        // Push the edited wording to every school's copy synced from this
+        // competency area — same reasoning as propagateTopicRename().
+        NlscSyncService::propagateTopicCompetencyAreaUpdate($area);
 
         return response()->json(['success' => true]);
     }

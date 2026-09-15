@@ -117,6 +117,7 @@ class SchoolNlscTopicController extends Controller
                         'school_nlsc_topic_id' => $schoolTopic->id,
                         'description' => $adminArea->description,
                         'sort_order' => $adminArea->sort_order,
+                        'source_competency_area_id' => $adminArea->id,
                     ]);
                 }
 

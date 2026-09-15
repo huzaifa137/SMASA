@@ -12,6 +12,7 @@ class SchoolNlscCompetencyArea extends Model
         'school_nlsc_topic_id',
         'description',
         'sort_order',
+        'source_competency_area_id',
     ];
 
     public function topic()

@@ -6,9 +6,7 @@ use App\Helpers\PermissionHelper;
 use App\Models\NlscProject;
 use App\Models\NlscProjectArea;
 use App\Models\NlscProjectCompetencyArea;
-use App\Models\SchoolNlscProject;
-use App\Models\SchoolNlscProjectArea;
-use App\Models\SchoolNlscProjectCompetencyArea;
+use App\Services\NlscSyncService;
 use Illuminate\Http\Request;
 
 /**
@@ -203,12 +201,23 @@ class NlscProjectController extends Controller
             }
 
             $project->area->update(['area_name' => $newAreaName]);
+
+            // Push the area rename to every school copy already synced
+            // from it — same gap propagateProjectUpdate() below closes
+            // for the project's own name/description.
+            NlscSyncService::propagateProjectAreaRename($project->area);
         }
 
         $project->update([
             'project_name' => $request->project_name,
             'description' => $request->description,
         ]);
+
+        // Push the name/description edit to every school copy already
+        // synced from this project — without this they're stuck showing
+        // the old wording forever, since a synced copy otherwise never
+        // changes again.
+        NlscSyncService::propagateProjectUpdate($project);
 
         return response()->json(['success' => true]);
     }
@@ -243,6 +252,8 @@ class NlscProjectController extends Controller
         }
 
         $area->update(['area_name' => $request->area_name]);
+
+        NlscSyncService::propagateProjectAreaRename($area);
 
         return response()->json(['success' => true, 'area_name' => $area->area_name]);
     }
@@ -347,6 +358,11 @@ class NlscProjectController extends Controller
             'sort_order' => $nextOrder,
         ]);
 
+        // Push a copy to every school that already has this project
+        // synced in — same reasoning as
+        // NlscTopicController::storeCompetencyArea()'s propagation call.
+        NlscSyncService::propagateNewProjectCompetencyArea($project, $area);
+
         return response()->json(['success' => true, 'competency_area' => ['id' => $area->id, 'description' => $area->description]]);
     }
 
@@ -363,6 +379,8 @@ class NlscProjectController extends Controller
 
         $request->validate(['description' => 'required|string']);
         $area->update(['description' => $request->description]);
+
+        NlscSyncService::propagateProjectCompetencyAreaUpdate($area);
 
         return response()->json(['success' => true]);
     }

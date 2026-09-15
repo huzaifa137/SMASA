@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\NlscCompetencyArea;
 use App\Models\NlscTopic;
+use App\Services\NlscSyncService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -118,11 +119,15 @@ class NlscTopicBulkImport implements ToCollection, WithHeadingRow
                             continue;
                         }
 
-                        NlscCompetencyArea::create([
+                        $newArea = NlscCompetencyArea::create([
                             'nlsc_topic_id' => $topic->id,
                             'description' => $description,
                             'sort_order' => $nextAreaOrder++,
                         ]);
+
+                        // Reach schools that already have this topic
+                        // synced in — see NlscSyncService's docblock.
+                        NlscSyncService::propagateNewTopicCompetencyArea($topic, $newArea);
 
                         $existingDescriptions[] = strtolower($description);
                         $this->competencyAreasImported++;
