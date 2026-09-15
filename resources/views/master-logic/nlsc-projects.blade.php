@@ -583,17 +583,24 @@
                 const id = row.dataset.id;
                 Swal.fire({
                     title: 'Delete this project?',
-                    text: 'Its Competency Areas will be deleted too. This cannot be undone.',
+                    html: 'Its Competency Areas will be deleted too. This cannot be undone.'
+                        + '<div style="margin-top:1rem; text-align:left;">'
+                        + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
+                        + '<input type="checkbox" id="swalCascadeSchools" style="width:16px; height:16px;">'
+                        + 'Also remove this from schools that already have it in their own copy'
+                        + '</label></div>',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',
                     confirmButtonText: 'Delete',
+                    preConfirm: () => ({ cascade: document.getElementById('swalCascadeSchools').checked }),
                 }).then(result => {
                     if (!result.isConfirmed) return;
 
                     fetch(`{{ url('admin/nlsc-projects') }}/${id}`, {
                         method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify({ cascade_to_schools: result.value.cascade }),
                     })
                         .then(r => r.json())
                         .then(res => {
@@ -618,18 +625,24 @@
 
             Swal.fire({
                 title: `Delete all ${projectCount} project(s)?`,
-                text: 'Every Project Area, Project AND its competency areas, for this Senior/Subject only, will be permanently deleted. This cannot be undone.',
+                html: 'Every Project Area, Project AND its competency areas, for this Senior/Subject only, will be permanently deleted. This cannot be undone.'
+                    + '<div style="margin-top:1rem; text-align:left;">'
+                    + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
+                    + '<input type="checkbox" id="swalCascadeSchoolsAll" style="width:16px; height:16px;">'
+                    + 'Also remove these from schools that already have them in their own copy'
+                    + '</label></div>',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 confirmButtonText: 'Delete All',
+                preConfirm: () => ({ cascade: document.getElementById('swalCascadeSchoolsAll').checked }),
             }).then(result => {
                 if (!result.isConfirmed) return;
 
                 fetch(`{{ url('admin/nlsc-projects-all') }}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                    body: JSON.stringify({ senior_class_id: SELECTED_SENIOR, subject_id: SELECTED_SUBJECT }),
+                    body: JSON.stringify({ senior_class_id: SELECTED_SENIOR, subject_id: SELECTED_SUBJECT, cascade_to_schools: result.value.cascade }),
                 })
                     .then(r => r.json())
                     .then(res => {
@@ -697,16 +710,23 @@
                     const id = row.dataset.id;
                     Swal.fire({
                         title: 'Delete this competency area?',
+                        html: '<div style="text-align:left;">'
+                            + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
+                            + '<input type="checkbox" id="swalCascadeCompArea" style="width:16px; height:16px;">'
+                            + 'Also remove this from schools that already have it in their own copy'
+                            + '</label></div>',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#dc3545',
                         confirmButtonText: 'Delete',
+                        preConfirm: () => ({ cascade: document.getElementById('swalCascadeCompArea').checked }),
                     }).then(result => {
                         if (!result.isConfirmed) return;
 
                         fetch(`{{ url('admin/nlsc-project-competency-areas') }}/${id}`, {
                             method: 'DELETE',
-                            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: JSON.stringify({ cascade_to_schools: result.value.cascade }),
                         })
                             .then(r => r.json())
                             .then(res => {
@@ -792,17 +812,24 @@
 
             Swal.fire({
                 title: 'Clear all competency areas?',
-                text: 'The project itself stays — only its competency areas are removed. This cannot be undone.',
+                html: 'The project itself stays — only its competency areas are removed. This cannot be undone.'
+                    + '<div style="margin-top:1rem; text-align:left;">'
+                    + '<label style="font-size:.85rem; display:flex; align-items:center; gap:.5rem; cursor:pointer;">'
+                    + '<input type="checkbox" id="swalCascadeClearComp" style="width:16px; height:16px;">'
+                    + 'Also remove these from schools that already have them in their own copy'
+                    + '</label></div>',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 confirmButtonText: 'Clear All',
+                preConfirm: () => ({ cascade: document.getElementById('swalCascadeClearComp').checked }),
             }).then(result => {
                 if (!result.isConfirmed) return;
 
                 fetch(`{{ url('admin/nlsc-projects') }}/${projectId}/competency-areas-all`, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({ cascade_to_schools: result.value.cascade }),
                 })
                     .then(r => r.json())
                     .then(res => {
