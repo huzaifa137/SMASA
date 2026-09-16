@@ -784,6 +784,25 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         });
 
 
+    // "Create Assessment" — the Secondary O-Level gate before marks entry
+    // (see ExaminationController::marksEntrySubject() and
+    // NlscAssessmentController's own docblock). Deliberately its own
+    // separate controller binding rather than nested inside the
+    // ->controller(ExaminationController::class) group above, since it's
+    // a different controller — module:classes matches how the rest of
+    // the Secondary/NLSC screens (A-Level Combinations, O-Level
+    // Electives, NLSC Topics/Projects/Subject Achievement) are all gated.
+    Route::controller(\App\Http\Controllers\NlscAssessmentController::class)
+        ->prefix('examinations')
+        ->middleware(['module:classes'])
+        ->group(function () {
+            Route::get('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'index')->name('nlsc-assessments');
+            Route::post('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'store')->name('nlsc-assessments.store');
+            Route::get('/marks/{classSubjectId}/nlsc-assessments/subject-matter-options', 'subjectMatterOptions')->name('nlsc-assessments.subject-matter-options');
+            Route::get('/marks/nlsc-assessments/competency-area-options', 'competencyAreaOptions')->name('nlsc-assessments.competency-area-options');
+        });
+
+
     // ─────────────────────────────────────────────────────────────────────
     // Report Card Template Designer (dynamic, per-school, drag-and-drop)
     // Add this block into routes/web.php, right after the existing

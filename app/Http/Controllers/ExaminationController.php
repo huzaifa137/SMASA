@@ -301,6 +301,27 @@ class ExaminationController extends Controller
             })
             ->firstOrFail();
 
+        // Secondary O-Level (the NCDC NLSC curriculum) assesses against a
+        // specific Topic/Project + Competency Area rather than a plain
+        // numeric score — that has to be chosen first, on the Create
+        // Assessment screen, before marks entry means anything. Once at
+        // least one assessment exists for this exam/class-subject, marks
+        // entry proceeds as normal below.
+        $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+
+        if (in_array($classSubject->class_id, $secondaryOLevelClassIds, true)) {
+            $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)
+                ->where('examination_id', $examId)
+                ->where('class_id', $classSubject->class_id)
+                ->where('stream_id', $classSubject->stream_id)
+                ->where('subject_id', $classSubject->subject_id)
+                ->exists();
+
+            if (!$hasAssessment) {
+                return redirect()->route('nlsc-assessments', ['examId' => $examId, 'classSubjectId' => $classSubjectId]);
+            }
+        }
+
         // Fetch students in this class-stream
         $students = DB::table('students')
             ->where('school_id', $schoolId)

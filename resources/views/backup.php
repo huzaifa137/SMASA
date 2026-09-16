@@ -1,7 +1,15 @@
 <script type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-php artisan db:seed --class=NlscCompetencyAreaSeeder, --class=NlscSubjectAchievementSeeder, --class=NlscProjectSeeder
+
+<!-- php artisan db:seed --class=SecondarySchoolProductSeeder No Need Migrations already do this, Needed if we want to repopulate the db -->
+
+git pull
+php artisan migrate
+php artisan db:seed --class=NlscCompetencyAreaSeeder
+php artisan db:seed --class=NlscSubjectAchievementSeeder
+php artisan db:seed --class=NlscProjectSeeder
+
 
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;
