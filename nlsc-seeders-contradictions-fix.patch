@@ -1,0 +1,283 @@
+diff --git a/database/seeders/NlscProjectSeeder.php b/database/seeders/NlscProjectSeeder.php
+index 02fad72..9d4d54e 100644
+--- a/database/seeders/NlscProjectSeeder.php
++++ b/database/seeders/NlscProjectSeeder.php
+@@ -59,6 +59,18 @@ class NlscProjectSeeder extends Seeder
+         'English Language' => ['English'],
+         'History & Political Education' => ['History', 'History and Political Education', 'History & Political Education'],
+         'Physical Education' => ['PE'],
++        // The catalogue's own 'Religious Education' project content (values,
++        // community service, religious heritage) is written generically —
++        // not exclusively Christian or Islamic — but NLSC_SUBJECTS has no
++        // combined 'Religious Education' entry, only the CRE/IRE split from
++        // Senior 2 onward (see NlscCompetencyAreaSeeder's docblock). Without
++        // an alias here every Senior 1-3 'Religious Education' block would
++        // silently fail to resolve and get skipped entirely. Attaching to
++        // Christian Religious Education is a default, not a claim the
++        // content is Christian-specific — if your install also wants these
++        // under Islamic Religious Education, duplicate the block in the
++        // catalogue below with that subject name instead.
++        'Religious Education' => ['Christian Religious Education'],
+     ];
+ 
+     public function run(): void
+diff --git a/database/seeders/NlscSubjectAchievementSeeder.php b/database/seeders/NlscSubjectAchievementSeeder.php
+index 7d55ff9..e8ff0f1 100644
+--- a/database/seeders/NlscSubjectAchievementSeeder.php
++++ b/database/seeders/NlscSubjectAchievementSeeder.php
+@@ -51,7 +51,6 @@ class NlscSubjectAchievementSeeder extends Seeder
+      */
+     private const SUBJECT_ALIASES = [
+         'ENGLISH LANGUAGE' => ['ENGLISH'],
+-        'RELIGIOUS EDUCATION' => ['IRE', 'ISLAMIC RELIGIOUS EDUCATION', 'CRE', 'CHRISTIAN RELIGIOUS EDUCATION'],
+         'HISTORY AND POLITICAL EDUCATION' => ['HISTORY', 'HISTORY & POLITICAL EDUCATION'],
+         'PHYSICAL EDUCATION' => ['PE'],
+     ];
+@@ -235,7 +234,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Converts between fractions, decimals and percentages and applies them accurately in calculations and everyday problem-solving.',
+                     ],
+                     [
+-                        'topic' => 'Rectangular Cartesian Coordinates in 2 Dimensions',
++                        'topic' => 'Rectangular Cartesian Coordinates in 2-Dimensions',
+                         'achievement' => 'Plots, reads and interprets coordinates and uses coordinate grids to represent and solve problems involving points and shapes.',
+                     ],
+                     [
+@@ -263,7 +262,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Identifies lines of symmetry and performs and interprets reflections of shapes in different contexts, including the Cartesian plane.',
+                     ],
+                     [
+-                        'topic' => 'Equations of Lines and Curves',
++                        'topic' => 'Equation of Lines and Curves',
+                         'achievement' => 'Forms and interprets linear equations and represents straight-line relationships graphically.',
+                     ],
+                     [
+@@ -297,7 +296,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the origins, movements, settlement patterns and effects of major migrant groups in East Africa using historical evidence and maps.',
+                     ],
+                     [
+-                        'topic' => 'Culture and Key Ethnic Groups in East Africa',
++                        'topic' => 'Culture and Ethnic Groups in East Africa',
+                         'achievement' => 'Explains cultural practices, institutions and ethnic diversity in East Africa and demonstrates respect for different cultures and mechanisms of social harmony.',
+                     ],
+                     [
+@@ -320,38 +319,6 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'topic' => 'Response to the Establishment of Colonial Rule in East Africa',
+                         'achievement' => 'Analyses the reasons for and forms of African collaboration and resistance to colonial rule and evaluates their consequences.',
+                     ],
+-                    [
+-                        'topic' => 'Colonial Administrative Systems in East Africa',
+-                        'achievement' => 'Explains the major colonial administrative systems and assesses how colonial governments exercised political control over East African societies.',
+-                    ],
+-                    [
+-                        'topic' => 'Colonial Economy in East Africa',
+-                        'achievement' => 'Explains the organisation and effects of the colonial economy, including labour, taxation, cash crops, infrastructure and trade.',
+-                    ],
+-                    [
+-                        'topic' => 'World Wars and Their Impact on East Africa',
+-                        'achievement' => 'Explains East African involvement in the World Wars and assesses their political, social and economic effects on the region.',
+-                    ],
+-                    [
+-                        'topic' => 'Struggle for Independence in East Africa',
+-                        'achievement' => 'Explains the causes, processes, personalities and organisations involved in the struggle for independence and evaluates their contribution to national liberation.',
+-                    ],
+-                    [
+-                        'topic' => 'Post-Independence Socio-Economic Challenges in East Africa',
+-                        'achievement' => 'Identifies and analyses major social, political and economic challenges faced by East African states after independence.',
+-                    ],
+-                    [
+-                        'topic' => 'Civil Society and Non-Governmental Organisations',
+-                        'achievement' => 'Explains the role of civil society and NGOs in addressing social, economic and community challenges in East Africa.',
+-                    ],
+-                    [
+-                        'topic' => 'Changing Land Tenure Systems in East Africa',
+-                        'achievement' => 'Explains major changes in land ownership and tenure systems and assesses their effects on communities and economic development.',
+-                    ],
+-                    [
+-                        'topic' => 'Key Personalities in the History of East Africa Before Independence',
+-                        'achievement' => 'Identifies significant historical personalities and evaluates their roles and contributions to the development and transformation of East African societies.',
+-                    ],
+                 ],
+             ],
+             [
+@@ -359,7 +326,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                 'subject' => 'GEOGRAPHY',
+                 'topics' => [
+                     [
+-                        'topic' => 'Introduction to Geography',
++                        'topic' => 'Introduction',
+                         'achievement' => 'Explains the meaning, branches, scope and importance of Geography and relates geographical knowledge to everyday life and the environment.',
+                     ],
+                     [
+@@ -383,7 +350,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Distinguishes weather from climate, observes and records weather elements, uses weather instruments and explains their influence on human activities.',
+                     ],
+                     [
+-                        'topic' => 'Location, Size and Relief Regions of East Africa',
++                        'topic' => 'Location, Size, and Relief Regions of East Africa',
+                         'achievement' => 'Locates East Africa geographically and describes its size, major relief regions and associated physical characteristics.',
+                     ],
+                     [
+@@ -445,11 +412,11 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains conduction, convection and radiation and applies knowledge of heat transfer to everyday situations and practical problems.',
+                     ],
+                     [
+-                        'topic' => 'Expansion of Solids, Liquids and Gases',
++                        'topic' => 'Expansion of Solids, Liquids, and Gases',
+                         'achievement' => 'Explains thermal expansion in solids, liquids and gases and applies the concept to practical applications and everyday phenomena.',
+                     ],
+                     [
+-                        'topic' => 'Nature of Light and Reflection at Plane Surfaces',
++                        'topic' => 'Nature of Light; Reflection of Light at Plane Surfaces',
+                         'achievement' => 'Explains basic properties of light and applies the laws of reflection to predict and explain the behaviour of light at plane surfaces.',
+                     ],
+                 ],
+@@ -513,7 +480,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Distinguishes physical and chemical changes and uses observable evidence to identify and explain temporary and permanent changes in materials.',
+                     ],
+                     [
+-                        'topic' => 'Mixtures, Elements and Compounds',
++                        'topic' => 'Mixtures, Elements, and Compounds',
+                         'achievement' => 'Distinguishes elements, compounds and mixtures and selects appropriate methods for separating and purifying substances.',
+                     ],
+                     [
+@@ -535,7 +502,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                 'subject' => 'PHYSICAL EDUCATION',
+                 'topics' => [
+                     [
+-                        'topic' => 'Introduction to Physical Education',
++                        'topic' => 'Introduction to PE',
+                         'achievement' => 'Explains the meaning, importance and scope of Physical Education and demonstrates a positive attitude towards participation in physical activities.',
+                     ],
+                     [
+@@ -578,7 +545,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+             ],
+             [
+                 'senior' => 1,
+-                'subject' => 'RELIGIOUS EDUCATION',
++                'subject' => 'ISLAMIC RELIGIOUS EDUCATION',
+                 'topics' => [
+                     [
+                         'topic' => 'Worship',
+@@ -589,7 +556,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains major Islamic rituals and celebrations, their significance and the values they promote in individual and community life.',
+                     ],
+                     [
+-                        'topic' => 'Islam and Values in Christianity and African Traditional Religion',
++                        'topic' => 'Values in Christianity, Islam and African Traditional Religion',
+                         'achievement' => 'Compares selected Islamic values with values found in Christianity and African Traditional Religion and demonstrates respect for religious diversity and peaceful coexistence.',
+                     ],
+                 ],
+@@ -763,11 +730,11 @@ class NlscSubjectAchievementSeeder extends Seeder
+                 'subject' => 'HISTORY AND POLITICAL EDUCATION',
+                 'topics' => [
+                     [
+-                        'topic' => 'Colonial Administrative Systems in East Africa',
++                        'topic' => 'The Colonial Administrative Systems in East Africa',
+                         'achievement' => 'Explains the major colonial administrative systems used in East Africa, why they were adopted and their effects on East African societies.',
+                     ],
+                     [
+-                        'topic' => 'Colonial Economy in East Africa',
++                        'topic' => 'The Colonial Economy in East Africa',
+                         'achievement' => 'Explains the organisation and effects of the colonial economy, including taxation, labour, transport, agriculture, trade and infrastructure.',
+                     ],
+                     [
+@@ -783,7 +750,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Identifies and evaluates major political, social and economic challenges faced by East African states after independence and proposes appropriate responses.',
+                     ],
+                     [
+-                        'topic' => 'Civil Society and Non-Governmental Organisations in East Africa',
++                        'topic' => 'Civil Society and Non-Governmental Organisations',
+                         'achievement' => 'Explains the role of civil society and NGOs in East African development and evaluates their contributions and challenges.',
+                     ],
+                     [
+@@ -859,7 +826,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Investigates mechanical properties of materials and applies Hooke\'s law to describe and calculate deformation caused by forces.',
+                     ],
+                     [
+-                        'topic' => 'Reflection of Light by Curved Surfaces',
++                        'topic' => 'Reflection of Light at Curved Surfaces',
+                         'achievement' => 'Explains image formation by concave and convex mirrors and applies principles of reflection to practical optical devices.',
+                     ],
+                     [
+@@ -893,11 +860,11 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Distinguishes nutritional modes and identifies major nutrient compounds, their sources, functions and importance to organisms.',
+                     ],
+                     [
+-                        'topic' => 'Nutrition in Green Plants',
++                        'topic' => 'Nutrition in Plants',
+                         'achievement' => 'Explains photosynthesis and investigates how plants use light, water and carbon dioxide to manufacture food.',
+                     ],
+                     [
+-                        'topic' => 'Nutrition in Mammals',
++                        'topic' => 'Nutrition in Animals',
+                         'achievement' => 'Explains the processes of feeding and digestion in mammals and relates nutrients and digestive processes to growth, health and energy supply.',
+                     ],
+                     [
+@@ -931,7 +898,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the importance and movement of carbon in the environment, including carbon compounds, the carbon cycle and environmental implications.',
+                     ],
+                     [
+-                        'topic' => 'The Reactivity Series',
++                        'topic' => 'Reactivity Series of Metals',
+                         'achievement' => 'Arranges metals according to their reactivity, predicts reactions and applies the reactivity series to extraction, displacement and practical uses of metals.',
+                     ],
+                 ],
+@@ -980,7 +947,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+             ],
+             [
+                 'senior' => 2,
+-                'subject' => 'RELIGIOUS EDUCATION',
++                'subject' => 'ISLAMIC RELIGIOUS EDUCATION',
+                 'topics' => [
+                     [
+                         'topic' => 'Respect for Human Life',
+@@ -1009,7 +976,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the production process, distinguishes needs from wants, and evaluates specialisation, division of labour, diversification, raw materials, tools, machinery and equipment used in production.',
+                     ],
+                     [
+-                        'topic' => 'Marketing in a Small and Medium Business Enterprise (SME)',
++                        'topic' => 'Marketing in a Small Business Enterprise',
+                         'achievement' => 'Applies basic marketing principles, conducts simple market research, identifies distribution channels, develops promotional strategies and explains consumer protection.',
+                     ],
+                     [
+@@ -1161,11 +1128,11 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the importance of the Constitution, national symbols, citizenship, Parliament, judiciary, elections and other constitutional institutions and evaluates their roles in democratic governance.',
+                     ],
+                     [
+-                        'topic' => 'Democracy and Leadership in Uganda',
++                        'topic' => 'Democracy and Leadership in East Africa',
+                         'achievement' => 'Explains democratic principles and leadership responsibilities and evaluates how different leaders contribute to community development, governance and conflict resolution.',
+                     ],
+                     [
+-                        'topic' => 'The United Nations Organisation and Its Impact on Uganda',
++                        'topic' => 'The Role of the United Nations in Development and Its Impact on Uganda',
+                         'achievement' => 'Explains the history, structure and functions of the United Nations and evaluates its contribution to peace, development and Uganda\'s international relations.',
+                     ],
+                     [
+@@ -1435,7 +1402,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Identifies causes and forms of conflict in East Africa, analyses their effects and evaluates traditional and modern mechanisms for conflict prevention, resolution and peace building.',
+                     ],
+                     [
+-                        'topic' => 'Topical Review and Final Revision',
++                        'topic' => 'Topical Reviews',
+                         'achievement' => 'Integrates and applies knowledge from the four-year History and Political Education programme to analyse historical, political and contemporary issues and demonstrate the importance of historical understanding.',
+                     ],
+                 ],
+@@ -1477,7 +1444,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the distribution, development and importance of mining and manufacturing in Africa and evaluates factors affecting industrial development and environmental sustainability.',
+                     ],
+                     [
+-                        'topic' => 'Development of Transport and Communication in Africa',
++                        'topic' => 'Development of Transport, Communication and Trade in Africa',
+                         'achievement' => 'Explains the major transport and communication systems in Africa, analyses factors affecting their development and evaluates their contribution to economic integration and development.',
+                     ],
+                     [
+@@ -1541,7 +1508,7 @@ class NlscSubjectAchievementSeeder extends Seeder
+                         'achievement' => 'Explains the structure and function of flowers and the processes of pollination, fertilisation, fruit and seed formation and dispersal.',
+                     ],
+                     [
+-                        'topic' => 'Meiosis and Its Importance',
++                        'topic' => 'Mitosis and Meiosis and Their Importance',
+                         'achievement' => 'Explains meiosis, identifies its stages and evaluates its significance in maintaining chromosome number and generating variation.',
+                     ],
+                     [

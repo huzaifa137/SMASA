@@ -1,6 +1,7 @@
 <script type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+php artisan db:seed --class=NlscCompetencyAreaSeeder, --class=NlscSubjectAchievementSeeder, --class=NlscProjectSeeder
 
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;

@@ -59,6 +59,18 @@ class NlscProjectSeeder extends Seeder
         'English Language' => ['English'],
         'History & Political Education' => ['History', 'History and Political Education', 'History & Political Education'],
         'Physical Education' => ['PE'],
+        // The catalogue's own 'Religious Education' project content (values,
+        // community service, religious heritage) is written generically —
+        // not exclusively Christian or Islamic — but NLSC_SUBJECTS has no
+        // combined 'Religious Education' entry, only the CRE/IRE split from
+        // Senior 2 onward (see NlscCompetencyAreaSeeder's docblock). Without
+        // an alias here every Senior 1-3 'Religious Education' block would
+        // silently fail to resolve and get skipped entirely. Attaching to
+        // Christian Religious Education is a default, not a claim the
+        // content is Christian-specific — if your install also wants these
+        // under Islamic Religious Education, duplicate the block in the
+        // catalogue below with that subject name instead.
+        'Religious Education' => ['Christian Religious Education'],
     ];
 
     public function run(): void
