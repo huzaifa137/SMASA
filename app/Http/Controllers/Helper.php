@@ -1772,9 +1772,78 @@ class Helper extends Controller
         return self::pendingNlscAssessmentsQuery($examId, null);
     }
 
+    /**
+     * Every NLSC Assessment the CURRENT teacher has created that's still
+     * in an editable phase (see NlscAssessmentController::update()/
+     * destroy()'s own status guard for why 'closed'/'results_released'
+     * exams are excluded here too) — what "Manage Assessments" lists.
+     * Unlike getPendingNlscAssessments(), this is deliberately NOT gated
+     * behind "only if something's pending": once every class-subject has
+     * an assessment, the pending list (and its sidebar badge) empties
+     * out with nothing left pointing at what was already created, which
+     * is exactly the gap this fills.
+     */
+    public static function myCreatedNlscAssessments()
+    {
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $assessments = \App\Models\NlscAssessment::with('exam')
+            ->where('school_id', $schoolId)
+            ->where('created_by', $teacherId)
+            ->whereHas('exam', fn($q) => $q->whereIn('status', ['active', 'marks_entry']))
+            ->orderByDesc('id')
+            ->get();
+
+        return $assessments->map(function ($a) use ($schoolId) {
+            $classSubject = DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->where('class_id', $a->class_id)
+                ->where('stream_id', $a->stream_id)
+                ->where('subject_id', $a->subject_id)
+                ->first();
+
+            $a->setAttribute('class_subject_id', $classSubject->id ?? null);
+            $a->setAttribute('class_name', self::recordMdname($a->class_id));
+            $a->setAttribute('subject_matter_name', $a->assessment_type === 'projects'
+                ? optional($a->project)->project_name
+                : optional($a->topic)->topic_name);
+
+            return $a;
+        });
+    }
+
     public static function pendingNlscAssessmentsCountForExam(int $examId): int
     {
         return self::pendingNlscAssessmentsForExam($examId)->count();
+    }
+
+    /**
+     * True if this exam has at least one Secondary O-Level class attached
+     * at all — i.e. whether "Create Assessment" is a relevant stage for
+     * it in the first place, regardless of how many of those class-
+     * subjects still need one (see pendingNlscAssessmentsCountForExam()
+     * for that count). An exam that's purely Primary/Idaad-Thanawi/
+     * Secondary A-Level never goes through Create Assessment at all, so
+     * the stage shouldn't appear on its pipeline — that's the distinction
+     * a bare pending-count of 0 can't make on its own (it means the same
+     * thing for "no O-Level classes here" as it does for "all caught
+     * up").
+     */
+    public static function examHasSecondaryOLevelClasses(int $examId): bool
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $secondaryOLevelClassIds = self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+
+        if (empty($secondaryOLevelClassIds)) {
+            return false;
+        }
+
+        return ExaminationClass::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $secondaryOLevelClassIds)
+            ->exists();
     }
 
     public static function schoolProduct(int $schoolId): ?string

@@ -801,6 +801,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->middleware(['module:examinations'])
         ->group(function () {
             Route::get('/nlsc-assessments/pending', 'pending')->name('nlsc-assessments.pending');
+            Route::get('/nlsc-assessments/manage', 'manage')->name('nlsc-assessments.manage');
             Route::get('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'index')->name('nlsc-assessments');
             Route::post('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'store')->name('nlsc-assessments.store');
             Route::put('/{examId}/marks/{classSubjectId}/nlsc-assessments/{id}', 'update')->name('nlsc-assessments.update');

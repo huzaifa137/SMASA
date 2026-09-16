@@ -53,6 +53,13 @@
         }
         .btn-nt-primary:hover { background: #211ea3; color: #fff; }
 
+        .nt-tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; }
+        .nt-tab {
+            padding: .55rem 1.1rem; border-radius: .7rem; font-size: .82rem; font-weight: 700;
+            text-decoration: none; color: #4a4870; background: #eef0ff;
+        }
+        .nt-tab.active { background: #2C29CA; color: #fff; }
+
         .empty-state { text-align: center; padding: 3rem 1rem; color: #a3a0c9; }
     </style>
 @endsection
@@ -74,6 +81,11 @@
                     (Senior 5/6) never appears here — it goes straight to marks entry.
                 @endif
             </div>
+        </div>
+
+        <div class="nt-tabs">
+            <a href="{{ route('nlsc-assessments.pending') }}" class="nt-tab active"><i class="fas fa-list-check me-1"></i> Pending</a>
+            <a href="{{ route('nlsc-assessments.manage') }}" class="nt-tab"><i class="fas fa-clipboard-check me-1"></i> Manage Created</a>
         </div>
 
         <div class="nt-card">

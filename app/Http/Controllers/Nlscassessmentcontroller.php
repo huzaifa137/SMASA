@@ -98,6 +98,22 @@ class NlscAssessmentController extends Controller
         ));
     }
 
+    /**
+     * Every assessment the current teacher has created, still in an
+     * editable phase — the page "I can't find where to edit/delete what
+     * I already created" was missing. Unlike pending(), this never
+     * empties out just because nothing's left to create; it's a
+     * standing "manage what you've made" list.
+     */
+    public function manage()
+    {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+        $assessments = Helper::myCreatedNlscAssessments();
+
+        return view('Examination.nlsc-assessments-manage', compact('assessments'));
+    }
+
     public function store(Request $request, $examId, $classSubjectId)
     {
         if (!PermissionHelper::canFeature('edit_exam')) {
@@ -178,6 +194,14 @@ class NlscAssessmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Assessment not found.'], 404);
         }
 
+        // "As long as that exam is still on that phase" — once marks
+        // entry has closed, an assessment stops being something a
+        // teacher can silently swap out from under whatever marks were
+        // already entered against it.
+        if (!in_array($exam->status, ['active', 'marks_entry'], true)) {
+            return response()->json(['success' => false, 'message' => 'This exam is no longer in a stage where its assessments can be edited.'], 422);
+        }
+
         $request->validate([
             'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',
             'subject_matter_id' => 'required|integer',
@@ -238,6 +262,10 @@ class NlscAssessmentController extends Controller
 
         if (!$assessment) {
             return response()->json(['success' => false, 'message' => 'Assessment not found.'], 404);
+        }
+
+        if (!in_array($exam->status, ['active', 'marks_entry'], true)) {
+            return response()->json(['success' => false, 'message' => 'This exam is no longer in a stage where its assessments can be deleted.'], 422);
         }
 
         $assessment->delete();

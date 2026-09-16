@@ -412,6 +412,13 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li>
+                                    <a href="{{ route('nlsc-assessments.manage') }}">
+                                        <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments
+                                    </a>
+                                </li>
+                            @endif
                             @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
                                 <li>
                                     <a href="{{ route('examination.marks-entry-portal') }}">
@@ -952,6 +959,13 @@ use App\Helpers\PermissionHelper;
                                     <a href="{{ route('nlsc-assessments.pending') }}">
                                         <i class="fas fa-clipboard-list mr-2"></i>Create Assessment &nbsp; &nbsp;
                                         <span class="badge badge-danger float-right">{{ $pendingNlscAssessmentsCount }}</span>
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li>
+                                    <a href="{{ route('nlsc-assessments.manage') }}">
+                                        <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments
                                     </a>
                                 </li>
                             @endif

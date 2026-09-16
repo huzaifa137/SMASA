@@ -3243,19 +3243,44 @@ use App\Helpers\PermissionHelper;
                                             $duration = $startDate->diffInDays($endDate) + 1;
 
                                             /*─ pipeline stage definitions ───────────────────────────
-                                             *  order matters – it drives the connector "done" logic
+                                             *  order matters – it drives the connector "done" logic.
+                                             *  "Create Assessment" is inserted between Active and
+                                             *  Marks Entry only for exams that actually have a
+                                             *  Secondary O-Level class attached (see
+                                             *  Helper::examHasSecondaryOLevelClasses()) — it's not a
+                                             *  real $exam->status value, just a screen a Secondary
+                                             *  O-Level class-subject has to pass through before its
+                                             *  marks entry opens (NlscAssessmentController).
                                              *──────────────────────────────────────────────────────*/
+                                            $examHasOLevel = \App\Http\Controllers\Helper::examHasSecondaryOLevelClasses($exam->id);
+                                            $examPendingAssessments = $examHasOLevel ? \App\Http\Controllers\Helper::pendingNlscAssessmentsCountForExam($exam->id) : 0;
+
                                             $stages = [
                                                 ['key' => 'draft', 'icon' => 'fa-pen', 'label' => 'Draft'],
                                                 ['key' => 'active', 'icon' => 'fa-play', 'label' => 'Active'],
+                                            ];
+
+                                            if ($examHasOLevel) {
+                                                $stages[] = ['key' => 'create_assessment', 'icon' => 'fa-list-check', 'label' => 'Create Assessment'];
+                                            }
+
+                                            $stages = array_merge($stages, [
                                                 ['key' => 'marks_entry', 'icon' => 'fa-pen-alt', 'label' => 'Marks Entry'],
                                                 ['key' => 'closed', 'icon' => 'fa-lock', 'label' => 'Closed'],
                                                 ['key' => 'results_released', 'icon' => 'fa-trophy', 'label' => 'Results Released'],
-
-                                            ];
+                                            ]);
 
                                             /*─ find current index ───────────────────────────────────*/
-                                            $currentIdx = collect($stages)->search(fn($s) => $s['key'] === $exam->status);
+                                            if ($examHasOLevel && $exam->status === 'active') {
+                                                // "Create Assessment" work happens throughout the
+                                                // Active phase (a class-subject can be added after
+                                                // the rest are already done) — treat it as the current
+                                                // stage for the whole time the exam is Active, rather
+                                                // than only until the pending count first hits zero.
+                                                $currentIdx = collect($stages)->search(fn($s) => $s['key'] === 'create_assessment');
+                                            } else {
+                                                $currentIdx = collect($stages)->search(fn($s) => $s['key'] === $exam->status);
+                                            }
                                             if ($currentIdx === false)
                                                 $currentIdx = 0;
 
@@ -3263,6 +3288,9 @@ use App\Helpers\PermissionHelper;
                                             $stageTips = [
                                                 'draft' => 'Examination created, not yet published',
                                                 'active' => 'Examination is currently running',
+                                                'create_assessment' => $examPendingAssessments > 0
+                                                    ? $examPendingAssessments . ' Secondary O-Level class-subject(s) still need an assessment before marks entry'
+                                                    : 'All Secondary O-Level class-subjects have an assessment set up',
                                                 'marks_entry' => 'Teachers are entering marks',
                                                 'closed' => 'Marks locked, results being compiled',
                                                 'results_released' => 'Results published to students',
@@ -3391,9 +3419,14 @@ use App\Helpers\PermissionHelper;
                                                                 $isCurrentStage = ($idx === $currentIdx);
                                                                 $clickAction = '';
 
-                                                                // If the exam is fully done and this IS the results_released node,
-                                                                // clicking the trophy opens the results/pass-slips modal instead.
-                                                                if ($exam->status === 'results_released' && $stage['key'] === 'results_released' && \App\Helpers\PermissionHelper::canFeature('generate_reports')) {
+                                                                // "Create Assessment" isn't a real status to
+                                                                // transition into — it always links to the
+                                                                // per-exam pending list instead, regardless of
+                                                                // done/active/future state.
+                                                                if ($stage['key'] === 'create_assessment') {
+                                                                    $pendingUrl = route('nlsc-assessments.pending', ['examination_id' => $exam->id]);
+                                                                    $clickAction = "window.location.href='{$pendingUrl}'";
+                                                                } elseif ($exam->status === 'results_released' && $stage['key'] === 'results_released' && \App\Helpers\PermissionHelper::canFeature('generate_reports')) {
                                                                     $clickAction = "viewExamResults({$exam->id})";
                                                                 } elseif (($state === 'active' || $isNextStage) && \App\Helpers\PermissionHelper::canFeature('publish_results')) {
                                                                     $clickAction = "openStageTransition({$exam->id}, '{$exam->status}', '{$stage['key']}')";
