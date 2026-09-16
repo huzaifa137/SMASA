@@ -789,13 +789,18 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // NlscAssessmentController's own docblock). Deliberately its own
     // separate controller binding rather than nested inside the
     // ->controller(ExaminationController::class) group above, since it's
-    // a different controller — module:classes matches how the rest of
-    // the Secondary/NLSC screens (A-Level Combinations, O-Level
-    // Electives, NLSC Topics/Projects/Subject Achievement) are all gated.
+    // a different controller — but gated on module:examinations (matching
+    // the controller's own view_exams/edit_exam checks and the fact that
+    // it's reached from, and gates, the exam marks-entry flow), NOT
+    // module:classes — unlike A-Level Combinations/O-Level Electives/NLSC
+    // Topics-Projects-Subject Achievement, this isn't a class-subject
+    // setup screen, so a role scoped to Examinations without Classes
+    // access must still be able to reach it.
     Route::controller(\App\Http\Controllers\NlscAssessmentController::class)
         ->prefix('examinations')
-        ->middleware(['module:classes'])
+        ->middleware(['module:examinations'])
         ->group(function () {
+            Route::get('/nlsc-assessments/pending', 'pending')->name('nlsc-assessments.pending');
             Route::get('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'index')->name('nlsc-assessments');
             Route::post('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'store')->name('nlsc-assessments.store');
             Route::get('/marks/{classSubjectId}/nlsc-assessments/subject-matter-options', 'subjectMatterOptions')->name('nlsc-assessments.subject-matter-options');

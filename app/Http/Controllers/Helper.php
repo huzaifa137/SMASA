@@ -1608,6 +1608,91 @@ class Helper extends Controller
         return $examProgress;
     }
 
+    /**
+     * Secondary O-Level (Senior 1-4) class-subjects, assigned to the
+     * current teacher, in an 'active' or 'marks_entry' exam, that don't
+     * yet have an NlscAssessment — i.e. still blocked at the "Create
+     * Assessment" gate (see ExaminationController::marksEntrySubject())
+     * rather than being ready for marks entry. Deliberately Senior 1-4
+     * only (config('constants.options.SECONDARY_OLEVEL_CLASSES')) —
+     * Secondary A-Level (Senior 5/6, SECONDARY_OLEVEL_CLASSES' sibling
+     * SECONDARY_ALEVEL_CLASSES) never goes through Create Assessment at
+     * all, exactly like marksEntrySubject()'s own gate, so those never
+     * appear here even when an exam spans both O-Level and A-Level
+     * classes at once.
+     *
+     * Mirrors getHelperMarksEntryProgress()'s own shape/statuses, so the
+     * "Create Assessment" sidebar badge behaves exactly like the existing
+     * "Marks Entry" one it sits next to.
+     */
+    public static function getPendingNlscAssessments()
+    {
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $secondaryOLevelClassIds = self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+
+        if (empty($secondaryOLevelClassIds)) {
+            return collect();
+        }
+
+        $exams = Examination::where('school_id', $schoolId)
+            ->whereIn('status', ['active', 'marks_entry'])
+            ->get();
+
+        $pending = collect();
+
+        foreach ($exams as $exam) {
+            $examClassIds = ExaminationClass::where('examination_id', $exam->id)
+                ->where('school_id', $schoolId)
+                ->whereIn('class_id', $secondaryOLevelClassIds)
+                ->pluck('class_id');
+
+            if ($examClassIds->isEmpty()) {
+                continue; // this exam has no Secondary O-Level classes at all
+            }
+
+            $teacherSubjects = DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->where(function ($q) use ($teacherId) {
+                    $q->where('subject_teacher_1', $teacherId)
+                        ->orWhere('subject_teacher_2', $teacherId);
+                })
+                ->whereIn('class_id', $examClassIds)
+                ->get();
+
+            foreach ($teacherSubjects as $cs) {
+                $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)
+                    ->where('examination_id', $exam->id)
+                    ->where('class_id', $cs->class_id)
+                    ->where('stream_id', $cs->stream_id)
+                    ->when(is_null($cs->subject_id), function ($q) use ($cs) {
+                        $q->whereNull('subject_id')->where('custom_subject_id', $cs->custom_subject_id);
+                    }, function ($q) use ($cs) {
+                        $q->where('subject_id', $cs->subject_id);
+                    })
+                    ->exists();
+
+                if (!$hasAssessment) {
+                    $pending->push((object) [
+                        'exam' => $exam,
+                        'class_subject_id' => $cs->id,
+                        'class_name' => self::recordMdname($cs->class_id),
+                        'stream_id' => $cs->stream_id,
+                        'subject_name' => self::classSubjectName($cs),
+                    ]);
+                }
+            }
+        }
+
+        return $pending;
+    }
+
+    public static function getPendingNlscAssessmentsCount()
+    {
+        return self::getPendingNlscAssessments()->count();
+    }
+
     public static function schoolProduct(int $schoolId): ?string
     {
         return DB::table('schools')

@@ -386,9 +386,13 @@ use App\Helpers\PermissionHelper;
                             @php
                                 $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
                                 $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
+                                // Secondary O-Level (Senior 1-4) only — A-Level
+                                // (Senior 5/6) never needs Create Assessment, see
+                                // Helper::getPendingNlscAssessments()'s own docblock.
+                                $pendingNlscAssessmentsCount = Helper::getPendingNlscAssessmentsCount();
                             @endphp
-                            @if ($pendingMarksCount > 0)
-                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
+                            @if ($pendingMarksCount + $pendingNlscAssessmentsCount > 0)
+                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
                             @endif
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
@@ -399,6 +403,14 @@ use App\Helpers\PermissionHelper;
                             @if(PermissionHelper::canFeature('create_exam'))
                                 <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
                                         Examination</a></li>
+                            @endif
+                            @if ($pendingNlscAssessmentsCount > 0 && PermissionHelper::canFeature('view_exams'))
+                                <li>
+                                    <a href="{{ route('nlsc-assessments.pending') }}">
+                                        <i class="fas fa-clipboard-list mr-2"></i>Create Assessment
+                                        <span class="badge badge-danger float-right">{{ $pendingNlscAssessmentsCount }}</span>
+                                    </a>
+                                </li>
                             @endif
                             @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
                                 <li>
@@ -899,9 +911,13 @@ use App\Helpers\PermissionHelper;
                             @php
                                 $pendingMarksCountRaw = Helper::getHelperMarksEntryProgress();
                                 $pendingMarksCount = is_array($pendingMarksCountRaw) ? count($pendingMarksCountRaw) : (int) $pendingMarksCountRaw;
+                                // Secondary O-Level (Senior 1-4) only — A-Level
+                                // (Senior 5/6) never needs Create Assessment, see
+                                // Helper::getPendingNlscAssessments()'s own docblock.
+                                $pendingNlscAssessmentsCount = Helper::getPendingNlscAssessmentsCount();
                             @endphp
-                            @if ($pendingMarksCount > 0)
-                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount }}</span>
+                            @if ($pendingMarksCount + $pendingNlscAssessmentsCount > 0)
+                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
                             @endif
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
@@ -928,6 +944,14 @@ use App\Helpers\PermissionHelper;
                                     <a href="{{ url('examinations/aggregate-subjects') }}">
                                         <i class="fas fa-object-ungroup mr-2"></i>
                                         Aggregate Subjects
+                                    </a>
+                                </li>
+                            @endif
+                            @if ($pendingNlscAssessmentsCount > 0 && PermissionHelper::canFeature('view_exams'))
+                                <li>
+                                    <a href="{{ route('nlsc-assessments.pending') }}">
+                                        <i class="fas fa-clipboard-list mr-2"></i>Create Assessment &nbsp; &nbsp;
+                                        <span class="badge badge-danger float-right">{{ $pendingNlscAssessmentsCount }}</span>
                                     </a>
                                 </li>
                             @endif

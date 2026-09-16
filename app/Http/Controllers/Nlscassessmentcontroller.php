@@ -31,6 +31,22 @@ use Session;
 class NlscAssessmentController extends Controller
 {
     /**
+     * Every pending "Create Assessment" item across all of this teacher's
+     * Secondary O-Level class-subjects — what the sidebar's "Create
+     * Assessment" badge links to, mirroring the existing Marks Entry
+     * portal pattern. See Helper::getPendingNlscAssessments() for exactly
+     * what counts as pending (and why Secondary A-Level never does).
+     */
+    public function pending()
+    {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+        $pending = Helper::getPendingNlscAssessments();
+
+        return view('Examination.nlsc-assessments-pending', compact('pending'));
+    }
+
+    /**
      * The assessment hub for one exam/class-subject: existing
      * assessments (if any, each linking straight into marks entry for
      * this exam/class-subject) plus the Create Assessment form.
