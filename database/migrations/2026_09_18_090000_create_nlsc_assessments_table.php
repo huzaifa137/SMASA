@@ -15,15 +15,22 @@ use Illuminate\Support\Facades\Schema;
  * assessment_type is one of 'activities_of_integration', 'projects',
  * 'subject_achievement' — matching the three NLSC catalogues already
  * built (NlscTopicController / NlscProjectController /
- * NlscSubjectAchievementController). Only ONE of nlsc_topic_id /
- * nlsc_project_id is ever set, depending on assessment_type
+ * NlscSubjectAchievementController), but what nlsc_topic_id /
+ * nlsc_project_id actually point at is each SCHOOL's own catalogue copy
+ * (school_nlsc_topics / school_nlsc_projects — see
+ * SchoolNlscTopicController / SchoolNlscProjectController), not the
+ * platform-wide admin tables — a school's Create Assessment choices are
+ * always against what that school itself set up. Only ONE of
+ * nlsc_topic_id / nlsc_project_id is ever set, depending on
+ * assessment_type
  * ('subject_achievement' also uses nlsc_topic_id, since it's a statement
  * attached to a Topic, not its own catalogue — see
  * NlscSubjectAchievementController's own docblock for why).
  * nlsc_competency_area_id is only used for 'activities_of_integration'
- * (-> nlsc_competency_areas) and 'projects' (-> nlsc_project_competency_areas)
- * — 'subject_achievement' has no competency areas, just the one
- * statement, so it's left null for that type.
+ * (-> school_nlsc_competency_areas) and 'projects' (->
+ * school_nlsc_project_competency_areas) — 'subject_achievement' has no
+ * competency areas, just the one statement, so it's left null for that
+ * type.
  *
  * Deliberately plain unsignedBigInteger + no FK constraints, matching
  * every other master-data-style cross-reference already in this codebase

@@ -87,10 +87,126 @@
         }
 
         .empty-state { text-align: center; padding: 2rem 1rem; color: #a3a0c9; }
+
+        /* ===== Searchable dropdown (custom) ===== */
+        .nt-searchable {
+            position: relative;
+            width: 100%;
+        }
+
+        .nt-searchable .nt-search-input {
+            width: 100%;
+            border: 1.5px solid #e4e2ff;
+            background: #f6f5ff;
+            border-radius: .6rem;
+            padding: .6rem .85rem;
+            font-size: .875rem;
+            color: #1e1b4b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .nt-searchable .nt-search-input:focus { outline: none; border-color: #2C29CA; box-shadow: 0 0 0 3.5px rgba(44, 41, 202, .14); }
+        .nt-searchable .nt-search-input:disabled { background: #f1f0f6; color: #a3a0c9; cursor: not-allowed; }
+
+        .nt-searchable .nt-search-input .nt-selected-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nt-searchable .nt-search-input .nt-selected-text.placeholder { color: #a3a0c9; }
+
+        .nt-searchable .nt-search-input .nt-caret {
+            color: #a3a0c9;
+            font-size: .7rem;
+            transition: transform .15s ease;
+        }
+
+        .nt-searchable.open .nt-search-input .nt-caret { transform: rotate(180deg); }
+
+        .nt-searchable .nt-search-panel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: #fff;
+            border: 1.5px solid #e4e2ff;
+            border-radius: .6rem;
+            box-shadow: 0 10px 30px rgba(44, 41, 202, .16);
+            overflow: hidden;
+            display: none;
+        }
+
+        .nt-searchable.open .nt-search-panel { display: block; }
+
+        .nt-searchable .nt-search-panel .nt-search-box {
+            padding: .5rem .6rem;
+            border-bottom: 1px solid #f0eeff;
+            background: #faf9ff;
+        }
+
+        .nt-searchable .nt-search-panel .nt-search-box input {
+            width: 100%;
+            border: 1.5px solid #e4e2ff;
+            background: #fff;
+            border-radius: .5rem;
+            padding: .45rem .7rem;
+            font-size: .85rem;
+            color: #1e1b4b;
+        }
+
+        .nt-searchable .nt-search-panel .nt-search-box input:focus {
+            outline: none;
+            border-color: #2C29CA;
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .12);
+        }
+
+        .nt-searchable .nt-search-panel .nt-options-list {
+            max-height: 240px;
+            overflow-y: auto;
+            padding: .3rem;
+        }
+
+        .nt-searchable .nt-search-panel .nt-option {
+            padding: .5rem .7rem;
+            border-radius: .45rem;
+            font-size: .85rem;
+            color: #1e1b4b;
+            cursor: pointer;
+        }
+
+        .nt-searchable .nt-search-panel .nt-option:hover,
+        .nt-searchable .nt-search-panel .nt-option.active {
+            background: #eef0ff;
+            color: #2C29CA;
+        }
+
+        .nt-searchable .nt-search-panel .nt-option.selected {
+            background: #2C29CA;
+            color: #fff;
+        }
+
+        .nt-searchable .nt-search-panel .nt-no-results {
+            padding: .7rem;
+            text-align: center;
+            font-size: .82rem;
+            color: #a3a0c9;
+        }
     </style>
 @endsection
 
 @section('content')
+<?php
+use App\Http\Controllers\Helper;
+?>
+
     <div class="side-app">
         <div class="nt-hero">
             <span class="hero-badge"><i class="fas fa-clipboard-list me-1"></i> NLSC Assessment</span>
@@ -155,16 +271,44 @@
                     </div>
                     <div class="col-md-6">
                         <label class="nt-form-label" id="subjectMatterLabel">Topics <span class="nt-required">*</span></label>
-                        <select id="subjectMatter" class="nt-form-control" disabled>
-                            <option value="">Select assessment type first...</option>
-                        </select>
+
+                        {{-- Searchable Topics --}}
+                        <div class="nt-searchable" id="subjectMatterSearchable">
+                            <button type="button" class="nt-search-input" id="subjectMatterTrigger" disabled>
+                                <span class="nt-selected-text placeholder" id="subjectMatterText">Select assessment type first...</span>
+                                <i class="fas fa-chevron-down nt-caret"></i>
+                            </button>
+                            <div class="nt-search-panel">
+                                <div class="nt-search-box">
+                                    <input type="text" id="subjectMatterSearch" placeholder="Search..." autocomplete="off">
+                                </div>
+                                <div class="nt-options-list" id="subjectMatterOptions">
+                                    <div class="nt-no-results">No options</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="subjectMatter" value="">
+                        </div>
                     </div>
 
                     <div class="col-md-6" id="competencyAreaWrap">
                         <label class="nt-form-label">Competency Areas <span class="nt-required">*</span></label>
-                        <select id="competencyArea" class="nt-form-control" disabled>
-                            <option value="">Select a topic/project first...</option>
-                        </select>
+
+                        {{-- Searchable Competency Areas --}}
+                        <div class="nt-searchable" id="competencyAreaSearchable">
+                            <button type="button" class="nt-search-input" id="competencyAreaTrigger" disabled>
+                                <span class="nt-selected-text placeholder" id="competencyAreaText">Select a topic/project first...</span>
+                                <i class="fas fa-chevron-down nt-caret"></i>
+                            </button>
+                            <div class="nt-search-panel">
+                                <div class="nt-search-box">
+                                    <input type="text" id="competencyAreaSearch" placeholder="Search..." autocomplete="off">
+                                </div>
+                                <div class="nt-options-list" id="competencyAreaOptions">
+                                    <div class="nt-no-results">No options</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="competencyArea" value="">
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="nt-form-label">Year <span class="nt-required">*</span></label>
@@ -185,26 +329,54 @@
                         </select>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 mt-3">
                         <label class="nt-check">
                             <input type="checkbox" id="includeInReport" checked>
                             Include in this term's report form
                         </label>
                     </div>
-                </div>
+                </div> 
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-nt-secondary" style="text-decoration:none;">
-                        <i class="fas fa-arrow-left me-1"></i> Back
-                    </a>
-                    <button type="button" id="createAssessmentBtn" class="btn-nt-primary" disabled>
-                        <i class="fas fa-plus me-1"></i> Create
-                    </button>
-                </div>
+<div class="d-flex justify-content-end mt-4">
+    <a href="{{ route('examination.marks.entry', $exam->id) }}"
+        class="btn-nt-outline"
+        style="text-decoration: none; margin-right: 12px;">
+        <i class="fas fa-arrow-left mr-1"></i> Back
+    </a>
+
+    <button type="button"
+        id="createAssessmentBtn"
+        class="btn-nt-primary"
+        disabled>
+        <i class="fas fa-plus me-1"></i> Create
+    </button>
+</div>
+
+<style>
+    .btn-nt-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.15rem;
+        border: 1px solid #5351e4;
+        background: transparent;
+        color: #5351e4;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-nt-outline:hover {
+        background: #5351e4;
+        color: #fff;
+    }
+</style>
             </div>
         </div>
     </div>
-
+ </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -216,17 +388,238 @@
         const STORE_URL = "{{ route('nlsc-assessments.store', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}";
 
         const $assessmentType = document.getElementById('assessmentType');
-        const $subjectMatter = document.getElementById('subjectMatter');
+        const $subjectMatter = document.getElementById('subjectMatter'); // hidden input
         const $subjectMatterLabel = document.getElementById('subjectMatterLabel');
         const $competencyAreaWrap = document.getElementById('competencyAreaWrap');
-        const $competencyArea = document.getElementById('competencyArea');
+        const $competencyArea = document.getElementById('competencyArea'); // hidden input
         const $createBtn = document.getElementById('createAssessmentBtn');
 
-        function resetSelect($el, placeholder) {
-            $el.innerHTML = `<option value="">${placeholder}</option>`;
-            $el.disabled = true;
+        /* ============================================================
+         * Searchable dropdown helper
+         * ============================================================ */
+        function createSearchable(config) {
+            const {
+                rootId,
+                triggerId,
+                textId,
+                searchId,
+                optionsId,
+                hiddenId,
+            } = config;
+
+            const root = document.getElementById(rootId);
+            const trigger = document.getElementById(triggerId);
+            const textEl = document.getElementById(textId);
+            const searchInput = document.getElementById(searchId);
+            const optionsList = document.getElementById(optionsId);
+            const hiddenInput = document.getElementById(hiddenId);
+
+            let options = [];
+            let filteredOptions = [];
+            let selectedValue = '';
+            let placeholder = textEl.textContent;
+            let isOpen = false;
+
+            function setPlaceholder(text) {
+                placeholder = text;
+                if (!selectedValue) {
+                    textEl.textContent = text;
+                    textEl.classList.add('placeholder');
+                }
+            }
+
+            function renderOptions() {
+                if (!filteredOptions.length) {
+                    optionsList.innerHTML = '<div class="nt-no-results">No results found</div>';
+                    return;
+                }
+
+                optionsList.innerHTML = filteredOptions.map(o => {
+                    const isSelected = String(o.id) === String(selectedValue);
+                    return `<div class="nt-option${isSelected ? ' selected' : ''}" data-value="${o.id}">${escapeHtml(o.label)}</div>`;
+                }).join('');
+            }
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function filterOptions(query) {
+                const q = (query || '').trim().toLowerCase();
+                if (!q) {
+                    filteredOptions = options.slice();
+                } else {
+                    filteredOptions = options.filter(o => String(o.label).toLowerCase().includes(q));
+                }
+                renderOptions();
+            }
+
+            function openPanel() {
+                if (trigger.disabled) return;
+                closeAllSearchables(root);
+                isOpen = true;
+                root.classList.add('open');
+                searchInput.value = '';
+                filterOptions('');
+                setTimeout(() => searchInput.focus(), 30);
+            }
+
+            function closePanel() {
+                isOpen = false;
+                root.classList.remove('open');
+            }
+
+            function setOptions(newOptions, newPlaceholder) {
+                options = Array.isArray(newOptions) ? newOptions : [];
+                filteredOptions = options.slice();
+                if (typeof newPlaceholder === 'string') {
+                    placeholder = newPlaceholder;
+                }
+                // Reset selection whenever options are replaced
+                selectedValue = '';
+                hiddenInput.value = '';
+                textEl.textContent = placeholder;
+                textEl.classList.add('placeholder');
+                renderOptions();
+            }
+
+            function enable() {
+                trigger.disabled = false;
+            }
+
+            function disable(newPlaceholder) {
+                trigger.disabled = true;
+                if (typeof newPlaceholder === 'string') {
+                    placeholder = newPlaceholder;
+                }
+                selectedValue = '';
+                hiddenInput.value = '';
+                textEl.textContent = placeholder;
+                textEl.classList.add('placeholder');
+                options = [];
+                filteredOptions = [];
+                renderOptions();
+                closePanel();
+            }
+
+            function getValue() {
+                return selectedValue;
+            }
+
+            function setValue(val, label) {
+                selectedValue = val ? String(val) : '';
+                hiddenInput.value = selectedValue;
+                if (selectedValue) {
+                    textEl.textContent = label || selectedValue;
+                    textEl.classList.remove('placeholder');
+                } else {
+                    textEl.textContent = placeholder;
+                    textEl.classList.add('placeholder');
+                }
+                // refresh selected styling
+                renderOptions();
+                // fire change event for listeners
+                hiddenInput.dispatchEvent(new Event('change'));
+            }
+
+            function clearSelection() {
+                selectedValue = '';
+                hiddenInput.value = '';
+                textEl.textContent = placeholder;
+                textEl.classList.add('placeholder');
+                renderOptions();
+                hiddenInput.dispatchEvent(new Event('change'));
+            }
+
+            // Event listeners
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (trigger.disabled) return;
+                if (isOpen) {
+                    closePanel();
+                } else {
+                    openPanel();
+                }
+            });
+
+            searchInput.addEventListener('input', function () {
+                filterOptions(this.value);
+            });
+
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closePanel();
+                }
+            });
+
+            optionsList.addEventListener('click', function (e) {
+                const optionEl = e.target.closest('.nt-option');
+                if (!optionEl) return;
+                const value = optionEl.getAttribute('data-value');
+                const opt = options.find(o => String(o.id) === String(value));
+                if (opt) {
+                    setValue(opt.id, opt.label);
+                }
+                closePanel();
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!root.contains(e.target)) {
+                    closePanel();
+                }
+            });
+
+            return {
+                setOptions,
+                enable,
+                disable,
+                getValue,
+                setValue,
+                clearSelection,
+                closePanel,
+                setPlaceholder,
+                hiddenInput,
+            };
         }
 
+        // Close any other open searchable when one opens
+        function closeAllSearchables(exceptRoot) {
+            document.querySelectorAll('.nt-searchable.open').forEach(el => {
+                if (el !== exceptRoot) {
+                    el.classList.remove('open');
+                }
+            });
+        }
+
+        /* ============================================================
+         * Instantiate searchables
+         * ============================================================ */
+        const subjectMatterSearchable = createSearchable({
+            rootId: 'subjectMatterSearchable',
+            triggerId: 'subjectMatterTrigger',
+            textId: 'subjectMatterText',
+            searchId: 'subjectMatterSearch',
+            optionsId: 'subjectMatterOptions',
+            hiddenId: 'subjectMatter',
+        });
+
+        const competencyAreaSearchable = createSearchable({
+            rootId: 'competencyAreaSearchable',
+            triggerId: 'competencyAreaTrigger',
+            textId: 'competencyAreaText',
+            searchId: 'competencyAreaSearch',
+            optionsId: 'competencyAreaOptions',
+            hiddenId: 'competencyArea',
+        });
+
+        /* ============================================================
+         * Main logic
+         * ============================================================ */
         function refreshCreateButtonState() {
             const typeOk = !!$assessmentType.value;
             const subjectMatterOk = !!$subjectMatter.value;
@@ -236,45 +629,48 @@
         }
 
         $assessmentType.addEventListener('change', function () {
-            resetSelect($subjectMatter, 'Loading...');
-            resetSelect($competencyArea, 'Select a topic/project first...');
+            const type = this.value;
+
+            // Reset both searchables
+            subjectMatterSearchable.disable('Loading...');
+            competencyAreaSearchable.disable('Select a topic/project first...');
             refreshCreateButtonState();
 
-            if (!this.value) {
-                resetSelect($subjectMatter, 'Select assessment type first...');
+            if (!type) {
+                subjectMatterSearchable.disable('Select assessment type first...');
                 return;
             }
 
-            $subjectMatterLabel.innerHTML = (this.value === 'projects' ? 'Project' : 'Topics') + ' <span class="nt-required">*</span>';
-            $competencyAreaWrap.style.display = (this.value === 'subject_achievement') ? 'none' : '';
+            $subjectMatterLabel.innerHTML = (type === 'projects' ? 'Project' : 'Topics') + ' <span class="nt-required">*</span>';
+            $competencyAreaWrap.style.display = (type === 'subject_achievement') ? 'none' : '';
 
-            fetch(`${SUBJECT_MATTER_OPTIONS_URL}?assessment_type=${this.value}`, {
+            fetch(`${SUBJECT_MATTER_OPTIONS_URL}?assessment_type=${type}`, {
                 headers: { 'Accept': 'application/json' },
             })
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success || !res.options.length) {
-                        resetSelect($subjectMatter, 'None set up yet — add one from the catalogue first');
+                        subjectMatterSearchable.disable('None set up yet — add one from the catalogue first');
                         return;
                     }
-                    $subjectMatter.innerHTML = '<option value="">Select...</option>'
-                        + res.options.map(o => `<option value="${o.id}">${o.label}</option>`).join('');
-                    $subjectMatter.disabled = false;
+                    subjectMatterSearchable.setOptions(res.options, 'Select...');
+                    subjectMatterSearchable.enable();
                 })
-                .catch(() => resetSelect($subjectMatter, 'Failed to load — try again'));
+                .catch(() => subjectMatterSearchable.disable('Failed to load — try again'));
         });
 
+        // Listen to hidden input changes (fires when a value is selected)
         $subjectMatter.addEventListener('change', function () {
             refreshCreateButtonState();
 
             const type = $assessmentType.value;
             if (type === 'subject_achievement' || !this.value) {
-                resetSelect($competencyArea, 'Select a topic/project first...');
+                competencyAreaSearchable.disable('Select a topic/project first...');
                 refreshCreateButtonState();
                 return;
             }
 
-            resetSelect($competencyArea, 'Loading...');
+            competencyAreaSearchable.disable('Loading...');
 
             fetch(`${COMPETENCY_AREA_OPTIONS_URL}?assessment_type=${type}&subject_matter_id=${this.value}`, {
                 headers: { 'Accept': 'application/json' },
@@ -282,16 +678,15 @@
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success || !res.options.length) {
-                        resetSelect($competencyArea, 'None set up yet — add one from the catalogue first');
+                        competencyAreaSearchable.disable('None set up yet — add one from the catalogue first');
                         refreshCreateButtonState();
                         return;
                     }
-                    $competencyArea.innerHTML = '<option value="">Select...</option>'
-                        + res.options.map(o => `<option value="${o.id}">${o.label}</option>`).join('');
-                    $competencyArea.disabled = false;
+                    competencyAreaSearchable.setOptions(res.options, 'Select...');
+                    competencyAreaSearchable.enable();
                     refreshCreateButtonState();
                 })
-                .catch(() => { resetSelect($competencyArea, 'Failed to load — try again'); refreshCreateButtonState(); });
+                .catch(() => { competencyAreaSearchable.disable('Failed to load — try again'); refreshCreateButtonState(); });
         });
 
         $competencyArea.addEventListener('change', refreshCreateButtonState);

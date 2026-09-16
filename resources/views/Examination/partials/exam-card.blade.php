@@ -1,4 +1,13 @@
 <div class="exam-card status-{{ $exam->status }}" data-id="{{ $exam->id }}" onclick="viewExamDetails({{ $exam->id }})">
+    @php
+        // Secondary O-Level (Senior 1-4) only needs a Create Assessment
+        // step before marks entry — see NlscAssessmentController's own
+        // docblock. School-wide count (every teacher), since this board
+        // is the admin's view of the whole exam, not one teacher's.
+        $pendingNlscForExam = in_array($exam->status, ['active', 'marks_entry'])
+            ? \App\Http\Controllers\Helper::pendingNlscAssessmentsCountForExam($exam->id)
+            : 0;
+    @endphp
     <div class="d-flex justify-content-between align-items-start mb-2">
         <span class="exam-code-badge">
             <i class="fas fa-qrcode me-1"></i> {{ $exam->exam_code }}
@@ -22,6 +31,13 @@
                             <i class="fas fa-trash me-2"></i> Delete
                         </a></li>
                 @elseif($exam->status === 'active')
+                    @if($pendingNlscForExam > 0)
+                        <li><a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+                                onclick="event.stopPropagation();">
+                                <i class="fas fa-clipboard-list text-danger me-2"></i> Create Assessment
+                                <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
+                            </a></li>
+                    @endif
                     <li><a class="dropdown-item" href="#"
                             onclick="event.stopPropagation(); updateExamStatus({{ $exam->id }}, 'marks_entry')">
                             <i class="fas fa-pen-alt text-warning me-2"></i> Open Marks Entry
@@ -31,6 +47,13 @@
                             <i class="fas fa-table text-primary me-2"></i> Enter Marks
                         </a></li>
                 @elseif($exam->status === 'marks_entry')
+                    @if($pendingNlscForExam > 0)
+                        <li><a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+                                onclick="event.stopPropagation();">
+                                <i class="fas fa-clipboard-list text-danger me-2"></i> Create Assessment
+                                <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
+                            </a></li>
+                    @endif
                     <li><a class="dropdown-item" href="#"
                             onclick="event.stopPropagation(); updateExamStatus({{ $exam->id }}, 'closed')">
                             <i class="fas fa-lock text-danger me-2"></i> Close Exam
@@ -59,6 +82,17 @@
     </div>
 
     <h6 class="fw-bold mb-2" style="font-size: 0.95rem;">{{ $exam->exam_name }}</h6>
+
+    @if($pendingNlscForExam > 0)
+        <a href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+           class="d-inline-flex align-items-center mb-2"
+           onclick="event.stopPropagation();"
+           style="background: #FEE2E2; color: #DC2626; padding: .25rem .65rem; border-radius: 10px;
+                  font-size: .72rem; font-weight: 700; text-decoration: none;">
+            <i class="fas fa-clipboard-list me-1"></i> Create Assessment
+            <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
+        </a>
+    @endif
 
     <div class="mb-2">
         <small class="text-muted">

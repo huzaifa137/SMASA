@@ -1625,10 +1625,69 @@ class Helper extends Controller
      * "Create Assessment" sidebar badge behaves exactly like the existing
      * "Marks Entry" one it sits next to.
      */
-    public static function getPendingNlscAssessments()
+    /**
+     * Maps a Secondary O-Level exam subject (class_subjects.subject_id,
+     * a SECONDARY_OLEVEL_SUBJECTS/md_master_code_id-46 id) to the
+     * matching NLSC catalogue subject (school_nlsc_topics.subject_id /
+     * school_nlsc_project_areas.subject_id, an NLSC_SUBJECTS/
+     * md_master_code_id-48 id).
+     *
+     * These are DELIBERATELY two separate master-data lists (see
+     * config('constants.options.NLSC_SUBJECTS')'s own comment) with
+     * their own id ranges (318-335 vs 400-434) and, for several
+     * subjects, genuinely different names — not just a formatting
+     * difference a simple string-normalise would catch (UNEB's exam
+     * subject is "English Language", NCDC's NLSC menu calls the same
+     * subject "English"; "History" vs "History and Political
+     * Education"; "Entrepreneurship Education" vs "Entrepreneurship").
+     * A handful of UNEB subjects (Commerce) have no NLSC counterpart at
+     * all, and a few pairs (Computer Studies/ICT, Fine Art/Art and
+     * Design, Technical Drawing/Technology and Design) are the same
+     * subject area but renamed between the two curricula in a way no
+     * substring match would catch either — so this is an explicit,
+     * hand-built map (by SECONDARY_OLEVEL_SUBJECTS md_id) rather than
+     * name-matching. Returns null for a subject with no NLSC
+     * equivalent (Commerce) or one not in this map yet.
+     */
+    public static function secondaryOlevelToNlscSubjectId(?int $secondaryOlevelSubjectId): ?int
+    {
+        static $map = [
+            318 => 400, // English Language -> English
+            319 => 401, // Mathematics -> Mathematics
+            320 => 404, // Physics -> Physics
+            321 => 406, // Chemistry -> Chemistry
+            322 => 405, // Biology -> Biology
+            323 => 402, // History -> History and Political Education
+            324 => 403, // Geography -> Geography
+            325 => 409, // Christian Religious Education -> Christian Religious Education
+            326 => 410, // Islamic Religious Education -> Islamic Religious Education
+            327 => 420, // Literature in English -> Literature in English
+            328 => 413, // Agriculture -> Agriculture
+            // 329 Commerce -> no NLSC subject; not part of the NCDC NLSC menu
+            330 => 414, // Computer Studies -> ICT
+            331 => 412, // Kiswahili -> Kiswahili
+            332 => 421, // Fine Art -> Art and Design
+            333 => 408, // Physical Education -> Physical Education
+            334 => 423, // Technical Drawing -> Technology and Design
+            335 => 411, // Entrepreneurship Education -> Entrepreneurship
+        ];
+
+        return $secondaryOlevelSubjectId !== null ? ($map[$secondaryOlevelSubjectId] ?? null) : null;
+    }
+
+    /**
+     * Core "which Secondary O-Level class-subjects still need a Create
+     * Assessment entry for this exam" query, shared by
+     * getPendingNlscAssessments() (teacher-scoped — the sidebar badge)
+     * and pendingNlscAssessmentsCountForExam() (school-wide — the "All
+     * Examinations" board, where an admin needs to see this regardless
+     * of which teacher it's assigned to). $examId narrows to one exam;
+     * $teacherId narrows to one teacher's own class-subjects (null =
+     * every teacher, i.e. the whole school).
+     */
+    private static function pendingNlscAssessmentsQuery(?int $examId, ?int $teacherId): \Illuminate\Support\Collection
     {
         $schoolId = Session('LoggedSchool');
-        $teacherId = Session('LoggedTeacher');
 
         $secondaryOLevelClassIds = self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
 
@@ -1637,6 +1696,7 @@ class Helper extends Controller
         }
 
         $exams = Examination::where('school_id', $schoolId)
+            ->when($examId, fn($q) => $q->where('id', $examId))
             ->whereIn('status', ['active', 'marks_entry'])
             ->get();
 
@@ -1652,16 +1712,18 @@ class Helper extends Controller
                 continue; // this exam has no Secondary O-Level classes at all
             }
 
-            $teacherSubjects = DB::table('class_subjects')
+            $classSubjects = DB::table('class_subjects')
                 ->where('school_id', $schoolId)
-                ->where(function ($q) use ($teacherId) {
-                    $q->where('subject_teacher_1', $teacherId)
-                        ->orWhere('subject_teacher_2', $teacherId);
+                ->when($teacherId, function ($q) use ($teacherId) {
+                    $q->where(function ($q2) use ($teacherId) {
+                        $q2->where('subject_teacher_1', $teacherId)
+                            ->orWhere('subject_teacher_2', $teacherId);
+                    });
                 })
                 ->whereIn('class_id', $examClassIds)
                 ->get();
 
-            foreach ($teacherSubjects as $cs) {
+            foreach ($classSubjects as $cs) {
                 $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)
                     ->where('examination_id', $exam->id)
                     ->where('class_id', $cs->class_id)
@@ -1688,9 +1750,31 @@ class Helper extends Controller
         return $pending;
     }
 
+    public static function getPendingNlscAssessments()
+    {
+        return self::pendingNlscAssessmentsQuery(null, Session('LoggedTeacher'));
+    }
+
     public static function getPendingNlscAssessmentsCount()
     {
         return self::getPendingNlscAssessments()->count();
+    }
+
+    /**
+     * School-wide (every teacher, not just the current login) pending
+     * Create-Assessment list for ONE exam — what the "All Examinations"
+     * board links into (see the exam-card partial), since an admin
+     * managing exams there needs to see this regardless of which
+     * teacher a subject is assigned to.
+     */
+    public static function pendingNlscAssessmentsForExam(int $examId): \Illuminate\Support\Collection
+    {
+        return self::pendingNlscAssessmentsQuery($examId, null);
+    }
+
+    public static function pendingNlscAssessmentsCountForExam(int $examId): int
+    {
+        return self::pendingNlscAssessmentsForExam($examId)->count();
     }
 
     public static function schoolProduct(int $schoolId): ?string

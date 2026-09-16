@@ -63,9 +63,16 @@
             <span class="hero-badge"><i class="fas fa-clipboard-list me-1"></i> NLSC Assessment</span>
             <div class="hero-title">Create Assessment — Pending ({{ $pending->count() }})</div>
             <div class="hero-subtitle">
-                Every Secondary O-Level (Senior 1-4) class-subject you teach that still needs an
-                assessment created before marks entry opens for it. Secondary A-Level
-                (Senior 5/6) never appears here — it goes straight to marks entry.
+                @if($scopedToExam)
+                    Every Secondary O-Level (Senior 1-4) class-subject across the school that still
+                    needs an assessment created before marks entry opens, for
+                    <strong>{{ $scopedToExam->exam_name }}</strong>. Secondary A-Level (Senior 5/6)
+                    never appears here — it goes straight to marks entry.
+                @else
+                    Every Secondary O-Level (Senior 1-4) class-subject you teach that still needs an
+                    assessment created before marks entry opens for it. Secondary A-Level
+                    (Senior 5/6) never appears here — it goes straight to marks entry.
+                @endif
             </div>
         </div>
 
@@ -100,8 +107,13 @@
                                 <td colspan="5">
                                     <div class="empty-state">
                                         <i class="fas fa-circle-check d-block mb-2" style="font-size:1.8rem; color:#16a34a;"></i>
-                                        Nothing pending — every Secondary O-Level class-subject you teach already has
-                                        an assessment for its current exam.
+                                        @if($scopedToExam)
+                                            Nothing pending — every Secondary O-Level class-subject across the
+                                            school already has an assessment for this exam.
+                                        @else
+                                            Nothing pending — every Secondary O-Level class-subject you teach already has
+                                            an assessment for its current exam.
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -109,6 +121,9 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+     </div>
         </div>
     </div>
 @endsection

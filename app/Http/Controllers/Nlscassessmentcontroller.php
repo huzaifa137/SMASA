@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\Examination;
 use App\Models\NlscAssessment;
-use App\Models\NlscProject;
-use App\Models\NlscProjectArea;
-use App\Models\NlscProjectCompetencyArea;
-use App\Models\NlscSubjectAchievement;
-use App\Models\NlscTopic;
+use App\Models\SchoolNlscProjectArea;
+use App\Models\SchoolNlscProjectCompetencyArea;
+use App\Models\SchoolNlscTopic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Session;
@@ -36,14 +34,27 @@ class NlscAssessmentController extends Controller
      * Assessment" badge links to, mirroring the existing Marks Entry
      * portal pattern. See Helper::getPendingNlscAssessments() for exactly
      * what counts as pending (and why Secondary A-Level never does).
+     *
+     * When linked from the "All Examinations" board instead (see the
+     * exam-card partial's badge), ?examination_id=<id> narrows this to
+     * one exam AND switches to a school-wide view (every teacher, not
+     * just the current login) via Helper::pendingNlscAssessmentsForExam()
+     * — an admin there needs to see every class-subject still pending
+     * for that exam, not only their own.
      */
-    public function pending()
+    public function pending(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_exams');
 
-        $pending = Helper::getPendingNlscAssessments();
+        $examId = $request->query('examination_id');
 
-        return view('Examination.nlsc-assessments-pending', compact('pending'));
+        $pending = $examId
+            ? Helper::pendingNlscAssessmentsForExam((int) $examId)
+            : Helper::getPendingNlscAssessments();
+
+        $scopedToExam = $examId ? ($pending->first()?->exam ?? Examination::find($examId)) : null;
+
+        return view('Examination.nlsc-assessments-pending', compact('pending', 'scopedToExam'));
     }
 
     /**
@@ -141,6 +152,21 @@ class NlscAssessmentController extends Controller
     /**
      * AJAX: the Topics or Projects list for the picked Assessment Type,
      * scoped to this class-subject's own Senior/Subject.
+     *
+     * Reads from the SCHOOL's own catalogue copy (SchoolNlscTopic /
+     * SchoolNlscProjectArea — populated via the School Portal's Topics/
+     * Projects screens, see SchoolNlscTopicController), not the
+     * platform-wide admin catalogue (NlscTopic / NlscProjectArea) —
+     * those are a separate, school-agnostic table a school's own setup
+     * never writes to, so querying them here always came back empty
+     * regardless of what a school had actually set up.
+     *
+     * class_subjects.subject_id is a SECONDARY_OLEVEL_SUBJECTS id (UNEB's
+     * O-Level exam subject list), while the NLSC catalogue is keyed by
+     * NLSC_SUBJECTS id (NCDC's own subject menu) — a different id space,
+     * so it's translated via Helper::secondaryOlevelToNlscSubjectId()
+     * first (see that method's docblock for why this can't just be a
+     * name match).
      */
     public function subjectMatterOptions(Request $request, $classSubjectId)
     {
@@ -154,12 +180,20 @@ class NlscAssessmentController extends Controller
             ->firstOrFail();
 
         $seniorId = $classSubject->class_id;
-        $subjectId = $classSubject->subject_id;
+        $nlscSubjectId = Helper::secondaryOlevelToNlscSubjectId($classSubject->subject_id);
+
+        if (!$nlscSubjectId) {
+            // Either a custom subject (no subject_id at all) or a
+            // standard UNEB subject with no NLSC catalogue equivalent
+            // (e.g. Commerce) — there's genuinely nothing to list.
+            return response()->json(['success' => true, 'options' => []]);
+        }
 
         if ($request->assessment_type === 'projects') {
-            $areas = NlscProjectArea::with('projects')
+            $areas = SchoolNlscProjectArea::with('projects')
+                ->where('school_id', $schoolId)
                 ->where('senior_class_id', $seniorId)
-                ->where('subject_id', $subjectId)
+                ->where('subject_id', $nlscSubjectId)
                 ->orderBy('sort_order')
                 ->get();
 
@@ -170,8 +204,9 @@ class NlscAssessmentController extends Controller
         } else {
             // Both activities_of_integration and subject_achievement pick
             // from the same Topics list.
-            $options = NlscTopic::where('senior_class_id', $seniorId)
-                ->where('subject_id', $subjectId)
+            $options = SchoolNlscTopic::where('school_id', $schoolId)
+                ->where('senior_class_id', $seniorId)
+                ->where('subject_id', $nlscSubjectId)
                 ->orderBy('sort_order')
                 ->get()
                 ->map(fn($t) => ['id' => $t->id, 'label' => $t->topic_name]);
@@ -183,7 +218,11 @@ class NlscAssessmentController extends Controller
     /**
      * AJAX: Competency Areas for the picked Topic/Project (Subject
      * Achievement has none — that's handled entirely on the frontend by
-     * not calling this at all for that type).
+     * not calling this at all for that type). Reads from the school's
+     * own catalogue copy, same reasoning as subjectMatterOptions() above
+     * — subject_matter_id here is a school_nlsc_topics.id /
+     * school_nlsc_projects.id (that's what subjectMatterOptions() above
+     * now returns as each option's id), not the admin catalogue's.
      */
     public function competencyAreaOptions(Request $request)
     {
@@ -195,12 +234,12 @@ class NlscAssessmentController extends Controller
         ]);
 
         if ($request->assessment_type === 'projects') {
-            $options = NlscProjectCompetencyArea::where('nlsc_project_id', $request->subject_matter_id)
+            $options = SchoolNlscProjectCompetencyArea::where('school_nlsc_project_id', $request->subject_matter_id)
                 ->orderBy('sort_order')
                 ->get()
                 ->map(fn($c) => ['id' => $c->id, 'label' => $c->description]);
         } else {
-            $topic = NlscTopic::with('competencyAreas')->find($request->subject_matter_id);
+            $topic = SchoolNlscTopic::with('competencyAreas')->find($request->subject_matter_id);
             $options = $topic
                 ? $topic->competencyAreas->map(fn($c) => ['id' => $c->id, 'label' => $c->description])
                 : collect();
