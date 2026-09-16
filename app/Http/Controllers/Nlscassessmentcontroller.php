@@ -145,8 +145,104 @@ class NlscAssessmentController extends Controller
         return response()->json([
             'success' => true,
             'assessment_id' => $assessment->id,
-            'redirect' => route('examination.marks.subject', ['examId' => $examId, 'classSubjectId' => $classSubjectId]),
         ]);
+    }
+
+    /**
+     * Change what an already-created assessment is set against — the
+     * teacher picked the wrong Topic, or wants to switch from Activities
+     * of Integration to Subject Achievement, before marks entry has
+     * actually started using it. Same validation as store(), just
+     * updating in place instead of inserting a new row.
+     */
+    public function update(Request $request, $examId, $classSubjectId, $id)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        [$exam, $classSubject] = $this->examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId);
+
+        $assessment = NlscAssessment::where('id', $id)
+            ->where('school_id', $schoolId)
+            ->where('examination_id', $examId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->where('subject_id', $classSubject->subject_id)
+            ->first();
+
+        if (!$assessment) {
+            return response()->json(['success' => false, 'message' => 'Assessment not found.'], 404);
+        }
+
+        $request->validate([
+            'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',
+            'subject_matter_id' => 'required|integer',
+            'nlsc_competency_area_id' => 'nullable|integer',
+            'academic_year' => 'required|string|max:20',
+            'term' => 'required|string|max:20',
+        ]);
+
+        $data = [
+            'assessment_type' => $request->assessment_type,
+            'academic_year' => $request->academic_year,
+            'term' => $request->term,
+            'include_in_report' => $request->boolean('include_in_report', true),
+            'nlsc_topic_id' => null,
+            'nlsc_project_id' => null,
+            'nlsc_competency_area_id' => null,
+        ];
+
+        if ($request->assessment_type === 'projects') {
+            $data['nlsc_project_id'] = $request->subject_matter_id;
+            $data['nlsc_competency_area_id'] = $request->nlsc_competency_area_id;
+        } elseif ($request->assessment_type === 'activities_of_integration') {
+            $data['nlsc_topic_id'] = $request->subject_matter_id;
+            $data['nlsc_competency_area_id'] = $request->nlsc_competency_area_id;
+        } else { // subject_achievement
+            $data['nlsc_topic_id'] = $request->subject_matter_id;
+        }
+
+        $assessment->update($data);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Remove an assessment created by mistake — e.g. the wrong Assessment
+     * Type entirely, where editing would mean re-picking everything
+     * anyway. Marks entry for this exam/class-subject simply goes back to
+     * needing a fresh one, exactly like before any assessment existed.
+     */
+    public function destroy($examId, $classSubjectId, $id)
+    {
+        if (!PermissionHelper::canFeature('delete_exam')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        [$exam, $classSubject] = $this->examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId);
+
+        $assessment = NlscAssessment::where('id', $id)
+            ->where('school_id', $schoolId)
+            ->where('examination_id', $examId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->where('subject_id', $classSubject->subject_id)
+            ->first();
+
+        if (!$assessment) {
+            return response()->json(['success' => false, 'message' => 'Assessment not found.'], 404);
+        }
+
+        $assessment->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**

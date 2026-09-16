@@ -803,6 +803,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/nlsc-assessments/pending', 'pending')->name('nlsc-assessments.pending');
             Route::get('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'index')->name('nlsc-assessments');
             Route::post('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'store')->name('nlsc-assessments.store');
+            Route::put('/{examId}/marks/{classSubjectId}/nlsc-assessments/{id}', 'update')->name('nlsc-assessments.update');
+            Route::delete('/{examId}/marks/{classSubjectId}/nlsc-assessments/{id}', 'destroy')->name('nlsc-assessments.destroy');
             Route::get('/marks/{classSubjectId}/nlsc-assessments/subject-matter-options', 'subjectMatterOptions')->name('nlsc-assessments.subject-matter-options');
             Route::get('/marks/nlsc-assessments/competency-area-options', 'competencyAreaOptions')->name('nlsc-assessments.competency-area-options');
         });

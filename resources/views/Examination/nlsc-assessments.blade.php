@@ -88,6 +88,18 @@
 
         .empty-state { text-align: center; padding: 2rem 1rem; color: #a3a0c9; }
 
+        .nt-action-btn {
+            display: inline-flex; align-items: center; gap: .35rem;
+            border: none; border-radius: .55rem; padding: .4rem .8rem;
+            font-size: .76rem; font-weight: 700; cursor: pointer;
+            margin: .1rem .3rem .1rem 0;
+        }
+
+        .btn-edit-sm { background: #2C29CA; color: #fff; }
+        .btn-edit-sm:hover { background: #211ea3; color: #fff; }
+        .btn-del-sm { background: #dc3545; color: #fff; }
+        .btn-del-sm:hover { background: #b3212f; color: #fff; }
+
         /* ===== Searchable dropdown (custom) ===== */
         .nt-searchable {
             position: relative;
@@ -233,7 +245,11 @@ use App\Http\Controllers\Helper;
                         </thead>
                         <tbody>
                             @foreach ($assessments as $a)
-                                <tr>
+                                <tr data-assessment-id="{{ $a->id }}" data-assessment-type="{{ $a->assessment_type }}"
+                                    data-subject-matter-id="{{ $a->assessment_type === 'projects' ? $a->nlsc_project_id : $a->nlsc_topic_id }}"
+                                    data-competency-area-id="{{ $a->nlsc_competency_area_id }}"
+                                    data-term="{{ $a->term }}" data-academic-year="{{ $a->academic_year }}"
+                                    data-include-in-report="{{ $a->include_in_report ? 1 : 0 }}">
                                     <td><span class="nt-type-badge">
                                         @if($a->assessment_type === 'activities_of_integration') Activities of Integration
                                         @elseif($a->assessment_type === 'projects') Projects
@@ -243,10 +259,14 @@ use App\Http\Controllers\Helper;
                                     <td>{{ $a->subject_matter_name ?? '—' }}</td>
                                     <td>{{ $a->term }}</td>
                                     <td>{{ $a->academic_year }}</td>
-                                    <td>
-                                        <a href="{{ route('examination.marks.subject', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}" class="btn-nt-primary" style="text-decoration:none; display:inline-block;">
-                                            <i class="fas fa-pen me-1"></i> Go to Marks Entry
-                                        </a>
+                                    <td class="text-nowrap">
+                                        <button type="button" class="nt-action-btn btn-edit-sm edit-assessment-btn"><i class="fas fa-pen"></i> Edit</button>
+                                        <button type="button" class="nt-action-btn btn-del-sm delete-assessment-btn"><i class="fas fa-trash"></i> Delete</button>
+                                        @if(in_array($exam->status, ['active', 'marks_entry']))
+                                            <a href="{{ route('examination.marks.subject', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}" class="btn-nt-primary" style="text-decoration:none; display:inline-block;">
+                                                <i class="fas fa-pen me-1"></i> Go to Marks Entry
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -256,8 +276,8 @@ use App\Http\Controllers\Helper;
             </div>
         @endif
 
-        <div class="nt-card">
-            <div class="card-header-custom"><i class="fas fa-plus-circle me-2"></i> Create Assessment</div>
+        <div class="nt-card" id="createAssessmentCard">
+            <div class="card-header-custom" id="createFormTitle"><i class="fas fa-plus-circle me-2"></i> Create Assessment</div>
             <div class="card-body-custom">
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -338,11 +358,19 @@ use App\Http\Controllers\Helper;
                 </div> 
 
 <div class="d-flex justify-content-end mt-4">
-    <a href="{{ route('examination.marks.entry', $exam->id) }}"
+    <a href="{{ route('nlsc-assessments.pending') }}"
+        id="backLink"
         class="btn-nt-outline"
         style="text-decoration: none; margin-right: 12px;">
         <i class="fas fa-arrow-left mr-1"></i> Back
     </a>
+
+    <button type="button"
+        id="cancelEditBtn"
+        class="btn-nt-secondary"
+        style="display:none; margin-right: 12px;">
+        Cancel Edit
+    </button>
 
     <button type="button"
         id="createAssessmentBtn"
@@ -386,6 +414,13 @@ use App\Http\Controllers\Helper;
         const SUBJECT_MATTER_OPTIONS_URL = "{{ route('nlsc-assessments.subject-matter-options', $classSubject->id) }}";
         const COMPETENCY_AREA_OPTIONS_URL = "{{ route('nlsc-assessments.competency-area-options') }}";
         const STORE_URL = "{{ route('nlsc-assessments.store', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}";
+        const ASSESSMENT_BASE_URL = STORE_URL; // update/destroy share the same base path, just with /{id} appended
+
+        // Edit-mode state — set by an "Edit" click, consumed once the
+        // relevant options finish loading, then cleared.
+        let editingAssessmentId = null;
+        let pendingSubjectMatterId = null;
+        let pendingCompetencyAreaId = null;
 
         const $assessmentType = document.getElementById('assessmentType');
         const $subjectMatter = document.getElementById('subjectMatter'); // hidden input
@@ -393,6 +428,20 @@ use App\Http\Controllers\Helper;
         const $competencyAreaWrap = document.getElementById('competencyAreaWrap');
         const $competencyArea = document.getElementById('competencyArea'); // hidden input
         const $createBtn = document.getElementById('createAssessmentBtn');
+
+        // "Back" should mean "wherever I actually came from" (almost
+        // always the pending-assessments list, possibly scoped to one
+        // exam) rather than a hardcoded destination — it used to point
+        // straight at this exam's Marks Entry grid, which isn't even
+        // supposed to be reachable yet at this stage.
+        document.getElementById('backLink').addEventListener('click', function (e) {
+            if (window.history.length > 1 && document.referrer) {
+                e.preventDefault();
+                window.history.back();
+            }
+            // else: no usable history (e.g. opened in a new tab) — let
+            // the href fall through to the pending-assessments list.
+        });
 
         /* ============================================================
          * Searchable dropdown helper
@@ -655,6 +704,12 @@ use App\Http\Controllers\Helper;
                     }
                     subjectMatterSearchable.setOptions(res.options, 'Select...');
                     subjectMatterSearchable.enable();
+
+                    if (pendingSubjectMatterId) {
+                        const match = res.options.find(o => String(o.id) === String(pendingSubjectMatterId));
+                        pendingSubjectMatterId = null;
+                        if (match) subjectMatterSearchable.setValue(match.id, match.label);
+                    }
                 })
                 .catch(() => subjectMatterSearchable.disable('Failed to load — try again'));
         });
@@ -684,6 +739,13 @@ use App\Http\Controllers\Helper;
                     }
                     competencyAreaSearchable.setOptions(res.options, 'Select...');
                     competencyAreaSearchable.enable();
+
+                    if (pendingCompetencyAreaId) {
+                        const match = res.options.find(o => String(o.id) === String(pendingCompetencyAreaId));
+                        pendingCompetencyAreaId = null;
+                        if (match) competencyAreaSearchable.setValue(match.id, match.label);
+                    }
+
                     refreshCreateButtonState();
                 })
                 .catch(() => { competencyAreaSearchable.disable('Failed to load — try again'); refreshCreateButtonState(); });
@@ -692,11 +754,14 @@ use App\Http\Controllers\Helper;
         $competencyArea.addEventListener('change', refreshCreateButtonState);
 
         $createBtn.addEventListener('click', function () {
+            const isEditing = !!editingAssessmentId;
             this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
+            this.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> ${isEditing ? 'Updating...' : 'Creating...'}`;
 
-            fetch(STORE_URL, {
-                method: 'POST',
+            const url = isEditing ? `${ASSESSMENT_BASE_URL}/${editingAssessmentId}` : STORE_URL;
+
+            fetch(url, {
+                method: isEditing ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 body: JSON.stringify({
                     assessment_type: $assessmentType.value,
@@ -710,18 +775,105 @@ use App\Http\Controllers\Helper;
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success) {
-                        Swal.fire('Error', res.message || 'Failed to create assessment.', 'error');
+                        Swal.fire('Error', res.message || `Failed to ${isEditing ? 'update' : 'create'} assessment.`, 'error');
                         this.disabled = false;
-                        this.innerHTML = '<i class="fas fa-plus me-1"></i> Create';
+                        this.innerHTML = isEditing ? '<i class="fas fa-save me-1"></i> Update' : '<i class="fas fa-plus me-1"></i> Create';
                         return;
                     }
-                    window.location.href = res.redirect;
+                    // Stay right here — this is just the setup stage,
+                    // marks entry only actually opens once the exam
+                    // itself reaches that stage. Reload so the
+                    // list above reflects the change and the form resets.
+                    Swal.fire({
+                        icon: 'success',
+                        title: isEditing ? 'Assessment updated' : 'Assessment created',
+                        text: 'Marks entry for this class-subject will use this once the exam reaches that stage.',
+                        confirmButtonColor: '#2C29CA',
+                    }).then(() => window.location.reload());
                 })
                 .catch(() => {
-                    Swal.fire('Error', 'Failed to create — check your connection.', 'error');
+                    Swal.fire('Error', 'Failed — check your connection.', 'error');
                     this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-plus me-1"></i> Create';
+                    this.innerHTML = isEditing ? '<i class="fas fa-save me-1"></i> Update' : '<i class="fas fa-plus me-1"></i> Create';
                 });
+        });
+
+        // ===== Edit an existing assessment ===== reuses the Create form
+        // itself (rather than a separate modal) — pre-fills it from the
+        // row's data-* attributes, switches the submit button into
+        // "Update" mode, and the change-event chain above transparently
+        // re-selects the saved Topic/Project and Competency Area once
+        // their options finish loading.
+        document.querySelectorAll('.edit-assessment-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                editingAssessmentId = row.dataset.assessmentId;
+                pendingSubjectMatterId = row.dataset.subjectMatterId;
+                pendingCompetencyAreaId = row.dataset.competencyAreaId || null;
+
+                document.getElementById('academicYear').value = row.dataset.academicYear;
+                document.getElementById('term').value = row.dataset.term;
+                document.getElementById('includeInReport').checked = row.dataset.includeInReport === '1';
+
+                $assessmentType.value = row.dataset.assessmentType;
+                $assessmentType.dispatchEvent(new Event('change'));
+
+                document.getElementById('createFormTitle').innerHTML = '<i class="fas fa-pen-to-square me-2"></i> Edit Assessment';
+                $createBtn.innerHTML = '<i class="fas fa-save me-1"></i> Update';
+                document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+                document.getElementById('createAssessmentCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        document.getElementById('cancelEditBtn').addEventListener('click', function () {
+            editingAssessmentId = null;
+            pendingSubjectMatterId = null;
+            pendingCompetencyAreaId = null;
+
+            $assessmentType.value = '';
+            subjectMatterSearchable.clearSelection();
+            subjectMatterSearchable.disable('Select assessment type first...');
+            competencyAreaSearchable.clearSelection();
+            competencyAreaSearchable.disable('Select a topic/project first...');
+
+            document.getElementById('createFormTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i> Create Assessment';
+            $createBtn.innerHTML = '<i class="fas fa-plus me-1"></i> Create';
+            this.style.display = 'none';
+            refreshCreateButtonState();
+        });
+
+        // ===== Delete an assessment =====
+        document.querySelectorAll('.delete-assessment-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const id = row.dataset.assessmentId;
+
+                Swal.fire({
+                    title: 'Delete this assessment?',
+                    text: 'Marks entry for this class-subject will go back to needing one set up again.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Delete',
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    fetch(`${ASSESSMENT_BASE_URL}/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (!res.success) {
+                                Swal.fire('Error', res.message || 'Failed to delete.', 'error');
+                                return;
+                            }
+                            window.location.reload();
+                        })
+                        .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
+                });
+            });
         });
     </script>
 @endsection

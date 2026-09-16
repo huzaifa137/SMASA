@@ -420,6 +420,27 @@
             $entry = $examinations->where('status', 'marks_entry')->count();
             $released = $examinations->where('status', 'results_released')->count();
             $draft = $examinations->where('status', 'draft')->count();
+
+            // Secondary O-Level (Senior 1-4) exams need a "Create
+            // Assessment" step done for every class-subject before marks
+            // entry means anything (see NlscAssessmentController's own
+            // docblock) — that used to only surface as a small badge
+            // buried in each card's dropdown, easy to miss entirely on a
+            // board that otherwise reads as a straight Draft -> Active ->
+            // Marks Entry pipeline. Splitting "active" exams into their
+            // own column here makes it a real, visible stage of that
+            // pipeline instead. Still genuinely status = 'active' in the
+            // database either way — this split is purely about where the
+            // card is drawn, not a new status value, so dragging a card
+            // between either of these two columns (or in fact anywhere
+            // else) still posts the same real status values as before.
+            $activeExams = $examinations->where('status', 'active');
+            $activeNeedingAssessment = $activeExams->filter(
+                fn($e) => \App\Http\Controllers\Helper::pendingNlscAssessmentsCountForExam($e->id) > 0
+            );
+            $activeReady = $activeExams->reject(
+                fn($e) => $activeNeedingAssessment->contains('id', $e->id)
+            );
         @endphp
 
         <div class="row g-4 mb-5">
@@ -528,14 +549,40 @@
                         <i class="fas fa-play-circle" style="color: var(--success);"></i>
                         Active
                         <span class="column-count"
-                            id="activeCount">{{ $examinations->where('status', 'active')->count() }}</span>
+                            id="activeCount">{{ $activeReady->count() }}</span>
                     </div>
                     {{-- <i class="fas fa-ellipsis-h text-muted"></i> --}}
                 </div>
                 <div class="column-cards" id="activeCards">
-                    @foreach($examinations->where('status', 'active') as $exam)
+                    @foreach($activeReady as $exam)
                         @include('examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
+                </div>
+            </div>
+
+            <!-- Create Assessment Column: Active exams with at least one
+            Secondary O-Level class-subject still missing its NLSC
+            assessment. Same real status ('active') as the column to its
+            left — see the @php block above — so drag-and-drop between the
+            two just keeps the exam at status=active either way. -->
+            <div class="kanban-column" data-status="active">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-clipboard-list" style="color: var(--danger);"></i>
+                        Create Assessment
+                        <span class="column-count"
+                            id="createAssessmentCount">{{ $activeNeedingAssessment->count() }}</span>
+                    </div>
+                </div>
+                <div class="column-cards" id="createAssessmentCards">
+                    @forelse($activeNeedingAssessment as $exam)
+                        @include('examination.partials.exam-card', ['exam' => $exam])
+                    @empty
+                        <div class="text-center text-muted py-4" style="font-size:.82rem;">
+                            <i class="fas fa-circle-check d-block mb-1" style="font-size:1.3rem;color:var(--success);"></i>
+                            All caught up
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
