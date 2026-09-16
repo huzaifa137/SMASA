@@ -143,7 +143,7 @@ class NlscAssessmentController extends Controller
             'academic_year' => $request->academic_year,
             'term' => $request->term,
             'include_in_report' => $request->boolean('include_in_report', true),
-            'created_by' => $teacherId,
+            'created_by' => $teacherId ?? Session('LoggedAdmin'),
         ];
 
         if ($request->assessment_type === 'projects') {
@@ -372,6 +372,17 @@ class NlscAssessmentController extends Controller
         return response()->json(['success' => true, 'options' => $options->values()]);
     }
 
+    /**
+     * $teacherId is nullable on purpose: when the current session has no
+     * specific teacher (a school admin), the ownership filter is skipped
+     * entirely and any of the school's class-subjects is allowed — same
+     * relaxation Helper::pendingNlscAssessmentsQuery() already applies
+     * for pendingNlscAssessmentsForExam()'s admin/school-wide view (see
+     * pending()'s docblock). Without this, an admin following a "Create
+     * Assessment" link from that school-wide list for a class-subject
+     * that isn't their own would always 404 here, even though the link
+     * they clicked was correctly shown to them.
+     */
     private function examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId): array
     {
         $exam = Examination::where('id', $examId)
@@ -381,9 +392,11 @@ class NlscAssessmentController extends Controller
         $classSubject = DB::table('class_subjects')
             ->where('id', $classSubjectId)
             ->where('school_id', $schoolId)
-            ->where(function ($q) use ($teacherId) {
-                $q->where('subject_teacher_1', $teacherId)
-                    ->orWhere('subject_teacher_2', $teacherId);
+            ->when($teacherId, function ($q) use ($teacherId) {
+                $q->where(function ($q2) use ($teacherId) {
+                    $q2->where('subject_teacher_1', $teacherId)
+                        ->orWhere('subject_teacher_2', $teacherId);
+                });
             })
             ->firstOrFail();
 

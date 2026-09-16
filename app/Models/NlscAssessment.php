@@ -43,4 +43,13 @@ class NlscAssessment extends Model
     {
         return $this->belongsTo(SchoolNlscProject::class, 'nlsc_project_id');
     }
+
+    // The exam this assessment was created for — Helper::
+    // myCreatedNlscAssessments() eager-loads and filters on this
+    // (with('exam')/whereHas('exam', ...)) to only show assessments for
+    // exams still in an editable phase.
+    public function exam()
+    {
+        return $this->belongsTo(Examination::class, 'examination_id');
+    }
 }
