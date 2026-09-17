@@ -248,6 +248,7 @@ use App\Http\Controllers\Helper;
                                 <tr data-assessment-id="{{ $a->id }}" data-assessment-type="{{ $a->assessment_type }}"
                                     data-subject-matter-id="{{ $a->assessment_type === 'projects' ? $a->nlsc_project_id : $a->nlsc_topic_id }}"
                                     data-competency-area-id="{{ $a->nlsc_competency_area_id }}"
+                                    data-subject-achievement-id="{{ $a->nlsc_subject_achievement_id }}"
                                     data-term="{{ $a->term }}" data-academic-year="{{ $a->academic_year }}"
                                     data-include-in-report="{{ $a->include_in_report ? 1 : 0 }}">
                                     <td><span class="nt-type-badge">
@@ -262,7 +263,7 @@ use App\Http\Controllers\Helper;
                                     <td class="text-nowrap">
                                         <button type="button" class="nt-action-btn btn-edit-sm edit-assessment-btn"><i class="fas fa-pen"></i> Edit</button>
                                         <button type="button" class="nt-action-btn btn-del-sm delete-assessment-btn"><i class="fas fa-trash"></i> Delete</button>
-                                        @if(in_array($exam->status, ['active', 'marks_entry']))
+                                        @if($exam->status === 'marks_entry')
                                             <a href="{{ route('nlsc-assessments.marks-entry', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id, 'assessmentId' => $a->id]) }}" class="btn btn-sm btn-primary" style="text-decoration:none; display:inline-block;">
                                                 <i class="fas fa-list-check me-1"></i> Enter Assessment Marks
                                             </a>
@@ -311,7 +312,7 @@ use App\Http\Controllers\Helper;
                     </div>
 
                     <div class="col-md-6" id="competencyAreaWrap">
-                        <label class="nt-form-label">Competency Areas <span class="nt-required">*</span></label>
+                        <label class="nt-form-label" id="competencyAreaLabel">Competency Areas <span class="nt-required">*</span></label>
 
                         {{-- Searchable Competency Areas --}}
                         <div class="nt-searchable" id="competencyAreaSearchable">
@@ -672,8 +673,7 @@ use App\Http\Controllers\Helper;
         function refreshCreateButtonState() {
             const typeOk = !!$assessmentType.value;
             const subjectMatterOk = !!$subjectMatter.value;
-            const needsCompetency = $assessmentType.value === 'activities_of_integration' || $assessmentType.value === 'projects';
-            const competencyOk = !needsCompetency || !!$competencyArea.value;
+            const competencyOk = !!$competencyArea.value;
             $createBtn.disabled = !(typeOk && subjectMatterOk && competencyOk);
         }
 
@@ -691,7 +691,8 @@ use App\Http\Controllers\Helper;
             }
 
             $subjectMatterLabel.innerHTML = (type === 'projects' ? 'Project' : 'Topics') + ' <span class="nt-required">*</span>';
-            $competencyAreaWrap.style.display = (type === 'subject_achievement') ? 'none' : '';
+            document.getElementById('competencyAreaLabel').innerHTML =
+                (type === 'subject_achievement' ? 'Achievement Statement' : 'Competency Areas') + ' <span class="nt-required">*</span>';
 
             fetch(`${SUBJECT_MATTER_OPTIONS_URL}?assessment_type=${type}`, {
                 headers: { 'Accept': 'application/json' },
@@ -719,7 +720,7 @@ use App\Http\Controllers\Helper;
             refreshCreateButtonState();
 
             const type = $assessmentType.value;
-            if (type === 'subject_achievement' || !this.value) {
+            if (!this.value) {
                 competencyAreaSearchable.disable('Select a topic/project first...');
                 refreshCreateButtonState();
                 return;
@@ -766,7 +767,8 @@ use App\Http\Controllers\Helper;
                 body: JSON.stringify({
                     assessment_type: $assessmentType.value,
                     subject_matter_id: $subjectMatter.value,
-                    nlsc_competency_area_id: $competencyArea.value || null,
+                    nlsc_competency_area_id: $assessmentType.value !== 'subject_achievement' ? ($competencyArea.value || null) : null,
+                    nlsc_subject_achievement_id: $assessmentType.value === 'subject_achievement' ? ($competencyArea.value || null) : null,
                     academic_year: document.getElementById('academicYear').value,
                     term: document.getElementById('term').value,
                     include_in_report: document.getElementById('includeInReport').checked ? 1 : 0,
@@ -809,7 +811,7 @@ use App\Http\Controllers\Helper;
                 const row = this.closest('tr');
                 editingAssessmentId = row.dataset.assessmentId;
                 pendingSubjectMatterId = row.dataset.subjectMatterId;
-                pendingCompetencyAreaId = row.dataset.competencyAreaId || null;
+                pendingCompetencyAreaId = row.dataset.competencyAreaId || row.dataset.subjectAchievementId || null;
 
                 document.getElementById('academicYear').value = row.dataset.academicYear;
                 document.getElementById('term').value = row.dataset.term;

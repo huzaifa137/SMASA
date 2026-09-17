@@ -132,6 +132,7 @@ class NlscAssessmentController extends Controller
             'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',
             'subject_matter_id' => 'required|integer', // a nlsc_topic_id or nlsc_project_id, depending on type
             'nlsc_competency_area_id' => 'nullable|integer',
+            'nlsc_subject_achievement_id' => 'required_if:assessment_type,subject_achievement|nullable|integer',
             'academic_year' => 'required|string|max:20',
             'term' => 'required|string|max:20',
         ]);
@@ -155,8 +156,9 @@ class NlscAssessmentController extends Controller
         } elseif ($request->assessment_type === 'activities_of_integration') {
             $data['nlsc_topic_id'] = $request->subject_matter_id;
             $data['nlsc_competency_area_id'] = $request->nlsc_competency_area_id;
-        } else { // subject_achievement — no competency area, just the topic
+        } else { // subject_achievement — the topic, plus which ONE of its statements
             $data['nlsc_topic_id'] = $request->subject_matter_id;
+            $data['nlsc_subject_achievement_id'] = $request->nlsc_subject_achievement_id;
         }
 
         $assessment = NlscAssessment::create($data);
@@ -209,6 +211,7 @@ class NlscAssessmentController extends Controller
             'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',
             'subject_matter_id' => 'required|integer',
             'nlsc_competency_area_id' => 'nullable|integer',
+            'nlsc_subject_achievement_id' => 'required_if:assessment_type,subject_achievement|nullable|integer',
             'academic_year' => 'required|string|max:20',
             'term' => 'required|string|max:20',
         ]);
@@ -221,6 +224,7 @@ class NlscAssessmentController extends Controller
             'nlsc_topic_id' => null,
             'nlsc_project_id' => null,
             'nlsc_competency_area_id' => null,
+            'nlsc_subject_achievement_id' => null,
         ];
 
         if ($request->assessment_type === 'projects') {
@@ -231,6 +235,7 @@ class NlscAssessmentController extends Controller
             $data['nlsc_competency_area_id'] = $request->nlsc_competency_area_id;
         } else { // subject_achievement
             $data['nlsc_topic_id'] = $request->subject_matter_id;
+            $data['nlsc_subject_achievement_id'] = $request->nlsc_subject_achievement_id;
         }
 
         $assessment->update($data);
@@ -299,8 +304,12 @@ class NlscAssessmentController extends Controller
 
         $exam->syncStatus();
 
-        if (!in_array($exam->status, ['marks_entry', 'active'])) {
-            return redirect()->back()->with('error', 'Marks entry is not open for this examination.');
+        // Deliberately stricter than the generic marksEntrySubject()/
+        // saveMarks() (which also allow 'active'): marks for these
+        // three assessment types only opens once the exam has actually
+        // reached the marks_entry stage, not while it's still ongoing.
+        if ($exam->status !== 'marks_entry') {
+            return redirect()->back()->with('error', 'Marks entry for this examination is not open yet — it opens once the examination reaches the Marks Entry stage.');
         }
 
         $assessment = NlscAssessment::where('id', $assessmentId)
@@ -382,8 +391,8 @@ class NlscAssessmentController extends Controller
             ->firstOrFail();
 
         $exam = Examination::find($assessment->examination_id);
-        if (!$exam || !in_array($exam->status, ['active', 'marks_entry'], true)) {
-            return response()->json(['success' => false, 'message' => 'This exam is no longer in a stage where Maximum Marks can be changed.'], 422);
+        if (!$exam || $exam->status !== 'marks_entry') {
+            return response()->json(['success' => false, 'message' => 'Maximum Marks can only be set while this examination is in the Marks Entry stage.'], 422);
         }
 
         $classSubject = DB::table('class_subjects')
@@ -440,8 +449,8 @@ class NlscAssessmentController extends Controller
             ->firstOrFail();
 
         $exam = Examination::find($assessment->examination_id);
-        if (!$exam || !in_array($exam->status, ['active', 'marks_entry'], true)) {
-            return response()->json(['success' => false, 'message' => 'Marks entry is closed.'], 403);
+        if (!$exam || $exam->status !== 'marks_entry') {
+            return response()->json(['success' => false, 'message' => 'Marks entry is only open while this examination is in the Marks Entry stage.'], 403);
         }
 
         if (!$assessment->max_marks) {
@@ -549,11 +558,27 @@ class NlscAssessmentController extends Controller
             ];
         }
 
-        // subject_achievement — no single competency area is chosen at
-        // Create Assessment time (see store()'s docblock branch above),
-        // just the Topic, so every one of its achievement statements is
-        // shown rather than claiming a single one was picked.
+        // subject_achievement. Assessments created after the
+        // nlsc_subject_achievement_id column existed have one specific
+        // statement picked; anything created before that (column is
+        // null) falls back to showing every statement for the topic,
+        // since there's no way to know which one was actually intended.
         $topic = $assessment->topic;
+
+        if ($assessment->nlsc_subject_achievement_id) {
+            $achievement = $assessment->subjectAchievement;
+
+            return [
+                'topic_label' => 'Topic',
+                'topic_name' => optional($topic)->topic_name ?? '—',
+                'project_description' => null,
+                'competency_label' => 'Achievement statement',
+                'competency_text' => optional($achievement)->achievement_text,
+                'achievements' => [],
+                'label' => trim((optional($topic)->topic_name ?? 'Topic') . ' — ' . (optional($achievement)->achievement_text ?? '')),
+            ];
+        }
+
         $achievements = $topic ? $topic->subjectAchievements()->pluck('achievement_text')->all() : [];
 
         return [
@@ -634,20 +659,25 @@ class NlscAssessmentController extends Controller
     }
 
     /**
-     * AJAX: Competency Areas for the picked Topic/Project (Subject
-     * Achievement has none — that's handled entirely on the frontend by
-     * not calling this at all for that type). Reads from the school's
-     * own catalogue copy, same reasoning as subjectMatterOptions() above
-     * — subject_matter_id here is a school_nlsc_topics.id /
-     * school_nlsc_projects.id (that's what subjectMatterOptions() above
-     * now returns as each option's id), not the admin catalogue's.
+     * AJAX: the selectable options for the second dropdown, once a
+     * Topic/Project is picked — Competency Areas for
+     * activities_of_integration/projects, or a Topic's own Subject
+     * Achievement statements for subject_achievement (a Topic can have
+     * several — see NlscSubjectAchievementSeeder's docblock — so this
+     * is what lets Create Assessment pin down exactly ONE of them,
+     * rather than the whole Topic being the closest thing to record).
+     * Reads from the school's own catalogue copy, same reasoning as
+     * subjectMatterOptions() above — subject_matter_id here is a
+     * school_nlsc_topics.id / school_nlsc_projects.id (that's what
+     * subjectMatterOptions() above now returns as each option's id),
+     * not the admin catalogue's.
      */
     public function competencyAreaOptions(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_exams');
 
         $request->validate([
-            'assessment_type' => 'required|in:activities_of_integration,projects',
+            'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',
             'subject_matter_id' => 'required|integer',
         ]);
 
@@ -656,10 +686,15 @@ class NlscAssessmentController extends Controller
                 ->orderBy('sort_order')
                 ->get()
                 ->map(fn($c) => ['id' => $c->id, 'label' => $c->description]);
-        } else {
+        } elseif ($request->assessment_type === 'activities_of_integration') {
             $topic = SchoolNlscTopic::with('competencyAreas')->find($request->subject_matter_id);
             $options = $topic
                 ? $topic->competencyAreas->map(fn($c) => ['id' => $c->id, 'label' => $c->description])
+                : collect();
+        } else { // subject_achievement
+            $topic = SchoolNlscTopic::with('subjectAchievements')->find($request->subject_matter_id);
+            $options = $topic
+                ? $topic->subjectAchievements->map(fn($a) => ['id' => $a->id, 'label' => $a->achievement_text])
                 : collect();
         }
 

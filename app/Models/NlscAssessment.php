@@ -18,6 +18,7 @@ class NlscAssessment extends Model
         'nlsc_topic_id',
         'nlsc_project_id',
         'nlsc_competency_area_id',
+        'nlsc_subject_achievement_id',
         'academic_year',
         'term',
         'include_in_report',
@@ -49,6 +50,15 @@ class NlscAssessment extends Model
     public function project()
     {
         return $this->belongsTo(SchoolNlscProject::class, 'nlsc_project_id');
+    }
+
+    // Only ever set for assessment_type === 'subject_achievement' — the
+    // one statement (of the topic's several) actually being graded. Null
+    // on any assessment created before this column existed; see this
+    // column's migration docblock for the fallback that handles that.
+    public function subjectAchievement()
+    {
+        return $this->belongsTo(SchoolNlscSubjectAchievement::class, 'nlsc_subject_achievement_id');
     }
 
     // The exam this assessment was created for — Helper::

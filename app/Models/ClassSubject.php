@@ -16,6 +16,7 @@ class ClassSubject extends Model
         'custom_subject_id',
         'subject_source',
         'subject_type',
+        'is_auto_synced',
         'school_id',
         'subject_teacher_1',
         'subject_teacher_2',
@@ -25,6 +26,7 @@ class ClassSubject extends Model
 
     protected $casts = [
         'counts_towards_aggregate' => 'boolean',
+        'is_auto_synced' => 'boolean',
     ];
 
 
@@ -73,6 +75,11 @@ public function classSubjectsByClassAndStream()
     {
         if ($this->subject_source === 'custom' && $this->customSubject) {
             return $this->customSubject->subject_name;
+        }
+
+        if ($this->subject_source === 'school_alevel' && \App\Models\SchoolALevelSubject::isSyntheticId($this->subject_id)) {
+            $realId = \App\Models\SchoolALevelSubject::realIdFromSynthetic($this->subject_id);
+            return optional(\App\Models\SchoolALevelSubject::find($realId))->subject_name ?? 'Unknown subject';
         }
 
         return \App\Http\Controllers\Helper::recordMdname($this->subject_id);

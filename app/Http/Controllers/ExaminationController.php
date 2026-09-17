@@ -260,6 +260,22 @@ class ExaminationController extends Controller
             // part of the key too, or their progress counts would collide.
             ->keyBy(fn($r) => $r->subject_id . '_' . $r->custom_subject_id . '_' . $r->class_id . '_' . $r->stream_id);
 
+        // Secondary O-Level marks live in nlsc_assessment_marks, never
+        // examination_marks (see Helper::secondaryOLevelEnteredMarksCount()'s
+        // own docblock), so the grouped query above always finds 0 rows for
+        // one of these subjects no matter how many marks were actually
+        // saved. Computed separately here and merged into $markCounts under
+        // the exact same key the view already reads
+        // (marks-entry.blade.php's $markCounts[$key]->entered_count), so the
+        // view itself needs no change.
+        foreach ($assignedSubjects->where('subject_type', 'secondary_olevel') as $subject) {
+            $key = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
+
+            $markCounts[$key] = (object) [
+                'entered_count' => Helper::secondaryOLevelEnteredMarksCount($schoolId, $examId, $subject->class_id, $subject->stream_id, $subject->subject_id),
+            ];
+        }
+
         // Student counts per class-stream
         $studentCounts = \Illuminate\Support\Facades\DB::table('students')
             ->where('school_id', $schoolId)
@@ -2930,18 +2946,24 @@ class ExaminationController extends Controller
                 // subject_id alone would merge their mark counts together.
                 $isCustomSubject = is_null($subject->subject_id);
 
-                // Count marks entered for this subject
-                $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
-                    ->where('class_id', $subject->class_id)
-                    ->where('stream_id', $subject->stream_id)
-                    ->where('school_id', $schoolId)
-                    ->when($isCustomSubject, function ($q) use ($subject) {
-                        $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
-                    }, function ($q) use ($subject) {
-                        $q->where('subject_id', $subject->subject_id);
-                    })
-                    ->whereNotNull('marks_obtained')
-                    ->count();
+                // Secondary O-Level marks live in nlsc_assessment_marks,
+                // never examination_marks — see
+                // Helper::secondaryOLevelEnteredMarksCount()'s own
+                // docblock for why counting only examination_marks here
+                // left every O-Level subject stuck at 0 entered.
+                $enteredMarks = $subject->subject_type === 'secondary_olevel'
+                    ? Helper::secondaryOLevelEnteredMarksCount($schoolId, $exam->id, $subject->class_id, $subject->stream_id, $subject->subject_id)
+                    : ExaminationMark::where('examination_id', $exam->id)
+                        ->where('class_id', $subject->class_id)
+                        ->where('stream_id', $subject->stream_id)
+                        ->where('school_id', $schoolId)
+                        ->when($isCustomSubject, function ($q) use ($subject) {
+                            $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                        }, function ($q) use ($subject) {
+                            $q->where('subject_id', $subject->subject_id);
+                        })
+                        ->whereNotNull('marks_obtained')
+                        ->count();
 
                 $progressPercent = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
 
@@ -3043,17 +3065,27 @@ class ExaminationController extends Controller
                 foreach ($classSubjects as $subject) {
                     $isCustomSubject = is_null($subject->subject_id);
 
-                    $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
-                        ->where('class_id', $subject->class_id)
-                        ->where('stream_id', $subject->stream_id)
-                        ->where('school_id', $schoolId)
-                        ->when($isCustomSubject, function ($q) use ($subject) {
-                            $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
-                        }, function ($q) use ($subject) {
-                            $q->where('subject_id', $subject->subject_id);
-                        })
-                        ->whereNotNull('marks_obtained')
-                        ->count();
+                    // Secondary O-Level marks live in nlsc_assessment_marks,
+                    // never examination_marks — see
+                    // Helper::secondaryOLevelEnteredMarksCount()'s own
+                    // docblock. Without this, every Senior 1-4 class was
+                    // stuck showing 0 entered for its O-Level subjects no
+                    // matter how many marks had actually been saved, which
+                    // also meant "ready to release" could never trigger
+                    // for one of these classes.
+                    $enteredMarks = $subject->subject_type === 'secondary_olevel'
+                        ? Helper::secondaryOLevelEnteredMarksCount($schoolId, $exam->id, $subject->class_id, $subject->stream_id, $subject->subject_id)
+                        : ExaminationMark::where('examination_id', $exam->id)
+                            ->where('class_id', $subject->class_id)
+                            ->where('stream_id', $subject->stream_id)
+                            ->where('school_id', $schoolId)
+                            ->when($isCustomSubject, function ($q) use ($subject) {
+                                $q->whereNull('subject_id')->where('custom_subject_id', $subject->custom_subject_id);
+                            }, function ($q) use ($subject) {
+                                $q->where('subject_id', $subject->subject_id);
+                            })
+                            ->whereNotNull('marks_obtained')
+                            ->count();
 
                     $progress = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
                     if ($progress >= 100) {

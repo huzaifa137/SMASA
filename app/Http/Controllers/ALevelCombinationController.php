@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PermissionHelper;
+use App\Models\ClassSubject;
 use App\Models\SchoolALevelSubject;
 use App\Models\StudentALevelCombination;
 use Illuminate\Http\Request;
@@ -66,6 +67,17 @@ class ALevelCombinationController extends Controller
 
         $selectedClassId = $request->get('class_id', $classOptions->first()->class_id ?? null);
         $selectedStreamId = $request->get('stream_id', $classOptions->first()->stream_id ?? null);
+
+        // Backfill/self-heal: keeps class_subjects in sync with whatever
+        // combinations already exist for this class/stream every time the
+        // page is opened, not just on the next explicit Save — so a
+        // class/stream whose combinations were saved before
+        // syncClassSubjectsFromCombinations() existed gets its missing
+        // subjects (and therefore teacher-assignability) restored just by
+        // visiting this page, with no separate migration/backfill step.
+        if ($selectedClassId !== null && $selectedStreamId !== null) {
+            $this->syncClassSubjectsFromCombinations($schoolId, $selectedClassId, $selectedStreamId);
+        }
 
         $students = collect();
         $combinations = collect();
@@ -326,6 +338,8 @@ class ALevelCombinationController extends Controller
             'combinations.*.student_id' => 'required|integer',
             'combinations.*.principal_subject_ids' => 'nullable|array|max:3',
             'combinations.*.subsidiary_subject_id' => 'nullable|integer',
+            'class_id' => 'required',
+            'stream_id' => 'required|string',
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -361,11 +375,96 @@ class ALevelCombinationController extends Controller
                 );
             }
 
+            $this->syncClassSubjectsFromCombinations($schoolId, $request->class_id, $request->stream_id);
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Combinations saved.']);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Keeps class_subjects in sync with what students in this
+     * class/stream are ACTUALLY taking, per their own saved
+     * combinations — otherwise a principal or subsidiary subject a
+     * student picked never shows up on the teacher-assignment screen
+     * (Class/attached-stream-subjects.blade.php only ever lists
+     * class_subjects rows), so nobody could ever be assigned to teach
+     * it.
+     *
+     * General Paper is never touched here — it's added once, manually,
+     * at class-creation time, and is compulsory regardless of any
+     * student's individual combination.
+     *
+     * Only rows THIS method created (is_auto_synced = true) are ever
+     * added or removed — a subject a school manually ticked on the
+     * class-creation picker is left alone even if no student's
+     * combination currently includes it.
+     */
+    private function syncClassSubjectsFromCombinations($schoolId, $classId, $streamId): void
+    {
+        $studentIds = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classId)
+            ->where('stream', $streamId)
+            ->pluck('id');
+
+        $combinations = StudentALevelCombination::where('school_id', $schoolId)
+            ->whereIn('student_id', $studentIds)
+            ->get();
+
+        $subjectIdsInUse = collect();
+        foreach ($combinations as $combination) {
+            $subjectIdsInUse = $subjectIdsInUse->merge($combination->principal_subject_ids ?? []);
+            if ($combination->subsidiary_subject_id) {
+                $subjectIdsInUse->push($combination->subsidiary_subject_id);
+            }
+        }
+        $subjectIdsInUse = $subjectIdsInUse->filter()->unique()->values();
+
+        $existingAutoSynced = ClassSubject::where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('subject_type', 'secondary_alevel')
+            ->where('is_auto_synced', true)
+            ->get();
+
+        // Add newly-introduced subjects
+        foreach ($subjectIdsInUse as $subjectId) {
+            if ($existingAutoSynced->contains('subject_id', $subjectId)) {
+                continue;
+            }
+
+            $isSchoolSubject = SchoolALevelSubject::isSyntheticId($subjectId);
+
+            ClassSubject::create([
+                'school_id' => $schoolId,
+                'class_id' => $classId,
+                'stream_id' => $streamId,
+                'subject_id' => $subjectId,
+                'subject_source' => $isSchoolSubject ? 'school_alevel' : 'master',
+                'subject_type' => 'secondary_alevel',
+                'is_auto_synced' => true,
+            ]);
+        }
+
+        // Remove subjects nobody in this class/stream is taking anymore —
+        // and clear out anything already recorded against that subject
+        // for this class/stream, since it no longer applies to anyone.
+        foreach ($existingAutoSynced as $classSubject) {
+            if ($subjectIdsInUse->contains($classSubject->subject_id)) {
+                continue;
+            }
+
+            \App\Models\ExaminationMark::where('school_id', $schoolId)
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->where('subject_id', $classSubject->subject_id)
+                ->delete();
+
+            $classSubject->delete();
         }
     }
 }

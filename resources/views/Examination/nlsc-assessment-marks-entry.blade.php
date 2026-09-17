@@ -192,11 +192,13 @@
                         @if(PermissionHelper::canFeature('edit_exam') && in_array($exam->status, ['active', 'marks_entry']))
                             <div class="max-marks-display" id="maxMarksDisplay">
                                 <input type="text" class="nt-form-control" value="{{ $assessment->max_marks ?? '—' }}" disabled style="max-width:140px;">
-                                <button type="button" class="btn-nt-secondary" id="editMaxMarksBtn"><i class="fas fa-pen me-1"></i> Edit</button>
+                                <button type="button" class="btn-nt-secondary" id="editMaxMarksBtn">
+                                    <i class="fas fa-pen me-1"></i> {{ $assessment->max_marks ? 'Edit' : 'Set' }}
+                                </button>
                             </div>
                             <div class="max-marks-edit" id="maxMarksEdit">
                                 <input type="number" min="0.01" step="0.01" class="nt-form-control" id="maxMarksInput" value="{{ $assessment->max_marks }}" style="max-width:140px;">
-                                <button type="button" class="btn-nt-primary" id="saveMaxMarksBtn"><i class="fas fa-check"></i></button>
+                                <button type="button" class="btn-nt-primary" id="saveMaxMarksBtn">Save <i class="fas fa-check-double"></i></button>
                                 <button type="button" class="btn-nt-secondary" id="cancelMaxMarksBtn"><i class="fas fa-times"></i></button>
                             </div>
                         @else
@@ -235,7 +237,7 @@
                                 <td class="text-muted" style="font-size:.8rem;">{{ $key + 1 }}</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="student-avatar">{{ strtoupper(substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1)) }}</div>
+                                        <div class="student-avatar">{{ strtoupper(substr($student->lastname, 0, 1) . substr($student->firstname, 0, 1)) }}</div> &nbsp;
                                         <span style="font-size:.86rem;">{{ $student->lastname }} {{ $student->firstname }}</span>
                                     </div>
                                 </td>

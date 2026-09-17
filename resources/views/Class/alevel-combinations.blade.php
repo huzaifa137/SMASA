@@ -1008,6 +1008,8 @@
     </div>
     <script>
         const PRINCIPAL_LIMIT = 3;
+        const SELECTED_CLASS_ID = @json($selectedClassId);
+        const SELECTED_STREAM_ID = @json($selectedStreamId);
 
         // Shared toast style — small, top-right, auto-dismissing —
         // reused by Add/Rename/Delete on this school's own subjects so
@@ -1590,7 +1592,7 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ combinations }),
+                body: JSON.stringify({ combinations, class_id: SELECTED_CLASS_ID, stream_id: SELECTED_STREAM_ID }),
             })
                 .then(r => r.json())
                 .then(res => {
