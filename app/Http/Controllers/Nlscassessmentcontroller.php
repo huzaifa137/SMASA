@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Helpers\PermissionHelper;
 use App\Models\Examination;
+use App\Models\ExaminationClass;
 use App\Models\NlscAssessment;
+use App\Models\NlscAssessmentMark;
+use App\Models\SchoolNlscCompetencyArea;
 use App\Models\SchoolNlscProjectArea;
 use App\Models\SchoolNlscProjectCompetencyArea;
 use App\Models\SchoolNlscTopic;
@@ -271,6 +274,297 @@ class NlscAssessmentController extends Controller
         $assessment->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * The dedicated marks entry screen for ONE specific NLSC assessment
+     * (one Topic+Competency Area / Project+Competency Area / Topic's
+     * Subject Achievement statements) — what "Go to Marks Entry" on the
+     * assessment hub (index() above) now links to, instead of the
+     * generic numeric marks-entry-subject screen, which has no concept
+     * of Maximum Marks -> scale-of-3 conversion and assumes one plain
+     * score per student per subject rather than per assessment.
+     *
+     * Blocked until max_marks is set (via updateMaxMarks() below) —
+     * there's nothing meaningful to convert a raw mark against yet.
+     */
+    public function marksEntry($examId, $classSubjectId, $assessmentId)
+    {
+        PermissionHelper::denyUnlessFeature('view_exams');
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        [$exam, $classSubject] = $this->examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId);
+
+        $exam->syncStatus();
+
+        if (!in_array($exam->status, ['marks_entry', 'active'])) {
+            return redirect()->back()->with('error', 'Marks entry is not open for this examination.');
+        }
+
+        $assessment = NlscAssessment::where('id', $assessmentId)
+            ->where('school_id', $schoolId)
+            ->where('examination_id', $examId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->where('subject_id', $classSubject->subject_id)
+            ->firstOrFail();
+
+        // Every other assessment for this same exam/class-subject, for
+        // the "Assessment" switcher — picking one just navigates
+        // straight to that assessment's own copy of this same screen.
+        $siblingAssessments = NlscAssessment::where('school_id', $schoolId)
+            ->where('examination_id', $examId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->where('subject_id', $classSubject->subject_id)
+            ->orderBy('id')
+            ->get();
+
+        $siblingAssessments->each(function ($a) {
+            $a->setAttribute('display_label', $this->assessmentDisplayInfo($a)['label']);
+        });
+
+        $display = $this->assessmentDisplayInfo($assessment);
+
+        $students = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classSubject->class_id)
+            ->where('stream', $classSubject->stream_id)
+            ->orderBy('firstname')
+            ->get();
+
+        $existingMarks = NlscAssessmentMark::where('nlsc_assessment_id', $assessment->id)
+            ->get()
+            ->keyBy('student_id');
+
+        $className = Helper::recordMdname($classSubject->class_id);
+        $subjectName = Helper::recordMdname($classSubject->subject_id);
+
+        return view('Examination.nlsc-assessment-marks-entry', compact(
+            'exam',
+            'classSubject',
+            'className',
+            'subjectName',
+            'assessment',
+            'siblingAssessments',
+            'display',
+            'students',
+            'existingMarks'
+        ));
+    }
+
+    /**
+     * Set (or change) the Maximum Marks a raw mark is entered out of for
+     * this assessment — the "Edit" button next to Maximum Marks on the
+     * marks entry screen. Any marks already entered are immediately
+     * recomputed against the new value (calculated_score = round((raw /
+     * max_marks) * 3, 1)) so what's on screen never silently drifts out
+     * of sync with a max_marks change made after some marks were
+     * already saved.
+     */
+    public function updateMaxMarks(Request $request, $assessmentId)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $request->validate([
+            'max_marks' => 'required|numeric|min:0.01',
+        ]);
+
+        $assessment = NlscAssessment::where('id', $assessmentId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $exam = Examination::find($assessment->examination_id);
+        if (!$exam || !in_array($exam->status, ['active', 'marks_entry'], true)) {
+            return response()->json(['success' => false, 'message' => 'This exam is no longer in a stage where Maximum Marks can be changed.'], 422);
+        }
+
+        $classSubject = DB::table('class_subjects')
+            ->where('id', $request->integer('class_subject_id') ?: 0)
+            ->where('school_id', $schoolId)
+            ->when($teacherId, function ($q) use ($teacherId) {
+                $q->where(function ($q2) use ($teacherId) {
+                    $q2->where('subject_teacher_1', $teacherId)->orWhere('subject_teacher_2', $teacherId);
+                });
+            })
+            ->first();
+
+        if (!$classSubject || $classSubject->class_id != $assessment->class_id || $classSubject->stream_id != $assessment->stream_id || $classSubject->subject_id != $assessment->subject_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $assessment->update(['max_marks' => $request->max_marks]);
+
+        NlscAssessmentMark::where('nlsc_assessment_id', $assessment->id)
+            ->whereNotNull('marks_obtained')
+            ->get()
+            ->each(function ($mark) use ($assessment) {
+                $mark->update([
+                    'calculated_score' => $this->calculatedScore($mark->marks_obtained, $assessment->max_marks),
+                ]);
+            });
+
+        return response()->json(['success' => true, 'max_marks' => $assessment->max_marks]);
+    }
+
+    /**
+     * AJAX: save every student's raw mark for this one assessment —
+     * this screen's equivalent of ExaminationController::saveMarks(),
+     * just against nlsc_assessment_marks instead of examination_marks
+     * (see that table's own docblock for why they're separate).
+     */
+    public function saveAssessmentMarks(Request $request, $assessmentId)
+    {
+        if (!PermissionHelper::canFeature('edit_exam')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = Session('LoggedSchool');
+        $teacherId = Session('LoggedTeacher');
+
+        $request->validate([
+            'marks' => 'required|array',
+            'marks.*.student_id' => 'required|integer',
+            'marks.*.marks' => 'nullable|numeric',
+        ]);
+
+        $assessment = NlscAssessment::where('id', $assessmentId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        $exam = Examination::find($assessment->examination_id);
+        if (!$exam || !in_array($exam->status, ['active', 'marks_entry'], true)) {
+            return response()->json(['success' => false, 'message' => 'Marks entry is closed.'], 403);
+        }
+
+        if (!$assessment->max_marks) {
+            return response()->json(['success' => false, 'message' => 'Set Maximum Marks before entering marks.'], 422);
+        }
+
+        $classSubject = DB::table('class_subjects')
+            ->where('class_id', $assessment->class_id)
+            ->where('stream_id', $assessment->stream_id)
+            ->where('subject_id', $assessment->subject_id)
+            ->where('school_id', $schoolId)
+            ->when($teacherId, function ($q) use ($teacherId) {
+                $q->where(function ($q2) use ($teacherId) {
+                    $q2->where('subject_teacher_1', $teacherId)->orWhere('subject_teacher_2', $teacherId);
+                });
+            })
+            ->first();
+
+        if (!$classSubject) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->marks as $entry) {
+                $marksObtained = ($entry['marks'] !== '' && $entry['marks'] !== null) ? (float) $entry['marks'] : null;
+
+                NlscAssessmentMark::updateOrCreate(
+                    ['nlsc_assessment_id' => $assessment->id, 'student_id' => $entry['student_id']],
+                    [
+                        'school_id' => $schoolId,
+                        'marks_obtained' => $marksObtained,
+                        'calculated_score' => $marksObtained !== null
+                            ? $this->calculatedScore($marksObtained, $assessment->max_marks)
+                            : null,
+                        'entered_by' => $teacherId ?? Session('LoggedAdmin'),
+                        'entered_at' => now(),
+                    ]
+                );
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to save marks: ' . $e->getMessage()], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Marks saved successfully.']);
+    }
+
+    /**
+     * A raw mark, out of this assessment's own max_marks, converted onto
+     * NCDC's fixed 0-3 competency scale. 3 is deliberately a literal
+     * here, not configurable — it's the NLSC scale itself, not a
+     * per-school setting.
+     */
+    private function calculatedScore(float $marksObtained, float $maxMarks): float
+    {
+        if ($maxMarks <= 0) {
+            return 0.0;
+        }
+
+        return round(($marksObtained / $maxMarks) * 3, 1);
+    }
+
+    /**
+     * Everything the marks entry screen (and the Assessment switcher on
+     * it) needs to describe what one assessment is actually testing —
+     * centralised here since index() and marksEntry() both need it, and
+     * it already varies by assessment_type in three different ways.
+     */
+    private function assessmentDisplayInfo(NlscAssessment $assessment): array
+    {
+        if ($assessment->assessment_type === 'projects') {
+            $project = $assessment->project;
+            $competencyArea = $assessment->nlsc_competency_area_id
+                ? SchoolNlscProjectCompetencyArea::find($assessment->nlsc_competency_area_id)
+                : null;
+
+            return [
+                'topic_label' => 'Project',
+                'topic_name' => optional($project)->project_name ?? '—',
+                'project_description' => optional($project)->description,
+                'competency_label' => 'Competency area',
+                'competency_text' => optional($competencyArea)->description,
+                'achievements' => [],
+                'label' => trim((optional($project)->project_name ?? 'Project') . ' — ' . (optional($competencyArea)->description ?? '')),
+            ];
+        }
+
+        if ($assessment->assessment_type === 'activities_of_integration') {
+            $topic = $assessment->topic;
+            $competencyArea = $assessment->nlsc_competency_area_id
+                ? SchoolNlscCompetencyArea::find($assessment->nlsc_competency_area_id)
+                : null;
+
+            return [
+                'topic_label' => 'Topic',
+                'topic_name' => optional($topic)->topic_name ?? '—',
+                'project_description' => null,
+                'competency_label' => 'Competency area',
+                'competency_text' => optional($competencyArea)->description,
+                'achievements' => [],
+                'label' => trim((optional($topic)->topic_name ?? 'Topic') . ' — ' . (optional($competencyArea)->description ?? '')),
+            ];
+        }
+
+        // subject_achievement — no single competency area is chosen at
+        // Create Assessment time (see store()'s docblock branch above),
+        // just the Topic, so every one of its achievement statements is
+        // shown rather than claiming a single one was picked.
+        $topic = $assessment->topic;
+        $achievements = $topic ? $topic->subjectAchievements()->pluck('achievement_text')->all() : [];
+
+        return [
+            'topic_label' => 'Topic',
+            'topic_name' => optional($topic)->topic_name ?? '—',
+            'project_description' => null,
+            'competency_label' => 'Achievement statement(s)',
+            'competency_text' => null,
+            'achievements' => $achievements,
+            'label' => optional($topic)->topic_name ?? 'Subject Achievement',
+        ];
     }
 
     /**

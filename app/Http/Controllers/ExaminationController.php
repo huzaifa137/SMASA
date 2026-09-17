@@ -310,16 +310,32 @@ class ExaminationController extends Controller
         $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
 
         if (in_array($classSubject->class_id, $secondaryOLevelClassIds, true)) {
-            $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)
+            $nlscAssessments = \App\Models\NlscAssessment::where('school_id', $schoolId)
                 ->where('examination_id', $examId)
                 ->where('class_id', $classSubject->class_id)
                 ->where('stream_id', $classSubject->stream_id)
                 ->where('subject_id', $classSubject->subject_id)
-                ->exists();
+                ->orderBy('id')
+                ->get();
 
-            if (!$hasAssessment) {
+            if ($nlscAssessments->isEmpty()) {
                 return redirect()->route('nlsc-assessments', ['examId' => $examId, 'classSubjectId' => $classSubjectId]);
             }
+
+            // One assessment: skip the hub and go straight to marks
+            // entry for it. More than one (e.g. two Topics both being
+            // assessed this exam): send them to the hub instead, where
+            // each has its own "Go to Marks Entry" — there's no single
+            // correct one to land on directly.
+            if ($nlscAssessments->count() === 1) {
+                return redirect()->route('nlsc-assessments.marks-entry', [
+                    'examId' => $examId,
+                    'classSubjectId' => $classSubjectId,
+                    'assessmentId' => $nlscAssessments->first()->id,
+                ]);
+            }
+
+            return redirect()->route('nlsc-assessments', ['examId' => $examId, 'classSubjectId' => $classSubjectId]);
         }
 
         // Fetch students in this class-stream

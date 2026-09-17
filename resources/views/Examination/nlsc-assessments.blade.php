@@ -263,7 +263,7 @@ use App\Http\Controllers\Helper;
                                         <button type="button" class="nt-action-btn btn-edit-sm edit-assessment-btn"><i class="fas fa-pen"></i> Edit</button>
                                         <button type="button" class="nt-action-btn btn-del-sm delete-assessment-btn"><i class="fas fa-trash"></i> Delete</button>
                                         @if(in_array($exam->status, ['active', 'marks_entry']))
-                                            <a href="{{ route('examination.marks.subject', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}" class="btn-nt-primary" style="text-decoration:none; display:inline-block;">
+                                            <a href="{{ route('nlsc-assessments.marks-entry', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id, 'assessmentId' => $a->id]) }}" class="btn-nt-primary" style="text-decoration:none; display:inline-block;">
                                                 <i class="fas fa-pen me-1"></i> Go to Marks Entry
                                             </a>
                                         @endif

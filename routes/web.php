@@ -806,6 +806,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{examId}/marks/{classSubjectId}/nlsc-assessments', 'store')->name('nlsc-assessments.store');
             Route::put('/{examId}/marks/{classSubjectId}/nlsc-assessments/{id}', 'update')->name('nlsc-assessments.update');
             Route::delete('/{examId}/marks/{classSubjectId}/nlsc-assessments/{id}', 'destroy')->name('nlsc-assessments.destroy');
+            Route::get('/{examId}/marks/{classSubjectId}/nlsc-assessments/{assessmentId}/entry', 'marksEntry')->name('nlsc-assessments.marks-entry');
+            Route::put('/nlsc-assessments/{assessmentId}/max-marks', 'updateMaxMarks')->name('nlsc-assessments.max-marks');
+            Route::post('/nlsc-assessments/{assessmentId}/marks/save', 'saveAssessmentMarks')->name('nlsc-assessments.marks.save');
             Route::get('/marks/{classSubjectId}/nlsc-assessments/subject-matter-options', 'subjectMatterOptions')->name('nlsc-assessments.subject-matter-options');
             Route::get('/marks/nlsc-assessments/competency-area-options', 'competencyAreaOptions')->name('nlsc-assessments.competency-area-options');
         });

@@ -21,12 +21,19 @@ class NlscAssessment extends Model
         'academic_year',
         'term',
         'include_in_report',
+        'max_marks',
         'created_by',
     ];
 
     protected $casts = [
         'include_in_report' => 'boolean',
+        'max_marks' => 'float',
     ];
+
+    public function marks()
+    {
+        return $this->hasMany(NlscAssessmentMark::class, 'nlsc_assessment_id');
+    }
 
     // Points at the SCHOOL's own catalogue copy (SchoolNlscTopic /
     // SchoolNlscProject), not the platform-wide admin catalogue —
