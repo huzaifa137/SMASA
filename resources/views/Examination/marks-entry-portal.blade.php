@@ -1188,13 +1188,12 @@ use App\Http\Controllers\Helper;
 
         .pending-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.25rem;
             padding: 1.25rem;
             background: #f8f7ff;
             border-radius: 0 0 1rem 1rem;
         }
-
         .pending-exam-card {
             background: #ffffff;
             border-radius: 1rem;
@@ -1558,11 +1557,12 @@ use App\Http\Controllers\Helper;
             color: #28a745;
         }
 
-        @media (max-width: 768px) {
-            .pending-grid {
-                grid-template-columns: 1fr;
-                padding: 0.75rem;
-            }
+/* AFTER */
+@media (max-width: 768px) {
+    .pending-grid {
+        grid-template-columns: 1fr;   /* stays single column on phones */
+        padding: 0.75rem;
+    }
 
             .pending-exam-card {
                 margin-bottom: 0;
