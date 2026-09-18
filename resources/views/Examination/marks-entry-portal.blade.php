@@ -1289,9 +1289,88 @@ use App\Http\Controllers\Helper;
         }
 
         .subject-list {
-            max-height: 200px;
-            overflow-y: auto;
             margin-top: 0.75rem;
+        }
+
+        /* Groups subjects under the class-stream they belong to, so
+        "English" for Senior 1 and "English" for Senior 3 read as two
+        clearly separate things instead of two visually identical rows
+        that only differ in small meta text. Pending and completed
+        subjects for the SAME class live in the SAME group (pending
+        first, then a small divider before completed ones) rather than
+        two separate top-level sections — otherwise a class with both
+        would confusingly appear twice. */
+        .class-group {
+            margin-bottom: 0.65rem;
+            border: 1px solid #ede9ff;
+            border-radius: 0.6rem;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .class-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .class-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.6rem;
+            background: linear-gradient(90deg, #f3f2ff, #fafbff);
+            border-bottom: 1px solid #ede9ff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #2C29CA;
+        }
+
+        .class-group-header i {
+            font-size: 0.68rem;
+            color: #5351e4;
+        }
+
+        .class-group-stream {
+            font-weight: 600;
+            color: #6c5ce7;
+            background: #ede9ff;
+            padding: 0.05rem 0.45rem;
+            border-radius: 99px;
+            font-size: 0.63rem;
+        }
+
+        .class-group-count {
+            margin-left: auto;
+            font-size: 0.62rem;
+            font-weight: 600;
+            color: #8a87b8;
+            white-space: nowrap;
+        }
+
+        .class-group .subject-item {
+            margin: 0.5rem;
+        }
+
+        /* Separates a class's pending subjects from its completed ones
+        without repeating the class header — the whole point is that
+        "Senior 1" appears once, not once per status. */
+        .class-group-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.66rem;
+            font-weight: 600;
+            color: #28a745;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 0.4rem 0.6rem 0;
+            margin-top: 0.15rem;
+            border-top: 1px dashed #ede9ff;
+        }
+
+        .class-group-divider .fw-normal {
+            text-transform: none;
+            letter-spacing: normal;
+            font-size: 0.66rem;
         }
 
         .subject-list::-webkit-scrollbar {
@@ -1537,6 +1616,13 @@ use App\Http\Controllers\Helper;
                                     $pendingSubjects = collect($progress->subject_progress)->where('progress', '<', 100)->values();
                                     $completedSubjects = collect($progress->subject_progress)->where('progress', 100)->values();
 
+                                    // One group per class-stream, containing BOTH its pending
+                                    // and completed subjects — grouping pending and completed
+                                    // separately at the top level meant a class with both showed
+                                    // up twice (once under each), which is what this replaces.
+                                    $subjectsByClass = collect($progress->subject_progress)
+                                        ->groupBy(fn($s) => $s->class_name . '|' . $s->stream_name);
+
                                     $cardFilterState = $progress->total_subjects > 0 && $pendingSubjects->isEmpty() ? 'done' : 'pending';
                                 @endphp
                                 <div class="pending-exam-card" data-exam-id="{{ $exam->id }}"
@@ -1587,80 +1673,77 @@ use App\Http\Controllers\Helper;
                                                 No subjects assigned to you for this examination.
                                             </div>
                                         @else
-                                            @if ($pendingSubjects->isNotEmpty())
+                                            @if ($subjectsByClass->isNotEmpty())
                                                 <div class="subject-list">
-                                                    <div class="subject-list-title">
-                                                        <i class="fas fa-book-open me-1"></i>
-                                                        Subjects to complete ({{ $pendingSubjects->count() }})
-                                                    </div>
-
-                                                    @foreach ($pendingSubjects as $subject)
-                                                        <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
-                                                            class="subject-item pending-subject d-block text-decoration-none"
-                                                            @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
-                                                            <div class="d-flex justify-content-between align-items-start">
-                                                                <div class="subject-name">{{ $subject->subject_name }}</div>
-                                                                <span class="subject-percent pending-percent">{{ $subject->progress }}%</span>
+                                                    @foreach ($subjectsByClass as $classGroupKey => $classSubjects)
+                                                        @php
+                                                            [$groupClassName, $groupStreamName] = array_pad(explode('|', $classGroupKey, 2), 2, null);
+                                                            $classPending = $classSubjects->where('progress', '<', 100)->values();
+                                                            $classCompleted = $classSubjects->where('progress', 100)->values();
+                                                        @endphp
+                                                        <div class="class-group">
+                                                            <div class="class-group-header">
+                                                                <i class="fas fa-chalkboard"></i>
+                                                                <span>{{ $groupClassName }}</span>
+                                                                @if ($groupStreamName)
+                                                                    <span class="class-group-stream">{{ $groupStreamName }}</span>
+                                                                @endif
+                                                                <span class="class-group-count">{{ $classSubjects->count() }} subject{{ $classSubjects->count() > 1 ? 's' : '' }}</span>
                                                             </div>
-                                                            <div class="subject-meta">
-                                                                <span>
-                                                                    <i class="fas fa-users me-1"></i>
-                                                                    {{ $subject->class_name }}
-                                                                    @if ($subject->stream_name)
-                                                                        • {{ $subject->stream_name }}
-                                                                    @endif
-                                                                </span>
-                                                                <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                    <div class="subject-progress-bar flex-grow-1">
-                                                                        <div class="subject-progress-fill"
-                                                                            style="width: {{ $subject->progress }}%"></div>
+
+                                                            @foreach ($classPending as $subject)
+                                                                <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
+                                                                    class="subject-item pending-subject d-block text-decoration-none"
+                                                                    @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
+                                                                    <div class="d-flex justify-content-between align-items-start">
+                                                                        <div class="subject-name">{{ $subject->subject_name }}</div>
+                                                                        <span class="subject-percent pending-percent">{{ $subject->progress }}%</span>
                                                                     </div>
-                                                                    <span class="subject-stats">
-                                                                        {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-
-                                            @if ($completedSubjects->isNotEmpty())
-                                                <div class="subject-list mt-2">
-                                                    <div class="subject-list-title subject-list-title-done">
-                                                        <i class="fas fa-check-circle me-1"></i>
-                                                        Completed ({{ $completedSubjects->count() }})
-                                                        @if (!$progress->is_deadline_passed)
-                                                            <span class="fw-normal text-muted">— click to review</span>
-                                                        @endif
-                                                    </div>
-
-                                                    @foreach ($completedSubjects as $subject)
-                                                        <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
-                                                            class="subject-item completed-subject d-block text-decoration-none"
-                                                            @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
-                                                            <div class="d-flex justify-content-between align-items-start">
-                                                                <div class="subject-name">{{ $subject->subject_name }}</div>
-                                                                <span class="subject-percent completed-percent">100%</span>
-                                                            </div>
-                                                            <div class="subject-meta">
-                                                                <span>
-                                                                    <i class="fas fa-users me-1"></i>
-                                                                    {{ $subject->class_name }}
-                                                                    @if ($subject->stream_name)
-                                                                        • {{ $subject->stream_name }}
-                                                                    @endif
-                                                                </span>
-                                                                <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                    <div class="subject-progress-bar flex-grow-1">
-                                                                        <div class="subject-progress-fill" style="width: 100%; background: #28a745;"></div>
+                                                                    <div class="subject-meta">
+                                                                        <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                                                            <div class="subject-progress-bar flex-grow-1">
+                                                                                <div class="subject-progress-fill"
+                                                                                    style="width: {{ $subject->progress }}%"></div>
+                                                                            </div>
+                                                                            <span class="subject-stats">
+                                                                                {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
-                                                                    <span class="subject-stats" style="color: #28a745;">
-                                                                        {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                    </span>
+                                                                </a>
+                                                            @endforeach
+
+                                                            @if ($classCompleted->isNotEmpty())
+                                                                <div class="class-group-divider">
+                                                                    <i class="fas fa-check-circle"></i>
+                                                                    Completed ({{ $classCompleted->count() }})
+                                                                    @if (!$progress->is_deadline_passed)
+                                                                        <span class="fw-normal text-muted">— click to review</span>
+                                                                    @endif
                                                                 </div>
-                                                            </div>
-                                                        </a>
+
+                                                                @foreach ($classCompleted as $subject)
+                                                                    <a href="{{ $progress->is_deadline_passed ? '#' : route('examination.marks.subject', [$exam->id, $subject->class_subject_id]) }}"
+                                                                        class="subject-item completed-subject d-block text-decoration-none"
+                                                                        @if ($progress->is_deadline_passed) onclick="return false;" style="cursor: not-allowed; opacity: 0.75;" @endif>
+                                                                        <div class="d-flex justify-content-between align-items-start">
+                                                                            <div class="subject-name">{{ $subject->subject_name }}</div>
+                                                                            <span class="subject-percent completed-percent">100%</span>
+                                                                        </div>
+                                                                        <div class="subject-meta">
+                                                                            <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                                                                <div class="subject-progress-bar flex-grow-1">
+                                                                                    <div class="subject-progress-fill" style="width: 100%; background: #28a745;"></div>
+                                                                                </div>
+                                                                                <span class="subject-stats" style="color: #28a745;">
+                                                                                    {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </a>
+                                                                @endforeach
+                                                            @endif
+                                                        </div>
                                                     @endforeach
                                                 </div>
                                             @endif
