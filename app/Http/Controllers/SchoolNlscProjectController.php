@@ -98,7 +98,7 @@ class SchoolNlscProjectController extends Controller
      * which also removes that now-empty area, made the gap obvious since
      * the list then stayed empty for good.)
      */
-    private function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
+    public function cloneFromAdminIfNeeded($schoolId, $seniorClassId, $subjectId): void
     {
         if (!$seniorClassId || !$subjectId) {
             return;

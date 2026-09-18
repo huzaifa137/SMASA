@@ -1221,6 +1221,16 @@ use App\Http\Controllers\Helper;
             font-size: 1rem;
             color: #1a1a2e;
             margin-bottom: 0.5rem;
+            /* Shows the full name whenever it fits — most cards, at the
+               grid's 480px+ minimum width, fit even long names on one or
+               two lines. Only clamps with an ellipsis past 2 lines, as a
+               safety net for the rare very long name on a narrow card,
+               rather than a fixed character count that truncated names
+               that would've fit just fine. */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .pending-exam-title i {
@@ -1530,7 +1540,10 @@ use App\Http\Controllers\Helper;
             color: #2C29CA;
         }
 
-        .pending-exam-card.is-hidden {
+        .pending-exam-card.is-hidden,
+        .class-group.is-hidden,
+        .subject-item.is-hidden,
+        .class-group-divider.is-hidden {
             display: none;
         }
 
@@ -1619,26 +1632,20 @@ use App\Http\Controllers\Helper;
                                     $urgencyClass = $daysLeft <= 0 ? 'urgent' : ($daysLeft <= 2 ? 'warning' : 'normal');
                                     $urgencyIcon = $daysLeft <= 0 ? 'fa-exclamation-triangle' : 'fa-clock';
 
-                                    $pendingSubjects = collect($progress->subject_progress)->where('progress', '<', 100)->values();
-                                    $completedSubjects = collect($progress->subject_progress)->where('progress', 100)->values();
-
                                     // One group per class-stream, containing BOTH its pending
                                     // and completed subjects — grouping pending and completed
                                     // separately at the top level meant a class with both showed
                                     // up twice (once under each), which is what this replaces.
                                     $subjectsByClass = collect($progress->subject_progress)
                                         ->groupBy(fn($s) => $s->class_name . '|' . $s->stream_name);
-
-                                    $cardFilterState = $progress->total_subjects > 0 && $pendingSubjects->isEmpty() ? 'done' : 'pending';
                                 @endphp
-                                <div class="pending-exam-card" data-exam-id="{{ $exam->id }}"
-                                    data-filter-state="{{ $cardFilterState }}">
+                                <div class="pending-exam-card" data-exam-id="{{ $exam->id }}">
                                     <div class="pending-exam-header">
                                         <div class="d-flex justify-content-between align-items-start gap-2">
                                             <div>
-                                                <div class="pending-exam-title">
+                                                <div class="pending-exam-title" title="{{ $exam->exam_name }}">
                                                     <i class="fas fa-file-alt"></i>
-                                                    {{ Str::limit($exam->exam_name, 40) }}
+                                                    {{ $exam->exam_name }}
                                                 </div>
                                                 <div class="pending-exam-code mt-1">
                                                     <i class="fas fa-code me-1"></i> {{ $exam->exam_code }}
@@ -2816,22 +2823,53 @@ use App\Http\Controllers\Helper;
         }
 
         // ── Pending Marks Entry: All / Pending / Completed filter ──────────────
+        // Filters at the individual subject level — not just whole-card
+        // visibility — so selecting "Pending" shows every pending subject
+        // across every exam (hiding just the completed ones within an
+        // otherwise-visible card), and "Completed" does the reverse. A
+        // class-group or a whole exam card only disappears once nothing
+        // it contains matches the active filter.
         document.addEventListener('DOMContentLoaded', function () {
             const filterButtons = document.querySelectorAll('.pending-filter-btn');
             const examCards = document.querySelectorAll('.pending-exam-card');
+
+            function applyFilter(filter) {
+                examCards.forEach(function (card) {
+                    let cardHasVisibleSubject = false;
+
+                    card.querySelectorAll('.class-group').forEach(function (group) {
+                        let groupHasVisibleSubject = false;
+
+                        group.querySelectorAll('.subject-item').forEach(function (item) {
+                            const isPending = item.classList.contains('pending-subject');
+                            const show = filter === 'all' || (filter === 'pending' && isPending) || (filter === 'done' && !isPending);
+                            item.classList.toggle('is-hidden', !show);
+                            if (show) groupHasVisibleSubject = true;
+                        });
+
+                        // The "Completed (N)" divider only makes sense
+                        // when both sections are showing side by side.
+                        const divider = group.querySelector('.class-group-divider');
+                        if (divider) divider.classList.toggle('is-hidden', filter !== 'all');
+
+                        group.classList.toggle('is-hidden', !groupHasVisibleSubject);
+                        if (groupHasVisibleSubject) cardHasVisibleSubject = true;
+                    });
+
+                    // A card with no subjects at all (the "no subjects
+                    // assigned" notice) has no .class-group to match
+                    // against above, so it should stay visible under
+                    // every filter rather than being hidden as "empty".
+                    const hasAnyGroups = card.querySelector('.class-group') !== null;
+                    card.classList.toggle('is-hidden', hasAnyGroups && !cardHasVisibleSubject);
+                });
+            }
 
             filterButtons.forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     filterButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-
-                    const filter = btn.getAttribute('data-filter');
-
-                    examCards.forEach(function (card) {
-                        const state = card.getAttribute('data-filter-state');
-                        const show = filter === 'all' || filter === state;
-                        card.classList.toggle('is-hidden', !show);
-                    });
+                    applyFilter(btn.getAttribute('data-filter'));
                 });
             });
         });

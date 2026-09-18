@@ -633,6 +633,13 @@ class NlscAssessmentController extends Controller
         }
 
         if ($request->assessment_type === 'projects') {
+            // Same sync SchoolNlscProjectController::index() already runs
+            // on every visit to the Projects catalogue page — without
+            // this, a Senior/Subject this school has never opened that
+            // page for shows nothing here either, even though the
+            // admin's master list has plenty synced in for other schools.
+            app(SchoolNlscProjectController::class)->cloneFromAdminIfNeeded($schoolId, $seniorId, $nlscSubjectId);
+
             $areas = SchoolNlscProjectArea::with('projects')
                 ->where('school_id', $schoolId)
                 ->where('senior_class_id', $seniorId)
@@ -645,6 +652,14 @@ class NlscAssessmentController extends Controller
                 'label' => $area->area_name . ' — ' . $p->project_name,
             ]));
         } else {
+            // Same sync SchoolNlscTopicController::index() already runs on
+            // every visit to the Topics catalogue page (and, in turn,
+            // Subject Achievement's own catalogue page reuses this exact
+            // method too) — see the "projects" branch's comment above for
+            // why this can't just be left to whenever a school happens to
+            // have visited Topics before.
+            app(SchoolNlscTopicController::class)->cloneFromAdminIfNeeded($schoolId, $seniorId, $nlscSubjectId);
+
             // Both activities_of_integration and subject_achievement pick
             // from the same Topics list.
             $options = SchoolNlscTopic::where('school_id', $schoolId)
