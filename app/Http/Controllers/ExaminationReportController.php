@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
+use App\Models\NlscAssessment;
+use App\Models\NlscAssessmentMark;
 use App\Helpers\PermissionHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -185,10 +187,16 @@ class ExaminationReportController extends Controller
 
         $gradingScale = $exam->resolvedGradingBands();
 
+        // Secondary O-Level (NLSC, Senior 1-4) subjects never write to
+        // examination_marks -- see nlscMarksForScope()'s own docblock --
+        // so without merging those in here, every Senior 1-4 class shows
+        // this matrix as entirely empty no matter how many marks have
+        // actually been entered for it.
         $marksByStudent = ExaminationMark::where('examination_id', $exam->id)
             ->where('school_id', $schoolId)
             ->whereIn('student_id', $students->pluck('id'))
             ->get()
+            ->concat($this->nlscMarksForScope($schoolId, $exam->id, $classId, $streamIdsToUse))
             ->groupBy('student_id');
 
         $subjectStats = []; // report_key => ['sum'=>..,'count'=>..,'high'=>..,'low'=>..]
@@ -210,7 +218,7 @@ class ExaminationReportController extends Controller
                 $mark = $studentMarks->get($subj->report_key);
 
                 if ($mark && !is_null($mark->marks_obtained)) {
-                    $pct = $mark->total_marks > 0 ? round(($mark->marks_obtained / $mark->total_marks) * 100, 1) : 0;
+                    $pct = $this->resolvePercentage($mark);
                     $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
 
                     $cells[$subj->report_key] = (object) [
@@ -440,8 +448,20 @@ class ExaminationReportController extends Controller
             }, function ($q) use ($subjectRow) {
                 $q->where('subject_id', $subjectRow->subject_id);
             })
-            ->get()
-            ->keyBy('student_id');
+            ->get();
+
+        // Secondary O-Level (NLSC) subjects keep their marks in
+        // nlsc_assessment_marks, not examination_marks -- a custom
+        // subject is never NLSC (nlsc_assessments has no
+        // custom_subject_id column), so this only ever applies to a
+        // master subject flagged subject_type === 'secondary_olevel'.
+        if (!$isCustom && ($subjectRow->subject_type ?? null) === 'secondary_olevel') {
+            $marks = $marks->concat(
+                $this->nlscMarksForScope($schoolId, $exam->id, $classId, $streamIdsToUse, $subjectRow->subject_id)
+            );
+        }
+
+        $marks = $marks->keyBy('student_id');
 
         $gradingScale = $exam->resolvedGradingBands();
         $teacherName = Helper::teacherFullName($subjectRow->subject_teacher_1 ?? null);
@@ -461,7 +481,7 @@ class ExaminationReportController extends Controller
                 ];
             }
 
-            $pct = $mark->total_marks > 0 ? round(($mark->marks_obtained / $mark->total_marks) * 100, 1) : 0;
+            $pct = $this->resolvePercentage($mark);
             $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
 
             return (object) [
@@ -578,10 +598,30 @@ class ExaminationReportController extends Controller
 
         $marks = $marksQuery->get();
 
+        // Secondary O-Level (NLSC, Senior 1-4) marks never live in
+        // examination_marks (see nlscMarksForScope()'s own docblock) --
+        // without this, every Senior 1-4 class in scope contributes
+        // nothing to Grade Analysis no matter how many NLSC assessment
+        // marks have actually been entered. A custom-subject filter can
+        // never match an NLSC row (nlsc_assessments has no
+        // custom_subject_id column), so this is skipped entirely then.
+        if (!$request->filled('custom_subject_id')) {
+            $nlscSubjectId = $request->filled('subject_id') ? (int) $request->input('subject_id') : null;
+
+            foreach ($scopedClasses->unique('class_id') as $ec) {
+                $classStreamIds = $scopedClasses->where('class_id', $ec->class_id)->pluck('stream_id')->all();
+
+                $marks = $marks->concat(
+                    $this->nlscMarksForScope($schoolId, $examId, $ec->class_id, $classStreamIds, $nlscSubjectId)
+                        ->filter(fn($m) => $students->has($m->student_id))
+                );
+            }
+        }
+
         $gradingScale = $exam->resolvedGradingBands();
 
         $withPct = $marks->map(function ($m) use ($gradingScale) {
-            $pct = $m->total_marks > 0 ? round(($m->marks_obtained / $m->total_marks) * 100, 1) : 0;
+            $pct = $this->resolvePercentage($m);
             $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
             $m->percentage = $pct;
             $m->resolved_grade = $gradeRow?->grade ?? '—';
@@ -721,6 +761,118 @@ class ExaminationReportController extends Controller
     }
 
     // ─── Shared helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Effective marks for Secondary O-Level (NLSC, Senior 1-4) class-subjects,
+     * shaped like ExaminationMark rows (student_id / subject_id /
+     * custom_subject_id / marks_obtained / total_marks) so every report
+     * builder above can concat() them straight onto its ExaminationMark
+     * results and treat the two uniformly from that point on.
+     *
+     * NLSC marks never live in examination_marks at all (see
+     * nlsc_assessment_marks' own migration docblock for why) -- a
+     * class_subjects row with subject_type === 'secondary_olevel' can have
+     * several NlscAssessment rows at once (Activities of Integration /
+     * Projects / Subject Achievement), each already normalised onto NCDC's
+     * fixed 0-3 competency scale via calculated_score = round((marks_obtained
+     * / max_marks) * 3, 1) (see NlscAssessmentController::calculatedScore()).
+     * A student's overall mark for the subject is the average
+     * calculated_score across every assessment they have a mark on --
+     * excluding any assessment a teacher explicitly unflagged with
+     * include_in_report -- expressed back out of 100 (avg / 3 * 100) so
+     * every downstream percentage / grading-band / ranking calculation in
+     * this controller keeps working completely unmodified against it.
+     *
+     * marks_obtained/total_marks on the returned row are the summed RAW
+     * marks and max marks across those same assessments -- kept alongside
+     * the derived percentage purely for display (Class Summary and Subject
+     * Report both show "raw/total" next to the calculated percentage, the
+     * same as they already do for an ordinary subject), never used to
+     * re-derive the percentage -- see resolvePercentage().
+     */
+    private function nlscMarksForScope($schoolId, $examId, $classId, array $streamIds, ?int $subjectId = null)
+    {
+        $assessments = NlscAssessment::where('school_id', $schoolId)
+            ->where('examination_id', $examId)
+            ->where('class_id', $classId)
+            ->whereIn('stream_id', $streamIds)
+            ->where('include_in_report', true)
+            ->when($subjectId, fn($q) => $q->where('subject_id', $subjectId))
+            ->get();
+
+        if ($assessments->isEmpty()) {
+            return collect();
+        }
+
+        $marksByAssessment = NlscAssessmentMark::whereIn('nlsc_assessment_id', $assessments->pluck('id'))
+            ->whereNotNull('marks_obtained')
+            ->get()
+            ->groupBy('nlsc_assessment_id');
+
+        // subject_id|student_id => running totals, one row per student per
+        // subject across however many assessments that subject currently has.
+        $bySubjectStudent = [];
+
+        foreach ($assessments as $assessment) {
+            foreach ($marksByAssessment->get($assessment->id, collect()) as $mark) {
+                $key = $assessment->subject_id . '|' . $mark->student_id;
+
+                if (!isset($bySubjectStudent[$key])) {
+                    $bySubjectStudent[$key] = [
+                        'student_id' => $mark->student_id,
+                        'subject_id' => $assessment->subject_id,
+                        'class_id' => $assessment->class_id,
+                        'stream_id' => $assessment->stream_id,
+                        'raw_sum' => 0.0,
+                        'raw_max' => 0.0,
+                        'score_sum' => 0.0,
+                        'score_count' => 0,
+                    ];
+                }
+
+                $bySubjectStudent[$key]['raw_sum'] += (float) $mark->marks_obtained;
+                $bySubjectStudent[$key]['raw_max'] += (float) $assessment->max_marks;
+                $bySubjectStudent[$key]['score_sum'] += (float) ($mark->calculated_score ?? 0);
+                $bySubjectStudent[$key]['score_count']++;
+            }
+        }
+
+        return collect($bySubjectStudent)->map(function ($row) {
+            $avgScore = $row['score_count'] > 0 ? $row['score_sum'] / $row['score_count'] : 0.0;
+
+            return (object) [
+                'student_id' => $row['student_id'],
+                'subject_id' => $row['subject_id'],
+                'custom_subject_id' => null,
+                'class_id' => $row['class_id'],
+                'stream_id' => $row['stream_id'],
+                'marks_obtained' => round($row['raw_sum'], 1),
+                'total_marks' => round($row['raw_max'], 1),
+                'calculated_score' => round($avgScore, 1),
+                'percentage' => round(($avgScore / 3) * 100, 1),
+                'teacher_comment' => null,
+            ];
+        })->values();
+    }
+
+    /**
+     * Percentage for one mark row, whether it's an ordinary ExaminationMark
+     * (marks_obtained / total_marks) or an NLSC-derived pseudo-row from
+     * nlscMarksForScope() above, which already carries a pre-computed
+     * percentage -- that one is an average of the 0-3 calculated_score
+     * across possibly several assessments with different max_marks, which
+     * is NOT the same number as summing its raw marks_obtained/total_marks
+     * and dividing (see that method's own docblock), so it must never be
+     * recomputed from those raw fields here.
+     */
+    private function resolvePercentage($mark): float
+    {
+        if (isset($mark->percentage)) {
+            return $mark->percentage;
+        }
+
+        return $mark->total_marks > 0 ? round(($mark->marks_obtained / $mark->total_marks) * 100, 1) : 0;
+    }
 
     /**
      * Identity key for a class_subjects row or an ExaminationMark row: two
