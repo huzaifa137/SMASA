@@ -118,57 +118,57 @@ use App\Helpers\PermissionHelper;
         }
 
         /* Add these styles to your existing CSS section */
-.rpt-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    border: 2px solid transparent;
-}
+        .rpt-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border: 2px solid transparent;
+        }
 
-.rpt-btn-primary {
-    background: linear-gradient(135deg, #2C29CA, #4f46e5);
-    color: #fff;
-    border-color: #2C29CA;
-}
+        .rpt-btn-primary {
+            background: linear-gradient(135deg, #2C29CA, #4f46e5);
+            color: #fff;
+            border-color: #2C29CA;
+        }
 
-.rpt-btn-primary:hover {
-    background: linear-gradient(135deg, #1f1d9e, #4338ca);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 41, 202, 0.3);
-}
+        .rpt-btn-primary:hover {
+            background: linear-gradient(135deg, #1f1d9e, #4338ca);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 41, 202, 0.3);
+        }
 
-.rpt-btn-outline {
-    background: transparent;
-    color: #2C29CA;
-    border-color: #2C29CA;
-}
+        .rpt-btn-outline {
+            background: transparent;
+            color: #2C29CA;
+            border-color: #2C29CA;
+        }
 
-.rpt-btn-outline:hover {
-    background: #2C29CA;
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 41, 202, 0.2);
-}
+        .rpt-btn-outline:hover {
+            background: #2C29CA;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 41, 202, 0.2);
+        }
 
-/* Alternative - if you want a lighter outline variant */
-.rpt-btn-outline-light {
-    background: transparent;
-    color: #6b7280;
-    border-color: #d1d5db;
-}
+        /* Alternative - if you want a lighter outline variant */
+        .rpt-btn-outline-light {
+            background: transparent;
+            color: #6b7280;
+            border-color: #d1d5db;
+        }
 
-.rpt-btn-outline-light:hover {
-    background: #6b7280;
-    color: #fff;
-    border-color: #6b7280;
-}
+        .rpt-btn-outline-light:hover {
+            background: #6b7280;
+            color: #fff;
+            border-color: #6b7280;
+        }
     </style>
 @endsection
 
@@ -186,8 +186,9 @@ use App\Helpers\PermissionHelper;
                         <p>Generate detailed performance analysis with just one click</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ route('examination.reports.cumulative-analysis') }}" class="rpt-hero-action" style="background: rgba(129, 140, 248, 0.28); border-color: rgba(129, 140, 248, 0.4);">
+                <div class="d-flex flex-wrap" style="gap: 0.5rem;">
+                    <a href="{{ route('examination.reports.cumulative-analysis') }}" class="rpt-hero-action"
+                        style="background: rgba(129, 140, 248, 0.28); border-color: rgba(129, 140, 248, 0.4);">
                         <i class="fas fa-chart-line"></i>
                         <span>Cumulative Analysis</span>
                     </a>
@@ -449,5 +450,5 @@ use App\Helpers\PermissionHelper;
         @endif
     </div>
     </div>
-                    </div>
+    </div>
 @endsection

@@ -862,11 +862,14 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
             Route::get('/{examId}/class-summary', 'classSummary')->name('class-summary');
             Route::get('/{examId}/class-summary/pdf', 'classSummaryPdf')->name('class-summary.pdf');
+            Route::get('/{examId}/class-summary/excel', 'classSummaryExcel')->name('class-summary.excel');
 
             Route::get('/{examId}/subject-report', 'subjectReport')->name('subject-report');
             Route::get('/{examId}/subject-report/pdf', 'subjectReportPdf')->name('subject-report.pdf');
+            Route::get('/{examId}/subject-report/excel', 'subjectReportExcel')->name('subject-report.excel');
 
             Route::get('/{examId}/grade-analysis', 'gradeAnalysis')->name('grade-analysis');
+            Route::get('/{examId}/grade-analysis/excel', 'gradeAnalysisExcel')->name('grade-analysis.excel');
 
             // Cumulative Performance Analysis — spans several examinations
             // (e.g. BOT/Mid/End-of-Term across Term 1-3), so it deliberately

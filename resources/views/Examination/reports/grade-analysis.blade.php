@@ -292,7 +292,9 @@ use App\Http\Controllers\Helper;
         </script>
 
         <div class="d-flex justify-content-end gap-2 mb-3 no-print">
-            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button>
+            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button> &nbsp;
+            <a href="{{ route('examination.reports.grade-analysis.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
         </div>
 
         {{-- ── Stat cards ─────────────────────────────────────────────────── --}}

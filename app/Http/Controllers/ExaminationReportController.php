@@ -9,6 +9,9 @@ use App\Models\NlscAssessment;
 use App\Models\NlscAssessmentMark;
 use App\Helpers\PermissionHelper;
 use App\Exports\CumulativeAnalysisExport;
+use App\Exports\ClassSummaryReportExport;
+use App\Exports\SubjectReportExport;
+use App\Exports\GradeAnalysisExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -141,6 +144,32 @@ class ExaminationReportController extends Controller
         $filename = 'Class-Summary-' . str_replace(' ', '-', $data['className']) . '-' . $exam->exam_code . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Excel version of the PDF above — same $data, same heading block
+     * (school name / report title / class-and-term line) the PDF prints.
+     */
+    public function classSummaryExcel(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+
+        $examClasses = ExaminationClass::where('examination_id', $examId)->where('school_id', $schoolId)->get();
+        $classId = $request->input('class_id', $examClasses->first()->class_id ?? null);
+        $streamId = $request->input('stream_id');
+        $streamOptions = $examClasses->where('class_id', $classId)->values();
+
+        $data = $this->buildClassSummary($exam, $schoolId, $classId, $streamId, $streamOptions, $request);
+
+        $filename = 'Class-Summary-' . str_replace(' ', '-', $data['className']) . '-' . $exam->exam_code . '.xlsx';
+
+        return Excel::download(
+            new ClassSummaryReportExport($data, $exam, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
+            $filename
+        );
     }
 
     /**
@@ -412,6 +441,54 @@ class ExaminationReportController extends Controller
         return $pdf->download($filename);
     }
 
+    /**
+     * Excel version of the PDF above — same $data, same subject/teacher/
+     * stats heading block the PDF prints.
+     */
+    public function subjectReportExcel(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+
+        $examClasses = ExaminationClass::where('examination_id', $examId)->where('school_id', $schoolId)->get();
+        $classId = $request->input('class_id', $examClasses->first()->class_id ?? null);
+        $streamId = $request->input('stream_id');
+        $streamOptions = $examClasses->where('class_id', $classId)->values();
+        $streamIdsToUse = $streamId ? [$streamId] : $streamOptions->pluck('stream_id')->all();
+
+        $subjectRow = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->whereIn('stream_id', $streamIdsToUse)
+            ->where(function ($q) use ($request) {
+                if ($request->filled('subject_id')) {
+                    $q->where('subject_id', $request->input('subject_id'));
+                } elseif ($request->filled('custom_subject_id')) {
+                    $q->whereNull('subject_id')->where('custom_subject_id', $request->input('custom_subject_id'));
+                }
+            })
+            ->first();
+
+        if (!$subjectRow) {
+            return redirect()->route('examination.reports.subject-report', $examId)
+                ->with('error', 'Pick a subject before exporting.');
+        }
+
+        $subjectRow->report_key = $this->subjectKey($subjectRow);
+        $subjectRow->report_name = Helper::classSubjectName($subjectRow);
+
+        $data = $this->buildSubjectReport($exam, $schoolId, $classId, $streamIdsToUse, $subjectRow, $request);
+
+        $filename = 'Subject-Report-' . str_replace(' ', '-', $subjectRow->report_name) . '-' . $exam->exam_code . '.xlsx';
+
+        return Excel::download(
+            new SubjectReportExport($data, $exam, $subjectRow, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
+            $filename
+        );
+    }
+
     private function buildSubjectReport(Examination $exam, $schoolId, $classId, array $streamIdsToUse, $subjectRow, Request $request): array
     {
         if (!$subjectRow) {
@@ -558,6 +635,50 @@ class ExaminationReportController extends Controller
             return redirect()->route('examination.reports.index')
                 ->with('error', 'This examination has no classes configured yet.');
         }
+
+        $data = $this->buildGradeAnalysis($exam, $schoolId, $examClasses, $request);
+
+        return view('Examination.reports.grade-analysis', array_merge(['exam' => $exam], $data));
+    }
+
+    /**
+     * Excel version of Grade Analysis — this screen never had a PDF to
+     * mirror (only a browser Print button), so the heading block below
+     * is original to this export rather than copied from one.
+     */
+    public function gradeAnalysisExcel(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+
+        $examClasses = ExaminationClass::where('examination_id', $examId)->where('school_id', $schoolId)->get();
+
+        if ($examClasses->isEmpty()) {
+            return redirect()->route('examination.reports.index')
+                ->with('error', 'This examination has no classes configured yet.');
+        }
+
+        $data = $this->buildGradeAnalysis($exam, $schoolId, $examClasses, $request);
+
+        $filename = 'Grade-Analysis-' . $exam->exam_code . '.xlsx';
+
+        return Excel::download(
+            new GradeAnalysisExport($data, $exam, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
+            $filename
+        );
+    }
+
+    /**
+     * Shared builder for Grade Analysis, used by both the HTML view and
+     * the Excel export above so the two are guaranteed to agree — mirrors
+     * buildClassSummary()/buildSubjectReport()'s split for the other two
+     * reports.
+     */
+    private function buildGradeAnalysis(Examination $exam, $schoolId, $examClasses, Request $request): array
+    {
+        $examId = $exam->id;
 
         $classOptions = $this->classOptions($examClasses);
         $classId = $request->input('class_id'); // blank = whole examination, every class
@@ -743,8 +864,7 @@ class ExaminationReportController extends Controller
             $selectedSubjectName = $match->report_name ?? null;
         }
 
-        return view('Examination.reports.grade-analysis', [
-            'exam' => $exam,
+        return [
             'classOptions' => $classOptions,
             'streamOptions' => $streamOptions,
             'subjectOptions' => $subjectOptions,
@@ -760,8 +880,9 @@ class ExaminationReportController extends Controller
             'passRate' => $passRate,
             'studentsInScope' => $students->count(),
             'entriesInScope' => $withPct->count(),
-        ]);
+        ];
     }
+
 
     // ─── Cumulative Performance Analysis (multi-exam trend) ────────────────────
     //

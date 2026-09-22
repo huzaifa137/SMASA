@@ -284,7 +284,9 @@ use App\Http\Controllers\Helper;
         <div class="d-flex justify-content-end gap-2 mb-3 no-print">
             <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button> &nbsp;
             <a href="{{ route('examination.reports.class-summary.pdf', array_merge(['examId' => $exam->id], request()->query())) }}"
-                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a> &nbsp;
+            <a href="{{ route('examination.reports.class-summary.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
         </div>
 
         {{-- ── Stat cards ─────────────────────────────────────────────────── --}}
