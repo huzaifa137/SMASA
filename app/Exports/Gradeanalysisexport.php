@@ -72,7 +72,7 @@ class GradeAnalysisExport implements FromArray, WithTitle, WithStyles
         $currentRow = count($rows);
 
         $addSectionHeader = function (string $title) use (&$rows, &$currentRow) {
-            $rows[] = [];
+            $rows[] = $this->blankRow();
             $currentRow++;
             $rows[] = [$title];
             $currentRow++;
@@ -120,7 +120,7 @@ class GradeAnalysisExport implements FromArray, WithTitle, WithStyles
             $currentRow++;
         }
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Generated on ' . $this->generatedAt . ' — SMASA'];
 
         return $rows;

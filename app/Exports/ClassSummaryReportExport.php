@@ -25,6 +25,11 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
     protected string $schoolName;
     protected string $generatedAt;
 
+    /** Row the column-header line actually lands on — computed from the
+     *  array as it's built rather than hardcoded, so it can't drift out
+     *  of sync with the heading block above it. Set by array(). */
+    protected int $headerRow = 0;
+
     public function __construct(array $data, Examination $exam, string $schoolName, string $generatedAt)
     {
         $this->data = $data;
@@ -44,7 +49,7 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
                 . '  |  Class Average: ' . $this->data['classAverage'] . '%',
         ]);
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
 
         $headers = ['#', 'Student', 'Admission No.', 'Gender'];
         foreach ($this->data['subjects'] as $subject) {
@@ -55,6 +60,7 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
         $headers[] = 'Grade';
         $headers[] = 'Rank';
         $rows[] = $headers;
+        $this->headerRow = count($rows);
 
         foreach ($this->data['report'] as $i => $row) {
             $line = [
@@ -85,7 +91,7 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
         $footer = array_merge($footer, ['', '', '', '']);
         $rows[] = $footer;
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Generated on ' . $this->generatedAt . ' — SMASA'];
 
         return $rows;
@@ -98,6 +104,6 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        return $this->applyReportHeaderStyles($sheet, 3, 5);
+        return $this->applyReportHeaderStyles($sheet, 3, $this->headerRow);
     }
 }

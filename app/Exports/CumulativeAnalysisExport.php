@@ -19,25 +19,29 @@ class CumulativeAnalysisExport implements WithMultipleSheets
 {
     protected array $data;
     protected $selectedExams;
+    protected $selectedSubject;
     protected string $schoolName;
     protected string $academicYear;
+    protected string $generatedAt;
 
-    public function __construct(array $data, $selectedExams, string $schoolName, string $academicYear)
+    public function __construct(array $data, $selectedExams, $selectedSubject, string $schoolName, string $academicYear, string $generatedAt)
     {
         $this->data = $data;
         $this->selectedExams = $selectedExams;
+        $this->selectedSubject = $selectedSubject;
         $this->schoolName = $schoolName;
         $this->academicYear = $academicYear;
+        $this->generatedAt = $generatedAt;
     }
 
     public function sheets(): array
     {
         $sheets = [
-            new CumulativeOverviewSheet($this->data, $this->schoolName, $this->academicYear),
+            new CumulativeOverviewSheet($this->data, $this->selectedExams, $this->schoolName, $this->academicYear, $this->generatedAt),
         ];
 
         if ($this->data['subjectDetail']) {
-            $sheets[] = new CumulativeSubjectDetailSheet($this->data, $this->selectedExams, $this->schoolName, $this->academicYear);
+            $sheets[] = new CumulativeSubjectDetailSheet($this->data, $this->selectedExams, $this->selectedSubject, $this->schoolName, $this->academicYear, $this->generatedAt);
         }
 
         return $sheets;

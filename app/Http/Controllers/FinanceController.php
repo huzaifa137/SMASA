@@ -26,6 +26,8 @@ use App\Models\Classroom;
 use App\Models\Stream;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\PermissionHelper;
+use App\Exports\FinanceReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FinanceController extends Controller
 {
@@ -1813,6 +1815,90 @@ class FinanceController extends Controller
         }
 
         return $pdf->stream("Finance-" . ucfirst($type) . "-Report-" . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Excel export — same filtered dataset and same Year/Term/etc.
+     * filters-bar the PDF prints, via the FinanceReportExport class
+     * (school-name / report-title / filters heading block, mirroring
+     * the examination report Excel exports).
+     */
+    public function reportsExportExcel(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('financial_reports');
+
+        $schoolId = session('LoggedSchool');
+        $filters = $this->reportFilters($request);
+        $type = in_array($filters['report_type'], ['payments', 'expenses', 'payroll'], true)
+            ? $filters['report_type'] : 'payments';
+        $school = \App\Models\School::find($schoolId);
+
+        if ($type === 'payments') {
+            $rows = $this->financePaymentsQuery($schoolId, $filters)->orderByDesc('payment_date')->get();
+            $total = $rows->sum('amount_paid');
+        } elseif ($type === 'expenses') {
+            $rows = $this->financeExpensesQuery($schoolId, $filters)->orderByDesc('expense_date')->get();
+            $total = $rows->sum('amount');
+        } else {
+            $rows = $this->financePayrollQuery($schoolId, $filters)->orderByDesc('paid_date')->get();
+            $total = $rows->sum('net_pay');
+        }
+
+        $filename = 'Finance-' . ucfirst($type) . '-Report-' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(
+            new FinanceReportExport(
+                $type,
+                $rows,
+                $total,
+                $school->name ?? 'SMASA SCHOOL',
+                $this->financeReportContextLine($type, $filters),
+                now()->format('d M Y, H:i')
+            ),
+            $filename
+        );
+    }
+
+    /** Plain-text version of the PDF report's "filters-bar" line, shared
+     *  by the Excel export's heading block. */
+    private function financeReportContextLine(string $type, array $filters): string
+    {
+        $bits = [
+            'Year: ' . $filters['year'],
+            'Term: ' . ($filters['term'] ?: 'All'),
+        ];
+
+        if ($type === 'payroll') {
+            if ($filters['payroll_period_id']) {
+                $bits[] = 'Period: ' . (optional(PayrollPeriod::find($filters['payroll_period_id']))->period_name ?? '');
+            }
+        } elseif ($filters['period']) {
+            $bits[] = 'Period: ' . ucwords(str_replace('_', ' ', $filters['period']));
+        }
+
+        if ($filters['date_from']) {
+            $bits[] = 'From: ' . $filters['date_from'];
+        }
+        if ($filters['date_to']) {
+            $bits[] = 'To: ' . $filters['date_to'];
+        }
+        if ($type === 'expenses' && $filters['category_id']) {
+            $bits[] = 'Category: ' . (optional(ExpenseCategory::find($filters['category_id']))->name ?? '');
+        }
+        if ($type === 'payments' && $filters['payment_method']) {
+            $bits[] = 'Method: ' . ucfirst(str_replace('_', ' ', $filters['payment_method']));
+        }
+        if ($filters['status']) {
+            $bits[] = 'Status: ' . ucfirst($filters['status']);
+        }
+        if ($type === 'payments' && $filters['class_id']) {
+            $bits[] = 'Class: ' . Helper::recordMdname($filters['class_id']);
+        }
+        if ($filters['search']) {
+            $bits[] = 'Search: "' . $filters['search'] . '"';
+        }
+
+        return implode('  |  ', $bits);
     }
 
     public function outstandingFees(Request $request)

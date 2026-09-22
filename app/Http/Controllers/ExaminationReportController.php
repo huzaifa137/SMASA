@@ -986,7 +986,14 @@ class ExaminationReportController extends Controller
         $filename = 'Cumulative-Analysis-' . str_replace(' ', '-', $data['className']) . '-' . $scope['academicYear'] . '.xlsx';
 
         return Excel::download(
-            new CumulativeAnalysisExport($data, $scope['selectedExams'], Helper::schoolNameBySchoolID($schoolId), $scope['academicYear']),
+            new CumulativeAnalysisExport(
+                $data,
+                $scope['selectedExams'],
+                $scope['selectedSubject'],
+                Helper::schoolNameBySchoolID($schoolId),
+                $scope['academicYear'],
+                now()->format('d M Y, H:i')
+            ),
             $filename
         );
     }

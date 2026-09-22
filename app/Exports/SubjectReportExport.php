@@ -25,6 +25,10 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
     protected string $schoolName;
     protected string $generatedAt;
 
+    /** Row the column-header line actually lands on — computed from the
+     *  array as it's built rather than hardcoded. Set by array(). */
+    protected int $headerRow = 0;
+
     public function __construct(array $data, Examination $exam, $subjectRow, string $schoolName, string $generatedAt)
     {
         $this->data = $data;
@@ -53,8 +57,9 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
                 . '  |  Pass Rate: ' . ($stats['pass_rate'] ?? 'N/A') . (($stats['pass_rate'] ?? null) !== null ? '%' : ''),
         ]);
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Rank', 'Student', 'Admission No.', 'Gender', 'Marks', 'Total', '%', 'Grade', 'Remark'];
+        $this->headerRow = count($rows);
 
         foreach ($this->data['rows'] as $row) {
             if ($row->entered) {
@@ -80,7 +85,7 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
             }
         }
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Generated on ' . $this->generatedAt . ' — SMASA'];
 
         return $rows;
@@ -93,6 +98,6 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        return $this->applyReportHeaderStyles($sheet, 4, 6);
+        return $this->applyReportHeaderStyles($sheet, 4, $this->headerRow);
     }
 }

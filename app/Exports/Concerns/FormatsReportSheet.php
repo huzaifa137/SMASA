@@ -30,6 +30,22 @@ trait FormatsReportSheet
     }
 
     /**
+     * A visually-blank separator row between the heading block and a
+     * table (or between stacked tables). Deliberately NOT a bare `[]`:
+     * PhpSpreadsheet's fromArray() silently drops a fully-empty row
+     * instead of writing it, so every row beneath a `[]` spacer quietly
+     * shifts up by one. That single-row shift is what was misaligning
+     * every hardcoded/tracked header-row number below it, landing the
+     * bold/purple column-header styling on the first data row instead
+     * of the header row itself. A row with one blank cell still renders
+     * as an empty line without being dropped.
+     */
+    protected function blankRow(): array
+    {
+        return [''];
+    }
+
+    /**
      * Bold/centred styling for the heading block: row 1 (school name,
      * larger/bold) through row $headingRowCount (smaller context lines).
      */

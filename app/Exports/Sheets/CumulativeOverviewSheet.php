@@ -2,13 +2,11 @@
 
 namespace App\Exports\Sheets;
 
+use App\Exports\Concerns\FormatsReportSheet;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 /**
  * "Cumulative Overview" sheet — every subject's cumulative average (across
@@ -19,38 +17,62 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
  * every cell is already an AVERAGE across however many exams were
  * selected rather than a single exam's mark — the per-exam marks
  * themselves live on the companion "Subject Detail" sheet.
+ *
+ * Built from a manual array() (like the other report exports) rather
+ * than WithHeadings, so the same school-name / report-title / class
+ * heading block the PDF prints above its table can sit above the
+ * column headers here too.
  */
-class CumulativeOverviewSheet implements FromArray, WithHeadings, WithTitle, WithStyles, WithColumnFormatting
+class CumulativeOverviewSheet implements FromArray, WithTitle, WithStyles
 {
+    use FormatsReportSheet;
+
     protected array $data;
+    protected $selectedExams;
     protected string $schoolName;
     protected string $academicYear;
+    protected string $generatedAt;
 
-    public function __construct(array $data, string $schoolName, string $academicYear)
+    /** Row the column-header line actually lands on — computed from the
+     *  array as it's built rather than hardcoded. Set by array(). */
+    protected int $headerRow = 0;
+
+    public function __construct(array $data, $selectedExams, string $schoolName, string $academicYear, string $generatedAt)
     {
         $this->data = $data;
+        $this->selectedExams = $selectedExams;
         $this->schoolName = $schoolName;
         $this->academicYear = $academicYear;
-    }
-
-    public function headings(): array
-    {
-        $headers = ['#', 'Student', 'Admission No.', 'Gender'];
-
-        foreach ($this->data['subjects'] as $subject) {
-            $headers[] = $subject->report_name . ' — Avg %';
-        }
-
-        $headers[] = 'Cumulative Avg %';
-        $headers[] = 'Grade';
-        $headers[] = 'Rank';
-
-        return $headers;
+        $this->generatedAt = $generatedAt;
     }
 
     public function array(): array
     {
-        $rows = [];
+        $examsLine = $this->selectedExams->map(
+            fn($e) => str_replace('-', ' ', $e->exam_type) . ' (' . $e->term . ')'
+        )->implode(' | ');
+
+        $rows = $this->buildHeadingRows([
+            $this->schoolName,
+            'Cumulative Performance Analysis — ' . $this->academicYear,
+            'Includes: ' . $examsLine,
+            'Class: ' . $this->data['className'] . ' — ' . $this->data['streamLabel']
+                . '  |  Students: ' . $this->data['report']->count()
+                . '  |  Cumulative Class Average: '
+                . ($this->data['classCumulativeAverage'] !== null ? $this->data['classCumulativeAverage'] . '%' : '—'),
+        ]);
+
+        $rows[] = $this->blankRow();
+
+        $headers = ['#', 'Student', 'Admission No.', 'Gender'];
+        foreach ($this->data['subjects'] as $subject) {
+            $headers[] = $subject->report_name . ' — Avg %';
+        }
+        $headers[] = 'Cumulative Avg %';
+        $headers[] = 'Grade';
+        $headers[] = 'Rank';
+        $rows[] = $headers;
+        $this->headerRow = count($rows);
 
         foreach ($this->data['report'] as $i => $row) {
             $line = [
@@ -72,6 +94,9 @@ class CumulativeOverviewSheet implements FromArray, WithHeadings, WithTitle, Wit
             $rows[] = $line;
         }
 
+        $rows[] = $this->blankRow();
+        $rows[] = ['Generated on ' . $this->generatedAt . ' — SMASA'];
+
         return $rows;
     }
 
@@ -80,25 +105,8 @@ class CumulativeOverviewSheet implements FromArray, WithHeadings, WithTitle, Wit
         return 'Cumulative Overview';
     }
 
-    public function columnFormats(): array
-    {
-        return [];
-    }
-
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2C29CA']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-
-        $sheet->freezePane('B2');
-
-        foreach (range('A', $sheet->getHighestColumn()) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        return [];
+        return $this->applyReportHeaderStyles($sheet, 4, $this->headerRow);
     }
 }

@@ -26,6 +26,10 @@ class FinanceReportExport implements FromArray, WithTitle, WithStyles
     protected string $contextLine;
     protected string $generatedAt;
 
+    /** Row the column-header line actually lands on — computed from the
+     *  array as it's built rather than hardcoded. Set by array(). */
+    protected int $headerRow = 0;
+
     public function __construct(string $type, Collection $rows, $total, string $schoolName, string $contextLine, string $generatedAt)
     {
         $this->type = $type;
@@ -50,16 +54,17 @@ class FinanceReportExport implements FromArray, WithTitle, WithStyles
             $this->contextLine,
         ]);
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = $this->headings();
+        $this->headerRow = count($rows);
 
         foreach ($this->rows as $r) {
             $rows[] = $this->mapRow($r);
         }
 
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Total', '', '', $this->total];
-        $rows[] = [];
+        $rows[] = $this->blankRow();
         $rows[] = ['Generated on ' . $this->generatedAt . ' — SMASA'];
 
         return $rows;
@@ -122,6 +127,6 @@ class FinanceReportExport implements FromArray, WithTitle, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        return $this->applyReportHeaderStyles($sheet, 3, 5);
+        return $this->applyReportHeaderStyles($sheet, 3, $this->headerRow);
     }
 }
