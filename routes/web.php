@@ -867,6 +867,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/subject-report/pdf', 'subjectReportPdf')->name('subject-report.pdf');
 
             Route::get('/{examId}/grade-analysis', 'gradeAnalysis')->name('grade-analysis');
+
+            // Cumulative Performance Analysis — spans several examinations
+            // (e.g. BOT/Mid/End-of-Term across Term 1-3), so it deliberately
+            // sits outside the {examId} group above.
+            Route::get('/cumulative-analysis', 'cumulativeAnalysis')->name('cumulative-analysis');
+            Route::get('/cumulative-analysis/pdf', 'cumulativeAnalysisPdf')->name('cumulative-analysis.pdf');
+            Route::get('/cumulative-analysis/excel', 'cumulativeAnalysisExcel')->name('cumulative-analysis.excel');
         });
 
     // Assessment Scales (per-school customizable comment/mark scales for

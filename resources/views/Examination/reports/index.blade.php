@@ -186,10 +186,16 @@ use App\Helpers\PermissionHelper;
                         <p>Generate detailed performance analysis with just one click</p>
                     </div>
                 </div>
-                <a href="{{ route('examination.index') }}" class="rpt-hero-action">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Exams</span>
-                </a>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('examination.reports.cumulative-analysis') }}" class="rpt-hero-action" style="background: rgba(129, 140, 248, 0.28); border-color: rgba(129, 140, 248, 0.4);">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Cumulative Analysis</span>
+                    </a>
+                    <a href="{{ route('examination.index') }}" class="rpt-hero-action">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Exams</span>
+                    </a>
+                </div>
             </div>
             <div class="rpt-hero-features">
                 <div class="rpt-feature">
@@ -226,6 +232,15 @@ use App\Helpers\PermissionHelper;
                     <div>
                         <div class="rpt-feature-title">Export Data</div>
                         <div class="rpt-feature-desc">PDF &amp; Excel formats</div>
+                    </div>
+                </div>
+                <div class="rpt-feature">
+                    <div class="rpt-feature-icon" style="background: rgba(196, 181, 253, 0.15);">
+                        <i class="fas fa-chart-line" style="color: #a78bfa;"></i>
+                    </div>
+                    <div>
+                        <div class="rpt-feature-title">Cumulative Analysis</div>
+                        <div class="rpt-feature-desc">Trend across BOT/Mid/EOT, Term 1-3</div>
                     </div>
                 </div>
             </div>
@@ -310,7 +325,7 @@ use App\Helpers\PermissionHelper;
 
             .rpt-hero-features {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
                 gap: 1.25rem;
             }
 

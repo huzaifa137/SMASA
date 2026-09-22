@@ -8,9 +8,11 @@ use App\Models\ExaminationMark;
 use App\Models\NlscAssessment;
 use App\Models\NlscAssessmentMark;
 use App\Helpers\PermissionHelper;
+use App\Exports\CumulativeAnalysisExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Reports & Summaries for the Examinations module.
@@ -18,10 +20,11 @@ use Barryvdh\DomPDF\Facade\Pdf;
  * Everything a teacher enters through the Marks Entry portal, and every
  * pass slip that gets printed, ultimately feeds these reports — they're
  * the "step back and look at the whole picture" view: a full subject x
- * student matrix for a class, a deep dive into a single subject, or a
- * grade-distribution / performance analysis across an exam.
+ * student matrix for a class, a deep dive into a single subject, a
+ * grade-distribution / performance analysis across an exam, or a
+ * cumulative trend across several exams sat over a term/year.
  *
- * All three report builders share the same underlying data (Examination,
+ * All report builders share the same underlying data (Examination,
  * ExaminationClass, ExaminationMark, class_subjects, students) that the
  * marks entry and pass slip flows already use, so grades and percentages
  * here are always derived the same way (percentage -> grading scheme
@@ -758,6 +761,545 @@ class ExaminationReportController extends Controller
             'studentsInScope' => $students->count(),
             'entriesInScope' => $withPct->count(),
         ]);
+    }
+
+    // ─── Cumulative Performance Analysis (multi-exam trend) ────────────────────
+    //
+    // Where the three report builders above always work within ONE
+    // examination, this one deliberately spans several — the school's own
+    // BOT / Mid-Term / End-of-Term sittings across Term 1-3 of an academic
+    // year (9 "major" exams in the common case, though the picker below
+    // never hardcodes that number: any set of 1+ examinations the user
+    // ticks is honoured). For every subject it shows each selected exam's
+    // mark for that student BEFORE the average, exactly like the Subject
+    // Report already does for a single exam, then folds every subject's
+    // average into one cumulative class ranking.
+
+    public function cumulativeAnalysis(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $scope = $this->resolveCumulativeScope($request, $schoolId);
+
+        if ($scope['redirect']) {
+            return $scope['redirect'];
+        }
+
+        $data = $this->buildCumulativeAnalysis(
+            $schoolId,
+            $scope['classId'],
+            $scope['streamId'],
+            $scope['selectedExams'],
+            $scope['selectedSubject'],
+            $request
+        );
+
+        return view('Examination.reports.cumulative-analysis', array_merge($data, [
+            'academicYears' => $scope['academicYears'],
+            'academicYear' => $scope['academicYear'],
+            'classOptions' => $scope['classOptions'],
+            'streamOptions' => $scope['streamOptions'],
+            'availableExams' => $scope['availableExams'],
+            'selectedExamIds' => $scope['selectedExams']->pluck('id')->all(),
+            'subjectOptions' => $scope['subjectOptions'],
+            'selectedSubjectKey' => $scope['subjectKey'],
+            'selectedClassId' => $scope['classId'],
+            'selectedStreamId' => $scope['streamId'],
+            'filters' => $request->only(['gender', 'search']),
+        ]));
+    }
+
+    public function cumulativeAnalysisPdf(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $scope = $this->resolveCumulativeScope($request, $schoolId);
+
+        if ($scope['redirect']) {
+            return $scope['redirect'];
+        }
+
+        $data = $this->buildCumulativeAnalysis(
+            $schoolId,
+            $scope['classId'],
+            $scope['streamId'],
+            $scope['selectedExams'],
+            $scope['selectedSubject'],
+            $request
+        );
+
+        $pdf = Pdf::loadView('Examination.reports.pdf.cumulative-analysis', array_merge($data, [
+            'schoolName' => Helper::schoolNameBySchoolID($schoolId),
+            'academicYear' => $scope['academicYear'],
+            'generatedAt' => now()->format('d M Y, H:i'),
+        ]));
+        $pdf->setPaper('A4', 'landscape');
+
+        $filename = 'Cumulative-Analysis-' . str_replace(' ', '-', $data['className']) . '-' . $scope['academicYear'] . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function cumulativeAnalysisExcel(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $schoolId = Session('LoggedSchool');
+        $scope = $this->resolveCumulativeScope($request, $schoolId);
+
+        if ($scope['redirect']) {
+            return $scope['redirect'];
+        }
+
+        $data = $this->buildCumulativeAnalysis(
+            $schoolId,
+            $scope['classId'],
+            $scope['streamId'],
+            $scope['selectedExams'],
+            $scope['selectedSubject'],
+            $request
+        );
+
+        $filename = 'Cumulative-Analysis-' . str_replace(' ', '-', $data['className']) . '-' . $scope['academicYear'] . '.xlsx';
+
+        return Excel::download(
+            new CumulativeAnalysisExport($data, $scope['selectedExams'], Helper::schoolNameBySchoolID($schoolId), $scope['academicYear']),
+            $filename
+        );
+    }
+
+    /**
+     * Resolve every dropdown/checkbox on the Cumulative Analysis picker
+     * from the request, with sane defaults at every step (latest academic
+     * year -> first class with exams -> every exam that class actually
+     * sat -> first subject) so the three actions above (view / PDF /
+     * Excel) always agree on exactly what's in scope, the same guarantee
+     * buildClassSummary()/buildSubjectReport() give the other reports.
+     */
+    private function resolveCumulativeScope(Request $request, $schoolId): array
+    {
+        $academicYears = Examination::where('school_id', $schoolId)
+            ->orderByDesc('academic_year')
+            ->pluck('academic_year')
+            ->unique()
+            ->values();
+
+        if ($academicYears->isEmpty()) {
+            return ['redirect' => redirect()->route('examination.reports.index')
+                ->with('error', 'No examinations exist yet to build a cumulative analysis from.')];
+        }
+
+        $academicYear = $request->input('academic_year', $academicYears->first());
+        if (!$academicYears->contains($academicYear)) {
+            $academicYear = $academicYears->first();
+        }
+
+        $examsInYear = $this->orderExamsWithinYear(
+            Examination::where('school_id', $schoolId)->where('academic_year', $academicYear)->get()
+        );
+
+        $examClassesAll = ExaminationClass::where('school_id', $schoolId)
+            ->whereIn('examination_id', $examsInYear->pluck('id'))
+            ->get();
+
+        if ($examClassesAll->isEmpty()) {
+            return ['redirect' => redirect()->route('examination.reports.index')
+                ->with('error', "None of the {$academicYear} examinations have classes configured yet.")];
+        }
+
+        $classOptions = $this->classOptions($examClassesAll);
+
+        $classId = $request->input('class_id', $classOptions->first()->class_id);
+        if (!$classOptions->contains('class_id', $classId)) {
+            $classId = $classOptions->first()->class_id;
+        }
+
+        $streamOptions = $examClassesAll->where('class_id', $classId)->unique('stream_id')->values();
+        $streamId = $request->input('stream_id');
+        if ($streamId && !$streamOptions->contains('stream_id', $streamId)) {
+            $streamId = null;
+        }
+
+        // Only exams that actually have THIS class(+stream) configured make
+        // it onto the checklist — ticking one that was never sat by this
+        // class would just render an all-blank column.
+        $availableExams = $examsInYear->filter(function ($exam) use ($examClassesAll, $classId, $streamId) {
+            return $examClassesAll->contains(fn($ec) => $ec->examination_id === $exam->id
+                && (string) $ec->class_id === (string) $classId
+                && (!$streamId || (string) $ec->stream_id === (string) $streamId));
+        })->values();
+
+        $requestedExamIds = $request->input('exam_ids');
+        $selectedExamIds = is_array($requestedExamIds)
+            ? array_map('intval', $requestedExamIds)
+            : $availableExams->pluck('id')->all(); // nothing ticked yet -> default to every available exam
+
+        $selectedExams = $availableExams->whereIn('id', $selectedExamIds)->values();
+        if ($selectedExams->isEmpty()) {
+            $selectedExams = $availableExams; // never show a fully empty report just because the picker cleared
+        }
+
+        $streamIdsForSubjects = $streamId ? [$streamId] : $streamOptions->pluck('stream_id')->all();
+        $subjectOptions = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->whereIn('stream_id', $streamIdsForSubjects)
+            ->get()
+            ->unique(fn($cs) => $this->subjectKey($cs))
+            ->map(function ($cs) {
+                $cs->report_key = $this->subjectKey($cs);
+                $cs->report_name = Helper::classSubjectName($cs);
+                return $cs;
+            })
+            ->sortBy('report_name')
+            ->values();
+
+        $subjectKey = $request->input('subject_key', $subjectOptions->first()->report_key ?? null);
+        $selectedSubject = $subjectOptions->firstWhere('report_key', $subjectKey);
+
+        return [
+            'redirect' => null,
+            'academicYears' => $academicYears,
+            'academicYear' => $academicYear,
+            'classOptions' => $classOptions,
+            'classId' => $classId,
+            'streamOptions' => $streamOptions,
+            'streamId' => $streamId,
+            'availableExams' => $availableExams,
+            'selectedExams' => $selectedExams,
+            'subjectOptions' => $subjectOptions,
+            'subjectKey' => $subjectKey,
+            'selectedSubject' => $selectedSubject,
+        ];
+    }
+
+    /**
+     * Sort a school's examinations into the canonical Term 1-3 x
+     * Beginning/Mid/End-of-Term order (the 9 "major" sittings), rather
+     * than the alphabetical order 'exam_type' would otherwise sort into
+     * (which would wrongly place "End-of-Term" before "Mid-Term"). Any
+     * exam_type/term this school has customised away from those three
+     * falls back to start_date so it still lands somewhere sensible.
+     */
+    private function orderExamsWithinYear($exams)
+    {
+        $typeOrder = ['Beginning-of-Term' => 1, 'Mid-Term' => 2, 'End-of-Term' => 3];
+
+        return $exams->sortBy(function ($exam) use ($typeOrder) {
+            $termNumber = (int) preg_replace('/\D/', '', (string) $exam->term) ?: 9;
+            $typeNumber = $typeOrder[$exam->exam_type] ?? 9;
+
+            return sprintf('%02d-%02d-%s', $termNumber, $typeNumber, $exam->start_date);
+        })->values();
+    }
+
+    /**
+     * Core builder shared by the HTML view, PDF export, and Excel export
+     * for Cumulative Analysis. For every student x subject combination it
+     * keeps each selected exam's individual mark (so the deep-dive table
+     * can show them before the average, per the brief) and folds them
+     * into a per-subject average, then a per-student cumulative average
+     * across every subject that has at least one entry anywhere in the
+     * selected exams.
+     */
+    private function buildCumulativeAnalysis($schoolId, $classId, $streamId, $selectedExams, $selectedSubject, Request $request): array
+    {
+        $examIds = $selectedExams->pluck('id')->values()->all();
+
+        if (empty($examIds)) {
+            return [
+                'className' => Helper::recordMdname($classId),
+                'streamLabel' => $streamId ? Helper::recordMdname($streamId) : 'All Streams',
+                'subjects' => collect(),
+                'report' => collect(),
+                'subjectCumulativeAverages' => collect(),
+                'classCumulativeAverage' => null,
+                'classTotal' => 0,
+                'gradingScale' => collect(),
+                'subjectDetail' => null,
+                'selectedExams' => $selectedExams,
+            ];
+        }
+
+        $examClasses = ExaminationClass::whereIn('examination_id', $examIds)
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->when($streamId, fn($q) => $q->where('stream_id', $streamId))
+            ->get();
+
+        $streamIdsToUse = $streamId ? [$streamId] : $examClasses->pluck('stream_id')->unique()->values()->all();
+
+        $classSubjectRows = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->whereIn('stream_id', $streamIdsToUse)
+            ->get();
+
+        $subjects = $classSubjectRows
+            ->unique(fn($cs) => $this->subjectKey($cs))
+            ->map(function ($cs) {
+                $cs->report_key = $this->subjectKey($cs);
+                $cs->report_name = Helper::classSubjectName($cs);
+                return $cs;
+            })
+            ->sortBy('report_name')
+            ->values();
+
+        $students = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classId)
+            ->whereIn('stream', $streamIdsToUse)
+            ->when($request->filled('gender'), fn($q) => $q->where('gender', $request->input('gender')))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = $request->input('search');
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('firstname', 'like', "%{$term}%")
+                        ->orWhere('lastname', 'like', "%{$term}%")
+                        ->orWhere('admission_number', 'like', "%{$term}%");
+                });
+            })
+            ->orderBy('firstname')
+            ->get();
+
+        // Grading scale: the most recent selected exam's own resolved
+        // scheme (class-level override, else exam-level, else school
+        // default) — the same "latest sitting wins" convention already
+        // used for a combined multi-exam pass slip.
+        $latestExam = $selectedExams->sortBy('start_date')->last();
+        $examClassLatest = $latestExam
+            ? $examClasses->first(fn($ec) => $ec->examination_id === $latestExam->id)
+            : null;
+        $gradingScale = $examClassLatest
+            ? $examClassLatest->resolvedGradingBands()
+            : ($latestExam?->resolvedGradingBands() ?? collect());
+
+        $gradeFor = function ($pct) use ($gradingScale) {
+            return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark)?->grade ?? '—';
+        };
+
+        // Marks per exam, keyed student_id -> report_key -> mark row.
+        // NLSC (Secondary O-Level) marks are merged in per exam exactly
+        // like every other report here, via nlscMarksForScope().
+        $marksByExam = [];
+        foreach ($examIds as $eid) {
+            $marksByExam[$eid] = ExaminationMark::where('examination_id', $eid)
+                ->where('school_id', $schoolId)
+                ->whereIn('student_id', $students->pluck('id'))
+                ->get()
+                ->concat($this->nlscMarksForScope($schoolId, $eid, $classId, $streamIdsToUse))
+                ->groupBy('student_id')
+                ->map(fn($group) => $group->keyBy(fn($m) => $this->subjectKey($m)));
+        }
+
+        $subjectStats = [];
+        foreach ($subjects as $subj) {
+            $subjectStats[$subj->report_key] = ['sum' => 0, 'count' => 0];
+        }
+
+        $report = $students->map(function ($student) use ($subjects, $examIds, $marksByExam, $gradeFor, &$subjectStats) {
+            $subjectAverages = [];
+            $sumOfAverages = 0;
+            $countedSubjects = 0;
+
+            foreach ($subjects as $subj) {
+                $examEntries = [];
+                $pctSum = 0;
+                $pctCount = 0;
+
+                foreach ($examIds as $eid) {
+                    $mark = $marksByExam[$eid][$student->id][$subj->report_key] ?? null;
+
+                    if ($mark && !is_null($mark->marks_obtained)) {
+                        $pct = $this->resolvePercentage($mark);
+                        $examEntries[$eid] = (object) [
+                            'marks' => $mark->marks_obtained,
+                            'total' => $mark->total_marks,
+                            'percentage' => $pct,
+                            'grade' => $gradeFor($pct),
+                        ];
+                        $pctSum += $pct;
+                        $pctCount++;
+                    } else {
+                        $examEntries[$eid] = null;
+                    }
+                }
+
+                $avg = $pctCount > 0 ? round($pctSum / $pctCount, 1) : null;
+
+                $subjectAverages[$subj->report_key] = (object) [
+                    'exams' => $examEntries,
+                    'average' => $avg,
+                    'grade' => $avg !== null ? $gradeFor($avg) : '—',
+                    'entries' => $pctCount,
+                ];
+
+                if ($avg !== null) {
+                    $sumOfAverages += $avg;
+                    $countedSubjects++;
+                    $subjectStats[$subj->report_key]['sum'] += $avg;
+                    $subjectStats[$subj->report_key]['count']++;
+                }
+            }
+
+            $cumulativeAverage = $countedSubjects > 0 ? round($sumOfAverages / $countedSubjects, 1) : null;
+
+            return (object) [
+                'student' => $student,
+                'subjectAverages' => $subjectAverages,
+                'cumulativeAverage' => $cumulativeAverage,
+                'grade' => $cumulativeAverage !== null ? $gradeFor($cumulativeAverage) : '—',
+                'subjectsCounted' => $countedSubjects,
+                'subjectsExpected' => $subjects->count(),
+                'trend' => $this->cumulativeTrend($student->id, $examIds, $marksByExam),
+            ];
+        });
+
+        $ranked = $report->where('subjectsCounted', '>', 0)->sortByDesc('cumulativeAverage')->values();
+        foreach ($ranked as $i => $row) {
+            $row->rank = $i + 1;
+        }
+        $report = $report
+            ->map(function ($row) {
+                if (!isset($row->rank)) {
+                    $row->rank = null;
+                }
+                return $row;
+            })
+            ->sortBy(fn($r) => $r->rank ?? PHP_INT_MAX)
+            ->values();
+
+        $subjectCumulativeAverages = collect($subjectStats)->map(function ($s) {
+            return $s['count'] > 0 ? round($s['sum'] / $s['count'], 1) : null;
+        });
+
+        $classTotal = $ranked->count();
+        $classCumulativeAverage = $classTotal > 0 ? round($ranked->avg('cumulativeAverage'), 1) : null;
+
+        $subjectDetail = $selectedSubject
+            ? $this->buildCumulativeSubjectDetail($students, $examIds, $marksByExam, $selectedSubject, $gradeFor)
+            : null;
+
+        return [
+            'className' => Helper::recordMdname($classId),
+            'streamLabel' => $streamId ? Helper::recordMdname($streamId) : 'All Streams',
+            'subjects' => $subjects,
+            'report' => $report,
+            'subjectCumulativeAverages' => $subjectCumulativeAverages,
+            'classCumulativeAverage' => $classCumulativeAverage,
+            'classTotal' => $classTotal,
+            'gradingScale' => $gradingScale,
+            'subjectDetail' => $subjectDetail,
+            'selectedExams' => $selectedExams,
+        ];
+    }
+
+    /**
+     * Per-subject deep dive across every selected exam for ONE subject —
+     * the "marks in that subject for the student, before the average" view
+     * the brief specifically asked for. Mirrors buildSubjectReport()'s
+     * shape but with one column per selected exam instead of one exam's
+     * single mark.
+     */
+    private function buildCumulativeSubjectDetail($students, array $examIds, array $marksByExam, $subject, callable $gradeFor): array
+    {
+        $rows = $students->map(function ($student) use ($examIds, $marksByExam, $subject, $gradeFor) {
+            $examEntries = [];
+            $pctSum = 0;
+            $pctCount = 0;
+
+            foreach ($examIds as $eid) {
+                $mark = $marksByExam[$eid][$student->id][$subject->report_key] ?? null;
+
+                if ($mark && !is_null($mark->marks_obtained)) {
+                    $pct = $this->resolvePercentage($mark);
+                    $examEntries[$eid] = (object) [
+                        'marks' => $mark->marks_obtained,
+                        'total' => $mark->total_marks,
+                        'percentage' => $pct,
+                        'grade' => $gradeFor($pct),
+                    ];
+                    $pctSum += $pct;
+                    $pctCount++;
+                } else {
+                    $examEntries[$eid] = null;
+                }
+            }
+
+            $avg = $pctCount > 0 ? round($pctSum / $pctCount, 1) : null;
+
+            return (object) [
+                'student' => $student,
+                'exams' => $examEntries,
+                'average' => $avg,
+                'grade' => $avg !== null ? $gradeFor($avg) : '—',
+                'entered' => $pctCount > 0,
+            ];
+        });
+
+        $ranked = $rows->where('entered', true)->sortByDesc('average')->values();
+        foreach ($ranked as $i => $row) {
+            $row->rank = $i + 1;
+        }
+        $rows = $rows
+            ->map(function ($row) {
+                if (!isset($row->rank)) {
+                    $row->rank = null;
+                }
+                return $row;
+            })
+            ->sortBy(fn($r) => $r->rank ?? PHP_INT_MAX)
+            ->values();
+
+        $entered = $rows->where('entered', true);
+
+        return [
+            'subject' => $subject,
+            'rows' => $rows,
+            'average' => $entered->isNotEmpty() ? round($entered->avg('average'), 1) : null,
+            'highest' => $entered->isNotEmpty() ? $entered->max('average') : null,
+            'lowest' => $entered->isNotEmpty() ? $entered->min('average') : null,
+            'entered_count' => $entered->count(),
+            'total_count' => $rows->count(),
+        ];
+    }
+
+    /**
+     * A simple up/down/flat trend flag for a student across the selected
+     * exams: compares their overall percentage (sum of marks obtained /
+     * sum of max marks, across every subject) on the FIRST selected exam
+     * against the LAST. Needs at least two exams with entered marks to
+     * mean anything; returns null otherwise so the view can render a
+     * neutral dash instead of a misleading arrow.
+     */
+    private function cumulativeTrend($studentId, array $examIds, array $marksByExam): ?string
+    {
+        if (count($examIds) < 2) {
+            return null;
+        }
+
+        $pctFor = function ($eid) use ($marksByExam, $studentId) {
+            $marks = $marksByExam[$eid][$studentId] ?? collect();
+            $withMarks = $marks->filter(fn($m) => !is_null($m->marks_obtained));
+            $obtained = $withMarks->sum('marks_obtained');
+            $max = $withMarks->sum('total_marks');
+            return $max > 0 ? round(($obtained / $max) * 100, 1) : null;
+        };
+
+        $firstPct = $pctFor(reset($examIds));
+        $lastPct = $pctFor(end($examIds));
+
+        if ($firstPct === null || $lastPct === null) {
+            return null;
+        }
+        if ($lastPct > $firstPct + 0.5) {
+            return 'up';
+        }
+        if ($lastPct < $firstPct - 0.5) {
+            return 'down';
+        }
+        return 'flat';
     }
 
     // ─── Shared helpers ─────────────────────────────────────────────────────────
