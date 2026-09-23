@@ -1327,7 +1327,8 @@ class ExaminationController extends Controller
             $subjectMarks,
             $examsList,
             $examSummary,
-            $student
+            $student,
+            $this->parseIdCsv(request('progressive_exam_ids'))
         );
 
         $lang = request('lang', 'en');
@@ -1439,7 +1440,8 @@ class ExaminationController extends Controller
                 $passslipData['subjectMarks'] ?? collect(),
                 $passslipData['examsList'] ?? null,
                 $passslipData['examSummary'] ?? [],
-                $student
+                $student,
+                $this->parseIdCsv(request('progressive_exam_ids'))
             );
 
             return [
@@ -1552,6 +1554,16 @@ class ExaminationController extends Controller
 
             $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id);
 
+            // Progressive Assessment Record's "Sittings" picker, resolved
+            // per-class directly from that class's own saved settings —
+            // NOT via request('progressive_exam_ids'), since request() is
+            // shared across this whole bulk loop and applySavedPassslipSettings()
+            // is deliberately never called here for exactly that reason
+            // (see resolveBulkPassslipTemplate()'s docblock above).
+            $progressiveExamIdsForClass = $this->parseIdCsv(
+                Helper::getPassslipSettings($schoolId, $ec->class_id)['progressive_exam_ids'] ?? null
+            );
+
             foreach ($students as $student) {
                 if ($multiExam) {
                     $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
@@ -1572,7 +1584,8 @@ class ExaminationController extends Controller
                     $passslipData['subjectMarks'] ?? collect(),
                     $passslipData['examsList'] ?? null,
                     $passslipData['examSummary'] ?? [],
-                    $student
+                    $student,
+                    $progressiveExamIdsForClass
                 );
 
                 // 🔥 KEY FIX: Build complete slip structure explicitly
@@ -1915,7 +1928,8 @@ class ExaminationController extends Controller
             $subjectMarks,
             $examsList,
             $examSummary,
-            $student
+            $student,
+            $this->parseIdCsv($request->query('progressive_exam_ids'))
         );
 
         if ($isNursery) {
@@ -2282,19 +2296,14 @@ class ExaminationController extends Controller
             if ($hasAggregateSubjects) {
                 $aggregatePoints = 0;
                 $aggregateMarksSum = 0;
-                $hasFail = false;
 
                 foreach ($aggregateMarks as $m) {
                     $pct = $m->total_marks > 0 ? round(($m->marks_obtained / $m->total_marks) * 100, 1) : 0;
                     $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
                     $points = $gradeRow?->points ?? $m->grade_points;
-                    $remark = $gradeRow?->remark ?? $m->grade_remark;
 
                     $aggregatePoints += (int) ($points ?? 0);
                     $aggregateMarksSum += $m->marks_obtained ?? 0;
-                    if ($remark && stripos($remark, 'fail') !== false) {
-                        $hasFail = true;
-                    }
                 }
 
                 $aggregate = $aggregatePoints;
@@ -2303,7 +2312,11 @@ class ExaminationController extends Controller
                     ? $examClass->gradingScheme
                     : $exam->resolvedGradingScheme();
 
-                $division = $scheme?->divisionFor($aggregate, $hasFail);
+                // Division is looked up purely from the aggregate band.
+                // The "Ungraded on any fail" scheme flag is not applied —
+                // aggregate points alone determine the division label across
+                // the summary bar and all slip templates (Modern/Classic/Minimal).
+                $division = $scheme?->divisionFor($aggregate, false);
             }
         }
 
@@ -2524,6 +2537,22 @@ class ExaminationController extends Controller
     }
 
     /**
+     * Parse a comma-separated id list (from a request field or a saved
+     * settings value) into a clean array of unique positive ints, in the
+     * order given. Used by the Progressive Assessment Record's own
+     * "Sittings" picker (progressive_exam_ids) — kept as a separate
+     * helper from resolveExamSelection() above since that picker is an
+     * independent selection from exam_ids/avg_exam_ids (see
+     * buildProgressiveAssessmentData()'s docblock).
+     */
+    private function parseIdCsv($value): array
+    {
+        $ids = array_filter(explode(',', (string) $value), 'strlen');
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    /**
      * Build the "Progressive Assessment Record" data for one student —
      * a transposed summary of every sitting (Practicals / Test 1 /
      * Test 2 / Test 3 / Final …): one row per sitting, one column per
@@ -2549,6 +2578,13 @@ class ExaminationController extends Controller
      * Returns null when there's nothing to show (no sibling sittings
      * and no marks at all) so the Blade side can skip the section
      * cleanly instead of rendering an empty table.
+     *
+     * $progressiveExamIds — the Progressive Assessment Record's OWN
+     * "Sittings" picker on the customise page (separate checkboxes from
+     * "Combine Examinations"). When non-empty, it wins over both the
+     * reused multi-exam data AND the auto-discovered set below: "only
+     * these, in this order" — see the picker's own comment in
+     * customize.blade.php.
      */
     public function buildProgressiveAssessmentData(
         $baseExamId,
@@ -2562,9 +2598,25 @@ class ExaminationController extends Controller
         $reuseSubjectMarks = null,
         $reuseExamsList = null,
         $reuseExamSummary = null,
-        $student = null
+        $student = null,
+        ?array $progressiveExamIds = null
     ): ?array {
-        if ($multiExam && $reuseSubjectMarks !== null) {
+        if (!empty($progressiveExamIds)) {
+            $examIds = Examination::where('school_id', $schoolId)
+                ->whereIn('id', $progressiveExamIds)
+                ->orderBy('start_date')
+                ->pluck('id')
+                ->all();
+
+            if (empty($examIds)) {
+                return null;
+            }
+
+            $data = $this->buildMultiExamPassslipData($examIds, $studentId, $schoolId, [], $student);
+            $examsList = $data['examsList'] ?? collect();
+            $subjectMarks = collect($data['subjectMarks'] ?? []);
+            $examSummary = collect($data['examSummary'] ?? []);
+        } elseif ($multiExam && $reuseSubjectMarks !== null) {
             $examsList = $reuseExamsList ?? collect();
             $subjectMarks = collect($reuseSubjectMarks);
             $examSummary = collect($reuseExamSummary ?? []);
@@ -2835,7 +2887,6 @@ class ExaminationController extends Controller
             $marksSum = 0;
             $ptsSum = 0;
             $ptsCount = 0;
-            $hasFail = false;
 
             foreach ($subjectRows as $sm) {
                 if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
@@ -2846,16 +2897,16 @@ class ExaminationController extends Controller
                     $marksSum += $ed['marks_obtained'] ?? 0;
                     $ptsSum += $ed['points'] ?? 0;
                     $ptsCount++;
-                    if ($ed['remark'] && stripos($ed['remark'], 'fail') !== false) {
-                        $hasFail = true;
-                    }
                 }
             }
 
+            // Progressive record rows show the pure aggregate-band division
+            // without the ungraded_on_fail override — that override applies
+            // to the live pass-slip grade only (single exam context above).
             $examSummary[$eid] = [
                 'total_marks' => $ptsCount > 0 ? $marksSum : null,
                 'aggregate' => $ptsCount > 0 ? $ptsSum : null,
-                'division' => $ptsCount > 0 ? ($combinedScheme?->divisionFor($ptsSum, $hasFail) ?? '—') : '—',
+                'division' => $ptsCount > 0 ? ($combinedScheme?->divisionFor($ptsSum, false) ?? '—') : '—',
             ];
         }
 
@@ -2864,7 +2915,6 @@ class ExaminationController extends Controller
         if ($useAvg) {
             $avgPtsSum = 0;
             $avgPtsCount = 0;
-            $avgHasFail = false;
 
             foreach ($subjectRows as $sm) {
                 if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
@@ -2873,15 +2923,13 @@ class ExaminationController extends Controller
                 if ($sm->avgPercentage !== null) {
                     $avgPtsSum += $sm->avgPoints ?? 0;
                     $avgPtsCount++;
-                    if ($sm->avgRemark && stripos($sm->avgRemark, 'fail') !== false) {
-                        $avgHasFail = true;
-                    }
                 }
             }
 
+            // Same as per-exam rows: pure aggregate-band lookup, no fail override.
             $avgSummary = [
                 'aggregate' => $avgPtsCount > 0 ? $avgPtsSum : null,
-                'division' => $avgPtsCount > 0 ? ($combinedScheme?->divisionFor($avgPtsSum, $avgHasFail) ?? '—') : '—',
+                'division' => $avgPtsCount > 0 ? ($combinedScheme?->divisionFor($avgPtsSum, false) ?? '—') : '—',
             ];
         }
 

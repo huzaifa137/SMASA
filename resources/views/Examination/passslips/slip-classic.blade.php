@@ -2021,6 +2021,7 @@
                     // Student Information — per-field
                     'stu_name' => $on('show_stu_name', true, $savedCfg),
                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
                     'stu_exam' => $on('show_stu_exam', true, $savedCfg),
                     'stu_class' => $on('show_stu_class', true, $savedCfg),
                     'stu_stream' => $on('show_stu_stream', true, $savedCfg),
@@ -2368,6 +2369,11 @@
                                 @if($cfg['stu_admission'])
                                     <div class="rc-stu-row"><span class="k">LIN No.:</span>
                                         <span>{{ $admissionNo }}</span>
+                                    </div>
+                                @endif
+                                @if($cfg['stu_paycode'])
+                                    <div class="rc-stu-row"><span class="k">Pay Code:</span>
+                                        <span>{{ $s->paycode ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_class'])

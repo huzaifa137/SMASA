@@ -948,6 +948,13 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             const avgExamIds = Array.from(document.querySelectorAll('.cz-exam-avg-cb:checked')).map(cb => cb.value);
             if (extraExamIds.length) settings.exam_ids = extraExamIds.join(',');
             if (avgExamIds.length) settings.avg_exam_ids = avgExamIds.join(',');
+            // Progressive Assessment Record — a DEDICATED sittings picker,
+            // separate from "Combine Examinations" above (see the comment
+            // by .cz-exam-progressive-cb in the markup). Leaving every one
+            // of these unchecked keeps the old "auto-include every sitting"
+            // behaviour — only send the key at all once something's ticked.
+            const progressiveExamIds = Array.from(document.querySelectorAll('.cz-exam-progressive-cb:checked')).map(cb => cb.value);
+            if (progressiveExamIds.length) settings.progressive_exam_ids = progressiveExamIds.join(',');
             return settings;
         }
 
@@ -1044,6 +1051,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             scheduleRefresh();
         }));
         document.querySelectorAll('.cz-exam-avg-cb').forEach(cb => cb.addEventListener('change', scheduleRefresh));
+        document.querySelectorAll('.cz-exam-progressive-cb').forEach(cb => cb.addEventListener('change', scheduleRefresh));
 
         document.getElementById('czColorPicker').addEventListener('input', function () {
             document.querySelectorAll('.cz-preset-dot').forEach(d => d.classList.toggle('active', d.dataset.color === this.value));
@@ -1107,6 +1115,10 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                     if (!cb.disabled) cb.checked = avgIds.includes(cb.value);
                 });
             }
+            const progressiveIds = typeof saved.progressive_exam_ids === 'string' ? saved.progressive_exam_ids.split(',').filter(Boolean) : [];
+            document.querySelectorAll('.cz-exam-progressive-cb').forEach(cb => {
+                cb.checked = progressiveIds.includes(cb.value);
+            });
             refreshPreviewNow();
         }
 

@@ -400,6 +400,11 @@ use App\Http\Controllers\Helper;
                                 </div>
 
                                 <div class="form-group">
+                                    <label>Pay Code</label>
+                                    <input type="text" name="paycode" class="form-control">
+                                </div>
+
+                                <div class="form-group">
                                     <label>Primary Contact</label>
                                     <input type="text" name="primary_contact" class="form-control">
                                 </div>

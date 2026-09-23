@@ -565,6 +565,7 @@ class StudentController extends Controller
                 'stream' => $request->input('stream') ?: \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL,
                 'linked_student_id' => $linkedStudentId, // ◄── NEW LINE #2
                 'admission_number' => $request->input('Admission_Number', null),
+                'paycode' => $request->input('paycode', null),
                 'gender' => $validated['gender'],
                 'school_id' => $validated['School'],
                 'primary_contact' => $validated['primary_contact'] ?? null,
@@ -734,6 +735,7 @@ class StudentController extends Controller
             'birth_certificate_entry_number' => $request->birth_certificate_entry_number,
             'registration_number' => $request->registration_number,
             'admission_number' => $request->admission_number,
+            'paycode' => $request->paycode,
             'admission_year' => $request->admission_year,
             'date_of_admission' => $request->date_of_admission,
             'ple_score' => $request->ple_score,
@@ -1043,6 +1045,7 @@ class StudentController extends Controller
             'lastname' => $student->lastname,
             'gender' => $student->gender,
             'admission_number' => $student->admission_number,
+            'paycode' => $student->paycode,
 
             'senior_id' => $student->senior,
             'senior' => Helper::recordMdname($student->senior),

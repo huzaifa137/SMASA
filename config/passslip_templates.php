@@ -83,6 +83,7 @@ return [
         // ── Student Information — per-field toggles ─────────────────
         'show_stu_name' => ['label' => 'Student Name', 'icon' => 'fa-user', 'group' => 'Student Information Fields'],
         'show_stu_admission' => ['label' => 'Admission No.', 'icon' => 'fa-id-badge', 'group' => 'Student Information Fields'],
+        'show_stu_paycode' => ['label' => 'Pay Code', 'icon' => 'fa-money-check', 'group' => 'Student Information Fields'],
         'show_stu_class' => ['label' => 'Class', 'icon' => 'fa-chalkboard', 'group' => 'Student Information Fields'],
         'show_stu_stream' => ['label' => 'Stream', 'icon' => 'fa-diagram-project', 'group' => 'Student Information Fields'],
         'show_stu_academic_year' => ['label' => 'Academic Year', 'icon' => 'fa-calendar', 'group' => 'Student Information Fields'],
@@ -198,7 +199,7 @@ return [
             'show_section_progressive',
 
             // Student Information — per-field
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
+            'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_stream',
             'show_stu_academic_year', 'show_stu_term', 'show_stu_exam', 'show_stu_dob', 'show_stu_gender',
             'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
 
@@ -226,7 +227,7 @@ return [
             // Student Information — per-field (Modern's info row only
             // shows this subset; Stream/DOB/etc. aren't part of its
             // design, so those keys are simply left off this list).
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
+            'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
 
             // Summary Bar — per-field (new section for Modern, mirrors
             // Classic's Performance Summary strip using the same keys).
@@ -255,7 +256,7 @@ return [
 
             // Student Information — per-field (Minimal's ledger only
             // ever showed this subset of fields, mirrors Modern's list).
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
+            'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_exam', 'show_stu_gender', 'show_stu_status',
 
             // Summary Bar — per-field (new section for Minimal; the CSS
             // already existed but was never actually rendered — mirrors

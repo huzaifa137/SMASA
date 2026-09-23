@@ -289,6 +289,7 @@
             color: #111;
             text-transform: uppercase;
             line-height: 1.2;
+            white-space: nowrap;
         }
 
         .sch-arabic-name {
@@ -1207,6 +1208,11 @@
                 print-color-adjust: exact;
                 color-adjust: exact;
             }
+
+            .sch-name {
+                white-space: nowrap;
+                font-size: clamp(18px, 3.5vw, 30px);
+            }
         }
 
         .slip::before,
@@ -1465,6 +1471,7 @@
                     'stu_details_block' => $on('show_stu_details_block', true, $savedCfg),
                     'stu_name' => $on('show_stu_name', true, $savedCfg),
                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
                     'stu_exam' => $on('show_stu_exam', true, $savedCfg),
                     'stu_class' => $on('show_stu_class', true, $savedCfg),
                     'stu_gender' => $on('show_stu_gender', true, $savedCfg),
@@ -1791,6 +1798,11 @@
                                 @if($cfg['stu_admission'])
                                     <div class="stu-field"><strong>LIN:</strong>
                                         {{ $s->adm_no ?? ($s->index_no ?? '—') }}
+                                    </div>
+                                @endif
+                                @if($cfg['stu_paycode'])
+                                    <div class="stu-field"><strong>PAY CODE:</strong>
+                                        {{ $s->paycode ?? '—' }}
                                     </div>
                                 @endif
                                 @if($cfg['stu_exam'])
