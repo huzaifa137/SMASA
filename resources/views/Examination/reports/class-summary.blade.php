@@ -301,7 +301,7 @@ use App\Http\Controllers\Helper;
             </div>
             <div class="rpt-stat-card success">
                 <div class="rpt-stat-label">Class Average</div>
-                <div class="rpt-stat-value">{{ $classAverage }}%</div>
+                <div class="rpt-stat-value">@whole($classAverage)%</div>
                 <div class="rpt-stat-sub">across {{ $classTotal }} ranked student(s)</div>
             </div>
             <div class="rpt-stat-card {{ ($report->count() - $classTotal) > 0 ? 'warning' : 'success' }}">
@@ -333,9 +333,19 @@ use App\Http\Controllers\Helper;
                                 <th class="rpt-name-col">Student</th>
                                 <th>Gender</th>
                                 @foreach ($subjects as $subj)
-                                    <th title="{{ $subj->report_name }}">{{ Str::limit($subj->report_name, 10, '') }}</th>
+                                    <th title="{{ $subj->report_name }}">
+                                        {{ Str::limit($subj->report_name, 10, '') }}
+                                        @if($subj->out_of)
+                                            <div style="font-size:.6rem;font-weight:400;opacity:.75;">(/{{ \App\Helpers\NumberHelper::whole($subj->out_of) }})</div>
+                                        @endif
+                                    </th>
                                 @endforeach
-                                <th>Total</th>
+                                <th>
+                                    Total
+                                    @if($examTotalMax)
+                                        <div style="font-size:.6rem;font-weight:400;opacity:.75;">(/{{ \App\Helpers\NumberHelper::whole($examTotalMax) }})</div>
+                                    @endif
+                                </th>
                                 <th>Avg %</th>
                                 <th>Grade</th>
                                 <th>Rank</th>
@@ -353,18 +363,18 @@ use App\Http\Controllers\Helper;
                                         @php $cell = $row->cells[$subj->report_key] ?? null; @endphp
                                         <td>
                                             @if ($cell)
-                                                {{ $cell->marks }}/{{ $cell->total }}
+                                                @whole($cell->marks)
                                                 @php
                                                     $cellColor = $cell->percentage >= 80 ? '#0d9668' : ($cell->percentage >= 50 ? '#b45309' : '#dc2626');
                                                 @endphp
-                                                <div style="font-size:.65rem;font-weight:600;color:{{ $cellColor }};">{{ $cell->percentage }}% · {{ $cell->grade }}</div>
+                                                <div style="font-size:.65rem;font-weight:600;color:{{ $cellColor }};">@whole($cell->percentage)% · {{ $cell->grade }}</div>
                                             @else
                                                 <span class="rpt-cell-empty">—</span>
                                             @endif
                                         </td>
                                     @endforeach
-                                    <td>{{ $row->total_obtained }}/{{ $row->total_max }}</td>
-                                    <td><strong>{{ $row->average }}%</strong></td>
+                                    <td>@whole($row->total_obtained)</td>
+                                    <td><strong>@whole($row->average)%</strong></td>
                                     <td>
                                         @php
                                             $badge = $row->average >= 80 ? 'rpt-badge-good' : ($row->average >= 50 ? 'rpt-badge-mid' : ($row->subjects_done > 0 ? 'rpt-badge-bad' : 'rpt-badge-neutral'));
@@ -381,7 +391,7 @@ use App\Http\Controllers\Helper;
                                 <td></td>
                                 @foreach ($subjects as $subj)
                                     @php $avg = $subjectAverages[$subj->report_key] ?? null; @endphp
-                                    <td>{{ $avg && $avg['average'] !== null ? $avg['average'] . '%' : '—' }}</td>
+                                    <td>{{ $avg && $avg['average'] !== null ? \App\Helpers\NumberHelper::whole($avg['average']) . '%' : '—' }}</td>
                                 @endforeach
                                 <td colspan="4"></td>
                             </tr>

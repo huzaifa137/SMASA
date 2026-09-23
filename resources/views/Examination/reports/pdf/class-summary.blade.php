@@ -103,7 +103,7 @@
             <td class="label">Students:</td>
             <td>{{ $report->count() }}</td>
             <td class="label">Class Average:</td>
-            <td>{{ $classAverage }}%</td>
+            <td>{{ \App\Helpers\NumberHelper::whole($classAverage) }}%</td>
         </tr>
     </table>
 
@@ -114,9 +114,9 @@
                 <th style="text-align:left;">Student</th>
                 <th>Gender</th>
                 @foreach ($subjects as $subj)
-                    <th>{{ Str::limit($subj->report_name, 8, '') }}</th>
+                    <th>{{ Str::limit($subj->report_name, 8, '') }}{{ $subj->out_of ? ' (/' . \App\Helpers\NumberHelper::whole($subj->out_of) . ')' : '' }}</th>
                 @endforeach
-                <th>Total</th>
+                <th>Total{{ $examTotalMax ? ' (/' . \App\Helpers\NumberHelper::whole($examTotalMax) . ')' : '' }}</th>
                 <th>Avg %</th>
                 <th>Grade</th>
                 <th>Rank</th>
@@ -130,10 +130,10 @@
                     <td>{{ $row->student->gender ?? '—' }}</td>
                     @foreach ($subjects as $subj)
                         @php $cell = $row->cells[$subj->report_key] ?? null; @endphp
-                        <td>{{ $cell ? $cell->marks . '/' . $cell->total : '—' }}</td>
+                        <td>{{ $cell ? \App\Helpers\NumberHelper::whole($cell->marks) : '—' }}</td>
                     @endforeach
-                    <td>{{ $row->total_obtained }}/{{ $row->total_max }}</td>
-                    <td>{{ $row->average }}%</td>
+                    <td>{{ \App\Helpers\NumberHelper::whole($row->total_obtained) }}</td>
+                    <td>{{ \App\Helpers\NumberHelper::whole($row->average) }}%</td>
                     <td>{{ $row->grade }}</td>
                     <td>{{ $row->rank ?? '—' }}</td>
                 </tr>
@@ -144,7 +144,7 @@
                 <td colspan="3">Subject Average</td>
                 @foreach ($subjects as $subj)
                     @php $avg = $subjectAverages[$subj->report_key] ?? null; @endphp
-                    <td>{{ $avg && $avg['average'] !== null ? $avg['average'] . '%' : '—' }}</td>
+                    <td>{{ $avg && $avg['average'] !== null ? \App\Helpers\NumberHelper::whole($avg['average']) . '%' : '—' }}</td>
                 @endforeach
                 <td colspan="4"></td>
             </tr>

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Helpers\NumberHelper;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Helper;
 use App\Models\Student;
@@ -91,6 +92,18 @@ class AppServiceProvider extends ServiceProvider
         });
         Blade::directive('endcannotfeature', function () {
             return "<?php endif; ?>";
+        });
+
+        /**
+         * @whole($value)
+         * Prints a mark/percentage/total as a whole number, dropping
+         * any decimal places ("93.00" -> "93") instead of every pass
+         * slip and report export printing the full decimal. Null/blank
+         * values print the same em-dash placeholder used everywhere
+         * else a mark can be missing.
+         */
+        Blade::directive('whole', function ($expression) {
+            return "<?php echo \\App\\Helpers\\NumberHelper::whole({$expression}); ?>";
         });
     }
 }

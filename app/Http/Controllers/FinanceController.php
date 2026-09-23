@@ -27,6 +27,7 @@ use App\Models\Stream;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\PermissionHelper;
 use App\Exports\FinanceReportExport;
+use App\Exports\OutstandingFeesExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FinanceController extends Controller
@@ -1953,6 +1954,38 @@ class FinanceController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->stream('Outstanding-Fees-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Excel export — same filtered, unpaginated dataset as the PDF
+     * export above (same outstandingFeesFilters()/outstandingFeesQuery()
+     * helpers, so the two can never drift apart), via the
+     * OutstandingFeesExport class used by the other report exports.
+     */
+    public function outstandingFeesExcel(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('financial_reports');
+
+        $schoolId = session('LoggedSchool');
+        $filters = $this->outstandingFeesFilters($request);
+
+        $allocations = $this->outstandingFeesQuery($schoolId, $filters)
+            ->orderByDesc('balance')
+            ->get();
+
+        $totalOutstanding = $allocations->sum('balance');
+        $school = \App\Models\School::find($schoolId);
+
+        return Excel::download(
+            new OutstandingFeesExport(
+                $allocations,
+                $totalOutstanding,
+                $filters,
+                $school->name ?? 'SMASA SCHOOL',
+                now()->format('d M Y, H:i')
+            ),
+            'Outstanding-Fees-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 
     /**

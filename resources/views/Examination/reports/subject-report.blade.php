@@ -308,17 +308,17 @@ use App\Http\Controllers\Helper;
                 </div>
                 <div class="rpt-stat-card success">
                     <div class="rpt-stat-label">Average</div>
-                    <div class="rpt-stat-value">{{ $stats['average'] ?? '—' }}{{ $stats['average'] !== null ? '%' : '' }}</div>
+                    <div class="rpt-stat-value">@whole($stats['average'] ?? null){{ $stats['average'] !== null ? '%' : '' }}</div>
                 </div>
                 <div class="rpt-stat-card">
                     <div class="rpt-stat-label">Highest / Lowest</div>
                     <div class="rpt-stat-value" style="font-size:1.1rem;">
-                        {{ $stats['highest'] ?? '—' }}% / {{ $stats['lowest'] ?? '—' }}%
+                        @whole($stats['highest'] ?? null)% / @whole($stats['lowest'] ?? null)%
                     </div>
                 </div>
                 <div class="rpt-stat-card {{ $stats['pass_rate'] !== null && $stats['pass_rate'] < 50 ? 'danger' : 'success' }}">
                     <div class="rpt-stat-label">Pass Rate</div>
-                    <div class="rpt-stat-value">{{ $stats['pass_rate'] ?? 'N/A' }}{{ $stats['pass_rate'] !== null ? '%' : '' }}</div>
+                    <div class="rpt-stat-value">{{ $stats['pass_rate'] !== null ? \App\Helpers\NumberHelper::whole($stats['pass_rate']) . '%' : 'N/A' }}</div>
                     <div class="rpt-stat-sub">
                         @if ($stats['pass_rate'] !== null)
                             {{ $stats['pass_count'] }}/{{ $stats['entered_count'] }} at or above {{ $stats['pass_mark'] }}%
@@ -370,7 +370,7 @@ use App\Http\Controllers\Helper;
                                             <th>Rank</th>
                                             <th class="rpt-name-col">Student</th>
                                             <th>Gender</th>
-                                            <th>Marks</th>
+                                            <th>Marks{{ ($stats['subject_out_of'] ?? null) ? ' (/' . \App\Helpers\NumberHelper::whole($stats['subject_out_of']) . ')' : '' }}</th>
                                             <th>%</th>
                                             <th>Grade</th>
                                             <th>Remark</th>
@@ -386,8 +386,8 @@ use App\Http\Controllers\Helper;
                                                 </td>
                                                 <td>{{ $row->student->gender ?? '—' }}</td>
                                                 @if ($row->entered)
-                                                    <td>{{ $row->marks }}/{{ $row->total }}</td>
-                                                    <td><strong>{{ $row->percentage }}%</strong></td>
+                                                    <td>@whole($row->marks)</td>
+                                                    <td><strong>@whole($row->percentage)%</strong></td>
                                                     <td>
                                                         @php
                                                             $badge = $row->percentage >= 80 ? 'rpt-badge-good' : ($row->percentage >= 50 ? 'rpt-badge-mid' : 'rpt-badge-bad');

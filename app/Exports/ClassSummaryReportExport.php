@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Exports\Concerns\FormatsReportSheet;
+use App\Helpers\NumberHelper;
 use App\Models\Examination;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -46,16 +47,19 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
             $this->exam->term . ' • ' . $this->exam->academic_year
                 . '  |  Class: ' . $this->data['className'] . ' — ' . $this->data['streamLabel']
                 . '  |  Students: ' . $this->data['report']->count()
-                . '  |  Class Average: ' . $this->data['classAverage'] . '%',
+                . '  |  Class Average: ' . NumberHelper::whole($this->data['classAverage']) . '%',
         ]);
 
         $rows[] = $this->blankRow();
 
+        // Every student sits a subject out of the same total, so the
+        // out-of value goes once in the column header ("English (/100)")
+        // instead of every cell repeating "/100".
         $headers = ['#', 'Student', 'Admission No.', 'Gender'];
         foreach ($this->data['subjects'] as $subject) {
-            $headers[] = $subject->report_name;
+            $headers[] = $subject->report_name . ($subject->out_of ? ' (/' . NumberHelper::whole($subject->out_of) . ')' : '');
         }
-        $headers[] = 'Total';
+        $headers[] = 'Total' . (($this->data['examTotalMax'] ?? null) ? ' (/' . NumberHelper::whole($this->data['examTotalMax']) . ')' : '');
         $headers[] = 'Avg %';
         $headers[] = 'Grade';
         $headers[] = 'Rank';
@@ -72,11 +76,11 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
 
             foreach ($this->data['subjects'] as $subject) {
                 $cell = $row->cells[$subject->report_key] ?? null;
-                $line[] = $cell ? $cell->marks . '/' . $cell->total : '—';
+                $line[] = $cell ? NumberHelper::whole($cell->marks) : '—';
             }
 
-            $line[] = $row->total_obtained . '/' . $row->total_max;
-            $line[] = $row->average . '%';
+            $line[] = NumberHelper::whole($row->total_obtained);
+            $line[] = NumberHelper::whole($row->average) . '%';
             $line[] = $row->grade;
             $line[] = $row->rank ?? '—';
 
@@ -86,7 +90,7 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
         $footer = ['', 'Subject Average', '', ''];
         foreach ($this->data['subjects'] as $subject) {
             $avg = $this->data['subjectAverages'][$subject->report_key] ?? null;
-            $footer[] = ($avg && $avg['average'] !== null) ? $avg['average'] . '%' : '—';
+            $footer[] = ($avg && $avg['average'] !== null) ? NumberHelper::whole($avg['average']) . '%' : '—';
         }
         $footer = array_merge($footer, ['', '', '', '']);
         $rows[] = $footer;

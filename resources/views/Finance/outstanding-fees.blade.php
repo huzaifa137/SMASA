@@ -516,6 +516,10 @@ use App\Helpers\PermissionHelper;
                    target="_blank" class="btn-fin btn-outline-fin">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
+                <a href="{{ route('finance.outstanding-fees.excel') }}?{{ http_build_query(request()->query()) }}"
+                   class="btn-fin btn-outline-fin">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
                 <button onclick="window.print()" class="btn-fin btn-outline-fin">
                     <i class="fas fa-print"></i> Print
                 </button>

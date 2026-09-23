@@ -1083,6 +1083,7 @@ Route::prefix('finance')
         Route::get('/reports/export/excel', 'reportsExportExcel')->name('reports.export.excel');
         Route::get('/outstanding-fees', 'outstandingFees')->name('outstanding-fees');
         Route::get('/outstanding-fees/pdf', 'outstandingFeesPdf')->name('outstanding-fees.pdf');
+        Route::get('/outstanding-fees/excel', 'outstandingFeesExcel')->name('outstanding-fees.excel');
         Route::post('/outstanding-fees/recalculate', 'recalculateBalances')->name('outstanding-fees.recalculate');
     });
 

@@ -123,10 +123,10 @@
         <tr>
             <td>Students<br><strong>{{ $stats['total_students'] }}</strong></td>
             <td>Entered<br><strong>{{ $stats['entered_count'] }}</strong></td>
-            <td>Average<br><strong>{{ $stats['average'] ?? '—' }}%</strong></td>
-            <td>Highest<br><strong>{{ $stats['highest'] ?? '—' }}%</strong></td>
-            <td>Lowest<br><strong>{{ $stats['lowest'] ?? '—' }}%</strong></td>
-            <td>Pass Rate<br><strong>{{ $stats['pass_rate'] ?? 'N/A' }}{{ $stats['pass_rate'] !== null ? '%' : '' }}</strong></td>
+            <td>Average<br><strong>{{ \App\Helpers\NumberHelper::whole($stats['average'] ?? null) }}%</strong></td>
+            <td>Highest<br><strong>{{ \App\Helpers\NumberHelper::whole($stats['highest'] ?? null) }}%</strong></td>
+            <td>Lowest<br><strong>{{ \App\Helpers\NumberHelper::whole($stats['lowest'] ?? null) }}%</strong></td>
+            <td>Pass Rate<br><strong>{{ $stats['pass_rate'] !== null ? \App\Helpers\NumberHelper::whole($stats['pass_rate']) . '%' : 'N/A' }}</strong></td>
         </tr>
     </table>
 
@@ -136,7 +136,7 @@
                 <th>Rank</th>
                 <th>Student</th>
                 <th>Gender</th>
-                <th>Marks</th>
+                <th>Marks{{ ($stats['subject_out_of'] ?? null) ? ' (/' . \App\Helpers\NumberHelper::whole($stats['subject_out_of']) . ')' : '' }}</th>
                 <th>%</th>
                 <th>Grade</th>
                 <th>Remark</th>
@@ -149,8 +149,8 @@
                     <td class="name">{{ $row->student->firstname }} {{ $row->student->lastname }}</td>
                     <td>{{ $row->student->gender ?? '—' }}</td>
                     @if ($row->entered)
-                        <td>{{ $row->marks }}/{{ $row->total }}</td>
-                        <td>{{ $row->percentage }}%</td>
+                        <td>{{ \App\Helpers\NumberHelper::whole($row->marks) }}</td>
+                        <td>{{ \App\Helpers\NumberHelper::whole($row->percentage) }}%</td>
                         <td>{{ $row->grade }}</td>
                         <td>{{ $row->remark }}</td>
                     @else

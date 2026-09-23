@@ -613,6 +613,11 @@ class ExaminationReportController extends Controller
                 ? round(($entered->filter(fn($r) => $r->percentage >= $exam->pass_mark)->count() / $entered->count()) * 100, 1)
                 : null,
             'teacher_name' => $teacherName,
+            // Every entered row sat this subject out of the same total,
+            // so the first one seen is enough — lets the "Marks" column
+            // header read "Marks (/100)" instead of a separate "Total"
+            // column repeating the same number down every row.
+            'subject_out_of' => $entered->isNotEmpty() ? (float) $entered->first()->total : null,
         ];
 
         $gradeDistribution = $gradingScale->map(function ($band) use ($entered) {

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Exports\Concerns\FormatsReportSheet;
+use App\Helpers\NumberHelper;
 use App\Models\Examination;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -51,14 +52,18 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
                 . '  |  Teacher: ' . ($stats['teacher_name'] ?? '—'),
             'Students: ' . ($stats['total_students'] ?? 0)
                 . '  |  Entered: ' . ($stats['entered_count'] ?? 0)
-                . '  |  Average: ' . ($stats['average'] ?? '—') . '%'
-                . '  |  Highest: ' . ($stats['highest'] ?? '—') . '%'
-                . '  |  Lowest: ' . ($stats['lowest'] ?? '—') . '%'
-                . '  |  Pass Rate: ' . ($stats['pass_rate'] ?? 'N/A') . (($stats['pass_rate'] ?? null) !== null ? '%' : ''),
+                . '  |  Average: ' . ($stats['average'] !== null ? NumberHelper::whole($stats['average']) : '—') . '%'
+                . '  |  Highest: ' . ($stats['highest'] !== null ? NumberHelper::whole($stats['highest']) : '—') . '%'
+                . '  |  Lowest: ' . ($stats['lowest'] !== null ? NumberHelper::whole($stats['lowest']) : '—') . '%'
+                . '  |  Pass Rate: ' . ($stats['pass_rate'] !== null ? NumberHelper::whole($stats['pass_rate']) : 'N/A') . (($stats['pass_rate'] ?? null) !== null ? '%' : ''),
         ]);
 
         $rows[] = $this->blankRow();
-        $rows[] = ['Rank', 'Student', 'Admission No.', 'Gender', 'Marks', 'Total', '%', 'Grade', 'Remark'];
+        // Every row sat this subject out of the same total, so it goes
+        // once in the "Marks" header ("Marks (/100)") instead of a
+        // separate "Total" column repeating the same number every row.
+        $marksHeader = 'Marks' . (($stats['subject_out_of'] ?? null) ? ' (/' . NumberHelper::whole($stats['subject_out_of']) . ')' : '');
+        $rows[] = ['Rank', 'Student', 'Admission No.', 'Gender', $marksHeader, '%', 'Grade', 'Remark'];
         $this->headerRow = count($rows);
 
         foreach ($this->data['rows'] as $row) {
@@ -68,9 +73,8 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
                     trim($row->student->firstname . ' ' . $row->student->lastname),
                     $row->student->admission_number ?? '',
                     $row->student->gender ?? '',
-                    $row->marks,
-                    $row->total,
-                    $row->percentage . '%',
+                    NumberHelper::whole($row->marks),
+                    NumberHelper::whole($row->percentage) . '%',
                     $row->grade,
                     $row->remark,
                 ];
@@ -80,7 +84,7 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
                     trim($row->student->firstname . ' ' . $row->student->lastname),
                     $row->student->admission_number ?? '',
                     $row->student->gender ?? '',
-                    'Marks not entered', '', '', '', '',
+                    'Marks not entered', '', '', '',
                 ];
             }
         }
