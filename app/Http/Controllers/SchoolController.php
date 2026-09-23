@@ -450,7 +450,7 @@ class SchoolController extends Controller
             'boarding_status' => 'nullable|string|max:100',
             'name' => 'nullable|string|max:255',
             'registration_code' => 'nullable|string|max:50',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string',
             'population' => 'nullable|string',
             'motto' => 'nullable|string|max:255',
             'vision' => 'nullable|string|max:255',

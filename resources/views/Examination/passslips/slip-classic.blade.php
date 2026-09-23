@@ -1861,6 +1861,7 @@
                     'examSummary' => $examSummary ?? [],
                     'avgSummary' => $avgSummary ?? null,
                     'disciplineRatings' => $disciplineRatings ?? collect(),
+                    'progressiveAssessment' => $progressiveAssessment ?? null,
                 ]
             ];
         } else {
@@ -1932,6 +1933,7 @@
                 $examSummarySlip = collect($slipData['examSummary'] ?? []);
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
                 $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
+                $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
                 $divClass = function ($div) {
                     if (!$div || $div === '—')
                         return 'div-x';
@@ -1981,11 +1983,32 @@
                     // everything else in Classic is unchanged. Still
                     // available any time via its toggle.
                     'signatures' => $on('show_signatures', false, $savedCfg),
-                    'term_dates' => $on('show_term_dates', true, $savedCfg),
+                    // Granular split of the old combined 'show_term_dates'
+                    // switch — each label can now be removed on its own
+                    // instead of only as a pair. Falls back to the legacy
+                    // key (then true) so a profile saved before this split
+                    // still shows both, same convention as show_logo_left/
+                    // show_logo_right falling back to show_logo elsewhere.
+                    'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                    'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     // New toggles
                     'result' => $on('show_result', true, $savedCfg),
+                    // Granular split of the old combined 'show_score_col'
+                    // switch — Classic's single-exam marks table used to
+                    // hide FULL MARKS + MARKS OBTAINED + PERCENTAGE
+                    // together as one group; each is now removable on its
+                    // own. Falls back to the legacy key (then true) so a
+                    // profile saved before this split still shows all
+                    // three, same fallback convention used just above for
+                    // the term-dates split.
+                    'col_full_marks' => $on('show_col_full_marks', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    'col_marks_obtained' => $on('show_col_marks_obtained', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    'col_percentage' => $on('show_col_percentage', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    // Kept for the MULTI-EXAM (BOT|MID|EOT) table variant
+                    // below, which only ever showed one combined MARKS
+                    // column per sitting — no granularity problem there.
                     'score_col' => $on('show_score_col', true, $savedCfg),
                     'comment_col' => $on('show_comment_col', true, $savedCfg),
 
@@ -1993,6 +2016,7 @@
                     'section_student_info' => $on('show_section_student_info', true, $savedCfg),
                     'section_summary' => $on('show_section_summary', true, $savedCfg),
                     'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+                    'section_progressive' => $on('show_section_progressive', true, $savedCfg),
 
                     // Student Information — per-field
                     'stu_name' => $on('show_stu_name', true, $savedCfg),

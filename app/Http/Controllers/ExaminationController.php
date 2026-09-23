@@ -1310,6 +1310,26 @@ class ExaminationController extends Controller
         $termDates = Helper::passslipTermDates($schoolId);
         $isNursery = $this->isNurseryClass($student->senior);
 
+        // Progressive Assessment Record — Primary design templates only
+        // (Classic/Modern/Minimal); Nursery's report layouts don't have
+        // this section. Reuses this slip's own combined-exam data when
+        // the sidebar already selected extra exams, otherwise resolves
+        // every sitting for this class/term/year automatically.
+        $progressiveAssessment = $isNursery ? null : $this->buildProgressiveAssessmentData(
+            $examId,
+            $studentId,
+            $schoolId,
+            $student->senior,
+            $student->stream,
+            $exam->term,
+            $exam->academic_year,
+            $multiExam,
+            $subjectMarks,
+            $examsList,
+            $examSummary,
+            $student
+        );
+
         $lang = request('lang', 'en');
 
         // Use nursery layout if applicable. applySavedPassslipSettings()
@@ -1352,7 +1372,8 @@ class ExaminationController extends Controller
             'examSummary',
             'avgSummary',
             'disciplineRatings',
-            'termDates'
+            'termDates',
+            'progressiveAssessment'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
@@ -1393,14 +1414,33 @@ class ExaminationController extends Controller
         $multiExam = count($examIds) > 1;
         $examsList = collect([$exam]);
 
+        // Nursery's report layouts don't have a Progressive Assessment
+        // Record section — skip the extra query work for that family.
+        $isNurseryForProgressive = $this->isNurseryClass($classId);
+
         // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
-        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList) {
+        $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList, $classId, $streamId, $isNurseryForProgressive) {
             if ($multiExam) {
                 $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
                 $examsList = $passslipData['examsList'] ?? $examsList;
             } else {
                 $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
             }
+
+            $progressiveAssessment = $isNurseryForProgressive ? null : $this->buildProgressiveAssessmentData(
+                $examId,
+                $student->id,
+                $schoolId,
+                $classId,
+                $streamId,
+                $exam->term,
+                $exam->academic_year,
+                $multiExam,
+                $passslipData['subjectMarks'] ?? collect(),
+                $passslipData['examsList'] ?? null,
+                $passslipData['examSummary'] ?? [],
+                $student
+            );
 
             return [
                 'student' => $student,
@@ -1422,6 +1462,7 @@ class ExaminationController extends Controller
                 'examSummary' => $passslipData['examSummary'] ?? [],
                 'avgSummary' => $passslipData['avgSummary'] ?? null,
                 'disciplineRatings' => $passslipData['disciplineRatings'] ?? collect(),
+                'progressiveAssessment' => $progressiveAssessment,
             ];
         })
             // ✅ FIXED: Use sort() with comparison function instead of sortByDesc().thenBy()
@@ -1509,6 +1550,8 @@ class ExaminationController extends Controller
                 ->where('stream', $ec->stream_id)
                 ->get(); // ✅ Removed orderBy('lastname')
 
+            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id);
+
             foreach ($students as $student) {
                 if ($multiExam) {
                     $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
@@ -1516,6 +1559,21 @@ class ExaminationController extends Controller
                 } else {
                     $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
                 }
+
+                $progressiveAssessment = $isNurseryClassForProgressive ? null : $this->buildProgressiveAssessmentData(
+                    $examId,
+                    $student->id,
+                    $schoolId,
+                    $ec->class_id,
+                    $ec->stream_id,
+                    $exam->term,
+                    $exam->academic_year,
+                    $multiExam,
+                    $passslipData['subjectMarks'] ?? collect(),
+                    $passslipData['examsList'] ?? null,
+                    $passslipData['examSummary'] ?? [],
+                    $student
+                );
 
                 // 🔥 KEY FIX: Build complete slip structure explicitly
                 $allSlips[] = [
@@ -1538,6 +1596,7 @@ class ExaminationController extends Controller
                     'examSummary' => $passslipData['examSummary'] ?? [],
                     'avgSummary' => $passslipData['avgSummary'] ?? null,
                     'disciplineRatings' => $passslipData['disciplineRatings'] ?? collect(),
+                    'progressiveAssessment' => $progressiveAssessment,
                 ];
             }
         }
@@ -1844,6 +1903,21 @@ class ExaminationController extends Controller
         $isNursery = $this->isNurseryClass($student->senior);
         $lang = request('lang', 'en');
 
+        $progressiveAssessment = $isNursery ? null : $this->buildProgressiveAssessmentData(
+            $examId,
+            $student->id,
+            $schoolId,
+            $student->senior,
+            $student->stream,
+            $exam->term,
+            $exam->academic_year,
+            $multiExam,
+            $subjectMarks,
+            $examsList,
+            $examSummary,
+            $student
+        );
+
         if ($isNursery) {
             $nurseryTemplate = $request->query('template', 'nursery-classic');
             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
@@ -1873,7 +1947,8 @@ class ExaminationController extends Controller
             'examSummary',
             'avgSummary',
             'disciplineRatings',
-            'termDates'
+            'termDates',
+            'progressiveAssessment'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
     }
 
@@ -2446,6 +2521,87 @@ class ExaminationController extends Controller
         $avgExamIds = array_values(array_intersect($avgExamIds, $examIds));
 
         return [$examIds, $avgExamIds];
+    }
+
+    /**
+     * Build the "Progressive Assessment Record" data for one student —
+     * a transposed summary of every sitting (Practicals / Test 1 /
+     * Test 2 / Test 3 / Final …): one row per sitting, one column per
+     * subject, with an AVG / AGG / DIV per row. Reuses the exact same
+     * combined-exam data buildMultiExamPassslipData() already computes
+     * for the BOT|MID|END multi-exam marks table — this just re-shapes
+     * it by exam instead of by subject, so grading-scheme resolution,
+     * aggregate-subject flags, etc. all stay identical to the rest of
+     * the slip instead of being recomputed a second way.
+     *
+     * Which sittings populate it:
+     *   - if the "Combine Examinations" sidebar already picked extra
+     *     exams for THIS slip (exam_ids on the request, i.e. $multiExam
+     *     is already true), the exact same $examIds/$subjectMarks/
+     *     $examSummary already built for the main slip are reused as-is
+     *     — no second query pass;
+     *   - otherwise (a normal single-exam slip) every sitting recorded
+     *     for this student's class in the same term & academic year is
+     *     pulled in automatically, so the section is fully populated
+     *     without the admin having to tick every sitting one by one in
+     *     the sidebar first.
+     *
+     * Returns null when there's nothing to show (no sibling sittings
+     * and no marks at all) so the Blade side can skip the section
+     * cleanly instead of rendering an empty table.
+     */
+    public function buildProgressiveAssessmentData(
+        $baseExamId,
+        $studentId,
+        $schoolId,
+        $classId,
+        $streamId,
+        $term,
+        $academicYear,
+        bool $multiExam = false,
+        $reuseSubjectMarks = null,
+        $reuseExamsList = null,
+        $reuseExamSummary = null,
+        $student = null
+    ): ?array {
+        if ($multiExam && $reuseSubjectMarks !== null) {
+            $examsList = $reuseExamsList ?? collect();
+            $subjectMarks = collect($reuseSubjectMarks);
+            $examSummary = collect($reuseExamSummary ?? []);
+        } else {
+            $examIds = Examination::where('school_id', $schoolId)
+                ->where('term', $term)
+                ->where('academic_year', $academicYear)
+                ->whereIn('id', function ($q) use ($classId, $streamId, $schoolId) {
+                    $q->select('examination_id')
+                        ->from('examination_classes')
+                        ->where('school_id', $schoolId)
+                        ->where('class_id', $classId)
+                        ->where('stream_id', $streamId);
+                })
+                ->orderBy('start_date')
+                ->pluck('id')
+                ->all();
+
+            if (empty($examIds)) {
+                $examIds = [(int) $baseExamId];
+            }
+
+            $data = $this->buildMultiExamPassslipData($examIds, $studentId, $schoolId, [], $student);
+            $examsList = $data['examsList'] ?? collect();
+            $subjectMarks = collect($data['subjectMarks'] ?? []);
+            $examSummary = collect($data['examSummary'] ?? []);
+        }
+
+        if ($examsList->isEmpty() || $subjectMarks->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'examsList' => $examsList,
+            'subjectMarks' => $subjectMarks,
+            'examSummary' => $examSummary,
+        ];
     }
 
     /**

@@ -40,6 +40,19 @@
 | JSON containing the old keys doesn't error out — they're simply
 | ignored by Classic now.
 |
+| NOTE (term dates / marks columns): 'show_term_dates' used to be one
+| master switch hiding "This Term Ends On" AND "Next Term Starts On"
+| together — there was no way to remove just one of the two labels.
+| It's superseded by 'show_term_ends_on' / 'show_next_term_starts_on'
+| for classic/modern/minimal, each gating its own label independently.
+| Same story for 'show_score_col' on Classic specifically: it used to
+| hide FULL MARKS + MARKS OBTAINED + PERCENTAGE together as one column
+| group; it's superseded there by 'show_col_full_marks' /
+| 'show_col_marks_obtained' / 'show_col_percentage'. Both old keys are
+| left in the registry (and still drive Modern/Minimal's single
+| combined score column, which never had this granularity problem) so
+| old saved settings JSON keeps working.
+|
 */
 
 return [
@@ -57,6 +70,15 @@ return [
         'show_section_student_info' => ['label' => 'Student Information (entire section)', 'icon' => 'fa-id-card', 'group' => 'Sections'],
         'show_section_summary' => ['label' => 'Performance Summary strip (entire section)', 'icon' => 'fa-chart-simple', 'group' => 'Sections'],
         'show_section_marks_table' => ['label' => 'Marks Table (entire section)', 'icon' => 'fa-table', 'group' => 'Sections'],
+        // Progressive Assessment Record — a transposed summary table (one
+        // row per sitting: Practicals / Test 1 / Test 2 / Test 3 / Final
+        // …, one column per subject, with an AVG/AGG/DIV per row). Which
+        // sittings populate it is resolved server-side (the "Combine
+        // Examinations" sidebar list on the customise page if anything's
+        // ticked there, otherwise every sitting for the student's class
+        // in the same term & year is pulled in automatically) — this
+        // toggle only controls whether the section renders at all.
+        'show_section_progressive' => ['label' => 'Progressive Assessment Record (entire section)', 'icon' => 'fa-table-list', 'group' => 'Sections'],
 
         // ── Student Information — per-field toggles ─────────────────
         'show_stu_name' => ['label' => 'Student Name', 'icon' => 'fa-user', 'group' => 'Student Information Fields'],
@@ -112,6 +134,14 @@ return [
         'show_result' => ['label' => 'Result box', 'icon' => 'fa-flag-checkered', 'group' => 'Summary Bar'],
 
         'show_score_col' => ['label' => 'Score / Marks column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
+        // ── Classic-only granular split of 'show_score_col' — Classic is
+        // the only design whose marks table breaks the score out into
+        // three separate columns (Modern/Minimal show one combined
+        // MARKS/SCORE column, still controlled by 'show_score_col'
+        // above). Each of the three can now be removed on its own.
+        'show_col_full_marks' => ['label' => 'Full Marks column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
+        'show_col_marks_obtained' => ['label' => 'Marks Obtained column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
+        'show_col_percentage' => ['label' => 'Percentage column', 'icon' => 'fa-percent', 'group' => 'Marks Table'],
         'show_dev' => ['label' => 'Development (DEV ↑↓) column', 'icon' => 'fa-arrows-alt-v', 'group' => 'Marks Table'],
         'show_grade_pill' => ['label' => 'Grade pills (A / B / C …)', 'icon' => 'fa-tag', 'group' => 'Marks Table'],
         'show_comment_col' => ['label' => 'Comment column', 'icon' => 'fa-comment-dots', 'group' => 'Marks Table'],
@@ -123,6 +153,10 @@ return [
         'show_discipline' => ['label' => 'Discipline section', 'icon' => 'fa-user-shield', 'group' => 'Bottom Section'],
         'show_signatures' => ['label' => 'Signature column', 'icon' => 'fa-signature', 'group' => 'Bottom Section'],
         'show_term_dates' => ['label' => 'Term dates', 'icon' => 'fa-calendar-alt', 'group' => 'Bottom Section'],
+        // ── Granular split of 'show_term_dates' — each label can now be
+        // removed on its own instead of only as a pair.
+        'show_term_ends_on' => ['label' => 'This Term Ends On', 'icon' => 'fa-calendar-alt', 'group' => 'Bottom Section'],
+        'show_next_term_starts_on' => ['label' => 'Next Term Starts On', 'icon' => 'fa-calendar-alt', 'group' => 'Bottom Section'],
 
         'show_footer_timestamp' => ['label' => 'Generation timestamp', 'icon' => 'fa-clock', 'group' => 'Footer'],
         'show_confidential' => ['label' => 'CONFIDENTIAL stamp', 'icon' => 'fa-lock', 'group' => 'Footer'],
@@ -150,12 +184,18 @@ return [
             'show_border', 'show_watermark',
             'show_logo', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr',
-            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
+            // Granular marks-table column split (superseded 'show_score_col'
+            // for Classic — see the NOTE above).
+            'show_col_full_marks', 'show_col_marks_obtained', 'show_col_percentage',
+            'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            // Granular term-dates split (superseded 'show_term_dates').
+            'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters
             'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+            'show_section_progressive',
 
             // Student Information — per-field
             'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
@@ -171,12 +211,17 @@ return [
             'show_border', 'show_watermark',
             'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
+            // Modern's marks table only ever had ONE combined score
+            // column (no Full Marks / Marks Obtained split), so it keeps
+            // using 'show_score_col' as-is — no granularity problem here.
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters
             'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+            'show_section_progressive',
 
             // Student Information — per-field (Modern's info row only
             // shows this subset; Stream/DOB/etc. aren't part of its
@@ -197,12 +242,16 @@ return [
             // in slip-minimal for old saved profiles).
             'show_logo_left', 'show_logo_right', 'show_arabic', 'show_motto', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
+            // Minimal's marks table only ever had ONE combined score
+            // column too, same as Modern — keeps 'show_score_col' as-is.
             'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
-            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures', 'show_term_dates',
+            'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
+            'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
 
             // Whole-section masters
             'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+            'show_section_progressive',
 
             // Student Information — per-field (Minimal's ledger only
             // ever showed this subset of fields, mirrors Modern's list).
