@@ -29,6 +29,7 @@ use App\Exports\StudentBulkTemplate;
 use App\Imports\StudentBulkImport;
 use App\Models\SchoolALevelSubject;
 use App\Models\SchoolOLevelElective;
+use App\Support\StudentImportFields;
 
 
 class StudentController extends Controller
@@ -1307,6 +1308,11 @@ class StudentController extends Controller
         $aLevelSubjectOptions = $this->resolveALevelSubjectOptions($schoolId);
         $oLevelSubjectOptions = $this->resolveOLevelSubjectOptions($schoolId);
 
+        // Optional bio-data columns the school can tick on/off for the
+        // template — grouped for the checkbox UI. See
+        // StudentImportFields for the full catalog.
+        $optionalFieldGroups = StudentImportFields::grouped();
+
         return view(
             'student.bulk-import-students',
             compact(
@@ -1317,7 +1323,8 @@ class StudentController extends Controller
                 'secondaryOLevelClassIds',
                 'secondaryALevelClassIds',
                 'aLevelSubjectOptions',
-                'oLevelSubjectOptions'
+                'oLevelSubjectOptions',
+                'optionalFieldGroups'
             )
         );
     }
@@ -1430,8 +1437,50 @@ class StudentController extends Controller
             $subjectOptions = array_merge($subjectOptions, $this->resolveOLevelSubjectOptions($schoolId));
         }
 
+        // Optional bio-data columns the school ticked on the form.
+        $extraFields = StudentImportFields::selected((array) $request->input('fields', []));
+
+        $mode = $request->input('mode') === 'update' ? 'update' : 'create';
+        $matchBy = in_array($request->input('match_by'), ['lin', 'reg', 'name'], true)
+            ? $request->input('match_by')
+            : 'reg';
+
+        // Update mode: prefill the sheet with the class/stream's CURRENT
+        // students (identifier + name/gender + their existing value for
+        // each ticked field) so the school edits/fills blanks instead of
+        // retyping everyone from scratch.
+        $existingStudents = [];
+        if ($mode === 'update') {
+            $identifierColumn = $matchBy === 'lin' ? 'admission_number' : ($matchBy === 'reg' ? 'registration_number' : null);
+
+            $students = Student::where('school_id', $schoolId)
+                ->where('senior', $classId)
+                ->where('stream', $streamId)
+                ->orderBy('firstname')
+                ->get();
+
+            $existingStudents = $students->map(function ($student) use ($identifierColumn, $extraFields) {
+                $values = [];
+                foreach ($extraFields as $field) {
+                    $raw = $student->{$field['key']};
+                    $values[$field['key']] = in_array($field['key'], StudentImportFields::DATE_KEYS, true) && $raw
+                        ? \Illuminate\Support\Carbon::parse($raw)->format('Y-m-d')
+                        : (string) ($raw ?? '');
+                }
+
+                return [
+                    'identifier' => $identifierColumn ? (string) ($student->{$identifierColumn} ?? '') : '',
+                    'firstname' => $student->firstname,
+                    'lastname' => $student->lastname,
+                    'gender' => $student->gender,
+                    'values' => $values,
+                ];
+            })->all();
+        }
+
+        $filenamePrefix = $mode === 'update' ? 'students_update_' : 'students_import_';
         $filename =
-            'students_import_' .
+            $filenamePrefix .
             preg_replace('/\\s+/', '_', $className) . '_' .
             preg_replace('/\\s+/', '_', $streamName) . '_' .
             $year . '.xlsx';
@@ -1443,7 +1492,11 @@ class StudentController extends Controller
                 $year,
                 $schoolName,
                 $category,
-                $subjectOptions
+                $subjectOptions,
+                $extraFields,
+                $mode,
+                $matchBy,
+                $existingStudents
             ),
             $filename
         );
@@ -1474,9 +1527,16 @@ class StudentController extends Controller
             'stream_id' => 'required',
             'year' => 'required|digits:4',
             'file' => 'required|file|mimes:xlsx,xls',
+            'mode' => 'nullable|in:create,update',
+            'match_by' => 'nullable|in:lin,reg,name',
         ]);
 
         $schoolId = Helper::requireSchool();
+
+        $updateMode = $request->input('mode') === 'update';
+        $matchBy = in_array($request->input('match_by'), ['lin', 'reg', 'name'], true)
+            ? $request->input('match_by')
+            : 'reg';
 
         $school = DB::table('schools')
             ->where('id', $schoolId)
@@ -1516,7 +1576,9 @@ class StudentController extends Controller
             $level,
             $principalSubjects,
             $subsidiarySubjects,
-            $electiveSubjects
+            $electiveSubjects,
+            $updateMode,
+            $matchBy
         );
 
         Excel::import(
@@ -1524,8 +1586,28 @@ class StudentController extends Controller
             $request->file('file')
         );
 
+        if ($updateMode) {
+            $message = $importer->updatedCount . ' student(s) updated successfully.';
+            if ($importer->skippedCount) {
+                $message .= ' ' . $importer->skippedCount . ' row(s) had no changes to apply.';
+            }
+            if (count($importer->errors)) {
+                $message .= ' ' . count($importer->errors) . ' row(s) had errors.';
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'mode' => 'update',
+                'updated' => $importer->updatedCount,
+                'skipped' => $importer->skippedCount,
+                'errors' => $importer->errors,
+                'message' => $message,
+            ]);
+        }
+
         return response()->json([
             'status' => 'success',
+            'mode' => 'create',
 
             'imported' => $importer->importedCount,
 

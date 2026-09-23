@@ -259,6 +259,60 @@
             margin-bottom: 16px;
         }
 
+        .collapsible-section {
+            border: 1.5px solid var(--brd);
+            border-radius: var(--rads);
+            overflow: hidden;
+        }
+
+        .collapsible-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--bg);
+            border: none;
+            padding: 14px 18px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .collapsible-toggle:hover {
+            background: var(--bl);
+        }
+
+        .collapsible-toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapsible-chevron {
+            font-size: .8rem;
+            color: var(--b);
+            transition: transform .2s;
+        }
+
+        .collapsible-toggle[aria-expanded="true"] .collapsible-chevron {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-badge {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--b);
+            background: var(--bl);
+            border-radius: 999px;
+            padding: 3px 12px;
+            white-space: nowrap;
+        }
+
+        .collapsible-body {
+            padding: 0 18px 18px;
+        }
+
+
         .divider {
             border: none;
             border-top: 1.5px solid var(--brd);
@@ -305,6 +359,8 @@
             }
         }
     </style>
+    {{-- SweetAlert2 CSS --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endsection
 
 @section('content')
@@ -444,10 +500,83 @@
 
                 <hr class="divider">
 
+                {{-- ===== IMPORT MODE ===== --}}
+                <div class="section-title">Import Mode</div>
+                <p style="color:var(--t2);font-size:.9rem;margin-bottom:14px;">Choose whether this template/upload
+                    creates new students, or updates bio-data on students already in this class/stream.</p>
+                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:10px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
+                        <input type="radio" name="import_mode" id="mode_create" value="create" checked>
+                        <span>
+                            <strong style="font-size:.88rem;color:var(--t1);">Add new students</strong><br>
+                            <span style="font-size:.78rem;color:var(--t2);">Blank template — one row per new admission.</span>
+                        </span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
+                        <input type="radio" name="import_mode" id="mode_update" value="update">
+                        <span>
+                            <strong style="font-size:.88rem;color:var(--t1);">Update existing students</strong><br>
+                            <span style="font-size:.78rem;color:var(--t2);">Template is pre-filled with current students — fill in the blanks.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div id="updateModeOptions" style="display:none; margin-top:12px; padding:16px 18px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                    <label class="form-label" style="margin-bottom:8px;">Match existing students by</label>
+                    <select id="match_by" style="width:100%; max-width:320px; padding:10px 14px; border-radius:8px; border:1.5px solid var(--brd); font-size:.9rem;">
+                        <option value="reg" selected>Registration No. (recommended)</option>
+                        <option value="lin">LIN No.</option>
+                        <option value="name">Firstname + Lastname</option>
+                    </select>
+                    <p style="font-size:.8rem;color:#4b4880;margin:10px 0 0;">
+                        Registration No. and LIN No. are unique per student, so they're the safest way to match.
+                        Matching by name only works reliably if no two students in this class/stream share the exact
+                        same first and last name. A blank cell in the uploaded file never erases existing data —
+                        only cells you actually fill in are applied.
+                    </p>
+                </div>
+
+                <hr class="divider">
+
+                {{-- ===== OPTIONAL BIO-DATA COLUMNS (collapsible) ===== --}}
+                <div class="collapsible-section" id="optionalFieldsSection">
+                    <button type="button" class="collapsible-toggle" id="optionalFieldsToggle" aria-expanded="false">
+                        <span class="collapsible-toggle-left">
+                            <i class="fas fa-chevron-right collapsible-chevron" id="optionalFieldsChevron"></i>
+                            <span class="section-title" style="margin-bottom:0;">Optional Columns to Include</span>
+                        </span>
+                        <span class="collapsible-badge" id="optionalFieldsBadge" style="display:none;">0 selected</span>
+                    </button>
+                    <div class="collapsible-body" id="optionalFieldsBody" style="display:none;">
+                        <p style="color:var(--t2);font-size:.9rem;margin:14px 0;">Tick any extra bio-data you already
+                            have on hand (e.g. from a spreadsheet like your school's existing student register) so it
+                            can be entered in the same pass as names — instead of a separate trip to each student's
+                            profile later.</p>
+                        <div style="display:flex; gap:10px; margin-bottom:14px;">
+                            <button type="button" class="btn-outline" id="btn-fields-all" style="padding:6px 16px;font-size:.8rem;">Select All</button>
+                            <button type="button" class="btn-outline" id="btn-fields-none" style="padding:6px 16px;font-size:.8rem;">Clear</button>
+                        </div>
+                        <div id="optionalFieldsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px 18px; margin-bottom:6px;">
+                            @foreach($optionalFieldGroups ?? [] as $group => $fields)
+                                <div style="grid-column:1/-1; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--t3); margin-top:8px;">{{ $group }}</div>
+                                @foreach($fields as $field)
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:.86rem; color:var(--t1); cursor:pointer;">
+                                        <input type="checkbox" class="optional-field-checkbox" value="{{ $field['key'] }}">
+                                        {{ $field['label'] }}
+                                    </label>
+                                @endforeach
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+
                 {{-- Download Template --}}
                 <div class="section-title">Download Import Template</div>
-                <p style="color:var(--t2);font-size:.9rem;">Download the Excel template for the selected class and stream.
-                    The template includes sample rows to guide your data entry.</p>
+                <p style="color:var(--t2);font-size:.9rem;" id="templateHelpText">Download the Excel template for the
+                    selected class and stream. The template includes sample rows to guide your data entry.</p>
                 <button type="button" class="btn-outline" id="btn-download-template">
                     <i class="fas fa-download"></i> Download Template
                 </button>
@@ -459,7 +588,7 @@
                 <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Click to browse or drag & drop your Excel file here</p>
-                    <small>Supported: .xlsx, .xls &nbsp;|&nbsp; Required columns: firstname, lastname, gender</small>
+                    <small id="uploadHint">Supported: .xlsx, .xls &nbsp;|&nbsp; Required columns: firstname, lastname, gender</small>
                 </div>
                 <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
                 <div id="file-name-display"></div>
@@ -467,9 +596,9 @@
                 <div style="margin-top: 20px; display:flex; gap:12px; align-items:center; flex-wrap: wrap;">
                     <button type="button" class="btn-primary-custom" id="btn-import" disabled>
                         <span id="import-spinner" class="spinner-border spinner-border-sm me-2" style="display:none"></span>
-                        <i class="fas fa-upload me-1"></i> Import Students
+                        <i class="fas fa-upload me-1"></i> <span id="btn-import-label">Import Students</span>
                     </button>
-                    <span style="font-size:.82rem;color:var(--t2)">Only filled rows will be imported.</span>
+                    <span style="font-size:.82rem;color:var(--t2)" id="importHelpText">Only filled rows will be imported.</span>
                 </div>
 
                 {{-- Result --}}
@@ -478,6 +607,7 @@
                     <div class="err-list" id="err-list"></div>
                 </div>
             </div>
+
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
                 <a href="{{ route('students.all.students') }}" class="btn-outline" style="display: inline-flex;">
@@ -494,10 +624,26 @@
 @endsection
 
 @section('js')
+    {{-- SweetAlert2 JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
     <script>
         const schoolId = {{ $schoolId }};
         const csrfToken = '{{ csrf_token() }}';
         let selectedFile = null;
+
+        // SweetAlert2 toast mixin for quick info messages
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
 
         // Load streams when class changes
         document.getElementById('class_id').addEventListener('change', function () {
@@ -606,16 +752,109 @@
             updateGuidance();
         })();
 
+        // ===== Import mode (create vs update) =====
+        function currentMode() {
+            return document.querySelector('input[name="import_mode"]:checked')?.value || 'create';
+        }
+
+        function selectedFields() {
+            return Array.from(document.querySelectorAll('.optional-field-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function updateModeUI() {
+            const isUpdate = currentMode() === 'update';
+            document.getElementById('updateModeOptions').style.display = isUpdate ? 'block' : 'none';
+            document.getElementById('templateHelpText').textContent = isUpdate
+                ? 'Downloads a template pre-filled with this class/stream\'s current students — fill in the blanks for the columns you ticked below, then re-upload.'
+                : 'Download the Excel template for the selected class and stream. The template includes sample rows to guide your data entry.';
+            document.getElementById('uploadHint').textContent = isUpdate
+                ? 'Supported: .xlsx, .xls  |  Only cells you fill in are applied — blanks never erase existing data.'
+                : 'Supported: .xlsx, .xls  |  Required columns: firstname, lastname, gender';
+            document.getElementById('btn-import-label').textContent = isUpdate ? 'Update Students' : 'Import Students';
+            document.getElementById('importHelpText').textContent = isUpdate
+                ? 'Existing students are matched and updated — no new students are created.'
+                : 'Only filled rows will be imported.';
+        }
+
+        document.getElementById('mode_create').addEventListener('change', updateModeUI);
+        document.getElementById('mode_update').addEventListener('change', updateModeUI);
+        updateModeUI();
+
+        // ===== Optional Columns — collapsible panel =====
+        // Collapsed by default; a click expands/collapses it, and the
+        // toggle's badge always shows how many are ticked so the count
+        // is visible even while the panel is closed.
+        (function () {
+            const toggle = document.getElementById('optionalFieldsToggle');
+            const body = document.getElementById('optionalFieldsBody');
+            const chevron = document.getElementById('optionalFieldsChevron');
+            const badge = document.getElementById('optionalFieldsBadge');
+
+            function setExpanded(expanded) {
+                toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                body.style.display = expanded ? 'block' : 'none';
+            }
+
+            toggle.addEventListener('click', function () {
+                setExpanded(toggle.getAttribute('aria-expanded') !== 'true');
+            });
+
+            function updateBadge() {
+                const count = selectedFields().length;
+                badge.textContent = count + ' selected';
+                badge.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+
+            document.getElementById('optionalFieldsGrid').addEventListener('change', updateBadge);
+            document.getElementById('btn-fields-all').addEventListener('click', updateBadge);
+            document.getElementById('btn-fields-none').addEventListener('click', updateBadge);
+            updateBadge();
+        })();
+
+        document.getElementById('btn-fields-all').addEventListener('click', function () {
+            document.querySelectorAll('.optional-field-checkbox').forEach(cb => cb.checked = true);
+        });
+        document.getElementById('btn-fields-none').addEventListener('click', function () {
+            document.querySelectorAll('.optional-field-checkbox').forEach(cb => cb.checked = false);
+        });
+
         // Download template
         document.getElementById('btn-download-template').addEventListener('click', function () {
             const classId = document.getElementById('class_id').value;
             const streamId = document.getElementById('stream_id').value;
             const year = document.getElementById('year').value;
-            if (!classId || !streamId) { alert('Please select both a class and stream first.'); return; }
+            if (!classId || !streamId) { 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Selection',
+                    text: 'Please select both a class and stream first.',
+                    confirmButtonColor: '#2f2ccb'
+                });
+                return; 
+            }
             const categoryId = document.getElementById('category').value;
-            if (!categoryId) { alert('Please select a category first.'); return; }
-            const url = `/students/download-template?class_id=${encodeURIComponent(classId)}&stream_id=${encodeURIComponent(streamId)}&year=${year}&category=${encodeURIComponent(categoryId)}`;
-            window.location.href = url;
+            if (!categoryId) { 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Category',
+                    text: 'Please select a category first.',
+                    confirmButtonColor: '#2f2ccb'
+                });
+                return; 
+            }
+
+            const params = new URLSearchParams();
+            params.set('class_id', classId);
+            params.set('stream_id', streamId);
+            params.set('year', year);
+            params.set('category', categoryId);
+            params.set('mode', currentMode());
+            if (currentMode() === 'update') {
+                params.set('match_by', document.getElementById('match_by').value);
+            }
+            selectedFields().forEach(f => params.append('fields[]', f));
+
+            window.location.href = `/students/download-template?${params.toString()}`;
         });
 
         // File drag & drop
@@ -639,7 +878,15 @@
             const streamId = document.getElementById('stream_id').value;
             const year = document.getElementById('year').value;
             const categoryId = document.getElementById('category').value;
-            if (!classId || !streamId || !year || !categoryId) { alert('Please select class, stream, year and category.'); return; }
+            if (!classId || !streamId || !year || !categoryId) { 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Configuration',
+                    text: 'Please select class, stream, year and category.',
+                    confirmButtonColor: '#2f2ccb'
+                });
+                return; 
+            }
 
             const spinner = document.getElementById('import-spinner');
             spinner.style.display = 'inline-block';
@@ -651,6 +898,10 @@
             fd.append('stream_id', streamId);
             fd.append('year', year);
             fd.append('category', categoryId);
+            fd.append('mode', currentMode());
+            if (currentMode() === 'update') {
+                fd.append('match_by', document.getElementById('match_by').value);
+            }
             fd.append('file', selectedFile);
 
             fetch('/students/bulk-import', { method: 'POST', body: fd })
@@ -675,7 +926,9 @@
             box.style.display = 'block';
             errList.innerHTML = '';
 
-            if (data.status === 'success' || data.imported > 0) {
+            const successCount = data.mode === 'update' ? (data.updated ?? 0) : (data.imported ?? 0);
+
+            if (data.status === 'success' || successCount > 0) {
                 box.classList.add('result-success');
                 msg.innerHTML = `<strong style="color:var(--g)"><i class="fas fa-check-circle me-1"></i>${data.message}</strong>`;
             } else {
@@ -684,8 +937,7 @@
             }
 
             if (data.errors && data.errors.length) {
-                const hasSuccess = (data.imported ?? 0) > 0;
-                if (hasSuccess) box.className = 'result-box result-warn';
+                if (successCount > 0) box.className = 'result-box result-warn';
                 data.errors.forEach(e => {
                     const d = document.createElement('div');
                     d.className = 'err-item';
@@ -693,6 +945,15 @@
                     errList.appendChild(d);
                 });
             }
+
+            // Additionally, show a SweetAlert2 popup for the overall result
+            const iconType = data.status === 'success' || successCount > 0 ? 'success' : 'error';
+            Swal.fire({
+                icon: iconType,
+                title: data.status === 'success' || successCount > 0 ? 'Completed' : 'Import Failed',
+                html: `<p style="font-size:.9rem;color:var(--t2);">${data.message}</p>`,
+                confirmButtonColor: '#2f2ccb'
+            });
         }
     </script>
 @endsection

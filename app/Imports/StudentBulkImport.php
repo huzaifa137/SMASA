@@ -5,26 +5,44 @@ namespace App\Imports;
 use App\Models\Student;
 use App\Models\StudentALevelCombination;
 use App\Models\StudentOLevelElective;
+use App\Support\StudentImportFields;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 /**
- * Imports a class/stream's students from Excel — and, when the class is
- * Secondary A-Level or O-Level, also assigns each student's own subject
- * combination / electives straight from the same row, using the
+ * Imports (or, in update mode, updates) a class/stream's students from
+ * Excel — and, when the class is Secondary A-Level or O-Level, also
+ * assigns each student's own subject combination / electives straight
+ * from the same row, using the
  * principal_1/principal_2/principal_3/subsidiary or elective_1/elective_2
  * columns StudentBulkTemplate adds for those levels.
+ *
+ * Any of StudentImportFields::FIELDS (LIN No., contact, guardian details,
+ * date of birth, etc.) present as a column — whether or not it was one of
+ * the columns ticked when the template was generated, so a hand-edited
+ * or reused template still works — is read and applied. A blank cell for
+ * one of these never clears an existing value; it's just left alone.
+ *
+ * Two modes, chosen by $updateMode:
+ *   - create (default): a new Student row is created per row, same as
+ *     before, plus any optional fields present are set on creation.
+ *   - update: no new students are created. Each row is matched to an
+ *     EXISTING student — by LIN No. (admission_number), Registration No.
+ *     (registration_number), or firstname+lastname (per $matchBy) — and
+ *     only the non-empty cells on that row are written onto that
+ *     student's record. Unmatched or ambiguous rows are reported as
+ *     errors and skipped; nothing is created.
  *
  * Subject names are matched case/whitespace-insensitively against the
  * merged list (master_datas + this school's own additions) passed in from
  * StudentController — the exact same list alevel-combinations /
  * o-level-electives use, so anything selectable there is importable here.
  * A name that doesn't match anything is never guessed at — it's reported
- * back as a warning (the student is still created; only that one subject
- * is skipped) so the school can fix the spelling or add it as a new
- * elective/subject first, then patch it up on the manual entry screen.
+ * back as a warning (the student is still created/updated; only that one
+ * subject is skipped) so the school can fix the spelling or add it as a
+ * new elective/subject first, then patch it up on the manual entry screen.
  */
 class StudentBulkImport implements ToCollection, WithHeadingRow
 {
@@ -47,11 +65,19 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
     /** @var Collection lowercased-trimmed name => int id */
     protected $electivesByName;
 
+    /** Whether this run updates existing students instead of creating new ones. */
+    protected bool $updateMode;
+
+    /** 'lin' | 'reg' | 'name' — how a row is matched to an existing student in update mode. */
+    protected string $matchBy;
+
     public const PRINCIPAL_LIMIT = 3;
     public const ELECTIVE_LIMIT = 2;
 
     public array $errors = [];
     public int $importedCount = 0;
+    public int $updatedCount = 0;
+    public int $skippedCount = 0;
 
     public function __construct(
         $schoolId,
@@ -63,7 +89,9 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
         ?string $level = null,
         array $principalSubjects = [],
         array $subsidiarySubjects = [],
-        array $electiveSubjects = []
+        array $electiveSubjects = [],
+        bool $updateMode = false,
+        string $matchBy = 'reg'
     ) {
         $this->schoolId = $schoolId;
         $this->classId = $classId;
@@ -72,6 +100,8 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
         $this->category = $category;
         $this->addedBy = $addedBy;
         $this->level = $level;
+        $this->updateMode = $updateMode;
+        $this->matchBy = in_array($matchBy, ['lin', 'reg', 'name'], true) ? $matchBy : 'reg';
 
         $this->principalsByName = collect($principalSubjects)
             ->keyBy(fn($s) => $this->normalizeName($s['name']));
@@ -89,6 +119,79 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
     }
 
     public function collection(Collection $rows)
+    {
+        if ($this->updateMode) {
+            $this->runUpdate($rows);
+        } else {
+            $this->runCreate($rows);
+        }
+    }
+
+    /**
+     * Reads every StudentImportFields column present and non-empty on the
+     * row, normalizing date columns along the way. Aliases 'phone' /
+     * 'contact' onto 'primary_contact' for backwards compatibility with
+     * the original 3-column template's phone handling.
+     *
+     * @return array field_key => value, only for columns actually present with a value
+     */
+    protected function extractOptionalFields($row): array
+    {
+        $values = [];
+
+        $primaryContact = $row['primary_contact'] ?? $row['phone'] ?? $row['contact'] ?? null;
+        if (!empty(trim((string) $primaryContact))) {
+            $values['primary_contact'] = trim((string) $primaryContact);
+        }
+
+        foreach (StudentImportFields::keys() as $key) {
+            if ($key === 'primary_contact') {
+                continue; // handled above with its aliases
+            }
+
+            $raw = $row[$key] ?? null;
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+
+            $values[$key] = in_array($key, StudentImportFields::DATE_KEYS, true)
+                ? $this->normalizeDate($raw)
+                : trim((string) $raw);
+        }
+
+        return array_filter($values, fn($v) => $v !== null && $v !== '');
+    }
+
+    /**
+     * Normalizes a date cell to Y-m-d, whatever shape Excel/PhpSpreadsheet
+     * handed back for it: a DateTime/Carbon instance (date-formatted
+     * cell), a numeric Excel serial (rare with ToCollection, but cheap to
+     * guard against), or a plain typed string (left as-is — Laravel's
+     * `date` cast / MySQL both parse common formats like Y-m-d or d/m/Y
+     * fine on their own).
+     */
+    protected function normalizeDate($value): ?string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+
+    // ───────────────────────────── Create mode ─────────────────────────
+
+    protected function runCreate(Collection $rows)
     {
         $schoolRegCode = DB::table('schools')
             ->where('id', $this->schoolId)
@@ -198,25 +301,21 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
 
             try {
 
-                $student = Student::create([
-                    'firstname' => $firstname,
-                    'lastname' => $lastname,
-                    'gender' => $gender,
-                    'senior' => $this->classId,
-                    'stream' => $this->streamId,
-                    'school_id' => $this->schoolId,
-                    'registration_number' => $studentId,
-                    'primary_contact' => trim(
-                        $row['phone']
-                        ?? $row['contact']
-                        ?? $row['primary_contact']
-                        ?? ''
-                    ),
-                    'date_of_birth' => !empty($row['date_of_birth'])
-                        ? $row['date_of_birth']
-                        : null,
-                    'added_by' => $this->addedBy,
-                ]);
+                $attributes = array_merge(
+                    [
+                        'firstname' => $firstname,
+                        'lastname' => $lastname,
+                        'gender' => $gender,
+                        'senior' => $this->classId,
+                        'stream' => $this->streamId,
+                        'school_id' => $this->schoolId,
+                        'registration_number' => $studentId,
+                        'added_by' => $this->addedBy,
+                    ],
+                    $this->extractOptionalFields($row)
+                );
+
+                $student = Student::create($attributes);
 
                 $this->importedCount++;
 
@@ -232,6 +331,125 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                     "Row {$rowNumber}: " . $e->getMessage();
             }
         }
+    }
+
+    // ───────────────────────────── Update mode ─────────────────────────
+
+    /**
+     * Matches each row to an existing student in this school (scoped to
+     * the chosen class/stream when matching by name, since names alone
+     * aren't unique school-wide) and writes only the non-empty cells onto
+     * that record. Never creates a student; a row that matches nothing —
+     * or, for name-matching, matches more than one student — is reported
+     * as an error and left untouched.
+     */
+    protected function runUpdate(Collection $rows)
+    {
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+
+            $firstname = trim($row['firstname'] ?? $row['first_name'] ?? '');
+            $lastname = trim($row['lastname'] ?? $row['last_name'] ?? $row['surname'] ?? '');
+
+            $student = $this->findExistingStudent($row, $firstname, $lastname, $rowNumber);
+
+            if (!$student) {
+                continue; // findExistingStudent already logged the reason
+            }
+
+            $updates = $this->extractOptionalFields($row);
+
+            // Name/gender are prefilled by the update template but stay
+            // editable — apply them too if the school changed them, same
+            // "never overwrite with a blank" rule as every other field.
+            if ($firstname !== '') {
+                $updates['firstname'] = $firstname;
+            }
+            if ($lastname !== '') {
+                $updates['lastname'] = $lastname;
+            }
+            $gender = trim($row['gender'] ?? '');
+            if ($gender !== '') {
+                $gender = ucfirst(strtolower($gender));
+                if (in_array($gender, ['Male', 'Female', 'Other'])) {
+                    $updates['gender'] = $gender;
+                }
+            }
+
+            try {
+                if (!empty($updates)) {
+                    $student->update($updates);
+                    $this->updatedCount++;
+                } else {
+                    $this->skippedCount++;
+                }
+
+                if ($this->level === 'alevel') {
+                    $this->assignALevelCombination($student, $row, $rowNumber);
+                } elseif ($this->level === 'olevel') {
+                    $this->assignOLevelElectives($student, $row, $rowNumber);
+                }
+            } catch (\Exception $e) {
+                $this->errors[] = "Row {$rowNumber}: " . $e->getMessage();
+            }
+        }
+    }
+
+    /**
+     * Resolves the row to one existing Student, per $matchBy. Always
+     * scoped to this school; 'name' matching is additionally scoped to
+     * the chosen class/stream, since firstname+lastname isn't unique
+     * school-wide the way LIN No./Registration No. are.
+     */
+    protected function findExistingStudent($row, string $firstname, string $lastname, int $rowNumber): ?Student
+    {
+        if ($this->matchBy === 'lin' || $this->matchBy === 'reg') {
+            $column = $this->matchBy === 'lin' ? 'admission_number' : 'registration_number';
+            $label = $this->matchBy === 'lin' ? 'LIN No.' : 'Registration No.';
+
+            $identifier = trim((string) ($row[$column] ?? ($this->matchBy === 'lin' ? ($row['lin_no'] ?? '') : ($row['registration_no'] ?? ''))));
+
+            if ($identifier === '') {
+                $this->errors[] = "Row {$rowNumber}: No {$label} given — this row was skipped (update mode never creates new students).";
+                return null;
+            }
+
+            $student = Student::where('school_id', $this->schoolId)
+                ->where($column, $identifier)
+                ->first();
+
+            if (!$student) {
+                $this->errors[] = "Row {$rowNumber}: No existing student found with {$label} \"{$identifier}\" — skipped.";
+                return null;
+            }
+
+            return $student;
+        }
+
+        // matchBy === 'name'
+        if (empty($firstname) || empty($lastname)) {
+            $this->errors[] = "Row {$rowNumber}: Firstname and lastname are required to match an existing student by name.";
+            return null;
+        }
+
+        $matches = Student::where('school_id', $this->schoolId)
+            ->where('senior', $this->classId)
+            ->where('stream', $this->streamId)
+            ->whereRaw('LOWER(TRIM(firstname)) = ?', [strtolower($firstname)])
+            ->whereRaw('LOWER(TRIM(lastname)) = ?', [strtolower($lastname)])
+            ->get();
+
+        if ($matches->isEmpty()) {
+            $this->errors[] = "Row {$rowNumber}: No existing student named \"{$firstname} {$lastname}\" found in this class/stream — skipped.";
+            return null;
+        }
+
+        if ($matches->count() > 1) {
+            $this->errors[] = "Row {$rowNumber}: \"{$firstname} {$lastname}\" matches {$matches->count()} students in this class/stream — skipped. Re-download the update template (it includes a Registration No. column) and match by that instead.";
+            return null;
+        }
+
+        return $matches->first();
     }
 
     /**
