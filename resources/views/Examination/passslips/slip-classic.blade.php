@@ -2252,9 +2252,13 @@
                 | every data row always stay in sync.
                 |──────────────────────────────────────────────────────────────
                 */
-                // Count visible columns for colspan calculations
+                // Count visible columns for colspan calculations. Classic's
+                // score group is 3 independently-toggleable columns (Full
+                // Marks / Marks Obtained / Percentage) rather than one.
                 $visibleCols = 1 // Subject (always visible)
-                    + ($cfg['score_col'] ? 1 : 0)
+                    + ($cfg['col_full_marks'] ? 1 : 0)
+                    + ($cfg['col_marks_obtained'] ? 1 : 0)
+                    + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['dev'] ? 1 : 0)
                     + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['comment_col'] ? 1 : 0)
@@ -2671,12 +2675,14 @@
                                     <tr>
                                         <th style="width:28px;">NO.</th>
                                         <th class="tl" style="min-width:110px;">SUBJECT</th>
-                                        @if($cfg['score_col'])
+                                        @if($cfg['col_full_marks'])
                                             <th style="width:56px;">FULL MARKS</th>
+                                        @endif
+                                        @if($cfg['col_marks_obtained'])
                                             <th style="width:64px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS OBTAINED' }}</th>
-                                            @if(!$isEarlyYears)
-                                                <th style="width:56px;">PERCENTAGE (%)</th>
-                                            @endif
+                                        @endif
+                                        @if($cfg['col_percentage'] && !$isEarlyYears)
+                                            <th style="width:56px;">PERCENTAGE (%)</th>
                                         @endif
                                         @if($cfg['dev'])
                                             <th style="width:38px;">DEV.</th>
@@ -2716,12 +2722,14 @@
                                                 <tr>
                                                     <td class="num-td">{{ $rn }}</td>
                                                     <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                                    @if($cfg['score_col'])
+                                                    @if($cfg['col_full_marks'])
                                                         <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                    @endif
+                                                    @if($cfg['col_marks_obtained'])
                                                         <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
-                                                        @if(!$isEarlyYears)
-                                                            <td class="score-td">{{ $sm->percentage }}%</td>
-                                                        @endif
+                                                    @endif
+                                                    @if($cfg['col_percentage'] && !$isEarlyYears)
+                                                        <td class="score-td">{{ $sm->percentage }}%</td>
                                                     @endif
                                                     @if($cfg['dev'])
                                                         <td class="num-td">
@@ -2763,12 +2771,14 @@
                                             <tr>
                                                 <td class="num-td">{{ $rn }}</td>
                                                 <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                                @if($cfg['score_col'])
+                                                @if($cfg['col_full_marks'])
                                                     <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                @endif
+                                                @if($cfg['col_marks_obtained'])
                                                     <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
-                                                    @if(!$isEarlyYears)
-                                                        <td class="score-td">{{ $sm->percentage }}%</td>
-                                                    @endif
+                                                @endif
+                                                @if($cfg['col_percentage'] && !$isEarlyYears)
+                                                    <td class="score-td">{{ $sm->percentage }}%</td>
                                                 @endif
                                                 @if($cfg['dev'])
                                                     <td class="num-td">
@@ -2805,12 +2815,14 @@
                                                 style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
                                                 TOTAL
                                             </td>
-                                            @if($cfg['score_col'])
+                                            @if($cfg['col_full_marks'])
                                                 <td class="score-td">{{ $totMax }}</td>
+                                            @endif
+                                            @if($cfg['col_marks_obtained'])
                                                 <td class="score-td">{{ $totObt }}</td>
-                                                @if(!$isEarlyYears)
-                                                    <td class="score-td">{{ $pct }}%</td>
-                                                @endif
+                                            @endif
+                                            @if($cfg['col_percentage'] && !$isEarlyYears)
+                                                <td class="score-td">{{ $pct }}%</td>
                                             @endif
                                             @if($cfg['dev'])
                                                 <td class="num-td">
@@ -2845,6 +2857,14 @@
                         @endif
                     </div>
                 @endif
+
+                {{-- ══ PROGRESSIVE ASSESSMENT RECORD ═══════════════════════════════
+                     Transposed summary of every sitting this term/year (one row
+                     per sitting, one column per subject). Whole section gated by
+                     its own master switch, independent of the main Marks Table. --}}
+                @include('Examination.passslips.partials.progressive-assessment-record', [
+                    'progressive' => $progressiveSlip ?? null,
+                ])
 
                 {{-- ══ OPTIONAL PERFORMANCE-OVER-TIME CHART ═══════════════════════ --}}
                 @if($cfg['perf_chart'] && count($growth) > 0)
@@ -2983,24 +3003,32 @@
                         </div>
                     @endif
 
-                    {{-- ══ TERM DATES ═══════════════════════════════════════════════════ --}}
-                    @if($cfg['term_dates'] ?? true)
+                    {{-- ══ TERM DATES ═══════════════════════════════════════════════════
+                         Each label now gated independently via 'term_ends_on' /
+                         'next_term_starts_on' (see the $cfg computation above) instead
+                         of the old combined 'term_dates' switch, so either can be
+                         removed on its own. --}}
+                    @if(($cfg['term_ends_on'] ?? true) || ($cfg['next_term_starts_on'] ?? true))
                         @php
                             $termEndsOn = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
                                 ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
                             $nextTermStartsOn = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
                                 ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
                         @endphp
-                        @if($termEndsOn || $nextTermStartsOn)
+                        @if(($cfg['term_ends_on'] && $termEndsOn) || ($cfg['next_term_starts_on'] && $nextTermStartsOn))
                             <div class="rc-sig-row" style="margin-top:.5rem;">
-                                <div class="rc-sig-cell">
-                                    <div class="lbl">This Term Ends On</div>
-                                    <div class="rc-sig-line">{{ $termEndsOn ?? '—' }}</div>
-                                </div>
-                                <div class="rc-sig-cell">
-                                    <div class="lbl">Next Term Starts On</div>
-                                    <div class="rc-sig-line">{{ $nextTermStartsOn ?? '—' }}</div>
-                                </div>
+                                @if($cfg['term_ends_on'] ?? true)
+                                    <div class="rc-sig-cell">
+                                        <div class="lbl">This Term Ends On</div>
+                                        <div class="rc-sig-line">{{ $termEndsOn ?? '—' }}</div>
+                                    </div>
+                                @endif
+                                @if($cfg['next_term_starts_on'] ?? true)
+                                    <div class="rc-sig-cell">
+                                        <div class="lbl">Next Term Starts On</div>
+                                        <div class="rc-sig-line">{{ $nextTermStartsOn ?? '—' }}</div>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     @endif

@@ -791,6 +791,40 @@ selected classes" is clicked. --}}
                     @endforeach
                 @endif
 
+                {{-- Progressive Assessment Record — a DEDICATED sittings
+                     picker, separate from "Combine Examinations" above
+                     (that one controls what the main Marks Table averages
+                     together; this one only controls which rows appear in
+                     the Progressive Assessment Record section). Leaving
+                     everything here unchecked keeps the old behaviour —
+                     every sitting recorded for this class in the current
+                     term & year is pulled in automatically. Checking one
+                     or more switches this to "only these, in this order". --}}
+                <div class="cz-group-label"><i class="fas fa-table-list"></i> Progressive Assessment Record — Sittings</div>
+                <div class="small text-muted mb-2" style="font-size:.72rem;">
+                    Pick which sittings should appear as rows in the Progressive
+                    Assessment Record. Leave all unchecked to auto-include every
+                    sitting recorded for this class this term/year.
+                </div>
+                <div class="cz-check-row">
+                    <label for="cz_prog_{{ $exam->id }}">
+                        <input type="checkbox" id="cz_prog_{{ $exam->id }}" class="cz-exam-progressive-cb" value="{{ $exam->id }}"
+                            style="margin-right:.4rem;">
+                        {{ $exam->exam_name }} ({{ $exam->term }}) — current
+                    </label>
+                </div>
+                @if (isset($siblingExams))
+                    @foreach ($siblingExams as $se)
+                        <div class="cz-check-row">
+                            <label for="cz_prog_{{ $se->id }}">
+                                <input type="checkbox" id="cz_prog_{{ $se->id }}" class="cz-exam-progressive-cb" value="{{ $se->id }}"
+                                    style="margin-right:.4rem;">
+                                {{ $se->exam_name }} ({{ $se->term }})
+                            </label>
+                        </div>
+                    @endforeach
+                @endif
+
                 <div class="cz-group-label"><i class="fas fa-save"></i> Apply &amp; Save</div>
                 <div class="small text-muted mb-2" style="font-size:.72rem;">
                     Pick which class(es) this customised design belongs to, then save.

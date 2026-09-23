@@ -1309,6 +1309,7 @@
                     'examSummary' => $examSummary ?? [],
                     'avgSummary' => $avgSummary ?? null,
                     'disciplineRatings' => $disciplineRatings ?? collect(),
+                    'progressiveAssessment' => $progressiveAssessment ?? null,
                 ]
             ];
         } else {
@@ -1380,6 +1381,7 @@
                 $examSummarySlip = collect($slipData['examSummary'] ?? []);
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
                 $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
+                $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
 
                 $divClass = function ($div) {
                     if (!$div || $div === '—')
@@ -1433,7 +1435,13 @@
                     'remarks' => $on('show_remarks', true, $savedCfg),
                     'discipline' => $on('show_discipline', true, $savedCfg),
                     'signatures' => $on('show_signatures', true, $savedCfg),
-                    'term_dates' => $on('show_term_dates', true, $savedCfg),
+                    // Granular split of the old combined 'show_term_dates'
+                    // switch — each label now removable on its own instead
+                    // of only as a pair. Falls back to the legacy key
+                    // (then true) so a profile saved before this split
+                    // still shows both.
+                    'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                    'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
                     'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
                     'confidential' => $on('show_confidential', true, $savedCfg),
                     'score_col' => $on('show_score_col', true, $savedCfg),
@@ -1445,6 +1453,7 @@
                     'section_student_info' => $on('show_section_student_info', true, $savedCfg),
                     'section_summary' => $on('show_section_summary', true, $savedCfg),
                     'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+                    'section_progressive' => $on('show_section_progressive', true, $savedCfg),
 
                     // Student Info row — per-field (Modern's row only
                     // ever showed this subset of fields).
@@ -2199,6 +2208,11 @@
                 </div>
                 @endif
 
+                {{-- ══ PROGRESSIVE ASSESSMENT RECORD ═══════════════════════════════ --}}
+                @include('Examination.passslips.partials.progressive-assessment-record', [
+                    'progressive' => $progressiveSlip ?? null,
+                ])
+
                 {{-- ══ BOTTOM SECTION ══════════════════════════════════════════════ --}}
                 @if($cfg['perf_chart'] || $cfg['remarks'] || $cfg['discipline'] || $cfg['signatures'])
                     <div class="bottom-section">
@@ -2286,18 +2300,24 @@
                     </div>
                 @endif
 
-                {{-- ══ TERM DATES ═══════════════════════════════════════════════════ --}}
-                @if($cfg['term_dates'] ?? true)
+                {{-- ══ TERM DATES ═══════════════════════════════════════════════════
+                     Each label gated independently via 'term_ends_on' /
+                     'next_term_starts_on' so either can be removed on its own. --}}
+                @if(($cfg['term_ends_on'] ?? true) || ($cfg['next_term_starts_on'] ?? true))
                     @php
                         $termEndsOnM = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
                             ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
                         $nextTermStartsOnM = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
                             ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
                     @endphp
-                    @if($termEndsOnM || $nextTermStartsOnM)
+                    @if(($cfg['term_ends_on'] && $termEndsOnM) || ($cfg['next_term_starts_on'] && $nextTermStartsOnM))
                         <div class="sig-col-right" style="display:flex;width:100%;justify-content:space-between;margin-top:.5rem;">
-                            <div><strong>This Term Ends On:</strong> {{ $termEndsOnM ?? '—' }}</div>
-                            <div><strong>Next Term Starts On:</strong> {{ $nextTermStartsOnM ?? '—' }}</div>
+                            @if($cfg['term_ends_on'] ?? true)
+                                <div><strong>This Term Ends On:</strong> {{ $termEndsOnM ?? '—' }}</div>
+                            @endif
+                            @if($cfg['next_term_starts_on'] ?? true)
+                                <div><strong>Next Term Starts On:</strong> {{ $nextTermStartsOnM ?? '—' }}</div>
+                            @endif
                         </div>
                     @endif
                 @endif
