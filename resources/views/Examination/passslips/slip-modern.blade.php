@@ -290,6 +290,10 @@
             text-transform: uppercase;
             line-height: 1.2;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 100%;
         }
 
         .sch-arabic-name {
@@ -1209,6 +1213,13 @@
                 color-adjust: exact;
             }
 
+            /* No-JS fallback only — the fitSchoolNames() script near the
+               end of the page sets an inline px font-size that wins over
+               this (and over .slip.md-dense .sch-name below, which used
+               to silently beat this rule regardless of print: two
+               classes outrank one no matter what media query it's in).
+               Kept here purely so something reasonable still happens if
+               JavaScript is ever unavailable when printing. */
             .sch-name {
                 white-space: nowrap;
                 font-size: clamp(18px, 3.5vw, 30px);
@@ -2463,9 +2474,50 @@
     </div>{{-- /.page-wrap --}}
 
     <script>
+        /* ── School-name auto-fit ────────────────────────────────────────
+           See slip-classic.blade.php for the full rationale: a fixed
+           font-size tuned against a wide on-screen preview can overflow
+           at the narrower width the print engine paginates to, and the
+           clamp()/vw print rule above can't be relied on to fix that by
+           itself. This measures the real rendered width and shrinks an
+           explicit inline px font-size until it fits on one line.
+        ──────────────────────────────────────────────────────────────── */
+        function fitSchoolNames() {
+            document.querySelectorAll('.sch-center').forEach(function (container) {
+                var nameEl = container.querySelector('.sch-name');
+                if (!nameEl) return;
+
+                nameEl.style.fontSize = '';
+                var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
+                var minSize = 12;
+
+                if (nameEl.scrollWidth <= container.clientWidth) return;
+
+                while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
+                    size -= 0.5;
+                    nameEl.style.fontSize = size + 'px';
+                }
+            });
+        }
+
+        function runFit() {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
+            } else {
+                fitSchoolNames();
+            }
+        }
+
+        window.addEventListener('load', runFit);
+        window.addEventListener('resize', fitSchoolNames);
+        window.addEventListener('beforeprint', fitSchoolNames);
+
         @if($mode === 'class' || $mode === 'all')
             window.addEventListener('load', function () {
-                setTimeout(function () { window.print(); }, 900);
+                setTimeout(function () {
+                    fitSchoolNames();
+                    window.print();
+                }, 900);
             });
         @endif
     </script>

@@ -119,6 +119,11 @@ return [
         'show_arabic' => ['label' => 'Arabic school name', 'icon' => 'fa-language', 'group' => 'School Header'],
         'show_motto' => ['label' => 'School motto', 'icon' => 'fa-quote-left', 'group' => 'School Header'],
         'show_contact' => ['label' => 'Phone / email / location', 'icon' => 'fa-phone', 'group' => 'School Header'],
+        // Classic-only report number box next to the letterhead. When
+        // turned off, the school name's container (flex: 1, same
+        // reflow convention used throughout this file) reclaims the
+        // freed width automatically — no separate layout toggle needed.
+        'show_report_no' => ['label' => 'Report No. box', 'icon' => 'fa-hashtag', 'group' => 'School Header'],
 
         'show_photo' => ['label' => 'Student photo', 'icon' => 'fa-portrait', 'group' => 'Student Block'],
         'show_minichart' => ['label' => 'Subject mini chart (student vs class)', 'icon' => 'fa-chart-line', 'group' => 'Student Block'],
@@ -183,7 +188,7 @@ return [
     'capabilities' => [
         'classic' => [
             'show_border', 'show_watermark',
-            'show_logo', 'show_arabic', 'show_motto', 'show_contact',
+            'show_logo', 'show_arabic', 'show_motto', 'show_contact', 'show_report_no',
             'show_photo', 'show_minichart', 'show_qr',
             // Granular marks-table column split (superseded 'show_score_col'
             // for Classic — see the NOTE above).

@@ -1073,6 +1073,11 @@
             color: var(--rc-navy);
             text-transform: uppercase;
             line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 100%;
         }
 
         .rc-lh-arabic {
@@ -1968,6 +1973,7 @@
                     'arabic' => $on('show_arabic', true, $savedCfg),
                     'motto' => $on('show_motto', true, $savedCfg),
                     'contact' => $on('show_contact', true, $savedCfg),
+                    'report_no' => $on('show_report_no', true, $savedCfg),
                     'photo' => $on('show_photo', true, $savedCfg),
                     'minichart' => $on('show_minichart', true, $savedCfg),
                     'qr' => $on('show_qr', true, $savedCfg),
@@ -2329,10 +2335,12 @@
                         @endif
                     </div>
 
-                    <div class="rc-lh-reportno">
-                        <div class="lbl">Report No.</div>
-                        <div class="val">{{ $reportNo }}</div>
-                    </div>
+                    @if($cfg['report_no'])
+                        <div class="rc-lh-reportno">
+                            <div class="lbl">Report No.</div>
+                            <div class="val">{{ $reportNo }}</div>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- ══ TITLE ════════════════════════════════════════════════════ --}}
@@ -3169,9 +3177,65 @@
         </div>{{-- /.page-wrap --}}
 
         <script>
+            /* ── School-name auto-fit ────────────────────────────────────
+               .rc-lh-name has a fixed font-size that was only ever tuned
+               to fit comfortably in a wide desktop preview. At the
+               narrower width the print engine actually paginates to (A4
+               content width), a longer school name has no room left and
+               the browser wraps it onto a second line — CSS alone can't
+               reliably prevent this across print engines/paper sizes, so
+               this measures the real rendered width and shrinks an
+               explicit inline font-size (px) until it fits on one line.
+               An inline px value wins over every stylesheet rule
+               regardless of specificity or media query, so it can't be
+               silently overridden the way a plain @media print rule can.
+            ──────────────────────────────────────────────────────────── */
+            function fitSchoolNames() {
+                document.querySelectorAll('.rc-lh-center').forEach(function (container) {
+                    var nameEl = container.querySelector('.rc-lh-name');
+                    if (!nameEl) return;
+
+                    // Reset to the CSS base size before each measurement
+                    // so re-fitting (resize/beforeprint) can grow back up
+                    // too, not just keep shrinking.
+                    nameEl.style.fontSize = '';
+                    var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
+                    var minSize = 12; // never shrink below this — ellipsis takes over instead
+
+                    if (nameEl.scrollWidth <= container.clientWidth) return;
+
+                    while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
+                        size -= 0.5;
+                        nameEl.style.fontSize = size + 'px';
+                    }
+                });
+            }
+
+            function runFit() {
+                // document.fonts.ready avoids measuring against a
+                // fallback system font while Inter/900 is still
+                // downloading — a common cause of "fits on screen, wraps
+                // in print" when print is triggered quickly after load.
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
+                } else {
+                    fitSchoolNames();
+                }
+            }
+
+            window.addEventListener('load', runFit);
+            window.addEventListener('resize', fitSchoolNames);
+            // Re-measure against the print layout specifically — the
+            // @media print container width (A4 page box) can differ from
+            // whatever on-screen width this was first fitted against.
+            window.addEventListener('beforeprint', fitSchoolNames);
+
             @if($mode === 'class' || $mode === 'all')
                 window.addEventListener('load', function () {
-                    setTimeout(function () { window.print(); }, 900);
+                    setTimeout(function () {
+                        fitSchoolNames();
+                        window.print();
+                    }, 900);
                 });
             @endif
         </script>

@@ -274,7 +274,7 @@ $controller = new Controller();
                                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                                     <i class="fas fa-phone-alt text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Phone</h6>
-                                    <p class="mb-0 fw-bold">{{ (!empty($school) && !empty($school->phone)) ? $school->phone : '00-000-000-00' }}</p>
+                                    <p class="mb-0 fw-bold">{{ (!empty($profile) && !empty($profile->phone)) ? $profile->phone : ((!empty($school) && !empty($school->phone)) ? $school->phone : '00-000-000-00') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">

@@ -419,11 +419,25 @@ class Helper extends Controller
 
     public static function schoolPhoneBySchoolID($school_id)
     {
-        $schoolPhone = DB::table('schools')
-            ->where('id', $school_id)
+        // The "Phone Number" field on the school-profile edit page
+        // (storeSchoolProfile()) saves into school_profiles.phone, not
+        // schools.phone — every other pass-slip header field (email,
+        // motto, logo) already reads from school_profiles, so phone
+        // needs the same source to actually reflect profile edits.
+        // schools.phone is kept as a fallback for schools that have
+        // never saved a school_profiles record (or left phone blank
+        // there) so nothing regresses for existing data.
+        $profilePhone = DB::table('school_profiles')
+            ->where('school_id', $school_id)
             ->value('phone');
 
-        return $schoolPhone;
+        if (!empty($profilePhone)) {
+            return $profilePhone;
+        }
+
+        return DB::table('schools')
+            ->where('id', $school_id)
+            ->value('phone');
     }
 
     public static function schoolNumber($house_id)
