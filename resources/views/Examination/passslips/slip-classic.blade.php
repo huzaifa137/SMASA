@@ -608,6 +608,23 @@
             vertical-align: middle;
         }
 
+        /* REMARKS / TEACHER — a slightly smaller font plus a wider
+           minimum column lets a normal 2-3 word value sit on one line
+           instead of wrapping just because the column was squeezed too
+           narrow; a genuinely long remark still wraps normally rather
+           than being force-fit or clipped. */
+        .marks-tbl th.col-remarks,
+        .marks-tbl td.col-remarks {
+            min-width: 130px;
+            font-size: .68rem;
+        }
+
+        .marks-tbl th.col-teacher,
+        .marks-tbl td.col-teacher {
+            min-width: 128px;
+            font-size: .68rem;
+        }
+
         .marks-tbl tbody tr:nth-child(even) {
             background: #f9f9fb;
         }
@@ -2489,7 +2506,7 @@
                             <div class="rc-summary-cell">
                                 <i class="fas fa-clipboard-list"></i>
                                 <div class="rc-summary-lbl">Total Marks</div>
-                                <div class="rc-summary-val">{{ $totObt }} / {{ $totMax }}</div>
+                                <div class="rc-summary-val">@whole($totObt) / @whole($totMax)</div>
                             </div>
                         @endif
                         @if($cfg['sum_average_mark'])
@@ -2594,7 +2611,7 @@
                                             <th rowspan="2" style="width:38px;">GRADE</th>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <th class="tl" rowspan="2" style="min-width:100px;">TEACHER</th>
+                                            <th class="tl col-teacher" rowspan="2">TEACHER</th>
                                         @endif
                                     </tr>
                                     <tr>
@@ -2611,7 +2628,7 @@
                                             @foreach($examsList as $ex)
                                                 @php $ed = $sm->exams[$ex->id] ?? null; @endphp
                                                 <td class="score-td">
-                                                    {{ $ed && $ed['marks_obtained'] !== null ? $ed['marks_obtained'] : '—' }}
+                                                    @whole($ed['marks_obtained'] ?? null)
                                                 </td>
                                                 <td class="num-td">
                                                     @if($ed && $ed['grade'] && $ed['grade'] !== '—')
@@ -2627,7 +2644,7 @@
                                                 </td>
                                             @endif
                                             @if($cfg['teacher_col'])
-                                                <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
                                         </tr>
                                     @endforeach
@@ -2642,7 +2659,7 @@
                                             @foreach($examsList as $ex)
                                                 @php $esum = $examSummarySlip->get($ex->id); @endphp
                                                 @if($showAggDiv)
-                                                    <td class="score-td">{{ $esum['total_marks'] ?? '—' }}</td>
+                                                    <td class="score-td">@whole($esum['total_marks'] ?? null)</td>
                                                     <td class="num-td">{{ $esum['aggregate'] ?? '—' }}</td>
                                                 @else
                                                     @php
@@ -2706,10 +2723,10 @@
                                             <th style="width:48px;">GRADE POINT</th>
                                         @endif
                                         @if($cfg['comment_col'])
-                                            <th class="tl">REMARKS</th>
+                                            <th class="tl col-remarks">REMARKS</th>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <th class="tl" style="min-width:100px;">TEACHER</th>
+                                            <th class="tl col-teacher">TEACHER</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -2737,13 +2754,13 @@
                                                     <td class="num-td">{{ $rn }}</td>
                                                     <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                                     @if($cfg['col_full_marks'])
-                                                        <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                        <td class="score-td">@whole($sm->total_marks ?? null)</td>
                                                     @endif
                                                     @if($cfg['col_marks_obtained'])
-                                                        <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
+                                                        <td class="score-td">@whole($sm->marks_obtained ?? null)</td>
                                                     @endif
                                                     @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                        <td class="score-td">{{ $sm->percentage }}%</td>
+                                                        <td class="score-td">@whole($sm->percentage)%</td>
                                                     @endif
                                                     @if($cfg['dev'])
                                                         <td class="num-td">
@@ -2763,10 +2780,10 @@
                                                         <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['comment_col'])
-                                                        <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                                        <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['teacher_col'])
-                                                        <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                        <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                                     @endif
                                                 </tr>
                                             @endforeach
@@ -2786,13 +2803,13 @@
                                                 <td class="num-td">{{ $rn }}</td>
                                                 <td style="font-weight:500;">{{ $sm->subject_name }}</td>
                                                 @if($cfg['col_full_marks'])
-                                                    <td class="score-td">{{ $sm->total_marks ?? '—' }}</td>
+                                                    <td class="score-td">@whole($sm->total_marks ?? null)</td>
                                                 @endif
                                                 @if($cfg['col_marks_obtained'])
-                                                    <td class="score-td">{{ $sm->marks_obtained ?? '—' }}</td>
+                                                    <td class="score-td">@whole($sm->marks_obtained ?? null)</td>
                                                 @endif
                                                 @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                    <td class="score-td">{{ $sm->percentage }}%</td>
+                                                    <td class="score-td">@whole($sm->percentage)%</td>
                                                 @endif
                                                 @if($cfg['dev'])
                                                     <td class="num-td">
@@ -2812,10 +2829,10 @@
                                                     <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['comment_col'])
-                                                    <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                                    <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['teacher_col'])
-                                                    <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                    <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                                 @endif
                                             </tr>
                                         @endforeach
@@ -2830,13 +2847,13 @@
                                                 TOTAL
                                             </td>
                                             @if($cfg['col_full_marks'])
-                                                <td class="score-td">{{ $totMax }}</td>
+                                                <td class="score-td">@whole($totMax)</td>
                                             @endif
                                             @if($cfg['col_marks_obtained'])
-                                                <td class="score-td">{{ $totObt }}</td>
+                                                <td class="score-td">@whole($totObt)</td>
                                             @endif
                                             @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                <td class="score-td">{{ $pct }}%</td>
+                                                <td class="score-td">@whole($pct)%</td>
                                             @endif
                                             @if($cfg['dev'])
                                                 <td class="num-td">

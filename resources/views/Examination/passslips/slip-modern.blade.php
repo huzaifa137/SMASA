@@ -639,6 +639,23 @@
             vertical-align: middle;
         }
 
+        /* COMMENT / TEACHER — a slightly smaller font plus a wider
+           minimum column lets a normal 2-3 word value sit on one line
+           instead of wrapping just because the column was squeezed too
+           narrow; a genuinely long comment still wraps normally rather
+           than being force-fit or clipped. */
+        .marks-tbl th.col-remarks,
+        .marks-tbl td.col-remarks {
+            min-width: 130px;
+            font-size: .68rem;
+        }
+
+        .marks-tbl th.col-teacher,
+        .marks-tbl td.col-teacher {
+            min-width: 128px;
+            font-size: .68rem;
+        }
+
         .marks-tbl tbody tr:nth-child(even) {
             background: #f9f9fb;
         }
@@ -1868,20 +1885,20 @@
                         @if($cfg['sum_total_marks'])
                             <div class="sum-cell">
                                 <div class="sum-lbl">Total Marks</div>
-                                <div class="sum-val">{{ $totObt }} / {{ $totMax }}</div>
+                                <div class="sum-val">@whole($totObt) / @whole($totMax)</div>
                             </div>
                         @endif
                         @if($cfg['sum_average_mark'])
                             <div class="sum-cell">
                                 <div class="sum-lbl">Average Mark</div>
                                 <div class="sum-val">
-                                    {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}</div>
+                                    {{ $isEarlyYears ? \App\Helpers\NumberHelper::whole($earlyYearsAvg) . '/' . \App\Helpers\NumberHelper::whole($earlyYearsMax) : \App\Helpers\NumberHelper::whole($pct) . '%' }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_average_pct'])
                             <div class="sum-cell">
                                 <div class="sum-lbl">Average %</div>
-                                <div class="sum-val">{{ $isEarlyYears ? '—' : $pct . '%' }}</div>
+                                <div class="sum-val">{{ $isEarlyYears ? '—' : \App\Helpers\NumberHelper::whole($pct) . '%' }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_grade'] && !$isEarlyYears)
@@ -1961,7 +1978,7 @@
                                         <th rowspan="2" style="width:38px;">GRADE</th>
                                     @endif
                                     @if($cfg['teacher_col'])
-                                        <th class="tl" rowspan="2" style="min-width:100px;">TEACHER</th>
+                                        <th class="tl col-teacher" rowspan="2">TEACHER</th>
                                     @endif
                                 </tr>
                                 <tr>
@@ -1978,7 +1995,7 @@
                                         @foreach($examsList as $ex)
                                             @php $ed = $sm->exams[$ex->id] ?? null; @endphp
                                             <td class="score-td">
-                                                {{ $ed && $ed['marks_obtained'] !== null ? $ed['marks_obtained'] : '—' }}
+                                                @whole($ed['marks_obtained'] ?? null)
                                             </td>
                                             <td class="num-td">
                                                 @if($ed && $ed['grade'] && $ed['grade'] !== '—')
@@ -1994,7 +2011,7 @@
                                             </td>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                            <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -2009,7 +2026,7 @@
                                         @foreach($examsList as $ex)
                                             @php $esum = $examSummarySlip->get($ex->id); @endphp
                                             @if($showAggDiv)
-                                                <td class="score-td">{{ $esum['total_marks'] ?? '—' }}</td>
+                                                <td class="score-td">@whole($esum['total_marks'] ?? null)</td>
                                                 <td class="num-td">{{ $esum['aggregate'] ?? '—' }}</td>
                                             @else
                                                 @php
@@ -2066,10 +2083,10 @@
                                         <th style="width:38px;">GRADE</th>
                                     @endif
                                     @if($cfg['comment_col'])
-                                        <th class="tl">COMMENT</th>
+                                        <th class="tl col-remarks">COMMENT</th>
                                     @endif
                                     @if($cfg['teacher_col'])
-                                        <th class="tl" style="min-width:100px;">TEACHER</th>
+                                        <th class="tl col-teacher">TEACHER</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -2098,10 +2115,10 @@
                                                 @if($cfg['score_col'])
                                                     <td class="score-td">
                                                         @if($isEarlyYears)
-                                                            {{ $sm->marks_obtained ?? '—' }}<span
-                                                                style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                            @whole($sm->marks_obtained ?? null)<span
+                                                                style="font-size:.65rem;color:#aaa;">/@whole($earlyYearsMax)</span>
                                                         @else
-                                                            {{ $sm->percentage }}%
+                                                            @whole($sm->percentage)%
                                                         @endif
                                                     </td>
                                                 @endif
@@ -2122,10 +2139,10 @@
                                                     </td>
                                                 @endif
                                                 @if($cfg['comment_col'])
-                                                    <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                                    <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['teacher_col'])
-                                                    <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                    <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                                 @endif
                                             </tr>
                                         @endforeach
@@ -2146,10 +2163,10 @@
                                             @if($cfg['score_col'])
                                                 <td class="score-td">
                                                     @if($isEarlyYears)
-                                                        {{ $sm->marks_obtained ?? '—' }}<span
-                                                            style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                        @whole($sm->marks_obtained ?? null)<span
+                                                            style="font-size:.65rem;color:#aaa;">/@whole($earlyYearsMax)</span>
                                                     @else
-                                                        {{ $sm->percentage }}%
+                                                        @whole($sm->percentage)%
                                                     @endif
                                                 </td>
                                             @endif
@@ -2170,10 +2187,10 @@
                                                 </td>
                                             @endif
                                             @if($cfg['comment_col'])
-                                                <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                                <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                             @endif
                                             @if($cfg['teacher_col'])
-                                                <td style="font-size:.72rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
                                         </tr>
                                     @endforeach
@@ -2190,10 +2207,10 @@
                                         @if($cfg['score_col'])
                                             <td class="score-td">
                                                 @if($isEarlyYears)
-                                                    {{ $earlyYearsAvg }}<span
-                                                        style="font-size:.65rem;color:#aaa;">/{{ $earlyYearsMax }}</span>
+                                                    @whole($earlyYearsAvg)<span
+                                                        style="font-size:.65rem;color:#aaa;">/@whole($earlyYearsMax)</span>
                                                 @else
-                                                    {{ $pct }}%
+                                                    @whole($pct)%
                                                 @endif
                                             </td>
                                         @endif

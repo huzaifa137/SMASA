@@ -69,10 +69,10 @@
                             @foreach($paSubjects as $paSm)
                                 @php $paEd = $paSm->exams[$paEx->id] ?? null; @endphp
                                 <td class="score-td">
-                                    {{ $paEd && $paEd['marks_obtained'] !== null ? $paEd['marks_obtained'] : '—' }}
+                                    @whole($paEd['marks_obtained'] ?? null)
                                 </td>
                             @endforeach
-                            <td class="num-td">{{ $paRowAvg ?? '—' }}</td>
+                            <td class="num-td">@whole($paRowAvg ?? null)</td>
                             <td class="num-td">{{ $paEsum['aggregate'] ?? '—' }}</td>
                             <td class="num-td">{{ $paEsum['division'] ?? '—' }}</td>
                         </tr>

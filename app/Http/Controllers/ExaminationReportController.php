@@ -231,9 +231,9 @@ class ExaminationReportController extends Controller
             ->concat($this->nlscMarksForScope($schoolId, $exam->id, $classId, $streamIdsToUse))
             ->groupBy('student_id');
 
-        $subjectStats = []; // report_key => ['sum'=>..,'count'=>..,'high'=>..,'low'=>..]
+        $subjectStats = []; // report_key => ['sum'=>..,'count'=>..,'high'=>..,'low'=>..,'out_of'=>..]
         foreach ($subjects as $subj) {
-            $subjectStats[$subj->report_key] = ['sum' => 0, 'count' => 0, 'high' => null, 'low' => null];
+            $subjectStats[$subj->report_key] = ['sum' => 0, 'count' => 0, 'high' => null, 'low' => null, 'out_of' => null];
         }
 
         $report = $students->map(function ($student) use ($marksByStudent, $subjects, $gradingScale, &$subjectStats) {
@@ -268,6 +268,12 @@ class ExaminationReportController extends Controller
                     $subjectStats[$subj->report_key]['count']++;
                     $subjectStats[$subj->report_key]['high'] = max($subjectStats[$subj->report_key]['high'] ?? $pct, $pct);
                     $subjectStats[$subj->report_key]['low'] = min($subjectStats[$subj->report_key]['low'] ?? $pct, $pct);
+                    // Out-of value for this subject's column — every student
+                    // sits the same subject out of the same total, so the
+                    // first mark seen is enough; lets the header read
+                    // "English (/100)" instead of repeating "/100" in
+                    // every single cell.
+                    $subjectStats[$subj->report_key]['out_of'] ??= (float) $mark->total_marks;
                 } else {
                     $cells[$subj->report_key] = null;
                 }
@@ -317,6 +323,13 @@ class ExaminationReportController extends Controller
             ];
         });
 
+        // Attach each subject's out-of value so the column header can read
+        // "English (/100)" instead of every cell repeating "/100".
+        foreach ($subjects as $subj) {
+            $subj->out_of = $subjectStats[$subj->report_key]['out_of'] ?? null;
+        }
+        $examTotalMax = $subjects->sum(fn($s) => $s->out_of ?? 0);
+
         $classTotal = $ranked->count();
         $classAverage = $classTotal > 0 ? round($ranked->avg('average'), 1) : 0;
 
@@ -329,6 +342,7 @@ class ExaminationReportController extends Controller
             'classAverage' => $classAverage,
             'classTotal' => $classTotal,
             'gradingScale' => $gradingScale,
+            'examTotalMax' => $examTotalMax,
         ];
     }
 

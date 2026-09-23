@@ -699,6 +699,23 @@
             vertical-align: middle;
         }
 
+        /* Comment / Teacher — a slightly smaller font plus a wider
+           minimum column lets a normal 2-3 word value sit on one line
+           instead of wrapping just because the column was squeezed too
+           narrow; a genuinely long comment still wraps normally rather
+           than being force-fit or clipped. */
+        .marks-tbl th.col-remarks,
+        .marks-tbl td.col-remarks {
+            min-width: 130px;
+            font-size: .68rem;
+        }
+
+        .marks-tbl th.col-teacher,
+        .marks-tbl td.col-teacher {
+            min-width: 128px;
+            font-size: .68rem;
+        }
+
         .marks-tbl tbody tr:nth-child(even) {
             background: #f9f9fb;
         }
@@ -1388,15 +1405,15 @@
                     <div class="sum-cell">
                         <div class="sum-lbl">{{ $ar['total_marks'] }}</div>
                         <div class="sum-val">
-                            {{ number_format($totObt, 0) }}<span
-                                style="font-size:.65rem;color:#aaa;font-weight:500;">/{{ $totMax }}</span>
+                            @whole($totObt)<span
+                                style="font-size:.65rem;color:#aaa;font-weight:500;">/@whole($totMax)</span>
                         </div>
                     </div>
                     <div class="sum-cell">
                         <div class="sum-lbl">{{ $ar['average'] }}</div>
                         <div class="sum-val"
                             style="color:{{ $pct >= 75 ? '#1a7a4a' : ($pct >= $exam->pass_mark ? '#856404' : '#c0392b') }}">
-                            {{ $pct }}%
+                            @whole($pct)%
                         </div>
                         @if($termDelta !== null)
                             <div class="sum-sub">
@@ -1431,9 +1448,9 @@
                                 <th style="width:42px;">{{ $ar['dev'] }}</th> @endif
                                 @if($cfg['grade_pill'])
                                 <th style="width:42px;">{{ $ar['grade'] }}</th> @endif
-                                <th class="tr">{{ $ar['comment'] }}</th>
+                                <th class="tr col-remarks">{{ $ar['comment'] }}</th>
                                 @if($cfg['teacher_col'])
-                                <th class="tr" style="min-width:100px;">{{ $ar['teacher'] }}</th> @endif
+                                <th class="tr col-teacher">{{ $ar['teacher'] }}</th> @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -1458,7 +1475,7 @@
                                         @endphp
                                         <tr>
                                             <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                            <td class="score-td">{{ $sm->percentage }}%</td>
+                                            <td class="score-td">@whole($sm->percentage)%</td>
                                             @if($cfg['dev'])
                                                 <td class="num-td">
                                                     @if($delta !== null)
@@ -1475,9 +1492,9 @@
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
                                             @endif
-                                            <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                            <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                             @if($cfg['teacher_col'])
-                                                <td style="font-size:.74rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
                                         </tr>
                                     @endforeach
@@ -1495,7 +1512,7 @@
                                     @endphp
                                     <tr>
                                         <td style="font-weight:500;">{{ $sm->subject_name }}</td>
-                                        <td class="score-td">{{ $sm->percentage }}%</td>
+                                        <td class="score-td">@whole($sm->percentage)%</td>
                                         @if($cfg['dev'])
                                             <td class="num-td">
                                                 @if($delta !== null)
@@ -1512,9 +1529,9 @@
                                                 <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                             </td>
                                         @endif
-                                        <td>{{ $sm->grade_remark ?? '—' }}</td>
+                                        <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                         @if($cfg['teacher_col'])
-                                            <td style="font-size:.74rem;color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                            <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -1526,7 +1543,7 @@
                                         style="text-align:right;color:#666;font-size:.74rem;padding-left:.8rem;font-weight:600;">
                                         {{ $ar['total_avg_row'] }}
                                     </td>
-                                    <td class="score-td">{{ $pct }}%</td>
+                                    <td class="score-td">@whole($pct)%</td>
                                     @if($cfg['dev'])
                                         <td class="num-td">
                                             @if($termDelta !== null)
