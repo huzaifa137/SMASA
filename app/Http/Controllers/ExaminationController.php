@@ -857,6 +857,7 @@ class ExaminationController extends Controller
     public const PASSSLIP_TEMPLATE_KEYS = [
         'classic', 'modern', 'minimal',
         'nursery-classic', 'nursery-modern', 'nursery-minimal',
+        'secondary-classic',
     ];
 
     /**
@@ -867,6 +868,16 @@ class ExaminationController extends Controller
     public static function isNurseryTemplateKey(?string $template): bool
     {
         return str_starts_with((string) $template, 'nursery-');
+    }
+
+    /**
+     * Whether a Design Template key belongs to the Secondary gallery
+     * (the "Secondary Design Template" cards on the pass slips index,
+     * for O-Level/A-Level classes — see Helper::isSecondaryClass()).
+     */
+    public static function isSecondaryTemplateKey(?string $template): bool
+    {
+        return str_starts_with((string) $template, 'secondary-');
     }
 
     /**
@@ -903,6 +914,22 @@ class ExaminationController extends Controller
             'nursery-classic' => 'Examination.passslips.preview-kindergarten',
             'nursery-modern' => 'Examination.passslips.preview-kindergarten-2',
             default => 'Examination.passslips.slip-nursery',
+        };
+    }
+
+    /**
+     * Resolve which Secondary (O-Level/A-Level) pass-slip view to render.
+     * Same job resolvePrimarySlipView()/resolveNurserySlipView() do for
+     * their families. Only one design exists today ('secondary-classic'
+     * → slip-secondary.blade.php) — the match() is still written the
+     * same way as the other two resolvers so a future 'secondary-modern'
+     * / 'secondary-minimal' just slots in here without touching any
+     * call site.
+     */
+    public function resolveSecondarySlipView(string $template, string $lang): string
+    {
+        return match ($template) {
+            default => 'Examination.passslips.slip-secondary',
         };
     }
 
@@ -1309,13 +1336,15 @@ class ExaminationController extends Controller
         $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
         $termDates = Helper::passslipTermDates($schoolId);
         $isNursery = $this->isNurseryClass($student->senior);
+        $isSecondary = !$isNursery && $this->isSecondaryClass($student->senior);
 
         // Progressive Assessment Record — Primary design templates only
-        // (Classic/Modern/Minimal); Nursery's report layouts don't have
-        // this section. Reuses this slip's own combined-exam data when
-        // the sidebar already selected extra exams, otherwise resolves
-        // every sitting for this class/term/year automatically.
-        $progressiveAssessment = $isNursery ? null : $this->buildProgressiveAssessmentData(
+        // (Classic/Modern/Minimal); Nursery's and Secondary's report
+        // layouts don't have this section yet. Reuses this slip's own
+        // combined-exam data when the sidebar already selected extra
+        // exams, otherwise resolves every sitting for this class/term/
+        // year automatically.
+        $progressiveAssessment = ($isNursery || $isSecondary) ? null : $this->buildProgressiveAssessmentData(
             $examId,
             $studentId,
             $schoolId,
@@ -1347,6 +1376,12 @@ class ExaminationController extends Controller
                 $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
+        } elseif ($isSecondary) {
+            $template = request('template', 'secondary-classic');
+            if (!self::isSecondaryTemplateKey($template)) {
+                $template = 'secondary-classic';
+            }
+            $view = $this->resolveSecondarySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
@@ -1415,9 +1450,10 @@ class ExaminationController extends Controller
         $multiExam = count($examIds) > 1;
         $examsList = collect([$exam]);
 
-        // Nursery's report layouts don't have a Progressive Assessment
-        // Record section — skip the extra query work for that family.
-        $isNurseryForProgressive = $this->isNurseryClass($classId);
+        // Nursery's and Secondary's report layouts don't have a
+        // Progressive Assessment Record section — skip the extra query
+        // work for those families.
+        $isNurseryForProgressive = $this->isNurseryClass($classId) || $this->isSecondaryClass($classId);
 
         // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
         $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList, $classId, $streamId, $isNurseryForProgressive) {
@@ -1480,8 +1516,9 @@ class ExaminationController extends Controller
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
-        // Check if the class is nursery
+        // Check if the class is nursery / secondary
         $isNursery = $this->isNurseryClass($classId);
+        $isSecondary = !$isNursery && $this->isSecondaryClass($classId);
 
         $lang = request('lang', 'en');
 
@@ -1503,13 +1540,23 @@ class ExaminationController extends Controller
                 $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
+        } elseif ($isSecondary) {
+            // Same idea as the Nursery branch above, for the Secondary
+            // gallery — slip-secondary.blade.php already normalises the
+            // 'class' mode's $slips collection into its own $renderSlips
+            // loop the same way slip-classic.blade.php does.
+            $template = request('template', 'secondary-classic');
+            if (!self::isSecondaryTemplateKey($template)) {
+                $template = 'secondary-classic';
+            }
+            $view = $this->resolveSecondarySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
 
         $termDates = Helper::passslipTermDates($schoolId);
 
-        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg', 'termDates') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
+        return view($view, compact('exam', 'slips', 'classId', 'streamId', 'examsList', 'useAvg', 'termDates') + ['mode' => 'class', 'multiExam' => $multiExam, 'isNursery' => $isNursery, 'isSecondary' => $isSecondary]);
     }
 
     // ─── METHOD 2: passslipAll ────────────────────────────────────────────────
@@ -1552,7 +1599,7 @@ class ExaminationController extends Controller
                 ->where('stream', $ec->stream_id)
                 ->get(); // ✅ Removed orderBy('lastname')
 
-            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id);
+            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id) || $this->isSecondaryClass($ec->class_id);
 
             // Progressive Assessment Record's "Sittings" picker, resolved
             // per-class directly from that class's own saved settings —
@@ -1629,13 +1676,24 @@ class ExaminationController extends Controller
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
-        // Check if ALL classes in this exam are nursery
+        // Check if ALL classes in this exam are nursery, or ALL are
+        // Secondary — same "must be uniform across the whole exam" rule
+        // nursery already used, just extended with a second family. A
+        // mixed exam (some nursery/primary/secondary classes together)
+        // still falls back to the Primary template, same as before.
         $isNursery = true;
+        $isSecondary = true;
         foreach ($examClasses as $ec) {
             if (!$this->isNurseryClass($ec->class_id)) {
                 $isNursery = false;
-                break;
             }
+            if (!$this->isSecondaryClass($ec->class_id)) {
+                $isSecondary = false;
+            }
+        }
+        if ($examClasses->isEmpty()) {
+            $isNursery = false;
+            $isSecondary = false;
         }
 
         $lang = request('lang', 'en');
@@ -1652,13 +1710,19 @@ class ExaminationController extends Controller
                 $template = 'nursery-classic';
             }
             $view = $this->resolveNurserySlipView($template, $lang);
+        } elseif ($isSecondary) {
+            $template = request('template', 'secondary-classic');
+            if (!self::isSecondaryTemplateKey($template)) {
+                $template = 'secondary-classic';
+            }
+            $view = $this->resolveSecondarySlipView($template, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
 
         $termDates = Helper::passslipTermDates($schoolId);
 
-        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg', 'termDates') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery]);
+        return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg', 'termDates') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery, 'isSecondary' => $isSecondary]);
     }
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
@@ -1780,17 +1844,32 @@ class ExaminationController extends Controller
         // classic/modern/minimal are "Primary Design Template"s;
         // nursery-classic/nursery-modern/nursery-minimal are the mirror
         // set for "Nursery Design Template"s (see the second gallery on
-        // the pass slips index). Each family's class selector / "Preview
-        // with" dropdown must only ever list classes that family's
-        // templates actually apply to — Helper::isNurseryClass() is the
-        // single source of truth for which classes count as Nursery
-        // (Baby/Middle/Top), same as everywhere else in this controller.
+        // the pass slips index); secondary-classic is the same mirror
+        // idea for "Secondary Design Template"s (O-Level/A-Level). Each
+        // family's class selector / "Preview with" dropdown must only
+        // ever list classes that family's templates actually apply to —
+        // Helper::isNurseryClass()/isSecondaryClass() are the single
+        // source of truth for which classes count as which family, same
+        // as everywhere else in this controller. A class that is neither
+        // Nursery nor Secondary is treated as Primary, by elimination.
         $isNurseryTemplate = self::isNurseryTemplateKey($template);
+        $isSecondaryTemplate = self::isSecondaryTemplateKey($template);
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->get()
-            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
+            ->filter(function ($ec) use ($isNurseryTemplate, $isSecondaryTemplate) {
+                $classIsNursery = Helper::isNurseryClass($ec->class_id);
+                $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($ec->class_id);
+
+                if ($isNurseryTemplate) {
+                    return $classIsNursery;
+                }
+                if ($isSecondaryTemplate) {
+                    return $classIsSecondary;
+                }
+                return !$classIsNursery && !$classIsSecondary;
+            })
             ->values();
 
         // Same "combine examinations" list the main panel offers, so
@@ -1807,6 +1886,7 @@ class ExaminationController extends Controller
             'exam',
             'template',
             'isNurseryTemplate',
+            'isSecondaryTemplate',
             'examClasses',
             'siblingExams',
             'toggleGroups'
@@ -1857,17 +1937,29 @@ class ExaminationController extends Controller
         // yet) — fall back to the first student in a class from the
         // SAME family as the requested template, so the preview is
         // never just a blank error and never silently previews a
-        // Nursery student against a Primary-only template (or vice
-        // versa). classic/modern/minimal only ever apply to non-Nursery
-        // classes; nursery-classic/nursery-modern/nursery-minimal only
-        // ever apply to Nursery ones.
+        // Nursery/Secondary student against a Primary-only template (or
+        // vice versa). classic/modern/minimal only ever apply to
+        // non-Nursery, non-Secondary classes; nursery-*/secondary-*
+        // only ever apply to their own family.
         $wantsNurseryTemplate = self::isNurseryTemplateKey($request->query('template'));
+        $wantsSecondaryTemplate = self::isSecondaryTemplateKey($request->query('template'));
         if (!$student) {
             $ec = DB::table('examination_classes')
                 ->where('examination_id', $examId)
                 ->where('school_id', $schoolId)
                 ->get()
-                ->reject(fn ($row) => Helper::isNurseryClass($row->class_id) !== $wantsNurseryTemplate)
+                ->filter(function ($row) use ($wantsNurseryTemplate, $wantsSecondaryTemplate) {
+                    $classIsNursery = Helper::isNurseryClass($row->class_id);
+                    $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($row->class_id);
+
+                    if ($wantsNurseryTemplate) {
+                        return $classIsNursery;
+                    }
+                    if ($wantsSecondaryTemplate) {
+                        return $classIsSecondary;
+                    }
+                    return !$classIsNursery && !$classIsSecondary;
+                })
                 ->first();
 
             if ($ec) {
@@ -1914,9 +2006,10 @@ class ExaminationController extends Controller
         $termDates = Helper::passslipTermDates($schoolId);
 
         $isNursery = $this->isNurseryClass($student->senior);
+        $isSecondary = !$isNursery && $this->isSecondaryClass($student->senior);
         $lang = request('lang', 'en');
 
-        $progressiveAssessment = $isNursery ? null : $this->buildProgressiveAssessmentData(
+        $progressiveAssessment = ($isNursery || $isSecondary) ? null : $this->buildProgressiveAssessmentData(
             $examId,
             $student->id,
             $schoolId,
@@ -1935,6 +2028,9 @@ class ExaminationController extends Controller
         if ($isNursery) {
             $nurseryTemplate = $request->query('template', 'nursery-classic');
             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
+        } elseif ($isSecondary) {
+            $secondaryTemplate = $request->query('template', 'secondary-classic');
+            $view = $this->resolveSecondarySlipView($secondaryTemplate, $lang);
         } else {
             $view = $this->resolvePrimarySlipView($lang);
         }
@@ -2396,6 +2492,14 @@ class ExaminationController extends Controller
                 'label' => $prevExam->term . ' ' . $prevExam->academic_year,
                 'percentage' => $prevPct,
                 'exam_name' => $prevExam->exam_name,
+                // Raw total obtained for this earlier exam — added for
+                // the Secondary template's "Total Marks -271↓" style
+                // term-over-term deltas (see slip-secondary.blade.php).
+                // Additive-only key: every other consumer of growthData
+                // (slip-classic/modern/minimal/nursery-*) only ever reads
+                // 'label'/'percentage'/'exam_name', so this is safe to
+                // add without touching them.
+                'totalObtained' => $prevObtained,
             ];
         }
 
@@ -2404,6 +2508,7 @@ class ExaminationController extends Controller
             'label' => $exam->term . ' ' . $exam->academic_year,
             'percentage' => $percentage,
             'exam_name' => $exam->exam_name,
+            'totalObtained' => $totalObtained,
         ];
 
         // Per-subject growth (last exam vs current)
@@ -3998,5 +4103,17 @@ class ExaminationController extends Controller
     public function isNurseryClass($classId): bool
     {
         return Helper::isNurseryClass($classId);
+    }
+
+    /**
+     * Check if a class is a Secondary (O-Level/A-Level) class.
+     *
+     * Delegates to Helper::isSecondaryClass() — same thin-wrapper
+     * convention as isNurseryClass() above, so every passslip* method in
+     * this file can call $this->isSecondaryClass(...) consistently.
+     */
+    public function isSecondaryClass($classId): bool
+    {
+        return Helper::isSecondaryClass($classId);
     }
 }

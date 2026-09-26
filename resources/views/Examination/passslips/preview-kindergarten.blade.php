@@ -51,6 +51,12 @@
         };
         $accentDark = $hexToDark($accent);
 
+        // Page Size & Text Scale — same convention as Accent Colour above
+        // (query-string wins, applies unconditionally, never gated behind
+        // config/passslip_templates.php's capability list). See
+        // Helper::passslipPageSizing() for the fix for "words so small".
+        ['pageW' => $pageW, 'pageH' => $pageH, 'pageScale' => $pageScale] = Helper::passslipPageSizing();
+
         // Helper: treat '1' / 'true' / missing (falls back to saved
         // per-class settings, then to $default) as ON. Query-string
         // always wins so the live customisation preview keeps working.
@@ -168,6 +174,9 @@
             --accent-dark:
                 {{ $accentDark }}
             ;
+            --page-scale:
+                {{ $pageScale }}
+            ;
         }
 
         * {
@@ -177,6 +186,11 @@
         }
 
         body {
+            /* Page Size & Text Scale — zooms the WHOLE sheet (borders,
+       icons, spacing, not just font-size) so nothing overflows its
+       box when a school picks a larger scale. 1 (100%) = identical
+       to every slip printed before this setting existed. */
+            zoom: var(--page-scale);
             font-family: 'Baloo 2', sans-serif;
             background: #dfe3ea;
         }
@@ -221,12 +235,12 @@
         .sheet {
             /* Fluid on screen — shrinks to fit narrow containers like the
        "Customize this design" live-preview iframe — but never
-       grows past true A4 width. @media print below pins this
-       back to an exact 210mm regardless of viewport, so printed
+       grows past the selected Page Size. @media print below pins this
+       back to the exact dimensions regardless of viewport, so printed
        output is unaffected. */
             width: 100%;
-            max-width: 210mm;
-            min-height: 297mm;
+            max-width: {{ $pageW }};
+            min-height: {{ $pageH }};
             background: var(--paper);
             position: relative;
             padding: 10mm 11mm 8mm;
@@ -321,6 +335,11 @@
         }
 
         @media print {
+            @page {
+                margin: 0;
+                size: {{ $pageW }} {{ $pageH }};
+            }
+
             body {
                 background: #fff;
             }
@@ -335,8 +354,8 @@
 
             .sheet {
                 box-shadow: none;
-                width: 210mm;
-                min-height: 297mm;
+                width: {{ $pageW }};
+                min-height: {{ $pageH }};
                 border-radius: 0;
                 page-break-after: always;
                 page-break-inside: avoid;

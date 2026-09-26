@@ -13,6 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 
+    <?php use App\Http\Controllers\Helper; ?>
+
     @php
         /*
         |─────────────────────────────────────────────────────────────
@@ -46,6 +48,12 @@
             return sprintf('#%02x%02x%02x', $r, $g, $b);
         };
         $accentDark = $hexToDark($accent);
+
+        // Page Size & Text Scale — same convention as Accent Colour above
+        // (query-string wins, applies unconditionally, never gated behind
+        // config/passslip_templates.php's capability list). See
+        // Helper::passslipPageSizing() for the fix for "words so small".
+        ['pageW' => $pageW, 'pageH' => $pageH, 'pageScale' => $pageScale] = Helper::passslipPageSizing();
 
         // Transparent version (rgba) for subtle fills — generated as CSS string
         $accentAlpha = function (string $hex, float $a): string {
@@ -83,6 +91,9 @@
             --accent-a35:
                 {{ $accentA35 }}
             ;
+            --page-scale:
+                {{ $pageScale }}
+            ;
         }
 
         /* ════════════════════════════════════════════════════════════════
@@ -95,6 +106,11 @@
         }
 
         body {
+            /* Page Size & Text Scale — zooms the WHOLE sheet (borders,
+       icons, spacing, not just font-size) so nothing overflows its
+       box when a school picks a larger scale. 1 (100%) = identical
+       to every slip printed before this setting existed. */
+            zoom: var(--page-scale);
             font-family: 'Inter', sans-serif;
             background: #dde1e7;
             color: #111;
@@ -1705,7 +1721,7 @@
         @media print {
             @page {
                 margin: .5cm .65cm;
-                size: A4;
+                size: {{ $pageW }} {{ $pageH }};
             }
 
             body {
@@ -1826,8 +1842,6 @@
 </head>
 
 <body class="tpl-{{ $template }}">
-
-    <?php use App\Http\Controllers\Helper; ?>
 
     {{-- ══ TOOLBAR ══════════════════════════════════════════════════ --}}
     <div class="toolbar">

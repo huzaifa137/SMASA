@@ -388,6 +388,24 @@ selected classes" is clicked. --}}
             border-color: #1e1b4b;
         }
 
+        .cz-select {
+            padding: .35rem .5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #1e293b;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .cz-hint {
+            font-size: .7rem;
+            color: #64748b;
+            padding: 0 .25rem .4rem;
+            line-height: 1.4;
+        }
+
         .cz-class-chip {
             padding: .4rem .8rem;
             border-radius: 20px;
@@ -709,6 +727,37 @@ selected classes" is clicked. --}}
                     @endforeach
                 </div>
 
+                {{-- Page Size & Text Scale — same as Accent Colour above:
+                applies in every scenario of every design template, so it's
+                never gated behind a capability check. Defaults (A4 @ 100%)
+                keep every existing slip printing exactly as it does today;
+                a school only sees a difference once it deliberately picks
+                something else here. --}}
+                <div class="cz-group-label"><i class="fas fa-expand"></i> Page Size</div>
+                <div class="cz-color-row">
+                    <label for="czPageSize">Paper size</label>
+                    <select id="czPageSize" class="cz-select">
+                        <option value="a4" selected>A4 (default)</option>
+                        <option value="letter">Letter</option>
+                        <option value="legal">Legal</option>
+                        <option value="a3">A3 (extra large)</option>
+                    </select>
+                </div>
+                <div class="cz-color-row">
+                    <label for="czTextScale">Text &amp; layout scale</label>
+                    <select id="czTextScale" class="cz-select">
+                        <option value="100" selected>100% (default)</option>
+                        <option value="110">110%</option>
+                        <option value="125">125%</option>
+                        <option value="150">150%</option>
+                    </select>
+                </div>
+                <p class="cz-hint">
+                    Scale zooms the whole slip — borders, icons and spacing
+                    grow together with the text, so nothing overflows its
+                    box. A higher scale may print onto more than one page.
+                </p>
+
                 {{-- ── Dynamically-filtered toggle groups ──
                 Only the sections/keys this template actually supports
                 are rendered here at all — this is the fix for the
@@ -940,7 +989,12 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
            reflects — used both for the live preview query string and
            for the Save payload, so the two are always in sync. ── */
         function collectSettings() {
-            const settings = { template: currentTemplate(), accent: document.getElementById('czColorPicker').value };
+            const settings = {
+                template: currentTemplate(),
+                accent: document.getElementById('czColorPicker').value,
+                page_size: document.getElementById('czPageSize').value,
+                text_scale: document.getElementById('czTextScale').value,
+            };
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 settings[cb.dataset.key] = cb.checked;
             });
@@ -1063,6 +1117,9 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             scheduleRefresh();
         }));
 
+        document.getElementById('czPageSize').addEventListener('change', scheduleRefresh);
+        document.getElementById('czTextScale').addEventListener('change', scheduleRefresh);
+
         document.getElementById('czPreviewClass').addEventListener('change', function () {
             const classId = currentPreviewClassId();
             if (classId) {
@@ -1098,6 +1155,16 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 document.querySelectorAll('.cz-preset-dot').forEach(d => {
                     d.classList.toggle('active', d.dataset.color === saved.accent);
                 });
+            }
+            // Page Size & Text Scale — same "fall back to the default
+            // option already marked selected in the markup" approach as
+            // every toggle below, so an old saved profile with neither
+            // key still restores to A4 @ 100%, not a blank/broken select.
+            if (saved.page_size) {
+                document.getElementById('czPageSize').value = saved.page_size;
+            }
+            if (saved.text_scale) {
+                document.getElementById('czTextScale').value = String(saved.text_scale);
             }
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 const key = cb.dataset.key;

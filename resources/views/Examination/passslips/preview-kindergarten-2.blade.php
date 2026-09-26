@@ -39,6 +39,12 @@
     };
     $accentDark = $hexToDark($accent);
 
+    // Page Size & Text Scale — same convention as Accent Colour above
+    // (query-string wins, applies unconditionally, never gated behind
+    // config/passslip_templates.php's capability list). See
+    // Helper::passslipPageSizing() for the fix for "words so small".
+    ['pageW' => $pageW, 'pageH' => $pageH, 'pageScale' => $pageScale] = Helper::passslipPageSizing();
+
     $accentAlpha = function (string $hex, float $a): string {
       $hex = ltrim($hex, '#');
       [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
@@ -185,6 +191,9 @@
       --accent-a35:
         {{ $accentA35 }}
       ;
+      --page-scale:
+        {{ $pageScale }}
+      ;
     }
 
     * {
@@ -192,6 +201,11 @@
     }
 
     body {
+      /* Page Size & Text Scale — zooms the WHOLE sheet (borders, icons,
+         spacing, not just font-size) so nothing overflows its box when
+         a school picks a larger scale. 1 (100%) = identical to every
+         slip printed before this setting existed. */
+      zoom: var(--page-scale);
       font-family: 'Poppins', sans-serif;
       background: #dde1e7;
       margin: 0;
@@ -240,12 +254,12 @@
     .sheet {
       /* Fluid on screen — shrinks to fit narrow containers like the
      "Customize this design" live-preview iframe — but never grows
-     past true A4 width. The @media print block further down pins
-     this back to an exact 210mm regardless of viewport, so printed
-     output is unaffected. */
+     past the selected Page Size. The @media print block further down
+     pins this back to the exact dimensions regardless of viewport, so
+     printed output is unaffected. */
       width: 100%;
-      max-width: 210mm;
-      min-height: 297mm;
+      max-width: {{ $pageW }};
+      min-height: {{ $pageH }};
       margin: 0 auto;
       background: var(--cream);
       position: relative;
@@ -1208,7 +1222,7 @@
 
     @media print {
       @page {
-        size: A4;
+        size: {{ $pageW }} {{ $pageH }};
         margin: 0;
       }
 
@@ -1228,9 +1242,9 @@
       .sheet {
         box-shadow: none;
         border: none;
-        width: 210mm;
-        height: 297mm;
-        max-height: 297mm;
+        width: {{ $pageW }};
+        height: {{ $pageH }};
+        max-height: {{ $pageH }};
         overflow: hidden;
       }
     }

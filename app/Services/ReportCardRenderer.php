@@ -84,7 +84,12 @@ class ReportCardRenderer
         $prevSubjects = collect($passslipData['previousSubjectMarks'] ?? []);
         $subjects = collect($passslipData['subjectMarks'] ?? [])->map(function ($m) use ($prevSubjects) {
             $dev = null;
-            $prev = $prevSubjects->get($m->subject_id ?? null);
+            // Keyed the same way buildPassslipData() now keys
+            // previousSubjectMarks (subject_id|custom_subject_id) so a
+            // pure custom subject (subject_id null) still matches its own
+            // previous-exam row instead of colliding with every other
+            // custom subject under a single null key.
+            $prev = $prevSubjects->get(\App\Http\Controllers\Helper::subjectKey($m));
             if ($prev && ($prev->total_marks ?? 0) > 0 && is_numeric($m->percentage ?? null)) {
                 $prevPct = round(($prev->marks_obtained / $prev->total_marks) * 100, 1);
                 $dev = round($m->percentage - $prevPct, 1);

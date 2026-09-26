@@ -349,14 +349,9 @@ class ClassandSubjectController extends Controller
             'subjects.*' => 'required'
         ]);
 
-        $school = School::find(session('LoggedSchool'));
+        $schoolId = session('LoggedSchool');
+        $school = School::find($schoolId);
         $usesCustomSubjects = $school && $school->usesCustomSubjects();
-
-        // Delete old subjects
-        ClassSubject::where('class_id', $assignment->class_id)
-            ->where('stream_id', $assignment->stream_id)
-            ->where('school_id', session('LoggedSchool'))
-            ->delete();
 
         // Determine subject type based on class level
         $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
@@ -373,28 +368,108 @@ class ClassandSubjectController extends Controller
             $subjectType = 'thanawi';
         }
 
-        // Insert new subjects
-        foreach ($request->subjects as $subjectId) {
+        // 🔥 FIX: this used to unconditionally delete every class_subjects
+        // row for this class/stream and recreate them from scratch on every
+        // save — even for subjects that were already attached and
+        // untouched. That wiped subject_teacher_1/2, assessment_scale_id
+        // and counts_towards_aggregate on every edit, and — worse — for a
+        // school that had already switched to custom subjects
+        // (CustomSubjectController::confirmSwitch, which deliberately
+        // keeps the original subject_id on carried-over rows so their
+        // exam marks stay linked) it threw that preserved subject_id away
+        // the moment the subjects list was touched again, orphaning every
+        // mark already entered under it: the recreated row got a fresh
+        // custom_subject_id with subject_id = null, a different identity
+        // to marks entry / passlips than the one the marks were saved
+        // under, and the "new" subject showed up as blank/unnamed on
+        // report cards while the old marks appeared under no subject at
+        // all in marks entry.
+        //
+        // This now syncs instead of nuking: rows for subjects that are
+        // still selected are left alone (or, for a not-yet-converted
+        // master row whose name matches a newly-selected custom subject,
+        // upgraded in place — exactly what confirmSwitch would have done),
+        // only genuinely removed subjects are deleted, and only genuinely
+        // new subjects are created.
+        DB::transaction(function () use ($request, $assignment, $schoolId, $usesCustomSubjects, $subjectType) {
+            $existingRows = ClassSubject::where('class_id', $assignment->class_id)
+                ->where('stream_id', $assignment->stream_id)
+                ->where('school_id', $schoolId)
+                ->get();
+
+            $keepIds = [];
+
             if ($usesCustomSubjects) {
-                ClassSubject::create([
-                    'class_id' => $assignment->class_id,
-                    'stream_id' => $assignment->stream_id,
-                    'custom_subject_id' => $subjectId,
-                    'subject_source' => 'custom',
-                    'subject_type' => $subjectType,
-                    'school_id' => session('LoggedSchool'),
-                ]);
+                $existingByCustomId = $existingRows->whereNotNull('custom_subject_id')->keyBy('custom_subject_id');
+
+                // Not-yet-converted master rows, indexed by their resolved
+                // name, so a master subject that's simply being re-selected
+                // under its new custom_subject_id (same name) gets upgraded
+                // in place instead of losing its subject_id.
+                $existingMasterByName = $existingRows
+                    ->whereNull('custom_subject_id')
+                    ->keyBy(fn($row) => Helper::recordMdname($row->subject_id));
+
+                foreach ($request->subjects as $customSubjectId) {
+                    $existing = $existingByCustomId->get($customSubjectId);
+
+                    if (!$existing) {
+                        $customName = CustomSubject::where('id', $customSubjectId)->value('subject_name');
+                        $existing = $customName ? $existingMasterByName->get($customName) : null;
+                    }
+
+                    if ($existing) {
+                        $existing->custom_subject_id = $customSubjectId;
+                        $existing->subject_source = 'custom';
+                        $existing->subject_type = $subjectType;
+                        $existing->save();
+                        $keepIds[] = $existing->id;
+                        continue;
+                    }
+
+                    $created = ClassSubject::create([
+                        'class_id' => $assignment->class_id,
+                        'stream_id' => $assignment->stream_id,
+                        'custom_subject_id' => $customSubjectId,
+                        'subject_source' => 'custom',
+                        'subject_type' => $subjectType,
+                        'school_id' => $schoolId,
+                    ]);
+                    $keepIds[] = $created->id;
+                }
             } else {
-                ClassSubject::create([
-                    'class_id' => $assignment->class_id,
-                    'stream_id' => $assignment->stream_id,
-                    'subject_id' => $subjectId,
-                    'subject_source' => 'master',
-                    'subject_type' => $subjectType,
-                    'school_id' => session('LoggedSchool'),
-                ]);
+                $existingBySubjectId = $existingRows->whereNotNull('subject_id')->keyBy('subject_id');
+
+                foreach ($request->subjects as $subjectId) {
+                    $existing = $existingBySubjectId->get($subjectId);
+
+                    if ($existing) {
+                        $existing->subject_type = $subjectType;
+                        $existing->save();
+                        $keepIds[] = $existing->id;
+                        continue;
+                    }
+
+                    $created = ClassSubject::create([
+                        'class_id' => $assignment->class_id,
+                        'stream_id' => $assignment->stream_id,
+                        'subject_id' => $subjectId,
+                        'subject_source' => 'master',
+                        'subject_type' => $subjectType,
+                        'school_id' => $schoolId,
+                    ]);
+                    $keepIds[] = $created->id;
+                }
             }
-        }
+
+            // Only now remove whatever was deselected — never a row that
+            // just got matched/kept above.
+            ClassSubject::where('class_id', $assignment->class_id)
+                ->where('stream_id', $assignment->stream_id)
+                ->where('school_id', $schoolId)
+                ->whereNotIn('id', $keepIds)
+                ->delete();
+        });
 
         return response()->json([
             'success' => true,

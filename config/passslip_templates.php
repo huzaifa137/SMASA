@@ -271,6 +271,33 @@ return [
             'show_sum_position', 'show_sum_subjects', 'show_sum_attendance',
         ],
 
+        // ── Secondary Design Templates ───────────────────────────────
+        // "Secondary Design Template" gallery on the pass slips index,
+        // for O-Level/A-Level classes (see Helper::isSecondaryClass()).
+        // Reuses the existing Primary toggle keys 1:1 — nothing new was
+        // added to the registry above because slip-secondary.blade.php's
+        // layout (subject table with MARKS/DEV/GRADE/COMMENT/TEACHER
+        // columns, student-vs-class line chart, performance-over-time
+        // bar chart, remarks + signatures) already matches Classic's
+        // vocabulary closely enough that inventing parallel keys would
+        // just be duplication. Add more keys here only once the markup
+        // actually branches on them (same rule as nursery-classic above).
+        'secondary-classic' => [
+            'show_border', 'show_watermark',
+            'show_logo', 'show_contact',
+            'show_photo', 'show_minichart', 'show_qr',
+            'show_dev', 'show_comment_col', 'show_teacher_col',
+            'show_perf_chart', 'show_remarks', 'show_signatures',
+            'show_footer_timestamp', 'show_confidential',
+
+            'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
+
+            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
+            'show_stu_exam', 'show_stu_status',
+
+            'show_sum_total_marks', 'show_sum_average_pct', 'show_sum_division',
+        ],
+
         // ── Nursery Design Templates ─────────────────────────────────
         // Mirrors the Primary set above (Classic/Modern/Minimal), but
         // for the "Nursery Design Template" gallery on the pass slips

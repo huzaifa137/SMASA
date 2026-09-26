@@ -719,6 +719,56 @@ class Helper extends Controller
         return $presets[array_key_last($presets)]['remark'];
     }
 
+    /**
+     * Page Size & Text Scale — applies to every pass-slip design exactly
+     * like Accent Colour ($accent in slip-classic/modern/minimal/ar and
+     * slip-nursery/preview-kindergarten*.blade.php): read straight from
+     * request() so the query string always wins (the "Customize this
+     * design" live preview keeps reacting instantly), never gated behind
+     * config/passslip_templates.php's per-template capability list.
+     *
+     * Defaults ('a4' @ 100%) are the exact physical size/scale every
+     * template already rendered at before this setting existed, so a
+     * class that has never touched this control prints identically to
+     * today — only a class that deliberately picks a bigger page and/or
+     * a higher text scale from the sidebar sees anything different. This
+     * is the fix for schools reporting their pass slips print with "the
+     * words so small" at a fixed A4 size: 'text_scale' zooms the WHOLE
+     * sheet (not just font-size), so headings, icons, borders and
+     * spacing all grow together instead of text overflowing its boxes.
+     */
+    public static function passslipPageSizing(): array
+    {
+        $sizes = [
+            'a4' => ['w' => '210mm', 'h' => '297mm', 'label' => 'A4'],
+            'letter' => ['w' => '215.9mm', 'h' => '279.4mm', 'label' => 'Letter'],
+            'legal' => ['w' => '215.9mm', 'h' => '355.6mm', 'label' => 'Legal'],
+            'a3' => ['w' => '297mm', 'h' => '420mm', 'label' => 'A3'],
+        ];
+
+        $key = strtolower((string) request('page_size', 'a4'));
+        if (!isset($sizes[$key])) {
+            $key = 'a4';
+        }
+
+        // A fixed step list (not a free-form number) keeps every saved
+        // profile printing at a predictable, tested scale rather than
+        // an arbitrary one that might overflow a template's layout.
+        $scale = (int) request('text_scale', 100);
+        if (!in_array($scale, [100, 110, 125, 150], true)) {
+            $scale = 100;
+        }
+
+        return [
+            'pageSizeKey' => $key,
+            'pageSizeLabel' => $sizes[$key]['label'],
+            'pageW' => $sizes[$key]['w'],
+            'pageH' => $sizes[$key]['h'],
+            'textScale' => $scale,
+            'pageScale' => round($scale / 100, 2),
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Passlip Customisation Persistence (per class)
@@ -1088,6 +1138,53 @@ class Helper extends Controller
         }
 
         return self::recordMdname($row->subject_id ?? null) ?? '';
+    }
+
+    /**
+     * Same idea as classSubjectName(), but for rows that don't carry a
+     * subject_source column — namely examination_marks / ExaminationMark,
+     * which only ever stores subject_id and custom_subject_id.
+     *
+     * Convention (matches ExaminationController::marksEntrySubject()'s
+     * $isCustomSubject check and CustomSubjectController::confirmSwitch(),
+     * which deliberately keeps subject_id as the identity for
+     * carried-over subjects): whenever subject_id is present, it is the
+     * identity, even if custom_subject_id also happens to be set for
+     * audit purposes. Only a genuinely null subject_id means "resolve
+     * this one via custom_subject_id instead".
+     *
+     * Use this (not recordMdname($mark->subject_id) directly) anywhere an
+     * ExaminationMark's subject name needs to be displayed — passlips,
+     * report cards, exports — otherwise pure custom subjects (a school
+     * that never had a master subject_id for this one) resolve to a
+     * blank name.
+     */
+    public static function examSubjectName($subjectId, $customSubjectId = null)
+    {
+        if (!empty($subjectId)) {
+            return self::recordMdname($subjectId) ?? '';
+        }
+
+        if (!empty($customSubjectId)) {
+            return DB::table('custom_subjects')->where('id', $customSubjectId)->value('subject_name') ?? '';
+        }
+
+        return '';
+    }
+
+    /**
+     * The composite key that uniquely identifies a subject across both
+     * examination_marks and class_subjects once custom subjects are in
+     * play (mirrors the unique index added in
+     * add_custom_subject_support_to_examination_marks_table): subject_id
+     * when present, otherwise custom_subject_id. A plain subject_id key
+     * collapses every pure-custom subject (subject_id always null) onto
+     * a single bucket, silently dropping all but one — this is the key
+     * to use instead anywhere marks/rows are keyed or matched by subject.
+     */
+    public static function subjectKey($row): string
+    {
+        return ($row->subject_id ?? '0') . '|' . ($row->custom_subject_id ?? '0');
     }
 
     public static function MasterRecordMerge($item1, $item2)
