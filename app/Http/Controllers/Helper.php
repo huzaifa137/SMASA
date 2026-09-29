@@ -635,6 +635,47 @@ class Helper extends Controller
     }
 
     /**
+     * md_id values (master_datas rows) that count as "Secondary" classes:
+     * Secondary O-Level (Senior 1-4) and A-Level (Senior 5-6). Resolved
+     * dynamically from master_datas via the SECONDARY_OLEVEL_CLASSES /
+     * SECONDARY_ALEVEL_CLASSES master codes, cached per request since
+     * isSecondaryClass() is called inside loops.
+     */
+    public static function secondaryClassIds(): array
+    {
+        static $cached = null;
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $cached = DB::table('master_datas')
+            ->whereIn('md_master_code_id', [
+                config('constants.options.SECONDARY_OLEVEL_CLASSES'),
+                config('constants.options.SECONDARY_ALEVEL_CLASSES'),
+            ])
+            ->pluck('md_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $cached;
+    }
+
+    /**
+     * True if $classId (a master_datas md_id) is a Secondary (O-Level /
+     * A-Level) class. Single source of truth —
+     * ExaminationController::isSecondaryClass() delegates here.
+     */
+    public static function isSecondaryClass($classId): bool
+    {
+        if (empty($classId)) {
+            return false;
+        }
+
+        return in_array((int) $classId, self::secondaryClassIds(), true);
+    }
+
+    /**
      * The 3 legacy system comment presets: marks (1-3), label, remark.
      * Used only as a fallback when no AssessmentScale is attached yet
      * (e.g. a fresh install before migrations have run the backfill).

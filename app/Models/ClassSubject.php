@@ -82,6 +82,6 @@ public function classSubjectsByClassAndStream()
             return optional(\App\Models\SchoolALevelSubject::find($realId))->subject_name ?? 'Unknown subject';
         }
 
-        return \App\Http\Controllers\Helper::recordMdname($this->subject_id);
+        return \App\Http\Controllers\Helper::classSubjectName($this);
     }
 }

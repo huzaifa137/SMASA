@@ -635,6 +635,12 @@ th {
                             
                                 @php
                                     $student = $card->student;
+                                @endphp
+
+                                {{-- Skip cards whose student record no longer exists --}}
+                                @continue(!$student)
+
+                                @php
                                     $initials = strtoupper(substr($student->firstname ?? 'S', 0, 1) . substr($student->lastname ?? 'T', 0, 1));
                                     $className = Helper::recordMdname($student->senior);
                                     $streamName = $student->stream;

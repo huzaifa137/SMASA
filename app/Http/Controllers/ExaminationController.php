@@ -2290,11 +2290,16 @@ class ExaminationController extends Controller
         // class_subjects.subject_teacher_1/2 holds the actual assigned teacher;
         // ExaminationMark has no teacher_name column, so resolve it via a join
         // rather than referencing a non-existent attribute.
+        // Keyed by subject_id (master) or custom_subject_id (custom) so pure
+        // custom subjects (subject_id = null) don't collapse onto one key.
         $subjectTeachers = DB::table('class_subjects')
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', $schoolId)
-            ->pluck('subject_teacher_1', 'subject_id');
+            ->get(['subject_id', 'custom_subject_id', 'subject_teacher_1'])
+            ->mapWithKeys(fn($r) => [
+                (!empty($r->subject_id) ? 's:' . $r->subject_id : 'c:' . $r->custom_subject_id) => $r->subject_teacher_1,
+            ]);
 
         // ── Aggregate ──────────────────────────────────────────────────────────
         $totalObtained = $marks->whereNotNull('marks_obtained')->sum('marks_obtained');
@@ -2331,11 +2336,12 @@ class ExaminationController extends Controller
                 $points = $gradeRow?->points ?? $m->grade_points;
             }
 
-            $teacherId = $subjectTeachers[$m->subject_id] ?? null;
+            $teacherId = $subjectTeachers[!empty($m->subject_id) ? 's:' . $m->subject_id : 'c:' . $m->custom_subject_id] ?? null;
 
             return (object) [
                 'subject_id' => $m->subject_id,
-                'subject_name' => Helper::recordMdname($m->subject_id),
+                'custom_subject_id' => $m->custom_subject_id,
+                'subject_name' => Helper::examSubjectName($m->subject_id, $m->custom_subject_id),
                 'subject_type' => $m->subject_type ?? null,
                 'marks_obtained' => $m->marks_obtained,
                 'total_marks' => $m->total_marks,
@@ -2518,7 +2524,16 @@ class ExaminationController extends Controller
                 ->where('student_id', $studentId)
                 ->where('school_id', $schoolId)
                 ->get()
-                ->keyBy('subject_id');
+                ->flatMap(function ($pm) {
+                    // Keyed by subject_id (master subjects, used by the older
+                    // templates) AND by subject_id|custom_subject_id so pure
+                    // custom subjects (subject_id = null) still match.
+                    $out = [Helper::subjectKey($pm) => $pm];
+                    if (!empty($pm->subject_id)) {
+                        $out[$pm->subject_id] = $pm;
+                    }
+                    return $out;
+                });
         }
 
         // Fetch student record if not passed in
@@ -2793,7 +2808,7 @@ class ExaminationController extends Controller
                 ->where('student_id', $studentId)
                 ->where('school_id', $schoolId)
                 ->get()
-                ->keyBy('subject_id');
+                ->keyBy(fn($m) => Helper::subjectKey($m));
 
             $perExamSubjectMarks[$eid] = $marks;
             $allSubjectIds = $allSubjectIds->merge($marks->keys());
@@ -2901,7 +2916,10 @@ class ExaminationController extends Controller
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', $schoolId)
-            ->pluck('subject_teacher_1', 'subject_id');
+            ->get(['subject_id', 'custom_subject_id', 'subject_teacher_1'])
+            ->mapWithKeys(fn($r) => [
+                (!empty($r->subject_id) ? 's:' . $r->subject_id : 'c:' . $r->custom_subject_id) => $r->subject_teacher_1,
+            ]);
 
         // Which subjects count toward the aggregate for THIS class (e.g.
         // English, Mathematics, Science, Social Studies — never everything
@@ -2913,9 +2931,8 @@ class ExaminationController extends Controller
             ->where('stream_id', $streamId)
             ->where('school_id', $schoolId)
             ->where('counts_towards_aggregate', true)
-            ->pluck('subject_id')
-            ->filter()
-            ->map(fn($id) => (int) $id)
+            ->get(['subject_id', 'custom_subject_id'])
+            ->map(fn($row) => Helper::subjectKey($row))
             ->flip();
 
         $isEarlyYears = collect($perExamSubjectMarks)
@@ -2923,14 +2940,19 @@ class ExaminationController extends Controller
             ->every(fn($m) => Helper::isEarlyYearsSubject($m->subject_id, $m->class_id ?? $classId, $m->stream_id ?? $streamId));
 
         $combinedAssessmentScale = ($isEarlyYears && $allSubjectIds->isNotEmpty())
-            ? Helper::assessmentScaleForClassSubject($classId, $streamId, $allSubjectIds->first(), $schoolId)
+            ? Helper::assessmentScaleForClassSubject(
+                $classId,
+                $streamId,
+                collect($perExamSubjectMarks)->flatMap(fn($c) => $c->values())->first()?->subject_id,
+                $schoolId
+            )
             : null;
         $combinedMaxMark = $combinedAssessmentScale ? (float) $combinedAssessmentScale->max_score : Helper::earlyYearsMaxMark();
 
         // Averaging only makes sense across 2+ chosen examinations
         $useAvg = count($avgExamIds) >= 2;
 
-        $subjectRows = $allSubjectIds->map(function ($subjectId) use ($examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg) {
+        $subjectRows = $allSubjectIds->map(function ($subjectKey) use ($examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg) {
             $examData = [];
             $avgPctSum = 0;
             $avgPctCount = 0;
@@ -2938,7 +2960,7 @@ class ExaminationController extends Controller
             $lastGrade = '—';
 
             foreach ($examIds as $eid) {
-                $m = $perExamSubjectMarks[$eid][$subjectId] ?? null;
+                $m = $perExamSubjectMarks[$eid][$subjectKey] ?? null;
                 $obtained = $m->marks_obtained ?? null;
                 $total = $m->total_marks ?? null;
                 $pct = ($total && $total > 0 && $obtained !== null) ? round(($obtained / $total) * 100, 1) : null;
@@ -2969,16 +2991,29 @@ class ExaminationController extends Controller
             $avgPct = ($useAvg && $avgPctCount > 0) ? round($avgPctSum / $avgPctCount, 1) : null;
             $avgScaleRow = $avgPct !== null ? $scaleFor($avgPct) : null;
 
+            // Resolve identity from whichever exam actually has a mark row.
+            $refMark = null;
+            foreach ($examIds as $eid) {
+                if (isset($perExamSubjectMarks[$eid][$subjectKey])) {
+                    $refMark = $perExamSubjectMarks[$eid][$subjectKey];
+                    break;
+                }
+            }
+            $refSubjectId = $refMark->subject_id ?? null;
+            $refCustomId = $refMark->custom_subject_id ?? null;
+
             return (object) [
-                'subject_id' => $subjectId,
-                'subject_name' => Helper::recordMdname($subjectId),
+                'subject_id' => $refSubjectId,
+                'custom_subject_id' => $refCustomId,
+                'subject_key' => $subjectKey,
+                'subject_name' => Helper::examSubjectName($refSubjectId, $refCustomId),
                 'exams' => $examData,
                 'avgPercentage' => $avgPct,
                 'grade' => $avgPct !== null ? $gradeFor($avgPct) : $lastGrade,
                 'avgPoints' => $avgScaleRow?->points !== null ? (int) $avgScaleRow->points : null,
                 'avgRemark' => $avgScaleRow?->remark ?? null,
                 'percentage' => $avgPct ?? ($lastPct ?? 0),
-                'teacher_name' => Helper::teacherFullName($subjectTeachers[$subjectId] ?? null),
+                'teacher_name' => Helper::teacherFullName($subjectTeachers[!empty($refSubjectId) ? 's:' . $refSubjectId : 'c:' . $refCustomId] ?? null),
             ];
         })->sortBy('subject_name')->values();
 
@@ -2994,7 +3029,7 @@ class ExaminationController extends Controller
             $ptsCount = 0;
 
             foreach ($subjectRows as $sm) {
-                if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
+                if (!isset($aggregateSubjectIds[$sm->subject_key])) {
                     continue;
                 }
                 $ed = $sm->exams[$eid] ?? null;
@@ -3022,7 +3057,7 @@ class ExaminationController extends Controller
             $avgPtsCount = 0;
 
             foreach ($subjectRows as $sm) {
-                if (!isset($aggregateSubjectIds[(int) $sm->subject_id])) {
+                if (!isset($aggregateSubjectIds[$sm->subject_key])) {
                     continue;
                 }
                 if ($sm->avgPercentage !== null) {
@@ -4057,15 +4092,16 @@ class ExaminationController extends Controller
 
         // Get subject-wise breakdown
         $subjectBreakdown = [];
-        $subjects = $marks->groupBy('subject_id');
+        $subjects = $marks->groupBy(fn($m) => Helper::subjectKey($m));
         foreach ($subjects as $subjectId => $subjectMarks) {
-            $subjectName = Helper::recordMdname($subjectId);
+            $subjectName = Helper::examSubjectName($subjectMarks->first()->subject_id, $subjectMarks->first()->custom_subject_id);
             $avgSubjectScore = round($subjectMarks->avg('marks_obtained'));
             $maxScore = $subjectMarks->max('marks_obtained');
             $minScore = $subjectMarks->min('marks_obtained');
 
             $subjectBreakdown[] = [
-                'subject_id' => $subjectId,
+                'subject_id' => $subjectMarks->first()->subject_id,
+                'custom_subject_id' => $subjectMarks->first()->custom_subject_id,
                 'subject_name' => $subjectName,
                 'average' => $avgSubjectScore,
                 'max' => $maxScore,

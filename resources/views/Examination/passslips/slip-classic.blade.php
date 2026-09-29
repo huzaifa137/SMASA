@@ -2757,7 +2757,7 @@
                                             @foreach($grpSubjs as $sm)
                                                 @php
                                                     $rn++;
-                                                    $prevM = $prevSubj[$sm->subject_id] ?? null;
+                                                    $prevM = ($prevSubj[\App\Http\Controllers\Helper::subjectKey($sm)] ?? ($prevSubj[$sm->subject_id] ?? null));
                                                     $delta = null;
                                                     if ($prevM && ($prevM->total_marks ?? 0) > 0) {
                                                         $pPct = round(($prevM->marks_obtained / $prevM->total_marks) * 100, 1);
@@ -2806,7 +2806,7 @@
                                         @foreach($subjMarks as $sm)
                                             @php
                                                 $rn++;
-                                                $prevM = $prevSubj[$sm->subject_id] ?? null;
+                                                $prevM = ($prevSubj[\App\Http\Controllers\Helper::subjectKey($sm)] ?? ($prevSubj[$sm->subject_id] ?? null));
                                                 $delta = null;
                                                 if ($prevM && ($prevM->total_marks ?? 0) > 0) {
                                                     $pPct = round(($prevM->marks_obtained / $prevM->total_marks) * 100, 1);
