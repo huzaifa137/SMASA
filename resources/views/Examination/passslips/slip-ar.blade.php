@@ -271,7 +271,11 @@
            PAGE WRAPPER
         ══════════════════════════════════════════════════════════════ */
         .page-wrap {
-            max-width: 800px;
+            /* zoom on <body> multiplies every length, so the container is
+               divided by the scale: its VISUAL width stays the same as at
+               100% (the paper width) and only the text/layout inside grows
+               — instead of the slip growing wider than the page. */
+            max-width: calc(800px / var(--page-scale, 1));
             margin: 1.5rem auto;
         }
 

@@ -754,8 +754,10 @@ selected classes" is clicked. --}}
                 </div>
                 <p class="cz-hint">
                     Scale zooms the whole slip — borders, icons and spacing
-                    grow together with the text, so nothing overflows its
-                    box. A higher scale may print onto more than one page.
+                    grow together with the text — while the slip itself stays
+                    exactly as wide as the chosen paper, so nothing is cut off
+                    at the edges. Content that no longer fits the page height
+                    at a higher scale continues onto a second page.
                 </p>
 
                 {{-- ── Dynamically-filtered toggle groups ──
@@ -936,6 +938,11 @@ selected classes" is clicked. --}}
                                 Preview with: {{ Helper::recordMdname($ec->class_id) }}
                             </option>
                         @endforeach
+                        @if ($examClasses->isEmpty())
+                            <option value="" disabled selected>
+                                No {{ ($isNurseryTemplate ?? false) ? 'Nursery' : (($isSecondaryTemplate ?? false) ? 'Secondary' : 'Primary') }} classes in this examination
+                            </option>
+                        @endif
                     </select>
                 </div>
                 <div class="cz-iframe-shell">

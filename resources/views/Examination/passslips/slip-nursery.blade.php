@@ -272,7 +272,11 @@
         }
 
         .page-wrap {
-            max-width: 820px;
+            /* zoom on <body> multiplies every length, so the container is
+               divided by the scale: its VISUAL width stays the same as at
+               100% (the paper width) and only the text/layout inside grows
+               — instead of the slip growing wider than the page. */
+            max-width: calc(820px / var(--page-scale, 1));
             margin: 1.5rem auto;
         }
 
@@ -690,7 +694,7 @@
                 page-break-after: always;
                 page-break-inside: avoid;
                 width: 100%;
-                min-height: calc({{ $pageH }} - 1cm);
+                min-height: calc(({{ $pageH }} - 1cm) / var(--page-scale, 1));
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;

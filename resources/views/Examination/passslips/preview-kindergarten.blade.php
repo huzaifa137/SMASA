@@ -239,8 +239,8 @@
        back to the exact dimensions regardless of viewport, so printed
        output is unaffected. */
             width: 100%;
-            max-width: {{ $pageW }};
-            min-height: {{ $pageH }};
+            max-width: calc({{ $pageW }} / var(--page-scale, 1));
+            min-height: calc({{ $pageH }} / var(--page-scale, 1));
             background: var(--paper);
             position: relative;
             padding: 10mm 11mm 8mm;
@@ -354,8 +354,12 @@
 
             .sheet {
                 box-shadow: none;
-                width: {{ $pageW }};
-                min-height: {{ $pageH }};
+                /* body is zoomed by --page-scale, so divide to land on
+                   exactly one physical page (no cut-off on the right, no
+                   spill onto a blank second page). */
+                width: calc({{ $pageW }} / var(--page-scale, 1));
+                max-width: calc({{ $pageW }} / var(--page-scale, 1));
+                min-height: calc({{ $pageH }} / var(--page-scale, 1));
                 border-radius: 0;
                 page-break-after: always;
                 page-break-inside: avoid;

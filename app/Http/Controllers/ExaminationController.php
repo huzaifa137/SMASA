@@ -1922,57 +1922,88 @@ class ExaminationController extends Controller
         $classId = $request->query('class_id');
         $streamId = $request->query('stream_id');
 
-        $studentQuery = DB::table('students')->where('school_id', $schoolId);
+        // The preview must ONLY ever render a student from the SAME family
+        // (Primary / Nursery / Secondary) as the requested design
+        // template. Previously, when no class_id matched (or the exam had
+        // no class of that family), the query fell through to "the first
+        // student in the whole school" — so opening a Nursery design on an
+        // exam without Nursery classes silently previewed a Primary
+        // student with the Primary slip (Progressive Assessment Record
+        // and all). Restrict to this exam's own classes of the right
+        // family, and never fall back across families.
+        $wantsNurseryTemplate = self::isNurseryTemplateKey($request->query('template'));
+        $wantsSecondaryTemplate = self::isSecondaryTemplateKey($request->query('template'));
 
-        if ($classId) {
-            $studentQuery->where('senior', $classId);
+        $familyClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->get()
+            ->filter(function ($row) use ($wantsNurseryTemplate, $wantsSecondaryTemplate) {
+                $classIsNursery = Helper::isNurseryClass($row->class_id);
+                $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($row->class_id);
+
+                if ($wantsNurseryTemplate) {
+                    return $classIsNursery;
+                }
+                if ($wantsSecondaryTemplate) {
+                    return $classIsSecondary;
+                }
+                return !$classIsNursery && !$classIsSecondary;
+            })
+            ->values();
+
+        $student = null;
+
+        // 1) The class the customise page asked for — only if it really
+        //    belongs to this exam AND this template's family.
+        if ($classId && $familyClasses->contains(fn ($row) => (int) $row->class_id === (int) $classId)) {
+            $studentQuery = DB::table('students')
+                ->where('school_id', $schoolId)
+                ->where('senior', $classId);
             if ($streamId) {
                 $studentQuery->where('stream', $streamId);
             }
-        }
+            $student = $studentQuery->first();
 
-        $student = $studentQuery->first();
-
-        // No student in that specific class (or no class chosen at all
-        // yet) — fall back to the first student in a class from the
-        // SAME family as the requested template, so the preview is
-        // never just a blank error and never silently previews a
-        // Nursery/Secondary student against a Primary-only template (or
-        // vice versa). classic/modern/minimal only ever apply to
-        // non-Nursery, non-Secondary classes; nursery-*/secondary-*
-        // only ever apply to their own family.
-        $wantsNurseryTemplate = self::isNurseryTemplateKey($request->query('template'));
-        $wantsSecondaryTemplate = self::isSecondaryTemplateKey($request->query('template'));
-        if (!$student) {
-            $ec = DB::table('examination_classes')
-                ->where('examination_id', $examId)
-                ->where('school_id', $schoolId)
-                ->get()
-                ->filter(function ($row) use ($wantsNurseryTemplate, $wantsSecondaryTemplate) {
-                    $classIsNursery = Helper::isNurseryClass($row->class_id);
-                    $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($row->class_id);
-
-                    if ($wantsNurseryTemplate) {
-                        return $classIsNursery;
-                    }
-                    if ($wantsSecondaryTemplate) {
-                        return $classIsSecondary;
-                    }
-                    return !$classIsNursery && !$classIsSecondary;
-                })
-                ->first();
-
-            if ($ec) {
+            // Same class, any stream, if that specific stream is empty.
+            if (!$student && $streamId) {
                 $student = DB::table('students')
                     ->where('school_id', $schoolId)
-                    ->where('senior', $ec->class_id)
-                    ->where('stream', $ec->stream_id)
+                    ->where('senior', $classId)
                     ->first();
             }
         }
 
+        // 2) Otherwise the first student in any of this exam's classes
+        //    of the same family.
         if (!$student) {
-            abort(404, 'No student available yet to preview this design against.');
+            foreach ($familyClasses as $ec) {
+                $student = DB::table('students')
+                    ->where('school_id', $schoolId)
+                    ->where('senior', $ec->class_id)
+                    ->where('stream', $ec->stream_id)
+                    ->first()
+                    ?? DB::table('students')
+                        ->where('school_id', $schoolId)
+                        ->where('senior', $ec->class_id)
+                        ->first();
+
+                if ($student) {
+                    break;
+                }
+            }
+        }
+
+        if (!$student) {
+            $familyName = $wantsNurseryTemplate ? 'Nursery' : ($wantsSecondaryTemplate ? 'Secondary' : 'Primary');
+            return response(
+                '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                . '<body style="font-family:system-ui,sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:1rem;">'
+                . '<div><div style="font-size:1.05rem;font-weight:700;margin-bottom:.4rem;">No ' . e($familyName) . ' student to preview</div>'
+                . '<div style="font-size:.85rem;">This examination has no ' . e($familyName) . ' class with students yet, '
+                . 'so this design can\'t be previewed here.</div></div></body></html>',
+                200
+            );
         }
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);

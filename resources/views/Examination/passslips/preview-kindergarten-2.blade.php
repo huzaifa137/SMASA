@@ -246,7 +246,7 @@
     }
 
     .page-wrap {
-      max-width: 850px;
+      max-width: calc(850px / var(--page-scale, 1));
       margin: 1.5rem auto;
       padding: 0 12px;
     }
@@ -258,8 +258,8 @@
      pins this back to the exact dimensions regardless of viewport, so
      printed output is unaffected. */
       width: 100%;
-      max-width: {{ $pageW }};
-      min-height: {{ $pageH }};
+      max-width: calc({{ $pageW }} / var(--page-scale, 1));
+      min-height: calc({{ $pageH }} / var(--page-scale, 1));
       margin: 0 auto;
       background: var(--cream);
       position: relative;
@@ -1242,10 +1242,20 @@
       .sheet {
         box-shadow: none;
         border: none;
-        width: {{ $pageW }};
+        /* body is zoomed by --page-scale, so divide to land on exactly
+           one physical page. Above 100% the design's fixed one-page height
+           would clip content, so it grows (and paginates) instead. */
+        width: calc({{ $pageW }} / var(--page-scale, 1));
+        max-width: calc({{ $pageW }} / var(--page-scale, 1));
+        @if($pageScale > 1)
+        min-height: calc({{ $pageH }} / var(--page-scale, 1));
+        overflow: visible;
+        page-break-after: always;
+        @else
         height: {{ $pageH }};
         max-height: {{ $pageH }};
         overflow: hidden;
+        @endif
       }
     }
   </style>
