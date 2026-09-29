@@ -775,9 +775,9 @@ selected classes" is clicked. --}}
                     // Primary design now — the short INITIALS column is the
                     // one that's on by default (see the slip views).
                     $offByDefaultKeys = match ($template) {
-                        'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col'],
+                        'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point'],
                         'classic' => ['show_signatures', 'show_teacher_col'],
-                        'modern' => ['show_teacher_col'],
+                        'modern' => ['show_teacher_col', 'show_col_grade_point'],
                         default => [],
                     };
                 @endphp

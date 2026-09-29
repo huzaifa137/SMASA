@@ -147,7 +147,13 @@ return [
         // above). Each of the three can now be removed on its own.
         'show_col_full_marks' => ['label' => 'Full Marks column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
         'show_col_marks_obtained' => ['label' => 'Marks Obtained column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
-        'show_col_percentage' => ['label' => 'Percentage column', 'icon' => 'fa-percent', 'group' => 'Marks Table'],
+        'show_col_percentage' => ['label' => 'Marks / Results column', 'icon' => 'fa-list-ol', 'group' => 'Marks Table'],
+        // Grade and Grade Point used to be ONE switch ('show_grade_pill' below).
+        // They are now separate columns on every Primary design. The old key is
+        // kept in the registry (and as the fallback the slip views read) so
+        // already-saved settings JSON keeps working.
+        'show_col_grade' => ['label' => 'Grade column', 'icon' => 'fa-tag', 'group' => 'Marks Table'],
+        'show_col_grade_point' => ['label' => 'Grade Point column', 'icon' => 'fa-star', 'group' => 'Marks Table'],
         'show_dev' => ['label' => 'Development (DEV ↑↓) column', 'icon' => 'fa-arrows-alt-v', 'group' => 'Marks Table'],
         'show_grade_pill' => ['label' => 'Grade pills (A / B / C …)', 'icon' => 'fa-tag', 'group' => 'Marks Table'],
         'show_comment_col' => ['label' => 'Comment column', 'icon' => 'fa-comment-dots', 'group' => 'Marks Table'],
@@ -196,7 +202,7 @@ return [
             // Granular marks-table column split (superseded 'show_score_col'
             // for Classic — see the NOTE above).
             'show_col_full_marks', 'show_col_marks_obtained', 'show_col_percentage',
-            'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             // Granular term-dates split (superseded 'show_term_dates').
             'show_term_ends_on', 'show_next_term_starts_on',
@@ -223,7 +229,7 @@ return [
             // Modern's marks table only ever had ONE combined score
             // column (no Full Marks / Marks Obtained split), so it keeps
             // using 'show_score_col' as-is — no granularity problem here.
-            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_score_col', 'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
@@ -253,7 +259,7 @@ return [
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             // Minimal's marks table only ever had ONE combined score
             // column too, same as Modern — keeps 'show_score_col' as-is.
-            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_score_col', 'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',

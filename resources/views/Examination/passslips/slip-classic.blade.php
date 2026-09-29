@@ -2040,7 +2040,13 @@
                     'qr' => $on('show_qr', true, $savedCfg),
                     'rank' => $on('show_rank', true, $savedCfg),
                     'dev' => $on('show_dev', true, $savedCfg),
-                    'grade_pill' => $on('show_grade_pill', true, $savedCfg),
+                    // Grade and Grade Point used to share ONE switch ('show_grade_pill').
+                    // They are now independent columns: 'show_col_grade' and
+                    // 'show_col_grade_point'. Both fall back to the legacy
+                    // 'show_grade_pill' so profiles saved before the split look the same.
+                    // ($cfg['grade_pill'] keeps its old name but now means "Grade column".)
+                    'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                    'col_grade_point' => $on('show_col_grade_point', $on('show_grade_pill', true, $savedCfg), $savedCfg),
                     // Teacher (full name) is opt-in now; the short INITIALS column
                     // below is the default one shown instead.
                     'teacher_col' => $on('show_teacher_col', false, $savedCfg),
@@ -2333,6 +2339,7 @@
                     + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['dev'] ? 1 : 0)
                     + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['comment_col'] ? 1 : 0)
                     + ($cfg['teacher_col'] ? 1 : 0)
                     + ($cfg['initials_col'] ? 1 : 0);
@@ -2782,13 +2789,15 @@
                                             <th style="width:64px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS OBTAINED' }}</th>
                                         @endif
                                         @if($cfg['col_percentage'] && !$isEarlyYears)
-                                            <th style="width:56px;">PERCENTAGE (%)</th>
+                                            <th style="width:64px;">MARKS</th>
                                         @endif
                                         @if($cfg['dev'])
                                             <th style="width:38px;">DEV.</th>
                                         @endif
                                         @if($cfg['grade_pill'] && !$isEarlyYears)
                                             <th style="width:38px;">GRADE</th>
+                                        @endif
+                                        @if($cfg['col_grade_point'] && !$isEarlyYears)
                                             <th style="width:48px;">GRADE POINT</th>
                                         @endif
                                         @if($cfg['comment_col'])
@@ -2849,6 +2858,8 @@
                                                         <td class="num-td">
                                                             <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                         </td>
+                                                    @endif
+                                                    @if($cfg['col_grade_point'] && !$isEarlyYears)
                                                         <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['comment_col'])
@@ -2901,6 +2912,8 @@
                                                     <td class="num-td">
                                                         <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                     </td>
+                                                @endif
+                                                @if($cfg['col_grade_point'] && !$isEarlyYears)
                                                     <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['comment_col'])
@@ -2946,8 +2959,10 @@
                                             @endif
                                             @if($cfg['grade_pill'] && !$isEarlyYears)
                                                 <td class="num-td">
-                                                    <span >AGG</span>
+                                                    <span>AGG</span>
                                                 </td>
+                                            @endif
+                                            @if($cfg['col_grade_point'] && !$isEarlyYears)
                                                 <td class="num-td">{{ $aggregateLabel }}</td>
                                             @endif
                                             @if($resultColspan > 0)
@@ -3032,18 +3047,21 @@
 
                    
 
-                            {{-- Class Teacher's Remarks --}}
+                            {{-- Class Teacher's Remarks / Head Teacher's Remarks --}}
                             @if($cfg['remarks'])
                                 <div class="rc-section">
-                                    <div class="rc-section-hd">Class Teacher's Remarks</div>
                                     @php
                                         $classTeacherName = $s->class_teacher ?? 'Class Teacher';
                                         $ctRemark = $s->class_teacher_remark ?? '';
                                         $ctSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
                                         $htSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
                                     @endphp
+
+                                    {{-- Each heading now carries the teacher's name, with that
+                                         teacher's remark and signature line directly below it. --}}
+                                    <div class="rc-section-hd">Class Teacher's Remarks - <span style="text-transform:none;letter-spacing:0;">{{ $classTeacherName }}</span></div>
                                     <div class="rc-remarks-box">
-                                        <div class="rc-remark-line">
+                                        <div class="rc-remark-line" style="margin-bottom:0;">
                                             <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
                                             <div class="sig-line" style="margin-top:.4rem;">
                                                 @if($ctSigUrl)
@@ -3051,9 +3069,11 @@
                                                         style="max-width:80px;max-height:20px;object-fit:contain;">
                                                 @endif
                                             </div>
-                                            <div class="who">{{ $classTeacherName }}</div>
                                         </div>
+                                    </div>
 
+                                    <div class="rc-section-hd">Head Teacher's Remarks - <span style="text-transform:none;letter-spacing:0;">{{ $headTeacherName }}</span></div>
+                                    <div class="rc-remarks-box">
                                         <div class="rc-remark-line" style="margin-bottom:0;">
                                             <div>{{ $s->head_teacher_remark ?? '' }}</div>
                                             <div class="sig-line" style="margin-top:.4rem;">
@@ -3062,7 +3082,6 @@
                                                         style="max-width:80px;max-height:20px;object-fit:contain;">
                                                 @endif
                                             </div>
-                                            <div class="who">{{ $headTeacherName }}</div>
                                         </div>
                                     </div>
                                 </div>

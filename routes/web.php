@@ -768,6 +768,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/discipline/criteria', 'saveDisciplineCriteria')->name('discipline.criteria.save');
             Route::delete('/discipline/criteria/{criteriaId}', 'deleteDisciplineCriteria')->name('discipline.criteria.delete');
 
+            // Exam Subjects — choose which subjects are sat in this exam
+            // (marks entry) and which show on pass slips / report cards.
+            Route::get('/{examId}/subjects', [\App\Http\Controllers\ExaminationSubjectController::class, 'edit'])->name('subjects.edit');
+            Route::post('/{examId}/subjects/save', [\App\Http\Controllers\ExaminationSubjectController::class, 'save'])->name('subjects.save');
+
             // Report Card Remarks (Class Teacher / Head Teacher)
             Route::get('/{id}/remarks', 'remarksEntry')->name('remarks.entry');
             Route::post('/{id}/remarks/save', 'saveRemarks')->name('remarks.save');

@@ -1506,7 +1506,13 @@
                     'qr' => $on('show_qr', true, $savedCfg),
                     'rank' => $on('show_rank', true, $savedCfg),
                     'dev' => $on('show_dev', true, $savedCfg),
-                    'grade_pill' => $on('show_grade_pill', true, $savedCfg),
+                    // Grade and Grade Point are independent columns now. 'grade_pill'
+                    // keeps its old name but means the "Grade column"; falls back to the
+                    // legacy 'show_grade_pill' for profiles saved before the split.
+                    // Grade Point did not exist in this design before, so it defaults OFF
+                    // (the table looks exactly as it did until someone turns it on).
+                    'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                    'col_grade_point' => $on('show_col_grade_point', false, $savedCfg),
                     // Teacher (full name) is opt-in now; the short INITIALS column
                     // below is the default one shown instead.
                     'teacher_col' => $on('show_teacher_col', false, $savedCfg),
@@ -1658,6 +1664,7 @@
                     + ($cfg['score_col'] ? 1 : 0)
                     + ($cfg['dev'] ? 1 : 0)
                     + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['comment_col'] ? 1 : 0)
                     + ($cfg['teacher_col'] ? 1 : 0)
                     + ($cfg['initials_col'] ? 1 : 0);
@@ -2144,6 +2151,9 @@
                                     @if($cfg['grade_pill'] && !$isEarlyYears)
                                         <th style="width:38px;">GRADE</th>
                                     @endif
+                                    @if($cfg['col_grade_point'] && !$isEarlyYears)
+                                        <th style="width:48px;">GRADE POINT</th>
+                                    @endif
                                     @if($cfg['comment_col'])
                                         <th class="tl col-remarks">COMMENT</th>
                                     @endif
@@ -2203,6 +2213,9 @@
                                                         <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                     </td>
                                                 @endif
+                                                @if($cfg['col_grade_point'] && !$isEarlyYears)
+                                                    <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
+                                                @endif
                                                 @if($cfg['comment_col'])
                                                     <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                                 @endif
@@ -2254,6 +2267,9 @@
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
                                             @endif
+                                            @if($cfg['col_grade_point'] && !$isEarlyYears)
+                                                <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
+                                            @endif
                                             @if($cfg['comment_col'])
                                                 <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
                                             @endif
@@ -2300,6 +2316,9 @@
                                             <td class="num-td">
                                                 <span>AGG</span>
                                             </td>
+                                        @endif
+                                        @if($cfg['col_grade_point'] && !$isEarlyYears)
+                                            <td class="num-td">{{ $avgGradePoint ?? '—' }}</td>
                                         @endif
                                         @if($resultColspan > 0)
                                             <td colspan="{{ $resultColspan }}">

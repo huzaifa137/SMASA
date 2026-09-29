@@ -69,6 +69,14 @@
                         </a></li>
                 @endif
 
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" href="{{ route('examination.subjects.edit', $exam->id) }}"
+                        onclick="event.stopPropagation();">
+                        <i class="fas fa-list-check text-primary me-2"></i> Exam Subjects
+                    </a></li>
+
                 @if(in_array($exam->status, ['closed', 'results_released']))
     <a href="{{ route('examination.passslips.index', $exam->id) }}"
        class="btn btn-sm fw-semibold"

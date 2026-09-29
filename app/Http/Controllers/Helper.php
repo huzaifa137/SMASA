@@ -1826,6 +1826,9 @@ class Helper extends Controller
                 ->whereIn('class_id', $examClasses->pluck('class_id'))
                 ->get();
 
+            // Subjects switched off for this exam aren't being sat.
+            $teacherSubjects = \App\Models\ExaminationSubjectSetting::filterSat($exam->id, $teacherSubjects);
+
             $totalSubjects = $teacherSubjects->count();
             $submittedSubjects = 0;
             $subjectProgress = [];
@@ -2028,6 +2031,9 @@ class Helper extends Controller
                 })
                 ->whereIn('class_id', $examClassIds)
                 ->get();
+
+            // No "Create Assessment" is needed for a subject this exam isn't sitting.
+            $classSubjects = \App\Models\ExaminationSubjectSetting::filterSat($exam->id, $classSubjects);
 
             foreach ($classSubjects as $cs) {
                 $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)

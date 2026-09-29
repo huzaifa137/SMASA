@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
+use App\Models\ExaminationSubjectSetting;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -249,6 +250,12 @@ class ExaminationController extends Controller
             return in_array($s->class_id . '_' . $s->stream_id, $validPairs);
         });
 
+        // Subjects this exam has switched off (Exam Subjects screen) are not
+        // being sat, so they don't appear for marks entry at all.
+        $assignedSubjects = $assignedSubjects->filter(
+            fn($s) => ExaminationSubjectSetting::marksEntryOpen($examId, $s)
+        );
+
         $markCounts = \App\Models\ExaminationMark::where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->whereNotNull('marks_obtained')
@@ -316,6 +323,13 @@ class ExaminationController extends Controller
                     ->orWhere('subject_teacher_2', $teacherId);
             })
             ->firstOrFail();
+
+        // Not sat in this exam (Exam Subjects screen) → no marks entry,
+        // even via a direct link or an old bookmark.
+        if (!ExaminationSubjectSetting::marksEntryOpen($examId, $classSubject)) {
+            return redirect()->route('examination.marks.entry', $examId)
+                ->with('error', 'This subject is not being examined in this examination.');
+        }
 
         // Secondary O-Level (the NCDC NLSC curriculum) assesses against a
         // specific Topic/Project + Competency Area rather than a plain
@@ -513,6 +527,18 @@ class ExaminationController extends Controller
                 $q->whereNull('subject_id')->where('custom_subject_id', $request->custom_subject_id);
             })
             ->first();
+
+        if (!ExaminationSubjectSetting::marksEntryOpen($examId, (object) [
+            'class_id' => $request->class_id,
+            'stream_id' => (string) $request->stream_id,
+            'subject_id' => $request->subject_id,
+            'custom_subject_id' => $request->custom_subject_id,
+        ])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is not being examined in this examination, so marks cannot be saved for it.',
+            ], 422);
+        }
 
         $assessmentScale = ($classSubjectRow && $classSubjectRow->assessment_scale_id)
             ? \App\Models\AssessmentScale::with('presets')->find($classSubjectRow->assessment_scale_id)
@@ -1782,6 +1808,7 @@ class ExaminationController extends Controller
                     $studentTotal = ExaminationMark::where('examination_id', $examId)
                         ->where('student_id', $s->id)
                         ->where('school_id', $schoolId)
+                        ->visibleOnReport()
                         ->whereNotNull('marks_obtained')
                         ->sum('marks_obtained');
 
@@ -2256,6 +2283,7 @@ class ExaminationController extends Controller
         $marks = ExaminationMark::where('examination_id', $examId)
             ->where('student_id', $studentId)
             ->where('school_id', $schoolId)
+            ->visibleOnReport() // subjects hidden via Exam Subjects stay off the slip
             ->get();
 
         if ($marks->isEmpty()) {
@@ -2484,6 +2512,7 @@ class ExaminationController extends Controller
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', $schoolId)
+            ->visibleOnReport()
             ->whereNotNull('marks_obtained')
             ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
             ->groupBy('student_id')
@@ -2516,6 +2545,7 @@ class ExaminationController extends Controller
             $prevMarks = ExaminationMark::where('examination_id', $prevExam->id)
                 ->where('student_id', $studentId)
                 ->where('school_id', $schoolId)
+                ->visibleOnReport()
                 ->whereNotNull('marks_obtained')
                 ->get();
 
@@ -2555,6 +2585,7 @@ class ExaminationController extends Controller
             $previousSubjectMarks = ExaminationMark::where('examination_id', $previousExams[0]->id)
                 ->where('student_id', $studentId)
                 ->where('school_id', $schoolId)
+                ->visibleOnReport()
                 ->get()
                 ->flatMap(function ($pm) {
                     // Keyed by subject_id (master subjects, used by the older
@@ -2839,6 +2870,7 @@ class ExaminationController extends Controller
             $marks = ExaminationMark::where('examination_id', $eid)
                 ->where('student_id', $studentId)
                 ->where('school_id', $schoolId)
+                ->visibleOnReport()
                 ->get()
                 ->keyBy(fn($m) => Helper::subjectKey($m));
 
@@ -3126,6 +3158,7 @@ class ExaminationController extends Controller
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->where('school_id', $schoolId)
+            ->visibleOnReport()
             ->whereNotNull('marks_obtained')
             ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
             ->groupBy('student_id')
@@ -3303,6 +3336,9 @@ class ExaminationController extends Controller
                 return in_array($s->class_id . '_' . $s->stream_id, $validPairs);
             })->values();
 
+            // Subjects switched off for this exam don't count as outstanding.
+            $teacherSubjects = ExaminationSubjectSetting::filterSat($exam->id, $teacherSubjects);
+
             $totalSubjects = $teacherSubjects->count();
             $submittedSubjects = 0;
             $subjectProgress = [];
@@ -3430,6 +3466,9 @@ class ExaminationController extends Controller
                     ->where('stream_id', (string) $ec->stream_id)
                     ->get();
 
+                // Subjects switched off for this exam aren't being sat.
+                $classSubjects = ExaminationSubjectSetting::filterSat($exam->id, $classSubjects);
+
                 $studentCount = DB::table('students')
                     ->where('school_id', $schoolId)
                     ->where('senior', $ec->class_id)
@@ -3554,6 +3593,10 @@ class ExaminationController extends Controller
             ->where('class_id', $ec->class_id)
             ->where('stream_id', (string) $ec->stream_id)
             ->get();
+
+        // Subjects switched off for this exam aren't being sat, so they
+        // must not block releasing the class.
+        $classSubjects = ExaminationSubjectSetting::filterSat($exam->id, $classSubjects);
 
         $studentCount = DB::table('students')
             ->where('school_id', $schoolId)
