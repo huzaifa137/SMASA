@@ -151,7 +151,10 @@ return [
         'show_dev' => ['label' => 'Development (DEV ↑↓) column', 'icon' => 'fa-arrows-alt-v', 'group' => 'Marks Table'],
         'show_grade_pill' => ['label' => 'Grade pills (A / B / C …)', 'icon' => 'fa-tag', 'group' => 'Marks Table'],
         'show_comment_col' => ['label' => 'Comment column', 'icon' => 'fa-comment-dots', 'group' => 'Marks Table'],
-        'show_teacher_col' => ['label' => 'Teacher column', 'icon' => 'fa-chalkboard-teacher', 'group' => 'Marks Table'],
+        // INITIALS is the default (short, fits any scale); the full-name
+        // TEACHER column is opt-in — see slip-classic/modern/minimal.
+        'show_initials_col' => ['label' => 'Teacher initials column', 'icon' => 'fa-user-tag', 'group' => 'Marks Table'],
+        'show_teacher_col' => ['label' => 'Teacher name column', 'icon' => 'fa-chalkboard-teacher', 'group' => 'Marks Table'],
         'show_totals_row' => ['label' => 'Totals / average row', 'icon' => 'fa-sigma', 'group' => 'Marks Table'],
 
         'show_perf_chart' => ['label' => 'Performance-over-time chart', 'icon' => 'fa-chart-bar', 'group' => 'Bottom Section'],
@@ -193,7 +196,7 @@ return [
             // Granular marks-table column split (superseded 'show_score_col'
             // for Classic — see the NOTE above).
             'show_col_full_marks', 'show_col_marks_obtained', 'show_col_percentage',
-            'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
+            'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             // Granular term-dates split (superseded 'show_term_dates').
             'show_term_ends_on', 'show_next_term_starts_on',
@@ -220,7 +223,7 @@ return [
             // Modern's marks table only ever had ONE combined score
             // column (no Full Marks / Marks Obtained split), so it keeps
             // using 'show_score_col' as-is — no granularity problem here.
-            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
+            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
@@ -250,7 +253,7 @@ return [
             'show_photo', 'show_minichart', 'show_qr', 'show_rank', 'show_stu_details_block',
             // Minimal's marks table only ever had ONE combined score
             // column too, same as Modern — keeps 'show_score_col' as-is.
-            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_teacher_col', 'show_totals_row',
+            'show_score_col', 'show_dev', 'show_grade_pill', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',

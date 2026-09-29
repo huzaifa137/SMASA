@@ -2385,6 +2385,7 @@ class ExaminationController extends Controller
                 'percentage' => $pct,
                 'class_average' => $m->class_average ?? null,
                 'teacher_name' => Helper::teacherFullName($teacherId),
+                'teacher_initials' => Helper::teacherInitials($teacherId),
                 'teacher_comment' => $m->teacher_comment,
             ];
         })->sortBy('subject_name');
@@ -3045,6 +3046,7 @@ class ExaminationController extends Controller
                 'avgRemark' => $avgScaleRow?->remark ?? null,
                 'percentage' => $avgPct ?? ($lastPct ?? 0),
                 'teacher_name' => Helper::teacherFullName($subjectTeachers[!empty($refSubjectId) ? 's:' . $refSubjectId : 'c:' . $refCustomId] ?? null),
+                'teacher_initials' => Helper::teacherInitials($subjectTeachers[!empty($refSubjectId) ? 's:' . $refSubjectId : 'c:' . $refCustomId] ?? null),
             ];
         })->sortBy('subject_name')->values();
 

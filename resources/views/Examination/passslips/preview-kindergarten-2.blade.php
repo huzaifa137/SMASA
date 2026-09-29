@@ -1235,8 +1235,12 @@
       }
 
       .page-wrap {
+        /* @page margin is 0 here, so the printable width is the whole
+           paper; divide by the zoom so the zoomed sheet fits it exactly. */
+        width: calc({{ $pageW }} / var(--page-scale, 1));
+        max-width: none;
         margin: 0;
-        max-width: 100%;
+        padding: 0;
       }
 
       .sheet {
@@ -1259,6 +1263,7 @@
       }
     }
   </style>
+    @include('Examination.passslips.partials.scale-fit')
 </head>
 
 <body>

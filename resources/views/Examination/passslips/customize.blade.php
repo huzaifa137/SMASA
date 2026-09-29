@@ -771,9 +771,13 @@ selected classes" is clicked. --}}
                     // The panel's switches should reflect that instead of
                     // always starting checked, or the preview and the
                     // switches would disagree the moment the page loads.
+                    // 'show_teacher_col' (full teacher NAME) is opt-in for every
+                    // Primary design now — the short INITIALS column is the
+                    // one that's on by default (see the slip views).
                     $offByDefaultKeys = match ($template) {
-                        'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures'],
-                        'classic' => ['show_signatures'],
+                        'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col'],
+                        'classic' => ['show_signatures', 'show_teacher_col'],
+                        'modern' => ['show_teacher_col'],
                         default => [],
                     };
                 @endphp

@@ -676,6 +676,21 @@
             font-size: .68rem;
         }
 
+        /* INITIALS column — a short, centred replacement for the wide
+           TEACHER name column. */
+        .marks-tbl th.col-initials,
+        .marks-tbl td.col-initials {
+            width: 64px;
+            text-align: center;
+        }
+
+        .marks-tbl td.col-initials {
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            color: #333;
+        }
+
         .marks-tbl tbody tr:nth-child(even) {
             background: #f9f9fb;
         }
@@ -1181,7 +1196,17 @@
             }
 
             .page-wrap {
-                max-width: 100%;
+                /* PRINT FIT — body is zoomed by --page-scale, and a
+                   percentage width does NOT shrink to compensate (the slip
+                   was laid out at the full paper width, THEN magnified, so
+                   its right edge ran off the sheet). Physical lengths
+                   (mm/cm) ARE multiplied by the zoom, so dividing the
+                   printable width (paper minus the @page side margins) by
+                   the scale makes the zoomed result land on exactly the
+                   printable width at every scale. At 100% this is the same
+                   width as before. */
+                width: calc(({{ $pageW }} - 1.3cm) / var(--page-scale, 1));
+                max-width: none;
                 margin: 0;
             }
 
@@ -1302,6 +1327,7 @@
 .discipline-col  { min-width: 130px; }
 .sig-col-right   { min-width: 90px; }
     </style>
+    @include('Examination.passslips.partials.scale-fit')
     @include('Examination.passslips.partials.template-modern')
 </head>
 
@@ -1481,7 +1507,10 @@
                     'rank' => $on('show_rank', true, $savedCfg),
                     'dev' => $on('show_dev', true, $savedCfg),
                     'grade_pill' => $on('show_grade_pill', true, $savedCfg),
-                    'teacher_col' => $on('show_teacher_col', true, $savedCfg),
+                    // Teacher (full name) is opt-in now; the short INITIALS column
+                    // below is the default one shown instead.
+                    'teacher_col' => $on('show_teacher_col', false, $savedCfg),
+                    'initials_col' => $on('show_initials_col', true, $savedCfg),
                     'totals_row' => $on('show_totals_row', true, $savedCfg),
                     'perf_chart' => $on('show_perf_chart', true, $savedCfg),
                     'remarks' => $on('show_remarks', true, $savedCfg),
@@ -1584,6 +1613,7 @@
                 $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
                 $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
                 $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+                $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
                 $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
                 $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
                 $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
@@ -1629,7 +1659,8 @@
                     + ($cfg['dev'] ? 1 : 0)
                     + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
                     + ($cfg['comment_col'] ? 1 : 0)
-                    + ($cfg['teacher_col'] ? 1 : 0);
+                    + ($cfg['teacher_col'] ? 1 : 0)
+                    + ($cfg['initials_col'] ? 1 : 0);
 
                 /*
                 |──────────────────────────────────────────────────────────────
@@ -1736,11 +1767,12 @@
                             <div class="sch-arabic-name">{{ $schoolNameArabic }}</div>
                         @endif
 
-                        @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation))
+                        @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))
                             <div class="sch-details">
                                 @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
                                 @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
                                 @if($schoolLocation)<span> {{ $schoolLocation }}</span>@endif
+                                @if($schoolWebsite)<span>{{ ($schoolPhone || $schoolEmail || $schoolLocation) ? ' | ' : '' }}{{ $schoolWebsite }}</span>@endif
                             </div>
                         @endif
 
@@ -1998,6 +2030,9 @@
                                     @if($cfg['teacher_col'])
                                         <th class="tl col-teacher" rowspan="2">TEACHER</th>
                                     @endif
+                                    @if($cfg['initials_col'])
+                                        <th class="col-initials" rowspan="2">INITIALS</th>
+                                    @endif
                                 </tr>
                                 <tr>
                                     @foreach($examsList as $ex)
@@ -2031,6 +2066,9 @@
                                         @if($cfg['teacher_col'])
                                             <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                         @endif
+                                        @if($cfg['initials_col'])
+                                            <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                        @endif
                                     </tr>
                                 @endforeach
 
@@ -2061,6 +2099,9 @@
                                         @if($cfg['teacher_col'])
                                             <td></td>
                                         @endif
+                                        @if($cfg['initials_col'])
+                                            <td></td>
+                                        @endif
                                     </tr>
                                 @endif
 
@@ -2080,6 +2121,9 @@
                                             <td></td>
                                         @endif
                                         @if($cfg['teacher_col'])
+                                            <td></td>
+                                        @endif
+                                        @if($cfg['initials_col'])
                                             <td></td>
                                         @endif
                                     </tr>
@@ -2105,6 +2149,9 @@
                                     @endif
                                     @if($cfg['teacher_col'])
                                         <th class="tl col-teacher">TEACHER</th>
+                                    @endif
+                                    @if($cfg['initials_col'])
+                                        <th class="col-initials">INITIALS</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -2162,6 +2209,9 @@
                                                 @if($cfg['teacher_col'])
                                                     <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                                 @endif
+                                                @if($cfg['initials_col'])
+                                                    <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                                @endif
                                             </tr>
                                         @endforeach
                                     @endforeach
@@ -2210,13 +2260,16 @@
                                             @if($cfg['teacher_col'])
                                                 <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
+                                            @if($cfg['initials_col'])
+                                                <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 @endif
 
                                 {{-- TOTALS ROW --}}
                                 @if($cfg['totals_row'])
-                                    @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0); @endphp
+                                    @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0) + ($cfg['initials_col'] ? 1 : 0); @endphp
                                     <tr class="totals-row">
                                         <td
                                             style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">

@@ -410,11 +410,58 @@ class Helper extends Controller
 
     public static function schoolNameBySchoolID($school_id)
     {
-        $schoolName = DB::table('schools')
-            ->where('id', $school_id)
+        // The "School Name" field on the school-profile edit page
+        // (SchoolController::storeSchoolProfile()) saves into
+        // school_profiles.name — it never touches schools.name, which is
+        // the name the school was first registered with. Report cards,
+        // pass slips, exports etc. all read the name through this helper,
+        // so it must read the SAME place the edit page writes to, or an
+        // edited name only ever shows on the profile page itself.
+        // schools.name stays as the fallback for schools that have never
+        // saved a profile (or left the name blank there) — same
+        // profile-first / schools-second order schoolPhoneBySchoolID()
+        // below already uses.
+        $profileName = DB::table('school_profiles')
+            ->where('school_id', $school_id)
             ->value('name');
 
-        return $schoolName;
+        if (!empty(trim((string) $profileName))) {
+            return trim($profileName);
+        }
+
+        return DB::table('schools')
+            ->where('id', $school_id)
+            ->value('name');
+    }
+
+    /**
+     * Website shown in the pass-slip / report-card letterhead, next to
+     * the P.O Box / phone / email. Saved from the school-profile page
+     * into school_profiles.website. Shown without the "https://" prefix
+     * and trailing slash so it stays short enough for the header line;
+     * returns null when none has been set.
+     */
+    public static function schoolWebsiteBySchoolID($school_id): ?string
+    {
+        // Column check is cached for the request (a bulk print calls this
+        // once per student) and keeps the slip working on a database that
+        // hasn't run the add-website migration yet.
+        static $hasColumn = null;
+        $hasColumn ??= \Illuminate\Support\Facades\Schema::hasColumn('school_profiles', 'website');
+
+        if (empty($school_id) || !$hasColumn) {
+            return null;
+        }
+
+        $website = trim((string) DB::table('school_profiles')
+            ->where('school_id', $school_id)
+            ->value('website'));
+
+        if ($website === '') {
+            return null;
+        }
+
+        return rtrim(preg_replace('#^https?://#i', '', $website), '/');
     }
 
     public static function schoolPhoneBySchoolID($school_id)
@@ -535,6 +582,53 @@ class Helper extends Controller
         }
 
         return trim(($teacher->surname ?? '') . ' ' . ($teacher->firstname ?? '')) ?: null;
+    }
+
+    /**
+     * Initials shown in the pass-slip / report-card "INITIALS" column.
+     *
+     * 1. If the teacher set their own initials on their profile
+     *    (teachers.initials) that value always wins — shown as typed,
+     *    just upper-cased.
+     * 2. Otherwise they're worked out from the teacher's names: the first
+     *    letter of the surname, first name and other name(s) —
+     *    e.g. "Bukenya Huzaifa" => "BH", "Nakato Mary Grace" => "NMG".
+     *
+     * Returns null when the teacher can't be found / has no name, so the
+     * slip can show a dash. Cached per request — one slip renders the same
+     * teacher on many subject rows.
+     */
+    public static function teacherInitials($teacherId): ?string
+    {
+        static $cache = [];
+
+        if (empty($teacherId)) {
+            return null;
+        }
+
+        if (array_key_exists($teacherId, $cache)) {
+            return $cache[$teacherId];
+        }
+
+        $teacher = DB::table('teachers')->where('id', $teacherId)->first();
+
+        if (!$teacher) {
+            return $cache[$teacherId] = null;
+        }
+
+        $own = trim((string) ($teacher->initials ?? ''));
+        if ($own !== '') {
+            return $cache[$teacherId] = mb_strtoupper($own);
+        }
+
+        $letters = '';
+        foreach ([$teacher->surname ?? '', $teacher->firstname ?? '', $teacher->othername ?? ''] as $part) {
+            foreach (preg_split('/[\s\-]+/u', trim((string) $part), -1, PREG_SPLIT_NO_EMPTY) as $word) {
+                $letters .= mb_strtoupper(mb_substr($word, 0, 1));
+            }
+        }
+
+        return $cache[$teacherId] = ($letters !== '' ? $letters : null);
     }
 
     /*

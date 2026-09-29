@@ -12,6 +12,7 @@ class SchoolProfile extends Model
         'school_id',
         'school_type',
         'email',
+        'website',
         'gender',
         'boarding_status',
         'name',

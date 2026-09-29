@@ -87,6 +87,14 @@ $controller = new Controller();
                                                 </div>
 
                                                 <div class="form-group">
+                                                    <label for="schoolWebsite" class="form-label">Website</label>
+                                                    <input type="text" name="website" id="schoolWebsite" class="form-control"
+                                                        placeholder="www.yourschool.com"
+                                                        value="{{ !empty($profile) ? ($profile->website ?? '') : '' }}">
+                                                    <small class="text-muted">Shown on report cards next to the postal address, phone and email.</small>
+                                                </div>
+
+                                                <div class="form-group">
                                                     <label for="schoolType" class="form-label">Postal Address</label>
                                                     <input type="text" name="school_type" id="schoolType"
                                                         class="form-control" placeholder="P.O BOX 000-00100 Kampala"
@@ -248,7 +256,7 @@ $controller = new Controller();
                                 <!-- LEFT SIDE (icon + name grouped) -->
                                 <div class="d-none d-lg-flex">
                                     <i class="fas fa-school fa-2x"></i>
-                                    <h3 class="mb-0 ms-3"> &nbsp;{{ !empty($school) ? $school->name : 'School Name' }}</h3>
+                                    <h3 class="mb-0 ms-3"> &nbsp;{{ (!empty($profile) && !empty($profile->name)) ? $profile->name : (!empty($school) ? $school->name : 'School Name') }}</h3>
                                 </div>
 
                                 <!-- RIGHT SIDE (badge) -->
@@ -267,7 +275,7 @@ $controller = new Controller();
                                 <div class="metric-card bg-light rounded-3 p-3 text-center">
                                     <i class="fas fa-envelope text-primary fa-2x mb-2"></i>
                                     <h6 class="text-muted mb-1">Email</h6>
-                                    <p class="mb-0 fw-bold">{{ !empty($school) ? $school->email : 'N/A' }}</p>
+                                    <p class="mb-0 fw-bold">{{ (!empty($profile) && !empty($profile->email)) ? $profile->email : (!empty($school) ? $school->email : 'N/A') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">

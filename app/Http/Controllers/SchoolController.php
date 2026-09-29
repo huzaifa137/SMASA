@@ -446,6 +446,7 @@ class SchoolController extends Controller
             // and come back later to fill in the rest.
             'school_type' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
+            'website' => 'nullable|string|max:255',
             'gender' => 'nullable|string|max:50',
             'boarding_status' => 'nullable|string|max:100',
             'name' => 'nullable|string|max:255',

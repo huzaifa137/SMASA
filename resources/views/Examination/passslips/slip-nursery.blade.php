@@ -90,6 +90,7 @@
         $schoolName = Helper::schoolNameBySchoolID($schoolId) ?? config('app.name', 'School');
         $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
         $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+        $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
         $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
         $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
         $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
@@ -684,7 +685,17 @@
             }
 
             .page-wrap {
-                max-width: 100%;
+                /* PRINT FIT — body is zoomed by --page-scale, and a
+                   percentage width does NOT shrink to compensate (the slip
+                   was laid out at the full paper width, THEN magnified, so
+                   its right edge ran off the sheet). Physical lengths
+                   (mm/cm) ARE multiplied by the zoom, so dividing the
+                   printable width (paper minus the @page side margins) by
+                   the scale makes the zoomed result land on exactly the
+                   printable width at every scale. At 100% this is the same
+                   width as before. */
+                width: calc(({{ $pageW }} - 1.3cm) / var(--page-scale, 1));
+                max-width: none;
                 margin: 0;
             }
 
@@ -726,6 +737,7 @@
             }
         }
     </style>
+    @include('Examination.passslips.partials.scale-fit')
 </head>
 
 <body>
@@ -829,6 +841,7 @@
                             @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
                             @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
                             @if($schoolLocation)<span>{{ $schoolLocation }}</span>@endif
+                            @if($schoolWebsite)<span>{{ $schoolLocation ? ' | ' : '' }}{{ $schoolWebsite }}</span>@endif
                         </div>
                     @endif
                     @if($cfg['motto'])
