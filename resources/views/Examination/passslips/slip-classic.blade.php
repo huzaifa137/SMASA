@@ -1161,39 +1161,39 @@
             margin-top: 3px;
         }
 
-.rc-lh-reportno {
-    flex-shrink: 0;
-    border: 1.5px solid #cfd4de;
-    border-radius: 4px;
-    padding: .2rem .5rem;
-    text-align: center;
-}
+        .rc-lh-reportno {
+            flex-shrink: 0;
+            border: 1.5px solid #cfd4de;
+            border-radius: 4px;
+            padding: .2rem .5rem;
+            text-align: center;
+        }
 
-.rc-lh-reportno .lbl {
-    font-size: .5rem;
-    font-weight: 800;
-    letter-spacing: .06em;
-    color: #666;
-    text-transform: uppercase;
-}
+        .rc-lh-reportno .lbl {
+            font-size: .5rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            color: #666;
+            text-transform: uppercase;
+        }
 
-.rc-lh-reportno .val {
-    font-size: .6rem;
-    font-weight: 800;
-    color: var(--rc-navy);
-    margin-top: .05rem;
-}
+        .rc-lh-reportno .val {
+            font-size: .6rem;
+            font-weight: 800;
+            color: var(--rc-navy);
+            margin-top: .05rem;
+        }
 
-.rc-title-block {
-    text-align: center;
-    padding: 0rem 1.1rem .1rem;
-}
+        .rc-title-block {
+            text-align: center;
+            padding: 0rem 1.1rem .1rem;
+        }
 
-.rc-title-rule {
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
-    margin: 0 1.1rem .25rem;
-}
+        .rc-title-rule {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
+            margin: 0 1.1rem .25rem;
+        }
 
         .rc-title {
             font-size: 1.55rem;
@@ -1740,7 +1740,10 @@
         @media print {
             @page {
                 margin: .5cm .65cm;
-                size: {{ $pageW }} {{ $pageH }};
+                size:
+                    {{ $pageW }}
+                    {{ $pageH }}
+                ;
             }
 
             body {
@@ -1866,6 +1869,24 @@
             print-color-adjust: exact;
             color-adjust: exact;
         }
+
+        /* SUBJECT column — shrink to the longest rendered subject name.
+   width:1% + nowrap makes the browser give this column the
+   minimum it needs, and the leftover table width is handed to the
+   other columns (Grade Point, Remarks, etc.). */
+        .marks-tbl th.col-subject,
+        .marks-tbl td.col-subject {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        /* GRADE POINT — keep the two-word header (and any multi-digit
+   value) on a single line. */
+        .marks-tbl th.col-grade-point,
+        .marks-tbl td.col-grade-point {
+            white-space: nowrap;
+            width: 64px;
+        }
     </style>
     @include('Examination.passslips.partials.scale-fit')
     @include('Examination.passslips.partials.template-classic')
@@ -1983,366 +2004,375 @@
         @foreach($renderSlips as $slipData)
 
             @php
-                $slipCounter++;
-                $s = (object) $slipData['student'];
-                $subjMarks = collect($slipData['subjectMarks']);
-                $totObt = $slipData['totalObtained'];
-                $totMax = $slipData['totalMax'];
-                $pct = $slipData['percentage'];
-                $oGrade = $slipData['overallGrade'];
-                $oRemark = $slipData['overallRemark'];
-                $rank = $slipData['classRank'];
-                $classTotalN = $slipData['classTotal'];
-                $growth = $slipData['growthData'];
-                $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
-                $useAvgSlip = $slipData['useAvg'] ?? false;
-                $examSummarySlip = collect($slipData['examSummary'] ?? []);
-                $avgSummarySlip = $slipData['avgSummary'] ?? null;
-                $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
-                $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
-                $divClass = function ($div) {
-                    if (!$div || $div === '—')
+                    $slipCounter++;
+                    $s = (object) $slipData['student'];
+                    $subjMarks = collect($slipData['subjectMarks']);
+                    $totObt = $slipData['totalObtained'];
+                    $totMax = $slipData['totalMax'];
+                    $pct = $slipData['percentage'];
+                    $oGrade = $slipData['overallGrade'];
+                    $oRemark = $slipData['overallRemark'];
+                    $rank = $slipData['classRank'];
+                    $classTotalN = $slipData['classTotal'];
+                    $growth = $slipData['growthData'];
+                    $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
+                    $useAvgSlip = $slipData['useAvg'] ?? false;
+                    $examSummarySlip = collect($slipData['examSummary'] ?? []);
+                    $avgSummarySlip = $slipData['avgSummary'] ?? null;
+                    $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
+                    $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
+                    $divClass = function ($div) {
+                        if (!$div || $div === '—')
+                            return 'div-x';
+                        $d = strtolower($div);
+                        if (str_contains($d, 'ungraded'))
+                            return 'div-ungraded';
+                        if (str_contains($d, '1'))
+                            return 'div-1';
+                        if (str_contains($d, '2'))
+                            return 'div-2';
+                        if (str_contains($d, '3'))
+                            return 'div-3';
+                        if (str_contains($d, '4'))
+                            return 'div-4';
                         return 'div-x';
-                    $d = strtolower($div);
-                    if (str_contains($d, 'ungraded'))
-                        return 'div-ungraded';
-                    if (str_contains($d, '1'))
-                        return 'div-1';
-                    if (str_contains($d, '2'))
-                        return 'div-2';
-                    if (str_contains($d, '3'))
-                        return 'div-3';
-                    if (str_contains($d, '4'))
-                        return 'div-4';
-                    return 'div-x';
-                };
+                    };
 
-                $isEarlyYears = $slipData['isEarlyYears'] ?? false;
-                $earlyYearsAvg = $slipData['earlyYearsAverage'] ?? null;
-                $earlyYearsMax = $slipData['earlyYearsMaxMark'] ?? 3;
+                    $isEarlyYears = $slipData['isEarlyYears'] ?? false;
+                    $earlyYearsAvg = $slipData['earlyYearsAverage'] ?? null;
+                    $earlyYearsMax = $slipData['earlyYearsMaxMark'] ?? 3;
 
-                // ── Per-class saved customisation ───────────────────────────
-                // Each student's class can carry its own saved show/hide
-                // profile (e.g. Baby Class vs S.4). Query-string params
-                // (from the live preview toggles) still override these.
-                $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
+                    // ── Per-class saved customisation ───────────────────────────
+                    // Each student's class can carry its own saved show/hide
+                    // profile (e.g. Baby Class vs S.4). Query-string params
+                    // (from the live preview toggles) still override these.
+                    $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
 
-                $cfg = [
-                    'border' => $on('show_border', true, $savedCfg),
-                    'watermark' => $on('show_watermark', true, $savedCfg),
-                    'logo' => $on('show_logo', true, $savedCfg),
-                    'arabic' => $on('show_arabic', true, $savedCfg),
-                    'motto' => $on('show_motto', true, $savedCfg),
-                    'contact' => $on('show_contact', true, $savedCfg),
-                    'report_no' => $on('show_report_no', true, $savedCfg),
-                    'photo' => $on('show_photo', true, $savedCfg),
-                    'minichart' => $on('show_minichart', true, $savedCfg),
-                    'qr' => $on('show_qr', true, $savedCfg),
-                    'rank' => $on('show_rank', true, $savedCfg),
-                    'dev' => $on('show_dev', true, $savedCfg),
-                    // Grade and Grade Point used to share ONE switch ('show_grade_pill').
-                    // They are now independent columns: 'show_col_grade' and
-                    // 'show_col_grade_point'. Both fall back to the legacy
-                    // 'show_grade_pill' so profiles saved before the split look the same.
-                    // ($cfg['grade_pill'] keeps its old name but now means "Grade column".)
-                    'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
-                    'col_grade_point' => $on('show_col_grade_point', $on('show_grade_pill', true, $savedCfg), $savedCfg),
-                    // Teacher (full name) is opt-in now; the short INITIALS column
-                    // below is the default one shown instead.
-                    'teacher_col' => $on('show_teacher_col', false, $savedCfg),
-                    'initials_col' => $on('show_initials_col', true, $savedCfg),
-                    'totals_row' => $on('show_totals_row', true, $savedCfg),
-                    'perf_chart' => $on('show_perf_chart', true, $savedCfg),
-                    'remarks' => $on('show_remarks', true, $savedCfg),
-                    'discipline' => $on('show_discipline', true, $savedCfg),
-                    // Signature column defaults OFF for Classic only —
-                    // everything else in Classic is unchanged. Still
-                    // available any time via its toggle.
-                    'signatures' => $on('show_signatures', false, $savedCfg),
-                    // Granular split of the old combined 'show_term_dates'
-                    // switch — each label can now be removed on its own
-                    // instead of only as a pair. Falls back to the legacy
-                    // key (then true) so a profile saved before this split
-                    // still shows both, same convention as show_logo_left/
-                    // show_logo_right falling back to show_logo elsewhere.
-                    'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
-                    'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
-                    'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
-                    'confidential' => $on('show_confidential', true, $savedCfg),
-                    // New toggles
-                    'result' => $on('show_result', true, $savedCfg),
-                    // Granular split of the old combined 'show_score_col'
-                    // switch — Classic's single-exam marks table used to
-                    // hide FULL MARKS + MARKS OBTAINED + PERCENTAGE
-                    // together as one group; each is now removable on its
-                    // own. Falls back to the legacy key (then true) so a
-                    // profile saved before this split still shows all
-                    // three, same fallback convention used just above for
-                    // the term-dates split.
-                    'col_full_marks' => $on('show_col_full_marks', $on('show_score_col', true, $savedCfg), $savedCfg),
-                    'col_marks_obtained' => $on('show_col_marks_obtained', $on('show_score_col', true, $savedCfg), $savedCfg),
-                    'col_percentage' => $on('show_col_percentage', $on('show_score_col', true, $savedCfg), $savedCfg),
-                    // Kept for the MULTI-EXAM (BOT|MID|EOT) table variant
-                    // below, which only ever showed one combined MARKS
-                    // column per sitting — no granularity problem there.
-                    'score_col' => $on('show_score_col', true, $savedCfg),
-                    'comment_col' => $on('show_comment_col', true, $savedCfg),
+                    $cfg = [
+                        'border' => $on('show_border', true, $savedCfg),
+                        'watermark' => $on('show_watermark', true, $savedCfg),
+                        'logo' => $on('show_logo', true, $savedCfg),
+                        'arabic' => $on('show_arabic', true, $savedCfg),
+                        'motto' => $on('show_motto', true, $savedCfg),
+                        'contact' => $on('show_contact', true, $savedCfg),
+                        'report_no' => $on('show_report_no', true, $savedCfg),
+                        'photo' => $on('show_photo', true, $savedCfg),
+                        'minichart' => $on('show_minichart', true, $savedCfg),
+                        'qr' => $on('show_qr', true, $savedCfg),
+                        'rank' => $on('show_rank', true, $savedCfg),
+                        'dev' => $on('show_dev', true, $savedCfg),
+                        // Grade and Grade Point used to share ONE switch ('show_grade_pill').
+                        // They are now independent columns: 'show_col_grade' and
+                        // 'show_col_grade_point'. Both fall back to the legacy
+                        // 'show_grade_pill' so profiles saved before the split look the same.
+                        // ($cfg['grade_pill'] keeps its old name but now means "Grade column".)
+                        'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                        'col_grade_point' => $on('show_col_grade_point', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                        // Teacher (full name) is opt-in now; the short INITIALS column
+                        // below is the default one shown instead.
+                        'teacher_col' => $on('show_teacher_col', false, $savedCfg),
+                        'initials_col' => $on('show_initials_col', true, $savedCfg),
+                        'totals_row' => $on('show_totals_row', true, $savedCfg),
+                        'perf_chart' => $on('show_perf_chart', true, $savedCfg),
+                        'remarks' => $on('show_remarks', true, $savedCfg),
+                        'discipline' => $on('show_discipline', true, $savedCfg),
+                        // Signature column defaults OFF for Classic only —
+                        // everything else in Classic is unchanged. Still
+                        // available any time via its toggle.
+                        'signatures' => $on('show_signatures', false, $savedCfg),
+                        // Granular split of the old combined 'show_term_dates'
+                        // switch — each label can now be removed on its own
+                        // instead of only as a pair. Falls back to the legacy
+                        // key (then true) so a profile saved before this split
+                        // still shows both, same convention as show_logo_left/
+                        // show_logo_right falling back to show_logo elsewhere.
+                        'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                        'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                        'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
+                        'confidential' => $on('show_confidential', true, $savedCfg),
+                        // New toggles
+                        'result' => $on('show_result', true, $savedCfg),
+                        // Granular split of the old combined 'show_score_col'
+                        // switch — Classic's single-exam marks table used to
+                        // hide FULL MARKS + MARKS OBTAINED + PERCENTAGE
+                        // together as one group; each is now removable on its
+                        // own. Falls back to the legacy key (then true) so a
+                        // profile saved before this split still shows all
+                        // three, same fallback convention used just above for
+                        // the term-dates split.
+                        'col_full_marks' => $on('show_col_full_marks', $on('show_score_col', true, $savedCfg), $savedCfg),
+                        'col_marks_obtained' => $on('show_col_marks_obtained', $on('show_score_col', true, $savedCfg), $savedCfg),
+                        'col_percentage' => $on('show_col_percentage', $on('show_score_col', true, $savedCfg), $savedCfg),
+                        // Kept for the MULTI-EXAM (BOT|MID|EOT) table variant
+                        // below, which only ever showed one combined MARKS
+                        // column per sitting — no granularity problem there.
+                        'score_col' => $on('show_score_col', true, $savedCfg),
+                        'comment_col' => $on('show_comment_col', true, $savedCfg),
 
-                    // Whole-section master switches
-                    'section_student_info' => $on('show_section_student_info', true, $savedCfg),
-                    'section_summary' => $on('show_section_summary', true, $savedCfg),
-                    'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
-                    'section_progressive' => $on('show_section_progressive', true, $savedCfg),
+                        // Whole-section master switches
+                        'section_student_info' => $on('show_section_student_info', true, $savedCfg),
+                        'section_summary' => $on('show_section_summary', true, $savedCfg),
+                        'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+                        'section_progressive' => $on('show_section_progressive', true, $savedCfg),
 
-                    // Student Information — per-field
-                    'stu_name' => $on('show_stu_name', true, $savedCfg),
-                    'stu_admission' => $on('show_stu_admission', true, $savedCfg),
-                    'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
-                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
-                    'stu_class' => $on('show_stu_class', true, $savedCfg),
-                    'stu_stream' => $on('show_stu_stream', true, $savedCfg),
-                    'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
-                    'stu_term' => $on('show_stu_term', true, $savedCfg),
-                    'stu_dob' => $on('show_stu_dob', true, $savedCfg),
-                    'stu_gender' => $on('show_stu_gender', true, $savedCfg),
-                    'stu_class_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
-                    'stu_house' => $on('show_stu_house', true, $savedCfg),
-                    'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
-                    'stu_status' => $on('show_stu_status', true, $savedCfg),
+                        // Student Information — per-field
+                        'stu_name' => $on('show_stu_name', true, $savedCfg),
+                        'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                        'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
+                        'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+                        'stu_class' => $on('show_stu_class', true, $savedCfg),
+                        'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+                        'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
+                        'stu_term' => $on('show_stu_term', true, $savedCfg),
+                        'stu_dob' => $on('show_stu_dob', true, $savedCfg),
+                        'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                        'stu_class_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
+                        'stu_house' => $on('show_stu_house', true, $savedCfg),
+                        'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
+                        'stu_status' => $on('show_stu_status', true, $savedCfg),
 
-                    // Summary Bar — per-field
-                    'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
-                    'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
-                    'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
-                    'sum_grade' => $on('show_sum_grade', true, $savedCfg),
-                    'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
-                    'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
-                    'sum_division' => $on('show_sum_division', true, $savedCfg),
-                    'sum_position' => $on('show_sum_position', true, $savedCfg),
-                    'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
-                    'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
-                ];
+                        // Summary Bar — per-field
+                        'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
+                        'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
+                        'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
+                        'sum_grade' => $on('show_sum_grade', true, $savedCfg),
+                        'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                        'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
+                        'sum_division' => $on('show_sum_division', true, $savedCfg),
+                        'sum_position' => $on('show_sum_position', true, $savedCfg),
+                        'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
+                        'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
+                    ];
 
-                // Early years classes aren't scored Pass/Fail against the
-                // exam's normal pass_mark — they're Fair/Good/Excellent.
-                $passed = $isEarlyYears ? true : ($pct >= $exam->pass_mark);
-                $statusLabel = $s->status ?? ($isEarlyYears ? $oRemark : ($passed ? 'Promoted' : 'Repeat'));
+                    // Early years classes aren't scored Pass/Fail against the
+                    // exam's normal pass_mark — they're Fair/Good/Excellent.
+                    $passed = $isEarlyYears ? true : ($pct >= $exam->pass_mark);
+                    $statusLabel = $s->status ?? ($isEarlyYears ? $oRemark : ($passed ? 'Promoted' : 'Repeat'));
 
-                /* Resolve student photo */
-                $photo = null;
-                if (!empty($s->student_photo)) {
-                    foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                        $fp = str_replace(
-                            '/',
-                            DIRECTORY_SEPARATOR,
-                            public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext)
-                        );
-                        if (file_exists($fp)) {
-                            $photo = asset('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
-                            break;
-                        }
-                    }
-                }
-
-                /* Group subjects */
-                $grouped = $subjMarks->groupBy(fn($sm) => $sm->subject_type ?? '');
-                $useGroups = $grouped->count() > 1 || ($grouped->count() === 1 && !$grouped->has(''));
-
-                /* Mini chart arrays */
-                $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
-                $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
-                $miniClass = $subjMarks->map(fn($sm) => $sm->class_average ?? rand(55, 80))->values()->toArray();
-
-                /* Growth chart arrays */
-                $growthLabels = collect($growth)->pluck('label')->toArray();
-                $growthValues = collect($growth)->pluck('percentage')->toArray();
-
-                /* Term delta */
-                $prevPct = isset($growth[count($growth) - 2]) ? $growth[count($growth) - 2]['percentage'] : null;
-                $termDelta = $prevPct !== null ? round($pct - $prevPct, 1) : null;
-
-                /* Unique IDs */
-                $cMini = 'mini_' . $slipCounter;
-                $cPerf = 'perf_' . $slipCounter;
-                $qrId = 'qr_canvas_' . $slipCounter;
-
-                /* School meta */
-                $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
-                $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
-                $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
-                $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
-                $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
-                $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
-                $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
-
-                // Resolve logo URL the same way student photos are resolved
-                $schoolLogoUrl = null;
-                if ($schoolLogo) {
-                    // New approach: stored in public/uploads/logos/
-                    $directPath = public_path('uploads/logos/' . $schoolLogo);
-                    if (file_exists($directPath)) {
-                        $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
-                    }
-                    // Fallback: old Storage::disk('public') approach (logos/filename.ext)
-                    else {
+                    /* Resolve student photo */
+                    $photo = null;
+                    if (!empty($s->student_photo)) {
                         foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                            $fallback = public_path('storage/' . $schoolLogo);
-                            if (file_exists($fallback)) {
-                                $schoolLogoUrl = asset('storage/' . $schoolLogo);
-                                break;
-                            }
-                            // Also try with extensions appended
-                            $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
-                            if (file_exists($fallback2)) {
-                                $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                            $fp = str_replace(
+                                '/',
+                                DIRECTORY_SEPARATOR,
+                                public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext)
+                            );
+                            if (file_exists($fp)) {
+                                $photo = asset('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
                                 break;
                             }
                         }
                     }
-                }
 
-                $qrText = $slipData['qrText'] ?? '';
+                    /* Group subjects */
+                    $grouped = $subjMarks->groupBy(fn($sm) => $sm->subject_type ?? '');
+                    $useGroups = $grouped->count() > 1 || ($grouped->count() === 1 && !$grouped->has(''));
 
-                /*
-                |──────────────────────────────────────────────────────────────
-                | NEW "classic" layout — extra derived fields.
-                | Everything below is computed from data the system already
-                | has (student row, subject marks, exam, grading scheme,
-                | attendance log). Where the schema simply has no such field
-                | yet (e.g. House/Team isn't tracked per-student), we fall
-                | back to an em-dash rather than invent a value.
-                |──────────────────────────────────────────────────────────────
-                */
-                $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
-                $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
-                $houseTeam = $s->house ?? '—'; // not modelled per-student in this schema yet
+                    /* Mini chart arrays */
+                    $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
+                    $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
+                    $miniClass = $subjMarks->map(fn($sm) => $sm->class_average ?? rand(55, 80))->values()->toArray();
 
-                $noOfSubjects = $subjMarks->count();
+                    /* Growth chart arrays */
+                    $growthLabels = collect($growth)->pluck('label')->toArray();
+                    $growthValues = collect($growth)->pluck('percentage')->toArray();
 
-                // ── A4 single-page fit ──────────────────────────────────
-                // A slip with lots of subjects, a long discipline table, or
-                // several optional sections switched on can genuinely run
-                // longer than one A4 page. There's no reliable way to
-                // measure rendered height from Blade/PHP before it's drawn,
-                // so instead we estimate "how much is on this page" from
-                // the same data that drives the toggles, and drop a
-                // ".rc-dense" class on the slip when it crosses a
-                // threshold. The stylesheet below shrinks paddings, gaps
-                // and font-sizes under that class — enough headroom that a
-                // slip with e.g. 12+ subjects and every optional section
-                // enabled still lands on one page instead of spilling a
-                // couple of rows onto a second.
-                $rcContentScore = $noOfSubjects
-                    + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
-                    + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
-                    + ($cfg['remarks'] ? 2 : 0)
-                    + ($cfg['signatures'] ? 1 : 0);
-                $isDense = $rcContentScore > 14;
+                    /* Term delta */
+                    $prevPct = isset($growth[count($growth) - 2]) ? $growth[count($growth) - 2]['percentage'] : null;
+                    $termDelta = $prevPct !== null ? round($pct - $prevPct, 1) : null;
 
-                $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
-                $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
+                    /* Unique IDs */
+                    $cMini = 'mini_' . $slipCounter;
+                    $cPerf = 'perf_' . $slipCounter;
+                    $qrId = 'qr_canvas_' . $slipCounter;
 
-                $divisionLabel = $avgSummarySlip['division']
-                    ?? $examSummarySlip->last()['division']
-                    ?? $slipData['division']
-                    ?? null;
-                // Same fallback chain as Division above — multi-exam sources
-                // first (already scoped to this class's aggregate subjects),
-                // then the plain single-exam value computed in
-                // buildPassslipData(). Null when the scheme has no Division
-                // bands or the class has no subjects flagged toward it.
-                $aggregateLabel = $avgSummarySlip['aggregate']
-                    ?? $examSummarySlip->last()['aggregate']
-                    ?? $slipData['aggregate']
-                    ?? null;
+                    /* School meta */
+                    $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
+                    $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
+                    $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+                    $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
+                    $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
+                    $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
+                    $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
-                // Auto-generated report reference (not a stored DB field —
-                // built from the school, exam and student so every printed
-                // slip has a unique, reproducible number for the letterhead).
-                $schoolInitials = collect(preg_split('/\s+/', trim($schoolName)))
-                    ->filter()
-                    ->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))
-                    ->implode('');
-                $reportNo = ($schoolInitials ?: 'RC') . '/' . ($exam->exam_code ?: strtoupper(substr($exam->term ?? 'TRM', 0, 3)))
-                    . '/' . $exam->academic_year . '/' . str_pad((string) $s->id, 4, '0', STR_PAD_LEFT);
+                    // Resolve logo URL the same way student photos are resolved
+                    $schoolLogoUrl = null;
+                    if ($schoolLogo) {
+                        // New approach: stored in public/uploads/logos/
+                        $directPath = public_path('uploads/logos/' . $schoolLogo);
+                        if (file_exists($directPath)) {
+                            $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+                        }
+                        // Fallback: old Storage::disk('public') approach (logos/filename.ext)
+                        else {
+                            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                                $fallback = public_path('storage/' . $schoolLogo);
+                                if (file_exists($fallback)) {
+                                    $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                                    break;
+                                }
+                                // Also try with extensions appended
+                                $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                                if (file_exists($fallback2)) {
+                                    $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
-                // Grade scale (this exam's resolved grading bands) for the
-                // "Grade Scale" reference table — skipped for early years,
-                // which use a Fair/Good/Excellent preset scale instead.
-                $gradeBands = $isEarlyYears ? collect() : $exam->resolvedGradingBands();
+                    $qrText = $slipData['qrText'] ?? '';
 
-                // Attendance for this exam's term window (student_attendances
-                // log). Left blank (—) if the exam has no start/end date set.
-                $attPresent = 0;
-                $attDaysOpened = 0;
-                $attPct = null;
-                if (!empty($exam->start_date) && !empty($exam->end_date)) {
-                    $attPresent = DB::table('student_attendances')
-                        ->where('student_id', $s->id)
-                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                        ->whereIn('status', ['present', 'late'])
-                        ->count();
-                    $attTaken = DB::table('student_attendances')
-                        ->where('student_id', $s->id)
-                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                        ->count();
-                    $attDaysOpened = DB::table('student_attendances')
-                        ->where('school_id', $schoolId)
-                        ->where('class_id', $s->senior)
-                        ->where('stream_id', $s->stream)
-                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                        ->distinct()
-                        ->count('attendance_date');
-                    $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
-                    $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
-                }
-                $attAbsent = max(0, $attDaysOpened - $attPresent);
+                    /*
+                    |──────────────────────────────────────────────────────────────
+                    | NEW "classic" layout — extra derived fields.
+                    | Everything below is computed from data the system already
+                    | has (student row, subject marks, exam, grading scheme,
+                    | attendance log). Where the schema simply has no such field
+                    | yet (e.g. House/Team isn't tracked per-student), we fall
+                    | back to an em-dash rather than invent a value.
+                    |──────────────────────────────────────────────────────────────
+                    */
+                    $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
+                    $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
+                    $houseTeam = $s->house ?? '—'; // not modelled per-student in this schema yet
 
-                // Discipline: per-criterion remark text + an overall grade,
-                // derived from the A/B/C ratings already stored.
-                $disciplineRemarkFor = fn($r) => match ($r) {
-                    'A' => 'Consistently meets expectations.',
-                    'B' => 'Generally meets expectations.',
-                    'C' => 'Needs improvement.',
-                    default => 'Not yet rated.',
-                };
-                $disciplinePointsMap = ['A' => 3, 'B' => 2, 'C' => 1];
-                $dPoints = $disciplineRatingsSlip->pluck('rating')->filter()
-                    ->map(fn($r) => $disciplinePointsMap[$r] ?? null)->filter(fn($v) => $v !== null);
-                $overallDisciplineGrade = null;
-                $overallDisciplineRemark = null;
-                if ($dPoints->count() > 0) {
-                    $avgD = $dPoints->avg();
-                    $overallDisciplineGrade = $avgD >= 2.5 ? 'A' : ($avgD >= 1.5 ? 'B' : 'C');
-                    $overallDisciplineRemark = $avgD >= 2.5 ? 'Excellent' : ($avgD >= 1.5 ? 'Good' : 'Needs Improvement');
-                }
+                    $noOfSubjects = $subjMarks->count();
 
-                $nextAcademicYear = is_numeric($exam->academic_year)
-                    ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
-                    : '—';
+                    // ── A4 single-page fit ──────────────────────────────────
+                    // A slip with lots of subjects, a long discipline table, or
+                    // several optional sections switched on can genuinely run
+                    // longer than one A4 page. There's no reliable way to
+                    // measure rendered height from Blade/PHP before it's drawn,
+                    // so instead we estimate "how much is on this page" from
+                    // the same data that drives the toggles, and drop a
+                    // ".rc-dense" class on the slip when it crosses a
+                    // threshold. The stylesheet below shrinks paddings, gaps
+                    // and font-sizes under that class — enough headroom that a
+                    // slip with e.g. 12+ subjects and every optional section
+                    // enabled still lands on one page instead of spilling a
+                    // couple of rows onto a second.
+                    $rcContentScore = $noOfSubjects
+                        + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
+                        + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
+                        + ($cfg['remarks'] ? 2 : 0)
+                        + ($cfg['signatures'] ? 1 : 0);
+                    $isDense = $rcContentScore > 14;
 
-                $headTeacherName = $s->head_teacher ?? 'Head Teacher';
+                    $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
+                    $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
 
-                /*
-                |──────────────────────────────────────────────────────────────
-                | Build the dynamic table column list.
-                | We hide/show columns based on $cfg flags so the header and
-                | every data row always stay in sync.
-                |──────────────────────────────────────────────────────────────
-                */
-                // Count visible columns for colspan calculations. Classic's
-                // score group is 3 independently-toggleable columns (Full
-                // Marks / Marks Obtained / Percentage) rather than one.
-                $visibleCols = 1 // Subject (always visible)
-                    + ($cfg['col_full_marks'] ? 1 : 0)
-                    + ($cfg['col_marks_obtained'] ? 1 : 0)
-                    + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
-                    + ($cfg['dev'] ? 1 : 0)
-                    + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
-                    + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
-                    + ($cfg['comment_col'] ? 1 : 0)
-                    + ($cfg['teacher_col'] ? 1 : 0)
-                    + ($cfg['initials_col'] ? 1 : 0);
+                    $divisionLabel = $avgSummarySlip['division']
+                        ?? $examSummarySlip->last()['division']
+                        ?? $slipData['division']
+                        ?? null;
+                    // Same fallback chain as Division above — multi-exam sources
+                    // first (already scoped to this class's aggregate subjects),
+                    // then the plain single-exam value computed in
+                    // buildPassslipData(). Null when the scheme has no Division
+                    // bands or the class has no subjects flagged toward it.
+                    $aggregateLabel = $avgSummarySlip['aggregate']
+                        ?? $examSummarySlip->last()['aggregate']
+                        ?? $slipData['aggregate']
+                        ?? null;
+
+                    // Auto-generated report reference (not a stored DB field —
+                    // built from the school, exam and student so every printed
+                    // slip has a unique, reproducible number for the letterhead).
+                    $schoolInitials = collect(preg_split('/\s+/', trim($schoolName)))
+                        ->filter()
+                        ->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                        ->implode('');
+                    $reportNo = ($schoolInitials ?: 'RC') . '/' . ($exam->exam_code ?: strtoupper(substr($exam->term ?? 'TRM', 0, 3)))
+                        . '/' . $exam->academic_year . '/' . str_pad((string) $s->id, 4, '0', STR_PAD_LEFT);
+
+                    // Grade scale (this exam's resolved grading bands) for the
+                    // "Grade Scale" reference table — skipped for early years,
+                    // which use a Fair/Good/Excellent preset scale instead.
+                    $gradeBands = $isEarlyYears ? collect() : $exam->resolvedGradingBands();
+
+                    // Attendance for this exam's term window (student_attendances
+                    // log). Left blank (—) if the exam has no start/end date set.
+                    $attPresent = 0;
+                    $attDaysOpened = 0;
+                    $attPct = null;
+                    if (!empty($exam->start_date) && !empty($exam->end_date)) {
+                        $attPresent = DB::table('student_attendances')
+                            ->where('student_id', $s->id)
+                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                            ->whereIn('status', ['present', 'late'])
+                            ->count();
+                        $attTaken = DB::table('student_attendances')
+                            ->where('student_id', $s->id)
+                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                            ->count();
+                        $attDaysOpened = DB::table('student_attendances')
+                            ->where('school_id', $schoolId)
+                            ->where('class_id', $s->senior)
+                            ->where('stream_id', $s->stream)
+                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                            ->distinct()
+                            ->count('attendance_date');
+                        $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
+                        $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
+                    }
+                    $attAbsent = max(0, $attDaysOpened - $attPresent);
+
+                    // Discipline: per-criterion remark text + an overall grade,
+                    // derived from the A/B/C ratings already stored.
+                    $disciplineRemarkFor = fn($r) => match ($r) {
+                        'A' => 'Consistently meets expectations.',
+                        'B' => 'Generally meets expectations.',
+                        'C' => 'Needs improvement.',
+                        default => 'Not yet rated.',
+                    };
+                    $disciplinePointsMap = ['A' => 3, 'B' => 2, 'C' => 1];
+                    $dPoints = $disciplineRatingsSlip->pluck('rating')->filter()
+                        ->map(fn($r) => $disciplinePointsMap[$r] ?? null)->filter(fn($v) => $v !== null);
+                    $overallDisciplineGrade = null;
+                    $overallDisciplineRemark = null;
+                    if ($dPoints->count() > 0) {
+                        $avgD = $dPoints->avg();
+                        $overallDisciplineGrade = $avgD >= 2.5 ? 'A' : ($avgD >= 1.5 ? 'B' : 'C');
+                        $overallDisciplineRemark = $avgD >= 2.5 ? 'Excellent' : ($avgD >= 1.5 ? 'Good' : 'Needs Improvement');
+                    }
+
+                    $nextAcademicYear = is_numeric($exam->academic_year)
+                        ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
+                        : '—';
+
+                    $headTeacherName = $s->head_teacher ?? 'Head Teacher';
+
+                    /*
+                    |──────────────────────────────────────────────────────────────
+                    | Build the dynamic table column list.
+                    | We hide/show columns based on $cfg flags so the header and
+                    | every data row always stay in sync.
+                    |──────────────────────────────────────────────────────────────
+                    */
+                    // Count visible columns for colspan calculations. Classic's
+                    // score group is 3 independently-toggleable columns (Full
+                    // Marks / Marks Obtained / Percentage) rather than one.
+                    $visibleCols = 1 // Subject (always visible)
+                        + ($cfg['col_full_marks'] ? 1 : 0)
+                        + ($cfg['col_marks_obtained'] ? 1 : 0)
+                        + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
+                        + ($cfg['dev'] ? 1 : 0)
+                        + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
+                        + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
+                        + ($cfg['comment_col'] ? 1 : 0)
+                        + ($cfg['teacher_col'] ? 1 : 0)
+                        + ($cfg['initials_col'] ? 1 : 0);
+
+                    // Longest subject name on THIS slip — used to size the SUBJECT
+                // column so it never wraps, while the freed-up width goes to
+                // GRADE POINT and the other numeric columns.
+                    $longestSubject = $subjMarks
+                        ->pluck('subject_name')
+                        ->filter()
+                        ->sortByDesc(fn($n) => mb_strlen($n))
+                        ->first();
             @endphp
 
             {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
@@ -2373,46 +2403,46 @@
                         <div class="rc-lh-name">{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
-                            <div class="rc-lh-arabic">{{ $schoolNameArabic }}</div>
+                            <div class="rc-lh-arabic" style="font-size: 1rem;">{{ $schoolNameArabic }}</div>
                         @endif
 
-@if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))
-    <div class="rc-lh-details">
-        {{-- Wraps onto a second line only when P.O Box + phone + email +
-             website don't fit on one (each item stays whole). --}}
-        <div>
-            
-            @if($schoolLocation)
-                <span style="margin-right: 20px; display: inline-block;">
-                    <i class="fas fa-location-dot"></i> {{ $schoolLocation }}
-                </span>
-            @endif
+                        @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))
+                            <div class="rc-lh-details">
+                                {{-- Wraps onto a second line only when P.O Box + phone + email +
+                                website don't fit on one (each item stays whole). --}}
+                                <div>
 
-            @if($schoolPhone)
-                <span style="margin-right: 20px; display: inline-block;">
-                    <i class="fas fa-phone"></i> {{ $schoolPhone }}
-                </span>
-            @endif
+                                    @if($schoolLocation)
+                                        <span style="margin-right: 20px; display: inline-block;font-size: 1rem;">
+                                            <i class="fas fa-location-dot"></i> {{ $schoolLocation }}
+                                        </span>
+                                    @endif
 
-            @if($schoolEmail)
-                <span style="display: inline-block;@if($schoolWebsite) margin-right: 20px;@endif">
-                    <i class="fas fa-envelope"></i> {{ $schoolEmail }}
-                </span>
-            @endif
+                                    @if($schoolPhone)
+                                        <span style="margin-right: 20px; display: inline-block;font-size: 1rem;">
+                                            <i class="fas fa-phone"></i> {{ $schoolPhone }}
+                                        </span>
+                                    @endif
 
-            @if($schoolWebsite)
-                <span style="display: inline-block;">
-                    <i class="fas fa-globe"></i> {{ $schoolWebsite }}
-                </span>
-            @endif
+                                    @if($schoolEmail)
+                                        <span style="font-size: 1rem;display: inline-block;@if($schoolWebsite) margin-right: 20px;@endif">
+                                            <i class="fas fa-envelope"></i> {{ $schoolEmail }}
+                                        </span>
+                                    @endif
 
-        </div>
-    </div>
-@endif
+                                    @if($schoolWebsite)
+                                        <span style="font-size: 1rem;display: inline-block;">
+                                            <i class="fas fa-globe"></i> {{ $schoolWebsite }}
+                                        </span>
+                                    @endif
+
+                                </div>
+                            </div>
+                        @endif
 
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="rc-lh-motto">MOTTO : "{{ $schoolMotto }}"</div>
+                            <div class="rc-lh-motto" style="font-size: 1rem;">MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
                     </div>
 
@@ -2435,89 +2465,103 @@
                 <div class="rc-title-rule"></div>
 
                 {{-- ══ STUDENT INFORMATION ═════════════════════════════════════════
-                     Whole section can be switched off with one master toggle
-                     (show_section_student_info). Each row inside it has its
-                     own show_stu_* toggle. The rows live in ONE flex-wrap
-                     list (.rc-stu-fields) rather than two hard-coded halves,
-                     so when a row is switched off the rest reflow to fill
-                     the gap instead of leaving a blank slot — and if only
-                     one row is left in the final line, the
-                     ":last-child:nth-child(odd)" rule in the stylesheet
-                     stretches it to the full width. ══════════════════════ --}}
+                Whole section can be switched off with one master toggle
+                (show_section_student_info). Each row inside it has its
+                own show_stu_* toggle. The rows live in ONE flex-wrap
+                list (.rc-stu-fields) rather than two hard-coded halves,
+                so when a row is switched off the rest reflow to fill
+                the gap instead of leaving a blank slot — and if only
+                one row is left in the final line, the
+                ":last-child:nth-child(odd)" rule in the stylesheet
+                stretches it to the full width. ══════════════════════ --}}
                 @if($cfg['section_student_info'])
                     <div class="rc-section">
                         <div class="rc-section-hd">Student Information</div>
-                        <div class="rc-stu-grid"
-                            style="display: flex; align-items: stretch; padding: .7rem .9rem; gap: 1rem;">
+                        <div class="rc-stu-grid" style="display: flex; align-items: stretch; padding: .7rem .9rem; gap: 1rem;">
                             <div class="rc-stu-fields" style="flex: 1; min-width: 0;">
                                 @if($cfg['stu_name'])
-                                    <div class="rc-stu-row"><span class="k">Student Name:</span>
-                                        <span>{{ $s->lastname }} {{ $s->firstname }} {{ $s->other_names ?? '' }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Student Name:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->lastname }}
+                                            {{ $s->firstname }} {{ $s->other_names ?? '' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_admission'])
-                                    <div class="rc-stu-row"><span class="k">LIN No.:</span>
-                                        <span>{{ $admissionNo }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">LIN No.:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $admissionNo }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_paycode'])
-                                    <div class="rc-stu-row"><span class="k">Pay Code:</span>
-                                        <span>{{ $s->paycode ?? '—' }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Pay Code:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->paycode ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_class'])
-                                    <div class="rc-stu-row"><span class="k">Class:</span>
-                                        <span>{{ Helper::recordMdname($s->senior) }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Class:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ Helper::recordMdname($s->senior) }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_stream'])
-                                    <div class="rc-stu-row"><span class="k">Stream:</span>
-                                        <span>{{ $s->stream ?? '—' }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Stream:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->stream ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_academic_year'])
-                                    <div class="rc-stu-row"><span class="k">Academic Year:</span>
-                                        <span>{{ $exam->academic_year }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Academic Year:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->academic_year }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_term'])
-                                    <div class="rc-stu-row"><span class="k">Term:</span>
-                                        <span>{{ $exam->term }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Term:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->term }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_exam'])
-                                    <div class="rc-stu-row"><span class="k">Exam:</span>
-                                        <span>{{ $exam->exam_name }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Exam:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->exam_name }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_dob'])
-                                    <div class="rc-stu-row"><span class="k">Date of Birth:</span>
-                                        <span>{{ $dobFormatted }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Date of Birth:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $dobFormatted }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_gender'])
-                                    <div class="rc-stu-row"><span class="k">Gender:</span>
-                                        <span>{{ $s->gender ?? '—' }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Gender:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->gender ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_class_teacher'])
-                                    <div class="rc-stu-row"><span class="k">Class Teacher:</span>
-                                        <span>{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Class Teacher:</span>
+                                        <span
+                                            style="font-size: 1.05rem; color: #111;">{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_house'])
-                                    <div class="rc-stu-row"><span class="k">House / Team:</span>
-                                        <span>{{ $houseTeam }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">House / Team:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ $houseTeam }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_report_date'])
-                                    <div class="rc-stu-row"><span class="k">Date of Report:</span>
-                                        <span>{{ now()->format('d M Y') }}</span>
+                                    <div class="rc-stu-row">
+                                        <span class="k" style="font-size: 1.10rem;">Date of Report:</span>
+                                        <span style="font-size: 1.05rem; color: #111;">{{ now()->format('d M Y') }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_status'])
                                     <div class="rc-stu-row">
-                                        <span class="k">Status:</span>
+                                        <span class="k" style="font-size: 1.10rem;">Status:</span>
                                         <span @php
                                             $statusLower = strtolower($statusLabel);
                                             if ($isEarlyYears) {
@@ -2528,7 +2572,7 @@
                                                     : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
                                             }
                                         @endphp class="status-pill {{ $statusClass }}"
-                                            style="margin-top:0;">
+                                            style="margin-top:0; font-size: 1.05rem;">
                                             {{ ucfirst($statusLabel) }}
                                         </span>
                                     </div>
@@ -2558,12 +2602,12 @@
                 @endif
 
                 {{-- ══ ACADEMIC PERFORMANCE SUMMARY ═══════════════════════════════
-                     Whole strip can be switched off with show_section_summary;
-                     each cell inside has its own show_sum_* toggle. Cells use
-                     "flex: 1 1 0" with no fixed basis, so whatever is left
-                     after some are switched off automatically grows to fill
-                     the row — no code change needed for that part, it
-                     already behaved this way. ══════════════════════════════ --}}
+                Whole strip can be switched off with show_section_summary;
+                each cell inside has its own show_sum_* toggle. Cells use
+                "flex: 1 1 0" with no fixed basis, so whatever is left
+                after some are switched off automatically grows to fill
+                the row — no code change needed for that part, it
+                already behaved this way. ══════════════════════════════ --}}
                 @if($cfg['section_summary'])
                     <div class="rc-summary">
                         @if($cfg['sum_total_marks'])
@@ -2578,7 +2622,8 @@
                                 <i class="fas fa-chart-column"></i>
                                 <div class="rc-summary-lbl">Average Mark</div>
                                 <div class="rc-summary-val">
-                                    {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}</div>
+                                    {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}
+                                </div>
                             </div>
                         @endif
                         @if($cfg['sum_average_pct'])
@@ -2614,8 +2659,8 @@
                                 <i class="fas fa-trophy"></i>
                                 <div class="rc-summary-lbl">Division</div>
                                 <div class="rc-summary-val" style="font-size: 0.75rem;">
-    {{ strtoupper($divisionLabel) }}
-</div>
+                                    {{ strtoupper($divisionLabel) }}
+                                </div>
 
                             </div>
                         @endif
@@ -2644,9 +2689,9 @@
                 @endif
 
                 {{-- ══ MARKS TABLE ════════════════════════════════════════════════
-                     Whole table can be switched off with show_section_marks_table;
-                     column-level toggles (score/dev/grade/comment/teacher/totals)
-                     keep working exactly as before inside it. ═══════════════════ --}}
+                Whole table can be switched off with show_section_marks_table;
+                column-level toggles (score/dev/grade/comment/teacher/totals)
+                keep working exactly as before inside it. ═══════════════════ --}}
                 @if($cfg['section_marks_table'])
                     <div class="rc-table-wrap">
                         @if($multiExam)
@@ -2665,39 +2710,40 @@
                             <table class="marks-tbl">
                                 <thead>
                                     <tr>
-                                        <th class="tl" rowspan="2" style="min-width:100px;">SUBJECTS</th>
+                                        <th class="tl" rowspan="2" style="min-width:100px; font-size: 1.10rem;">SUBJECTS</th>
                                         @foreach($examsList as $ex)
-                                            <th class="exam-grp-th" colspan="2">
+                                            <th class="exam-grp-th" colspan="2" style="font-size: 1.10rem;">
                                                 {{ $examLabels[$ex->exam_type] ?? strtoupper($ex->term ?? $ex->exam_name) }}
                                             </th>
                                         @endforeach
                                         @if($cfg['grade_pill'])
-                                            <th rowspan="2" style="width:38px;">GRADE</th>
+                                            <th rowspan="2" style="width:38px; font-size: 1.10rem;">GRADE</th>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <th class="tl col-teacher" rowspan="2">TEACHER</th>
+                                            <th class="tl col-teacher" rowspan="2" style="font-size: 1.10rem;">TEACHER</th>
                                         @endif
                                         @if($cfg['initials_col'])
-                                            <th class="col-initials" rowspan="2">INITIALS</th>
+                                            <th class="col-initials" rowspan="2" style="font-size: 1.10rem;">INITIALS</th>
                                         @endif
                                     </tr>
                                     <tr>
                                         @foreach($examsList as $ex)
-                                            <th class="sub-th">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
-                                            <th class="sub-th">GRADE</th>
+                                            <th class="sub-th" style="font-size: 1.05rem;">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
+                                            <th class="sub-th" style="font-size: 1.05rem;">GRADE</th>
                                         @endforeach
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($subjMarks as $sm)
                                         <tr>
-                                            <td style="font-weight:500;">{{ $sm->subject_name }}</td>
+                                            <td class="col-subject" style="font-weight:500; font-size: 1.05rem;">{{ $sm->subject_name }}
+                                            </td>
                                             @foreach($examsList as $ex)
                                                 @php $ed = $sm->exams[$ex->id] ?? null; @endphp
-                                                <td class="score-td">
+                                                <td class="score-td" style="font-size: 1.05rem;">
                                                     @whole($ed['marks_obtained'] ?? null)
                                                 </td>
-                                                <td class="num-td">
+                                                <td class="num-td" style="font-size: 1.05rem;">
                                                     @if($ed && $ed['grade'] && $ed['grade'] !== '—')
                                                         <span class="g-pill {{ $gc($ed['grade']) }}">{{ $ed['grade'] }}</span>
                                                     @else
@@ -2706,15 +2752,16 @@
                                                 </td>
                                             @endforeach
                                             @if($cfg['grade_pill'])
-                                                <td class="num-td">
+                                                <td class="num-td" style="font-size: 1.05rem;">
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
                                             @endif
                                             @if($cfg['teacher_col'])
-                                                <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                <td class="col-teacher" style="color:#555; font-size: 0.80rem;">
+                                                    {{ $sm->teacher_name ?? '—' }}</td>
                                             @endif
                                             @if($cfg['initials_col'])
-                                                <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                                <td class="col-initials" style="font-size: 1rem;">{{ $sm->teacher_initials ?? '—' }}</td>
                                             @endif
                                         </tr>
                                     @endforeach
@@ -2723,26 +2770,28 @@
                                     @if($cfg['totals_row'])
                                         <tr class="totals-row">
                                             <td
-                                                style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
+                                                style="text-align:right;color:#666;font-size:1.05rem;padding-right:.8rem;font-weight:600;">
                                                 {{ $showAggDiv ? 'TOTAL / AGG' : 'TOTAL / ' . ($useAvgSlip ? 'AVERAGE' : 'COMBINED') }}
                                             </td>
                                             @foreach($examsList as $ex)
                                                 @php $esum = $examSummarySlip->get($ex->id); @endphp
                                                 @if($showAggDiv)
-                                                    <td class="score-td">@whole($esum['total_marks'] ?? null)</td>
-                                                    <td class="num-td">{{ $esum['aggregate'] ?? '—' }}</td>
+                                                    <td class="score-td" style="font-size: 1.05rem;">@whole($esum['total_marks'] ?? null)</td>
+                                                    <td class="num-td" style="font-size: 1.05rem;">{{ $esum['aggregate'] ?? '—' }}</td>
                                                 @else
                                                     @php
                                                         $examPctSum = $subjMarks->sum(fn($sm) => $sm->exams[$ex->id]['percentage'] ?? 0);
                                                         $examPctCnt = $subjMarks->filter(fn($sm) => ($sm->exams[$ex->id]['percentage'] ?? null) !== null)->count();
                                                         $examAvgPct = $examPctCnt > 0 ? round($examPctSum / $examPctCnt, 1) : null;
                                                     @endphp
-                                                    <td class="score-td" colspan="2">{{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}
+                                                    <td class="score-td" colspan="2" style="font-size: 1.05rem;">
+                                                        {{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}
                                                     </td>
                                                 @endif
                                             @endforeach
                                             @if($cfg['grade_pill'])
-                                                <td class="num-td"><span class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span></td>
+                                                <td class="num-td" style="font-size: 1.05rem;"><span
+                                                        class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span></td>
                                             @endif
                                             @if($cfg['teacher_col'])
                                                 <td></td>
@@ -2756,10 +2805,10 @@
                                     {{-- DIVISION ROW --}}
                                     @if($cfg['totals_row'] && $showAggDiv)
                                         <tr class="division-row">
-                                            <td class="division-label">DIVISION</td>
+                                            <td class="division-label" style="font-size: 1.05rem;">DIVISION</td>
                                             @foreach($examsList as $ex)
                                                 @php $div = $examSummarySlip->get($ex->id)['division'] ?? '—'; @endphp
-                                                <td colspan="2">
+                                                <td colspan="2" style="font-size: 1.05rem;">
                                                     <span class="div-pill {{ $divClass($div) }}">{{ strtoupper($div) }}</span>
                                                 </td>
                                             @endforeach
@@ -2780,34 +2829,34 @@
                             <table class="marks-tbl">
                                 <thead>
                                     <tr>
-                                        <th style="width:28px;">NO.</th>
-                                        <th class="tl" style="min-width:110px;">SUBJECT</th>
+                                        <th>NO.</th>
+                                        <th class="tl col-subject" data-fit="{{ $longestSubject }}" font-size: 1rem;">SUBJECT</th>
                                         @if($cfg['col_full_marks'])
-                                            <th style="width:56px;">FULL MARKS</th>
+                                            <th style="width:56px; font-size: ;">FULL MARKS</th>
                                         @endif
                                         @if($cfg['col_marks_obtained'])
-                                            <th style="width:64px;">{{ $isEarlyYears ? 'SCORE' : 'MARKS OBTAINED' }}</th>
+                                            <th style="width:64px; font-size: 1;">{{ $isEarlyYears ? 'SCORE' : 'SCORE' }}</th>
                                         @endif
                                         @if($cfg['col_percentage'] && !$isEarlyYears)
-                                            <th style="width:64px;">MARKS</th>
+                                            <th style="width:64px; font-size: 1;">MARKS</th>
                                         @endif
                                         @if($cfg['dev'])
-                                            <th style="width:38px;">DEV.</th>
+                                            <th style="width:38px; font-size: 1;">DEV.</th>
                                         @endif
                                         @if($cfg['grade_pill'] && !$isEarlyYears)
-                                            <th style="width:38px;">GRADE</th>
+                                            <th style="width:38px; font-size: 1;">GRADE</th>
                                         @endif
                                         @if($cfg['col_grade_point'] && !$isEarlyYears)
-                                            <th style="width:48px;">GRADE POINT</th>
+                                            <th class="col-grade-point" style="font-size: 1;">GRADE POINT</th>
                                         @endif
                                         @if($cfg['comment_col'])
-                                            <th class="tl col-remarks">REMARKS</th>
+                                            <th class="tl col-remarks" font-size: 1;">REMARKS</th>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <th class="tl col-teacher">TEACHER</th>
+                                            <th class="tl col-teacher" font-size: 1;">TEACHER</th>
                                         @endif
                                         @if($cfg['initials_col'])
-                                            <th class="col-initials">INITIALS</th>
+                                            <th class="col-initials" font-size: 1;">INITIALS</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -2818,7 +2867,8 @@
                                         @foreach($grouped as $grpName => $grpSubjs)
                                             @if($grpName)
                                                 <tr class="grp-row">
-                                                    <td colspan="{{ $visibleCols + 1 }}">{{ strtoupper($grpName) }}</td>
+                                                    <td colspan="{{ $visibleCols + 1 }}" style="font-size: 1.05rem;">{{ strtoupper($grpName) }}
+                                                    </td>
                                                 </tr>
                                             @endif
                                             @foreach($grpSubjs as $sm)
@@ -2832,19 +2882,20 @@
                                                     }
                                                 @endphp
                                                 <tr>
-                                                    <td class="num-td">{{ $rn }}</td>
-                                                    <td style="font-weight:500;">{{ $sm->subject_name }}</td>
+                                                    <td class="num-td" style="font-size: 0.80;">{{ $rn }}</td>
+                                                    <td class="col-subject" style="font-weight:500; font-size: 0.80;">{{ $sm->subject_name }}
+                                                    </td>
                                                     @if($cfg['col_full_marks'])
-                                                        <td class="score-td">@whole($sm->total_marks ?? null)</td>
+                                                        <td class="score-td" style="font-size: 0.80;">@whole($sm->total_marks ?? null)</td>
                                                     @endif
                                                     @if($cfg['col_marks_obtained'])
-                                                        <td class="score-td">@whole($sm->marks_obtained ?? null)</td>
+                                                        <td class="score-td" style="font-size: 0.80;">@whole($sm->marks_obtained ?? null)</td>
                                                     @endif
                                                     @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                        <td class="score-td">@whole($sm->percentage)%</td>
+                                                        <td class="score-td" style="font-size: 0.80;">@whole($sm->percentage)%</td>
                                                     @endif
                                                     @if($cfg['dev'])
-                                                        <td class="num-td">
+                                                        <td class="num-td" style="font-size: 0.80;">
                                                             @if($delta !== null)
                                                                 @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
                                                                 @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
@@ -2855,21 +2906,23 @@
                                                         </td>
                                                     @endif
                                                     @if($cfg['grade_pill'] && !$isEarlyYears)
-                                                        <td class="num-td">
+                                                        <td class="num-td" style="font-size: 0.80;">
                                                             <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                         </td>
                                                     @endif
                                                     @if($cfg['col_grade_point'] && !$isEarlyYears)
-                                                        <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
+                                                        <td class="num-td col-grade-point" style="font-size: 0.80;">
+                                                            {{ $sm->grade_points ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['comment_col'])
-                                                        <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
+                                                        <td class="col-remarks" style="font-size: 0.80;">{{ $sm->grade_remark ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['teacher_col'])
-                                                        <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                        <td class="col-teacher" style="color:#555; font-size: 0.80;">
+                                                            {{ $sm->teacher_name ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['initials_col'])
-                                                        <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                                        <td class="col-initials" style="font-size: 0.80;">{{ $sm->teacher_initials ?? '—' }}</td>
                                                     @endif
                                                 </tr>
                                             @endforeach
@@ -2886,19 +2939,20 @@
                                                 }
                                             @endphp
                                             <tr>
-                                                <td class="num-td">{{ $rn }}</td>
-                                                <td style="font-weight:500;">{{ $sm->subject_name }}</td>
+                                                <td class="num-td" style="font-size: 1.05rem;">{{ $rn }}</td>
+                                                <td class="col-subject" style="font-weight:500; font-size: 1.05rem;">{{ $sm->subject_name }}
+                                                </td>
                                                 @if($cfg['col_full_marks'])
-                                                    <td class="score-td">@whole($sm->total_marks ?? null)</td>
+                                                    <td class="score-td" style="font-size: 0.80rem;">@whole($sm->total_marks ?? null)</td>
                                                 @endif
                                                 @if($cfg['col_marks_obtained'])
-                                                    <td class="score-td">@whole($sm->marks_obtained ?? null)</td>
+                                                    <td class="score-td" style="font-size: 0.80rem;">@whole($sm->marks_obtained ?? null)</td>
                                                 @endif
                                                 @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                    <td class="score-td">@whole($sm->percentage)%</td>
+                                                    <td class="score-td" style="font-size: 0.80rem;">@whole($sm->percentage)%</td>
                                                 @endif
                                                 @if($cfg['dev'])
-                                                    <td class="num-td">
+                                                    <td class="num-td" style="font-size: 0.80rem;">
                                                         @if($delta !== null)
                                                             @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
                                                             @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
@@ -2909,21 +2963,23 @@
                                                     </td>
                                                 @endif
                                                 @if($cfg['grade_pill'] && !$isEarlyYears)
-                                                    <td class="num-td">
+                                                    <td class="num-td" style="font-size: 0.80rem;">
                                                         <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                     </td>
                                                 @endif
                                                 @if($cfg['col_grade_point'] && !$isEarlyYears)
-                                                    <td class="num-td">{{ $sm->grade_points ?? '—' }}</td>
+                                                    <td class="num-td col-grade-point" style="font-size: 0.80rem;">
+                                                        {{ $sm->grade_points ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['comment_col'])
-                                                    <td class="col-remarks">{{ $sm->grade_remark ?? '—' }}</td>
+                                                    <td class="col-remarks" style="font-size: 0.80rem;">{{ $sm->grade_remark ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['teacher_col'])
-                                                    <td class="col-teacher" style="color:#555;">{{ $sm->teacher_name ?? '—' }}</td>
+                                                    <td class="col-teacher" style="color:#555; font-size: 0.80;">
+                                                        {{ $sm->teacher_name ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['initials_col'])
-                                                    <td class="col-initials">{{ $sm->teacher_initials ?? '—' }}</td>
+                                                    <td class="col-initials" style="font-size: 0.80rem;">{{ $sm->teacher_initials ?? '—' }}</td>
                                                 @endif
                                             </tr>
                                         @endforeach
@@ -2934,20 +2990,20 @@
                                         @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0) + ($cfg['initials_col'] ? 1 : 0); @endphp
                                         <tr class="totals-row">
                                             <td colspan="2"
-                                                style="text-align:right;color:#666;font-size:.72rem;padding-right:.8rem;font-weight:600;">
+                                                style="text-align:right;color:#666;font-size:0.80rem;padding-right:.8rem;font-weight:600;">
                                                 TOTAL
                                             </td>
                                             @if($cfg['col_full_marks'])
-                                                <td class="score-td">@whole($totMax)</td>
+                                                <td class="score-td" style="font-size: 0.80;">@whole($totMax)</td>
                                             @endif
                                             @if($cfg['col_marks_obtained'])
-                                                <td class="score-td">@whole($totObt)</td>
+                                                <td class="score-td" style="font-size: 0.80;">@whole($totObt)</td>
                                             @endif
                                             @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                <td class="score-td">@whole($pct)%</td>
+                                                <td class="score-td" style="font-size: 0.80rem;">@whole($pct)%</td>
                                             @endif
                                             @if($cfg['dev'])
-                                                <td class="num-td">
+                                                <td class="num-td" style="font-size: 0.80rem;">
                                                     @if($termDelta !== null)
                                                         @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
                                                         @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
@@ -2958,18 +3014,18 @@
                                                 </td>
                                             @endif
                                             @if($cfg['grade_pill'] && !$isEarlyYears)
-                                                <td class="num-td">
+                                                <td class="num-td" style="font-size: 0.80rem;">
                                                     <span>AGG</span>
                                                 </td>
                                             @endif
                                             @if($cfg['col_grade_point'] && !$isEarlyYears)
-                                                <td class="num-td">{{ $aggregateLabel }}</td>
+                                                <td class="num-td col-grade-point" style="font-size: 0.80rem;">{{ $aggregateLabel }}</td>
                                             @endif
                                             @if($resultColspan > 0)
                                                 <td colspan="{{ $resultColspan }}">
                                                     <strong
                                                         style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
-                                                        
+
                                                     </strong>
                                                 </td>
                                             @endif
@@ -2983,239 +3039,268 @@
                 @endif
 
                 {{-- ══ PROGRESSIVE ASSESSMENT RECORD ═══════════════════════════════
-                     Transposed summary of every sitting this term/year (one row
-                     per sitting, one column per subject). Whole section gated by
-                     its own master switch, independent of the main Marks Table. --}}
+                Transposed summary of every sitting this term/year (one row
+                per sitting, one column per subject). Whole section gated by
+                its own master switch, independent of the main Marks Table. --}}
                 @include('Examination.passslips.partials.progressive-assessment-record', [
                     'progressive' => $progressiveSlip ?? null,
                 ])
 
                 {{-- ══ OPTIONAL PERFORMANCE-OVER-TIME CHART ═══════════════════════ --}}
                 @if($cfg['perf_chart'] && count($growth) > 0)
-                        <div class="rc-section">
-                            <div class="rc-section-hd">{{ $s->firstname }}'s Performance Over Time</div>
-                            <div style="padding:.6rem .8rem;">
-                                <canvas id="{{ $cPerf }}" height="90"></canvas>
-                            </div>
+                    <div class="rc-section">
+                        <div class="rc-section-hd">{{ $s->firstname }}'s Performance Over Time</div>
+                        <div style="padding:.6rem .8rem;">
+                            <canvas id="{{ $cPerf }}" height="90"></canvas>
                         </div>
-                    @endif
+                    </div>
+                @endif
 
-                    {{-- ══ DISCIPLINE & CONDUCT · GRADE SCALE · CLASS TEACHER'S REMARKS ══ --}}
-                    @if($cfg['discipline'] || $cfg['remarks'])
-                        <div class="rc-footer-grid">
+                {{-- ══ DISCIPLINE & CONDUCT · GRADE SCALE · CLASS TEACHER'S REMARKS ══ --}}
+                @if($cfg['discipline'] || $cfg['remarks'])
+                    <div class="rc-footer-grid">
 
-                            {{-- Discipline & Conduct --}}
-                            @if($cfg['discipline'] && $disciplineRatingsSlip->count() > 0)
-                                <div class="rc-section">
-                                    <div class="rc-section-hd">Discipline &amp; Conduct</div>
-                                    <table class="rc-mini-tbl">
-                                        <thead>
+                        {{-- Discipline & Conduct --}}
+                        @if($cfg['discipline'] && $disciplineRatingsSlip->count() > 0)
+                            <div class="rc-section">
+                                <div class="rc-section-hd">Discipline &amp; Conduct</div>
+                                <table class="rc-mini-tbl">
+                                    <thead>
+                                        <tr>
+                                            <th>Criteria</th>
+                                            <th style="width:40px;">Grade</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($disciplineRatingsSlip as $dr)
                                             <tr>
-                                                <th>Criteria</th>
-                                                <th style="width:40px;">Grade</th>
-                                                <th>Remarks</th>
+                                                <td>{{ $dr->name }}</td>
+                                                <td>
+                                                    @if($dr->rating)
+                                                        <span class="rc-dg-pill rc-dg-{{ $dr->rating }}">{{ $dr->rating }}</span>
+                                                    @else
+                                                        <span style="color:#bbb;">—</span>
+                                                    @endif
+                                                </td>
+                                                <td style="color:#555;">{{ $disciplineRemarkFor($dr->rating) }}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($disciplineRatingsSlip as $dr)
-                                                <tr>
-                                                    <td>{{ $dr->name }}</td>
-                                                    <td>
-                                                        @if($dr->rating)
-                                                            <span class="rc-dg-pill rc-dg-{{ $dr->rating }}">{{ $dr->rating }}</span>
-                                                        @else
-                                                            <span style="color:#bbb;">—</span>
-                                                        @endif
-                                                    </td>
-                                                    <td style="color:#555;">{{ $disciplineRemarkFor($dr->rating) }}</td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                    @if($overallDisciplineGrade)
-                                        <div class="rc-odg-box">
-                                            <span class="lbl">Overall Discipline Grade</span>
-                                            <span>
-                                                <span
-                                                    class="rc-dg-pill rc-dg-{{ $overallDisciplineGrade }}">{{ $overallDisciplineGrade }}</span>
-                                                <strong style="margin-left:.3rem;">{{ $overallDisciplineRemark }}</strong>
-                                            </span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-
-                   
-
-                            {{-- Class Teacher's Remarks / Head Teacher's Remarks --}}
-                            @if($cfg['remarks'])
-                                <div class="rc-section">
-                                    @php
-                                        $classTeacherName = $s->class_teacher ?? 'Class Teacher';
-                                        $ctRemark = $s->class_teacher_remark ?? '';
-                                        $ctSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
-                                        $htSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
-                                    @endphp
-
-                                    {{-- Each heading now carries the teacher's name, with that
-                                         teacher's remark and signature line directly below it. --}}
-                                    <div class="rc-section-hd">Class Teacher's Remarks - <span style="text-transform:none;letter-spacing:0;">{{ $classTeacherName }}</span></div>
-                                    <div class="rc-remarks-box">
-                                        <div class="rc-remark-line" style="margin-bottom:0;">
-                                            <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
-                                            <div class="sig-line" style="margin-top:.4rem;">
-                                                @if($ctSigUrl)
-                                                    <img src="{{ $ctSigUrl }}" alt="signature"
-                                                        style="max-width:80px;max-height:20px;object-fit:contain;">
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="rc-section-hd">Head Teacher's Remarks - <span style="text-transform:none;letter-spacing:0;">{{ $headTeacherName }}</span></div>
-                                    <div class="rc-remarks-box">
-                                        <div class="rc-remark-line" style="margin-bottom:0;">
-                                            <div>{{ $s->head_teacher_remark ?? '' }}</div>
-                                            <div class="sig-line" style="margin-top:.4rem;">
-                                                @if($htSigUrl)
-                                                    <img src="{{ $htSigUrl }}" alt="signature"
-                                                        style="max-width:80px;max-height:20px;object-fit:contain;">
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                        </div>
-                    @endif
-
-                   
-
-                    {{-- ══ SIGNATURES ══════════════════════════════════════════════════ --}}
-                    @if($cfg['signatures'])
-                        @php
-                            $classTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
-                            $headTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
-                        @endphp
-                        <div class="rc-sig-row">
-                            <div class="rc-sig-cell">
-                                <div class="lbl">Class Teacher</div>
-                                <div class="rc-sig-line">Name: {{ $s->class_teacher ?? '' }}</div>
-                                <div class="rc-sig-line">
-                                    Signature:
-                                    @if($classTeacherSigUrl)
-                                        <img src="{{ $classTeacherSigUrl }}"
-                                            style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;"
-                                            alt="sig">
-                                    @endif
-                                </div>
-                                <div class="rc-sig-line">Date: </div>
-                            </div>
-
-                            <div class="rc-sig-cell">
-                                <div class="lbl">School Administration</div>
-                                <div class="rc-sig-line">
-                                    Name: {{ $headTeacherName }}
-                                </div>
-                                <div class="rc-sig-line">
-                                    Signature:
-                                    @if($headTeacherSigUrl)
-                                        <img src="{{ $headTeacherSigUrl }}"
-                                            style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;"
-                                            alt="sig">
-                                    @endif
-                                </div>
-                                <div class="rc-sig-line">Date: </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- ══ TERM DATES ═══════════════════════════════════════════════════
-                         Each label now gated independently via 'term_ends_on' /
-                         'next_term_starts_on' (see the $cfg computation above) instead
-                         of the old combined 'term_dates' switch, so either can be
-                         removed on its own. --}}
-                    @if(($cfg['term_ends_on'] ?? true) || ($cfg['next_term_starts_on'] ?? true))
-                        @php
-                            $termEndsOn = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
-                                ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
-                            $nextTermStartsOn = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
-                                ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
-                        @endphp
-                        @if(($cfg['term_ends_on'] && $termEndsOn) || ($cfg['next_term_starts_on'] && $nextTermStartsOn))
-                            <div class="rc-sig-row" style="margin-top:.5rem;">
-                                @if($cfg['term_ends_on'] ?? true)
-                                    <div class="rc-sig-cell">
-                                        <div class="lbl">This Term Ends On</div>
-                                        <div class="rc-sig-line">{{ $termEndsOn ?? '—' }}</div>
-                                    </div>
-                                @endif
-                                @if($cfg['next_term_starts_on'] ?? true)
-                                    <div class="rc-sig-cell">
-                                        <div class="lbl">Next Term Starts On</div>
-                                        <div class="rc-sig-line">{{ $nextTermStartsOn ?? '—' }}</div>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                @if($overallDisciplineGrade)
+                                    <div class="rc-odg-box">
+                                        <span class="lbl">Overall Discipline Grade</span>
+                                        <span>
+                                            <span
+                                                class="rc-dg-pill rc-dg-{{ $overallDisciplineGrade }}">{{ $overallDisciplineGrade }}</span>
+                                            <strong style="margin-left:.3rem;">{{ $overallDisciplineRemark }}</strong>
+                                        </span>
                                     </div>
                                 @endif
                             </div>
                         @endif
-                    @endif
 
 
-                    {{-- ══ FOOTER ════════════════════════════════════════════════════════ --}}
-                    @if($cfg['footer_timestamp'] || $cfg['confidential'])
-                        <div class="slip-footer">
-                            <div style="font-size:.58rem;color:#aaa;">
-                                @if($cfg['footer_timestamp'])
-                                    Generated: {{ now()->format('d M Y, H:i') }}
-                                    &bull; {{ $exam->exam_code ?? '' }}
-                                    &bull; {{ $exam->term }} {{ $exam->academic_year }}
+
+                        {{-- Class Teacher's Remarks / Head Teacher's Remarks --}}
+                        @if($cfg['remarks'])
+                            <div class="rc-section">
+                                @php
+                                    $classTeacherName = $s->class_teacher ?? 'Class Teacher';
+                                    $ctRemark = $s->class_teacher_remark ?? '';
+                                    $ctSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                                    $htSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
+                                @endphp
+
+                                {{-- Each heading now carries the teacher's name, with that
+                                teacher's remark and signature line directly below it. --}}
+                                <div class="rc-section-hd">Class Teacher's Remarks - <span
+                                        style="text-transform:none;letter-spacing:0;">{{ $classTeacherName }}</span></div>
+                                <div class="rc-remarks-box">
+                                    <div class="rc-remark-line" style="margin-bottom:0;">
+                                        <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
+                                        <div class="sig-line" style="margin-top:.4rem;">
+                                            @if($ctSigUrl)
+                                                <img src="{{ $ctSigUrl }}" alt="signature"
+                                                    style="max-width:80px;max-height:20px;object-fit:contain;">
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rc-section-hd">Head Teacher's Remarks - <span
+                                        style="text-transform:none;letter-spacing:0;">{{ $headTeacherName }}</span></div>
+                                <div class="rc-remarks-box">
+                                    <div class="rc-remark-line" style="margin-bottom:0;">
+                                        <div>{{ $s->head_teacher_remark ?? '' }}</div>
+                                        <div class="sig-line" style="margin-top:.4rem;">
+                                            @if($htSigUrl)
+                                                <img src="{{ $htSigUrl }}" alt="signature"
+                                                    style="max-width:80px;max-height:20px;object-fit:contain;">
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                    </div>
+                @endif
+
+
+
+                {{-- ══ SIGNATURES ══════════════════════════════════════════════════ --}}
+                @if($cfg['signatures'])
+                    @php
+                        $classTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->class_teacher_signature ?? null);
+                        $headTeacherSigUrl = \App\Http\Controllers\Helper::signatureUrl($s->head_teacher_signature ?? null);
+                    @endphp
+                    <div class="rc-sig-row">
+                        <div class="rc-sig-cell">
+                            <div class="lbl">Class Teacher</div>
+                            <div class="rc-sig-line">Name: {{ $s->class_teacher ?? '' }}</div>
+                            <div class="rc-sig-line">
+                                Signature:
+                                @if($classTeacherSigUrl)
+                                    <img src="{{ $classTeacherSigUrl }}"
+                                        style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;" alt="sig">
                                 @endif
                             </div>
-                            @if($cfg['confidential'])
-                                <div style="font-size:.63rem;font-weight:800;color:#c0392b;letter-spacing:.07em;">CONFIDENTIAL</div>
+                            <div class="rc-sig-line">Date: </div>
+                        </div>
+
+                        <div class="rc-sig-cell">
+                            <div class="lbl">School Administration</div>
+                            <div class="rc-sig-line">
+                                Name: {{ $headTeacherName }}
+                            </div>
+                            <div class="rc-sig-line">
+                                Signature:
+                                @if($headTeacherSigUrl)
+                                    <img src="{{ $headTeacherSigUrl }}"
+                                        style="max-width:80px;max-height:18px;object-fit:contain;vertical-align:middle;" alt="sig">
+                                @endif
+                            </div>
+                            <div class="rc-sig-line">Date: </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ══ TERM DATES ═══════════════════════════════════════════════════
+                Each label now gated independently via 'term_ends_on' /
+                'next_term_starts_on' (see the $cfg computation above) instead
+                of the old combined 'term_dates' switch, so either can be
+                removed on its own. --}}
+                @if(($cfg['term_ends_on'] ?? true) || ($cfg['next_term_starts_on'] ?? true))
+                    @php
+                        $termEndsOn = isset($termDates['term_ends_on']) && $termDates['term_ends_on']
+                            ? \Carbon\Carbon::parse($termDates['term_ends_on'])->format('d M Y') : null;
+                        $nextTermStartsOn = isset($termDates['next_term_starts_on']) && $termDates['next_term_starts_on']
+                            ? \Carbon\Carbon::parse($termDates['next_term_starts_on'])->format('d M Y') : null;
+                    @endphp
+                    @if(($cfg['term_ends_on'] && $termEndsOn) || ($cfg['next_term_starts_on'] && $nextTermStartsOn))
+                        <div class="rc-sig-row" style="margin-top:.5rem;">
+                            @if($cfg['term_ends_on'] ?? true)
+                                <div class="rc-sig-cell">
+                                    <div class="lbl">This Term Ends On</div>
+                                    <div class="rc-sig-line">{{ $termEndsOn ?? '—' }}</div>
+                                </div>
+                            @endif
+                            @if($cfg['next_term_starts_on'] ?? true)
+                                <div class="rc-sig-cell">
+                                    <div class="lbl">Next Term Starts On</div>
+                                    <div class="rc-sig-line">{{ $nextTermStartsOn ?? '—' }}</div>
+                                </div>
                             @endif
                         </div>
                     @endif
+                @endif
 
-                </div>{{-- /.slip --}}
 
-                {{-- ══ PER-SLIP SCRIPTS ═══════════════════════════════════════════════ --}}
-                <script>
-                    (function () {
-                        /* Mini student-vs-class line chart */
-                        @if($cfg['minichart'] && count($miniLabels) > 0)
-                            var miniCtx = document.getElementById('{{ $cMini }}');
-                            if (miniCtx) {
-                                new Chart(miniCtx.getContext('2d'), {
-                                    type: 'line',
+                {{-- ══ FOOTER ════════════════════════════════════════════════════════ --}}
+                @if($cfg['footer_timestamp'] || $cfg['confidential'])
+                    <div class="slip-footer">
+                        <div style="font-size:.58rem;color:#aaa;">
+                            @if($cfg['footer_timestamp'])
+                                Generated: {{ now()->format('d M Y, H:i') }}
+                                &bull; {{ $exam->exam_code ?? '' }}
+                                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                            @endif
+                        </div>
+                        @if($cfg['confidential'])
+                            <div style="font-size:.63rem;font-weight:800;color:#c0392b;letter-spacing:.07em;">CONFIDENTIAL</div>
+                        @endif
+                    </div>
+                @endif
+
+            </div>{{-- /.slip --}}
+
+            {{-- ══ PER-SLIP SCRIPTS ═══════════════════════════════════════════════ --}}
+            <script>
+                (function () {
+                    /* Mini student-vs-class line chart */
+                    @if($cfg['minichart'] && count($miniLabels) > 0)
+                        var miniCtx = document.getElementById('{{ $cMini }}');
+                        if (miniCtx) {
+                            new Chart(miniCtx.getContext('2d'), {
+                                type: 'line',
+                                data: {
+                                    labels: {!! json_encode($miniLabels) !!},
+                                    datasets: [
+                                        {
+                                            label: '{{ addslashes($s->firstname) }}',
+                                            data: {!! json_encode($miniStudent) !!},
+                                            borderColor: '#1a7a4a',
+                                            backgroundColor: 'rgba(26,122,74,.08)',
+                                            tension: 0.35, fill: true,
+                                            pointRadius: 3, borderWidth: 2,
+                                            pointBackgroundColor: '#1a7a4a',
+                                        },
+                                        {
+                                            label: '{{ addslashes(Helper::recordMdname($s->senior)) }}',
+                                            data: {!! json_encode($miniClass) !!},
+                                            borderColor: '#aaa',
+                                            backgroundColor: 'transparent',
+                                            tension: 0.35, fill: false,
+                                            pointRadius: 2, borderWidth: 1.5,
+                                            borderDash: [4, 3],
+                                            pointBackgroundColor: '#aaa',
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true, animation: false,
+                                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 8, font: { size: 9 } } } },
+                                    scales: {
+                                        y: { min: 0, max: 100, ticks: { font: { size: 8 }, stepSize: 50 }, grid: { color: '#f0f0f0' } },
+                                        x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                    }
+                                }
+                            });
+                        }
+                    @endif
+
+                        /* Performance over time bar chart */
+                        @if($cfg['perf_chart'] && count($growth) > 0)
+                            var perfCtx = document.getElementById('{{ $cPerf }}');
+                            if (perfCtx) {
+                                var vals = {!! json_encode($growthValues) !!};
+                                new Chart(perfCtx.getContext('2d'), {
+                                    type: 'bar',
                                     data: {
-                                        labels: {!! json_encode($miniLabels) !!},
-                                        datasets: [
-                                            {
-                                                label: '{{ addslashes($s->firstname) }}',
-                                                data: {!! json_encode($miniStudent) !!},
-                                                borderColor: '#1a7a4a',
-                                                backgroundColor: 'rgba(26,122,74,.08)',
-                                                tension: 0.35, fill: true,
-                                                pointRadius: 3, borderWidth: 2,
-                                                pointBackgroundColor: '#1a7a4a',
-                                            },
-                                            {
-                                                label: '{{ addslashes(Helper::recordMdname($s->senior)) }}',
-                                                data: {!! json_encode($miniClass) !!},
-                                                borderColor: '#aaa',
-                                                backgroundColor: 'transparent',
-                                                tension: 0.35, fill: false,
-                                                pointRadius: 2, borderWidth: 1.5,
-                                                borderDash: [4, 3],
-                                                pointBackgroundColor: '#aaa',
-                                            }
-                                        ]
+                                        labels: {!! json_encode($growthLabels) !!},
+                                        datasets: [{
+                                            data: vals,
+                                            backgroundColor: vals.map(function (v, i) {
+                                                return i === vals.length - 1 ? '{{ $accent }}' : '#555';
+                                            }),
+                                            borderRadius: 3, borderSkipped: false,
+                                        }]
                                     },
                                     options: {
                                         responsive: true, animation: false,
-                                        plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 8, font: { size: 9 } } } },
+                                        plugins: { legend: { display: false } },
                                         scales: {
                                             y: { min: 0, max: 100, ticks: { font: { size: 8 }, stepSize: 50 }, grid: { color: '#f0f0f0' } },
                                             x: { ticks: { font: { size: 8 } }, grid: { display: false } }
@@ -3224,135 +3309,106 @@
                                 });
                             }
                         @endif
+                                                            })();
+            </script>
 
-                            /* Performance over time bar chart */
-                            @if($cfg['perf_chart'] && count($growth) > 0)
-                                var perfCtx = document.getElementById('{{ $cPerf }}');
-                                if (perfCtx) {
-                                    var vals = {!! json_encode($growthValues) !!};
-                                    new Chart(perfCtx.getContext('2d'), {
-                                        type: 'bar',
-                                        data: {
-                                            labels: {!! json_encode($growthLabels) !!},
-                                            datasets: [{
-                                                data: vals,
-                                                backgroundColor: vals.map(function (v, i) {
-                                                    return i === vals.length - 1 ? '{{ $accent }}' : '#555';
-                                                }),
-                                                borderRadius: 3, borderSkipped: false,
-                                            }]
-                                        },
-                                        options: {
-                                            responsive: true, animation: false,
-                                            plugins: { legend: { display: false } },
-                                            scales: {
-                                                y: { min: 0, max: 100, ticks: { font: { size: 8 }, stepSize: 50 }, grid: { color: '#f0f0f0' } },
-                                                x: { ticks: { font: { size: 8 } }, grid: { display: false } }
-                                            }
-                                        }
-                                    });
-                                }
-                            @endif
-                                                })();
+            {{-- QR Code --}}
+            @if($cfg['qr'] && $qrText)
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        var qrCanvas = document.getElementById('{{ $qrId }}');
+                        if (!qrCanvas || typeof QRCode === 'undefined') return;
+
+                        var qrData = `{{ addslashes(implode('\n', array_filter([
+                    'Student: ' . trim($s->lastname . ' ' . $s->firstname . ' ' . ($s->other_names ?? '')),
+                    'Adm No: ' . ($s->adm_no ?? ($s->index_no ?? '')),
+                    'Class: ' . Helper::recordMdname($s->senior) . (($s->stream ?? false) ? ' - ' . $s->stream : ''),
+                    'Exam: ' . $exam->exam_name,
+                    'Term: ' . $exam->term,
+                    'Year: ' . $exam->academic_year,
+                    'Average: ' . ($isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%'),
+                    'Grade: ' . ($isEarlyYears ? $oRemark : $oGrade),
+                    'Result: ' . ($isEarlyYears ? strtoupper($oRemark) : ($passed ? 'PASS' : 'FAIL')),
+                    'School: ' . $schoolName,
+                ]))) }}`;
+
+                        QRCode.toCanvas(qrCanvas, qrData, {
+                            width: 160, margin: 2,
+                            errorCorrectionLevel: 'H',
+                            color: { dark: '#000000', light: '#FFFFFF' }
+                        }, function (error) {
+                            if (error) console.error('QR Error:', error);
+                        });
+                    });
                 </script>
-
-                {{-- QR Code --}}
-                @if($cfg['qr'] && $qrText)
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                var qrCanvas = document.getElementById('{{ $qrId }}');
-                                if (!qrCanvas || typeof QRCode === 'undefined') return;
-
-                                var qrData = `{{ addslashes(implode('\n', array_filter([
-                        'Student: ' . trim($s->lastname . ' ' . $s->firstname . ' ' . ($s->other_names ?? '')),
-                        'Adm No: ' . ($s->adm_no ?? ($s->index_no ?? '')),
-                        'Class: ' . Helper::recordMdname($s->senior) . (($s->stream ?? false) ? ' - ' . $s->stream : ''),
-                        'Exam: ' . $exam->exam_name,
-                        'Term: ' . $exam->term,
-                        'Year: ' . $exam->academic_year,
-                        'Average: ' . ($isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%'),
-                        'Grade: ' . ($isEarlyYears ? $oRemark : $oGrade),
-                        'Result: ' . ($isEarlyYears ? strtoupper($oRemark) : ($passed ? 'PASS' : 'FAIL')),
-                        'School: ' . $schoolName,
-                    ]))) }}`;
-
-                                QRCode.toCanvas(qrCanvas, qrData, {
-                                    width: 160, margin: 2,
-                                    errorCorrectionLevel: 'H',
-                                    color: { dark: '#000000', light: '#FFFFFF' }
-                                }, function (error) {
-                                    if (error) console.error('QR Error:', error);
-                                });
-                            });
-                        </script>
-                @endif
+            @endif
 
         @endforeach
-        </div>{{-- /.page-wrap --}}
+    </div>{{-- /.page-wrap --}}
 
-        <script>
-            /* ── School-name auto-fit ────────────────────────────────────
-               .rc-lh-name has a fixed font-size that was only ever tuned
-               to fit comfortably in a wide desktop preview. At the
-               narrower width the print engine actually paginates to (A4
-               content width), a longer school name has no room left and
-               the browser wraps it onto a second line — CSS alone can't
-               reliably prevent this across print engines/paper sizes, so
-               this measures the real rendered width and shrinks an
-               explicit inline font-size (px) until it fits on one line.
-               An inline px value wins over every stylesheet rule
-               regardless of specificity or media query, so it can't be
-               silently overridden the way a plain @media print rule can.
-            ──────────────────────────────────────────────────────────── */
-            function fitSchoolNames() {
-                document.querySelectorAll('.rc-lh-center').forEach(function (container) {
-                    var nameEl = container.querySelector('.rc-lh-name');
-                    if (!nameEl) return;
+    <script>
+        /* ── School-name auto-fit ────────────────────────────────────
+           .rc-lh-name has a fixed font-size that was only ever tuned
+           to fit comfortably in a wide desktop preview. At the
+           narrower width the print engine actually paginates to (A4
+           content width), a longer school name has no room left and
+           the browser wraps it onto a second line — CSS alone can't
+           reliably prevent this across print engines/paper sizes, so
+           this measures the real rendered width and shrinks an
+           explicit inline font-size (px) until it fits on one line.
+           An inline px value wins over every stylesheet rule
+           regardless of specificity or media query, so it can't be
+           silently overridden the way a plain @media print rule can.
+        ──────────────────────────────────────────────────────────── */
+        function fitSchoolNames() {
+            document.querySelectorAll('.rc-lh-center').forEach(function (container) {
+                var nameEl = container.querySelector('.rc-lh-name');
+                if (!nameEl) return;
 
-                    // Reset to the CSS base size before each measurement
-                    // so re-fitting (resize/beforeprint) can grow back up
-                    // too, not just keep shrinking.
-                    nameEl.style.fontSize = '';
-                    var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
-                    var minSize = 12; // never shrink below this — ellipsis takes over instead
+                // Reset to the CSS base size before each measurement
+                // so re-fitting (resize/beforeprint) can grow back up
+                // too, not just keep shrinking.
+                nameEl.style.fontSize = '';
+                var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
+                var minSize = 12; // never shrink below this — ellipsis takes over instead
 
-                    if (nameEl.scrollWidth <= container.clientWidth) return;
+                if (nameEl.scrollWidth <= container.clientWidth) return;
 
-                    while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
-                        size -= 0.5;
-                        nameEl.style.fontSize = size + 'px';
-                    }
-                });
-            }
-
-            function runFit() {
-                // document.fonts.ready avoids measuring against a
-                // fallback system font while Inter/900 is still
-                // downloading — a common cause of "fits on screen, wraps
-                // in print" when print is triggered quickly after load.
-                if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
-                } else {
-                    fitSchoolNames();
+                while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
+                    size -= 0.5;
+                    nameEl.style.fontSize = size + 'px';
                 }
+            });
+        }
+
+        function runFit() {
+            // document.fonts.ready avoids measuring against a
+            // fallback system font while Inter/900 is still
+            // downloading — a common cause of "fits on screen, wraps
+            // in print" when print is triggered quickly after load.
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
+            } else {
+                fitSchoolNames();
             }
+        }
 
-            window.addEventListener('load', runFit);
-            window.addEventListener('resize', fitSchoolNames);
-            // Re-measure against the print layout specifically — the
-            // @media print container width (A4 page box) can differ from
-            // whatever on-screen width this was first fitted against.
-            window.addEventListener('beforeprint', fitSchoolNames);
+        window.addEventListener('load', runFit);
+        window.addEventListener('resize', fitSchoolNames);
+        // Re-measure against the print layout specifically — the
+        // @media print container width (A4 page box) can differ from
+        // whatever on-screen width this was first fitted against.
+        window.addEventListener('beforeprint', fitSchoolNames);
 
-            @if($mode === 'class' || $mode === 'all')
-                window.addEventListener('load', function () {
-                    setTimeout(function () {
-                        fitSchoolNames();
-                        window.print();
-                    }, 900);
-                });
-            @endif
-        </script>
+        @if($mode === 'class' || $mode === 'all')
+            window.addEventListener('load', function () {
+                setTimeout(function () {
+                    fitSchoolNames();
+                    window.print();
+                }, 900);
+            });
+        @endif
+    </script>
 </body>
 
 </html>

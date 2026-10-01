@@ -2042,6 +2042,13 @@ use App\Http\Controllers\Helper;
                                                                                                         `;
                     }
 
+                    actionButtonsHTML += `
+                        <button onclick="window.location.href='/examinations/${examId}/subjects'"
+                            style="background: #0EA5E9; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+                            <i class="fas fa-list-check me-2"></i> Exam Subjects
+                        </button>
+                    `;
+
                     let deadlineBadge = '';
                     if (exam.days_until_deadline > 0) {
                         const isUrgent = exam.days_until_deadline <= 3;
