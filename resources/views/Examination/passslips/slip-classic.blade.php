@@ -1125,9 +1125,12 @@
             color: var(--rc-navy);
             text-transform: uppercase;
             line-height: 1.15;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            /* Never clip the school name — fitSchoolNames() shrinks it to one
+               line, and if it still can't fit it wraps (no "…"). */
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            overflow-wrap: anywhere;
             display: block;
             max-width: 100%;
         }
@@ -2004,375 +2007,375 @@
         @foreach($renderSlips as $slipData)
 
             @php
-                    $slipCounter++;
-                    $s = (object) $slipData['student'];
-                    $subjMarks = collect($slipData['subjectMarks']);
-                    $totObt = $slipData['totalObtained'];
-                    $totMax = $slipData['totalMax'];
-                    $pct = $slipData['percentage'];
-                    $oGrade = $slipData['overallGrade'];
-                    $oRemark = $slipData['overallRemark'];
-                    $rank = $slipData['classRank'];
-                    $classTotalN = $slipData['classTotal'];
-                    $growth = $slipData['growthData'];
-                    $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
-                    $useAvgSlip = $slipData['useAvg'] ?? false;
-                    $examSummarySlip = collect($slipData['examSummary'] ?? []);
-                    $avgSummarySlip = $slipData['avgSummary'] ?? null;
-                    $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
-                    $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
-                    $divClass = function ($div) {
-                        if (!$div || $div === '—')
-                            return 'div-x';
-                        $d = strtolower($div);
-                        if (str_contains($d, 'ungraded'))
-                            return 'div-ungraded';
-                        if (str_contains($d, '1'))
-                            return 'div-1';
-                        if (str_contains($d, '2'))
-                            return 'div-2';
-                        if (str_contains($d, '3'))
-                            return 'div-3';
-                        if (str_contains($d, '4'))
-                            return 'div-4';
+                $slipCounter++;
+                $s = (object) $slipData['student'];
+                $subjMarks = collect($slipData['subjectMarks']);
+                $totObt = $slipData['totalObtained'];
+                $totMax = $slipData['totalMax'];
+                $pct = $slipData['percentage'];
+                $oGrade = $slipData['overallGrade'];
+                $oRemark = $slipData['overallRemark'];
+                $rank = $slipData['classRank'];
+                $classTotalN = $slipData['classTotal'];
+                $growth = $slipData['growthData'];
+                $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
+                $useAvgSlip = $slipData['useAvg'] ?? false;
+                $examSummarySlip = collect($slipData['examSummary'] ?? []);
+                $avgSummarySlip = $slipData['avgSummary'] ?? null;
+                $disciplineRatingsSlip = collect($slipData['disciplineRatings'] ?? []);
+                $progressiveSlip = $slipData['progressiveAssessment'] ?? null;
+                $divClass = function ($div) {
+                    if (!$div || $div === '—')
                         return 'div-x';
-                    };
+                    $d = strtolower($div);
+                    if (str_contains($d, 'ungraded'))
+                        return 'div-ungraded';
+                    if (str_contains($d, '1'))
+                        return 'div-1';
+                    if (str_contains($d, '2'))
+                        return 'div-2';
+                    if (str_contains($d, '3'))
+                        return 'div-3';
+                    if (str_contains($d, '4'))
+                        return 'div-4';
+                    return 'div-x';
+                };
 
-                    $isEarlyYears = $slipData['isEarlyYears'] ?? false;
-                    $earlyYearsAvg = $slipData['earlyYearsAverage'] ?? null;
-                    $earlyYearsMax = $slipData['earlyYearsMaxMark'] ?? 3;
+                $isEarlyYears = $slipData['isEarlyYears'] ?? false;
+                $earlyYearsAvg = $slipData['earlyYearsAverage'] ?? null;
+                $earlyYearsMax = $slipData['earlyYearsMaxMark'] ?? 3;
 
-                    // ── Per-class saved customisation ───────────────────────────
-                    // Each student's class can carry its own saved show/hide
-                    // profile (e.g. Baby Class vs S.4). Query-string params
-                    // (from the live preview toggles) still override these.
-                    $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
+                // ── Per-class saved customisation ───────────────────────────
+                // Each student's class can carry its own saved show/hide
+                // profile (e.g. Baby Class vs S.4). Query-string params
+                // (from the live preview toggles) still override these.
+                $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
 
-                    $cfg = [
-                        'border' => $on('show_border', true, $savedCfg),
-                        'watermark' => $on('show_watermark', true, $savedCfg),
-                        'logo' => $on('show_logo', true, $savedCfg),
-                        'arabic' => $on('show_arabic', true, $savedCfg),
-                        'motto' => $on('show_motto', true, $savedCfg),
-                        'contact' => $on('show_contact', true, $savedCfg),
-                        'report_no' => $on('show_report_no', true, $savedCfg),
-                        'photo' => $on('show_photo', true, $savedCfg),
-                        'minichart' => $on('show_minichart', true, $savedCfg),
-                        'qr' => $on('show_qr', true, $savedCfg),
-                        'rank' => $on('show_rank', true, $savedCfg),
-                        'dev' => $on('show_dev', true, $savedCfg),
-                        // Grade and Grade Point used to share ONE switch ('show_grade_pill').
-                        // They are now independent columns: 'show_col_grade' and
-                        // 'show_col_grade_point'. Both fall back to the legacy
-                        // 'show_grade_pill' so profiles saved before the split look the same.
-                        // ($cfg['grade_pill'] keeps its old name but now means "Grade column".)
-                        'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
-                        'col_grade_point' => $on('show_col_grade_point', $on('show_grade_pill', true, $savedCfg), $savedCfg),
-                        // Teacher (full name) is opt-in now; the short INITIALS column
-                        // below is the default one shown instead.
-                        'teacher_col' => $on('show_teacher_col', false, $savedCfg),
-                        'initials_col' => $on('show_initials_col', true, $savedCfg),
-                        'totals_row' => $on('show_totals_row', true, $savedCfg),
-                        'perf_chart' => $on('show_perf_chart', true, $savedCfg),
-                        'remarks' => $on('show_remarks', true, $savedCfg),
-                        'discipline' => $on('show_discipline', true, $savedCfg),
-                        // Signature column defaults OFF for Classic only —
-                        // everything else in Classic is unchanged. Still
-                        // available any time via its toggle.
-                        'signatures' => $on('show_signatures', false, $savedCfg),
-                        // Granular split of the old combined 'show_term_dates'
-                        // switch — each label can now be removed on its own
-                        // instead of only as a pair. Falls back to the legacy
-                        // key (then true) so a profile saved before this split
-                        // still shows both, same convention as show_logo_left/
-                        // show_logo_right falling back to show_logo elsewhere.
-                        'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
-                        'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
-                        'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
-                        'confidential' => $on('show_confidential', true, $savedCfg),
-                        // New toggles
-                        'result' => $on('show_result', true, $savedCfg),
-                        // Granular split of the old combined 'show_score_col'
-                        // switch — Classic's single-exam marks table used to
-                        // hide FULL MARKS + MARKS OBTAINED + PERCENTAGE
-                        // together as one group; each is now removable on its
-                        // own. Falls back to the legacy key (then true) so a
-                        // profile saved before this split still shows all
-                        // three, same fallback convention used just above for
-                        // the term-dates split.
-                        'col_full_marks' => $on('show_col_full_marks', $on('show_score_col', true, $savedCfg), $savedCfg),
-                        'col_marks_obtained' => $on('show_col_marks_obtained', $on('show_score_col', true, $savedCfg), $savedCfg),
-                        'col_percentage' => $on('show_col_percentage', $on('show_score_col', true, $savedCfg), $savedCfg),
-                        // Kept for the MULTI-EXAM (BOT|MID|EOT) table variant
-                        // below, which only ever showed one combined MARKS
-                        // column per sitting — no granularity problem there.
-                        'score_col' => $on('show_score_col', true, $savedCfg),
-                        'comment_col' => $on('show_comment_col', true, $savedCfg),
+                $cfg = [
+                    'border' => $on('show_border', true, $savedCfg),
+                    'watermark' => $on('show_watermark', true, $savedCfg),
+                    'logo' => $on('show_logo', true, $savedCfg),
+                    'arabic' => $on('show_arabic', true, $savedCfg),
+                    'motto' => $on('show_motto', true, $savedCfg),
+                    'contact' => $on('show_contact', true, $savedCfg),
+                    'report_no' => $on('show_report_no', true, $savedCfg),
+                    'photo' => $on('show_photo', true, $savedCfg),
+                    'minichart' => $on('show_minichart', true, $savedCfg),
+                    'qr' => $on('show_qr', true, $savedCfg),
+                    'rank' => $on('show_rank', true, $savedCfg),
+                    'dev' => $on('show_dev', true, $savedCfg),
+                    // Grade and Grade Point used to share ONE switch ('show_grade_pill').
+                    // They are now independent columns: 'show_col_grade' and
+                    // 'show_col_grade_point'. Both fall back to the legacy
+                    // 'show_grade_pill' so profiles saved before the split look the same.
+                    // ($cfg['grade_pill'] keeps its old name but now means "Grade column".)
+                    'grade_pill' => $on('show_col_grade', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                    'col_grade_point' => $on('show_col_grade_point', $on('show_grade_pill', true, $savedCfg), $savedCfg),
+                    // Teacher (full name) is opt-in now; the short INITIALS column
+                    // below is the default one shown instead.
+                    'teacher_col' => $on('show_teacher_col', false, $savedCfg),
+                    'initials_col' => $on('show_initials_col', true, $savedCfg),
+                    'totals_row' => $on('show_totals_row', true, $savedCfg),
+                    'perf_chart' => $on('show_perf_chart', true, $savedCfg),
+                    'remarks' => $on('show_remarks', true, $savedCfg),
+                    'discipline' => $on('show_discipline', true, $savedCfg),
+                    // Signature column defaults OFF for Classic only —
+                    // everything else in Classic is unchanged. Still
+                    // available any time via its toggle.
+                    'signatures' => $on('show_signatures', false, $savedCfg),
+                    // Granular split of the old combined 'show_term_dates'
+                    // switch — each label can now be removed on its own
+                    // instead of only as a pair. Falls back to the legacy
+                    // key (then true) so a profile saved before this split
+                    // still shows both, same convention as show_logo_left/
+                    // show_logo_right falling back to show_logo elsewhere.
+                    'term_ends_on' => $on('show_term_ends_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                    'next_term_starts_on' => $on('show_next_term_starts_on', $on('show_term_dates', true, $savedCfg), $savedCfg),
+                    'footer_timestamp' => $on('show_footer_timestamp', true, $savedCfg),
+                    'confidential' => $on('show_confidential', true, $savedCfg),
+                    // New toggles
+                    'result' => $on('show_result', true, $savedCfg),
+                    // Granular split of the old combined 'show_score_col'
+                    // switch — Classic's single-exam marks table used to
+                    // hide FULL MARKS + MARKS OBTAINED + PERCENTAGE
+                    // together as one group; each is now removable on its
+                    // own. Falls back to the legacy key (then true) so a
+                    // profile saved before this split still shows all
+                    // three, same fallback convention used just above for
+                    // the term-dates split.
+                    'col_full_marks' => $on('show_col_full_marks', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    'col_marks_obtained' => $on('show_col_marks_obtained', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    'col_percentage' => $on('show_col_percentage', $on('show_score_col', true, $savedCfg), $savedCfg),
+                    // Kept for the MULTI-EXAM (BOT|MID|EOT) table variant
+                    // below, which only ever showed one combined MARKS
+                    // column per sitting — no granularity problem there.
+                    'score_col' => $on('show_score_col', true, $savedCfg),
+                    'comment_col' => $on('show_comment_col', true, $savedCfg),
 
-                        // Whole-section master switches
-                        'section_student_info' => $on('show_section_student_info', true, $savedCfg),
-                        'section_summary' => $on('show_section_summary', true, $savedCfg),
-                        'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
-                        'section_progressive' => $on('show_section_progressive', true, $savedCfg),
+                    // Whole-section master switches
+                    'section_student_info' => $on('show_section_student_info', true, $savedCfg),
+                    'section_summary' => $on('show_section_summary', true, $savedCfg),
+                    'section_marks_table' => $on('show_section_marks_table', true, $savedCfg),
+                    'section_progressive' => $on('show_section_progressive', true, $savedCfg),
 
-                        // Student Information — per-field
-                        'stu_name' => $on('show_stu_name', true, $savedCfg),
-                        'stu_admission' => $on('show_stu_admission', true, $savedCfg),
-                        'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
-                        'stu_exam' => $on('show_stu_exam', true, $savedCfg),
-                        'stu_class' => $on('show_stu_class', true, $savedCfg),
-                        'stu_stream' => $on('show_stu_stream', true, $savedCfg),
-                        'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
-                        'stu_term' => $on('show_stu_term', true, $savedCfg),
-                        'stu_dob' => $on('show_stu_dob', true, $savedCfg),
-                        'stu_gender' => $on('show_stu_gender', true, $savedCfg),
-                        'stu_class_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
-                        'stu_house' => $on('show_stu_house', true, $savedCfg),
-                        'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
-                        'stu_status' => $on('show_stu_status', true, $savedCfg),
+                    // Student Information — per-field
+                    'stu_name' => $on('show_stu_name', true, $savedCfg),
+                    'stu_admission' => $on('show_stu_admission', true, $savedCfg),
+                    'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
+                    'stu_exam' => $on('show_stu_exam', true, $savedCfg),
+                    'stu_class' => $on('show_stu_class', true, $savedCfg),
+                    'stu_stream' => $on('show_stu_stream', true, $savedCfg),
+                    'stu_academic_year' => $on('show_stu_academic_year', true, $savedCfg),
+                    'stu_term' => $on('show_stu_term', true, $savedCfg),
+                    'stu_dob' => $on('show_stu_dob', true, $savedCfg),
+                    'stu_gender' => $on('show_stu_gender', true, $savedCfg),
+                    'stu_class_teacher' => $on('show_stu_class_teacher', true, $savedCfg),
+                    'stu_house' => $on('show_stu_house', true, $savedCfg),
+                    'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
+                    'stu_status' => $on('show_stu_status', true, $savedCfg),
 
-                        // Summary Bar — per-field
-                        'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
-                        'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
-                        'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
-                        'sum_grade' => $on('show_sum_grade', true, $savedCfg),
-                        'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
-                        'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
-                        'sum_division' => $on('show_sum_division', true, $savedCfg),
-                        'sum_position' => $on('show_sum_position', true, $savedCfg),
-                        'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
-                        'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
-                    ];
+                    // Summary Bar — per-field
+                    'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
+                    'sum_average_mark' => $on('show_sum_average_mark', true, $savedCfg),
+                    'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
+                    'sum_grade' => $on('show_sum_grade', true, $savedCfg),
+                    'sum_grade_point' => $on('show_sum_grade_point', true, $savedCfg),
+                    'sum_aggregate' => $on('show_sum_aggregate', true, $savedCfg),
+                    'sum_division' => $on('show_sum_division', true, $savedCfg),
+                    'sum_position' => $on('show_sum_position', true, $savedCfg),
+                    'sum_subjects' => $on('show_sum_subjects', true, $savedCfg),
+                    'sum_attendance' => $on('show_sum_attendance', true, $savedCfg),
+                ];
 
-                    // Early years classes aren't scored Pass/Fail against the
-                    // exam's normal pass_mark — they're Fair/Good/Excellent.
-                    $passed = $isEarlyYears ? true : ($pct >= $exam->pass_mark);
-                    $statusLabel = $s->status ?? ($isEarlyYears ? $oRemark : ($passed ? 'Promoted' : 'Repeat'));
+                // Early years classes aren't scored Pass/Fail against the
+                // exam's normal pass_mark — they're Fair/Good/Excellent.
+                $passed = $isEarlyYears ? true : ($pct >= $exam->pass_mark);
+                $statusLabel = $s->status ?? ($isEarlyYears ? $oRemark : ($passed ? 'Promoted' : 'Repeat'));
 
-                    /* Resolve student photo */
-                    $photo = null;
-                    if (!empty($s->student_photo)) {
+                /* Resolve student photo */
+                $photo = null;
+                if (!empty($s->student_photo)) {
+                    foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
+                        $fp = str_replace(
+                            '/',
+                            DIRECTORY_SEPARATOR,
+                            public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext)
+                        );
+                        if (file_exists($fp)) {
+                            $photo = asset('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
+                            break;
+                        }
+                    }
+                }
+
+                /* Group subjects */
+                $grouped = $subjMarks->groupBy(fn($sm) => $sm->subject_type ?? '');
+                $useGroups = $grouped->count() > 1 || ($grouped->count() === 1 && !$grouped->has(''));
+
+                /* Mini chart arrays */
+                $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
+                $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
+                $miniClass = $subjMarks->map(fn($sm) => $sm->class_average ?? rand(55, 80))->values()->toArray();
+
+                /* Growth chart arrays */
+                $growthLabels = collect($growth)->pluck('label')->toArray();
+                $growthValues = collect($growth)->pluck('percentage')->toArray();
+
+                /* Term delta */
+                $prevPct = isset($growth[count($growth) - 2]) ? $growth[count($growth) - 2]['percentage'] : null;
+                $termDelta = $prevPct !== null ? round($pct - $prevPct, 1) : null;
+
+                /* Unique IDs */
+                $cMini = 'mini_' . $slipCounter;
+                $cPerf = 'perf_' . $slipCounter;
+                $qrId = 'qr_canvas_' . $slipCounter;
+
+                /* School meta */
+                $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
+                $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
+                $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+                $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
+                $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
+                $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
+                $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
+
+                // Resolve logo URL the same way student photos are resolved
+                $schoolLogoUrl = null;
+                if ($schoolLogo) {
+                    // New approach: stored in public/uploads/logos/
+                    $directPath = public_path('uploads/logos/' . $schoolLogo);
+                    if (file_exists($directPath)) {
+                        $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
+                    }
+                    // Fallback: old Storage::disk('public') approach (logos/filename.ext)
+                    else {
                         foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                            $fp = str_replace(
-                                '/',
-                                DIRECTORY_SEPARATOR,
-                                public_path('uploads/studentPhotos/' . $s->student_photo . '.' . $ext)
-                            );
-                            if (file_exists($fp)) {
-                                $photo = asset('uploads/studentPhotos/' . $s->student_photo . '.' . $ext);
+                            $fallback = public_path('storage/' . $schoolLogo);
+                            if (file_exists($fallback)) {
+                                $schoolLogoUrl = asset('storage/' . $schoolLogo);
+                                break;
+                            }
+                            // Also try with extensions appended
+                            $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
+                            if (file_exists($fallback2)) {
+                                $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
                                 break;
                             }
                         }
                     }
+                }
 
-                    /* Group subjects */
-                    $grouped = $subjMarks->groupBy(fn($sm) => $sm->subject_type ?? '');
-                    $useGroups = $grouped->count() > 1 || ($grouped->count() === 1 && !$grouped->has(''));
+                $qrText = $slipData['qrText'] ?? '';
 
-                    /* Mini chart arrays */
-                    $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
-                    $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
-                    $miniClass = $subjMarks->map(fn($sm) => $sm->class_average ?? rand(55, 80))->values()->toArray();
+                /*
+                |──────────────────────────────────────────────────────────────
+                | NEW "classic" layout — extra derived fields.
+                | Everything below is computed from data the system already
+                | has (student row, subject marks, exam, grading scheme,
+                | attendance log). Where the schema simply has no such field
+                | yet (e.g. House/Team isn't tracked per-student), we fall
+                | back to an em-dash rather than invent a value.
+                |──────────────────────────────────────────────────────────────
+                */
+                $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
+                $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
+                $houseTeam = $s->house ?? '—'; // not modelled per-student in this schema yet
 
-                    /* Growth chart arrays */
-                    $growthLabels = collect($growth)->pluck('label')->toArray();
-                    $growthValues = collect($growth)->pluck('percentage')->toArray();
+                $noOfSubjects = $subjMarks->count();
 
-                    /* Term delta */
-                    $prevPct = isset($growth[count($growth) - 2]) ? $growth[count($growth) - 2]['percentage'] : null;
-                    $termDelta = $prevPct !== null ? round($pct - $prevPct, 1) : null;
+                // ── A4 single-page fit ──────────────────────────────────
+                // A slip with lots of subjects, a long discipline table, or
+                // several optional sections switched on can genuinely run
+                // longer than one A4 page. There's no reliable way to
+                // measure rendered height from Blade/PHP before it's drawn,
+                // so instead we estimate "how much is on this page" from
+                // the same data that drives the toggles, and drop a
+                // ".rc-dense" class on the slip when it crosses a
+                // threshold. The stylesheet below shrinks paddings, gaps
+                // and font-sizes under that class — enough headroom that a
+                // slip with e.g. 12+ subjects and every optional section
+                // enabled still lands on one page instead of spilling a
+                // couple of rows onto a second.
+                $rcContentScore = $noOfSubjects
+                    + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
+                    + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
+                    + ($cfg['remarks'] ? 2 : 0)
+                    + ($cfg['signatures'] ? 1 : 0);
+                $isDense = $rcContentScore > 14;
 
-                    /* Unique IDs */
-                    $cMini = 'mini_' . $slipCounter;
-                    $cPerf = 'perf_' . $slipCounter;
-                    $qrId = 'qr_canvas_' . $slipCounter;
+                $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
+                $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
 
-                    /* School meta */
-                    $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
-                    $schoolNameArabic = Helper::schoolNameArabic($schoolId) ?? '';
-                    $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
-                    $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
-                    $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
-                    $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
-                    $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
+                $divisionLabel = $avgSummarySlip['division']
+                    ?? $examSummarySlip->last()['division']
+                    ?? $slipData['division']
+                    ?? null;
+                // Same fallback chain as Division above — multi-exam sources
+                // first (already scoped to this class's aggregate subjects),
+                // then the plain single-exam value computed in
+                // buildPassslipData(). Null when the scheme has no Division
+                // bands or the class has no subjects flagged toward it.
+                $aggregateLabel = $avgSummarySlip['aggregate']
+                    ?? $examSummarySlip->last()['aggregate']
+                    ?? $slipData['aggregate']
+                    ?? null;
 
-                    // Resolve logo URL the same way student photos are resolved
-                    $schoolLogoUrl = null;
-                    if ($schoolLogo) {
-                        // New approach: stored in public/uploads/logos/
-                        $directPath = public_path('uploads/logos/' . $schoolLogo);
-                        if (file_exists($directPath)) {
-                            $schoolLogoUrl = asset('uploads/logos/' . $schoolLogo);
-                        }
-                        // Fallback: old Storage::disk('public') approach (logos/filename.ext)
-                        else {
-                            foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                                $fallback = public_path('storage/' . $schoolLogo);
-                                if (file_exists($fallback)) {
-                                    $schoolLogoUrl = asset('storage/' . $schoolLogo);
-                                    break;
-                                }
-                                // Also try with extensions appended
-                                $fallback2 = public_path('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
-                                if (file_exists($fallback2)) {
-                                    $schoolLogoUrl = asset('uploads/logos/' . pathinfo($schoolLogo, PATHINFO_FILENAME) . '.' . $ext);
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                // Auto-generated report reference (not a stored DB field —
+                // built from the school, exam and student so every printed
+                // slip has a unique, reproducible number for the letterhead).
+                $schoolInitials = collect(preg_split('/\s+/', trim($schoolName)))
+                    ->filter()
+                    ->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                    ->implode('');
+                $reportNo = ($schoolInitials ?: 'RC') . '/' . ($exam->exam_code ?: strtoupper(substr($exam->term ?? 'TRM', 0, 3)))
+                    . '/' . $exam->academic_year . '/' . str_pad((string) $s->id, 4, '0', STR_PAD_LEFT);
 
-                    $qrText = $slipData['qrText'] ?? '';
+                // Grade scale (this exam's resolved grading bands) for the
+                // "Grade Scale" reference table — skipped for early years,
+                // which use a Fair/Good/Excellent preset scale instead.
+                $gradeBands = $isEarlyYears ? collect() : $exam->resolvedGradingBands();
 
-                    /*
-                    |──────────────────────────────────────────────────────────────
-                    | NEW "classic" layout — extra derived fields.
-                    | Everything below is computed from data the system already
-                    | has (student row, subject marks, exam, grading scheme,
-                    | attendance log). Where the schema simply has no such field
-                    | yet (e.g. House/Team isn't tracked per-student), we fall
-                    | back to an em-dash rather than invent a value.
-                    |──────────────────────────────────────────────────────────────
-                    */
-                    $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
-                    $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
-                    $houseTeam = $s->house ?? '—'; // not modelled per-student in this schema yet
+                // Attendance for this exam's term window (student_attendances
+                // log). Left blank (—) if the exam has no start/end date set.
+                $attPresent = 0;
+                $attDaysOpened = 0;
+                $attPct = null;
+                if (!empty($exam->start_date) && !empty($exam->end_date)) {
+                    $attPresent = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->whereIn('status', ['present', 'late'])
+                        ->count();
+                    $attTaken = DB::table('student_attendances')
+                        ->where('student_id', $s->id)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->count();
+                    $attDaysOpened = DB::table('student_attendances')
+                        ->where('school_id', $schoolId)
+                        ->where('class_id', $s->senior)
+                        ->where('stream_id', $s->stream)
+                        ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
+                        ->distinct()
+                        ->count('attendance_date');
+                    $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
+                    $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
+                }
+                $attAbsent = max(0, $attDaysOpened - $attPresent);
 
-                    $noOfSubjects = $subjMarks->count();
+                // Discipline: per-criterion remark text + an overall grade,
+                // derived from the A/B/C ratings already stored.
+                $disciplineRemarkFor = fn($r) => match ($r) {
+                    'A' => 'Consistently meets expectations.',
+                    'B' => 'Generally meets expectations.',
+                    'C' => 'Needs improvement.',
+                    default => 'Not yet rated.',
+                };
+                $disciplinePointsMap = ['A' => 3, 'B' => 2, 'C' => 1];
+                $dPoints = $disciplineRatingsSlip->pluck('rating')->filter()
+                    ->map(fn($r) => $disciplinePointsMap[$r] ?? null)->filter(fn($v) => $v !== null);
+                $overallDisciplineGrade = null;
+                $overallDisciplineRemark = null;
+                if ($dPoints->count() > 0) {
+                    $avgD = $dPoints->avg();
+                    $overallDisciplineGrade = $avgD >= 2.5 ? 'A' : ($avgD >= 1.5 ? 'B' : 'C');
+                    $overallDisciplineRemark = $avgD >= 2.5 ? 'Excellent' : ($avgD >= 1.5 ? 'Good' : 'Needs Improvement');
+                }
 
-                    // ── A4 single-page fit ──────────────────────────────────
-                    // A slip with lots of subjects, a long discipline table, or
-                    // several optional sections switched on can genuinely run
-                    // longer than one A4 page. There's no reliable way to
-                    // measure rendered height from Blade/PHP before it's drawn,
-                    // so instead we estimate "how much is on this page" from
-                    // the same data that drives the toggles, and drop a
-                    // ".rc-dense" class on the slip when it crosses a
-                    // threshold. The stylesheet below shrinks paddings, gaps
-                    // and font-sizes under that class — enough headroom that a
-                    // slip with e.g. 12+ subjects and every optional section
-                    // enabled still lands on one page instead of spilling a
-                    // couple of rows onto a second.
-                    $rcContentScore = $noOfSubjects
-                        + ($cfg['discipline'] ? $disciplineRatingsSlip->count() : 0)
-                        + ($cfg['perf_chart'] && count($growth) > 0 ? 3 : 0)
-                        + ($cfg['remarks'] ? 2 : 0)
-                        + ($cfg['signatures'] ? 1 : 0);
-                    $isDense = $rcContentScore > 14;
+                $nextAcademicYear = is_numeric($exam->academic_year)
+                    ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
+                    : '—';
 
-                    $avgGradePoint = $subjMarks->pluck('grade_points')->filter(fn($v) => $v !== null)->avg();
-                    $avgGradePoint = $avgGradePoint !== null ? round($avgGradePoint, 1) : null;
+                $headTeacherName = $s->head_teacher ?? 'Head Teacher';
 
-                    $divisionLabel = $avgSummarySlip['division']
-                        ?? $examSummarySlip->last()['division']
-                        ?? $slipData['division']
-                        ?? null;
-                    // Same fallback chain as Division above — multi-exam sources
-                    // first (already scoped to this class's aggregate subjects),
-                    // then the plain single-exam value computed in
-                    // buildPassslipData(). Null when the scheme has no Division
-                    // bands or the class has no subjects flagged toward it.
-                    $aggregateLabel = $avgSummarySlip['aggregate']
-                        ?? $examSummarySlip->last()['aggregate']
-                        ?? $slipData['aggregate']
-                        ?? null;
+                /*
+                |──────────────────────────────────────────────────────────────
+                | Build the dynamic table column list.
+                | We hide/show columns based on $cfg flags so the header and
+                | every data row always stay in sync.
+                |──────────────────────────────────────────────────────────────
+                */
+                // Count visible columns for colspan calculations. Classic's
+                // score group is 3 independently-toggleable columns (Full
+                // Marks / Marks Obtained / Percentage) rather than one.
+                $visibleCols = 1 // Subject (always visible)
+                    + ($cfg['col_full_marks'] ? 1 : 0)
+                    + ($cfg['col_marks_obtained'] ? 1 : 0)
+                    + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['dev'] ? 1 : 0)
+                    + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
+                    + ($cfg['comment_col'] ? 1 : 0)
+                    + ($cfg['teacher_col'] ? 1 : 0)
+                    + ($cfg['initials_col'] ? 1 : 0);
 
-                    // Auto-generated report reference (not a stored DB field —
-                    // built from the school, exam and student so every printed
-                    // slip has a unique, reproducible number for the letterhead).
-                    $schoolInitials = collect(preg_split('/\s+/', trim($schoolName)))
-                        ->filter()
-                        ->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))
-                        ->implode('');
-                    $reportNo = ($schoolInitials ?: 'RC') . '/' . ($exam->exam_code ?: strtoupper(substr($exam->term ?? 'TRM', 0, 3)))
-                        . '/' . $exam->academic_year . '/' . str_pad((string) $s->id, 4, '0', STR_PAD_LEFT);
-
-                    // Grade scale (this exam's resolved grading bands) for the
-                    // "Grade Scale" reference table — skipped for early years,
-                    // which use a Fair/Good/Excellent preset scale instead.
-                    $gradeBands = $isEarlyYears ? collect() : $exam->resolvedGradingBands();
-
-                    // Attendance for this exam's term window (student_attendances
-                    // log). Left blank (—) if the exam has no start/end date set.
-                    $attPresent = 0;
-                    $attDaysOpened = 0;
-                    $attPct = null;
-                    if (!empty($exam->start_date) && !empty($exam->end_date)) {
-                        $attPresent = DB::table('student_attendances')
-                            ->where('student_id', $s->id)
-                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                            ->whereIn('status', ['present', 'late'])
-                            ->count();
-                        $attTaken = DB::table('student_attendances')
-                            ->where('student_id', $s->id)
-                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                            ->count();
-                        $attDaysOpened = DB::table('student_attendances')
-                            ->where('school_id', $schoolId)
-                            ->where('class_id', $s->senior)
-                            ->where('stream_id', $s->stream)
-                            ->whereBetween('attendance_date', [$exam->start_date, $exam->end_date])
-                            ->distinct()
-                            ->count('attendance_date');
-                        $attBase = $attDaysOpened > 0 ? $attDaysOpened : $attTaken;
-                        $attPct = $attBase > 0 ? round(($attPresent / $attBase) * 100, 1) : null;
-                    }
-                    $attAbsent = max(0, $attDaysOpened - $attPresent);
-
-                    // Discipline: per-criterion remark text + an overall grade,
-                    // derived from the A/B/C ratings already stored.
-                    $disciplineRemarkFor = fn($r) => match ($r) {
-                        'A' => 'Consistently meets expectations.',
-                        'B' => 'Generally meets expectations.',
-                        'C' => 'Needs improvement.',
-                        default => 'Not yet rated.',
-                    };
-                    $disciplinePointsMap = ['A' => 3, 'B' => 2, 'C' => 1];
-                    $dPoints = $disciplineRatingsSlip->pluck('rating')->filter()
-                        ->map(fn($r) => $disciplinePointsMap[$r] ?? null)->filter(fn($v) => $v !== null);
-                    $overallDisciplineGrade = null;
-                    $overallDisciplineRemark = null;
-                    if ($dPoints->count() > 0) {
-                        $avgD = $dPoints->avg();
-                        $overallDisciplineGrade = $avgD >= 2.5 ? 'A' : ($avgD >= 1.5 ? 'B' : 'C');
-                        $overallDisciplineRemark = $avgD >= 2.5 ? 'Excellent' : ($avgD >= 1.5 ? 'Good' : 'Needs Improvement');
-                    }
-
-                    $nextAcademicYear = is_numeric($exam->academic_year)
-                        ? ((int) $exam->academic_year) . '/' . ((int) $exam->academic_year + 1)
-                        : '—';
-
-                    $headTeacherName = $s->head_teacher ?? 'Head Teacher';
-
-                    /*
-                    |──────────────────────────────────────────────────────────────
-                    | Build the dynamic table column list.
-                    | We hide/show columns based on $cfg flags so the header and
-                    | every data row always stay in sync.
-                    |──────────────────────────────────────────────────────────────
-                    */
-                    // Count visible columns for colspan calculations. Classic's
-                    // score group is 3 independently-toggleable columns (Full
-                    // Marks / Marks Obtained / Percentage) rather than one.
-                    $visibleCols = 1 // Subject (always visible)
-                        + ($cfg['col_full_marks'] ? 1 : 0)
-                        + ($cfg['col_marks_obtained'] ? 1 : 0)
-                        + ($cfg['col_percentage'] && !$isEarlyYears ? 1 : 0)
-                        + ($cfg['dev'] ? 1 : 0)
-                        + ($cfg['grade_pill'] && !$isEarlyYears ? 1 : 0)
-                        + ($cfg['col_grade_point'] && !$isEarlyYears ? 1 : 0)
-                        + ($cfg['comment_col'] ? 1 : 0)
-                        + ($cfg['teacher_col'] ? 1 : 0)
-                        + ($cfg['initials_col'] ? 1 : 0);
-
-                    // Longest subject name on THIS slip — used to size the SUBJECT
+                // Longest subject name on THIS slip — used to size the SUBJECT
                 // column so it never wraps, while the freed-up width goes to
                 // GRADE POINT and the other numeric columns.
-                    $longestSubject = $subjMarks
-                        ->pluck('subject_name')
-                        ->filter()
-                        ->sortByDesc(fn($n) => mb_strlen($n))
-                        ->first();
+                $longestSubject = $subjMarks
+                    ->pluck('subject_name')
+                    ->filter()
+                    ->sortByDesc(fn($n) => mb_strlen($n))
+                    ->first();
             @endphp
 
             {{-- ────────────────────────── SLIP CARD ────────────────────────── --}}
@@ -2425,7 +2428,8 @@
                                     @endif
 
                                     @if($schoolEmail)
-                                        <span style="font-size: 1rem;display: inline-block;@if($schoolWebsite) margin-right: 20px;@endif">
+                                        <span
+                                            style="font-size: 1rem;display: inline-block;@if($schoolWebsite) margin-right: 20px;@endif">
                                             <i class="fas fa-envelope"></i> {{ $schoolEmail }}
                                         </span>
                                     @endif
@@ -2758,7 +2762,8 @@
                                             @endif
                                             @if($cfg['teacher_col'])
                                                 <td class="col-teacher" style="color:#555; font-size: 0.80rem;">
-                                                    {{ $sm->teacher_name ?? '—' }}</td>
+                                                    {{ $sm->teacher_name ?? '—' }}
+                                                </td>
                                             @endif
                                             @if($cfg['initials_col'])
                                                 <td class="col-initials" style="font-size: 1rem;">{{ $sm->teacher_initials ?? '—' }}</td>
@@ -2912,14 +2917,16 @@
                                                     @endif
                                                     @if($cfg['col_grade_point'] && !$isEarlyYears)
                                                         <td class="num-td col-grade-point" style="font-size: 0.80;">
-                                                            {{ $sm->grade_points ?? '—' }}</td>
+                                                            {{ $sm->grade_points ?? '—' }}
+                                                        </td>
                                                     @endif
                                                     @if($cfg['comment_col'])
                                                         <td class="col-remarks" style="font-size: 0.80;">{{ $sm->grade_remark ?? '—' }}</td>
                                                     @endif
                                                     @if($cfg['teacher_col'])
                                                         <td class="col-teacher" style="color:#555; font-size: 0.80;">
-                                                            {{ $sm->teacher_name ?? '—' }}</td>
+                                                            {{ $sm->teacher_name ?? '—' }}
+                                                        </td>
                                                     @endif
                                                     @if($cfg['initials_col'])
                                                         <td class="col-initials" style="font-size: 0.80;">{{ $sm->teacher_initials ?? '—' }}</td>
@@ -2969,14 +2976,16 @@
                                                 @endif
                                                 @if($cfg['col_grade_point'] && !$isEarlyYears)
                                                     <td class="num-td col-grade-point" style="font-size: 0.80rem;">
-                                                        {{ $sm->grade_points ?? '—' }}</td>
+                                                        {{ $sm->grade_points ?? '—' }}
+                                                    </td>
                                                 @endif
                                                 @if($cfg['comment_col'])
                                                     <td class="col-remarks" style="font-size: 0.80rem;">{{ $sm->grade_remark ?? '—' }}</td>
                                                 @endif
                                                 @if($cfg['teacher_col'])
                                                     <td class="col-teacher" style="color:#555; font-size: 0.80;">
-                                                        {{ $sm->teacher_name ?? '—' }}</td>
+                                                        {{ $sm->teacher_name ?? '—' }}
+                                                    </td>
                                                 @endif
                                                 @if($cfg['initials_col'])
                                                     <td class="col-initials" style="font-size: 0.80rem;">{{ $sm->teacher_initials ?? '—' }}</td>
@@ -3119,7 +3128,13 @@
                                         style="text-transform:none;letter-spacing:0;">{{ $classTeacherName }}</span></div>
                                 <div class="rc-remarks-box">
                                     <div class="rc-remark-line" style="margin-bottom:0;">
-                                        <div>{{ $ctRemark ?: 'No remarks recorded.' }}</div>
+                                        <div>
+                                            @if($ctRemark)
+                                                <span style="font-size: 0.90rem;">{{ $ctRemark }}</span>
+                                            @else
+                                                <span>No remarks recorded.</span>
+                                            @endif
+                                        </div>
                                         <div class="sig-line" style="margin-top:.4rem;">
                                             @if($ctSigUrl)
                                                 <img src="{{ $ctSigUrl }}" alt="signature"
@@ -3133,7 +3148,13 @@
                                         style="text-transform:none;letter-spacing:0;">{{ $headTeacherName }}</span></div>
                                 <div class="rc-remarks-box">
                                     <div class="rc-remark-line" style="margin-bottom:0;">
-                                        <div>{{ $s->head_teacher_remark ?? '' }}</div>
+                                        <div>
+                                            @if($s->head_teacher_remark)
+                                                <span style="font-size: 0.90rem;">{{ $s->head_teacher_remark }}</span>
+                                            @else
+                                                <span style="font-size: 0.80rem;">No remarks recorded.</span>
+                                            @endif
+                                        </div>
                                         <div class="sig-line" style="margin-top:.4rem;">
                                             @if($htSigUrl)
                                                 <img src="{{ $htSigUrl }}" alt="signature"
@@ -3309,7 +3330,7 @@
                                 });
                             }
                         @endif
-                                                            })();
+                                                                            })();
             </script>
 
             {{-- QR Code --}}
@@ -3346,60 +3367,8 @@
         @endforeach
     </div>{{-- /.page-wrap --}}
 
+    @include('Examination.passslips.partials.fit-school-name')
     <script>
-        /* ── School-name auto-fit ────────────────────────────────────
-           .rc-lh-name has a fixed font-size that was only ever tuned
-           to fit comfortably in a wide desktop preview. At the
-           narrower width the print engine actually paginates to (A4
-           content width), a longer school name has no room left and
-           the browser wraps it onto a second line — CSS alone can't
-           reliably prevent this across print engines/paper sizes, so
-           this measures the real rendered width and shrinks an
-           explicit inline font-size (px) until it fits on one line.
-           An inline px value wins over every stylesheet rule
-           regardless of specificity or media query, so it can't be
-           silently overridden the way a plain @media print rule can.
-        ──────────────────────────────────────────────────────────── */
-        function fitSchoolNames() {
-            document.querySelectorAll('.rc-lh-center').forEach(function (container) {
-                var nameEl = container.querySelector('.rc-lh-name');
-                if (!nameEl) return;
-
-                // Reset to the CSS base size before each measurement
-                // so re-fitting (resize/beforeprint) can grow back up
-                // too, not just keep shrinking.
-                nameEl.style.fontSize = '';
-                var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
-                var minSize = 12; // never shrink below this — ellipsis takes over instead
-
-                if (nameEl.scrollWidth <= container.clientWidth) return;
-
-                while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
-                    size -= 0.5;
-                    nameEl.style.fontSize = size + 'px';
-                }
-            });
-        }
-
-        function runFit() {
-            // document.fonts.ready avoids measuring against a
-            // fallback system font while Inter/900 is still
-            // downloading — a common cause of "fits on screen, wraps
-            // in print" when print is triggered quickly after load.
-            if (document.fonts && document.fonts.ready) {
-                document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
-            } else {
-                fitSchoolNames();
-            }
-        }
-
-        window.addEventListener('load', runFit);
-        window.addEventListener('resize', fitSchoolNames);
-        // Re-measure against the print layout specifically — the
-        // @media print container width (A4 page box) can differ from
-        // whatever on-screen width this was first fitted against.
-        window.addEventListener('beforeprint', fitSchoolNames);
-
         @if($mode === 'class' || $mode === 'all')
             window.addEventListener('load', function () {
                 setTimeout(function () {

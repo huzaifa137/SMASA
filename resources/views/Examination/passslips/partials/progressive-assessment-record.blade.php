@@ -141,7 +141,7 @@
                             @endforeach
                             <td class="num-td">@whole($paRowAvg ?? null)</td>
                             <td class="num-td">{{ $paEsum['aggregate'] ?? '—' }}</td>
-                            <td class="num-td">{{ $paEsum['division'] ?? '—' }}</td>
+                            <td class="num-td" style="white-space:nowrap;">{{ \App\Http\Controllers\Helper::divisionShort($paEsum['division'] ?? null) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

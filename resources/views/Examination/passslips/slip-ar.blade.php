@@ -1811,6 +1811,8 @@
         @endforeach
     </div>{{-- /.page-wrap --}}
 
+    @include('Examination.passslips.partials.fit-school-name')
+
     <script>
         @if($mode === 'class' || $mode === 'all')
             window.addEventListener('load', function () {

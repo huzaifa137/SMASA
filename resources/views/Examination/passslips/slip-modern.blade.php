@@ -309,9 +309,12 @@
             color: #111;
             text-transform: uppercase;
             line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            /* Never clip the school name — fitSchoolNames() shrinks it to one
+               line, and if it still can't fit it wraps (no "…"). */
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            overflow-wrap: anywhere;
             display: block;
             max-width: 100%;
         }
@@ -1283,7 +1286,9 @@
                Kept here purely so something reasonable still happens if
                JavaScript is ever unavailable when printing. */
             .sch-name {
-                white-space: nowrap;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
                 font-size: clamp(18px, 3.5vw, 30px);
             }
         }
@@ -2580,45 +2585,8 @@
         @endforeach
     </div>{{-- /.page-wrap --}}
 
+    @include('Examination.passslips.partials.fit-school-name')
     <script>
-        /* ── School-name auto-fit ────────────────────────────────────────
-           See slip-classic.blade.php for the full rationale: a fixed
-           font-size tuned against a wide on-screen preview can overflow
-           at the narrower width the print engine paginates to, and the
-           clamp()/vw print rule above can't be relied on to fix that by
-           itself. This measures the real rendered width and shrinks an
-           explicit inline px font-size until it fits on one line.
-        ──────────────────────────────────────────────────────────────── */
-        function fitSchoolNames() {
-            document.querySelectorAll('.sch-center').forEach(function (container) {
-                var nameEl = container.querySelector('.sch-name');
-                if (!nameEl) return;
-
-                nameEl.style.fontSize = '';
-                var size = parseFloat(window.getComputedStyle(nameEl).fontSize);
-                var minSize = 12;
-
-                if (nameEl.scrollWidth <= container.clientWidth) return;
-
-                while (size > minSize && nameEl.scrollWidth > container.clientWidth) {
-                    size -= 0.5;
-                    nameEl.style.fontSize = size + 'px';
-                }
-            });
-        }
-
-        function runFit() {
-            if (document.fonts && document.fonts.ready) {
-                document.fonts.ready.then(fitSchoolNames).catch(fitSchoolNames);
-            } else {
-                fitSchoolNames();
-            }
-        }
-
-        window.addEventListener('load', runFit);
-        window.addEventListener('resize', fitSchoolNames);
-        window.addEventListener('beforeprint', fitSchoolNames);
-
         @if($mode === 'class' || $mode === 'all')
             window.addEventListener('load', function () {
                 setTimeout(function () {

@@ -855,6 +855,36 @@ class Helper extends Controller
     }
 
     /**
+     * Short division label for the Progressive Assessment Record DIV column:
+     *   "Division 1" → I, "Division 2" → II, "Division 3" → III,
+     *   "Division 4" → IV, "Ungraded (U)" → U.
+     * Anything unrecognised (or "—"/empty) is returned unchanged, so custom
+     * division names configured on a grading scheme still display.
+     */
+    public static function divisionShort($division): string
+    {
+        $raw = trim((string) $division);
+        if ($raw === '' || $raw === '—' || $raw === '-') {
+            return '—';
+        }
+
+        $lower = strtolower($raw);
+        if (str_contains($lower, 'ungraded') || $lower === 'u') {
+            return 'U';
+        }
+
+        $map = ['1' => 'I', '2' => 'II', '3' => 'III', '4' => 'IV'];
+        if (preg_match('/^(?:division|div\.?)?\s*(\d)$/i', $raw, $m) && isset($map[$m[1]])) {
+            return $map[$m[1]];
+        }
+        if (preg_match('/^(?:division|div\.?)?\s*(i{1,3}|iv)$/i', $raw, $m)) {
+            return strtoupper($m[1]);
+        }
+
+        return $raw;
+    }
+
+    /**
      * Page Size & Text Scale — applies to every pass-slip design exactly
      * like Accent Colour ($accent in slip-classic/modern/minimal/ar and
      * slip-nursery/preview-kindergarten*.blade.php): read straight from
