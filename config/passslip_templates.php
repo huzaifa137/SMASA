@@ -295,7 +295,7 @@ return [
             'show_border', 'show_watermark',
             'show_logo', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr',
-            'show_dev', 'show_comment_col', 'show_teacher_col',
+            'show_dev', 'show_col_grade', 'show_comment_col', 'show_teacher_col',
             'show_perf_chart', 'show_remarks', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',
 

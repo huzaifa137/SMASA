@@ -931,6 +931,16 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
+
+                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=secondary-classic"
+                    class="stack-btn">
+                    <div class="ic"><i class="fas fa-user-graduate"></i></div>
+                    <div>
+                        <div class="t">Customize Secondary</div>
+                        <div class="d">O-Level / A-Level report card</div>
+                    </div>
+                    <i class="fas fa-chevron-right chev"></i>
+                </a>
             </div>
 
         </div>{{-- /.ps-bento --}}

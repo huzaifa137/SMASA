@@ -250,6 +250,12 @@ class ParentPortalController extends Controller
                 $template = 'nursery-classic';
             }
             $view = $examController->resolveNurserySlipView($template, $lang);
+        } elseif ($examController->isSecondaryClass($student->senior)) {
+            $template = request('template', 'secondary-classic');
+            if (!ExaminationController::isSecondaryTemplateKey($template)) {
+                $template = 'secondary-classic';
+            }
+            $view = $examController->resolveSecondarySlipView($template, $lang);
         } else {
             $view = $examController->resolvePrimarySlipView($lang);
         }

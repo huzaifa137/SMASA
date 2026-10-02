@@ -659,7 +659,7 @@ selected classes" is clicked. --}}
             <div class="cz-panel" id="czPanel">
 
                 <div class="cz-group-label" style="margin-top:0;">
-                    <i class="fas fa-swatchbook"></i> {{ $isNurseryTemplate ?? false ? 'Nursery' : 'Primary' }} Design Template
+                    <i class="fas fa-swatchbook"></i> {{ ($isNurseryTemplate ?? false) ? 'Nursery' : (($isSecondaryTemplate ?? false) ? 'Secondary' : 'Primary') }} Design Template
                 </div>
                 {{-- Only this template's own family (Primary or Nursery) is
                 offered here — switching families entirely (e.g. Classic
@@ -667,11 +667,13 @@ selected classes" is clicked. --}}
                 the way switching within a family is, since it also changes
                 which classes this page applies to; that's done from the
                 pass slips index's two separate galleries instead. --}}
-                <div class="cz-tpl-mini" id="czTplMini" data-family="{{ $isNurseryTemplate ?? false ? 'nursery' : 'primary' }}">
+                <div class="cz-tpl-mini" id="czTplMini" data-family="{{ ($isNurseryTemplate ?? false) ? 'nursery' : (($isSecondaryTemplate ?? false) ? 'secondary' : 'primary') }}">
                     @php
                         $tplFamilyOptions = ($isNurseryTemplate ?? false)
                             ? ['nursery-classic' => 'Classic', 'nursery-modern' => 'Modern', 'nursery-minimal' => 'Minimal']
-                            : ['classic' => 'Classic', 'modern' => 'Modern', 'minimal' => 'Minimal'];
+                            : (($isSecondaryTemplate ?? false)
+                                ? ['secondary-classic' => 'Classic']
+                                : ['classic' => 'Classic', 'modern' => 'Modern', 'minimal' => 'Minimal']);
                     @endphp
                     @foreach ($tplFamilyOptions as $key => $label)
                         <div class="cz-tpl-mini-card {{ $template === $key ? 'selected' : '' }}" data-template="{{ $key }}">
@@ -778,6 +780,7 @@ selected classes" is clicked. --}}
                         'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point'],
                         'classic' => ['show_signatures', 'show_teacher_col'],
                         'modern' => ['show_teacher_col', 'show_col_grade_point'],
+                        'secondary-classic' => ['show_stu_exam'],
                         default => [],
                     };
                 @endphp
@@ -988,7 +991,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             // Fall back within whichever family this page was opened for,
             // never across to the other family's default.
             const family = document.getElementById('czTplMini')?.dataset.family;
-            return family === 'nursery' ? 'nursery-classic' : 'classic';
+            return family === 'nursery' ? 'nursery-classic' : (family === 'secondary' ? 'secondary-classic' : 'classic');
         }
 
         function currentPreviewClassId() {
