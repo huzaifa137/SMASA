@@ -52,7 +52,6 @@
             margin-bottom: 24px;
         }
 
-        /* Responsive padding for smaller devices */
         @media (max-width: 768px) {
             .card-box {
                 padding: 20px;
@@ -75,7 +74,6 @@
             border-left: 4px solid var(--b);
         }
 
-        /* Make steps stack on smaller screens */
         @media (max-width: 640px) {
             .step {
                 min-width: 100%;
@@ -161,7 +159,6 @@
             background: var(--bl);
         }
 
-        /* Make buttons full width on mobile */
         @media (max-width: 576px) {
 
             .btn-primary-custom,
@@ -181,7 +178,6 @@
             transition: .2s;
         }
 
-        /* Adjust upload zone padding on mobile */
         @media (max-width: 576px) {
             .upload-zone {
                 padding: 32px 16px;
@@ -312,7 +308,6 @@
             padding: 0 18px 18px;
         }
 
-
         .divider {
             border: none;
             border-top: 1.5px solid var(--brd);
@@ -332,7 +327,6 @@
             border-width: .15em;
         }
 
-        /* Additional responsive adjustments */
         @media (max-width: 768px) {
             .page-header h2 {
                 font-size: 1.3rem;
@@ -343,7 +337,6 @@
             }
         }
 
-        /* Container takes full width but with comfortable margins */
         .container-fluid {
             width: 100%;
             padding-right: 20px;
@@ -352,14 +345,191 @@
             margin-left: auto;
         }
 
-        /* For larger screens, add some max-width for better readability */
         @media (min-width: 1400px) {
             .container-fluid {
                 max-width: 1320px;
             }
         }
+
+        /* ===== OPTION 3: Dense checklist + search ===== */
+        .of-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            background: #fff;
+            border: 1.5px solid var(--brd);
+            border-radius: 10px;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .of-search-bar:focus-within {
+            border-color: var(--b);
+            box-shadow: 0 0 0 3px var(--bl);
+        }
+
+        .of-search-bar i {
+            color: var(--t3);
+            font-size: .85rem;
+        }
+
+        .of-search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: .88rem;
+            color: var(--t1);
+            background: transparent;
+        }
+
+        .of-search-count {
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--b);
+            background: var(--bl);
+            padding: 3px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .of-checklist {
+            max-height: 420px;
+            overflow-y: auto;
+            border: 1.5px solid var(--brd);
+            border-radius: var(--rads);
+            background: #fff;
+        }
+
+        .of-category {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--brd);
+            padding: 10px 16px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--b);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .of-category-count {
+            font-size: .68rem;
+            color: var(--t3);
+            background: #eef2f7;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .of-category-count[data-active="1"] {
+            color: var(--b);
+            background: var(--bl);
+        }
+
+        .of-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 4px 20px;
+            padding: 8px 16px 14px;
+        }
+
+        .of-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: .86rem;
+            color: var(--t1);
+            cursor: pointer;
+            transition: background .12s;
+            user-select: none;
+        }
+
+        .of-item:hover {
+            background: var(--bl);
+        }
+
+        /* Hide the native checkbox */
+        .of-item input[type="checkbox"].optional-field-checkbox {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        /* Toggle switch track */
+        .of-toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            min-width: 40px;
+            background: #cbd5e1;
+            border-radius: 999px;
+            transition: background .25s ease;
+            flex-shrink: 0;
+        }
+
+        /* Toggle knob */
+        .of-toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+            transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        /* Checked state */
+        .of-item input[type="checkbox"].optional-field-checkbox:checked+.of-toggle-switch {
+            background: var(--b);
+        }
+
+        .of-item input[type="checkbox"].optional-field-checkbox:checked+.of-toggle-switch .of-toggle-knob {
+            transform: translateX(18px);
+        }
+
+        /* Focus ring for accessibility */
+        .of-item input[type="checkbox"].optional-field-checkbox:focus-visible+.of-toggle-switch {
+            box-shadow: 0 0 0 3px var(--bl);
+        }
+
+        /* Label text */
+        .of-item-label {
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        /* Active/checked item text */
+        .of-item:has(input:checked) .of-item-label {
+            color: var(--b2);
+            font-weight: 600;
+        }
+
+        .of-empty-state {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--t3);
+            font-size: .85rem;
+        }
+
+        .of-empty-state i {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 8px;
+            opacity: .5;
+        }
     </style>
-    {{-- SweetAlert2 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endsection
 
@@ -371,7 +541,6 @@
                 <p>Import multiple students at once using an Excel spreadsheet template.</p>
             </div>
 
-            {{-- Steps --}}
             <div class="steps">
                 <div class="step">
                     <div class="step-num">Step 1</div>
@@ -407,7 +576,8 @@
                                     <option value="">-- Select Class --</option>
                                     @foreach($classrooms as $c)
                                         <option value="{{ $c->class_name }}">
-                                            {{ Helper::recordMdname($c->class_name) ?? $c->class_name }}</option>
+                                            {{ Helper::recordMdname($c->class_name) ?? $c->class_name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -460,85 +630,78 @@
                     </div>
                 </div>
 
-                {{-- ===== A-LEVEL / O-LEVEL SUBJECT GUIDANCE =====
-                Shown only when the selected Category is Secondary A-Level
-                or O-Level — explains the extra template columns
-                StudentBulkTemplate adds for those levels, and lists the
-                exact subject names StudentBulkImport will match against
-                (master_datas + this school's own alevel-combinations /
-                o-level-electives additions). Hidden otherwise. --}}
-                <div id="aLevelGuidance" style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
-                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;">
-                        <i class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing A-Level students
-                    </div>
-                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">
-                        The template will include <strong>principal_1</strong>, <strong>principal_2</strong>,
-                        <strong>principal_3</strong> and <strong>subsidiary</strong> columns. Fill each with the exact
-                        subject name (see the "Valid Subjects" tab in the downloaded file) and every student's
-                        combination will be assigned automatically — no separate trip to
-                        <a href="{{ route('alevel.combinations.entry') }}" target="_blank">A-Level Combinations</a> needed.
-                        General Paper is compulsory and doesn't need a column. Leave subsidiary blank if not applicable.
+                <div id="aLevelGuidance"
+                    style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;"><i
+                            class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing A-Level students</div>
+                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">The template will include
+                        <strong>principal_1</strong>, <strong>principal_2</strong>, <strong>principal_3</strong> and
+                        <strong>subsidiary</strong> columns. Fill each with the exact subject name (see the "Valid Subjects"
+                        tab in the downloaded file) and every student's combination will be assigned automatically — no
+                        separate trip to <a href="{{ route('alevel.combinations.entry') }}" target="_blank">A-Level
+                            Combinations</a> needed. General Paper is compulsory and doesn't need a column. Leave subsidiary
+                        blank if not applicable.
                     </p>
-                    <div id="aLevelSubjectPills" style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
+                    <div id="aLevelSubjectPills"
+                        style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
                 </div>
 
-                <div id="oLevelGuidance" style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
-                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;">
-                        <i class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing O-Level students
-                    </div>
-                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">
-                        The template will include <strong>elective_1</strong> and <strong>elective_2</strong> columns
-                        (up to 2 electives per student, on top of the class's compulsory subjects set on
-                        <a href="{{ route('school.create-class') }}" target="_blank">Create Class</a>). Fill in
-                        the exact elective name (see the "Valid Subjects" tab in the downloaded file) and each
-                        student's electives will be assigned automatically — no separate trip to
-                        <a href="{{ route('olevel.electives.entry') }}" target="_blank">O-Level Electives</a> needed.
-                        Leave blank if a student hasn't decided yet.
+                <div id="oLevelGuidance"
+                    style="display:none; margin-top:20px; padding:18px 20px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                    <div style="font-weight:700; color:#1e1b4b; font-size:.95rem; margin-bottom:6px;"><i
+                            class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing O-Level students</div>
+                    <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">The template will include
+                        <strong>elective_1</strong> and <strong>elective_2</strong> columns (up to 2 electives per student,
+                        on top of the class's compulsory subjects set on <a href="{{ route('school.create-class') }}"
+                            target="_blank">Create Class</a>). Fill in the exact elective name (see the "Valid Subjects" tab
+                        in the downloaded file) and each student's electives will be assigned automatically — no separate
+                        trip to <a href="{{ route('olevel.electives.entry') }}" target="_blank">O-Level Electives</a>
+                        needed. Leave blank if a student hasn't decided yet.
                     </p>
-                    <div id="oLevelSubjectPills" style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
+                    <div id="oLevelSubjectPills"
+                        style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto;"></div>
                 </div>
 
                 <hr class="divider">
 
-                {{-- ===== IMPORT MODE ===== --}}
                 <div class="section-title">Import Mode</div>
-                <p style="color:var(--t2);font-size:.9rem;margin-bottom:14px;">Choose whether this template/upload
-                    creates new students, or updates bio-data on students already in this class/stream.</p>
+                <p style="color:var(--t2);font-size:.9rem;margin-bottom:14px;">Choose whether this template/upload creates
+                    new students, or updates bio-data on students already in this class/stream.</p>
                 <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:10px;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
+                    <label
+                        style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
                         <input type="radio" name="import_mode" id="mode_create" value="create" checked>
-                        <span>
-                            <strong style="font-size:.88rem;color:var(--t1);">Add new students</strong><br>
-                            <span style="font-size:.78rem;color:var(--t2);">Blank template — one row per new admission.</span>
-                        </span>
+                        <span><strong style="font-size:.88rem;color:var(--t1);">Add new students</strong><br><span
+                                style="font-size:.78rem;color:var(--t2);">Blank template — one row per new
+                                admission.</span></span>
                     </label>
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
+                    <label
+                        style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--bg); border:1.5px solid var(--brd); border-radius:10px; padding:12px 16px; flex:1; min-width:220px;">
                         <input type="radio" name="import_mode" id="mode_update" value="update">
-                        <span>
-                            <strong style="font-size:.88rem;color:var(--t1);">Update existing students</strong><br>
-                            <span style="font-size:.78rem;color:var(--t2);">Template is pre-filled with current students — fill in the blanks.</span>
-                        </span>
+                        <span><strong style="font-size:.88rem;color:var(--t1);">Update existing students</strong><br><span
+                                style="font-size:.78rem;color:var(--t2);">Template is pre-filled with current students —
+                                fill in the blanks.</span></span>
                     </label>
                 </div>
 
-                <div id="updateModeOptions" style="display:none; margin-top:12px; padding:16px 18px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
+                <div id="updateModeOptions"
+                    style="display:none; margin-top:12px; padding:16px 18px; background:#eef0ff; border:1.5px solid #d6d9ff; border-radius:14px;">
                     <label class="form-label" style="margin-bottom:8px;">Match existing students by</label>
-                    <select id="match_by" style="width:100%; max-width:320px; padding:10px 14px; border-radius:8px; border:1.5px solid var(--brd); font-size:.9rem;">
+                    <select id="match_by"
+                        style="width:100%; max-width:320px; padding:10px 14px; border-radius:8px; border:1.5px solid var(--brd); font-size:.9rem;">
                         <option value="reg" selected>Registration No. (recommended)</option>
                         <option value="lin">LIN No.</option>
                         <option value="name">Firstname + Lastname</option>
                     </select>
-                    <p style="font-size:.8rem;color:#4b4880;margin:10px 0 0;">
-                        Registration No. and LIN No. are unique per student, so they're the safest way to match.
-                        Matching by name only works reliably if no two students in this class/stream share the exact
-                        same first and last name. A blank cell in the uploaded file never erases existing data —
-                        only cells you actually fill in are applied.
-                    </p>
+                    <p style="font-size:.8rem;color:#4b4880;margin:10px 0 0;">Registration No. and LIN No. are unique per
+                        student, so they're the safest way to match. Matching by name only works reliably if no two students
+                        in this class/stream share the exact same first and last name. A blank cell in the uploaded file
+                        never erases existing data — only cells you actually fill in are applied.</p>
                 </div>
 
                 <hr class="divider">
 
-                {{-- ===== OPTIONAL BIO-DATA COLUMNS (collapsible) ===== --}}
+                {{-- ===== OPTIONAL FIELDS — DENSE CHECKLIST + SEARCH (TOGGLE SWITCHES) ===== --}}
                 <div class="collapsible-section" id="optionalFieldsSection">
                     <button type="button" class="collapsible-toggle" id="optionalFieldsToggle" aria-expanded="false">
                         <span class="collapsible-toggle-left">
@@ -547,48 +710,62 @@
                         </span>
                         <span class="collapsible-badge" id="optionalFieldsBadge" style="display:none;">0 selected</span>
                     </button>
+
                     <div class="collapsible-body" id="optionalFieldsBody" style="display:none;">
-                        <p style="color:var(--t2);font-size:.9rem;margin:14px 0;">Tick any extra bio-data you already
-                            have on hand (e.g. from a spreadsheet like your school's existing student register) so it
-                            can be entered in the same pass as names — instead of a separate trip to each student's
-                            profile later.</p>
-                        <div style="display:flex; gap:10px; margin-bottom:14px;">
-                            <button type="button" class="btn-outline" id="btn-fields-all" style="padding:6px 16px;font-size:.8rem;">Select All</button>
-                            <button type="button" class="btn-outline" id="btn-fields-none" style="padding:6px 16px;font-size:.8rem;">Clear</button>
+                        <p style="color:var(--t2);font-size:.9rem;margin:14px 0;">
+                            Tick any extra bio-data you already have on hand so it can be entered in the same
+                            pass as names — instead of a separate trip to each student's profile later.
+                        </p>
+
+                        <div class="of-search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="ofSearchInput" placeholder="Search fields by name or category...">
+                            <span class="of-search-count" id="ofSearchCount">0 selected</span>
                         </div>
-                        <div id="optionalFieldsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px 18px; margin-bottom:6px;">
+
+                        <div class="of-checklist" id="ofChecklist">
                             @foreach($optionalFieldGroups ?? [] as $group => $fields)
-                                <div style="grid-column:1/-1; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--t3); margin-top:8px;">{{ $group }}</div>
-                                @foreach($fields as $field)
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:.86rem; color:var(--t1); cursor:pointer;">
-                                        <input type="checkbox" class="optional-field-checkbox" value="{{ $field['key'] }}">
-                                        {{ $field['label'] }}
-                                    </label>
-                                @endforeach
+                                <div class="of-category" data-group-name="{{ strtolower($group) }}">
+                                    <span>{{ $group }}</span>
+                                    <span class="of-category-count" data-count-for="{{ Str::slug($group) }}">0</span>
+                                </div>
+                                <div class="of-items" data-group="{{ strtolower($group) }}">
+                                    @foreach($fields as $field)
+                                        <label class="of-item" data-label="{{ strtolower($field['label']) }}"
+                                            data-group="{{ strtolower($group) }}">
+                                            <input type="checkbox" class="optional-field-checkbox" value="{{ $field['key'] }}">
+                                            <span class="of-toggle-switch">
+                                                <span class="of-toggle-knob"></span>
+                                            </span>
+                                            <span class="of-item-label">{{ $field['label'] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
                             @endforeach
+                            <div class="of-empty-state" id="ofEmptyState" style="display:none;">
+                                <i class="fas fa-search-minus"></i>
+                                No fields match your search.
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <hr class="divider">
 
-
-                {{-- Download Template --}}
                 <div class="section-title">Download Import Template</div>
                 <p style="color:var(--t2);font-size:.9rem;" id="templateHelpText">Download the Excel template for the
                     selected class and stream. The template includes sample rows to guide your data entry.</p>
-                <button type="button" class="btn-outline" id="btn-download-template">
-                    <i class="fas fa-download"></i> Download Template
-                </button>
+                <button type="button" class="btn-outline" id="btn-download-template"><i class="fas fa-download"></i>
+                    Download Template</button>
 
                 <hr class="divider">
 
-                {{-- Upload Section --}}
                 <div class="section-title">Upload Completed File</div>
                 <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Click to browse or drag & drop your Excel file here</p>
-                    <small id="uploadHint">Supported: .xlsx, .xls &nbsp;|&nbsp; Required columns: firstname, lastname, gender</small>
+                    <small id="uploadHint">Supported: .xlsx, .xls &nbsp;|&nbsp; Required columns: firstname, lastname,
+                        gender</small>
                 </div>
                 <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
                 <div id="file-name-display"></div>
@@ -598,60 +775,49 @@
                         <span id="import-spinner" class="spinner-border spinner-border-sm me-2" style="display:none"></span>
                         <i class="fas fa-upload me-1"></i> <span id="btn-import-label">Import Students</span>
                     </button>
-                    <span style="font-size:.82rem;color:var(--t2)" id="importHelpText">Only filled rows will be imported.</span>
+                    <span style="font-size:.82rem;color:var(--t2)" id="importHelpText">Only filled rows will be
+                        imported.</span>
                 </div>
 
-                {{-- Result --}}
                 <div id="result-box" class="result-box">
                     <div id="result-message"></div>
                     <div class="err-list" id="err-list"></div>
                 </div>
             </div>
 
-
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
-                <a href="{{ route('students.all.students') }}" class="btn-outline" style="display: inline-flex;">
-                    <i class="fas fa-arrow-left"></i> Back to Students
-                </a>
-                <a href="{{ route('students.bulk.photo.import.form') }}" class="btn-outline" style="display: inline-flex;">
-                    <i class="fas fa-portrait"></i> Bulk Photo Import
-                </a>
+                <a href="{{ route('students.all.students') }}" class="btn-outline" style="display: inline-flex;"><i
+                        class="fas fa-arrow-left"></i> Back to Students</a>
+                <a href="{{ route('students.bulk.photo.import.form') }}" class="btn-outline"
+                    style="display: inline-flex;"><i class="fas fa-portrait"></i> Bulk Photo Import</a>
             </div>
         </div>
+    </div>
     </div>
     </div>
     </div>
 @endsection
 
 @section('js')
-    {{-- SweetAlert2 JS --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-
     <script>
         const schoolId = {{ $schoolId }};
         const csrfToken = '{{ csrf_token() }}';
         let selectedFile = null;
 
-        // SweetAlert2 toast mixin for quick info messages
         const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
             }
         });
 
-        // Load streams when class changes
         document.getElementById('class_id').addEventListener('change', function () {
             const classId = this.value;
             const streamSelect = document.getElementById('stream_id');
             streamSelect.innerHTML = '<option value="">Loading...</option>';
             if (!classId) { streamSelect.innerHTML = '<option value="">-- Select Stream --</option>'; return; }
-
             fetch(`/students/streams/by-class?class_id=${encodeURIComponent(classId)}`)
                 .then(r => r.json())
                 .then(data => {
@@ -665,101 +831,55 @@
                 });
         });
 
-        // Secondary O-Level (Senior 1-4) vs A-Level (Senior 5/6) — narrow
-        // the Category dropdown down to just the one option that actually
-        // applies to whichever class was picked, instead of always
-        // offering both regardless of class. Only relevant for schools on
-        // the 'Secondary' product — every category select option is
-        // tagged data-secondary-level="olevel"/"alevel" for that product
-        // only (see bulk-import-students.blade.php's @@elseif above), so
-        // every other product's options are left untouched.
         const secondaryOLevelClassIds = @json($secondaryOLevelClassIds ?? []);
         const secondaryALevelClassIds = @json($secondaryALevelClassIds ?? []);
         (function () {
             const categorySelect = document.getElementById('category');
-            const secondaryOptions = categorySelect
-                ? Array.from(categorySelect.querySelectorAll('option[data-secondary-level]'))
-                : [];
-
-            if (!categorySelect || secondaryOptions.length === 0) {
-                return; // not a 'Secondary' product school — nothing to filter
-            }
-
+            const secondaryOptions = categorySelect ? Array.from(categorySelect.querySelectorAll('option[data-secondary-level]')) : [];
+            if (!categorySelect || secondaryOptions.length === 0) return;
             document.getElementById('class_id').addEventListener('change', function () {
                 const classId = this.value;
                 const isOLevel = secondaryOLevelClassIds.some(id => String(id) === String(classId));
                 const isALevel = secondaryALevelClassIds.some(id => String(id) === String(classId));
-
                 secondaryOptions.forEach(opt => {
                     const level = opt.dataset.secondaryLevel;
                     const shouldShow = !classId || (level === 'olevel' && isOLevel) || (level === 'alevel' && isALevel);
-                    opt.hidden = !shouldShow;
-                    opt.disabled = !shouldShow;
+                    opt.hidden = !shouldShow; opt.disabled = !shouldShow;
                 });
-
-                // If the currently selected category no longer applies to
-                // this class, clear it so the school can't accidentally
-                // submit a mismatched category/class pair.
                 const selectedOption = categorySelect.selectedOptions[0];
-                if (selectedOption && selectedOption.dataset.secondaryLevel && selectedOption.disabled) {
-                    categorySelect.value = '';
-                }
+                if (selectedOption && selectedOption.dataset.secondaryLevel && selectedOption.disabled) categorySelect.value = '';
             });
         })();
 
-        // ===== A-Level / O-Level subject guidance panel =====
-        // Shows the right panel (with the exact subject names
-        // StudentBulkImport will match against) once the school picks
-        // Secondary A-Level / O-Level as the Category — see
-        // StudentController::resolveALevelSubjectOptions() /
-        // resolveOLevelSubjectOptions() for where this data comes from.
         (function () {
             const aLevelSubjects = @json($aLevelSubjectOptions ?? ['principals' => [], 'subsidiaries' => []]);
             const oLevelSubjects = @json($oLevelSubjectOptions ?? ['electives' => []]);
-
             const aLevelGuidance = document.getElementById('aLevelGuidance');
             const oLevelGuidance = document.getElementById('oLevelGuidance');
             const aLevelPills = document.getElementById('aLevelSubjectPills');
             const oLevelPills = document.getElementById('oLevelSubjectPills');
             const categorySelect = document.getElementById('category');
             if (!categorySelect || !aLevelGuidance || !oLevelGuidance) return;
-
             function pill(name) {
                 const span = document.createElement('span');
                 span.textContent = name;
                 span.style.cssText = 'background:#fff; border:1px solid #d6d9ff; color:#2C29CA; font-size:.72rem; font-weight:600; padding:.2rem .6rem; border-radius:999px;';
                 return span;
             }
-
-            function renderPills(container, names) {
-                container.innerHTML = '';
-                names.forEach(name => container.appendChild(pill(name)));
-            }
-
-            renderPills(aLevelPills, [
-                ...aLevelSubjects.principals.map(s => s.name),
-                ...aLevelSubjects.subsidiaries.map(s => s.name),
-            ]);
+            function renderPills(container, names) { container.innerHTML = ''; names.forEach(name => container.appendChild(pill(name))); }
+            renderPills(aLevelPills, [...aLevelSubjects.principals.map(s => s.name), ...aLevelSubjects.subsidiaries.map(s => s.name)]);
             renderPills(oLevelPills, oLevelSubjects.electives.map(s => s.name));
-
             function updateGuidance() {
                 const level = categorySelect.selectedOptions[0]?.dataset.secondaryLevel || '';
                 aLevelGuidance.style.display = level === 'alevel' ? 'block' : 'none';
                 oLevelGuidance.style.display = level === 'olevel' ? 'block' : 'none';
             }
-
             categorySelect.addEventListener('change', updateGuidance);
             updateGuidance();
         })();
 
-        // ===== Import mode (create vs update) =====
-        function currentMode() {
-            return document.querySelector('input[name="import_mode"]:checked')?.value || 'create';
-        }
-
-        function selectedFields() {
-            return Array.from(document.querySelectorAll('.optional-field-checkbox:checked')).map(cb => cb.value);
-        }
+        function currentMode() { return document.querySelector('input[name="import_mode"]:checked')?.value || 'create'; }
+        function selectedFields() { return Array.from(document.querySelectorAll('.optional-field-checkbox:checked')).map(cb => cb.value); }
 
         function updateModeUI() {
             const isUpdate = currentMode() === 'update';
@@ -775,89 +895,95 @@
                 ? 'Existing students are matched and updated — no new students are created.'
                 : 'Only filled rows will be imported.';
         }
-
         document.getElementById('mode_create').addEventListener('change', updateModeUI);
         document.getElementById('mode_update').addEventListener('change', updateModeUI);
         updateModeUI();
 
-        // ===== Optional Columns — collapsible panel =====
-        // Collapsed by default; a click expands/collapses it, and the
-        // toggle's badge always shows how many are ticked so the count
-        // is visible even while the panel is closed.
+        // ===== OPTIONAL FIELDS — Dense checklist + search (toggle switches) =====
         (function () {
             const toggle = document.getElementById('optionalFieldsToggle');
             const body = document.getElementById('optionalFieldsBody');
-            const chevron = document.getElementById('optionalFieldsChevron');
             const badge = document.getElementById('optionalFieldsBadge');
+            const searchInput = document.getElementById('ofSearchInput');
+            const searchCount = document.getElementById('ofSearchCount');
+            const checklist = document.getElementById('ofChecklist');
+            const emptyState = document.getElementById('ofEmptyState');
+            if (!toggle) return;
 
             function setExpanded(expanded) {
                 toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
                 body.style.display = expanded ? 'block' : 'none';
             }
+            toggle.addEventListener('click', () => setExpanded(toggle.getAttribute('aria-expanded') !== 'true'));
 
-            toggle.addEventListener('click', function () {
-                setExpanded(toggle.getAttribute('aria-expanded') !== 'true');
-            });
-
-            function updateBadge() {
-                const count = selectedFields().length;
+            function updateCounts() {
+                const checked = document.querySelectorAll('.optional-field-checkbox:checked');
+                const count = checked.length;
                 badge.textContent = count + ' selected';
                 badge.style.display = count > 0 ? 'inline-block' : 'none';
+                searchCount.textContent = count + ' selected';
+
+                // Per-category counts
+                document.querySelectorAll('.of-items').forEach(items => {
+                    const group = items.dataset.group;
+                    const n = items.querySelectorAll('.optional-field-checkbox:checked').length;
+                    const el = document.querySelector(`.of-category[data-group-name="${group}"] .of-category-count`);
+                    if (el) {
+                        el.textContent = n;
+                        el.dataset.active = n > 0 ? '1' : '0';
+                    }
+                });
             }
 
-            document.getElementById('optionalFieldsGrid').addEventListener('change', updateBadge);
-            document.getElementById('btn-fields-all').addEventListener('click', updateBadge);
-            document.getElementById('btn-fields-none').addEventListener('click', updateBadge);
-            updateBadge();
+            searchInput.addEventListener('input', function () {
+                const q = this.value.toLowerCase().trim();
+                let visibleGroups = {};
+                let totalVisible = 0;
+
+                document.querySelectorAll('.of-items').forEach(items => {
+                    const group = items.dataset.group;
+                    let groupHasVisible = false;
+                    items.querySelectorAll('.of-item').forEach(item => {
+                        const match = !q
+                            || item.dataset.label.includes(q)
+                            || item.dataset.group.includes(q);
+                        item.style.display = match ? 'flex' : 'none';
+                        if (match) { groupHasVisible = true; totalVisible++; }
+                    });
+                    visibleGroups[group] = groupHasVisible;
+                    items.style.display = groupHasVisible ? 'grid' : 'none';
+                });
+
+                document.querySelectorAll('.of-category').forEach(cat => {
+                    const g = cat.dataset.groupName;
+                    cat.style.display = visibleGroups[g] !== false ? 'flex' : 'none';
+                });
+
+                emptyState.style.display = totalVisible === 0 ? 'block' : 'none';
+            });
+
+            checklist.addEventListener('change', (e) => {
+                if (e.target.classList.contains('optional-field-checkbox')) updateCounts();
+            });
+
+            updateCounts();
         })();
 
-        document.getElementById('btn-fields-all').addEventListener('click', function () {
-            document.querySelectorAll('.optional-field-checkbox').forEach(cb => cb.checked = true);
-        });
-        document.getElementById('btn-fields-none').addEventListener('click', function () {
-            document.querySelectorAll('.optional-field-checkbox').forEach(cb => cb.checked = false);
-        });
-
-        // Download template
         document.getElementById('btn-download-template').addEventListener('click', function () {
             const classId = document.getElementById('class_id').value;
             const streamId = document.getElementById('stream_id').value;
             const year = document.getElementById('year').value;
-            if (!classId || !streamId) { 
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Selection',
-                    text: 'Please select both a class and stream first.',
-                    confirmButtonColor: '#2f2ccb'
-                });
-                return; 
-            }
+            if (!classId || !streamId) { Swal.fire({ icon: 'warning', title: 'Missing Selection', text: 'Please select both a class and stream first.', confirmButtonColor: '#2f2ccb' }); return; }
             const categoryId = document.getElementById('category').value;
-            if (!categoryId) { 
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Category',
-                    text: 'Please select a category first.',
-                    confirmButtonColor: '#2f2ccb'
-                });
-                return; 
-            }
-
+            if (!categoryId) { Swal.fire({ icon: 'warning', title: 'Missing Category', text: 'Please select a category first.', confirmButtonColor: '#2f2ccb' }); return; }
             const params = new URLSearchParams();
-            params.set('class_id', classId);
-            params.set('stream_id', streamId);
-            params.set('year', year);
-            params.set('category', categoryId);
-            params.set('mode', currentMode());
-            if (currentMode() === 'update') {
-                params.set('match_by', document.getElementById('match_by').value);
-            }
+            params.set('class_id', classId); params.set('stream_id', streamId); params.set('year', year);
+            params.set('category', categoryId); params.set('mode', currentMode());
+            if (currentMode() === 'update') params.set('match_by', document.getElementById('match_by').value);
             selectedFields().forEach(f => params.append('fields[]', f));
-
             window.location.href = `/students/download-template?${params.toString()}`;
         });
 
-        // File drag & drop
         const zone = document.getElementById('upload-zone');
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
         zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -871,63 +997,33 @@
             document.getElementById('btn-import').disabled = false;
         }
 
-        // Import
         document.getElementById('btn-import').addEventListener('click', function () {
             if (!selectedFile) return;
             const classId = document.getElementById('class_id').value;
             const streamId = document.getElementById('stream_id').value;
             const year = document.getElementById('year').value;
             const categoryId = document.getElementById('category').value;
-            if (!classId || !streamId || !year || !categoryId) { 
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Incomplete Configuration',
-                    text: 'Please select class, stream, year and category.',
-                    confirmButtonColor: '#2f2ccb'
-                });
-                return; 
-            }
-
+            if (!classId || !streamId || !year || !categoryId) { Swal.fire({ icon: 'warning', title: 'Incomplete Configuration', text: 'Please select class, stream, year and category.', confirmButtonColor: '#2f2ccb' }); return; }
             const spinner = document.getElementById('import-spinner');
             spinner.style.display = 'inline-block';
             this.disabled = true;
-
             const fd = new FormData();
-            fd.append('_token', csrfToken);
-            fd.append('class_id', classId);
-            fd.append('stream_id', streamId);
-            fd.append('year', year);
-            fd.append('category', categoryId);
-            fd.append('mode', currentMode());
-            if (currentMode() === 'update') {
-                fd.append('match_by', document.getElementById('match_by').value);
-            }
+            fd.append('_token', csrfToken); fd.append('class_id', classId); fd.append('stream_id', streamId);
+            fd.append('year', year); fd.append('category', categoryId); fd.append('mode', currentMode());
+            if (currentMode() === 'update') fd.append('match_by', document.getElementById('match_by').value);
             fd.append('file', selectedFile);
-
             fetch('/students/bulk-import', { method: 'POST', body: fd })
                 .then(r => r.json())
-                .then(data => {
-                    spinner.style.display = 'none';
-                    document.getElementById('btn-import').disabled = false;
-                    showResult(data);
-                })
-                .catch(err => {
-                    spinner.style.display = 'none';
-                    document.getElementById('btn-import').disabled = false;
-                    showResult({ status: 'error', message: 'An error occurred: ' + err.message, errors: [] });
-                });
+                .then(data => { spinner.style.display = 'none'; document.getElementById('btn-import').disabled = false; showResult(data); })
+                .catch(err => { spinner.style.display = 'none'; document.getElementById('btn-import').disabled = false; showResult({ status: 'error', message: 'An error occurred: ' + err.message, errors: [] }); });
         });
 
         function showResult(data) {
             const box = document.getElementById('result-box');
             const msg = document.getElementById('result-message');
             const errList = document.getElementById('err-list');
-            box.className = 'result-box';
-            box.style.display = 'block';
-            errList.innerHTML = '';
-
+            box.className = 'result-box'; box.style.display = 'block'; errList.innerHTML = '';
             const successCount = data.mode === 'update' ? (data.updated ?? 0) : (data.imported ?? 0);
-
             if (data.status === 'success' || successCount > 0) {
                 box.classList.add('result-success');
                 msg.innerHTML = `<strong style="color:var(--g)"><i class="fas fa-check-circle me-1"></i>${data.message}</strong>`;
@@ -935,25 +1031,12 @@
                 box.classList.add('result-error');
                 msg.innerHTML = `<strong style="color:var(--r)"><i class="fas fa-times-circle me-1"></i>${data.message}</strong>`;
             }
-
             if (data.errors && data.errors.length) {
                 if (successCount > 0) box.className = 'result-box result-warn';
-                data.errors.forEach(e => {
-                    const d = document.createElement('div');
-                    d.className = 'err-item';
-                    d.textContent = e;
-                    errList.appendChild(d);
-                });
+                data.errors.forEach(e => { const d = document.createElement('div'); d.className = 'err-item'; d.textContent = e; errList.appendChild(d); });
             }
-
-            // Additionally, show a SweetAlert2 popup for the overall result
             const iconType = data.status === 'success' || successCount > 0 ? 'success' : 'error';
-            Swal.fire({
-                icon: iconType,
-                title: data.status === 'success' || successCount > 0 ? 'Completed' : 'Import Failed',
-                html: `<p style="font-size:.9rem;color:var(--t2);">${data.message}</p>`,
-                confirmButtonColor: '#2f2ccb'
-            });
+            Swal.fire({ icon: iconType, title: data.status === 'success' || successCount > 0 ? 'Completed' : 'Import Failed', html: `<p style="font-size:.9rem;color:var(--t2);">${data.message}</p>`, confirmButtonColor: '#2f2ccb' });
         }
     </script>
 @endsection

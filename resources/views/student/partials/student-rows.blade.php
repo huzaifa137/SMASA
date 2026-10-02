@@ -124,7 +124,7 @@ use App\Helpers\PermissionHelper;
                                                                 <button class="btn-icon btn-primary"
                                                                     onclick="generateSingleCard({{ $student->id }}, '{{ addslashes($student->firstname) }} {{ addslashes($student->lastname) }}')"
                                                                     title="Generate ID Card">
-                                                                    <i class="fas fa-magic"></i>
+                                                                    <i class="fas fa-id-card"></i>
                                                                 </button>
                                                             @endif
                                                         @endif
