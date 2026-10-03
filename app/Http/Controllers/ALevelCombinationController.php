@@ -398,10 +398,9 @@ class ALevelCombinationController extends Controller
      * at class-creation time, and is compulsory regardless of any
      * student's individual combination.
      *
-     * Only rows THIS method created (is_auto_synced = true) are ever
-     * added or removed — a subject a school manually ticked on the
-     * class-creation picker is left alone even if no student's
-     * combination currently includes it.
+     * This method only ever ADDS missing subjects. A subject no student
+     * takes any more is kept (hidden from marks entry, 0 students) so its
+     * teacher assignment and marks survive if it is given back later.
      */
     private function syncClassSubjectsFromCombinations($schoolId, $classId, $streamId): void
     {
@@ -431,9 +430,35 @@ class ALevelCombinationController extends Controller
             ->where('is_auto_synced', true)
             ->get();
 
+        // When every subject already on this class-stream is taught by one
+        // and the same teacher (a small school where one person takes it
+        // all), a newly added subject starts with that teacher instead of
+        // none. A subject with no teacher is invisible on every marks
+        // entry screen, which is exactly how a new subsidiary such as
+        // Sub-Mathematics used to "go missing". With two or more different
+        // teachers on the class there is no safe guess, so it stays
+        // unassigned and is picked on the Assign Teachers screen.
+        $assignedTeachers = ClassSubject::where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->whereNotNull('subject_teacher_1')
+            ->pluck('subject_teacher_1')
+            ->unique();
+        $soleTeacherId = $assignedTeachers->count() === 1 ? $assignedTeachers->first() : null;
+
         // Add newly-introduced subjects
         foreach ($subjectIdsInUse as $subjectId) {
             if ($existingAutoSynced->contains('subject_id', $subjectId)) {
+                continue;
+            }
+
+            // Already on the class (e.g. ticked manually at class creation)?
+            $alreadyOnClass = ClassSubject::where('school_id', $schoolId)
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->where('subject_id', $subjectId)
+                ->exists();
+            if ($alreadyOnClass) {
                 continue;
             }
 
@@ -447,36 +472,19 @@ class ALevelCombinationController extends Controller
                 'subject_source' => $isSchoolSubject ? 'school_alevel' : 'master',
                 'subject_type' => 'secondary_alevel',
                 'is_auto_synced' => true,
+                'subject_teacher_1' => $soleTeacherId,
             ]);
         }
 
-        // Remove subjects nobody in this class/stream is taking anymore —
-        // and clear out anything already recorded against that subject
-        // for this class/stream, since it no longer applies to anyone.
-        foreach ($existingAutoSynced as $classSubject) {
-            if ($subjectIdsInUse->contains($classSubject->subject_id)) {
-                continue;
-            }
-
-            // A subject with a teacher assigned is KEPT even when nobody
-            // takes it right now. Deleting it threw away the teacher
-            // assignment, so when the subject was given back to students
-            // the re-created row had no teacher and vanished from that
-            // teacher's marks entry screens. Marks screens hide a subject
-            // with no students (Helper::choiceSubjectHasNoStudents), and
-            // marks stay in the database, hidden from entry/slips until a
-            // student takes the subject again.
-            if ($classSubject->subject_teacher_1 || $classSubject->subject_teacher_2) {
-                continue;
-            }
-
-            \App\Models\ExaminationMark::where('school_id', $schoolId)
-                ->where('class_id', $classId)
-                ->where('stream_id', $streamId)
-                ->where('subject_id', $classSubject->subject_id)
-                ->delete();
-
-            $classSubject->delete();
-        }
+        // Subjects nobody in this class/stream takes any more are
+        // deliberately NOT deleted. The row carries the subject's teacher
+        // assignment (and marks entry only lists subjects assigned to the
+        // logged-in teacher), so deleting it and re-creating it when a
+        // student takes the subject again produced a row with no teacher —
+        // the subject then looked "gone" from the marks screens even
+        // though the student had it. A subject with no students is simply
+        // hidden from marks entry (Helper::choiceSubjectHasNoStudents),
+        // shows 0 students on the class-subjects screen, and keeps its
+        // teacher and its saved marks for when a student takes it again.
     }
 }

@@ -128,47 +128,122 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
     }
 
     /**
+     * Row -> [normalised heading => raw cell]. Headings are compared with
+     * case, spaces and punctuation ignored, so "LIN No." (read as lin_no),
+     * "LIN NO" and "admission_number" all resolve to the same column.
+     */
+    protected function rowByHeading($row): array
+    {
+        $cells = $row instanceof Collection ? $row->toArray() : (array) $row;
+        $byHeading = [];
+
+        foreach ($cells as $heading => $value) {
+            $norm = StudentImportFields::normalizeHeading($heading);
+            if ($norm !== '' && !array_key_exists($norm, $byHeading)) {
+                $byHeading[$norm] = $value;
+            }
+        }
+
+        return $byHeading;
+    }
+
+    /** First non-empty cell among the given headings (any spelling), as clean text. */
+    protected function cellByHeadings($row, array $headings): ?string
+    {
+        $byHeading = $this->rowByHeading($row);
+
+        foreach ($headings as $heading) {
+            $norm = StudentImportFields::normalizeHeading($heading);
+            if (isset($byHeading[$norm])) {
+                $text = $this->cellToText($byHeading[$norm]);
+                if ($text !== '') {
+                    return $text;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * A cell as plain text. Numbers typed into Excel arrive as floats, and
+     * a LIN or phone number must not become "1.2345E+15" or "700123456.0".
+     */
+    protected function cellToText($value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        if (is_float($value) || is_int($value)) {
+            return floor($value) == $value
+                ? sprintf('%.0f', $value)
+                : rtrim(rtrim(sprintf('%.6f', $value), '0'), '.');
+        }
+
+        return trim((string) $value);
+    }
+
+    /**
      * Reads every StudentImportFields column present and non-empty on the
-     * row, normalizing date columns along the way. Aliases 'phone' /
-     * 'contact' onto 'primary_contact' for backwards compatibility with
-     * the original 3-column template's phone handling.
+     * row, under ANY of its accepted headings (see
+     * StudentImportFields::ALIASES), normalizing date and numeric columns.
      *
      * @return array field_key => value, only for columns actually present with a value
      */
     protected function extractOptionalFields($row): array
     {
         $values = [];
-
-        $primaryContact = $row['primary_contact'] ?? $row['phone'] ?? $row['contact'] ?? null;
-        if (!empty(trim((string) $primaryContact))) {
-            $values['primary_contact'] = trim((string) $primaryContact);
-        }
+        $byHeading = $this->rowByHeading($row);
 
         foreach (StudentImportFields::keys() as $key) {
-            if ($key === 'primary_contact') {
-                continue; // handled above with its aliases
+            $raw = null;
+
+            foreach (StudentImportFields::headingCandidates($key) as $candidate) {
+                if (isset($byHeading[$candidate]) && $this->cellToText($byHeading[$candidate]) !== '') {
+                    $raw = $byHeading[$candidate];
+                    break;
+                }
             }
 
-            $raw = $row[$key] ?? null;
-            if ($raw === null || $raw === '') {
+            if ($raw === null) {
                 continue;
             }
 
-            $values[$key] = in_array($key, StudentImportFields::DATE_KEYS, true)
-                ? $this->normalizeDate($raw)
-                : trim((string) $raw);
+            if (in_array($key, StudentImportFields::DATE_KEYS, true)) {
+                $value = $this->normalizeDate($raw);
+            } elseif (in_array($key, StudentImportFields::NUMERIC_KEYS, true)) {
+                $value = $this->normalizeNumber($raw);
+            } else {
+                $value = $this->cellToText($raw);
+            }
+
+            if ($value !== null && $value !== '') {
+                $values[$key] = $value;
+            }
         }
 
-        return array_filter($values, fn($v) => $v !== null && $v !== '');
+        return $values;
+    }
+
+    /** Score columns are decimal(5,2): keep digits and the decimal point only. */
+    protected function normalizeNumber($value): ?string
+    {
+        $clean = preg_replace('/[^0-9.\-]/', '', $this->cellToText($value));
+
+        return is_numeric($clean) ? $clean : null;
     }
 
     /**
-     * Normalizes a date cell to Y-m-d, whatever shape Excel/PhpSpreadsheet
-     * handed back for it: a DateTime/Carbon instance (date-formatted
-     * cell), a numeric Excel serial (rare with ToCollection, but cheap to
-     * guard against), or a plain typed string (left as-is — Laravel's
-     * `date` cast / MySQL both parse common formats like Y-m-d or d/m/Y
-     * fine on their own).
+     * Normalizes a date cell to Y-m-d, whatever shape Excel handed back: a
+     * DateTime (date-formatted cell), an Excel serial number, or typed text
+     * such as 2007-05-14, 14/05/2007, 14-05-2007, 14.05.2007 or
+     * "14 May 2007". Slashed dates are read day-first. Text that can't be
+     * read as a date is skipped rather than stored as garbage.
      */
     protected function normalizeDate($value): ?string
     {
@@ -185,8 +260,19 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
         }
 
         $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
 
-        return $value === '' ? null : $value;
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'd.m.Y', 'j/n/Y', 'j-n-Y', 'd/m/y', 'j/n/y', 'd M Y', 'j F Y', 'M j, Y', 'F j, Y', 'Y/m/d'] as $format) {
+            $parsed = \DateTime::createFromFormat('!' . $format, $value);
+            $errors = \DateTime::getLastErrors();
+            if ($parsed && (!$errors || ($errors['warning_count'] == 0 && $errors['error_count'] == 0))) {
+                return $parsed->format('Y-m-d');
+            }
+        }
+
+        return null;
     }
 
     // ───────────────────────────── Create mode ─────────────────────────
@@ -400,7 +486,12 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
             $column = $this->matchBy === 'lin' ? 'admission_number' : 'registration_number';
             $label = $this->matchBy === 'lin' ? 'LIN No.' : 'Registration No.';
 
-            $identifier = trim((string) ($row[$column] ?? ($this->matchBy === 'lin' ? ($row['lin_no'] ?? '') : ($row['registration_no'] ?? ''))));
+            $identifier = (string) $this->cellByHeadings(
+                $row,
+                $this->matchBy === 'lin'
+                    ? ['admission_number', 'LIN No.', 'LIN', 'LIN Number', 'Admission No']
+                    : ['registration_number', 'Registration No.', 'Registration Number', 'Reg No']
+            );
 
             if ($identifier === '') {
                 $this->errors[] = "Row {$rowNumber}: No {$label} given — this row was skipped (update mode never creates new students).";

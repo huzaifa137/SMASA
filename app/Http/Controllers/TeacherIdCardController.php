@@ -514,11 +514,6 @@ class TeacherIdCardController extends Controller
 
     private function getLogoUrl(?SchoolProfile $profile): ?string
     {
-        if (!$profile || !$profile->logo) return null;
-        $path = 'uploads/school_logos/' . $profile->logo;
-        if (file_exists(public_path($path))) {
-            return asset($path);
-        }
-        return null;
+        return $profile ? $profile->logoPublicUrl() : null;
     }
 }

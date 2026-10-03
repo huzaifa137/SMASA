@@ -54,7 +54,10 @@ class ExaminationSubjectController extends Controller
                 ->where('school_id', $schoolId)
                 ->where('class_id', $ec->class_id)
                 ->where('stream_id', (string) $ec->stream_id)
-                ->get();
+                ->get()
+                // A choice subject no student currently takes has nothing to sit.
+                ->filter(fn($cs) => !Helper::choiceSubjectHasNoStudents($schoolId, $cs))
+                ->values();
 
             if ($subjects->isEmpty()) {
                 continue;

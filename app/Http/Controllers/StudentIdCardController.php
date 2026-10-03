@@ -219,6 +219,7 @@ class StudentIdCardController extends Controller
         $className = Helper::recordMdname($student->senior);
         $streamName = Helper::recordMdname($student->stream);
         $photoUrl = $this->getStudentPhotoUrl($student);
+        $logoUrl = $this->getLogoUrl($profile);
 
         return view('student.id-cards.preview', compact(
             'card',
@@ -228,7 +229,8 @@ class StudentIdCardController extends Controller
             'qrSvg',
             'className',
             'streamName',
-            'photoUrl'
+            'photoUrl',
+            'logoUrl'
         ));
     }
 
@@ -487,13 +489,7 @@ class StudentIdCardController extends Controller
 
     private function getLogoUrl(?SchoolProfile $profile): ?string
     {
-        if (!$profile || !$profile->logo)
-            return null;
-        $path = 'uploads/school_logos/' . $profile->logo;
-        if (file_exists(public_path($path))) {
-            return asset($path);
-        }
-        return null;
+        return $profile ? $profile->logoPublicUrl() : null;
     }
 
     // ──────────────────────────────────────────────
@@ -550,14 +546,7 @@ class StudentIdCardController extends Controller
 
     private function getLogoBase64(?SchoolProfile $profile): ?string
     {
-        if (!$profile || !$profile->logo) {
-            return null;
-        }
-        $path = public_path('uploads/school_logos/' . $profile->logo);
-        if (file_exists($path)) {
-            return $this->imageFileToBase64($path);
-        }
-        return null;
+        return $profile ? $profile->logoDataUri() : null;
     }
 
     // ──────────────────────────────────────────────

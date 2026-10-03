@@ -235,12 +235,9 @@ class ReportCardRenderer
             return null;
         }
 
-        $path = 'uploads/school_logos/' . $profile->logo;
-        if (! file_exists(public_path($path))) {
-            return null;
-        }
-
-        return $base64 ? $this->toBase64(public_path($path)) : asset($path);
+        // Resolves uploads/logos (where logos are actually saved) as well
+        // as the legacy locations.
+        return $base64 ? $profile->logoDataUri() : $profile->logoPublicUrl();
     }
 
     private function toBase64(string $absolutePath): ?string

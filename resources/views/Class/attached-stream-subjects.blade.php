@@ -61,7 +61,7 @@ $controller = new Controller();
                                         <td>{{ Helper::recordMdname($classInfo->class_id) }}</td>
                                         <td>{{ $classInfo->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $classInfo->stream_id }}</td>
                                         <td>{{ $class->display_name }}</td>
-                                        <td>0</td>
+                                        <td>{{ Helper::expectedStudentCount(Session('LoggedSchool'), $class) }}</td>
                                         <!-- <td>
                                             @if(PermissionHelper::canFeature('edit_class'))
                                                 <select name="assessment_scale_id"
