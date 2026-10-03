@@ -885,22 +885,18 @@ class Helper extends Controller
     }
 
     /**
-     * Page Size & Text Scale — applies to every pass-slip design exactly
-     * like Accent Colour ($accent in slip-classic/modern/minimal/ar and
-     * slip-nursery/preview-kindergarten*.blade.php): read straight from
-     * request() so the query string always wins (the "Customize this
-     * design" live preview keeps reacting instantly), never gated behind
-     * config/passslip_templates.php's per-template capability list.
+     * Page Size — applies to every pass-slip design exactly like Accent
+     * Colour: read straight from request() so the query string always
+     * wins (the "Customize this design" live preview keeps reacting
+     * instantly) and so a class's saved profile is merged in for real
+     * prints (see ExaminationController::applySavedPassslipSettings()).
      *
-     * Defaults ('a4' @ 100%) are the exact physical size/scale every
-     * template already rendered at before this setting existed, so a
-     * class that has never touched this control prints identically to
-     * today — only a class that deliberately picks a bigger page and/or
-     * a higher text scale from the sidebar sees anything different. This
-     * is the fix for schools reporting their pass slips print with "the
-     * words so small" at a fixed A4 size: 'text_scale' zooms the WHOLE
-     * sheet (not just font-size), so headings, icons, borders and
-     * spacing all grow together instead of text overflowing its boxes.
+     * The old "Text & layout scale" (a whole-sheet zoom) has been removed:
+     * it made the slip overflow its single page. Text size is now set per
+     * kind of text instead — see passslipTextSizes(). 'textScale' /
+     * 'pageScale' are kept in the returned array, fixed at 100% / 1, only
+     * so the existing `['pageScale' => $pageScale] = ...` destructuring
+     * in the slip views keeps working untouched.
      */
     public static function passslipPageSizing(): array
     {
@@ -916,21 +912,41 @@ class Helper extends Controller
             $key = 'a4';
         }
 
-        // A fixed step list (not a free-form number) keeps every saved
-        // profile printing at a predictable, tested scale rather than
-        // an arbitrary one that might overflow a template's layout.
-        $scale = (int) request('text_scale', 100);
-        if (!in_array($scale, [100, 110, 125, 150], true)) {
-            $scale = 100;
-        }
-
         return [
             'pageSizeKey' => $key,
             'pageSizeLabel' => $sizes[$key]['label'],
             'pageW' => $sizes[$key]['w'],
             'pageH' => $sizes[$key]['h'],
-            'textScale' => $scale,
-            'pageScale' => round($scale / 100, 2),
+            'textScale' => 100,
+            'pageScale' => 1.0,
+        ];
+    }
+
+    /**
+     * Dynamic text sizes (replaces the old "Text & layout scale").
+     *
+     *   lbl_size — size of LABELS  (e.g. "Student Name:", table headings), in rem
+     *   val_size — size of VALUES  (e.g. the student's name, marks), in rem
+     *
+     * Free-form numbers (clamped to a readable range) instead of a fixed
+     * list of steps, typed in or dragged on the customise panel's slider.
+     * null = "not set" → every template keeps its own built-in size, so a
+     * class that never touches these prints exactly as before. The slip
+     * views consume them as CSS variables: font-size: var(--lbl-size, 1.10rem).
+     */
+    public static function passslipTextSizes(): array
+    {
+        $read = function (string $key): ?float {
+            $raw = request($key);
+            if ($raw === null || $raw === '' || !is_numeric($raw)) {
+                return null;
+            }
+            return round(min(2.5, max(0.5, (float) $raw)), 2);
+        };
+
+        return [
+            'lbl' => $read('lbl_size'),
+            'val' => $read('val_size'),
         ];
     }
 

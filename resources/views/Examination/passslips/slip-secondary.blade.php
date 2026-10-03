@@ -39,6 +39,18 @@
         };
         $accentDark = $hexToDark($accent);
 
+        // Colour of the blue "cap" (left strip top + horizontal top band) —
+        // its own setting, independent of the accent colour.
+        $capColor = request('cap_color', '#1e88e5');
+        if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $capColor)) {
+            $capColor = '#1e88e5';
+        }
+
+        // Thickness (px) of the band: ONE value drives both the left strip's
+        // width / cap and the top band's height, so they always match.
+        $capSize = request('cap_size');
+        $capSize = is_numeric($capSize) ? (int) min(60, max(12, (float) $capSize)) : 28;
+
         ['pageW' => $pageW, 'pageH' => $pageH, 'pageScale' => $pageScale] = Helper::passslipPageSizing();
 
         $mode = $mode ?? 'single';
@@ -58,7 +70,7 @@
         :root {
             --accent: {{ $accent }};
             --accent-dark: {{ $accentDark }};
-            --blue: #1e88e5;
+            --blue: {{ $capColor }};
             --strip: #e1f3fa;
             --page-scale: {{ $pageScale }};
         }
@@ -163,25 +175,41 @@
             left: 0;
             top: 0;
             bottom: 0;
-            width: 28px;
+            width: var(--cap-size, 28px);
             background: var(--accent);
             z-index: 1;
         }
 
-        .side-strip::before {
+        .side-strip.has-cap::before {
             content: '';
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
-            height: 62px;
+            height: calc(var(--cap-size, 28px) + 34px);
             background: var(--blue);
+        }
+
+        /* Horizontal band along the top edge, continuing the cap to the right */
+        .cap-bar {
+            position: absolute;
+            left: var(--cap-size, 28px);
+            right: 0;
+            top: 0;
+            height: var(--cap-size, 28px);
+            background: var(--blue);
+            z-index: 1;
+        }
+
+        .slip.has-top-band .slip-body {
+            /* clear the top band (the letterhead already has ~14px of its own padding) */
+            margin-top: max(0px, calc(var(--cap-size, 28px) - 14px));
         }
 
         .slip-body {
             position: relative;
             z-index: 2;
-            margin-left: 28px;
+            margin-left: var(--cap-size, 28px);
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -265,6 +293,17 @@
             color: #555;
         }
 
+        .sch-item {
+            display: inline-block;
+            margin-left: 14px;
+            white-space: nowrap;
+        }
+
+        .sch-item i {
+            font-size: .68rem;
+            margin-right: 2px;
+        }
+
         /* ── Title banner ── */
         .title-band {
             background: var(--accent);
@@ -312,15 +351,16 @@
             padding: .15rem .8rem;
             margin: 0 .6rem 0 .6rem;
             border-right: 1px solid #bdbdbd;
-            font-size: .8rem;
+            font-size: var(--val-size, .8rem);
             font-weight: 600;
             display: flex;
             flex-direction: column;
-            gap: .35rem;
+            gap: .3rem;
         }
 
         .stu-details .k {
             font-weight: 700;
+            font-size: var(--lbl-size, .8rem);
         }
 
         .stu-chart {
@@ -514,10 +554,25 @@
             min-width: 0;
         }
 
-        .rem-sig {
-            flex: 0 0 118px;
+        .rem-sig-line {
             display: flex;
-            flex-direction: column;
+            align-items: flex-end;
+            gap: .5rem;
+            margin-top: .35rem;
+        }
+
+        .rem-sig-line .sig-lbl {
+            font-size: .68rem;
+            font-weight: 700;
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .rem-sig-line .sig-slot {
+            flex: 1;
+            margin-bottom: 0;
+            height: 30px;
+            justify-content: flex-start;
         }
 
         .rem-block {
@@ -595,6 +650,7 @@
         .slip,
         .side-strip,
         .side-strip::before,
+        .cap-bar,
         .title-band,
         .sum-bar,
         .watermark img {
@@ -639,25 +695,7 @@
             }
         }
     </style>
-    @if($pageScale >= 1.25)
-        <style>
-            /* Larger text scale: the sheet is narrower in layout pixels, so
-               stack chart + remarks vertically and let the slip flow to a
-               second page if it must, instead of clipping. */
-            .slip { max-height: none !important; min-height: 0 !important; overflow: visible !important; display: block !important; page-break-inside: auto !important; }
-            .slip-body { display: block; }
-            .side-strip { position: absolute; }
-            .bottom { flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
-            .tbl-wrap { break-inside: avoid; }
-            .bottom-left { flex: none; border-right: none; padding-right: 0; }
-            .bottom-left .chart-box { min-height: 110px; height: 120px; }
-            .bottom-right { padding-left: 0; }
-            .rem-sig { flex-basis: 100px; }
-            .stu-details { flex-basis: 190px; }
-            .title-band { font-size: .8rem; }
-        </style>
-    @endif
-    @include('Examination.passslips.partials.scale-fit')
+    @include('Examination.passslips.partials.text-sizes')
 </head>
 
 <body class="tpl-secondary-classic">
@@ -723,6 +761,9 @@
         // School identity (same for every slip — one school per exam)
         $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
         $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+        // Same source the Primary templates use: P.O Box / location is stored in `school_type`.
+        $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
+        $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
         $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
 
         // Same resolution order the Primary / Nursery slips use: the stored
@@ -772,6 +813,7 @@
                 $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
                 $cfg = [
                     'border' => $on('show_border', true, $savedCfg),
+                    'top_band' => $on('show_top_band', true, $savedCfg),
                     'watermark' => $on('show_watermark', true, $savedCfg),
                     'logo' => $on('show_logo', true, $savedCfg),
                     'contact' => $on('show_contact', true, $savedCfg),
@@ -799,6 +841,16 @@
                     'stu_exam' => $on('show_stu_exam', false, $savedCfg),
                     'stu_status' => $on('show_stu_status', true, $savedCfg),
 
+                    // Same Student Information fields (and keys) as the Primary Classic slip
+                    'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
+                    'stu_dob' => $on('show_stu_dob', true, $savedCfg),
+                    'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
+                    'stu_academic_year' => $on('show_stu_academic_year', false, $savedCfg),
+                    'stu_term' => $on('show_stu_term', false, $savedCfg),
+                    'stu_gender' => $on('show_stu_gender', false, $savedCfg),
+                    'stu_class_teacher' => $on('show_stu_class_teacher', false, $savedCfg),
+                    'stu_house' => $on('show_stu_house', false, $savedCfg),
+
                     'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
                     'sum_division' => $on('show_sum_division', true, $savedCfg),
@@ -813,6 +865,8 @@
 
                 $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
                 $className = Helper::recordMdname($s->senior);
+                $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
+                $infoClassTeacher = $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—');
                 $fullName = trim(($s->firstname ?? '') . ' ' . ($s->lastname ?? '') . ' ' . ($s->other_names ?? ''));
 
                 /* Student photo */
@@ -889,8 +943,12 @@
                 ]));
             @endphp
 
-            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }}">
-                <div class="side-strip"></div>
+            <div class="slip {{ $cfg['border'] ? 'has-border' : '' }} {{ $cfg['top_band'] ? 'has-top-band' : '' }}"
+                style="--cap-size: {{ $cfg['top_band'] ? $capSize : 28 }}px;">
+                <div class="side-strip {{ $cfg['top_band'] ? 'has-cap' : '' }}"></div>
+                @if($cfg['top_band'])
+                    <div class="cap-bar"></div>
+                @endif
 
                 @if($cfg['watermark'])
                     <div class="watermark">
@@ -917,13 +975,21 @@
                         @endif
                         <div class="sch-text">
                             <div class="sch-name">{{ $schoolName }}</div>
-                            @if($cfg['contact'])
-                                @if($schoolPhone)
-                                    <div class="sch-sub">{{ $schoolPhone }}</div>
-                                @endif
-                                @if($schoolEmail)
-                                    <div class="sch-sub muted">{{ $schoolEmail }}</div>
-                                @endif
+                            @if($cfg['contact'] && ($schoolLocation || $schoolPhone || $schoolEmail || $schoolWebsite))
+                                <div class="sch-sub">
+                                    @if($schoolLocation)
+                                        <span class="sch-item"><i class="fas fa-location-dot"></i> {{ $schoolLocation }}</span>
+                                    @endif
+                                    @if($schoolPhone)
+                                        <span class="sch-item"><i class="fas fa-phone"></i> {{ $schoolPhone }}</span>
+                                    @endif
+                                    @if($schoolEmail)
+                                        <span class="sch-item"><i class="fas fa-envelope"></i> {{ $schoolEmail }}</span>
+                                    @endif
+                                    @if($schoolWebsite)
+                                        <span class="sch-item"><i class="fas fa-globe"></i> {{ $schoolWebsite }}</span>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -948,7 +1014,10 @@
                                         <div><span class="k">NAME:</span> {{ $fullName }}</div>
                                     @endif
                                     @if($cfg['stu_admission'])
-                                        <div><span class="k">ADMNO:</span> {{ $admissionNo }}</div>
+                                        <div><span class="k">LIN No.:</span> {{ $admissionNo }}</div>
+                                    @endif
+                                    @if($cfg['stu_paycode'])
+                                        <div><span class="k">PAY CODE:</span> {{ $s->paycode ?? '—' }}</div>
                                     @endif
                                     @if($cfg['stu_class'] || $cfg['stu_stream'])
                                         <div>
@@ -957,8 +1026,29 @@
                                             @if($cfg['stu_stream']) {{ $s->stream ?? '—' }} @endif
                                         </div>
                                     @endif
+                                    @if($cfg['stu_academic_year'])
+                                        <div><span class="k">ACADEMIC YEAR:</span> {{ $exam->academic_year }}</div>
+                                    @endif
+                                    @if($cfg['stu_term'])
+                                        <div><span class="k">TERM:</span> {{ $exam->term }}</div>
+                                    @endif
                                     @if($cfg['stu_exam'])
                                         <div><span class="k">EXAM:</span> {{ $exam->exam_name }}</div>
+                                    @endif
+                                    @if($cfg['stu_dob'])
+                                        <div><span class="k">DATE OF BIRTH:</span> {{ $dobFormatted }}</div>
+                                    @endif
+                                    @if($cfg['stu_gender'])
+                                        <div><span class="k">GENDER:</span> {{ $s->gender ?? '—' }}</div>
+                                    @endif
+                                    @if($cfg['stu_class_teacher'])
+                                        <div><span class="k">CLASS TEACHER:</span> {{ $infoClassTeacher }}</div>
+                                    @endif
+                                    @if($cfg['stu_house'])
+                                        <div><span class="k">HOUSE / TEAM:</span> {{ $s->house ?? '—' }}</div>
+                                    @endif
+                                    @if($cfg['stu_report_date'])
+                                        <div><span class="k">DATE OF REPORT:</span> {{ now()->format('d M Y') }}</div>
                                     @endif
                                     @if($cfg['stu_status'])
                                         <div><span class="k">STATUS:</span>
@@ -1078,35 +1168,34 @@
                                 @if($cfg['remarks'])
                                     <div class="rem-head">
                                         <span>Remarks</span>
-                                        @if($cfg['signatures'])<span>Signature</span>@endif
                                     </div>
                                     <div class="rem-grid">
                                         <div class="rem-col">
                                             <div class="rem-block">
                                                 <div class="rem-who">{{ $classTeacherName }} - Class Teacher</div>
                                                 <div class="rem-text">{{ ($s->class_teacher_remark ?? '') ?: 'No remarks recorded.' }}</div>
-                                            </div>
-                                            <div class="rem-block">
-                                                <div class="rem-who">House Teacher</div>
-                                                <div class="rem-dash"></div>
-                                                <div class="rem-dash"></div>
+                                                @if($cfg['signatures'])
+                                                    <div class="rem-sig-line">
+                                                        <span class="sig-lbl">Signature:</span>
+                                                        <div class="sig-slot">
+                                                            @if($ctSigUrl)<img src="{{ $ctSigUrl }}" alt="signature">@endif
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="rem-block">
                                                 <div class="rem-who">{{ $headTeacherName }} - Head Teacher</div>
                                                 <div class="rem-text">{{ ($s->head_teacher_remark ?? '') ?: 'No remarks recorded.' }}</div>
+                                                @if($cfg['signatures'])
+                                                    <div class="rem-sig-line">
+                                                        <span class="sig-lbl">Signature:</span>
+                                                        <div class="sig-slot">
+                                                            @if($htSigUrl)<img src="{{ $htSigUrl }}" alt="signature">@endif
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-                                        @if($cfg['signatures'])
-                                            <div class="rem-sig">
-                                                <div class="sig-slot" style="margin-top:.2rem;">
-                                                    @if($ctSigUrl)<img src="{{ $ctSigUrl }}" alt="signature">@endif
-                                                </div>
-                                                <div class="sig-slot" style="margin-top:2.2rem;"></div>
-                                                <div class="sig-slot" style="margin-top:1.2rem;">
-                                                    @if($htSigUrl)<img src="{{ $htSigUrl }}" alt="signature">@endif
-                                                </div>
-                                            </div>
-                                        @endif
                                     </div>
                                 @endif
 

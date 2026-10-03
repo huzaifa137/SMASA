@@ -450,12 +450,17 @@
         }
 
         .stu-field {
-            font-size: .83rem;
+            font-size: var(--val-size, .83rem);
             color: #111;
+        }
+
+        .stu-field .status-pill {
+            font-size: calc(var(--val-size, .83rem) * .87);
         }
 
         .stu-field strong {
             font-weight: 700;
+            font-size: var(--lbl-size, .83rem);
         }
 
         .status-pill {
@@ -1146,7 +1151,7 @@
         }
 
         .slip.md-dense .stu-field {
-            font-size: .72rem;
+            font-size: var(--val-size, .72rem);
         }
 
         .slip.md-dense .sum-cell {
@@ -1332,7 +1337,7 @@
 .discipline-col  { min-width: 130px; }
 .sig-col-right   { min-width: 90px; }
     </style>
-    @include('Examination.passslips.partials.scale-fit')
+    @include('Examination.passslips.partials.text-sizes')
     @include('Examination.passslips.partials.template-modern')
 </head>
 

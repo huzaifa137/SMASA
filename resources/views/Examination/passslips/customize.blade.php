@@ -399,6 +399,46 @@ selected classes" is clicked. --}}
             cursor: pointer;
         }
 
+        .cz-size-row {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .3rem .25rem;
+        }
+
+        .cz-size-row label {
+            flex: 0 0 76px;
+            font-size: .8rem;
+        }
+
+        .cz-size-row input[type="range"] {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cz-size-num {
+            width: 62px;
+            padding: .3rem .4rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .cz-size-unit {
+            font-size: .7rem;
+            color: #64748b;
+        }
+
+        .cz-size-reset {
+            border: none;
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: .3rem .45rem;
+            cursor: pointer;
+            color: #475569;
+        }
+
         .cz-hint {
             font-size: .7rem;
             color: #64748b;
@@ -729,6 +769,29 @@ selected classes" is clicked. --}}
                     @endforeach
                 </div>
 
+                {{-- Top band colour — Secondary design only (its toggle is
+                "Top colour band" under Appearance below). --}}
+                @if($template === 'secondary-classic')
+                    <div class="cz-color-row">
+                        <label for="czCapColor">Top band colour</label>
+                        <div class="cz-color-swatch">
+                            <input type="color" id="czCapColor" value="#1e88e5">
+                        </div>
+                    </div>
+                    {{-- One thickness for BOTH the left strip width and the top band height --}}
+                    <div class="cz-size-row">
+                        <label for="czCapSizeNum">Band thickness</label>
+                        <input type="range" id="czCapSizeRange" min="12" max="60" step="1" value="28" data-default="28">
+                        <input type="number" id="czCapSizeNum" class="cz-size-num" min="12" max="60" step="1"
+                            placeholder="28" data-default="28">
+                        <span class="cz-size-unit">px</span>
+                        <button type="button" class="cz-size-reset" data-target="CapSize" title="Back to default">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
+                    </div>
+                    <p class="cz-hint">Sets the left strip width and the top band height together. Default 28px.</p>
+                @endif
+
                 {{-- Page Size & Text Scale — same as Accent Colour above:
                 applies in every scenario of every design template, so it's
                 never gated behind a capability check. Defaults (A4 @ 100%)
@@ -745,22 +808,41 @@ selected classes" is clicked. --}}
                         <option value="a3">A3 (extra large)</option>
                     </select>
                 </div>
-                <div class="cz-color-row">
-                    <label for="czTextScale">Text &amp; layout scale</label>
-                    <select id="czTextScale" class="cz-select">
-                        <option value="100" selected>100% (default)</option>
-                        <option value="110">110%</option>
-                        <option value="125">125%</option>
-                        <option value="150">150%</option>
-                    </select>
-                </div>
-                <p class="cz-hint">
-                    Scale zooms the whole slip — borders, icons and spacing
-                    grow together with the text — while the slip itself stays
-                    exactly as wide as the chosen paper, so nothing is cut off
-                    at the edges. Content that no longer fits the page height
-                    at a higher scale continues onto a second page.
-                </p>
+                {{-- Text Sizes — replaces the old "Text & layout scale" zoom (which pushed
+                the slip onto a second page). Two free-form sizes instead: one for
+                LABELS ("Student Name:", table headings) and one for VALUES (the
+                name itself, marks…). Type a number or drag the slider; empty =
+                the template's own built-in size. Not offered for the two
+                image-based Nursery designs, whose text is sized in pixels. --}}
+                @php
+                    $sizeDefaults = match ($template) {
+                        'classic' => [1.10, 1.05],
+                        'modern', 'minimal', 'nursery-minimal' => [0.83, 0.83],
+                        'secondary-classic' => [0.80, 0.80],
+                        default => null,
+                    };
+                @endphp
+                @if($sizeDefaults)
+                    <div class="cz-group-label"><i class="fas fa-text-height"></i> Text Sizes</div>
+                    @foreach([['Lbl', 'Label size', $sizeDefaults[0]], ['Val', 'Value size', $sizeDefaults[1]]] as [$id, $lbl, $def])
+                        <div class="cz-size-row">
+                            <label for="cz{{ $id }}Num">{{ $lbl }}</label>
+                            <input type="range" id="cz{{ $id }}Range" min="0.5" max="2" step="0.01" value="{{ $def }}"
+                                data-default="{{ $def }}">
+                            <input type="number" id="cz{{ $id }}Num" class="cz-size-num" min="0.5" max="2.5" step="0.01"
+                                placeholder="{{ $def }}" data-default="{{ $def }}">
+                            <span class="cz-size-unit">rem</span>
+                            <button type="button" class="cz-size-reset" data-target="{{ $id }}" title="Back to default">
+                                <i class="fas fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    @endforeach
+                    <p class="cz-hint">
+                        Labels are the names ("Student Name:", table headings); values are
+                        what sits next to them. Drag, or type a size in rem (0.5 – 2.5).
+                        Leave empty to keep the design's default.
+                    </p>
+                @endif
 
                 {{-- ── Dynamically-filtered toggle groups ──
                 Only the sections/keys this template actually supports
@@ -780,7 +862,7 @@ selected classes" is clicked. --}}
                         'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point'],
                         'classic' => ['show_signatures', 'show_teacher_col'],
                         'modern' => ['show_teacher_col', 'show_col_grade_point'],
-                        'secondary-classic' => ['show_stu_exam'],
+                        'secondary-classic' => ['show_stu_exam', 'show_stu_academic_year', 'show_stu_term', 'show_stu_gender', 'show_stu_class_teacher', 'show_stu_house'],
                         default => [],
                     };
                 @endphp
@@ -1007,8 +1089,16 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 template: currentTemplate(),
                 accent: document.getElementById('czColorPicker').value,
                 page_size: document.getElementById('czPageSize').value,
-                text_scale: document.getElementById('czTextScale').value,
             };
+            const capEl = document.getElementById('czCapColor');
+            if (capEl) settings.cap_color = capEl.value;
+            const capSizeEl = document.getElementById('czCapSizeNum');
+            if (capSizeEl && capSizeEl.value !== '') settings.cap_size = capSizeEl.value;
+            // Text sizes: only sent when the user actually set one (empty = template default).
+            ['Lbl', 'Val'].forEach(id => {
+                const n = document.getElementById('cz' + id + 'Num');
+                if (n && n.value !== '') settings[id === 'Lbl' ? 'lbl_size' : 'val_size'] = n.value;
+            });
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 settings[cb.dataset.key] = cb.checked;
             });
@@ -1131,8 +1221,29 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             scheduleRefresh();
         }));
 
+        const capColorEl = document.getElementById('czCapColor');
+        if (capColorEl) capColorEl.addEventListener('input', scheduleRefresh);
+
         document.getElementById('czPageSize').addEventListener('change', scheduleRefresh);
-        document.getElementById('czTextScale').addEventListener('change', scheduleRefresh);
+        // Text sizes: slider and number box stay in sync; empty number = default.
+        ['Lbl', 'Val', 'CapSize'].forEach(id => {
+            const range = document.getElementById('cz' + id + 'Range');
+            const num = document.getElementById('cz' + id + 'Num');
+            if (!range || !num) return;
+            range.addEventListener('input', () => { num.value = range.value; scheduleRefresh(); });
+            num.addEventListener('input', () => {
+                if (num.value !== '') range.value = num.value;
+                else range.value = range.dataset.default;
+                scheduleRefresh();
+            });
+        });
+        document.querySelectorAll('.cz-size-reset').forEach(btn => btn.addEventListener('click', () => {
+            const range = document.getElementById('cz' + btn.dataset.target + 'Range');
+            const num = document.getElementById('cz' + btn.dataset.target + 'Num');
+            num.value = '';
+            range.value = range.dataset.default;
+            scheduleRefresh();
+        }));
 
         document.getElementById('czPreviewClass').addEventListener('change', function () {
             const classId = currentPreviewClassId();
@@ -1170,6 +1281,13 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                     d.classList.toggle('active', d.dataset.color === saved.accent);
                 });
             }
+            const capSaved = document.getElementById('czCapColor');
+            if (capSaved) capSaved.value = saved.cap_color || '#1e88e5';
+            const capSizeNum = document.getElementById('czCapSizeNum');
+            if (capSizeNum) {
+                capSizeNum.value = saved.cap_size ?? '';
+                document.getElementById('czCapSizeRange').value = saved.cap_size ?? capSizeNum.dataset.default;
+            }
             // Page Size & Text Scale — same "fall back to the default
             // option already marked selected in the markup" approach as
             // every toggle below, so an old saved profile with neither
@@ -1177,9 +1295,14 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
             if (saved.page_size) {
                 document.getElementById('czPageSize').value = saved.page_size;
             }
-            if (saved.text_scale) {
-                document.getElementById('czTextScale').value = String(saved.text_scale);
-            }
+            // Text sizes — a saved profile without them restores to "default" (empty).
+            [['Lbl', 'lbl_size'], ['Val', 'val_size']].forEach(([id, key]) => {
+                const range = document.getElementById('cz' + id + 'Range');
+                const num = document.getElementById('cz' + id + 'Num');
+                if (!range || !num) return;
+                num.value = saved[key] ?? '';
+                range.value = saved[key] ?? range.dataset.default;
+            });
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 const key = cb.dataset.key;
                 cb.checked = key in saved ? !!saved[key] : !OFF_BY_DEFAULT.includes(key);

@@ -1263,7 +1263,6 @@
       }
     }
   </style>
-    @include('Examination.passslips.partials.scale-fit')
 </head>
 
 <body>

@@ -480,12 +480,13 @@
         }
 
         .stu-field {
-            font-size: .83rem;
+            font-size: var(--val-size, .83rem);
             color: #111;
         }
 
         .stu-field strong {
             font-weight: 700;
+            font-size: var(--lbl-size, .83rem);
         }
 
         /* Nursery Development Sections - 2 column grid */
@@ -737,7 +738,7 @@
             }
         }
     </style>
-    @include('Examination.passslips.partials.scale-fit')
+    @include('Examination.passslips.partials.text-sizes')
 </head>
 
 <body>

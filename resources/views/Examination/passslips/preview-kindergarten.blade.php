@@ -1483,7 +1483,6 @@
             margin-top: 2px;
         }
     </style>
-    @include('Examination.passslips.partials.scale-fit')
 </head>
 
 <body>

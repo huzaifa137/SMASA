@@ -60,6 +60,8 @@ return [
     'toggles' => [
         'show_border' => ['label' => 'Decorative border & corners', 'icon' => 'fa-border-all', 'group' => 'Appearance'],
         'show_watermark' => ['label' => 'Watermark (logo / school name)', 'icon' => 'fa-stamp', 'group' => 'Appearance'],
+        // Secondary only: the coloured cap on the left strip + the band across the top.
+        'show_top_band' => ['label' => 'Top colour band (left cap + top edge)', 'icon' => 'fa-grip-lines', 'group' => 'Appearance'],
 
         // ── Whole-section master switches ───────────────────────────
         // Turn an entire boxed section off in one click. Independent of
@@ -292,7 +294,7 @@ return [
         // just be duplication. Add more keys here only once the markup
         // actually branches on them (same rule as nursery-classic above).
         'secondary-classic' => [
-            'show_border', 'show_watermark',
+            'show_border', 'show_top_band', 'show_watermark',
             'show_logo', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr',
             'show_dev', 'show_col_grade', 'show_comment_col', 'show_teacher_col',
@@ -301,8 +303,9 @@ return [
 
             'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
 
-            'show_stu_name', 'show_stu_admission', 'show_stu_class', 'show_stu_stream',
-            'show_stu_exam', 'show_stu_status',
+            'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_stream',
+            'show_stu_academic_year', 'show_stu_term', 'show_stu_exam', 'show_stu_dob', 'show_stu_gender',
+            'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
 
             'show_sum_total_marks', 'show_sum_average_pct', 'show_sum_division',
         ],

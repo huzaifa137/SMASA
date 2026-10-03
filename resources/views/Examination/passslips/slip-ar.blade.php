@@ -506,12 +506,17 @@
         }
 
         .stu-field {
-            font-size: .88rem;
+            font-size: var(--val-size, .88rem);
             color: #111;
+        }
+
+        .stu-field .status-pill {
+            font-size: calc(var(--val-size, .88rem) * .85);
         }
 
         .stu-field strong {
             font-weight: 700;
+            font-size: var(--lbl-size, .88rem);
         }
 
         .status-pill {
@@ -1078,7 +1083,7 @@
             }
         }
     </style>
-    @include('Examination.passslips.partials.scale-fit')
+    @include('Examination.passslips.partials.text-sizes')
     @include('Examination.passslips.partials.template-themes')
 </head>
 

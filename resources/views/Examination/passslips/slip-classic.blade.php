@@ -1891,7 +1891,7 @@
             width: 64px;
         }
     </style>
-    @include('Examination.passslips.partials.scale-fit')
+    @include('Examination.passslips.partials.text-sizes')
     @include('Examination.passslips.partials.template-classic')
 </head>
 
@@ -2485,87 +2485,87 @@
                             <div class="rc-stu-fields" style="flex: 1; min-width: 0;">
                                 @if($cfg['stu_name'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Student Name:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->lastname }}
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Student Name:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $s->lastname }}
                                             {{ $s->firstname }} {{ $s->other_names ?? '' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_admission'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">LIN No.:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $admissionNo }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">LIN No.:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $admissionNo }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_paycode'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Pay Code:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->paycode ?? '—' }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Pay Code:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $s->paycode ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_class'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Class:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ Helper::recordMdname($s->senior) }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Class:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ Helper::recordMdname($s->senior) }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_stream'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Stream:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->stream ?? '—' }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Stream:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $s->stream ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_academic_year'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Academic Year:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->academic_year }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Academic Year:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $exam->academic_year }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_term'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Term:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->term }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Term:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $exam->term }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_exam'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Exam:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $exam->exam_name }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Exam:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $exam->exam_name }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_dob'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Date of Birth:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $dobFormatted }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Date of Birth:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $dobFormatted }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_gender'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Gender:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $s->gender ?? '—' }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Gender:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $s->gender ?? '—' }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_class_teacher'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Class Teacher:</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Class Teacher:</span>
                                         <span
-                                            style="font-size: 1.05rem; color: #111;">{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
+                                            style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—') }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_house'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">House / Team:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ $houseTeam }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">House / Team:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ $houseTeam }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_report_date'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Date of Report:</span>
-                                        <span style="font-size: 1.05rem; color: #111;">{{ now()->format('d M Y') }}</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Date of Report:</span>
+                                        <span style="font-size: var(--val-size, 1.05rem); color: #111;">{{ now()->format('d M Y') }}</span>
                                     </div>
                                 @endif
                                 @if($cfg['stu_status'])
                                     <div class="rc-stu-row">
-                                        <span class="k" style="font-size: 1.10rem;">Status:</span>
+                                        <span class="k" style="font-size: var(--lbl-size, 1.10rem);">Status:</span>
                                         <span @php
                                             $statusLower = strtolower($statusLabel);
                                             if ($isEarlyYears) {
@@ -2576,7 +2576,7 @@
                                                     : (str_contains($statusLower, 'fail') ? 'status-fail' : 'status-repeat');
                                             }
                                         @endphp class="status-pill {{ $statusClass }}"
-                                            style="margin-top:0; font-size: 1.05rem;">
+                                            style="margin-top:0; font-size: var(--val-size, 1.05rem);">
                                             {{ ucfirst($statusLabel) }}
                                         </span>
                                     </div>
@@ -2714,40 +2714,40 @@
                             <table class="marks-tbl">
                                 <thead>
                                     <tr>
-                                        <th class="tl" rowspan="2" style="min-width:100px; font-size: 1.10rem;">SUBJECTS</th>
+                                        <th class="tl" rowspan="2" style="min-width:100px; font-size: var(--lbl-size, 1.10rem);">SUBJECTS</th>
                                         @foreach($examsList as $ex)
-                                            <th class="exam-grp-th" colspan="2" style="font-size: 1.10rem;">
+                                            <th class="exam-grp-th" colspan="2" style="font-size: var(--lbl-size, 1.10rem);">
                                                 {{ $examLabels[$ex->exam_type] ?? strtoupper($ex->term ?? $ex->exam_name) }}
                                             </th>
                                         @endforeach
                                         @if($cfg['grade_pill'])
-                                            <th rowspan="2" style="width:38px; font-size: 1.10rem;">GRADE</th>
+                                            <th rowspan="2" style="width:38px; font-size: var(--lbl-size, 1.10rem);">GRADE</th>
                                         @endif
                                         @if($cfg['teacher_col'])
-                                            <th class="tl col-teacher" rowspan="2" style="font-size: 1.10rem;">TEACHER</th>
+                                            <th class="tl col-teacher" rowspan="2" style="font-size: var(--lbl-size, 1.10rem);">TEACHER</th>
                                         @endif
                                         @if($cfg['initials_col'])
-                                            <th class="col-initials" rowspan="2" style="font-size: 1.10rem;">INITIALS</th>
+                                            <th class="col-initials" rowspan="2" style="font-size: var(--lbl-size, 1.10rem);">INITIALS</th>
                                         @endif
                                     </tr>
                                     <tr>
                                         @foreach($examsList as $ex)
-                                            <th class="sub-th" style="font-size: 1.05rem;">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
-                                            <th class="sub-th" style="font-size: 1.05rem;">GRADE</th>
+                                            <th class="sub-th" style="font-size: var(--val-size, 1.05rem);">{{ $isEarlyYears ? 'SCORE' : 'MARKS' }}</th>
+                                            <th class="sub-th" style="font-size: var(--val-size, 1.05rem);">GRADE</th>
                                         @endforeach
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($subjMarks as $sm)
                                         <tr>
-                                            <td class="col-subject" style="font-weight:500; font-size: 1.05rem;">{{ $sm->subject_name }}
+                                            <td class="col-subject" style="font-weight:500; font-size: var(--val-size, 1.05rem);">{{ $sm->subject_name }}
                                             </td>
                                             @foreach($examsList as $ex)
                                                 @php $ed = $sm->exams[$ex->id] ?? null; @endphp
-                                                <td class="score-td" style="font-size: 1.05rem;">
+                                                <td class="score-td" style="font-size: var(--val-size, 1.05rem);">
                                                     @whole($ed['marks_obtained'] ?? null)
                                                 </td>
-                                                <td class="num-td" style="font-size: 1.05rem;">
+                                                <td class="num-td" style="font-size: var(--val-size, 1.05rem);">
                                                     @if($ed && $ed['grade'] && $ed['grade'] !== '—')
                                                         <span class="g-pill {{ $gc($ed['grade']) }}">{{ $ed['grade'] }}</span>
                                                     @else
@@ -2756,7 +2756,7 @@
                                                 </td>
                                             @endforeach
                                             @if($cfg['grade_pill'])
-                                                <td class="num-td" style="font-size: 1.05rem;">
+                                                <td class="num-td" style="font-size: var(--val-size, 1.05rem);">
                                                     <span class="g-pill {{ $gc($sm->grade) }}">{{ $sm->grade ?? '—' }}</span>
                                                 </td>
                                             @endif
@@ -2775,27 +2775,27 @@
                                     @if($cfg['totals_row'])
                                         <tr class="totals-row">
                                             <td
-                                                style="text-align:right;color:#666;font-size:1.05rem;padding-right:.8rem;font-weight:600;">
+                                                style="text-align:right;color:#666;font-size: var(--val-size, 1.05rem);padding-right:.8rem;font-weight:600;">
                                                 {{ $showAggDiv ? 'TOTAL / AGG' : 'TOTAL / ' . ($useAvgSlip ? 'AVERAGE' : 'COMBINED') }}
                                             </td>
                                             @foreach($examsList as $ex)
                                                 @php $esum = $examSummarySlip->get($ex->id); @endphp
                                                 @if($showAggDiv)
-                                                    <td class="score-td" style="font-size: 1.05rem;">@whole($esum['total_marks'] ?? null)</td>
-                                                    <td class="num-td" style="font-size: 1.05rem;">{{ $esum['aggregate'] ?? '—' }}</td>
+                                                    <td class="score-td" style="font-size: var(--val-size, 1.05rem);">@whole($esum['total_marks'] ?? null)</td>
+                                                    <td class="num-td" style="font-size: var(--val-size, 1.05rem);">{{ $esum['aggregate'] ?? '—' }}</td>
                                                 @else
                                                     @php
                                                         $examPctSum = $subjMarks->sum(fn($sm) => $sm->exams[$ex->id]['percentage'] ?? 0);
                                                         $examPctCnt = $subjMarks->filter(fn($sm) => ($sm->exams[$ex->id]['percentage'] ?? null) !== null)->count();
                                                         $examAvgPct = $examPctCnt > 0 ? round($examPctSum / $examPctCnt, 1) : null;
                                                     @endphp
-                                                    <td class="score-td" colspan="2" style="font-size: 1.05rem;">
+                                                    <td class="score-td" colspan="2" style="font-size: var(--val-size, 1.05rem);">
                                                         {{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}
                                                     </td>
                                                 @endif
                                             @endforeach
                                             @if($cfg['grade_pill'])
-                                                <td class="num-td" style="font-size: 1.05rem;"><span
+                                                <td class="num-td" style="font-size: var(--val-size, 1.05rem);"><span
                                                         class="g-pill {{ $gc($oGrade) }}">{{ $oGrade }}</span></td>
                                             @endif
                                             @if($cfg['teacher_col'])
@@ -2810,10 +2810,10 @@
                                     {{-- DIVISION ROW --}}
                                     @if($cfg['totals_row'] && $showAggDiv)
                                         <tr class="division-row">
-                                            <td class="division-label" style="font-size: 1.05rem;">DIVISION</td>
+                                            <td class="division-label" style="font-size: var(--val-size, 1.05rem);">DIVISION</td>
                                             @foreach($examsList as $ex)
                                                 @php $div = $examSummarySlip->get($ex->id)['division'] ?? '—'; @endphp
-                                                <td colspan="2" style="font-size: 1.05rem;">
+                                                <td colspan="2" style="font-size: var(--val-size, 1.05rem);">
                                                     <span class="div-pill {{ $divClass($div) }}">{{ strtoupper($div) }}</span>
                                                 </td>
                                             @endforeach
@@ -2872,7 +2872,7 @@
                                         @foreach($grouped as $grpName => $grpSubjs)
                                             @if($grpName)
                                                 <tr class="grp-row">
-                                                    <td colspan="{{ $visibleCols + 1 }}" style="font-size: 1.05rem;">{{ strtoupper($grpName) }}
+                                                    <td colspan="{{ $visibleCols + 1 }}" style="font-size: var(--val-size, 1.05rem);">{{ strtoupper($grpName) }}
                                                     </td>
                                                 </tr>
                                             @endif
@@ -2946,8 +2946,8 @@
                                                 }
                                             @endphp
                                             <tr>
-                                                <td class="num-td" style="font-size: 1.05rem;">{{ $rn }}</td>
-                                                <td class="col-subject" style="font-weight:500; font-size: 1.05rem;">{{ $sm->subject_name }}
+                                                <td class="num-td" style="font-size: var(--val-size, 1.05rem);">{{ $rn }}</td>
+                                                <td class="col-subject" style="font-weight:500; font-size: var(--val-size, 1.05rem);">{{ $sm->subject_name }}
                                                 </td>
                                                 @if($cfg['col_full_marks'])
                                                     <td class="score-td" style="font-size: 0.80rem;">@whole($sm->total_marks ?? null)</td>
