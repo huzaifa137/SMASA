@@ -1284,6 +1284,26 @@ class Helper extends Controller
 
     public static function recordMdname($md_id)
     {
+        // School-scoped Secondary subjects (a school's own A-Level
+        // principal/subsidiary subjects and O-Level electives) are not in
+        // master_datas — they are stored in their own tables and referenced
+        // by a synthetic id (offset + row id) so they can share the same
+        // integer columns as real master subjects. Resolve those here so
+        // every caller (exam marks portal, Exam Subjects screen, pass
+        // slips, report cards...) gets a name instead of a blank.
+        if (is_numeric($md_id) && (int) $md_id >= 9_000_000_000) {
+            // O-Level offset (9.5bn) is higher than A-Level (9bn), so test it first.
+            if ((int) $md_id >= 9_500_000_000) {
+                return DB::table('school_olevel_electives')
+                    ->where('id', (int) $md_id - 9_500_000_000)
+                    ->value('subject_name');
+            }
+
+            return DB::table('school_alevel_subjects')
+                ->where('id', (int) $md_id - 9_000_000_000)
+                ->value('subject_name');
+        }
+
         $recordName = DB::table('master_datas')
             ->where('md_id', operator: $md_id)
             ->value('md_name');

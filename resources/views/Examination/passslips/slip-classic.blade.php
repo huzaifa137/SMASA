@@ -750,6 +750,38 @@
             border-top: 3px solid #333;
         }
 
+        /* ── Summary strip: TOTAL | AVERAGE | AGGREGATE | DIVISION ── */
+        .summary-strip-row td.summary-strip-cell {
+            background: #eef0f4 !important;
+            border-top: 3px solid #333;
+            padding: .65rem .9rem;
+        }
+
+        .summary-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-strip .ss-item {
+            flex: 1;
+            text-align: center;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #444;
+            letter-spacing: .03em;
+            white-space: nowrap;
+        }
+
+        .summary-strip .ss-item b {
+            font-weight: 800;
+            color: #111;
+            font-size: .95rem;
+            margin-left: .25rem;
+        }
+
         /* Multi-exam header: exam group cell (row 1) + MARKS/GRADE sub-cells (row 2) */
         .marks-tbl th.exam-grp-th {
             border-bottom: 2px solid #555;
@@ -2994,50 +3026,25 @@
                                         @endforeach
                                     @endif
 
-                                    {{-- TOTALS ROW --}}
+                                    {{-- SUMMARY STRIP: TOTAL | AVERAGE | AGGREGATE | DIVISION --}}
                                     @if($cfg['totals_row'])
-                                        @php $resultColspan = ($cfg['comment_col'] ? 1 : 0) + ($cfg['teacher_col'] ? 1 : 0) + ($cfg['initials_col'] ? 1 : 0); @endphp
-                                        <tr class="totals-row">
-                                            <td colspan="2"
-                                                style="text-align:right;color:#666;font-size:0.80rem;padding-right:.8rem;font-weight:600;">
-                                                TOTAL
-                                            </td>
-                                            @if($cfg['col_full_marks'])
-                                                <td class="score-td" style="font-size: 0.80;">@whole($totMax)</td>
-                                            @endif
-                                            @if($cfg['col_marks_obtained'])
-                                                <td class="score-td" style="font-size: 0.80;">@whole($totObt)</td>
-                                            @endif
-                                            @if($cfg['col_percentage'] && !$isEarlyYears)
-                                                <td class="score-td" style="font-size: 0.80rem;">@whole($pct)%</td>
-                                            @endif
-                                            @if($cfg['dev'])
-                                                <td class="num-td" style="font-size: 0.80rem;">
-                                                    @if($termDelta !== null)
-                                                        @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
-                                                        @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
-                                                        @else <span class="dev-eq">—</span>
-                                                        @endif
-                                                    @else <span class="dev-eq">—</span>
+                                        @php
+                                            $ssMarked = $subjMarks->filter(fn($m) => ($m->marks_obtained ?? null) !== null)->count();
+                                            $ssAverage = $isEarlyYears
+                                                ? $earlyYearsAvg
+                                                : ($ssMarked > 0 ? round($totObt / $ssMarked) : null);
+                                        @endphp
+                                        <tr class="summary-strip-row">
+                                            <td class="summary-strip-cell" colspan="{{ $visibleCols + 1 }}">
+                                                <div class="summary-strip">
+                                                    <div class="ss-item">TOTAL: <b>@whole($totObt)</b></div>
+                                                    <div class="ss-item">AVERAGE: <b>{{ $ssAverage ?? '—' }}</b></div>
+                                                    @if(!$isEarlyYears)
+                                                        <div class="ss-item">AGGREGATE: <b>{{ $aggregateLabel ?? '—' }}</b></div>
+                                                        <div class="ss-item">DIVISION: <b>{{ $divisionLabel ? strtoupper(preg_replace('/^division\s*/i', '', $divisionLabel)) : '—' }}</b></div>
                                                     @endif
-                                                </td>
-                                            @endif
-                                            @if($cfg['grade_pill'] && !$isEarlyYears)
-                                                <td class="num-td" style="font-size: 0.80rem;">
-                                                    <span>AGG</span>
-                                                </td>
-                                            @endif
-                                            @if($cfg['col_grade_point'] && !$isEarlyYears)
-                                                <td class="num-td col-grade-point" style="font-size: 0.80rem;">{{ $aggregateLabel }}</td>
-                                            @endif
-                                            @if($resultColspan > 0)
-                                                <td colspan="{{ $resultColspan }}">
-                                                    <strong
-                                                        style="color:{{ $isEarlyYears ? '#1a7a4a' : ($passed ? '#1a7a4a' : '#c0392b') }}">
-
-                                                    </strong>
-                                                </td>
-                                            @endif
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endif
 
