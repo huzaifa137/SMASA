@@ -21,8 +21,18 @@
             text-transform: uppercase;
         }
 
-        .nt-hero .hero-title { font-size: 1.4rem; font-weight: 800; color: #fff; margin: .25rem 0; }
-        .nt-hero .hero-subtitle { color: rgba(255, 255, 255, .68); font-size: .85rem; max-width: 760px; }
+        .nt-hero .hero-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            margin: .25rem 0;
+        }
+
+        .nt-hero .hero-subtitle {
+            color: rgba(255, 255, 255, .68);
+            font-size: .85rem;
+            max-width: 760px;
+        }
 
         .nt-card {
             background: #fff;
@@ -40,27 +50,72 @@
             color: #1e1b4b;
         }
 
-        .nt-table { margin-bottom: 0; font-size: .87rem; }
-        .nt-table thead th {
-            background: #2C29CA; color: #fff; font-size: .68rem; text-transform: uppercase;
-            letter-spacing: .06em; font-weight: 700; padding: .85rem .9rem; border: none; white-space: nowrap;
+        .nt-table {
+            margin-bottom: 0;
+            font-size: .87rem;
         }
-        .nt-table tbody td { vertical-align: middle; padding: .85rem .9rem; border-bottom: 1px solid #f0eeff; }
+
+        .nt-table thead th {
+            background: #2C29CA;
+            color: #fff;
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 700;
+            padding: .85rem .9rem;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .nt-table tbody td {
+            vertical-align: middle;
+            padding: .85rem .9rem;
+            border-bottom: 1px solid #f0eeff;
+        }
 
         .btn-nt-primary {
-            background: #2C29CA; color: #fff; border: none; border-radius: .65rem;
-            padding: .5rem 1.1rem; font-weight: 700; font-size: .82rem; text-decoration: none; display: inline-block;
+            background: #2C29CA;
+            color: #fff;
+            border: none;
+            border-radius: .65rem;
+            padding: .5rem 1.1rem;
+            font-weight: 700;
+            font-size: .82rem;
+            text-decoration: none;
+            display: inline-block;
         }
-        .btn-nt-primary:hover { background: #211ea3; color: #fff; }
 
-        .nt-tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; }
+        .btn-nt-primary:hover {
+            background: #211ea3;
+            color: #fff;
+        }
+
+        .nt-tabs {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1.25rem;
+        }
+
         .nt-tab {
-            padding: .55rem 1.1rem; border-radius: .7rem; font-size: .82rem; font-weight: 700;
-            text-decoration: none; color: #4a4870; background: #eef0ff;
+            padding: .55rem 1.1rem;
+            border-radius: .7rem;
+            font-size: .82rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: #4a4870;
+            background: #eef0ff;
         }
-        .nt-tab.active { background: #2C29CA; color: #fff; }
 
-        .empty-state { text-align: center; padding: 3rem 1rem; color: #a3a0c9; }
+        .nt-tab.active {
+            background: #2C29CA;
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #a3a0c9;
+        }
     </style>
 @endsection
 
@@ -82,11 +137,24 @@
                 @endif
             </div>
         </div>
+<div class="nt-tabs">
+    <a href="{{ route('nlsc-assessments.pending') }}"
+       class="nt-tab {{ request()->routeIs('nlsc-assessments.pending') ? 'active' : 'nt-tab-outline' }}">
+        <i class="fas fa-list-check me-1"></i> Pending
+    </a>
 
-        <div class="nt-tabs">
-            <a href="{{ route('nlsc-assessments.pending') }}" class="nt-tab active"><i class="fas fa-list-check me-1"></i> Pending</a>
-            <a href="{{ route('nlsc-assessments.manage') }}" class="nt-tab"><i class="fas fa-clipboard-check me-1"></i> Manage Created</a>
-        </div>
+    <a href="{{ route('nlsc-assessments.manage') }}"
+       class="nt-tab {{ request()->routeIs('nlsc-assessments.manage') ? 'active' : 'nt-tab-outline' }}">
+        <i class="fas fa-clipboard-check me-1"></i> Manage Created
+    </a>
+
+    <style>
+        .nt-tab-outline {
+            background: transparent !important;
+            border: 1px solid currentColor !important;
+        }
+    </style>
+</div>
 
         <div class="nt-card">
             <div class="card-header-custom"><i class="fas fa-list me-2"></i> Pending Assessments</div>
@@ -109,7 +177,8 @@
                                 <td>{{ $item->subject_name }}</td>
                                 <td>{{ $item->exam->term }}</td>
                                 <td>
-                                    <a href="{{ route('nlsc-assessments', ['examId' => $item->exam->id, 'classSubjectId' => $item->class_subject_id]) }}" class="btn-nt-primary">
+                                    <a href="{{ route('nlsc-assessments', ['examId' => $item->exam->id, 'classSubjectId' => $item->class_subject_id]) }}"
+                                        class="btn-nt-primary">
                                         <i class="fas fa-plus me-1"></i> Create Assessment
                                     </a>
                                 </td>
@@ -118,7 +187,8 @@
                             <tr>
                                 <td colspan="5">
                                     <div class="empty-state">
-                                        <i class="fas fa-circle-check d-block mb-2" style="font-size:1.8rem; color:#16a34a;"></i>
+                                        <i class="fas fa-circle-check d-block mb-2"
+                                            style="font-size:1.8rem; color:#16a34a;"></i>
                                         @if($scopedToExam)
                                             Nothing pending — every Secondary O-Level class-subject across the
                                             school already has an assessment for this exam.
@@ -135,7 +205,7 @@
             </div>
         </div>
     </div>
-     </div>
-        </div>
+    </div>
+    </div>
     </div>
 @endsection

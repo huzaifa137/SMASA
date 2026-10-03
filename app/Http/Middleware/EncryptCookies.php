@@ -12,6 +12,6 @@ class EncryptCookies extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        'smasa_dl', // download signal read by public/js/smart-loader.js
     ];
 }
