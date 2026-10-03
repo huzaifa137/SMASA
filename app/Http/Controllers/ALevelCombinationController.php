@@ -458,6 +458,18 @@ class ALevelCombinationController extends Controller
                 continue;
             }
 
+            // A subject with a teacher assigned is KEPT even when nobody
+            // takes it right now. Deleting it threw away the teacher
+            // assignment, so when the subject was given back to students
+            // the re-created row had no teacher and vanished from that
+            // teacher's marks entry screens. Marks screens hide a subject
+            // with no students (Helper::choiceSubjectHasNoStudents), and
+            // marks stay in the database, hidden from entry/slips until a
+            // student takes the subject again.
+            if ($classSubject->subject_teacher_1 || $classSubject->subject_teacher_2) {
+                continue;
+            }
+
             \App\Models\ExaminationMark::where('school_id', $schoolId)
                 ->where('class_id', $classId)
                 ->where('stream_id', $streamId)

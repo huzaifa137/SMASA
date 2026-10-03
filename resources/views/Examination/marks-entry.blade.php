@@ -275,7 +275,7 @@ use App\Http\Controllers\Helper;
                             $key = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
                             $studentKey = $subject->class_id . '_' . $subject->stream_id;
                             $enteredCount = $markCounts[$key]->entered_count ?? 0;
-                            $totalStudents = $studentCounts[$studentKey]->total ?? 0;
+                            $totalStudents = $subjectStudentCounts[$key] ?? ($studentCounts[$studentKey]->total ?? 0);
                             $pct = $totalStudents > 0 ? round(($enteredCount / $totalStudents) * 100) : 0;
                         @endphp
 

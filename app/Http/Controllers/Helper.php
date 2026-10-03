@@ -204,67 +204,71 @@ class Helper extends Controller
         return session('LoggedTeacher');
     }
 
+    /**
+     * Stored gender values vary by how a student was registered/imported
+     * ("Male", "male", "M", "Boy"...). Counting only the exact strings
+     * "Male"/"Female" made schools with other spellings show 0 boys / girls
+     * and — because the total was boys + girls — a total of 0 as well.
+     */
+    private static function genderMatchValues(string $which): array
+    {
+        return $which === 'male'
+            ? ['male', 'm', 'boy', 'b']
+            : ['female', 'f', 'girl', 'g'];
+    }
+
+    private static function classStudentsQuery($classId, $stream_id = null)
+    {
+        $q = DB::table('students')
+            ->where('school_id', Session('LoggedSchool'))
+            ->where('senior', $classId);
+
+        if ($stream_id !== null) {
+            $q->where('stream', $stream_id);
+        }
+
+        return $q;
+    }
+
+    private static function countByGender($classId, $stream_id, string $which): int
+    {
+        $values = self::genderMatchValues($which);
+
+        return (int) self::classStudentsQuery($classId, $stream_id)
+            ->whereRaw('LOWER(TRIM(gender)) IN (' . implode(',', array_fill(0, count($values), '?')) . ')', $values)
+            ->count();
+    }
+
     public static function maleClassStudents($classId)
     {
-        $maleClassStudents = DB::table('students')
-            ->where('school_id', Session('LoggedSchool'))
-            ->where('senior', $classId)
-            ->where('gender', 'Male')
-            ->count();
-
-        return $maleClassStudents;
+        return self::countByGender($classId, null, 'male');
     }
 
     public static function femaleClassStudents($classId)
     {
-        $femaleClassStudents = DB::table('students')
-            ->where('school_id', Session('LoggedSchool'))
-            ->where('senior', $classId)
-            ->where('gender', 'Female')
-            ->count();
-
-        return $femaleClassStudents;
+        return self::countByGender($classId, null, 'female');
     }
 
+    /** Every student in the class — not just those with a recognised gender. */
     public static function totalClassStudent($classId)
     {
-
-        $totalClassStudent = self::femaleClassStudents($classId) + self::maleClassStudents($classId);
-
-        return $totalClassStudent;
+        return (int) self::classStudentsQuery($classId)->count();
     }
-
 
     public static function maleClassStreamStudents($classId, $stream_id)
     {
-        $maleClassStudents = DB::table('students')
-            ->where('school_id', Session('LoggedSchool'))
-            ->where('senior', $classId)
-            ->where('gender', 'Male')
-            ->where('stream', $stream_id)
-            ->count();
-
-        return $maleClassStudents;
+        return self::countByGender($classId, $stream_id, 'male');
     }
 
     public static function femaleClassStreamStudents($classId, $stream_id)
     {
-        $femaleClassStudents = DB::table('students')
-            ->where('school_id', Session('LoggedSchool'))
-            ->where('senior', $classId)
-            ->where('gender', 'Female')
-            ->where('stream', $stream_id)
-            ->count();
-
-        return $femaleClassStudents;
+        return self::countByGender($classId, $stream_id, 'female');
     }
 
+    /** Every student in the class-stream — not just those with a recognised gender. */
     public static function totalClassStreamStudent($classId, $stream_id)
     {
-
-        $totalClassStreamStudents = self::maleClassStreamStudents($classId, $stream_id) + self::femaleClassStreamStudents($classId, $stream_id);
-
-        return $totalClassStreamStudents;
+        return (int) self::classStudentsQuery($classId, $stream_id)->count();
     }
 
     public static function schoolName($school_id)
@@ -1371,6 +1375,19 @@ class Helper extends Controller
             ->map(fn($id) => (int) $id)
             ->unique()
             ->values();
+    }
+
+    /**
+     * True when this is a per-student choice subject that no student in the
+     * class-stream currently takes (e.g. History removed from everyone).
+     * Such a row is kept so its teacher assignment survives, but it has
+     * nothing to enter marks for, so marks screens hide it.
+     */
+    public static function choiceSubjectHasNoStudents($schoolId, $classSubject): bool
+    {
+        $takers = self::studentIdsTakingClassSubject($schoolId, $classSubject);
+
+        return $takers !== null && $takers->isEmpty();
     }
 
     /**

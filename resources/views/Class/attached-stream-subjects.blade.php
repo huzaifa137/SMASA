@@ -45,7 +45,7 @@ $controller = new Controller();
                                         <th>Stream</th>
                                         <th>Subject</th>
                                         <th>Students</th>
-                                        <th>Assessment Type</th>
+                                        <!-- <th>Assessment Type</th> -->
                                         <th>Subject Teacher (1)</th>
                                         <th>Subject Teacher (2)</th>
                                         <!-- <th colspan="2" style="text-align: center">Action</th> -->
@@ -62,7 +62,7 @@ $controller = new Controller();
                                         <td>{{ $classInfo->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $classInfo->stream_id }}</td>
                                         <td>{{ $class->display_name }}</td>
                                         <td>0</td>
-                                        <td>
+                                        <!-- <td>
                                             @if(PermissionHelper::canFeature('edit_class'))
                                                 <select name="assessment_scale_id"
                                                     class="form-select form-select-sm assign-assessment-scale form-control"
@@ -89,7 +89,7 @@ $controller = new Controller();
                                                         : 'Numeric marks' }}
                                                 </span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
                                                 @if(PermissionHelper::canFeature('assign_subject_teachers'))

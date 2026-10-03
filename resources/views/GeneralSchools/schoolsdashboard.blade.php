@@ -45,8 +45,8 @@
         $totalTeachers = Teacher::where('school_id', $schoolId)->count();
         $totalClasses = Classroom::where('school_id', $schoolId)->count();
 
-        $maleStudents = Student::where('school_id', $schoolId)->where('gender', 'Male')->whereNull('linked_student_id')->count();
-        $femaleStudents = Student::where('school_id', $schoolId)->where('gender', 'Female')->whereNull('linked_student_id')->count();
+        $maleStudents = Student::where('school_id', $schoolId)->whereRaw("LOWER(TRIM(gender)) IN ('male','m','boy','b')")->whereNull('linked_student_id')->count();
+        $femaleStudents = Student::where('school_id', $schoolId)->whereRaw("LOWER(TRIM(gender)) IN ('female','f','girl','g')")->whereNull('linked_student_id')->count();
 
         // ── Attendance Rate (student) – last 30 days ─────────────────────────────
         $last30 = now()->subDays(30)->toDateString();

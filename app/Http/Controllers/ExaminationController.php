@@ -256,6 +256,11 @@ class ExaminationController extends Controller
             fn($s) => ExaminationSubjectSetting::marksEntryOpen($examId, $s)
         );
 
+        // A choice subject nobody currently takes has nothing to enter.
+        $assignedSubjects = $assignedSubjects
+            ->filter(fn($s) => !Helper::choiceSubjectHasNoStudents($schoolId, $s))
+            ->values();
+
         $markCounts = \App\Models\ExaminationMark::where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->whereNotNull('marks_obtained')
@@ -292,7 +297,16 @@ class ExaminationController extends Controller
             ->get()
             ->keyBy(fn($r) => $r->class_id . '_' . $r->stream);
 
-        return view('Examination.marks-entry', compact('exam', 'assignedSubjects', 'markCounts', 'studentCounts'));
+        // Per-subject expected student count: a choice subject (A-Level
+        // principal/subsidiary, O-Level elective) is only for the students
+        // taking it, so "entered / total" must not use the whole class.
+        $subjectStudentCounts = [];
+        foreach ($assignedSubjects as $subject) {
+            $subjectKey = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
+            $subjectStudentCounts[$subjectKey] = Helper::expectedStudentCount($schoolId, $subject);
+        }
+
+        return view('Examination.marks-entry', compact('exam', 'assignedSubjects', 'markCounts', 'studentCounts', 'subjectStudentCounts'));
     }
 
     /**
@@ -3360,6 +3374,11 @@ class ExaminationController extends Controller
 
             // Subjects switched off for this exam don't count as outstanding.
             $teacherSubjects = ExaminationSubjectSetting::filterSat($exam->id, $teacherSubjects);
+
+            // Nor do choice subjects that no student currently takes.
+            $teacherSubjects = $teacherSubjects
+                ->filter(fn($s) => !Helper::choiceSubjectHasNoStudents($schoolId, $s))
+                ->values();
 
             $totalSubjects = $teacherSubjects->count();
             $submittedSubjects = 0;

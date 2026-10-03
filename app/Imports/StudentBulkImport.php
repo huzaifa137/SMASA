@@ -235,12 +235,8 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Normalize gender
-            $gender = ucfirst(strtolower($gender));
-
-            if (! in_array($gender, ['Male', 'Female', 'Other'])) {
-                $gender = 'Other';
-            }
+            // Normalize gender (accepts M / F / Boy / Girl as well)
+            $gender = self::normalizeGender($gender);
 
             // Find last registration number from students_basic
             $lastNumberBasic = DB::table('students_basic')
@@ -370,10 +366,7 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
             }
             $gender = trim($row['gender'] ?? '');
             if ($gender !== '') {
-                $gender = ucfirst(strtolower($gender));
-                if (in_array($gender, ['Male', 'Female', 'Other'])) {
-                    $updates['gender'] = $gender;
-                }
+                $updates['gender'] = self::normalizeGender($gender);
             }
 
             try {
@@ -551,5 +544,20 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                 'entered_at' => now(),
             ]
         );
+    }
+
+    /** Map the many ways a sheet can spell gender onto Male / Female / Other. */
+    private static function normalizeGender($value): string
+    {
+        $v = strtolower(trim((string) $value));
+
+        if (in_array($v, ['male', 'm', 'boy', 'b'], true)) {
+            return 'Male';
+        }
+        if (in_array($v, ['female', 'f', 'girl', 'g'], true)) {
+            return 'Female';
+        }
+
+        return 'Other';
     }
 }
