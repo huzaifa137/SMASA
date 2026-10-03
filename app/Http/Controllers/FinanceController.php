@@ -182,13 +182,15 @@ class FinanceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:200',
             'academic_year' => 'required|digits:4',
-            'term' => 'required|in:1,2,3',
+            // Optional: empty = the structure applies to every term.
+            'term' => 'nullable|in:1,2,3',
             'class_level' => 'nullable|string|max:50',
             'student_type' => 'required|in:boarding,day,all',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
             'items.*.fee_category_id' => 'required|exists:fee_categories,id',
+            'items.*.custom_category' => 'nullable|string|max:100',
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.is_mandatory' => 'boolean',
         ]);
@@ -199,7 +201,7 @@ class FinanceController extends Controller
                 'school_id' => $schoolId,
                 'name' => $validated['name'],
                 'academic_year' => $validated['academic_year'],
-                'term' => $validated['term'],
+                'term' => ($validated['term'] ?? null) ?: null,
                 'class_level' => $validated['class_level'] ?? null,
                 'student_type' => $validated['student_type'],
                 'notes' => $validated['notes'] ?? null,
@@ -208,7 +210,7 @@ class FinanceController extends Controller
 
             $total = 0;
             foreach ($validated['items'] as $i => $item) {
-                $category = FeeCategory::where('school_id', $schoolId)->findOrFail($item['fee_category_id']);
+                $category = $this->resolveFeeItemCategory($schoolId, $item);
                 $structure->items()->create([
                     'item_name' => $item['item_name'],
                     'category' => $category->name,
@@ -264,21 +266,28 @@ class FinanceController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:200',
+            'term' => 'nullable|in:1,2,3',
             'class_level' => 'nullable|string|max:50',
             'student_type' => 'required|in:boarding,day,all',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
             'items.*.fee_category_id' => 'required|exists:fee_categories,id',
+            'items.*.custom_category' => 'nullable|string|max:100',
             'items.*.amount' => 'required|numeric|min:0',
         ]);
+
+        // The term can be changed freely until students have been billed on
+        // this structure; after that it is locked so existing allocations
+        // never end up pointing at a structure for a different term.
+        $termLocked = $structure->allocations()->exists();
 
         DB::beginTransaction();
         try {
             $structure->items()->delete();
             $total = 0;
             foreach ($validated['items'] as $i => $item) {
-                $category = FeeCategory::where('school_id', $schoolId)->findOrFail($item['fee_category_id']);
+                $category = $this->resolveFeeItemCategory($schoolId, $item);
                 $structure->items()->create([
                     'item_name' => $item['item_name'],
                     'category' => $category->name,
@@ -290,13 +299,13 @@ class FinanceController extends Controller
                 $total += $item['amount'];
             }
 
-            $structure->update([
+            $structure->update(array_merge([
                 'name' => $validated['name'],
                 'class_level' => $validated['class_level'] ?? null,
                 'student_type' => $validated['student_type'],
                 'notes' => $validated['notes'] ?? null,
                 'total_amount' => $total,
-            ]);
+            ], $termLocked ? [] : ['term' => ($validated['term'] ?? null) ?: null]));
 
             DB::commit();
             return redirect()->route('finance.fee-structures.index')
@@ -305,6 +314,48 @@ class FinanceController extends Controller
             DB::rollBack();
             return back()->with('error', 'Update failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Resolves the FeeCategory a line item belongs to.
+     *
+     * Normal case: the category picked in the dropdown. If the school picked
+     * "Other" AND typed its own category name, that name becomes a real
+     * category for THIS school (reusing an existing one with the same name,
+     * reactivating it if it had been deactivated) so it is available in the
+     * dropdown, payments and reports from then on — not just on this one line.
+     */
+    private function resolveFeeItemCategory(int $schoolId, array $item): FeeCategory
+    {
+        $selected = FeeCategory::where('school_id', $schoolId)->findOrFail($item['fee_category_id']);
+
+        $custom = trim(preg_replace('/\s+/', ' ', (string) ($item['custom_category'] ?? '')));
+        if ($custom === '' || $selected->slug !== 'other') {
+            return $selected;
+        }
+
+        $slug = \Illuminate\Support\Str::slug($custom);
+        if ($slug === '') {
+            return $selected;
+        }
+
+        $existing = FeeCategory::where('school_id', $schoolId)->where('slug', $slug)->first();
+        if ($existing) {
+            if (!$existing->is_active) {
+                $existing->update(['is_active' => true]);
+            }
+            return $existing;
+        }
+
+        return FeeCategory::create([
+            'school_id' => $schoolId,
+            'name' => $custom,
+            'slug' => $slug,
+            'color' => '#64748b',
+            'icon' => 'fa-tag',
+            'is_external' => false,
+            'sort_order' => ((int) FeeCategory::where('school_id', $schoolId)->max('sort_order')) + 1,
+        ]);
     }
 
     public function deleteFeeStructure(int $id)
@@ -490,13 +541,28 @@ class FinanceController extends Controller
         $validated = $request->validate([
             'student_ids' => 'required|array|min:1',
             'fee_structure_id' => 'required|exists:fee_structures,id',
+            // Only needed for an all-terms structure: 1, 2, 3 or "all".
+            'term' => 'nullable|in:1,2,3,all',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_reason' => 'nullable|string|max:255',
         ]);
 
         $schoolId = session('LoggedSchool');
-        $structure = FeeStructure::findOrFail($validated['fee_structure_id']);
+        $structure = FeeStructure::where('school_id', $schoolId)->findOrFail($validated['fee_structure_id']);
         $discount = $validated['discount_amount'] ?? 0;
+
+        // A student's allocation always belongs to one concrete term. A
+        // fixed-term structure uses its own term; an all-terms structure
+        // needs the term(s) to bill chosen here.
+        if ($structure->appliesToAllTerms()) {
+            $chosen = $validated['term'] ?? null;
+            if (!$chosen) {
+                return back()->with('error', 'This fee structure applies to all terms. Please choose which term to allocate it for.');
+            }
+            $termsToBill = $chosen === 'all' ? [1, 2, 3] : [(int) $chosen];
+        } else {
+            $termsToBill = [(int) $structure->term];
+        }
 
         // Server-side validation: discount cannot exceed structure total
         if ($discount > $structure->total_amount) {
@@ -505,33 +571,37 @@ class FinanceController extends Controller
 
         $created = 0;
         foreach ($validated['student_ids'] as $studentId) {
-            $existing = StudentFeeAllocation::where([
-                'student_id' => $studentId,
-                'fee_structure_id' => $structure->id,
-                'academic_year' => $structure->academic_year,
-                'term' => $structure->term,
-            ])->first();
-
-            if (!$existing) {
-                $net = $structure->total_amount - $discount;
-                StudentFeeAllocation::create([
-                    'school_id' => $schoolId,
+            foreach ($termsToBill as $billTerm) {
+                $existing = StudentFeeAllocation::where([
                     'student_id' => $studentId,
                     'fee_structure_id' => $structure->id,
                     'academic_year' => $structure->academic_year,
-                    'term' => $structure->term,
-                    'allocated_amount' => $structure->total_amount,
-                    'discount_amount' => $discount,
-                    'discount_reason' => $validated['discount_reason'] ?? null,
-                    'balance' => $net,
-                    'payment_status' => 'unpaid',
-                    'allocated_by' => session('LoggedUser'),
-                ]);
-                $created++;
+                    'term' => $billTerm,
+                ])->first();
+
+                if (!$existing) {
+                    $net = $structure->total_amount - $discount;
+                    StudentFeeAllocation::create([
+                        'school_id' => $schoolId,
+                        'student_id' => $studentId,
+                        'fee_structure_id' => $structure->id,
+                        'academic_year' => $structure->academic_year,
+                        'term' => $billTerm,
+                        'allocated_amount' => $structure->total_amount,
+                        'discount_amount' => $discount,
+                        'discount_reason' => $validated['discount_reason'] ?? null,
+                        'balance' => $net,
+                        'payment_status' => 'unpaid',
+                        'allocated_by' => session('LoggedUser'),
+                    ]);
+                    $created++;
+                }
             }
         }
 
-        return back()->with('success', "Fees allocated to {$created} student(s).");
+        return back()->with('success', $created > 0
+            ? "Fees allocated: {$created} allocation(s) created."
+            : 'No new allocations were created — the selected students already have this fee structure for that term.');
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -2152,8 +2222,17 @@ class FinanceController extends Controller
             'discount_reason' => 'nullable|string|max:255',
         ]);
 
-        $structure = FeeStructure::findOrFail($validated['fee_structure_id']);
+        $structure = FeeStructure::where('school_id', $schoolId)->findOrFail($validated['fee_structure_id']);
         $discount = $validated['discount_amount'] ?? 0;
+
+        // The allocation's term never changes here, so the new structure has
+        // to cover that term (its own term, or all terms).
+        if (!$structure->appliesToTerm((int) $allocation->term)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'That fee structure is for ' . $structure->termLabel() . ', but this allocation is for Term ' . $allocation->term . '.'
+            ], 422);
+        }
 
         // Server-side validation: discount cannot exceed structure total
         if ($discount > $structure->total_amount) {

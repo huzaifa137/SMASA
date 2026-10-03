@@ -183,6 +183,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/secondary-alevel-subjects', 'storeSecondaryALevelSubject')->name('secondary-alevel-subjects.store');
             Route::put('/secondary-alevel-subjects/{md_id}', 'updateSecondaryALevelSubject')->name('secondary-alevel-subjects.update');
             Route::delete('/secondary-alevel-subjects/{md_id}', 'deleteSecondaryALevelSubject')->name('secondary-alevel-subjects.delete');
+
+            // Global Secondary O-Level subject list — which subjects are
+            // compulsory vs elective (see secondaryOLevelSubjectsIndex()).
+            Route::get('/secondary-olevel-subjects', 'secondaryOLevelSubjectsIndex')->name('secondary-olevel-subjects');
+            Route::post('/secondary-olevel-subjects', 'storeSecondaryOLevelSubject')->name('secondary-olevel-subjects.store');
+            Route::put('/secondary-olevel-subjects/{md_id}', 'updateSecondaryOLevelSubject')->name('secondary-olevel-subjects.update');
+            Route::delete('/secondary-olevel-subjects/{md_id}', 'deleteSecondaryOLevelSubject')->name('secondary-olevel-subjects.delete');
         });
 
     // NLSC (New Lower Secondary Curriculum, Senior 1-4) Topic catalogue —

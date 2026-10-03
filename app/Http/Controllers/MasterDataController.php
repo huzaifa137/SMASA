@@ -857,4 +857,162 @@ public function dropDown($links)
 
         return response()->json(['success' => true]);
     }
+
+    // ──────────────────────────────────────────────────────────────────
+    // Secondary O-Level subjects (global list, master code 46)
+    // ──────────────────────────────────────────────────────────────────
+    //
+    // Counterpart to the A-Level list above. Every O-Level subject is tagged
+    // in md_misc1 as 'Core' (compulsory — every student in a class that
+    // offers it takes it) or 'Elective' (each student opts in, up to 2, on
+    // the O-Level Electives screen). Helper::subjectSelectionKind() reads
+    // exactly this tag, so flipping a subject between the two groups here is
+    // what decides whether it has students: an Elective nobody has picked has
+    // no students at all (marks entry hides it, the report shows nothing).
+    // Anything not tagged 'Elective' is treated as compulsory.
+    //
+    // Changes apply to every school — a school's own additional electives
+    // are still managed from its own O-Level Electives page.
+    private const SECONDARY_OLEVEL_SUBJECT_GROUPS = [
+        'Core' => 'Compulsory',
+        'Elective' => 'Elective',
+    ];
+
+    public function secondaryOLevelSubjectsIndex()
+    {
+        PermissionHelper::denyUnlessFeature('view_master_data');
+
+        $subjects = DB::table('master_datas')
+            ->where('md_master_code_id', config('constants.options.SECONDARY_OLEVEL_SUBJECTS'))
+            ->orderBy('md_name')
+            ->get();
+
+        // Untagged rows are compulsory (same rule as subjectSelectionKind()).
+        $groupedSubjects = $subjects->groupBy(fn($s) => $s->md_misc1 === 'Elective' ? 'Elective' : 'Core');
+
+        return view('master-logic.secondary-olevel-subjects', [
+            'groupedSubjects' => $groupedSubjects,
+            'groups' => self::SECONDARY_OLEVEL_SUBJECT_GROUPS,
+        ]);
+    }
+
+    public function storeSecondaryOLevelSubject(Request $request)
+    {
+        if (!PermissionHelper::canFeature('create_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'subject_group' => 'required|in:' . implode(',', array_keys(self::SECONDARY_OLEVEL_SUBJECT_GROUPS)),
+            'subject_name' => 'required|string|max:255',
+        ]);
+
+        $masterCodeId = config('constants.options.SECONDARY_OLEVEL_SUBJECTS');
+        $name = trim($request->subject_name);
+
+        // A subject can only be in one group, so the name must be unique
+        // across the whole O-Level list (case-insensitive).
+        $exists = DB::table('master_datas')
+            ->where('md_master_code_id', $masterCodeId)
+            ->whereRaw('LOWER(md_name) = ?', [mb_strtolower($name)])
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'An O-Level subject with that name already exists.'], 422);
+        }
+
+        $mdId = DB::table('master_datas')->insertGetId([
+            'md_master_code_id' => $masterCodeId,
+            'md_code' => $name,
+            'md_name' => $name,
+            'md_description' => $name,
+            'md_date_added' => (string) time(),
+            'md_added_by' => (string) Helper::user_id(),
+            'md_misc1' => $request->subject_group,
+        ], 'md_id');
+
+        return response()->json([
+            'success' => true,
+            'subject' => ['md_id' => $mdId, 'md_name' => $name, 'md_misc1' => $request->subject_group],
+        ]);
+    }
+
+    public function updateSecondaryOLevelSubject(Request $request, $md_id)
+    {
+        if (!PermissionHelper::canFeature('edit_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $masterCodeId = config('constants.options.SECONDARY_OLEVEL_SUBJECTS');
+        $record = DB::table('master_datas')->where('md_id', $md_id)->where('md_master_code_id', $masterCodeId)->first();
+
+        if (!$record) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        $request->validate([
+            'subject_name' => 'required|string|max:255',
+            'subject_group' => 'nullable|in:' . implode(',', array_keys(self::SECONDARY_OLEVEL_SUBJECT_GROUPS)),
+        ]);
+
+        $name = trim($request->subject_name);
+
+        $duplicate = DB::table('master_datas')
+            ->where('md_master_code_id', $masterCodeId)
+            ->where('md_id', '!=', $md_id)
+            ->whereRaw('LOWER(md_name) = ?', [mb_strtolower($name)])
+            ->exists();
+
+        if ($duplicate) {
+            return response()->json(['success' => false, 'message' => 'An O-Level subject with that name already exists.'], 422);
+        }
+
+        $group = $request->subject_group ?: ($record->md_misc1 === 'Elective' ? 'Elective' : 'Core');
+
+        DB::table('master_datas')->where('md_id', $md_id)->update([
+            'md_code' => $name,
+            'md_name' => $name,
+            'md_description' => $name,
+            'md_misc1' => $group,
+        ]);
+
+        return response()->json(['success' => true, 'subject' => ['md_id' => (int) $md_id, 'md_name' => $name, 'md_misc1' => $group]]);
+    }
+
+    public function deleteSecondaryOLevelSubject($md_id)
+    {
+        if (!PermissionHelper::canFeature('delete_master_data')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $masterCodeId = config('constants.options.SECONDARY_OLEVEL_SUBJECTS');
+        $record = DB::table('master_datas')->where('md_id', $md_id)->where('md_master_code_id', $masterCodeId)->first();
+
+        if (!$record) {
+            return response()->json(['success' => false, 'message' => 'Subject not found.'], 404);
+        }
+
+        if (DB::table('class_subjects')->where('subject_id', $md_id)->where('subject_type', 'secondary_olevel')->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This subject is already assigned to one or more classes, so it cannot be deleted. Remove it from those classes first.',
+            ], 422);
+        }
+
+        $pickedByStudents = DB::table('student_olevel_electives')
+            ->whereJsonContains('elective_subject_ids', (int) $md_id)
+            ->orWhereJsonContains('elective_subject_ids', (string) $md_id)
+            ->exists();
+
+        if ($pickedByStudents) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Some students have already chosen this as an elective, so it cannot be deleted.',
+            ], 422);
+        }
+
+        DB::table('master_datas')->where('md_id', $md_id)->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

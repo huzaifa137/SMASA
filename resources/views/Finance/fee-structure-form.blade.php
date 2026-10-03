@@ -483,6 +483,21 @@
             margin: 0;
         }
 
+        /* Extra row under a line item: shown when the category is "Other" */
+        .custom-cat-row {
+            grid-column: 2 / span 2;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--b);
+        }
+
+        @media(max-width:900px) {
+            .custom-cat-row {
+                grid-column: 1 / -1;
+            }
+        }
+
         .item-cols-header {
             display: grid;
             grid-template-columns: 24px 1fr 180px 150px 80px 44px;
@@ -579,16 +594,25 @@
                         @error('academic_year')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Term <span style="color:var(--r)">*</span></label>
-                        <select name="term" class="form-control @error('term') is-invalid @enderror" {{ $isEdit ? 'disabled' : '' }}>
-                            <option value="">Select Term</option>
+                        <label class="form-label">Term</label>
+                        @php $termLocked = $isEdit && $structure->allocations()->exists(); @endphp
+                        <select name="term" class="form-control @error('term') is-invalid @enderror" {{ $termLocked ? 'disabled' : '' }}>
+                            <option value="">All Terms</option>
                             @foreach([1 => 'Term 1', 2 => 'Term 2', 3 => 'Term 3'] as $v => $l)
-                                <option value="{{ $v }}" {{ old('term', $structure->term ?? '') == $v ? 'selected' : '' }}>
+                                <option value="{{ $v }}" {{ (string) old('term', $structure->term ?? '') === (string) $v ? 'selected' : '' }}>
                                     {{ $l }}
                                 </option>
                             @endforeach
                         </select>
-                        @if($isEdit)<input type="hidden" name="term" value="{{ $structure->term }}">@endif
+                        @if($termLocked)<input type="hidden" name="term" value="{{ $structure->term }}">@endif
+                        <small style="color:var(--t3);font-size:.73rem;margin-top:.3rem;display:block;">
+                            <i class="fas fa-info-circle"></i>
+                            @if($termLocked)
+                                Locked — students are already billed on this structure.
+                            @else
+                                Optional. Leave as "All Terms" for a structure that applies every term.
+                            @endif
+                        </small>
                         @error('term')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
@@ -647,7 +671,7 @@
                             <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
                             <input type="text" name="items[{{ $i }}][item_name]" class="form-control"
                                 value="{{ $item['item_name'] ?? '' }}" placeholder="e.g. Tuition Fees" required>
-                            <select name="items[{{ $i }}][fee_category_id]" class="form-control">
+                            <select name="items[{{ $i }}][fee_category_id]" class="form-control item-category">
                                 @foreach($categoryOptions as $cv => $cl)
                                     <option value="{{ $cv }}" {{ ($item['fee_category_id'] ?? '') == $cv ? 'selected' : '' }}>{{ $cl }}
                                     </option>
@@ -662,6 +686,12 @@
                             <button type="button" class="btn btn-danger btn-sm remove-item" title="Remove">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
+                            <div class="custom-cat-row" style="display:none">
+                                <i class="fas fa-tag"></i>
+                                <input type="text" name="items[{{ $i }}][custom_category]" class="form-control custom-cat-input"
+                                    maxlength="100" value="{{ $item['custom_category'] ?? '' }}" disabled
+                                    placeholder="Type the new category name (e.g. Scouts, Swimming, Insurance) — saved for your school">
+                            </div>
                         </div>
                     @empty
                         <div class="items-empty" id="emptyState">
@@ -715,6 +745,8 @@
         // ── Config ──────────────────────────────────────────────────────
         const CATEGORIES = @json($categoryOptions);
         const DEFAULT_CATEGORY = @json((string) $defaultCategoryId);
+        // Picking one of these reveals the "type your own category" box.
+        const OTHER_CATEGORY_IDS = @json($categories->where('slug', 'other')->pluck('id')->map(fn($id) => (string) $id)->values());
         let itemIndex = {{ count($existingItems) }};
         const isEdit = {{ $isEdit ? 'true' : 'false' }};
 
@@ -759,7 +791,7 @@
                 <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
                 <input type="text" name="items[${idx}][item_name]" class="form-control"
                     value="${name.replace(/"/g, '&quot;')}" placeholder="e.g. Tuition Fees" required>
-                <select name="items[${idx}][fee_category_id]" class="form-control">
+                <select name="items[${idx}][fee_category_id]" class="form-control item-category">
                     ${catOptions(cat)}
                 </select>
                 <input type="text" name="items[${idx}][amount]" class="form-control item-amount"
@@ -770,7 +802,13 @@
                 </div>
                 <button type="button" class="btn btn-danger btn-sm remove-item" title="Remove">
                     <i class="fas fa-trash-alt"></i>
-                </button>`;
+                </button>
+                <div class="custom-cat-row" style="display:none">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" name="items[${idx}][custom_category]" class="form-control custom-cat-input"
+                        maxlength="100" disabled
+                        placeholder="Type the new category name (e.g. Scouts, Swimming, Insurance) — saved for your school">
+                </div>`;
             return card;
         }
 
@@ -955,6 +993,29 @@
                 }
             });
         });
+
+        // ── "Other" category → let the user type their own ─────────────────
+        function syncCustomCategory(card) {
+            const select = card.querySelector('.item-category');
+            const row = card.querySelector('.custom-cat-row');
+            if (!select || !row) return;
+            const isOther = OTHER_CATEGORY_IDS.includes(String(select.value));
+            const input = row.querySelector('.custom-cat-input');
+            row.style.display = isOther ? '' : 'none';
+            input.disabled = !isOther;           // disabled inputs are not submitted
+        }
+
+        container.addEventListener('change', function (e) {
+            if (e.target.classList.contains('item-category')) {
+                const card = e.target.closest('.item-card');
+                syncCustomCategory(card);
+                if (OTHER_CATEGORY_IDS.includes(String(e.target.value))) {
+                    card.querySelector('.custom-cat-input').focus();
+                }
+            }
+        });
+
+        container.querySelectorAll('.item-card').forEach(syncCustomCategory);
 
         // ── Wire up the top Add Item button ──────────────────────────────
         document.getElementById('addItem').addEventListener('click', addNewItem);

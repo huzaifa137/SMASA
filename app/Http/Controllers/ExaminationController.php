@@ -345,6 +345,12 @@ class ExaminationController extends Controller
                 ->with('error', 'This subject is not being examined in this examination.');
         }
 
+        // A choice subject nobody takes has no students to enter marks for.
+        if (Helper::choiceSubjectHasNoStudents($schoolId, $classSubject)) {
+            return redirect()->route('examination.marks.entry', $examId)
+                ->with('error', 'No student takes this subject, so there are no marks to enter.');
+        }
+
         // Secondary O-Level (the NCDC NLSC curriculum) assesses against a
         // specific Topic/Project + Competency Area rather than a plain
         // numeric score — that has to be chosen first, on the Create
@@ -3508,6 +3514,12 @@ class ExaminationController extends Controller
 
                 // Subjects switched off for this exam aren't being sat.
                 $classSubjects = ExaminationSubjectSetting::filterSat($exam->id, $classSubjects);
+
+                // Nor are choice subjects that no student currently takes
+                // (they showed up as an empty 0/0 row).
+                $classSubjects = $classSubjects
+                    ->filter(fn($s) => !Helper::choiceSubjectHasNoStudents($schoolId, $s))
+                    ->values();
 
                 $studentCount = DB::table('students')
                     ->where('school_id', $schoolId)

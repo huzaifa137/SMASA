@@ -34,8 +34,24 @@ class FeeStructure extends Model
         $this->update(['total_amount' => $this->items()->sum('amount')]);
     }
 
+    /** True when this structure is not tied to a single term (term is NULL). */
+    public function appliesToAllTerms(): bool
+    {
+        return $this->term === null || $this->term === '';
+    }
+
+    /** Whether this structure can be billed for the given term (1-3). */
+    public function appliesToTerm(int $term): bool
+    {
+        return $this->appliesToAllTerms() || (int) $this->term === $term;
+    }
+
     public function termLabel(): string
     {
+        if ($this->appliesToAllTerms()) {
+            return 'All Terms';
+        }
+
         return match ((int) $this->term) {
             1 => 'Term 1', 2 => 'Term 2', 3 => 'Term 3', default => 'Term ' . $this->term,
         };

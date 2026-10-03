@@ -1748,11 +1748,28 @@
                         <select name="fee_structure_id" required class="modal-select" id="modalFeeStructure">
                             <option value="">— Select fee structure —</option>
                             @foreach($structures as $struct)
-                                <option value="{{ $struct->id }}">{{ $struct->name }} - Term {{ $struct->term }} (UGX
+                                <option value="{{ $struct->id }}" data-term="{{ $struct->term }}">{{ $struct->name }} - {{ $struct->termLabel() }} (UGX
                                     {{ number_format($struct->total_amount, 0) }})
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- Term picker: only for fee structures that apply to all terms --}}
+                    <div class="modal-form-group" id="modalStepTerm" style="display: none;">
+                        <label class="modal-label">
+                            <i class="fas fa-calendar-alt"></i> Bill for Term
+                        </label>
+                        <select name="term" class="modal-select" id="modalAllocTerm" disabled>
+                            <option value="">— Select term —</option>
+                            <option value="1">Term 1</option>
+                            <option value="2">Term 2</option>
+                            <option value="3">Term 3</option>
+                            <option value="all">All 3 terms</option>
+                        </select>
+                        <small class="modal-hint">
+                            <i class="fas fa-info-circle"></i> This fee structure applies to all terms, so choose which term(s) to bill now.
+                        </small>
                     </div>
 
                     {{-- Discount Section --}}
@@ -1811,7 +1828,7 @@
                         <select name="fee_structure_id" required class="modal-select" id="editFeeStructure">
                             <option value="">— Select fee structure —</option>
                             @foreach($structures as $struct)
-                                <option value="{{ $struct->id }}">{{ $struct->name }} - Term {{ $struct->term }} (UGX
+                                <option value="{{ $struct->id }}" data-term="{{ $struct->term }}">{{ $struct->name }} - {{ $struct->termLabel() }} (UGX
                                     {{ number_format($struct->total_amount, 0) }})
                                 </option>
                             @endforeach
@@ -1864,6 +1881,29 @@
         // Store fee structure amounts for validation
         const feeStructureAmounts = @json($structures->mapWithKeys(fn($s) => [$s->id => $s->total_amount]));
 
+        // A fee structure with no term applies to all terms, so the user has to
+        // say which term(s) to bill. Fixed-term structures need no picker.
+        function hideModalTerm() {
+            const step = document.getElementById('modalStepTerm');
+            const sel = document.getElementById('modalAllocTerm');
+            if (step) step.style.display = 'none';
+            if (sel) { sel.disabled = true; sel.value = ''; }
+        }
+
+        function syncModalTerm() {
+            const structSel = document.getElementById('modalFeeStructure');
+            const step = document.getElementById('modalStepTerm');
+            const sel = document.getElementById('modalAllocTerm');
+            if (!structSel || !step || !sel) return;
+
+            const opt = structSel.options[structSel.selectedIndex];
+            const allTerms = !!structSel.value && opt && opt.dataset.term === '';
+
+            step.style.display = allTerms ? 'block' : 'none';
+            sel.disabled = !allTerms;   // disabled fields are not submitted
+            if (!allTerms) sel.value = '';
+        }
+
         function applyFilters() {
             let year = document.getElementById('filterYear').value;
             let term = document.getElementById('filterTerm').value;
@@ -1881,6 +1921,7 @@
             document.getElementById('modalStepStudents').style.display = 'none';
             document.getElementById('modalStepFeeStructure').style.display = 'none';
             document.getElementById('modalStepDiscount').style.display = 'none';
+            hideModalTerm();
             document.getElementById('modalStudentSearch').value = '';
             document.getElementById('modalFeeStructure').value = '';
             document.getElementById('modalSelectedStudentsContainer').innerHTML = '';
@@ -1949,6 +1990,7 @@
             document.getElementById('modalStepStudents').style.display = 'none';
             document.getElementById('modalStepFeeStructure').style.display = 'none';
             document.getElementById('modalStepDiscount').style.display = 'none';
+            hideModalTerm();
 
             loadModalStreams(modalState.classId);
         }
@@ -1960,6 +2002,7 @@
             document.getElementById('modalStepStudents').style.display = 'none';
             document.getElementById('modalStepFeeStructure').style.display = 'none';
             document.getElementById('modalStepDiscount').style.display = 'none';
+            hideModalTerm();
         }
 
         async function loadModalStreams(classId) {
@@ -1999,6 +2042,7 @@
             document.getElementById('modalStepStudents').style.display = 'block';
             document.getElementById('modalStepFeeStructure').style.display = 'block';
             document.getElementById('modalStepDiscount').style.display = 'block';
+            syncModalTerm();
 
             loadModalStudents(modalState.classId, modalState.streamId);
         }
@@ -2010,6 +2054,7 @@
             document.getElementById('modalStepStudents').style.display = 'none';
             document.getElementById('modalStepFeeStructure').style.display = 'none';
             document.getElementById('modalStepDiscount').style.display = 'none';
+            hideModalTerm();
         }
 
         async function loadModalStudents(classId, streamId) {
@@ -2120,6 +2165,7 @@
 
         if (modalFeeStructure) {
             modalFeeStructure.addEventListener('change', function () {
+                syncModalTerm();
                 const structureId = this.value;
                 selectedFeeStructureAmount = feeStructureAmounts[structureId] || 0;
 
@@ -2234,6 +2280,17 @@
                     icon: 'error',
                     title: 'No Fee Structure Selected',
                     text: 'Please select a fee structure to allocate.',
+                    confirmButtonColor: '#2f2ccb'
+                });
+                return;
+            }
+
+            const allocTermSel = document.getElementById('modalAllocTerm');
+            if (allocTermSel && !allocTermSel.disabled && !allocTermSel.value) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Term Selected',
+                    text: 'This fee structure applies to all terms. Please choose which term to bill.',
                     confirmButtonColor: '#2f2ccb'
                 });
                 return;

@@ -2301,6 +2301,13 @@ class Helper extends Controller
             // No "Create Assessment" is needed for a subject this exam isn't sitting.
             $classSubjects = \App\Models\ExaminationSubjectSetting::filterSat($exam->id, $classSubjects);
 
+            // Nor for an elective no student currently takes (e.g. Physical
+            // Education nobody has picked): there is nobody to assess, so it
+            // must not show up as something a teacher still has to create.
+            $classSubjects = $classSubjects
+                ->filter(fn($cs) => !self::choiceSubjectHasNoStudents($schoolId, $cs))
+                ->values();
+
             foreach ($classSubjects as $cs) {
                 $hasAssessment = \App\Models\NlscAssessment::where('school_id', $schoolId)
                     ->where('examination_id', $exam->id)
@@ -2386,9 +2393,15 @@ class Helper extends Controller
             $a->setAttribute('subject_matter_name', $a->assessment_type === 'projects'
                 ? optional($a->project)->project_name
                 : optional($a->topic)->topic_name);
+            $a->setAttribute('_has_no_students', $classSubject && self::choiceSubjectHasNoStudents($schoolId, $classSubject));
 
             return $a;
-        });
+        })
+            // Hide assessments on an elective nobody takes any more. They are
+            // kept in the database (not deleted) so they reappear untouched
+            // if a student later picks that elective.
+            ->reject(fn($a) => $a->getAttribute('_has_no_students'))
+            ->values();
     }
 
     public static function pendingNlscAssessmentsCountForExam(int $examId): int

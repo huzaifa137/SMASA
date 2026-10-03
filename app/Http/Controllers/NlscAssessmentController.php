@@ -258,7 +258,7 @@ class NlscAssessmentController extends Controller
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
 
-        [$exam, $classSubject] = $this->examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId);
+        [$exam, $classSubject] = $this->examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId, true);
 
         $assessment = NlscAssessment::where('id', $id)
             ->where('school_id', $schoolId)
@@ -741,7 +741,7 @@ class NlscAssessmentController extends Controller
      * that isn't their own would always 404 here, even though the link
      * they clicked was correctly shown to them.
      */
-    private function examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId): array
+    private function examAndClassSubject($examId, $classSubjectId, $schoolId, $teacherId, bool $allowNoStudents = false): array
     {
         $exam = Examination::where('id', $examId)
             ->where('school_id', $schoolId)
@@ -757,6 +757,12 @@ class NlscAssessmentController extends Controller
                 });
             })
             ->firstOrFail();
+
+        // An elective that no student takes has nobody to assess, so it can't
+        // be opened, created against or edited — even via an old link.
+        if (!$allowNoStudents && Helper::choiceSubjectHasNoStudents($schoolId, $classSubject)) {
+            abort(404, 'No student takes this subject.');
+        }
 
         return [$exam, $classSubject];
     }

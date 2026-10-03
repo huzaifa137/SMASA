@@ -539,6 +539,10 @@ use App\Helpers\PermissionHelper;
                                     class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
                     @endif
                     @if(PermissionHelper::canFeature('view_master_data'))
+                        <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
+                                    class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
+                    @endif
+                    @if(PermissionHelper::canFeature('view_master_data'))
                         <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
                                 Competency Areas</a></li>
                         <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects
