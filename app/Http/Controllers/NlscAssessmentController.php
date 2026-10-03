@@ -344,6 +344,12 @@ class NlscAssessmentController extends Controller
             ->orderBy('firstname')
             ->get();
 
+        // Electives only list the students who take them.
+        [$students, $hiddenStudents] = Helper::filterStudentsForClassSubject($students, $schoolId, $classSubject);
+        $subjectSelectionNote = $hiddenStudents > 0
+            ? $hiddenStudents . ' student(s) in this class-stream do not take this subject (per their saved electives), so they are not listed.'
+            : null;
+
         $existingMarks = NlscAssessmentMark::where('nlsc_assessment_id', $assessment->id)
             ->get()
             ->keyBy('student_id');
@@ -360,7 +366,8 @@ class NlscAssessmentController extends Controller
             'siblingAssessments',
             'display',
             'students',
-            'existingMarks'
+            'existingMarks',
+            'subjectSelectionNote'
         ));
     }
 
@@ -473,9 +480,16 @@ class NlscAssessmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
+        // Students who don't take this elective can't receive a mark for it.
+        $eligibleStudentIds = Helper::studentIdsTakingClassSubject($schoolId, $classSubject);
+
         DB::beginTransaction();
         try {
             foreach ($request->marks as $entry) {
+                if ($eligibleStudentIds !== null && !$eligibleStudentIds->contains((int) $entry['student_id'])) {
+                    continue;
+                }
+
                 $marksObtained = ($entry['marks'] !== '' && $entry['marks'] !== null) ? (float) $entry['marks'] : null;
 
                 NlscAssessmentMark::updateOrCreate(

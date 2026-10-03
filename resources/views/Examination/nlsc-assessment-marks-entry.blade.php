@@ -254,7 +254,7 @@
                                 <td colspan="5">
                                     <div class="empty-state">
                                         <i class="fas fa-users d-block mb-2" style="font-size:1.8rem;"></i>
-                                        No students found in this class-stream.
+                                        {{ $subjectSelectionNote ?? 'No students found in this class-stream.' }}
                                     </div>
                                 </td>
                             </tr>

@@ -1282,6 +1282,181 @@ class Helper extends Controller
         return $masterRecord;
     }
 
+    // ──────────────────────────────────────────────────────────────────
+    // Per-student subject selection (Secondary A-Level / O-Level)
+    // ──────────────────────────────────────────────────────────────────
+    //
+    // class_subjects is the class-stream's subject POOL. For Secondary
+    // A-Level, every subject except General Paper is chosen per student
+    // (principal subjects + one subsidiary, student_alevel_combinations).
+    // For Secondary O-Level, the Elective subjects are chosen per student
+    // (up to 2, student_olevel_electives). Compulsory subjects belong to
+    // everyone. These helpers answer "which students actually take THIS
+    // class_subjects row?" so marks entry, progress counts and report
+    // cards never include a student for a subject they don't take.
+
+    /**
+     * 'alevel' / 'olevel' when this class_subjects row is a per-student
+     * choice subject, null when it is compulsory (or not Secondary).
+     */
+    public static function subjectSelectionKind($classSubject): ?string
+    {
+        $type = $classSubject->subject_type ?? null;
+        $subjectId = $classSubject->subject_id ?? null;
+
+        if (empty($subjectId) || !in_array($type, ['secondary_alevel', 'secondary_olevel'], true)) {
+            return null;
+        }
+
+        if ($type === 'secondary_alevel') {
+            if ((int) $subjectId >= 9_000_000_000) {
+                return 'alevel'; // a school's own principal/subsidiary subject
+            }
+
+            $group = DB::table('master_datas')->where('md_id', $subjectId)->value('md_misc1');
+
+            return $group === 'General' ? null : 'alevel'; // General Paper is compulsory
+        }
+
+        if ((int) $subjectId >= 9_500_000_000) {
+            return 'olevel'; // a school's own elective
+        }
+
+        $group = DB::table('master_datas')->where('md_id', $subjectId)->value('md_misc1');
+
+        return $group === 'Elective' ? 'olevel' : null;
+    }
+
+    /**
+     * IDs of the students (in this row's class-stream) who take this
+     * subject, or null when it is compulsory and everyone takes it.
+     */
+    public static function studentIdsTakingClassSubject($schoolId, $classSubject)
+    {
+        $kind = self::subjectSelectionKind($classSubject);
+
+        if ($kind === null) {
+            return null;
+        }
+
+        $subjectId = (int) $classSubject->subject_id;
+
+        $classStudentIds = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classSubject->class_id)
+            ->where('stream', $classSubject->stream_id)
+            ->pluck('id');
+
+        if ($kind === 'alevel') {
+            return \App\Models\StudentALevelCombination::where('school_id', $schoolId)
+                ->whereIn('student_id', $classStudentIds)
+                ->get()
+                ->filter(function ($c) use ($subjectId) {
+                    $principals = array_map('intval', (array) ($c->principal_subject_ids ?? []));
+
+                    return in_array($subjectId, $principals, true)
+                        || (int) $c->subsidiary_subject_id === $subjectId;
+                })
+                ->pluck('student_id')
+                ->map(fn($id) => (int) $id)
+                ->unique()
+                ->values();
+        }
+
+        return \App\Models\StudentOLevelElective::where('school_id', $schoolId)
+            ->whereIn('student_id', $classStudentIds)
+            ->get()
+            ->filter(fn($e) => in_array($subjectId, array_map('intval', (array) ($e->elective_subject_ids ?? [])), true))
+            ->pluck('student_id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Narrow a class-stream's student list to those taking this subject.
+     * Returns [filteredStudents, hiddenCount].
+     */
+    public static function filterStudentsForClassSubject($students, $schoolId, $classSubject): array
+    {
+        $takers = self::studentIdsTakingClassSubject($schoolId, $classSubject);
+
+        if ($takers === null) {
+            return [$students, 0];
+        }
+
+        $filtered = $students->filter(fn($s) => $takers->contains((int) $s->id))->values();
+
+        return [$filtered, $students->count() - $filtered->count()];
+    }
+
+    /**
+     * How many students are expected to have a mark for this subject
+     * (the denominator for progress / release checks).
+     */
+    public static function expectedStudentCount($schoolId, $classSubject): int
+    {
+        $takers = self::studentIdsTakingClassSubject($schoolId, $classSubject);
+
+        if ($takers !== null) {
+            return $takers->count();
+        }
+
+        return DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classSubject->class_id)
+            ->where('stream', $classSubject->stream_id)
+            ->count();
+    }
+
+    /**
+     * Drop ExaminationMark rows for a student's subjects that the student
+     * does not take (e.g. a subject later removed from their
+     * combination). Conservative on purpose: a student with NO saved
+     * combination/electives record is left untouched, so legacy marks
+     * never vanish from a report card.
+     */
+    public static function filterMarksToStudentSubjects($marks, $studentId, $schoolId)
+    {
+        if ($marks->isEmpty()) {
+            return $marks;
+        }
+
+        $combination = \App\Models\StudentALevelCombination::where('school_id', $schoolId)
+            ->where('student_id', $studentId)->first();
+        $electives = \App\Models\StudentOLevelElective::where('school_id', $schoolId)
+            ->where('student_id', $studentId)->first();
+
+        if (!$combination && !$electives) {
+            return $marks;
+        }
+
+        $first = $marks->first();
+        $rows = DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $first->class_id)
+            ->where('stream_id', (string) $first->stream_id)
+            ->get()
+            ->keyBy(fn($r) => ($r->subject_id ?? '0') . '|' . ($r->custom_subject_id ?? '0'));
+
+        return $marks->filter(function ($m) use ($rows, $combination, $electives) {
+            $row = $rows->get(($m->subject_id ?? '0') . '|' . ($m->custom_subject_id ?? '0'));
+            $kind = $row ? self::subjectSelectionKind($row) : null;
+            $sid = (int) ($m->subject_id ?? 0);
+
+            if ($kind === 'alevel' && $combination) {
+                return in_array($sid, array_map('intval', (array) ($combination->principal_subject_ids ?? [])), true)
+                    || (int) $combination->subsidiary_subject_id === $sid;
+            }
+
+            if ($kind === 'olevel' && $electives) {
+                return in_array($sid, array_map('intval', (array) ($electives->elective_subject_ids ?? [])), true);
+            }
+
+            return true;
+        })->values();
+    }
+
     public static function recordMdname($md_id)
     {
         // School-scoped Secondary subjects (a school's own A-Level
@@ -1848,11 +2023,20 @@ class Helper extends Controller
             return 0;
         }
 
+        // Elective subjects only count the students who take them.
+        $takers = self::studentIdsTakingClassSubject($schoolId, (object) [
+            'subject_type' => 'secondary_olevel',
+            'subject_id' => $subjectId,
+            'class_id' => $classId,
+            'stream_id' => $streamId,
+        ]);
+
         $studentsWithEveryMark = null;
 
         foreach ($assessmentIds as $assessmentId) {
             $studentsWithThisMark = \App\Models\NlscAssessmentMark::where('nlsc_assessment_id', $assessmentId)
                 ->whereNotNull('marks_obtained')
+                ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
                 ->pluck('student_id');
 
             $studentsWithEveryMark = $studentsWithEveryMark === null
@@ -1901,12 +2085,10 @@ class Helper extends Controller
             $hasPendingMarks = false;
 
             foreach ($teacherSubjects as $subject) {
-                // Count students in this class-stream
-                $studentCount = DB::table('students')
-                    ->where('school_id', $schoolId)
-                    ->where('senior', $subject->class_id)
-                    ->where('stream', $subject->stream_id)
-                    ->count();
+                // Students expected to have a mark for THIS subject
+                // (choice subjects only count the students taking them).
+                $takers = self::studentIdsTakingClassSubject($schoolId, $subject);
+                $studentCount = $takers !== null ? $takers->count() : self::expectedStudentCount($schoolId, $subject);
 
                 // Count marks entered for this subject. subject_id is null
                 // for a pure custom subject (no master subject_id), so an
@@ -1927,6 +2109,7 @@ class Helper extends Controller
                         }, function ($q) use ($subject) {
                             $q->where('subject_id', $subject->subject_id);
                         })
+                        ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
                         ->whereNotNull('marks_obtained')
                         ->count();
 

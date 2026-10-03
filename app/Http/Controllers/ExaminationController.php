@@ -377,6 +377,13 @@ class ExaminationController extends Controller
             ->orderBy('firstname')
             ->get();
 
+        // Choice subjects (A-Level principals/subsidiary, O-Level
+        // electives) list only the students who actually take them.
+        [$students, $hiddenStudents] = Helper::filterStudentsForClassSubject($students, $schoolId, $classSubject);
+        $subjectSelectionNote = $hiddenStudents > 0
+            ? $hiddenStudents . ' student(s) in this class-stream do not take this subject (per their saved subject combination / electives), so they are not listed.'
+            : null;
+
         // Identify this subject the same way regardless of whether it's a
         // master subject, a pure custom subject, or a master subject that
         // was carried over when the school switched to custom subjects
@@ -454,7 +461,8 @@ class ExaminationController extends Controller
             'earlyYearsMaxMark',
             'assessmentScale',
             'scaleGradingBands',
-            'isCustomSubject'
+            'isCustomSubject',
+            'subjectSelectionNote'
         ));
     }
 
@@ -546,9 +554,19 @@ class ExaminationController extends Controller
 
         $isEarlyYears = (bool) $assessmentScale;
 
+        // Students who don't take this subject can never receive a mark
+        // for it, even from a stale page or a hand-built request.
+        $eligibleStudentIds = $classSubjectRow
+            ? Helper::studentIdsTakingClassSubject($schoolId, $classSubjectRow)
+            : null;
+
         DB::beginTransaction();
         try {
             foreach ($request->marks as $entry) {
+                if ($eligibleStudentIds !== null && !$eligibleStudentIds->contains((int) $entry['student_id'])) {
+                    continue;
+                }
+
                 // Only process if marks value is provided (not empty string)
                 $marksObtained = $entry['marks'] !== '' && $entry['marks'] !== null ? (float) $entry['marks'] : null;
                 $grade = null;
@@ -2286,6 +2304,10 @@ class ExaminationController extends Controller
             ->visibleOnReport() // subjects hidden via Exam Subjects stay off the slip
             ->get();
 
+        // Subjects this student no longer takes (removed from their
+        // combination / electives) stay off the slip too.
+        $marks = Helper::filterMarksToStudentSubjects($marks, $studentId, $schoolId);
+
         if ($marks->isEmpty()) {
             if (!$student) {
                 $student = DB::table('students')->where('id', $studentId)->first();
@@ -3345,12 +3367,10 @@ class ExaminationController extends Controller
             $hasPendingMarks = false;
 
             foreach ($teacherSubjects as $subject) {
-                // Count students in this class-stream
-                $studentCount = DB::table('students')
-                    ->where('school_id', $schoolId)
-                    ->where('senior', $subject->class_id)
-                    ->where('stream', $subject->stream_id)
-                    ->count();
+                // Students expected to have a mark for THIS subject
+                // (choice subjects only count the students taking them).
+                $takers = Helper::studentIdsTakingClassSubject($schoolId, $subject);
+                $studentCount = $takers !== null ? $takers->count() : Helper::expectedStudentCount($schoolId, $subject);
 
                 // A class_subjects row identifies its subject either via
                 // subject_id (master subject) or custom_subject_id (custom
@@ -3375,6 +3395,7 @@ class ExaminationController extends Controller
                         }, function ($q) use ($subject) {
                             $q->where('subject_id', $subject->subject_id);
                         })
+                        ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
                         ->whereNotNull('marks_obtained')
                         ->count();
 
@@ -3480,6 +3501,8 @@ class ExaminationController extends Controller
 
                 foreach ($classSubjects as $subject) {
                     $isCustomSubject = is_null($subject->subject_id);
+                    $takers = Helper::studentIdsTakingClassSubject($schoolId, $subject);
+                    $subjectStudentCount = $takers !== null ? $takers->count() : Helper::expectedStudentCount($schoolId, $subject);
 
                     // Secondary O-Level marks live in nlsc_assessment_marks,
                     // never examination_marks — see
@@ -3500,10 +3523,11 @@ class ExaminationController extends Controller
                             }, function ($q) use ($subject) {
                                 $q->where('subject_id', $subject->subject_id);
                             })
+                            ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
                             ->whereNotNull('marks_obtained')
                             ->count();
 
-                    $progress = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
+                    $progress = $subjectStudentCount > 0 ? round(($enteredMarks / $subjectStudentCount) * 100) : 0;
                     if ($progress >= 100) {
                         $completedSubjects++;
                     }
@@ -3520,7 +3544,7 @@ class ExaminationController extends Controller
                         'teacher_names' => $teacherNames->isNotEmpty() ? $teacherNames->implode(', ') : 'Unassigned',
                         'has_teacher' => $teacherNames->isNotEmpty(),
                         'entered_marks' => $enteredMarks,
-                        'total_students' => $studentCount,
+                        'total_students' => $subjectStudentCount,
                         'progress' => $progress,
                     ];
                 }
@@ -3611,6 +3635,10 @@ class ExaminationController extends Controller
         foreach ($classSubjects as $subject) {
             $isCustomSubject = is_null($subject->subject_id);
 
+            // Choice subjects only need marks for the students taking them.
+            $takers = Helper::studentIdsTakingClassSubject($schoolId, $subject);
+            $subjectStudentCount = $takers !== null ? $takers->count() : $studentCount;
+
             $enteredMarks = ExaminationMark::where('examination_id', $exam->id)
                 ->where('class_id', $subject->class_id)
                 ->where('stream_id', $subject->stream_id)
@@ -3620,13 +3648,14 @@ class ExaminationController extends Controller
                 }, function ($q) use ($subject) {
                     $q->where('subject_id', $subject->subject_id);
                 })
+                ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
                 ->whereNotNull('marks_obtained')
                 ->count();
 
-            if ($enteredMarks < $studentCount) {
+            if ($enteredMarks < $subjectStudentCount) {
                 return response()->json([
                     'success' => false,
-                    'message' => Helper::classSubjectName($subject) . ' still has marks pending (' . $enteredMarks . '/' . $studentCount . ') — every subject needs to be complete before this class can be released.',
+                    'message' => Helper::classSubjectName($subject) . ' still has marks pending (' . $enteredMarks . '/' . $subjectStudentCount . ') — every subject needs to be complete before this class can be released.',
                 ], 422);
             }
         }

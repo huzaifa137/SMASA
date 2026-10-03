@@ -751,7 +751,7 @@ use App\Helpers\PermissionHelper;
                                 <tr>
                                     <td colspan="8" class="text-center py-4 text-muted">
                                         <i class="fas fa-users fa-2x mb-2 d-block opacity-25"></i>
-                                        No students found in this class-stream.
+                                        {{ $subjectSelectionNote ?? 'No students found in this class-stream.' }}
                                     </td>
                                 </tr>
                             @endforelse
