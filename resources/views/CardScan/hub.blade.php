@@ -872,7 +872,7 @@
                 html += `<div style="font-size:.75rem;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:.4rem">By Term</div>`;
                 d.allocations.forEach(a => {
                     html += `<div class="borrow-row" style="${a.balance > 0 ? 'border-color:var(--r)' : ''}">
-                        <span>Term ${escHtml(a.term || '')}</span>
+                        <span>${escHtml(({1:'Term I',2:'Term II',3:'Term III'})[a.term] || (a.term ? 'Term ' + a.term : ''))}</span>
                         <span>Bal: UGX ${nf(a.balance)}</span>
                         <span class="badge-status ${a.status === 'paid' ? 'badge-success' : a.status === 'partial' ? 'badge-warning' : 'badge-danger'}">${(a.status || '').toUpperCase()}</span>
                     </div>`;

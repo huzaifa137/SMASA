@@ -346,7 +346,7 @@ class ParentPortalController extends Controller
                 'date' => $allocation->created_at,
                 'type' => 'charge',
                 'description' => 'Fee charge — ' . ($allocation->feeStructure->name ?? 'Fee Structure')
-                    . " (Term {$allocation->term}, {$allocation->academic_year})"
+                    . " (" . \App\Support\Term::label($allocation->term) . ", {$allocation->academic_year})"
                     . ($allocation->discount_amount > 0 ? ' — discount applied' : ''),
                 'debit' => $charge,
                 'credit' => null,

@@ -318,7 +318,7 @@
                         <p>
                             <i class="fas fa-school me-2" style="color: rgba(255,255,255,0.4);"></i>
                             {{ $className }} — {{ $streamName }}
-                            @if($timetable->term) · <span style="color: rgba(255,255,255,0.5);">{{ $timetable->term }}</span> @endif
+                            @if($timetable->term) · <span style="color: rgba(255,255,255,0.5);">{{ \App\Support\Term::label($timetable->term) }}</span> @endif
                         </p>
                     </div>
                 </div>
@@ -351,7 +351,7 @@
                 @if($timetable->term)
                 <div class="rpt-meta-item text-white">
                     <i class="fas fa-calendar text-white"></i>
-                    <span>{{ $timetable->term }}</span>
+                    <span>{{ \App\Support\Term::label($timetable->term) }}</span>
                 </div>
                 @endif
                 <div class="rpt-meta-item" style="{{ $timetable->status === 'draft' ? 'color: #fbbf24;' : 'color: #34d399;' }}">
@@ -400,7 +400,7 @@
         ">
             <span><i class="fas fa-school" style="color: #818cf8; width: 14px;"></i> {{ $className }} &mdash; {{ $streamName }}</span>
             @if($timetable->term)
-            <span><i class="fas fa-calendar-alt" style="color: #818cf8; width: 14px;"></i> {{ $timetable->term }}</span>
+            <span><i class="fas fa-calendar-alt" style="color: #818cf8; width: 14px;"></i> {{ \App\Support\Term::label($timetable->term) }}</span>
             @endif
             <span><i class="fas fa-clock" style="color: #818cf8; width: 14px;"></i> Created {{ $timetable->created_at->format('d M Y') }}</span>
         </p>

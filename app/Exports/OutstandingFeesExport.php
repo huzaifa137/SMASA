@@ -68,7 +68,7 @@ class OutstandingFeesExport implements FromArray, WithTitle, WithStyles
                 $alloc->student->admission_number ?? '—',
                 Helper::recordMdname($alloc->student->senior ?? null) ?? '—',
                 $alloc->feeStructure->name ?? '—',
-                'T' . $alloc->term,
+                \App\Support\Term::label($alloc->term),
                 $alloc->academic_year,
                 $net,
                 $paid,
@@ -90,7 +90,7 @@ class OutstandingFeesExport implements FromArray, WithTitle, WithStyles
     {
         $bits = [
             'Year: ' . $this->filters['year'],
-            'Term: ' . ($this->filters['term'] ?: 'All'),
+            'Term: ' . ($this->filters['term'] ? \App\Support\Term::label($this->filters['term']) : 'All'),
             'Status: ' . ($this->filters['status'] ? ucfirst($this->filters['status']) : 'Unpaid + Partial (defaulters)'),
         ];
 

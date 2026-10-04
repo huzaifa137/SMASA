@@ -377,7 +377,7 @@
                 <div class="form-group">
                     <label>Period Name <span class="required">*</span></label>
                     <input type="text" name="period_name" id="period_name" required value="{{ old('period_name') }}"
-                        placeholder="e.g., January 2026, Term 1 Salaries">
+                        placeholder="e.g., January 2026, Term I Salaries">
                     <small style="color:var(--text-3);display:block;margin-top:.3rem;">A descriptive name for this payroll
                         period</small>
                 </div>
@@ -399,9 +399,9 @@
                         <label>Term (Optional)</label>
                         <select name="term" id="term">
                             <option value="">-- Not Applicable --</option>
-                            <option value="1" {{ old('term') == '1' ? 'selected' : '' }}>Term 1</option>
-                            <option value="2" {{ old('term') == '2' ? 'selected' : '' }}>Term 2</option>
-                            <option value="3" {{ old('term') == '3' ? 'selected' : '' }}>Term 3</option>
+                            <option value="1" {{ old('term') == '1' ? 'selected' : '' }}>Term I</option>
+                            <option value="2" {{ old('term') == '2' ? 'selected' : '' }}>Term II</option>
+                            <option value="3" {{ old('term') == '3' ? 'selected' : '' }}>Term III</option>
                         </select>
                         <small style="color:var(--text-3);display:block;margin-top:.3rem;">Link to academic term if
                             applicable</small>

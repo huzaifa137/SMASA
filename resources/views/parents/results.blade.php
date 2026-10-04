@@ -32,7 +32,7 @@
                                     <strong>{{ $exam->exam_name }}</strong>
                                     <div style="font-size:0.72rem;color:var(--gray-500);">{{ $exam->exam_code }}</div>
                                 </td>
-                                <td>{{ $exam->term }}</td>
+                                <td>{{ \App\Support\Term::label($exam->term) }}</td>
                                 <td>{{ $exam->academic_year }}</td>
                                 <td style="text-align:right;">
                                     <a href="{{ route('parents.result.view', [$student->id, $exam->id]) }}" class="pp-btn pp-btn-primary">

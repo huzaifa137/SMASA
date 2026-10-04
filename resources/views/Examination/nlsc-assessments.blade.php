@@ -258,7 +258,7 @@ use App\Http\Controllers\Helper;
                                         @endif
                                     </span></td>
                                     <td>{{ $a->subject_matter_name ?? '—' }}</td>
-                                    <td>{{ $a->term }}</td>
+                                    <td>{{ \App\Support\Term::label($a->term) }}</td>
                                     <td>{{ $a->academic_year }}</td>
                                     <td class="text-nowrap">
                                         <button type="button" class="nt-action-btn btn-edit-sm edit-assessment-btn"><i class="fas fa-pen"></i> Edit</button>
@@ -344,9 +344,9 @@ use App\Http\Controllers\Helper;
                     <div class="col-md-6">
                         <label class="nt-form-label">Term <span class="nt-required">*</span></label>
                         <select id="term" class="nt-form-control">
-                            <option value="Term 1" @if($exam->term === 'Term 1') selected @endif>Term 1</option>
-                            <option value="Term 2" @if($exam->term === 'Term 2') selected @endif>Term 2</option>
-                            <option value="Term 3" @if($exam->term === 'Term 3') selected @endif>Term 3</option>
+                            <option value="Term 1" @if($exam->term === 'Term 1') selected @endif>Term I</option>
+                            <option value="Term 2" @if($exam->term === 'Term 2') selected @endif>Term II</option>
+                            <option value="Term 3" @if($exam->term === 'Term 3') selected @endif>Term III</option>
                         </select>
                     </div>
 

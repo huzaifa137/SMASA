@@ -52,8 +52,6 @@ class FeeStructure extends Model
             return 'All Terms';
         }
 
-        return match ((int) $this->term) {
-            1 => 'Term 1', 2 => 'Term 2', 3 => 'Term 3', default => 'Term ' . $this->term,
-        };
+        return \App\Support\Term::label($this->term);
     }
 }

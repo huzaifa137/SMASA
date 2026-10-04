@@ -150,7 +150,7 @@ use App\Http\Controllers\Helper;
                     </div>
                     <div class="rpt-hero-info">
                         <h4>Cumulative Performance Analysis</h4>
-                        <p>Track a class's average performance across several examinations — BOT, Mid-Term and End-of-Term, Term 1 to Term 3.</p>
+                        <p>Track a class's average performance across several examinations — BOT, Mid-Term and End-of-Term, Term I to Term III.</p>
                     </div>
                 </div>
                 <a href="{{ route('examination.reports.index') }}" class="rpt-hero-action no-print">
@@ -226,7 +226,7 @@ use App\Http\Controllers\Helper;
             @else
                 @foreach ($availableExams->groupBy('term') as $term => $examsInTerm)
                     <div class="cml-term-group">
-                        <div class="cml-term-group-label">{{ $term }}</div>
+                        <div class="cml-term-group-label">{{ \App\Support\Term::label($term) }}</div>
                         <div class="cml-exam-picker">
                             @foreach ($examsInTerm as $exam)
                                 <label class="cml-exam-chip">
@@ -432,7 +432,7 @@ use App\Http\Controllers\Helper;
                                 <tr>
                                     <th class="rpt-name-col">Student</th>
                                     @foreach ($selectedExams as $exam)
-                                        <th title="{{ $exam->exam_name }}">{{ str_replace('-', ' ', $exam->exam_type) }}<br>{{ $exam->term }}</th>
+                                        <th title="{{ $exam->exam_name }}">{{ str_replace('-', ' ', $exam->exam_type) }}<br>{{ \App\Support\Term::label($exam->term) }}</th>
                                     @endforeach
                                     <th>Average %</th>
                                     <th>Grade</th>

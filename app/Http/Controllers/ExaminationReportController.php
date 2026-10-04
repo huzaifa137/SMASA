@@ -1135,7 +1135,7 @@ class ExaminationReportController extends Controller
         $typeOrder = ['Beginning-of-Term' => 1, 'Mid-Term' => 2, 'End-of-Term' => 3];
 
         return $exams->sortBy(function ($exam) use ($typeOrder) {
-            $termNumber = (int) preg_replace('/\D/', '', (string) $exam->term) ?: 9;
+            $termNumber = \App\Support\Term::number($exam->term) ?? 9;
             $typeNumber = $typeOrder[$exam->exam_type] ?? 9;
 
             return sprintf('%02d-%02d-%s', $termNumber, $typeNumber, $exam->start_date);

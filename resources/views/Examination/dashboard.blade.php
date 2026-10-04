@@ -3177,7 +3177,7 @@ use App\Helpers\PermissionHelper;
                                             <small class="text-muted">
                                                 <i class="fas fa-code me-1"></i> {{ $exam->exam_code }}
                                                 &bull; {{ $exam->exam_type }}
-                                                &bull; {{ $exam->term }}
+                                                &bull; {{ \App\Support\Term::label($exam->term) }}
                                             </small>
                                         </div>
                                         <div class="col-md-3 text-end">
@@ -3358,7 +3358,7 @@ use App\Helpers\PermissionHelper;
                                                                                     <div class="epc-term">
                                                                                         <span class="term-badge">
                                                                                             <i class="fas fa-calendar-alt"></i>
-                                                                                            {{ $exam->term }}
+                                                                                            {{ \App\Support\Term::label($exam->term) }}
                                                                                         </span>
                                                                                     </div>
                                                                                     {{-- Schedule --}}
@@ -3594,7 +3594,7 @@ use App\Helpers\PermissionHelper;
                                                     <i class="fas fa-calendar-alt"></i>
                                                     <div>
                                                         <small>Term</small>
-                                                        <strong>{{ $exam->term }} • {{ $exam->academic_year }}</strong>
+                                                        <strong>{{ \App\Support\Term::label($exam->term) }} • {{ $exam->academic_year }}</strong>
                                                     </div>
                                                 </div>
                                                 <div class="released-info-item">
@@ -5295,7 +5295,7 @@ use App\Helpers\PermissionHelper;
     <label class="edit-label">
     <span class="required">*</span> Examination Name
     </label>
-    <input type="text" name="exam_name" value="${exam.exam_name || ''}" class="edit-input" placeholder="e.g. End of Term 1 Examinations 2025">
+    <input type="text" name="exam_name" value="${exam.exam_name || ''}" class="edit-input" placeholder="e.g. End of Term I Examinations 2025">
     </div>
     <div class="edit-form-group">
     <label class="edit-label">
@@ -5313,9 +5313,9 @@ use App\Helpers\PermissionHelper;
     <span class="required">*</span> Term
     </label>
     <select name="term" class="edit-input">
-    <option value="Term 1" ${exam.term === 'Term 1' ? 'selected' : ''}>Term 1</option>
-    <option value="Term 2" ${exam.term === 'Term 2' ? 'selected' : ''}>Term 2</option>
-    <option value="Term 3" ${exam.term === 'Term 3' ? 'selected' : ''}>Term 3</option>
+    <option value="Term 1" ${exam.term === 'Term 1' ? 'selected' : ''}>Term I</option>
+    <option value="Term 2" ${exam.term === 'Term 2' ? 'selected' : ''}>Term II</option>
+    <option value="Term 3" ${exam.term === 'Term 3' ? 'selected' : ''}>Term III</option>
     </select>
     </div>
     </div>

@@ -142,7 +142,7 @@ table.data tr:nth-child(even) td { background:#f8fafc; }
                 <td>{{ $alloc->student->admission_number ?? '—' }}</td>
                 <td>{{ \App\Http\Controllers\Helper::recordMdname($alloc->student->senior ?? null) ?? '—' }}</td>
                 <td>{{ $alloc->feeStructure->name ?? '—' }}</td>
-                <td>T{{ $alloc->term }} / {{ $alloc->academic_year }}</td>
+                <td>{{ \App\Support\Term::label($alloc->term) }} / {{ $alloc->academic_year }}</td>
                 <td class="amount">{{ number_format($net, 0) }}</td>
                 <td class="amount paid">{{ number_format($paid, 0) }}</td>
                 <td class="amount balance">{{ number_format($alloc->balance, 0) }}</td>

@@ -1394,7 +1394,7 @@
                     {{ Helper::recordMdname($classId) }}
                     {{ isset($streamId) && $streamId ? '– ' . $streamId : '' }}
                 @else All Classes @endif
-                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                &bull; {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
             </small>
         </div>
         <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
@@ -1862,7 +1862,7 @@
                 <div class="title-band">
                     <span>
                         ACADEMIC REPORT FORM — {{ Helper::recordMdname($s->senior) }}
-                        — {{ strtoupper($exam->term) }} — ({{ $exam->academic_year }})
+                        — {{ strtoupper(\App\Support\Term::label($exam->term)) }} — ({{ $exam->academic_year }})
                     </span>
                 </div>
 
@@ -2086,7 +2086,7 @@
                                     <th class="tl" rowspan="2" style="min-width:100px;">SUBJECTS</th>
                                     @foreach($examsList as $ex)
                                         <th class="exam-grp-th" colspan="2">
-                                            {{ $examLabels[$ex->exam_type] ?? strtoupper($ex->term ?? $ex->exam_name) }}
+                                            {{ $examLabels[$ex->exam_type] ?? strtoupper(isset($ex->term) ? \App\Support\Term::label($ex->term) : $ex->exam_name) }}
                                         </th>
                                     @endforeach
                                     @if($cfg['grade_pill'])
@@ -2514,7 +2514,7 @@
                             @if($cfg['footer_timestamp'])
                                 Generated: {{ now()->format('d M Y, H:i') }}
                                 &bull; {{ $exam->exam_code ?? '' }}
-                                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                                &bull; {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
                             @endif
                         </div>
                         @if($cfg['confidential'])
@@ -2613,7 +2613,7 @@
                     'Adm No: ' . ($s->adm_no ?? ($s->index_no ?? '')),
                     'Class: ' . Helper::recordMdname($s->senior) . (($s->stream ?? false) ? ' - ' . $s->stream : ''),
                     'Exam: ' . $exam->exam_name,
-                    'Term: ' . $exam->term,
+                    'Term: ' . \App\Support\Term::label($exam->term),
                     'Year: ' . $exam->academic_year,
                     'Average: ' . ($isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%'),
                     'Grade: ' . ($isEarlyYears ? $oRemark : $oGrade),

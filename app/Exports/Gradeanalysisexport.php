@@ -49,7 +49,7 @@ class GradeAnalysisExport implements FromArray, WithTitle, WithStyles
             : 'All Classes';
 
         $contextBits = [
-            $this->exam->term . ' • ' . $this->exam->academic_year,
+            \App\Support\Term::label($this->exam->term) . ' • ' . $this->exam->academic_year,
             'Scope: ' . $scopeLabel,
         ];
         if ($this->data['selectedSubjectName'] ?? null) {

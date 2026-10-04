@@ -491,7 +491,7 @@
                                 <div class="budget-year">
                                     {{ $budget->academic_year }}
                                     @if($budget->term)
-                                        • Term {{ $budget->term }}
+                                        • {{ \App\Support\Term::label($budget->term) }}
                                     @else
                                         • Full Year
                                     @endif

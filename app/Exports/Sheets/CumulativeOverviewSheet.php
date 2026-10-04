@@ -49,7 +49,7 @@ class CumulativeOverviewSheet implements FromArray, WithTitle, WithStyles
     public function array(): array
     {
         $examsLine = $this->selectedExams->map(
-            fn($e) => str_replace('-', ' ', $e->exam_type) . ' (' . $e->term . ')'
+            fn($e) => str_replace('-', ' ', $e->exam_type) . ' (' . \App\Support\Term::label($e->term) . ')'
         )->implode(' | ');
 
         $rows = $this->buildHeadingRows([

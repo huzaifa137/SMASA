@@ -420,7 +420,7 @@
                             <div class="form-group">
                                 <label class="form-label">Title <span class="text-danger">*</span></label>
                                 <input type="text" name="title" class="form-control" maxlength="255"
-                                    value="{{ old('title') }}" placeholder="e.g. Term 2 Fees Deadline" required>
+                                    value="{{ old('title') }}" placeholder="e.g. Term II Fees Deadline" required>
                             </div>
                         </div>
                         <div class="col-md-4">

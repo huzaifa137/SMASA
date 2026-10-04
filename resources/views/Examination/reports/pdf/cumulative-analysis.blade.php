@@ -168,7 +168,7 @@
                 <tr>
                     <th style="text-align:left;">Student</th>
                     @foreach ($selectedExams as $exam)
-                        <th>{{ str_replace('-', ' ', $exam->exam_type) }} {{ $exam->term }}</th>
+                        <th>{{ str_replace('-', ' ', $exam->exam_type) }} {{ \App\Support\Term::label($exam->term) }}</th>
                     @endforeach
                     <th>Average %</th>
                     <th>Grade</th>

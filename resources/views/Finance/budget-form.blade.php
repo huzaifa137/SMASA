@@ -423,7 +423,7 @@
                     <label>Budget Title <span class="required">*</span></label>
                     <input type="text" name="title" id="title" required
                         value="{{ old('title', $budget->title ?? '') }}"
-                        placeholder="e.g., Annual Budget 2026, Term 1 Budget">
+                        placeholder="e.g., Annual Budget 2026, Term I Budget">
                 </div>
 
                 <div class="form-row">
@@ -439,9 +439,9 @@
                         <label>Term (Optional)</label>
                         <select name="term" id="term">
                             <option value="">-- Full Year Budget --</option>
-                            <option value="1" {{ (old('term', $budget->term ?? '') == '1') ? 'selected' : '' }}>Term 1</option>
-                            <option value="2" {{ (old('term', $budget->term ?? '') == '2') ? 'selected' : '' }}>Term 2</option>
-                            <option value="3" {{ (old('term', $budget->term ?? '') == '3') ? 'selected' : '' }}>Term 3</option>
+                            <option value="1" {{ (old('term', $budget->term ?? '') == '1') ? 'selected' : '' }}>Term I</option>
+                            <option value="2" {{ (old('term', $budget->term ?? '') == '2') ? 'selected' : '' }}>Term II</option>
+                            <option value="3" {{ (old('term', $budget->term ?? '') == '3') ? 'selected' : '' }}>Term III</option>
                         </select>
                     </div>
                 </div>

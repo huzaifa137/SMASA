@@ -559,7 +559,7 @@
                         <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin: 0;">
                             <i class="fas fa-school me-2" style="color: rgba(255,255,255,0.4);"></i>
                             {{ $className }} — {{ $streamName }}
-                            @if($timetable->term) · <span style="color: rgba(255,255,255,0.5);">{{ $timetable->term }}</span> @endif
+                            @if($timetable->term) · <span style="color: rgba(255,255,255,0.5);">{{ \App\Support\Term::label($timetable->term) }}</span> @endif
                         </p>
                     </div>
                 </div>
@@ -602,7 +602,7 @@
                 @if($timetable->term)
                 <div class="rpt-meta-item">
                     <i class="fas fa-calendar"></i>
-                    <span>{{ $timetable->term }}</span>
+                    <span>{{ \App\Support\Term::label($timetable->term) }}</span>
                 </div>
                 @endif
                 <div class="rpt-meta-item" style="{{ $timetable->status === 'draft' ? 'color: #fbbf24;' : 'color: #34d399;' }}">

@@ -109,7 +109,7 @@ class FinanceReportExport implements FromArray, WithTitle, WithStyles
                 $r->amount_paid,
                 ucfirst(str_replace('_', ' ', $r->payment_method)),
                 optional($r->payment_date)->format('Y-m-d'),
-                $r->term,
+                \App\Support\Term::label($r->term),
                 $r->academic_year,
                 ucfirst($r->status),
             ],

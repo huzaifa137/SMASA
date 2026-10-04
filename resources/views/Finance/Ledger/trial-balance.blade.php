@@ -182,9 +182,9 @@
                 <label>Term</label>
                 <select name="term" onchange="this.form.submit()">
                     <option value="">Full Year</option>
-                    <option value="1" @selected($term == '1')>Term 1</option>
-                    <option value="2" @selected($term == '2')>Term 2</option>
-                    <option value="3" @selected($term == '3')>Term 3</option>
+                    <option value="1" @selected($term == '1')>Term I</option>
+                    <option value="2" @selected($term == '2')>Term II</option>
+                    <option value="3" @selected($term == '3')>Term III</option>
                 </select>
             </div>
         </form>
@@ -210,7 +210,7 @@
 
     <div class="fin-card">
         <div class="fin-card-header">
-            <h3><i class="fas fa-table"></i> Trial Balance — {{ $year }}{{ $term ? ' · Term '.$term : ' · Full Year' }}</h3>
+            <h3><i class="fas fa-table"></i> Trial Balance — {{ $year }}{{ $term ? ' · '.\App\Support\Term::label($term) : ' · Full Year' }}</h3>
         </div>
 
         @if(empty($rows))

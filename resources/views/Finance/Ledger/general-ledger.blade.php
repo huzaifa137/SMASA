@@ -192,9 +192,9 @@
                 <label>Term</label>
                 <select name="term">
                     <option value="">All Terms</option>
-                    <option value="1" @selected($term == '1')>Term 1</option>
-                    <option value="2" @selected($term == '2')>Term 2</option>
-                    <option value="3" @selected($term == '3')>Term 3</option>
+                    <option value="1" @selected($term == '1')>Term I</option>
+                    <option value="2" @selected($term == '2')>Term II</option>
+                    <option value="3" @selected($term == '3')>Term III</option>
                 </select>
             </div>
             <div class="filter-actions">

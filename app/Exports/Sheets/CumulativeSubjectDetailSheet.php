@@ -49,7 +49,7 @@ class CumulativeSubjectDetailSheet implements FromArray, WithTitle, WithStyles
         $subjectName = $this->selectedSubject->report_name ?? 'Selected Subject';
 
         $examsLine = collect($this->selectedExams)->map(
-            fn($e) => str_replace('-', ' ', $e->exam_type) . ' (' . $e->term . ')'
+            fn($e) => str_replace('-', ' ', $e->exam_type) . ' (' . \App\Support\Term::label($e->term) . ')'
         )->implode(' | ');
 
         $rows = $this->buildHeadingRows([
@@ -62,7 +62,7 @@ class CumulativeSubjectDetailSheet implements FromArray, WithTitle, WithStyles
 
         $headers = ['#', 'Student', 'Admission No.'];
         foreach ($this->selectedExams as $exam) {
-            $headers[] = $exam->term . ' — ' . $exam->exam_type . ' (%)';
+            $headers[] = \App\Support\Term::label($exam->term) . ' — ' . $exam->exam_type . ' (%)';
         }
         $headers[] = 'Average %';
         $headers[] = 'Grade';

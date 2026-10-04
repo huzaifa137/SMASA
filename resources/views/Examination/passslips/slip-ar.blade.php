@@ -1106,7 +1106,7 @@
                     {{ Helper::recordMdname($classId) }}
                     {{ isset($streamId) && $streamId ? '— ' . $streamId : '' }}
                 @else {{ $ar['all_cards'] }} @endif
-                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                &bull; {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
             </small>
         </div>
         <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
@@ -1364,7 +1364,7 @@
                     <span>
                         {{ $ar['academic_report'] }} —
                         {{ Helper::recordMdname($s->senior) }}
-                        — {{ $exam->term }} — ({{ $exam->academic_year }})
+                        — {{ \App\Support\Term::label($exam->term) }} — ({{ $exam->academic_year }})
                     </span>
                 </div>
 
@@ -1703,7 +1703,7 @@
                             @if($cfg['footer_timestamp'])
                                 {{ $ar['generated'] }}: {{ now()->format('d M Y، H:i') }}
                                 &bull; {{ $exam->exam_code ?? '' }}
-                                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                                &bull; {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
                             @endif
                         </div>
                         @if($cfg['confidential'])
@@ -1796,7 +1796,7 @@
                     'رقم القيد: ' . ($s->adm_no ?? ($s->index_no ?? '')),
                     'الصف: ' . Helper::recordMdname($s->senior) . (($s->stream ?? false) ? ' - ' . $s->stream : ''),
                     'الامتحان: ' . $exam->exam_name,
-                    'الفصل: ' . $exam->term,
+                    'الفصل: ' . \App\Support\Term::label($exam->term),
                     'السنة: ' . $exam->academic_year,
                     'المعدل: ' . $pct . '%',
                     'التقدير: ' . $oGrade,

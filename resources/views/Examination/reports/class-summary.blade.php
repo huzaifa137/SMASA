@@ -35,7 +35,7 @@ use App\Http\Controllers\Helper;
             <div class="rpt-meta-divider"></div>
             <div class="rpt-meta-item">
                 <i class="fas fa-calendar"></i>
-                <span>{{ $exam->term }} • {{ $exam->academic_year }}</span>
+                <span>{{ \App\Support\Term::label($exam->term) }} • {{ $exam->academic_year }}</span>
             </div>
             <div class="rpt-meta-divider"></div>
             <div class="rpt-meta-item rpt-meta-highlight">

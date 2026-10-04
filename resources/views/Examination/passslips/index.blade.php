@@ -699,7 +699,7 @@ use App\Http\Controllers\Helper;
                 <div class="ic" style="background:linear-gradient(135deg,#0a4191,#2563eb);"><i class="fas fa-calendar"></i>
                 </div>
                 <div>
-                    <div class="v">{{ $exam->term }}</div>
+                    <div class="v">{{ \App\Support\Term::label($exam->term) }}</div>
                     <div class="l">{{ $exam->academic_year }}</div>
                 </div>
             </div>

@@ -44,7 +44,7 @@ class ClassSummaryReportExport implements FromArray, WithTitle, WithStyles
         $rows = $this->buildHeadingRows([
             $this->schoolName,
             'Class Performance Summary — ' . $this->exam->exam_name . ' (' . $this->exam->exam_code . ')',
-            $this->exam->term . ' • ' . $this->exam->academic_year
+            \App\Support\Term::label($this->exam->term) . ' • ' . $this->exam->academic_year
                 . '  |  Class: ' . $this->data['className'] . ' — ' . $this->data['streamLabel']
                 . '  |  Students: ' . $this->data['report']->count()
                 . '  |  Class Average: ' . NumberHelper::whole($this->data['classAverage']) . '%',

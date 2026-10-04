@@ -143,7 +143,7 @@
             'End-of-Term' => 'EOT',
             'Continuous Assessment' => 'CA',
         ];
-        $examShortLabel = $examLabels[$exam->exam_type ?? null] ?? strtoupper($exam->term ?? $exam->exam_name ?? '');
+        $examShortLabel = $examLabels[$exam->exam_type ?? null] ?? strtoupper(isset($exam->term) ? \App\Support\Term::label($exam->term) : ($exam->exam_name ?? ''));
 
         // ── Normalise to one-or-many render list ──────────────────────────
         // passslipPreview()/passslipStudent() pass a single $student (mode
@@ -1826,7 +1826,7 @@
                                 <div class="info-icon" style="background:var(--green)"><i
                                         class="fa-solid fa-calendar-days"></i></div>
                                 <span class="label">Term:</span>
-                                <span class="value">{{ trim(($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
+                                <span class="value">{{ trim(\App\Support\Term::label($exam->term ?? '') . ' ' . ($exam->academic_year ?? '')) }}</span>
                             </div>
 
                             @if($cfg['stu_exam'])

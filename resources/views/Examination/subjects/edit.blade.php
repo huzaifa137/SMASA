@@ -265,7 +265,7 @@
                         <span class="mr-2">{{ $exam->exam_name }}</span>
                         <span
                             style="background: rgba(255, 255, 255, 0.1); color: #93c5fd; border: 1px solid rgba(147, 197, 253, 0.3); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 6px;">
-                            {{ $exam->term }} {{ $exam->academic_year }}
+                            {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
                         </span>
                     </h1>
                 </div>

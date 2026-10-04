@@ -32,9 +32,9 @@ use App\Http\Controllers\Helper;
                     <div class="col-12">
                         @php
                             $terms = [
-                                26 => 'Term 1',
-                                29 => 'Term 2',
-                                30 => 'Term 3',
+                                26 => 'Term I',
+                                29 => 'Term II',
+                                30 => 'Term III',
                             ];
                         @endphp
 

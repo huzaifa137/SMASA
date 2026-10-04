@@ -789,9 +789,9 @@
                     <div class="form-group">
                         <label>Term <span class="req">*</span></label>
                         <select name="term" id="term" class="form-control-fin" required>
-                            <option value="1">Term 1</option>
-                            <option value="2">Term 2</option>
-                            <option value="3">Term 3</option>
+                            <option value="1">Term I</option>
+                            <option value="2">Term II</option>
+                            <option value="3">Term III</option>
                         </select>
                     </div>
                 </div>
@@ -1196,7 +1196,7 @@
                         </div>
                         <div>
                             <div class="ap-label">Term</div>
-                            <div class="ap-value" style="font-size:1rem;">Term ${alloc.term}</div>
+                            <div class="ap-value" style="font-size:1rem;">${({1:'Term I',2:'Term II',3:'Term III'})[alloc.term] || ('Term ' + alloc.term)}</div>
                         </div>
                     </div>
                     <div style="margin-top:.6rem;font-size:.75rem;color:var(--text-3);border-top:1px solid rgba(5,150,105,.15);padding-top:.5rem;">

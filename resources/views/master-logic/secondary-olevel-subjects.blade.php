@@ -184,7 +184,8 @@
             <div class="col-12">
 
                 <div class="sos-hero">
-                    <span class="hero-badge" style="background:rgba(44,41,202,.25);border:1px solid rgba(107,105,232,.5);color:#c7c5ff;padding:.3rem .9rem;border-radius:999px;font-size:.65rem;font-weight:700;text-transform:uppercase;">
+                    <span class="hero-badge"
+                        style="background:rgba(44,41,202,.25);border:1px solid rgba(107,105,232,.5);color:#c7c5ff;padding:.3rem .9rem;border-radius:999px;font-size:.65rem;font-weight:700;text-transform:uppercase;">
                         <i class="fas fa-graduation-cap me-1"></i> Global Master Data
                     </span>
                     <h1 class="hero-title mt-2 mb-1">Secondary O-Level Subjects</h1>
@@ -215,14 +216,17 @@
                                     <div class="sos-item" data-md-id="{{ $subject->md_id }}">
                                         <input type="text" class="sos-name-input" value="{{ $subject->md_name }}"
                                             data-original="{{ $subject->md_name }}">
-                                        <select class="sos-group-select" data-original="{{ $groupKey }}" title="Compulsory or elective">
+                                        <select class="sos-group-select" data-original="{{ $groupKey }}"
+                                            title="Compulsory or elective">
                                             @foreach($groups as $gk => $gl)
                                                 <option value="{{ $gk }}" {{ $gk === $groupKey ? 'selected' : '' }}>{{ $gl }}</option>
                                             @endforeach
                                         </select>
                                         <div class="sos-actions">
-                                            <button type="button" class="sos-save" title="Save"><i class="fas fa-check"></i></button>
-                                            <button type="button" class="sos-delete" title="Delete"><i class="fas fa-trash"></i></button>
+                                            <button type="button" class="sos-save" title="Save"><i
+                                                    class="fas fa-check"></i></button>
+                                            <button type="button" class="sos-delete" title="Delete"><i
+                                                    class="fas fa-trash"></i></button>
                                         </div>
                                     </div>
                                 @empty
@@ -241,6 +245,9 @@
 
             </div>
         </div>
+    </div>
+    </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -291,12 +298,12 @@
             item.className = 'sos-item';
             item.dataset.mdId = mdId;
             item.innerHTML = `
-                <input type="text" class="sos-name-input" value="${escapeAttr(name)}" data-original="${escapeAttr(name)}">
-                <select class="sos-group-select" data-original="${group}" title="Compulsory or elective">${options}</select>
-                <div class="sos-actions">
-                    <button type="button" class="sos-save" title="Save"><i class="fas fa-check"></i></button>
-                    <button type="button" class="sos-delete" title="Delete"><i class="fas fa-trash"></i></button>
-                </div>`;
+                    <input type="text" class="sos-name-input" value="${escapeAttr(name)}" data-original="${escapeAttr(name)}">
+                    <select class="sos-group-select" data-original="${group}" title="Compulsory or elective">${options}</select>
+                    <div class="sos-actions">
+                        <button type="button" class="sos-save" title="Save"><i class="fas fa-check"></i></button>
+                        <button type="button" class="sos-delete" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>`;
             wireItem(item);
             return item;
         }

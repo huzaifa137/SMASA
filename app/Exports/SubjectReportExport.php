@@ -46,7 +46,7 @@ class SubjectReportExport implements FromArray, WithTitle, WithStyles
         $rows = $this->buildHeadingRows([
             $this->schoolName,
             'Subject Performance Report — ' . $this->exam->exam_name . ' (' . $this->exam->exam_code . ')',
-            $this->exam->term . ' • ' . $this->exam->academic_year
+            \App\Support\Term::label($this->exam->term) . ' • ' . $this->exam->academic_year
                 . '  |  Class: ' . $this->data['className'] . ' — ' . $this->data['streamLabel']
                 . '  |  Subject: ' . ($this->subjectRow->report_name ?? '—')
                 . '  |  Teacher: ' . ($stats['teacher_name'] ?? '—'),

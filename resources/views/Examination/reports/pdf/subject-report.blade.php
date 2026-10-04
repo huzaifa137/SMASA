@@ -105,7 +105,7 @@
     <div class="header">
         <h1>{{ $schoolName }}</h1>
         <p>Subject Performance Report — {{ $exam->exam_name }} ({{ $exam->exam_code }})</p>
-        <p>{{ $exam->term }} • {{ $exam->academic_year }}</p>
+        <p>{{ \App\Support\Term::label($exam->term) }} • {{ $exam->academic_year }}</p>
     </div>
 
     <table class="meta">

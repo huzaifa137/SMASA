@@ -241,7 +241,7 @@ use App\Helpers\PermissionHelper;
                     </div>
                     <div>
                         <div class="rpt-feature-title">Cumulative Analysis</div>
-                        <div class="rpt-feature-desc">Trend across BOT/Mid/EOT, Term 1-3</div>
+                        <div class="rpt-feature-desc">Trend across BOT/Mid/EOT, Term I–III</div>
                     </div>
                 </div>
             </div>

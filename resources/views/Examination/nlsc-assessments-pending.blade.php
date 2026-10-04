@@ -175,7 +175,7 @@
                                 <td>{{ $item->exam->exam_name }}</td>
                                 <td>{{ $item->class_name }} {{ $item->stream_id }}</td>
                                 <td>{{ $item->subject_name }}</td>
-                                <td>{{ $item->exam->term }}</td>
+                                <td>{{ \App\Support\Term::label($item->exam->term) }}</td>
                                 <td>
                                     <a href="{{ route('nlsc-assessments', ['examId' => $item->exam->id, 'classSubjectId' => $item->class_subject_id]) }}"
                                         class="btn-nt-primary">

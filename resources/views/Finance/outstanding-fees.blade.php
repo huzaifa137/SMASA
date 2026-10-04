@@ -538,9 +538,9 @@ use App\Helpers\PermissionHelper;
                 <label>Term</label>
                 <select id="filterTerm">
                     <option value="">All Terms</option>
-                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term 1</option>
-                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term 2</option>
-                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term 3</option>
+                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term I</option>
+                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term II</option>
+                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term III</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -672,7 +672,7 @@ use App\Helpers\PermissionHelper;
                             </td>
                             <td>
                                 <span class="badge-fin badge-blue">{{ $alloc->academic_year }}</span>
-                                <span class="badge-fin badge-gray">Term {{ $alloc->term }}</span>
+                                <span class="badge-fin badge-gray">{{ \App\Support\Term::label($alloc->term) }}</span>
                             </td>
                             <td class="amount-mono">UGX {{ number_format($net, 0) }}</td>
                             <td class="amount-mono" style="color:#059669;">UGX {{ number_format($paid, 0) }}

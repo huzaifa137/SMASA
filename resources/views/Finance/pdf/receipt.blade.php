@@ -207,7 +207,7 @@ body {
     </div>
     <div class="ss-right">
         <div class="s-lbl">Academic Year &amp; Term</div>
-        <div class="s-val">{{ $payment->academic_year }} &nbsp;·&nbsp; Term {{ $payment->term }}</div>
+        <div class="s-val">{{ $payment->academic_year }} &nbsp;·&nbsp; {{ \App\Support\Term::label($payment->term) }}</div>
     </div>
 </div>
 
@@ -286,7 +286,7 @@ body {
                 @endforeach
             @else
                 <tr>
-                    <td>School Fees — Term {{ $payment->term }}, {{ $payment->academic_year }}</td>
+                    <td>School Fees — {{ \App\Support\Term::label($payment->term) }}, {{ $payment->academic_year }}</td>
                     <td style="font-size:8px;color:#64748b">Tuition</td>
                     <td>{{ number_format($payment->amount_paid, 0) }}</td>
                 </tr>

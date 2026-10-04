@@ -132,7 +132,7 @@
                                     </span>
                                 </td>
                                 <td>{{ $a->subject_matter_name ?? '—' }}</td>
-                                <td>{{ $a->term }}</td>
+                                <td>{{ \App\Support\Term::label($a->term) }}</td>
                                 <td>
                                     @if($a->class_subject_id)
                                         <a href="{{ route('nlsc-assessments', ['examId' => $a->examination_id, 'classSubjectId' => $a->class_subject_id]) }}" class="nt-action-btn btn-edit-sm">

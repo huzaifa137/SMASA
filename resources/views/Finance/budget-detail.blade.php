@@ -404,7 +404,7 @@
         <div style="position:relative;z-index:1;">
             <div class="hero-badge"><i class="fas fa-chart-line"></i> Budget Details</div>
             <h1>{{ $budget->title }}</h1>
-            <p>{{ $budget->academic_year }} @if($budget->term) • Term {{ $budget->term }} @else • Full Year @endif</p>
+            <p>{{ $budget->academic_year }} @if($budget->term) • {{ \App\Support\Term::label($budget->term) }} @else • Full Year @endif</p>
         </div>
     </div>
 @endsection

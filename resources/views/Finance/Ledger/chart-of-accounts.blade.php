@@ -229,9 +229,9 @@
                     </select>
                     <select name="term" class="form-control" style="border-radius:10px;border:1.5px solid var(--border);padding:.5rem .75rem;font-size:.82rem;" onchange="this.form.submit()">
                         <option value="">All Terms</option>
-                        <option value="1" @selected($term == '1')>Term 1</option>
-                        <option value="2" @selected($term == '2')>Term 2</option>
-                        <option value="3" @selected($term == '3')>Term 3</option>
+                        <option value="1" @selected($term == '1')>Term I</option>
+                        <option value="2" @selected($term == '2')>Term II</option>
+                        <option value="3" @selected($term == '3')>Term III</option>
                     </select>
                 </form>
                 <button class="btn-fin btn-primary-fin btn-sm" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Account</button>
@@ -256,7 +256,7 @@
                             <th>Account Name</th>
                             <th>Type</th>
                             <th>Normal Balance</th>
-                            <th>Balance ({{ $year }}{{ $term ? ' — Term '.$term : '' }})</th>
+                            <th>Balance ({{ $year }}{{ $term ? ' — '.\App\Support\Term::label($term) : '' }})</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>

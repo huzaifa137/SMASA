@@ -135,7 +135,7 @@ class ReportCardRenderer
             'school_motto'   => $profile->motto ?? '',
             'logo_primary'   => $this->logoUrl($profile, $forPdf),
             'logo_secondary' => null, // SMASA schools currently store a single logo; wire a 2nd slot here if that's ever added
-            'term'           => $exam->term ?? '',
+            'term'           => \App\Support\Term::label($exam->term ?? ''),
             'year'           => $exam->academic_year ?? '',
             'exam_name'      => $exam->exam_name ?? '',
             'student' => [
@@ -269,7 +269,7 @@ class ReportCardRenderer
             'school_motto'   => 'Let Us Light the Way',
             'logo_primary'   => $logo,
             'logo_secondary' => $logo,
-            'term' => 'Term 2', 'year' => '2026', 'exam_name' => 'End of Term Exam',
+            'term' => 'Term II', 'year' => '2026', 'exam_name' => 'End of Term Exam',
             'student' => [
                 'name' => 'Amara Nakato', 'admission_no' => 'GA-2024-118',
                 'class' => 'Primary 5', 'stream' => 'Blue',
@@ -283,9 +283,9 @@ class ReportCardRenderer
                 ['name' => 'Social Studies', 'score' => 69, 'total' => 100, 'grade' => 'B-', 'remark' => 'Fair', 'percentage' => 69, 'class_average' => 64, 'teacher' => 'Mrs. Achen', 'dev' => '—'],
             ],
             'performance_history' => [
-                ['label' => 'Term 3 2025', 'value' => 66],
-                ['label' => 'Term 1 2026', 'value' => 71],
-                ['label' => 'Term 2 2026', 'value' => 78],
+                ['label' => 'Term III 2025', 'value' => 66],
+                ['label' => 'Term I 2026', 'value' => 71],
+                ['label' => 'Term II 2026', 'value' => 78],
             ],
             'attendance' => ['present' => 84, 'absent' => 3],
             'remarks' => [

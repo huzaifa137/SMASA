@@ -842,9 +842,9 @@
                         <div class="tt-float has-value">
                             <select id="termSelect">
                                 <option value="">— None —</option>
-                                <option value="Term 1">Term 1</option>
-                                <option value="Term 2">Term 2</option>
-                                <option value="Term 3">Term 3</option>
+                                <option value="Term 1">Term I</option>
+                                <option value="Term 2">Term II</option>
+                                <option value="Term 3">Term III</option>
                             </select>
                             <label>Term</label>
                         </div>

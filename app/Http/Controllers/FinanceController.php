@@ -569,10 +569,18 @@ class FinanceController extends Controller
             return back()->with('error', 'Discount cannot exceed the fee structure amount (UGX ' . number_format($structure->total_amount, 0) . ')');
         }
 
+        // Never bill a student that doesn't belong to this school, whatever
+        // ids the request carries.
+        $ownStudentIds = Student::where('school_id', $schoolId)
+            ->whereIn('id', $validated['student_ids'])
+            ->pluck('id')
+            ->all();
+
         $created = 0;
-        foreach ($validated['student_ids'] as $studentId) {
+        foreach ($ownStudentIds as $studentId) {
             foreach ($termsToBill as $billTerm) {
                 $existing = StudentFeeAllocation::where([
+                    'school_id' => $schoolId,
                     'student_id' => $studentId,
                     'fee_structure_id' => $structure->id,
                     'academic_year' => $structure->academic_year,
@@ -626,13 +634,21 @@ class FinanceController extends Controller
         if ($term)
             $query->where('term', $term);
         if ($search) {
-            $query->whereHas(
-                'student',
-                fn($q) =>
-                $q->where('firstname', 'like', "%$search%")
-                    ->orWhere('lastname', 'like', "%$search%")
-                    ->orWhere('admission_number', 'like', "%$search%")
-            )->orWhere('receipt_number', 'like', "%$search%");
+            // The search terms MUST be grouped: a bare ->orWhere() on the
+            // receipt number escaped the school / year / term filters above
+            // and pulled in other schools' payments.
+            $query->where(function ($sq) use ($search) {
+                $sq->where('receipt_number', 'like', "%$search%")
+                    ->orWhereHas(
+                        'student',
+                        fn($q) => $q->where('school_id', session('LoggedSchool'))
+                            ->where(function ($qq) use ($search) {
+                                $qq->where('firstname', 'like', "%$search%")
+                                    ->orWhere('lastname', 'like', "%$search%")
+                                    ->orWhere('admission_number', 'like', "%$search%");
+                            })
+                    );
+            });
         }
 
         $payments = $query->paginate(25);
@@ -675,7 +691,7 @@ class FinanceController extends Controller
             ->get()
             ->map(fn($a) => [
                 'id' => $a->id,
-                'label' => "Term {$a->term} — Balance: UGX " . number_format($a->balance, 0),
+                'label' => \App\Support\Term::label($a->term) . " — Balance: UGX " . number_format($a->balance, 0),
                 'balance' => $a->balance,
                 'term' => $a->term,
                 'status' => $a->payment_status,
@@ -1000,7 +1016,7 @@ class FinanceController extends Controller
                 'approved_at' => now(),
             ]));
 
-            $category = ExpenseCategory::find($validated['category_id']);
+            $category = ExpenseCategory::where('school_id', $schoolId)->find($validated['category_id']);
             $expenseAccount = ChartOfAccount::findOrCreateForExpenseCategory(
                 $schoolId,
                 $validated['category_id'],
@@ -1609,9 +1625,10 @@ class FinanceController extends Controller
             ->when($filters['payment_method'], fn($q) => $q->where('payment_method', $filters['payment_method']))
             ->when($filters['resolved_from'], fn($q) => $q->whereDate('payment_date', '>=', $filters['resolved_from']))
             ->when($filters['resolved_to'], fn($q) => $q->whereDate('payment_date', '<=', $filters['resolved_to']))
-            ->when($filters['class_id'] || $filters['stream_id'], function ($q) use ($filters) {
-                $q->whereHas('student', function ($sq) use ($filters) {
-                    $sq->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
+            ->when($filters['class_id'] || $filters['stream_id'], function ($q) use ($filters, $schoolId) {
+                $q->whereHas('student', function ($sq) use ($filters, $schoolId) {
+                    $sq->where('school_id', $schoolId)
+                        ->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
                         ->when($filters['stream_id'], fn($sq2) => $sq2->where('stream', $filters['stream_id']));
                 });
             })
@@ -1808,7 +1825,7 @@ class FinanceController extends Controller
                                 $r->amount_paid,
                                 ucfirst(str_replace('_', ' ', $r->payment_method)),
                                 optional($r->payment_date)->format('Y-m-d'),
-                                $r->term,
+                                \App\Support\Term::label($r->term),
                                 $r->academic_year,
                                 ucfirst($r->status),
                             ]);
@@ -1936,12 +1953,12 @@ class FinanceController extends Controller
     {
         $bits = [
             'Year: ' . $filters['year'],
-            'Term: ' . ($filters['term'] ?: 'All'),
+            'Term: ' . ($filters['term'] ? \App\Support\Term::label($filters['term']) : 'All'),
         ];
 
         if ($type === 'payroll') {
             if ($filters['payroll_period_id']) {
-                $bits[] = 'Period: ' . (optional(PayrollPeriod::find($filters['payroll_period_id']))->period_name ?? '');
+                $bits[] = 'Period: ' . (optional(PayrollPeriod::where('school_id', session('LoggedSchool'))->find($filters['payroll_period_id']))->period_name ?? '');
             }
         } elseif ($filters['period']) {
             $bits[] = 'Period: ' . ucwords(str_replace('_', ' ', $filters['period']));
@@ -1954,7 +1971,7 @@ class FinanceController extends Controller
             $bits[] = 'To: ' . $filters['date_to'];
         }
         if ($type === 'expenses' && $filters['category_id']) {
-            $bits[] = 'Category: ' . (optional(ExpenseCategory::find($filters['category_id']))->name ?? '');
+            $bits[] = 'Category: ' . (optional(ExpenseCategory::where('school_id', session('LoggedSchool'))->find($filters['category_id']))->name ?? '');
         }
         if ($type === 'payments' && $filters['payment_method']) {
             $bits[] = 'Method: ' . ucfirst(str_replace('_', ' ', $filters['payment_method']));
@@ -2129,9 +2146,10 @@ class FinanceController extends Controller
             ->when($filters['min_paid'] !== '', fn($q) => $q->whereRaw("{$paidExpression} >= ?", [(float) str_replace(',', '', $filters['min_paid'])]))
             ->when($filters['max_paid'] !== '', fn($q) => $q->whereRaw("{$paidExpression} <= ?", [(float) str_replace(',', '', $filters['max_paid'])]))
             ->when($filters['fee_structure_id'], fn($q) => $q->where('fee_structure_id', $filters['fee_structure_id']))
-            ->when($filters['class_id'] || $filters['stream_id'] || $filters['gender'] || $filters['search'], function ($q) use ($filters) {
-                $q->whereHas('student', function ($sq) use ($filters) {
-                    $sq->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
+            ->when($filters['class_id'] || $filters['stream_id'] || $filters['gender'] || $filters['search'], function ($q) use ($filters, $schoolId) {
+                $q->whereHas('student', function ($sq) use ($filters, $schoolId) {
+                    $sq->where('school_id', $schoolId)
+                        ->when($filters['class_id'], fn($sq2) => $sq2->where('senior', $filters['class_id']))
                         ->when($filters['stream_id'], fn($sq2) => $sq2->where('stream', $filters['stream_id']))
                         ->when($filters['gender'], fn($sq2) => $sq2->where('gender', $filters['gender']))
                         ->when($filters['search'], function ($sq2) use ($filters) {
@@ -2230,7 +2248,7 @@ class FinanceController extends Controller
         if (!$structure->appliesToTerm((int) $allocation->term)) {
             return response()->json([
                 'success' => false,
-                'message' => 'That fee structure is for ' . $structure->termLabel() . ', but this allocation is for Term ' . $allocation->term . '.'
+                'message' => 'That fee structure is for ' . $structure->termLabel() . ', but this allocation is for ' . \App\Support\Term::label($allocation->term) . '.'
             ], 422);
         }
 
@@ -2244,7 +2262,7 @@ class FinanceController extends Controller
 
         DB::beginTransaction();
         try {
-            $structure = FeeStructure::findOrFail($validated['fee_structure_id']);
+            $structure = FeeStructure::where('school_id', $schoolId)->findOrFail($validated['fee_structure_id']);
             $discount = $validated['discount_amount'] ?? 0;
             $net = $structure->total_amount - $discount;
 
@@ -2284,7 +2302,7 @@ class FinanceController extends Controller
         $allocation = StudentFeeAllocation::where('school_id', $schoolId)->findOrFail($id);
 
         // Check if there are any payments against this allocation
-        $hasPayments = FeePayment::where('allocation_id', $id)->exists();
+        $hasPayments = FeePayment::where('school_id', $schoolId)->where('allocation_id', $id)->exists();
 
         if ($hasPayments) {
             return response()->json(['success' => false, 'message' => 'Cannot delete allocation with existing payments.'], 400);

@@ -1632,7 +1632,7 @@
                                             <div class="event-title">{{ $exam->exam_name }}</div>
                                             <div class="event-time">
                                                 <i class="fas fa-tag"></i> {{ $exam->exam_type }}
-                                                &nbsp;·&nbsp; {{ $exam->term }}
+                                                &nbsp;·&nbsp; {{ \App\Support\Term::label($exam->term) }}
                                             </div>
                                         </div>
                                         <span class="event-badge {{ $exam->status }}">

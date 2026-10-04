@@ -168,7 +168,7 @@
 
                 <div class="mt-2">
                     <span class="nt-meta-pill"><i class="fas fa-calendar"></i> Year: {{ $assessment->academic_year }}</span>
-                    <span class="nt-meta-pill"><i class="fas fa-hourglass-half"></i> Term: {{ $assessment->term }}</span>
+                    <span class="nt-meta-pill"><i class="fas fa-hourglass-half"></i> Term: {{ \App\Support\Term::label($assessment->term) }}</span>
                 </div>
             </div>
         </div>

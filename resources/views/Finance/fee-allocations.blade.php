@@ -1522,9 +1522,9 @@
                 <label>Term</label>
                 <select name="term" id="filterTerm" onchange="applyFilters()">
                     <option value="">All Terms</option>
-                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term 1</option>
-                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term 2</option>
-                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term 3</option>
+                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term I</option>
+                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term II</option>
+                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term III</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -1584,7 +1584,7 @@
                         </div>
                         <td>
                             <span class="badge-fin badge-blue">{{ $alloc->academic_year }}</span>
-                            <span class="badge-fin badge-gray">Term {{ $alloc->term }}</span>
+                            <span class="badge-fin badge-gray">{{ \App\Support\Term::label($alloc->term) }}</span>
                             </div>
                         <td class="amount-mono">UGX {{ number_format($alloc->allocated_amount, 0) }}</td>
                         <td class="amount-mono" style="color:var(--r);">
@@ -1762,9 +1762,9 @@
                         </label>
                         <select name="term" class="modal-select" id="modalAllocTerm" disabled>
                             <option value="">— Select term —</option>
-                            <option value="1">Term 1</option>
-                            <option value="2">Term 2</option>
-                            <option value="3">Term 3</option>
+                            <option value="1">Term I</option>
+                            <option value="2">Term II</option>
+                            <option value="3">Term III</option>
                             <option value="all">All 3 terms</option>
                         </select>
                         <small class="modal-hint">

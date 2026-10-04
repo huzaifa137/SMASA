@@ -688,7 +688,7 @@ selected classes" is clicked. --}}
             </a>
 
             <h1 class="cz-title">
-                Customize this design — {{ $exam->exam_name }} ({{ $exam->term }})
+                Customize this design — {{ $exam->exam_name }} ({{ \App\Support\Term::label($exam->term) }})
             </h1>
             <span></span>
         </div>
@@ -920,7 +920,7 @@ selected classes" is clicked. --}}
                             <label for="cz_exam_{{ $se->id }}">
                                 <input type="checkbox" id="cz_exam_{{ $se->id }}" class="cz-exam-combine-cb" value="{{ $se->id }}"
                                     style="margin-right:.4rem;">
-                                {{ $se->exam_name }} ({{ $se->term }})
+                                {{ $se->exam_name }} ({{ \App\Support\Term::label($se->term) }})
                             </label>
                             <label class="cz-switch" title="Include in average">
                                 <input type="checkbox" id="cz_avg_{{ $se->id }}" class="cz-exam-avg-cb" value="{{ $se->id }}"
@@ -950,7 +950,7 @@ selected classes" is clicked. --}}
                     <label for="cz_prog_{{ $exam->id }}">
                         <input type="checkbox" id="cz_prog_{{ $exam->id }}" class="cz-exam-progressive-cb" value="{{ $exam->id }}"
                             style="margin-right:.4rem;">
-                        {{ $exam->exam_name }} ({{ $exam->term }}) — current
+                        {{ $exam->exam_name }} ({{ \App\Support\Term::label($exam->term) }}) — current
                     </label>
                 </div>
                 @if (isset($siblingExams))
@@ -959,7 +959,7 @@ selected classes" is clicked. --}}
                             <label for="cz_prog_{{ $se->id }}">
                                 <input type="checkbox" id="cz_prog_{{ $se->id }}" class="cz-exam-progressive-cb" value="{{ $se->id }}"
                                     style="margin-right:.4rem;">
-                                {{ $se->exam_name }} ({{ $se->term }})
+                                {{ $se->exam_name }} ({{ \App\Support\Term::label($se->term) }})
                             </label>
                         </div>
                     @endforeach

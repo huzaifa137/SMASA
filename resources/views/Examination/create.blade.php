@@ -673,7 +673,7 @@ use App\Http\Controllers\Helper;
                                     <label class="form-label fw-semibold">Examination Name <span
                                             class="text-danger">*</span></label>
                                     <input type="text" name="exam_name" class="form-control"
-                                        placeholder="e.g. End of Term 1 Examinations 2025">
+                                        placeholder="e.g. End of Term I Examinations 2025">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Exam Code</label>
@@ -695,9 +695,9 @@ use App\Http\Controllers\Helper;
                                     <label class="form-label fw-semibold">Term <span class="text-danger">*</span></label>
                                     <select name="term" class="form-control form-select">
                                         <option value="">-- Select Term --</option>
-                                        <option value="Term 1">Term 1</option>
-                                        <option value="Term 2">Term 2</option>
-                                        <option value="Term 3">Term 3</option>
+                                        <option value="Term 1">Term I</option>
+                                        <option value="Term 2">Term II</option>
+                                        <option value="Term 3">Term III</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mt-3">

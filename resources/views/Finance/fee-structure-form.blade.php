@@ -559,7 +559,7 @@
                     <div class="form-group">
                         <label class="form-label">Structure Name <span style="color:var(--r)">*</span></label>
                         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                            value="{{ old('name', $structure->name ?? '') }}" placeholder="e.g. S.1 Boarding — Term 1 2026">
+                            value="{{ old('name', $structure->name ?? '') }}" placeholder="e.g. S.1 Boarding — Term I 2026">
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
@@ -598,7 +598,7 @@
                         @php $termLocked = $isEdit && $structure->allocations()->exists(); @endphp
                         <select name="term" class="form-control @error('term') is-invalid @enderror" {{ $termLocked ? 'disabled' : '' }}>
                             <option value="">All Terms</option>
-                            @foreach([1 => 'Term 1', 2 => 'Term 2', 3 => 'Term 3'] as $v => $l)
+                            @foreach(\App\Support\Term::options() as $v => $l)
                                 <option value="{{ $v }}" {{ (string) old('term', $structure->term ?? '') === (string) $v ? 'selected' : '' }}>
                                     {{ $l }}
                                 </option>

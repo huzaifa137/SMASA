@@ -2599,7 +2599,7 @@ class ExaminationController extends Controller
             $prevPct = $prevMax > 0 ? round(($prevObtained / $prevMax) * 100, 1) : 0;
 
             $growthData[] = [
-                'label' => $prevExam->term . ' ' . $prevExam->academic_year,
+                'label' => \App\Support\Term::label($prevExam->term) . ' ' . $prevExam->academic_year,
                 'percentage' => $prevPct,
                 'exam_name' => $prevExam->exam_name,
                 // Raw total obtained for this earlier exam — added for
@@ -2615,7 +2615,7 @@ class ExaminationController extends Controller
 
         // Append current exam at the end
         $growthData[] = [
-            'label' => $exam->term . ' ' . $exam->academic_year,
+            'label' => \App\Support\Term::label($exam->term) . ' ' . $exam->academic_year,
             'percentage' => $percentage,
             'exam_name' => $exam->exam_name,
             'totalObtained' => $totalObtained,
@@ -2682,7 +2682,7 @@ class ExaminationController extends Controller
             'STREAM: ' . ($streamId ?? ''),
             'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
             'EXAM: ' . $exam->exam_name,
-            'TERM: ' . $exam->term . ' ' . $exam->academic_year,
+            'TERM: ' . \App\Support\Term::label($exam->term) . ' ' . $exam->academic_year,
             'SCORE: ' . ($isEarlyYears ? $earlyYearsAverage . '/' . $reportMaxMark : $percentage . '%'),
             'GRADE: ' . ($isEarlyYears ? $overallRemark : ($overallGradeRow?->grade ?? '—')),
         ]));
@@ -3226,7 +3226,7 @@ class ExaminationController extends Controller
             'STREAM: ' . ($streamId ?? ''),
             'POSITION: ' . (is_numeric($classRank) ? $classRank . '/' . $classTotal : 'N/A'),
             'EXAM: ' . $examNames,
-            'TERM: ' . ($firstExam->term ?? '') . ' ' . ($firstExam->academic_year ?? ''),
+            'TERM: ' . \App\Support\Term::label($firstExam->term ?? '') . ' ' . ($firstExam->academic_year ?? ''),
             'SCORE: ' . ($isEarlyYears ? ($earlyYearsAverage ?? 0) . '/' . $combinedMaxMark : $percentage . '%'),
             'GRADE: ' . ($isEarlyYears ? $overallRemark : ($overallGrade ?? '—')),
         ]));

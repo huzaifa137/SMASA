@@ -475,9 +475,9 @@
                 <label>Term</label>
                 <select id="filterTerm" onchange="applyFilters()">
                     <option value="">All Terms</option>
-                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term 1</option>
-                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term 2</option>
-                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term 3</option>
+                    <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term I</option>
+                    <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term II</option>
+                    <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term III</option>
                 </select>
             </div>
             <div class="filter-group search-group">
@@ -530,7 +530,7 @@
                             </td>
                             <td>
                                 <span class="badge-fin badge-blue">{{ $payment->academic_year }}</span>
-                                <span class="badge-fin badge-gray">Term {{ $payment->term }}</span>
+                                <span class="badge-fin badge-gray">{{ \App\Support\Term::label($payment->term) }}</span>
                             </td>
                             <td class="amount-mono" style="color:#2f2ccb;font-weight:700;">UGX
                                 {{ number_format($payment->amount_paid, 0) }}</td>

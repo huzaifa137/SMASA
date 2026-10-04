@@ -442,9 +442,9 @@ body{background:var(--bg);}
             <label>Term</label>
             <select id="filterTerm" onchange="applyFilters()">
                 <option value="">Full Year</option>
-                <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term 1</option>
-                <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term 2</option>
-                <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term 3</option>
+                <option value="1" {{ $term == '1' ? 'selected' : '' }}>Term I</option>
+                <option value="2" {{ $term == '2' ? 'selected' : '' }}>Term II</option>
+                <option value="3" {{ $term == '3' ? 'selected' : '' }}>Term III</option>
             </select>
         </div>
     </div>
@@ -669,9 +669,9 @@ body{background:var(--bg);}
             <label>Term</label>
             <select id="filterTerm">
                 <option value="">Full Year</option>
-                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
-                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
-                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term I</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term II</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term III</option>
             </select>
         </div>
         <div class="filter-group">
@@ -852,9 +852,9 @@ body{background:var(--bg);}
             <label>Term</label>
             <select id="filterTerm">
                 <option value="">Full Year</option>
-                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
-                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
-                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term I</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term II</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term III</option>
             </select>
         </div>
         <div class="filter-group">
@@ -1055,9 +1055,9 @@ body{background:var(--bg);}
             <label>Term</label>
             <select id="filterTerm">
                 <option value="">Full Year</option>
-                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term 1</option>
-                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term 2</option>
-                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term 3</option>
+                <option value="1" {{ $filters['term'] == '1' ? 'selected' : '' }}>Term I</option>
+                <option value="2" {{ $filters['term'] == '2' ? 'selected' : '' }}>Term II</option>
+                <option value="3" {{ $filters['term'] == '3' ? 'selected' : '' }}>Term III</option>
             </select>
         </div>
         <div class="filter-group">

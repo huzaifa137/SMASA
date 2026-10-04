@@ -198,7 +198,7 @@ use App\Http\Controllers\Helper;
                         <div class="col-12 col-sm-6 col-lg-3">
                             <span class="exam-meta-pill">
                                 <i class="fas fa-calendar"></i>
-                                <span>{{ $exam->term }} {{ $exam->academic_year }}</span>
+                                <span>{{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}</span>
                             </span>
                         </div>
 

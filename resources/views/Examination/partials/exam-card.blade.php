@@ -108,7 +108,7 @@
         </small>
         <br>
         <small class="text-muted">
-            <i class="fas fa-tag me-1"></i> {{ $exam->exam_type }} - {{ $exam->term }}
+            <i class="fas fa-tag me-1"></i> {{ $exam->exam_type }} - {{ \App\Support\Term::label($exam->term) }}
         </small>
     </div>
 

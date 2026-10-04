@@ -717,7 +717,7 @@
                     {{ Helper::recordMdname($classId) }}
                     {{ isset($streamId) && $streamId ? '– ' . $streamId : '' }}
                 @else All Classes @endif
-                &bull; {{ $exam->term }} {{ $exam->academic_year }}
+                &bull; {{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}
             </small>
         </div>
         <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
@@ -928,14 +928,14 @@
                 $ctSigUrl = Helper::signatureUrl($s->class_teacher_signature ?? null);
                 $htSigUrl = Helper::signatureUrl($s->head_teacher_signature ?? null);
 
-                $titleBand = strtoupper('Academic Report Form - ' . $className . ' - ' . $exam->exam_name . ' - (' . $exam->academic_year . ' ' . $exam->term . ')');
+                $titleBand = strtoupper('Academic Report Form - ' . $className . ' - ' . $exam->exam_name . ' - (' . $exam->academic_year . ' ' . \App\Support\Term::label($exam->term) . ')');
 
                 $qrData = implode("\n", array_filter([
                     'Student: ' . $fullName,
                     'Adm No: ' . $admissionNo,
                     'Class: ' . $className . (!empty($s->stream) ? ' - ' . $s->stream : ''),
                     'Exam: ' . $exam->exam_name,
-                    'Term: ' . $exam->term,
+                    'Term: ' . \App\Support\Term::label($exam->term),
                     'Year: ' . $exam->academic_year,
                     'Average: ' . $pct . '%',
                     'Result: ' . ($passed ? 'PASS' : 'FAIL'),
@@ -1030,7 +1030,7 @@
                                         <div><span class="k">ACADEMIC YEAR:</span> {{ $exam->academic_year }}</div>
                                     @endif
                                     @if($cfg['stu_term'])
-                                        <div><span class="k">TERM:</span> {{ $exam->term }}</div>
+                                        <div><span class="k">TERM:</span> {{ \App\Support\Term::label($exam->term) }}</div>
                                     @endif
                                     @if($cfg['stu_exam'])
                                         <div><span class="k">EXAM:</span> {{ $exam->exam_name }}</div>
