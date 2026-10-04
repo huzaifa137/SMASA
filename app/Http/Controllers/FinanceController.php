@@ -898,6 +898,12 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+     * Receipt for one payment, in the layout the cashier picks at print time:
+     *   ?format=roll  - 80 mm till-roll receipt (supermarket style)
+     *   ?format=slip  - horizontal slip, one third of an A4 sheet (3 per sheet)  [default]
+     *   ?format=full  - the original full-page (A5) receipt
+     */
     public function receiptPdf(int $id)
     {
         PermissionHelper::denyUnlessFeature('view_finance');
@@ -907,10 +913,137 @@ class FinanceController extends Controller
             ->findOrFail($id);
 
         $school = \App\Models\School::find($schoolId);
+        $fileName = "Receipt-{$payment->receipt_number}.pdf";
 
-        $pdf = Pdf::loadView('Finance.pdf.receipt', compact('payment', 'school'))
-            ->setPaper('a5', 'portrait');
-        return $pdf->stream("Receipt-{$payment->receipt_number}.pdf");
+        switch (request('format', 'slip')) {
+            case 'full':
+                return Pdf::loadView('Finance.pdf.receipt', compact('payment', 'school'))
+                    ->setPaper('a5', 'portrait')
+                    ->stream($fileName);
+
+            case 'roll':
+                $summary = $this->receiptSummary($payment);
+
+                return $this->rollReceiptPdf(compact('payment', 'school', 'summary'))->stream($fileName);
+
+            default:
+                $summary = $this->receiptSummary($payment);
+
+                // 210 x 99 mm in points: exactly a third of an A4 sheet.
+                return Pdf::loadView('Finance.pdf.receipt-slip', compact('payment', 'school', 'summary'))
+                    ->setPaper([0, 0, 595.28, 280.63])
+                    ->stream($fileName);
+        }
+    }
+
+    /**
+     * Everything the roll / slip receipts print, worked out once.
+     *
+     * Amount Due and Balance are a snapshot as at THIS payment (what was owed
+     * just before it, and what was left just after it), so an older receipt
+     * keeps showing the figures it was issued with even after later payments.
+     */
+    private function receiptSummary(FeePayment $payment): array
+    {
+        $student = $payment->student;
+        $allocation = $payment->allocation;
+        $counted = $payment->status === 'confirmed';
+
+        $amountDue = null;
+        $balance = null;
+        if ($allocation) {
+            $netDue = (float) $allocation->allocated_amount - (float) $allocation->discount_amount;
+            $paidBefore = (float) FeePayment::where('allocation_id', $allocation->id)
+                ->where('status', 'confirmed')
+                ->where('id', '<', $payment->id)
+                ->sum('amount_paid');
+
+            $amountDue = max(0, $netDue - $paidBefore);
+            $balance = max(0, $amountDue - ($counted ? (float) $payment->amount_paid : 0));
+        }
+
+        // What this transaction was for: its own breakdown, or one plain line.
+        $lines = [];
+        foreach ($payment->items as $item) {
+            $lines[] = [
+                'label' => $item->label,
+                'amount' => (float) $item->amount,
+                'note' => $item->is_external ? 'Non-fee item' : null,
+            ];
+        }
+        if (!$lines) {
+            $lines[] = [
+                'label' => 'School fees - ' . \App\Support\Term::label($payment->term),
+                'amount' => (float) $payment->amount_paid,
+                'note' => null,
+            ];
+        }
+
+        $className = $student->senior ?? null;
+        if ($className) {
+            $className = Helper::recordMdname($className) ?? $className;
+        }
+        $streamName = $student->stream ?? null;
+        if ($streamName) {
+            $streamName = Helper::recordMdname($streamName) ?? $streamName;
+        }
+
+        return [
+            'student_name' => trim(($student->firstname ?? '') . ' ' . ($student->lastname ?? '')) ?: 'N/A',
+            'admission_number' => $student->admission_number ?? '',
+            'class_name' => $className ?: '',
+            'stream_name' => $streamName ?: '',
+            'method_label' => match ($payment->payment_method) {
+                'cash' => 'Cash',
+                'bank_transfer' => 'Bank Transfer',
+                'mobile_money' => 'Mobile Money',
+                'cheque' => 'Cheque',
+                default => 'Other',
+            },
+            'lines' => $lines,
+            'paid_for' => implode(', ', array_column($lines, 'label')),
+            'amount_due' => $amountDue,
+            'balance' => $balance,
+            'status_stamp' => match ($payment->status) {
+                'reversed' => 'REVERSED',
+                'pending' => 'PENDING',
+                default => null,
+            },
+        ];
+    }
+
+    /**
+     * Till-roll receipt: 80 mm wide, and exactly as tall as its content so a
+     * roll printer does not feed a metre of blank paper. The content is laid
+     * out once on a very tall page to measure it, then again on the final page.
+     */
+    private function rollReceiptPdf(array $data)
+    {
+        $width = 226.77; // 80 mm in points
+        $contentHeight = null;
+
+        $probe = Pdf::loadView('Finance.pdf.receipt-roll', $data)->setPaper([0, 0, $width, 5000]);
+        $probe->getDomPDF()->setCallbacks([[
+            'event' => 'end_frame',
+            'f' => function ($frame) use (&$contentHeight) {
+                $node = $frame->get_node();
+                if ($node instanceof \DOMElement && $node->getAttribute('id') === 'rc') {
+                    $box = $frame->get_border_box();
+                    $contentHeight = $box['y'] + $box['h'];
+                }
+            },
+        ]]);
+
+        try {
+            $probe->output();
+        } catch (\Throwable $e) {
+            $contentHeight = null;
+        }
+
+        // Safety margin so rounding can never push the last line onto a 2nd page.
+        $height = $contentHeight ? (int) ceil($contentHeight) + 8 : 600;
+
+        return Pdf::loadView('Finance.pdf.receipt-roll', $data)->setPaper([0, 0, $width, $height]);
     }
 
     public function reversePayment(Request $request, int $id)

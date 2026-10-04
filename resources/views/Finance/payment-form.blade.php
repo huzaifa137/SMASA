@@ -789,9 +789,10 @@
                     <div class="form-group">
                         <label>Term <span class="req">*</span></label>
                         <select name="term" id="term" class="form-control-fin" required>
-                            <option value="1">Term I</option>
-                            <option value="2">Term II</option>
-                            <option value="3">Term III</option>
+                            @php $activeTermNo = \App\Support\Term::active(); @endphp
+                            @foreach (\App\Support\Term::options() as $v => $l)
+                                <option value="{{ $v }}" {{ (string) old('term', $activeTermNo) === (string) $v ? 'selected' : '' }}>{{ $l }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>

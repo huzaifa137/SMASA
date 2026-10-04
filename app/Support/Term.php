@@ -78,6 +78,28 @@ class Term
         return (string) $value;
     }
 
+    /**
+     * The logged-in school's ACTIVE term (Settings -> Term Dates) as 1..3,
+     * or null when the school has none flagged active. Used to pre-select
+     * the term in forms where a person has to choose one.
+     */
+    public static function active(): ?int
+    {
+        try {
+            return self::number(\App\Http\Controllers\Helper::activeTerm());
+        } catch (\Throwable $e) {
+            return null; // never let a missing active term break a form
+        }
+    }
+
+    /** Active term in the "Term 1" text form used by examinations / NLSC / timetables, or ''. */
+    public static function activeText(): string
+    {
+        $n = self::active();
+
+        return $n === null ? '' : 'Term ' . $n;
+    }
+
     /** [1 => 'Term I', 2 => 'Term II', 3 => 'Term III'] for building dropdowns. */
     public static function options(): array
     {

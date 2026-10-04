@@ -399,9 +399,10 @@
                         <label>Term (Optional)</label>
                         <select name="term" id="term">
                             <option value="">-- Not Applicable --</option>
-                            <option value="1" {{ old('term') == '1' ? 'selected' : '' }}>Term I</option>
-                            <option value="2" {{ old('term') == '2' ? 'selected' : '' }}>Term II</option>
-                            <option value="3" {{ old('term') == '3' ? 'selected' : '' }}>Term III</option>
+                            @php $selTerm = old('term', \App\Support\Term::active()); @endphp
+                            @foreach (\App\Support\Term::options() as $v => $l)
+                                <option value="{{ $v }}" {{ (string) $selTerm === (string) $v ? 'selected' : '' }}>{{ $l }}</option>
+                            @endforeach
                         </select>
                         <small style="color:var(--text-3);display:block;margin-top:.3rem;">Link to academic term if
                             applicable</small>

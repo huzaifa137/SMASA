@@ -1760,7 +1760,7 @@
                         <label class="modal-label">
                             <i class="fas fa-calendar-alt"></i> Bill for Term
                         </label>
-                        <select name="term" class="modal-select" id="modalAllocTerm" disabled>
+                        <select name="term" class="modal-select" id="modalAllocTerm" data-active-term="{{ \App\Support\Term::active() }}" disabled>
                             <option value="">— Select term —</option>
                             <option value="1">Term I</option>
                             <option value="2">Term II</option>
@@ -1902,6 +1902,8 @@
             step.style.display = allTerms ? 'block' : 'none';
             sel.disabled = !allTerms;   // disabled fields are not submitted
             if (!allTerms) sel.value = '';
+            // Pre-select the school's active term so billing defaults to the current term.
+            else if (!sel.value && sel.dataset.activeTerm) sel.value = sel.dataset.activeTerm;
         }
 
         function applyFilters() {

@@ -694,10 +694,11 @@ use App\Http\Controllers\Helper;
                                 <div class="col-md-4 mt-3">
                                     <label class="form-label fw-semibold">Term <span class="text-danger">*</span></label>
                                     <select name="term" class="form-control form-select">
+                                        @php $activeTermText = \App\Support\Term::activeText(); @endphp
                                         <option value="">-- Select Term --</option>
-                                        <option value="Term 1">Term I</option>
-                                        <option value="Term 2">Term II</option>
-                                        <option value="Term 3">Term III</option>
+                                        <option value="Term 1" {{ $activeTermText === 'Term 1' ? 'selected' : '' }}>Term I</option>
+                                        <option value="Term 2" {{ $activeTermText === 'Term 2' ? 'selected' : '' }}>Term II</option>
+                                        <option value="Term 3" {{ $activeTermText === 'Term 3' ? 'selected' : '' }}>Term III</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mt-3">

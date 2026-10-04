@@ -842,9 +842,10 @@
                         <div class="tt-float has-value">
                             <select id="termSelect">
                                 <option value="">— None —</option>
-                                <option value="Term 1">Term I</option>
-                                <option value="Term 2">Term II</option>
-                                <option value="Term 3">Term III</option>
+                                @php $activeTermText = \App\Support\Term::activeText(); @endphp
+                                <option value="Term 1" {{ $activeTermText === 'Term 1' ? 'selected' : '' }}>Term I</option>
+                                <option value="Term 2" {{ $activeTermText === 'Term 2' ? 'selected' : '' }}>Term II</option>
+                                <option value="Term 3" {{ $activeTermText === 'Term 3' ? 'selected' : '' }}>Term III</option>
                             </select>
                             <label>Term</label>
                         </div>

@@ -105,7 +105,7 @@ use App\Http\Controllers\Helper;
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <?php
-    echo Helper::DropMasterData(config('constants.options.SCHOOL_TERMS'), '', 'term', 1);
+    echo Helper::DropMasterData(config('constants.options.SCHOOL_TERMS'), Helper::activeTerm(), 'term', 1);
                                                                                                     
                                                                                                     ?>
                                     </div>

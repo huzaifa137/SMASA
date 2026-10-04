@@ -556,9 +556,9 @@
                                 @endif
                             </td>
                             <td class="action-icons">
-                                <a href="{{ route('finance.payments.receipt', $payment->id) }}" target="_blank"
-                                    title="Download Receipt">
-                                    <i class="fas fa-download" style="color:#2f2ccb;"></i>
+                                <a href="#" title="Print Receipt"
+                                    onclick="openReceiptPicker('{{ route('finance.payments.receipt', $payment->id) }}', '{{ $payment->receipt_number }}'); return false;">
+                                    <i class="fas fa-print" style="color:#2f2ccb;"></i>
                                 </a>
                                @if($payment->status == 'confirmed')
     <form method="POST" action="{{ route('finance.payments.reverse', $payment->id) }}" class="reverse-form" data-student="{{ $payment->student->firstname ?? '' }} {{ $payment->student->lastname ?? '' }}" data-amount="{{ number_format($payment->amount_paid, 0) }}" data-receipt="{{ $payment->receipt_number }}" style="display:inline;">
@@ -631,6 +631,40 @@
         @endif
 
         // SweetAlert confirmation for reversing payments
+/* Receipt layout is chosen each time a receipt is printed:
+   roll = 80 mm till-roll receipt, slip = horizontal slip (3 per A4 sheet). */
+function rememberReceiptFormat(fmt) {
+    try { localStorage.setItem('smasa_receipt_format', fmt); } catch (e) {}
+}
+
+function openReceiptPicker(url, receiptNo) {
+    let last = '';
+    try { last = localStorage.getItem('smasa_receipt_format') || ''; } catch (e) {}
+
+    const option = (fmt, icon, title, sub) => `
+        <a href="${url}?format=${fmt}" target="_blank" rel="noopener"
+           onclick="rememberReceiptFormat('${fmt}'); Swal.close();"
+           style="display:flex;align-items:center;gap:14px;text-align:left;text-decoration:none;
+                  padding:14px 16px;margin-top:10px;border-radius:12px;color:#0f172a;
+                  border:2px solid ${last === fmt ? '#2f2ccb' : '#e2e8f0'};
+                  background:${last === fmt ? '#eef2ff' : '#fff'};">
+            <i class="fas ${icon}" style="font-size:1.6rem;color:#2f2ccb;width:34px;text-align:center;"></i>
+            <span>
+                <strong style="display:block;font-size:.95rem;">${title}${last === fmt ? ' <small style="color:#2f2ccb;font-weight:600;">(last used)</small>' : ''}</strong>
+                <small style="color:#64748b;">${sub}</small>
+            </span>
+        </a>`;
+
+    Swal.fire({
+        title: 'Print receipt',
+        html: `<div style="color:#64748b;font-size:.85rem;">${receiptNo}</div>`
+            + option('roll', 'fa-receipt', 'Roll receipt (80 mm)', 'Supermarket style, for a thermal / till-roll printer')
+            + option('slip', 'fa-file-invoice', 'Slip (3 per A4 sheet)', 'Wide horizontal slip, one third of an A4 page'),
+        showConfirmButton: false,
+        showCloseButton: true,
+    });
+}
+
 function confirmReverse(button) {
     const form = button.closest('.reverse-form');
     const studentName = form.dataset.student || 'this student';
