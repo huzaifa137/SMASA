@@ -6,11 +6,11 @@ use App\Helpers\PermissionHelper;
 <div class="app-sidebar app-sidebar2">
     <div class="app-sidebar__logo text-center">
         @if (Session('LoggedAdmin'))
-            <a class="header-brand" href="{{ url('/admin/dashboard') }}">
+            <a class="header-brand" data-no-loader href="{{ url('/admin/dashboard') }}">
                 <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
             </a>
         @elseif(Session('LoggedSchool'))
-            <a class="header-brand" href="{{ url('/school/dashboard') }}">
+            <a class="header-brand" data-no-loader href="{{ url('/school/dashboard') }}">
                 <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
             </a>
         @endif
@@ -391,9 +391,8 @@ use App\Helpers\PermissionHelper;
                                 // Helper::getPendingNlscAssessments()'s own docblock.
                                 $pendingNlscAssessmentsCount = Helper::getPendingNlscAssessmentsCount();
                             @endphp
-                            @if ($pendingMarksCount + $pendingNlscAssessmentsCount > 0)
-                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
-                            @endif
+                            {{-- Always rendered (hidden when 0) so smasa-ux.js can update it in place without a reload --}}
+                            <span class="badge badge-danger ml-2 {{ ($pendingMarksCount + $pendingNlscAssessmentsCount) > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge="exam-total">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
                         <ul class="sub-menu">
@@ -404,11 +403,11 @@ use App\Helpers\PermissionHelper;
                                 <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
                                         Examination</a></li>
                             @endif
-                            @if ($pendingNlscAssessmentsCount > 0 && PermissionHelper::canFeature('view_exams'))
-                                <li>
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li class="{{ $pendingNlscAssessmentsCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="assess">
                                     <a href="{{ route('nlsc-assessments.pending') }}">
                                         <i class="fas fa-clipboard-list mr-2"></i>Create Assessment
-                                        <span class="badge badge-danger float-right">{{ $pendingNlscAssessmentsCount }}</span>
+                                        <span class="badge badge-danger float-right" data-smasa-badge="assess">{{ $pendingNlscAssessmentsCount }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -419,11 +418,11 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
-                                <li>
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li class="{{ $pendingMarksCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="marks">
                                     <a href="{{ route('examination.marks-entry-portal') }}">
                                         <i class="fas fa-pen-to-square mr-2"></i>Marks Entry
-                                        <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                        <span class="badge badge-danger float-right" data-smasa-badge="marks">{{ $pendingMarksCount }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -927,9 +926,8 @@ use App\Helpers\PermissionHelper;
                                 // Helper::getPendingNlscAssessments()'s own docblock.
                                 $pendingNlscAssessmentsCount = Helper::getPendingNlscAssessmentsCount();
                             @endphp
-                            @if ($pendingMarksCount + $pendingNlscAssessmentsCount > 0)
-                                <span class="badge badge-danger ml-2">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
-                            @endif
+                            {{-- Always rendered (hidden when 0) so smasa-ux.js can update it in place without a reload --}}
+                            <span class="badge badge-danger ml-2 {{ ($pendingMarksCount + $pendingNlscAssessmentsCount) > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge="exam-total">{{ $pendingMarksCount + $pendingNlscAssessmentsCount }}</span>
                             <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
                         </a>
                         <ul class="sub-menu">
@@ -958,11 +956,11 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if ($pendingNlscAssessmentsCount > 0 && PermissionHelper::canFeature('view_exams'))
-                                <li>
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li class="{{ $pendingNlscAssessmentsCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="assess">
                                     <a href="{{ route('nlsc-assessments.pending') }}">
                                         <i class="fas fa-clipboard-list mr-2"></i>Create Assessment &nbsp; &nbsp;
-                                        <span class="badge badge-danger float-right">{{ $pendingNlscAssessmentsCount }}</span>
+                                        <span class="badge badge-danger float-right" data-smasa-badge="assess">{{ $pendingNlscAssessmentsCount }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -973,11 +971,11 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if ($pendingMarksCount > 0 && PermissionHelper::canFeature('view_exams'))
-                                <li>
+                            @if (PermissionHelper::canFeature('view_exams'))
+                                <li class="{{ $pendingMarksCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="marks">
                                     <a href="{{ route('examination.marks-entry-portal') }}">
                                         <i class="fas fa-pen-to-square mr-2"></i>Marks Entry &nbsp; &nbsp;
-                                        <span class="badge badge-danger float-right">{{ $pendingMarksCount }}</span>
+                                        <span class="badge badge-danger float-right" data-smasa-badge="marks">{{ $pendingMarksCount }}</span>
                                     </a>
                                 </li>
                             @endif

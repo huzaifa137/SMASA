@@ -286,6 +286,28 @@
         Object.keys(binders).forEach(function (k) { try { binders[k](); } catch (e) { /* ignore */ } });
     }
 
+    /* ---------------------------------------------------- sidebar badges */
+    // The sidebar is never morphed (it is in SKIP), so its counters (Marks Entry,
+    // Create Assessment, Examinations total) are copied over by hand from the
+    // freshly fetched page. Items are always in the DOM and just hidden at 0.
+    function syncBadges(newDoc) {
+        try {
+            Array.prototype.forEach.call(document.querySelectorAll('[data-smasa-badge]'), function (el) {
+                var key = el.getAttribute('data-smasa-badge');
+                var fresh = newDoc.querySelector('[data-smasa-badge="' + key + '"]');
+                if (!fresh) { return; }
+                var n = parseInt((fresh.textContent || '0').trim(), 10) || 0;
+                el.textContent = String(n);
+                el.classList.toggle('smasa-hidden', n <= 0);
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('[data-smasa-badge-item]'), function (li) {
+                var key = li.getAttribute('data-smasa-badge-item');
+                var fresh = newDoc.querySelector('[data-smasa-badge-item="' + key + '"]');
+                if (fresh) { li.classList.toggle('smasa-hidden', fresh.classList.contains('smasa-hidden')); }
+            });
+        } catch (e) { /* never block a refresh because of a badge */ }
+    }
+
     /* --------------------------------------------------------------- refresh */
     function refresh(opts) {
         opts = opts || {};
@@ -305,6 +327,7 @@
             return res.text();
         }).then(function (html) {
             var doc = new DOMParser().parseFromString(html, 'text/html');
+            syncBadges(doc);
             if (page) {
                 return morphPage(doc).then(function (ok) { if (!ok) { throw new Error('no-root'); } return true; });
             }
@@ -397,6 +420,7 @@
                 return refresh();
             }
             var doc = new DOMParser().parseFromString(r.html, 'text/html');
+            syncBadges(doc);
             var flash = doc.getElementById('smasa-flash');
             if (flash) { showFlash(doc); } else { toast('success', 'Saved'); }
             if (form.hasAttribute('data-smasa-reset')) { form.reset(); }
@@ -412,7 +436,7 @@
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
     window.SMASA = {
-        settle: settle, toast: toast, refresh: refresh, done: done, reload: hardReload, bind: bind,
+        settle: settle, syncBadges: syncBadges, toast: toast, refresh: refresh, done: done, reload: hardReload, bind: bind,
         // page mode: patches the whole page body in place (stats, badges, steppers, tables, DataTables)
         refreshPage: function () { return refresh({ mode: 'page' }); },
         donePage: function (title, text, o) { o = o || {}; o.mode = 'page'; return done(title, text, o); }
