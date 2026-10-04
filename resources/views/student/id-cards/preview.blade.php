@@ -498,7 +498,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Stream</span>
-                        <span class="info-val">{{ $student->stream ?? '—' }}</span>
+                        <span class="info-val">{{ $streamName ?: '—' }}</span>
                     </div>
                     <div class="info-row" style="margin-top:.3rem;">
                         @if($student->gender === 'Male')

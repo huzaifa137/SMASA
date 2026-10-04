@@ -695,8 +695,8 @@ th {
                                                     <i class="fas fa-eye"></i>
                                                 </button>
 
-                                                <a href="javascript:void();" class="btn-icon btn-print"
-                                                    title="Download PDF" target="_blank">
+                                                <a href="{{ route('id-cards.print', $card->id) }}" class="btn-icon btn-print"
+                                                    title="Download PDF">
                                                     <i class="fas fa-print"></i>
                                                 </a>
                                             @endif

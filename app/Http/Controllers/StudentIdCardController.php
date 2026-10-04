@@ -251,7 +251,7 @@ class StudentIdCardController extends Controller
         $school = School::find($schoolId);
         $profile = SchoolProfile::where('school_id', $schoolId)->first();
 
-        $qrSvg = $this->generateQrSvg($card->qr_code_data);
+        $qrImg = $this->generateQrDataUri($card->qr_code_data);
         $className = Helper::recordMdname($student->senior);
         $streamName = Helper::recordMdname($student->stream);
         $photoUrl = $this->getStudentPhotoBase64($student);
@@ -262,7 +262,7 @@ class StudentIdCardController extends Controller
             'student',
             'school',
             'profile',
-            'qrSvg',
+            'qrImg',
             'className',
             'streamName',
             'photoUrl',
@@ -316,24 +316,23 @@ class StudentIdCardController extends Controller
             ], 422);
         }
 
-        $cardsData = $cards->map(function ($card) {
+        // One entry per card; the template prints FRONT | BACK side by side per student.
+        $cardItems = $cards->map(function ($card) {
             $student = $card->student;
             return [
                 'card' => $card,
                 'student' => $student,
-                'qrSvg' => $this->generateQrSvg($card->qr_code_data),
+                'qrImg' => $this->generateQrDataUri($card->qr_code_data),
                 'className' => Helper::recordMdname($student->senior),
                 'streamName' => Helper::recordMdname($student->stream),
                 'photoUrl' => $this->getStudentPhotoBase64($student),
             ];
-        });
+        })->values();
+        $cardCount = $cardItems->count();
 
-        // Chunk into rows of 2 so the layout uses plain HTML tables
-        // (grid/flex are not reliably supported by DomPDF — tables are).
-        $cardRows = $cardsData->chunk(2);
-
-        $pdf = Pdf::loadView('student.id-cards.pdf-bulk', compact('cardRows', 'school', 'profile', 'logoUrl', 'activeYear'))
+        $pdf = Pdf::loadView('student.id-cards.pdf-bulk', compact('cardItems', 'cardCount', 'school', 'profile', 'logoUrl', 'activeYear'))
             ->setPaper('a4', 'portrait')
+            ->setOption('dpi', 150)
             ->setOption('isRemoteEnabled', true)
             ->setOption('isHtml5ParserEnabled', true);
 
@@ -472,6 +471,16 @@ class StudentIdCardController extends Controller
         } catch (\Exception $e) {
             return '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#eee"/><text x="60" y="65" text-anchor="middle" fill="#666" font-size="10">QR N/A</text></svg>';
         }
+    }
+
+    /**
+     * QR code as an <img>-ready data URI. DomPDF can't reliably render an inline
+     * <svg> pasted into the HTML, but it renders SVG data-URI images correctly.
+     * Used by the PDF routes only (the on-screen preview keeps the inline SVG).
+     */
+    private function generateQrDataUri(string $data): string
+    {
+        return 'data:image/svg+xml;base64,' . base64_encode($this->generateQrSvg($data));
     }
 
     private function getStudentPhotoUrl(Student $student): ?string
