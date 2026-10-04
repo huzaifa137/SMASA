@@ -913,6 +913,7 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
 
+                @if(Helper::schoolHasNonSecondary($exam->school_id))
                 <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=classic" class="stack-btn">
                     <div class="ic"><i class="fas fa-graduation-cap"></i></div>
                     <div>
@@ -921,7 +922,9 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
+                @endif
 
+                @if(Helper::schoolHasNonSecondary($exam->school_id))
                 <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-classic"
                     class="stack-btn">
                     <div class="ic"><i class="fas fa-child"></i></div>
@@ -931,7 +934,9 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
+                @endif
 
+                @if(Helper::schoolHasSecondary($exam->school_id))
                 <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=secondary-classic"
                     class="stack-btn">
                     <div class="ic"><i class="fas fa-user-graduate"></i></div>
@@ -941,6 +946,7 @@ use App\Http\Controllers\Helper;
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
+                @endif
             </div>
 
         </div>{{-- /.ps-bento --}}

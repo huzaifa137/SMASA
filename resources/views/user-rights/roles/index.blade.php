@@ -5,6 +5,11 @@
 @section('css')
 <style>
 :root { --urp-primary:#4f46e5; --urp-dark:#1e1b4b; --urp-accent:#7c3aed; --radius:14px; }
+/* Replaces Bootstrap's .sticky-top here: that class carries z-index:1020,
+   which is higher than the sidebar (1000), so on small screens this card
+   painted over the open side-menu. Sticky only where the layout is two-column,
+   and keep it below the sidebar/overlay. */
+.urp-sticky-card { position: sticky; top: 80px; z-index: 1; }
 .urp-hero {
     background: linear-gradient(135deg, var(--urp-dark) 0%, #312e81 60%, var(--urp-accent) 100%);
     border-radius: var(--radius); padding: 2rem 2rem 2.8rem;
@@ -137,7 +142,7 @@
     }
     
     /* Remove sticky on form */
-    .sticky-top {
+    .urp-sticky-card {
         position: relative !important;
         top: 0 !important;
     }
@@ -581,7 +586,7 @@
         {{-- CREATE FORM --}}
         @if(PermissionHelper::canFeature('create_role'))
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm sticky-top" style="border-radius:var(--radius);top:80px;">
+            <div class="card border-0 shadow-sm urp-sticky-card" style="border-radius:var(--radius);">
                 <div class="card-header bg-white border-bottom" style="border-radius:var(--radius) var(--radius) 0 0;">
                     <h6 class="mb-0 font-weight-700" style="color:var(--urp-dark);">
                         <i class="fa fa-plus-circle mr-2 text-primary"></i>Add New Role

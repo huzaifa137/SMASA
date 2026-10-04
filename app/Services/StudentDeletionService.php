@@ -103,6 +103,12 @@ class StudentDeletionService
         DB::table('examination_marks')->where('student_id', $id)->delete();
         DB::table('student_exam_summaries')->where('student_id', $id)->delete();
 
+        // Per-student subject choices (Secondary). These only store a raw
+        // student_id, so without this they outlive the student and keep
+        // inflating "entered / expected" counts on the marks screens.
+        DB::table('student_alevel_combinations')->where('student_id', $id)->delete();
+        DB::table('student_olevel_electives')->where('student_id', $id)->delete();
+
         // ── Attendance ───────────────────────────────────────────────────
         DB::table('student_attendances')->where('student_id', $id)->delete();
 

@@ -63,7 +63,7 @@ class ExaminationSubjectController extends Controller
                 continue;
             }
 
-            $rows = $subjects->map(function ($cs) use ($settings, $markCounts) {
+            $rows = $subjects->map(function ($cs) use ($settings, $markCounts, $schoolId, $exam) {
                 $key = ExaminationSubjectSetting::keyFor($cs);
                 $setting = $settings[$key] ?? null;
 
@@ -75,7 +75,14 @@ class ExaminationSubjectController extends Controller
                     'teacher' => Helper::teacherFullName($cs->subject_teacher_1 ?? null),
                     'sat' => $setting ? (bool) $setting->marks_entry_enabled : true,
                     'show' => $setting ? (bool) $setting->show_on_report : true,
-                    'marks' => $markCounts[$key] ?? 0,
+                    // A choice subject (A-Level principal/subsidiary, O-Level
+                    // elective) only counts marks from students who still
+                    // take it - otherwise a mark left behind by a student
+                    // who switched subject (e.g. Luganda -> Subsidiary ICT)
+                    // inflates the count past the number of takers (2/1).
+                    'marks' => Helper::subjectSelectionKind($cs) !== null
+                        ? Helper::enteredMarksCountForTakers($schoolId, $exam->id, $cs)
+                        : ($markCounts[$key] ?? 0),
                 ];
             })->sortBy('name')->values();
 

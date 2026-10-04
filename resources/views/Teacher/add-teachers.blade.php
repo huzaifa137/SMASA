@@ -11,6 +11,59 @@ $controller = new Controller();
     <link href="{{ URL::asset('assets/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
     <!--Daterangepicker css-->
     <link href="{{ URL::asset('assets/plugins/bootstrap-daterangepicker/daterangepicker.css') }}" rel="stylesheet" />
+
+    <style>
+        /* ─── Mobile: stack card header title + buttons full-width ────────── */
+@media (max-width: 768px) {
+
+    /* Force header to stack vertically, with tighter padding */
+    .card-header.d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px;                        /* was 12px — tighter gap between title & buttons */
+        padding: 12px 14px;              /* tighten header padding */
+        text-align: left;
+    }
+
+    /* Title gets its own line, tighter bottom margin */
+    .card-header .card-title {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 1.05rem;              /* optional: slightly smaller on mobile */
+    }
+
+    /* Button wrapper becomes a vertical stack with small gap */
+    .card-header .d-flex.gap-2 {
+        flex-direction: column;
+        width: 100%;
+        gap: 6px !important;             /* was 10px — tighter gap between buttons */
+    }
+
+    /* Each button spans full width, tighter vertical padding */
+    .card-header .d-flex.gap-2>a.btn,
+    .card-header .d-flex.gap-2>.btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;               /* was 10px 14px — shorter buttons */
+        font-size: 14px;
+        margin: 0 !important;
+        line-height: 1.3;                /* prevents tall buttons from font metrics */
+    }
+
+    /* Kill the &nbsp; spacing that was used between the two links */
+    .card-header .d-flex.gap-2>a.btn+a.btn {
+        margin-left: 0 !important;
+    }
+
+    /* Tidy up icon spacing */
+    .card-header .d-flex.gap-2>a.btn i,
+    .card-header .d-flex.gap-2>.btn i {
+        margin-right: 6px;
+    }
+}
+    </style>
 @endsection
 
 @section('content')
@@ -24,14 +77,13 @@ $controller = new Controller();
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0 text-white">Add Teacher</h4>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('teachers.bulk.import.form') }}" class="btn"
-                                style="background-color: #059669; color:#FFF;">
-                                <i class="fas fa-file-import"></i> Bulk Import
-                            </a>  &nbsp;
-                            <a href="{{ route('school.teachers') }}" class="btn"
-                                style="background-color: #5351e4; color:#FFF;">
-                                <i class="fas fa-users"></i> All Teachers
-                            </a>
+                            <a href="{{ route('teachers.bulk.import.form') }}" class="btn" style="background-color: #059669; color:#FFF;">
+    <i class="fas fa-file-import"></i> Bulk Import
+</a>
+{{-- remove this &nbsp; --}}
+<a href="{{ route('school.teachers') }}" class="btn" style="background-color: #5351e4; color:#FFF;">
+    <i class="fas fa-users"></i> All Teachers
+</a>
                         </div>
                     </div>
                     <div class="card-body bg-light">

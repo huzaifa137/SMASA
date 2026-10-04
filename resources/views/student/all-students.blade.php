@@ -295,15 +295,15 @@ use App\Helpers\PermissionHelper;
             color: #fff;
         }
 
-.btn-edit {
-    background: #f39f40;
-    color: #fff;
-}
+        .btn-edit {
+            background: #f39f40;
+            color: #fff;
+        }
 
-.btn-edit:hover {
-    background: var(--a);
-    color: #fff;
-}
+        .btn-edit:hover {
+            background: var(--a);
+            color: #fff;
+        }
 
         .btn-del {
             background: var(--rl);
@@ -410,8 +410,8 @@ use App\Helpers\PermissionHelper;
         }
 
         /* ══════════════════════════════════
-                                       MODALS
-                                    ══════════════════════════════════ */
+                                                   MODALS
+                                                ══════════════════════════════════ */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -967,6 +967,140 @@ use App\Helpers\PermissionHelper;
             background: var(--g);
             color: #fff;
         }
+
+        /* ─── Mobile: stack hero buttons full-width ──────────────────────── */
+        @media (max-width: 768px) {
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px !important;
+                /* tighter gap between stacked buttons */
+            }
+
+            .hero-buttons>a {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 18px !important;
+                /* keeps them from getting too tall */
+            }
+        }
+
+        /* ─── Mobile: stack class/stream filter fields full-width ─────────── */
+        @media (max-width: 768px) {
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px !important;
+                padding: 1rem 1.1rem !important;
+            }
+
+            .filter-row>div {
+                width: 100%;
+                min-width: 0 !important;
+                /* kill the inline min-width:220px */
+            }
+
+            .filter-row>div>.form-control,
+            .filter-row>div>.btn {
+                width: 100%;
+            }
+
+            /* Reset button also full width */
+            .filter-row>div:last-child {
+                display: flex;
+            }
+
+            .filter-row>div:last-child>.btn {
+                justify-content: center;
+            }
+        }
+
+        /* ─── Mobile: stack stream header rows full-width ─────────────────── */
+        @media (max-width: 768px) {
+
+            .stream-header {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 10px;
+                padding: .85rem 1rem;
+            }
+
+            /* Left side (icon + stream name) stays on its own line */
+            .stream-header>div:first-child {
+                width: 100%;
+            }
+
+            /* Right side: search box + count badge stack vertically */
+            .stream-header>div:last-child {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 8px;
+                width: 100%;
+            }
+
+            /* Search wrapper spans full width */
+            .stream-header>div:last-child>div {
+                width: 100%;
+            }
+
+            /* Search input full width, no fixed 200px */
+            .stream-header .stream-search-input {
+                width: 100% !important;
+            }
+
+            /* Count badge full width, centered content */
+            .stream-header .badge {
+                width: 100%;
+                justify-content: center;
+                padding: .45rem .75rem;
+                font-size: .78rem;
+            }
+        }
+
+        /* ─── Mobile: wrap each stream table in a horizontal scroller ──────── */
+@media (max-width: 768px) {
+
+    /* Give every student table its own contained scroller */
+    .stream-filter-block {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+    }
+
+    /* Table can be as wide as it needs to be; the wrapper scrolls */
+    .stream-filter-block > .std-table {
+        min-width: 700px;
+        margin-bottom: 0;
+    }
+
+    /* Thin, obvious scrollbar so users know they can swipe */
+    .stream-filter-block::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .stream-filter-block::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+        margin: 0 8px;
+    }
+
+    .stream-filter-block::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 10px;
+    }
+
+    .stream-filter-block::-webkit-scrollbar-thumb:hover {
+        background: #2f2ccb;
+    }
+
+    /* Firefox */
+    .stream-filter-block {
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+    }
+}
     </style>
 @endsection
 
@@ -977,7 +1111,7 @@ use App\Helpers\PermissionHelper;
             <h1>All Students</h1>
             <p>Browse students by class and stream</p>
         </div>
-        <div style="position:relative;z-index:1;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="hero-buttons" style="position:relative;z-index:1;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
             @if(PermissionHelper::canFeature('import_students'))
                 <a href="{{ route('students.bulk.import.form') }}"
                     style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
@@ -1037,13 +1171,15 @@ use App\Helpers\PermissionHelper;
     this file — without turning this filter into a real navigation. --}}
     @if(!empty($groupedStudents))
         <div class="card" style="margin-bottom:1.5rem;">
-            <div class="card-body-custom" style="padding:1.1rem 1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+            <div class="card-body-custom filter-row"
+                style="padding:1.1rem 1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
                 <div style="min-width:220px;">
                     <label class="form-label" for="filterClassSelect">Class</label>
                     <select id="filterClassSelect" class="form-control">
                         <option value="">All Classes</option>
                         @foreach($groupedStudents as $senior => $streams)
-                            <option value="{{ $senior }}">{{ \App\Http\Controllers\Helper::item_md_name($senior) ?? $senior }}</option>
+                            <option value="{{ $senior }}">{{ \App\Http\Controllers\Helper::item_md_name($senior) ?? $senior }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -1083,7 +1219,8 @@ use App\Helpers\PermissionHelper;
 
                 <div style="padding:1.25rem 1.5rem;">
                     @foreach($streams as $stream => $students)
-                        <div class="stream-filter-block" data-class="{{ $senior }}" data-stream="{{ $stream }}" style="margin-bottom:2rem;">
+                        <div class="stream-filter-block" data-class="{{ $senior }}" data-stream="{{ $stream }}"
+                            style="margin-bottom:2rem;">
                             {{-- Stream header --}}
                             <div class="stream-header">
                                 <div style="display:flex;align-items:center;gap:.6rem;">
@@ -1109,7 +1246,8 @@ use App\Helpers\PermissionHelper;
                             </div>
 
                             @if(\App\Helpers\PermissionHelper::canFeature('delete_student'))
-                                <div class="bulk-action-bar" data-senior="{{ $senior }}" data-stream="{{ $stream }}" style="display:none;align-items:center;gap:.75rem;margin-bottom:.6rem;padding:.5rem .75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                                <div class="bulk-action-bar" data-senior="{{ $senior }}" data-stream="{{ $stream }}"
+                                    style="display:none;align-items:center;gap:.75rem;margin-bottom:.6rem;padding:.5rem .75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
                                     <span style="font-size:.8rem;font-weight:600;color:#dc2626;">
                                         <span class="selected-count">0</span> selected
                                     </span>
@@ -1132,9 +1270,8 @@ use App\Helpers\PermissionHelper;
                                     <tr>
                                         @if(\App\Helpers\PermissionHelper::canFeature('delete_student'))
                                             <th width="3%">
-                                                <input type="checkbox" class="select-all-checkbox"
-                                                    data-senior="{{ $senior }}" data-stream="{{ $stream }}"
-                                                    title="Select all on this page">
+                                                <input type="checkbox" class="select-all-checkbox" data-senior="{{ $senior }}"
+                                                    data-stream="{{ $stream }}" title="Select all on this page">
                                             </th>
                                         @endif
                                         <th width="4%">#</th>
@@ -1213,9 +1350,12 @@ use App\Helpers\PermissionHelper;
         // ── Modal helpers ──────────────────────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-        SMASA.bind('student/all-students:0', function () { document.querySelectorAll('.modal-overlay').forEach(m => { if (m.__smb) return; m.__smb = true;
-            m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
-        }); });
+        SMASA.bind('student/all-students:0', function () {
+            document.querySelectorAll('.modal-overlay').forEach(m => {
+                if (m.__smb) return; m.__smb = true;
+                m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+            });
+        });
 
         // ── Avatar helpers ──────────────────────────────────────────────────
         const COLORS = ['#2f2ccb', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626'];
@@ -1251,63 +1391,63 @@ use App\Helpers\PermissionHelper;
                             : `<span class="badge badge-gray">${s.gender || '—'}</span>`;
 
                     document.getElementById('viewBody').innerHTML = `
-                                                <div class="student-banner">
-                                                    ${photoHtml}
-                                                    <div>
-                                                        <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
-                                                        <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
-                                                            ${genderBadge}
-                                                            ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
-                                                            ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                            <div class="student-banner">
+                                                                ${photoHtml}
+                                                                <div>
+                                                                    <div class="banner-name">${s.firstname || ''} ${s.lastname || ''}</div>
+                                                                    <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem;">
+                                                                        ${genderBadge}
+                                                                        ${s.admission_number ? `<span class="badge badge-blue"><i class="fas fa-id-badge"></i> ${s.admission_number}</span>` : ''}
+                                                                        ${s.senior ? `<span class="badge badge-gray"><i class="fas fa-chalkboard"></i> ${s.senior}</span>` : ''}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
 
-                                                <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                                                <div class="info-grid">
-                                                    ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
-                                                    ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
-                                                    ${infoItem('Place of Birth', s.place_of_birth)}
-                                                    ${infoItem('Nationality', s.nationality)}
-                                                    ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
-                                                    ${infoItem('Gender', s.gender)}
-                                                </div>
+                                                            <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                                                            <div class="info-grid">
+                                                                ${infoItem('Full Name', (s.firstname || '') + ' ' + (s.lastname || ''))}
+                                                                ${infoItem('Date of Birth', fmtDate(s.date_of_birth))}
+                                                                ${infoItem('Place of Birth', s.place_of_birth)}
+                                                                ${infoItem('Nationality', s.nationality)}
+                                                                ${infoItem('Birth Certificate No.', s.birth_certificate_entry_number)}
+                                                                ${infoItem('Gender', s.gender)}
+                                                            </div>
 
-                                                <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                                                <div class="info-grid">
-                                                    ${infoItem('LIN Number', s.admission_number)}
-                                                    ${infoItem('Registration Number', s.registration_number)}
-                                                    ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
-                                                    ${infoItem('Admission Year', s.admission_year)}
-                                                    ${infoItem('Class / Senior', s.senior)}
-                                                    ${infoItem('Stream', s.stream)}
-                                                    ${infoItem('PLE Score', s.ple_score)}
-                                                    ${infoItem('UCE Score', s.uce_score)}
-                                                    ${infoItem('Previous School', s.previous_school)}
-                                                    ${infoItem('Primary School', s.primary_school_name)}
-                                                </div>
+                                                            <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                                                            <div class="info-grid">
+                                                                ${infoItem('LIN Number', s.admission_number)}
+                                                                ${infoItem('Registration Number', s.registration_number)}
+                                                                ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
+                                                                ${infoItem('Admission Year', s.admission_year)}
+                                                                ${infoItem('Class / Senior', s.senior)}
+                                                                ${infoItem('Stream', s.stream)}
+                                                                ${infoItem('PLE Score', s.ple_score)}
+                                                                ${infoItem('UCE Score', s.uce_score)}
+                                                                ${infoItem('Previous School', s.previous_school)}
+                                                                ${infoItem('Primary School', s.primary_school_name)}
+                                                            </div>
 
-                                                <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
-                                                <div class="info-grid">
-                                                    ${infoItem('Primary Contact', s.primary_contact)}
-                                                    ${infoItem('Other Contact', s.other_contact)}
-                                                    ${infoItem('Home Address', s.home_address, true)}
-                                                </div>
+                                                            <div class="section-hd"><i class="fas fa-phone"></i> Contact Information</div>
+                                                            <div class="info-grid">
+                                                                ${infoItem('Primary Contact', s.primary_contact)}
+                                                                ${infoItem('Other Contact', s.other_contact)}
+                                                                ${infoItem('Home Address', s.home_address, true)}
+                                                            </div>
 
-                                                <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
-                                                <div class="info-grid">
-                                                    ${infoItem('Guardian Names', s.guardian_names)}
-                                                    ${infoItem('Relation', s.relation)}
-                                                    ${infoItem('Guardian Phone', s.guardian_phone)}
-                                                    ${infoItem('Guardian Email', s.guardian_email)}
-                                                </div>
+                                                            <div class="section-hd"><i class="fas fa-users"></i> Guardian Information</div>
+                                                            <div class="info-grid">
+                                                                ${infoItem('Guardian Names', s.guardian_names)}
+                                                                ${infoItem('Relation', s.relation)}
+                                                                ${infoItem('Guardian Phone', s.guardian_phone)}
+                                                                ${infoItem('Guardian Email', s.guardian_email)}
+                                                            </div>
 
-                                                <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
-                                                <div class="info-grid">
-                                                    ${infoItem('Medical History', s.medical_history, true)}
-                                                    ${infoItem('Comments', s.comments, true)}
-                                                </div>
-                                            `;
+                                                            <div class="section-hd"><i class="fas fa-info-circle"></i> Additional Information</div>
+                                                            <div class="info-grid">
+                                                                ${infoItem('Medical History', s.medical_history, true)}
+                                                                ${infoItem('Comments', s.comments, true)}
+                                                            </div>
+                                                        `;
                 })
                 .catch(() => {
                     document.getElementById('viewBody').innerHTML = `<div class="empty-state"><div class="empty-icon-wrap"><i class="fas fa-times-circle"></i></div><p>Failed to load student data.</p></div>`;
@@ -1350,78 +1490,78 @@ use App\Helpers\PermissionHelper;
                 : `<small style="color:var(--t3);">No photo uploaded yet</small>`;
 
             return `
-                                        <div class="edit-section">
-                                            <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
-                                            <div class="form-grid-2">
-                                                <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
-                                                <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
-                                                <div class="form-group"><label class="form-label">Gender *</label>
-                                                    <select class="form-control" id="ef_gender">
-                                                        <option value="">Select</option>
-                                                        <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
-                                                        <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
-                                                        <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
-                                                <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
-                                                <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
-                                                <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
-                                            </div>
-                                        </div>
+                                                    <div class="edit-section">
+                                                        <div class="section-hd"><i class="fas fa-user"></i> Personal Information</div>
+                                                        <div class="form-grid-2">
+                                                            <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="ef_firstname" value="${esc(s.firstname)}"></div>
+                                                            <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="ef_lastname" value="${esc(s.lastname)}"></div>
+                                                            <div class="form-group"><label class="form-label">Gender *</label>
+                                                                <select class="form-control" id="ef_gender">
+                                                                    <option value="">Select</option>
+                                                                    <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
+                                                                    <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
+                                                                    <option value="Other" ${s.gender === 'Other' ? 'selected' : ''}>Other</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="ef_dob" value="${(s.date_of_birth || '').split('T')[0]}"></div>
+                                                            <div class="form-group"><label class="form-label">Place of Birth</label><input type="text" class="form-control" id="ef_pob" value="${esc(s.place_of_birth)}"></div>
+                                                            <div class="form-group"><label class="form-label">Nationality</label><input type="text" class="form-control" id="ef_nat" value="${esc(s.nationality)}"></div>
+                                                            <div class="form-group" style="grid-column:1/-1"><label class="form-label">Birth Certificate No.</label><input type="text" class="form-control" id="ef_bc" value="${esc(s.birth_certificate_entry_number)}"></div>
+                                                        </div>
+                                                    </div>
 
-                                        <div class="edit-section">
-                                            <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
-                                            <div class="form-grid-3">
-                                                <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
-                                                <div class="form-group"><label class="form-label">LIN No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
-                                                <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
-                                                <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
-                                                <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
-                                                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
-                                                <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
-                                                <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
-                                            </div>
-                                            <div class="form-grid-2">
-                                                <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
-                                                <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
-                                            </div>
-                                        </div>
+                                                    <div class="edit-section">
+                                                        <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+                                                        <div class="form-grid-3">
+                                                            <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
+                                                            <div class="form-group"><label class="form-label">LIN No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
+                                                            <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
+                                                            <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
+                                                            <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
+                                                            <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
+                                                            <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
+                                                            <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
+                                                        </div>
+                                                        <div class="form-grid-2">
+                                                            <div class="form-group"><label class="form-label">Previous School</label><input type="text" class="form-control" id="ef_prev" value="${esc(s.previous_school)}"></div>
+                                                            <div class="form-group"><label class="form-label">Primary School</label><input type="text" class="form-control" id="ef_prim" value="${esc(s.primary_school_name)}"></div>
+                                                        </div>
+                                                    </div>
 
-                                        <div class="edit-section">
-                                            <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
-                                            <div class="form-grid-3">
-                                                <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
-                                                <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
-                                                <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
-                                            </div>
-                                            <div class="form-grid-2">
-                                                <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
-                                                <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
-                                                <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
-                                                <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
-                                            </div>
-                                        </div>
+                                                    <div class="edit-section">
+                                                        <div class="section-hd"><i class="fas fa-phone"></i> Contact & Guardian</div>
+                                                        <div class="form-grid-3">
+                                                            <div class="form-group"><label class="form-label">Primary Contact</label><input type="text" class="form-control" id="ef_pc" value="${esc(s.primary_contact)}"></div>
+                                                            <div class="form-group"><label class="form-label">Other Contact</label><input type="text" class="form-control" id="ef_oc" value="${esc(s.other_contact)}"></div>
+                                                            <div class="form-group"><label class="form-label">Home Address</label><input type="text" class="form-control" id="ef_addr" value="${esc(s.home_address)}"></div>
+                                                        </div>
+                                                        <div class="form-grid-2">
+                                                            <div class="form-group"><label class="form-label">Guardian Names</label><input type="text" class="form-control" id="ef_gn" value="${esc(s.guardian_names)}"></div>
+                                                            <div class="form-group"><label class="form-label">Relation</label><input type="text" class="form-control" id="ef_rel" value="${esc(s.relation)}"></div>
+                                                            <div class="form-group"><label class="form-label">Guardian Phone</label><input type="text" class="form-control" id="ef_gph" value="${esc(s.guardian_phone)}"></div>
+                                                            <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" id="ef_gem" value="${esc(s.guardian_email)}"></div>
+                                                        </div>
+                                                    </div>
 
-                                        <div class="edit-section">
-                                            <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
-                                            <div class="form-grid-2">
-                                                <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
-                                                <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
-                                            </div>
-                                        </div>
+                                                    <div class="edit-section">
+                                                        <div class="section-hd"><i class="fas fa-info-circle"></i> Additional</div>
+                                                        <div class="form-grid-2">
+                                                            <div class="form-group"><label class="form-label">Medical History</label><textarea class="form-control" id="ef_med" rows="3">${esc(s.medical_history)}</textarea></div>
+                                                            <div class="form-group"><label class="form-label">Comments</label><textarea class="form-control" id="ef_com" rows="3">${esc(s.comments)}</textarea></div>
+                                                        </div>
+                                                    </div>
 
-                                        <div class="edit-section">
-                                            <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
-                                            <div style="margin-bottom:.75rem;">${photoHtml}</div>
-                                            <div class="photo-upload-wrap" id="photoWrap">
-                                                <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-                                                <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-                                                <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-                                                <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
-                                            </div>
-                                            <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
-                                        </div>`;
+                                                    <div class="edit-section">
+                                                        <div class="section-hd"><i class="fas fa-camera"></i> Student Photo</div>
+                                                        <div style="margin-bottom:.75rem;">${photoHtml}</div>
+                                                        <div class="photo-upload-wrap" id="photoWrap">
+                                                            <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+                                                            <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+                                                            <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+                                                            <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>
+                                                        </div>
+                                                        <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
+                                                    </div>`;
         }
 
         function esc(v) { return (v ?? '').toString().replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -1448,10 +1588,10 @@ use App\Helpers\PermissionHelper;
                 const reader = new FileReader();
                 reader.onload = e => {
                     wrap.innerHTML = `
-                                            <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
-                                            <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                                                <i class='fas fa-times' style='font-size:.7rem;'></i>
-                                            </button>`;
+                                                        <img src="${e.target.result}" style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin:0 auto;">
+                                                        <button type="button" onclick="resetPhotoUpload()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--r);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                                            <i class='fas fa-times' style='font-size:.7rem;'></i>
+                                                        </button>`;
                     wrap.style.position = 'relative';
                 };
                 reader.readAsDataURL(file);
@@ -1461,10 +1601,10 @@ use App\Helpers\PermissionHelper;
         function resetPhotoUpload() {
             selectedPhotoFile = null; // 👈 clear saved file
             document.getElementById('photoWrap').innerHTML = `
-                                    <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
-                                    <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
-                                    <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
-                                    <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
+                                                <input type="file" id="ef_photo" accept="image/jpg,image/jpeg,image/png,image/gif">
+                                                <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--t3);display:block;margin-bottom:.5rem;"></i>
+                                                <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--t2);">Click to upload photo</p>
+                                                <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--t3);">JPG, PNG or GIF · max 5MB</p>`;
             initPhotoUpload();
         }
 
@@ -1824,18 +1964,21 @@ use App\Helpers\PermissionHelper;
         // ── STREAM SEARCH ──────────────────────────────────────────────
         const searchTimers = {};
 
-        SMASA.bind('student/all-students:1', function () { document.querySelectorAll('.stream-search-input').forEach(input => { if (input.__smb) return; input.__smb = true;
-            input.addEventListener('input', function () {
-                const senior = this.dataset.senior;
-                const stream = this.dataset.stream;
-                const key = senior + '|' + stream;
+        SMASA.bind('student/all-students:1', function () {
+            document.querySelectorAll('.stream-search-input').forEach(input => {
+                if (input.__smb) return; input.__smb = true;
+                input.addEventListener('input', function () {
+                    const senior = this.dataset.senior;
+                    const stream = this.dataset.stream;
+                    const key = senior + '|' + stream;
 
-                clearTimeout(searchTimers[key]);
-                searchTimers[key] = setTimeout(() => {
-                    loadStreamPage(senior, stream, this.value.trim(), 1);
-                }, 350); // debounce
+                    clearTimeout(searchTimers[key]);
+                    searchTimers[key] = setTimeout(() => {
+                        loadStreamPage(senior, stream, this.value.trim(), 1);
+                    }, 350); // debounce
+                });
             });
-        }); });
+        });
 
         function loadStreamPage(senior, stream, q, page) {
             const tbody = document.getElementById(`tbody-${senior}-${stream}`);

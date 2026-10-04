@@ -529,6 +529,85 @@
             margin-bottom: 8px;
             opacity: .5;
         }
+
+        /* ─── Mobile: force page header title and subtitle onto separate lines ── */
+@media (max-width: 768px) {
+
+    .page-header {
+        padding: 20px 0 4px;
+        display: block !important;
+        text-align: left;
+    }
+
+    .page-header h2,
+    .page-header p {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        float: none !important;
+        clear: both !important;
+        flex: 0 0 100% !important;
+    }
+
+    .page-header h2 {
+        margin: 0 0 8px 0 !important;
+        line-height: 1.35;
+    }
+
+    .page-header p {
+        margin: 0 !important;
+        line-height: 1.45;
+    }
+
+    .page-header h2 i {
+        display: inline-block !important;
+        vertical-align: middle;
+        margin-right: 6px !important;
+    }
+}
+
+/* ─── Mobile: stack dark config grid + import mode radios ─────────── */
+@media (max-width: 768px) {
+
+    /* The dark "Class & Stream Configuration" panel */
+    .card-box > div[style*="linear-gradient(135deg, #1e293b"] {
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+
+    /* Inner 2-column grid → single column */
+    .card-box > div[style*="linear-gradient(135deg, #1e293b"] > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    /* Import Mode radio cards — stack full width instead of 220px min */
+    .card-box div[style*="display:flex"][style*="flex-wrap:wrap"] > label {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    /* The "Match existing students by" select inside the update panel */
+    #match_by {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Optional-fields checklist: single column on mobile */
+    .of-items {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Search bar: keep input flexible but prevent squeeze */
+    .of-search-bar {
+        flex-wrap: wrap;
+    }
+
+    .of-search-bar input {
+        min-width: 0;
+    }
+}
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endsection

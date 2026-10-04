@@ -364,6 +364,41 @@
                 justify-content: center;
             }
         }
+
+        /* ─── Mobile: force page header title and subtitle onto separate lines ── */
+@media (max-width: 768px) {
+
+    .page-header {
+        padding: 20px 0 4px;
+        display: block !important;      /* kill any flex/inline behaviour */
+    }
+
+    .page-header h2 {
+        display: block !important;
+        width: 100% !important;
+        float: none !important;
+        clear: both !important;
+        margin: 0 0 8px 0 !important;
+        line-height: 1.35;
+    }
+
+    .page-header p {
+        display: block !important;
+        width: 100% !important;
+        float: none !important;
+        clear: both !important;
+        margin: 0 !important;
+        line-height: 1.45;
+    }
+
+    /* If the icon inside the h2 is causing inline issues, keep it inline */
+    .page-header h2 i {
+        display: inline-block !important;
+        margin-right: 6px !important;
+        vertical-align: middle;
+    }
+}
+        
     </style>
 @endsection
 

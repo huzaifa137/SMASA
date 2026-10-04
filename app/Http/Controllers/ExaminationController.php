@@ -288,6 +288,22 @@ class ExaminationController extends Controller
             ];
         }
 
+        // Choice subjects (A-Level principal/subsidiary, O-Level elective):
+        // count only marks from students who still take the subject, so a
+        // mark left by a student who switched subject can't push the
+        // "entered" figure past the number of takers (e.g. 2/1).
+        foreach ($assignedSubjects as $subject) {
+            if (Helper::subjectSelectionKind($subject) === null || $subject->subject_type === 'secondary_olevel') {
+                continue; // compulsory, or O-Level (counted from NLSC marks above)
+            }
+
+            $key = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
+
+            $markCounts[$key] = (object) [
+                'entered_count' => Helper::enteredMarksCountForTakers($schoolId, $examId, $subject),
+            ];
+        }
+
         // Student counts per class-stream
         $studentCounts = \Illuminate\Support\Facades\DB::table('students')
             ->where('school_id', $schoolId)
@@ -1919,6 +1935,15 @@ class ExaminationController extends Controller
         // Nursery nor Secondary is treated as Primary, by elimination.
         $isNurseryTemplate = self::isNurseryTemplateKey($template);
         $isSecondaryTemplate = self::isSecondaryTemplateKey($template);
+
+        // A Primary school has no Secondary design to customise (and a
+        // pure Secondary school has no Primary/Nursery one) - send them
+        // back to the slips screen rather than render an empty designer.
+        if ($isSecondaryTemplate ? !Helper::schoolHasSecondary($schoolId) : !Helper::schoolHasNonSecondary($schoolId)) {
+            return redirect()->route('examination.passslips.index', $examId)
+                ->with('error', 'That design template does not apply to your school.');
+        }
+
         $examClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)

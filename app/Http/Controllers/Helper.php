@@ -367,6 +367,90 @@ class Helper extends Controller
         return array_keys($classTypes);
     }
 
+    /**
+     * True when this school is enrolled under the Secondary School Product
+     * (directly, or merged with another product on /school-products), i.e.
+     * it has Secondary O-Level and/or A-Level classes. Gates every
+     * secondary-only screen: O-Level Electives, A-Level Combinations,
+     * NLSC Topics / Projects / Subject Achievement, Create/Manage
+     * Assessments and the Secondary report-card design.
+     */
+    public static function schoolHasSecondary($schoolId = null): bool
+    {
+        $schoolId = $schoolId ?? Session('LoggedSchool');
+
+        if (empty($schoolId)) {
+            return false;
+        }
+
+        static $cache = [];
+
+        if (!array_key_exists($schoolId, $cache)) {
+            $types = self::schoolClassTypes($schoolId);
+
+            $cache[$schoolId] = in_array('Secondary O-Level', $types, true)
+                || in_array('Secondary A-Level', $types, true);
+        }
+
+        return $cache[$schoolId];
+    }
+
+    /**
+     * True when this school has at least one NON-Secondary product
+     * (Primary Secular / Primary Theology / Idaad And Thanawi), i.e. it
+     * still needs the Primary / Nursery designs and features. A pure
+     * Secondary school returns false.
+     */
+    public static function schoolHasNonSecondary($schoolId = null): bool
+    {
+        $schoolId = $schoolId ?? Session('LoggedSchool');
+
+        if (empty($schoolId)) {
+            return false;
+        }
+
+        static $cache = [];
+
+        if (!array_key_exists($schoolId, $cache)) {
+            $types = self::schoolClassTypes($schoolId);
+            $nonSecondary = array_filter($types, fn ($t) => !in_array($t, ['Secondary O-Level', 'Secondary A-Level'], true));
+
+            // No product at all (shouldn't happen): don't hide anything.
+            $cache[$schoolId] = !empty($nonSecondary) || empty($types);
+        }
+
+        return $cache[$schoolId];
+    }
+
+    /**
+     * How many saved marks exist for this class-subject from students who
+     * actually TAKE it. Used so a
+     * choice subject's "entered" count ignores marks left behind by a
+     * student who dropped it (e.g. Luganda -> Subsidiary ICT).
+     * Compulsory subjects (null takers) are returned unfiltered.
+     */
+    public static function enteredMarksCountForTakers($schoolId, $examId, $classSubject): int
+    {
+        $query = \App\Models\ExaminationMark::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classSubject->class_id)
+            ->where('stream_id', $classSubject->stream_id)
+            ->whereNotNull('marks_obtained')
+            ->when(
+                empty($classSubject->subject_id),
+                fn ($q) => $q->whereNull('subject_id')->where('custom_subject_id', $classSubject->custom_subject_id ?? null),
+                fn ($q) => $q->where('subject_id', $classSubject->subject_id)
+            );
+
+        $takers = self::studentIdsTakingClassSubject($schoolId, $classSubject);
+
+        if ($takers !== null) {
+            $query->whereIn('student_id', $takers->all());
+        }
+
+        return (int) $query->count();
+    }
+
     public static function schoolIDFromHouseRegistrationCode($house_id)
     {
         // using registration code

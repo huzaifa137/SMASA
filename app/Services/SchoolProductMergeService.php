@@ -163,6 +163,8 @@ class SchoolProductMergeService
             $this->deleteStudentRows('student_exam_summaries', $studentIds);
             $this->deleteStudentRows('student_attendances', $studentIds);
             $this->deleteStudentRows('student_id_cards', $studentIds);
+            $this->deleteStudentRows('student_alevel_combinations', $studentIds);
+            $this->deleteStudentRows('student_olevel_electives', $studentIds);
 
             if (!empty($studentIds)) {
                 DB::table('school_arrival_attendances')

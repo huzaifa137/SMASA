@@ -112,6 +112,7 @@ use App\Helpers\PermissionHelper;
                         <ul class="sub-menu">
                             <li><a href="{{ route('all.my-classes') }}"><i class="fas fa-list mr-2"></i>All Classes</a></li>
                             @if(PermissionHelper::canFeature('view_classes'))
+                                @if(Helper::schoolHasSecondary())
                                 <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O-Level
                                         Electives</a></li>
                                 <li><a href="{{ route('alevel.combinations.entry') }}"><i
@@ -122,6 +123,7 @@ use App\Helpers\PermissionHelper;
                                         (Project Work)</a></li>
                                 <li><a href="{{ route('school.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject
                                         Achievement</a></li>
+                                @endif
                             @endif
                         </ul>
                     </li>
@@ -403,7 +405,7 @@ use App\Helpers\PermissionHelper;
                                 <li><a href="{{ route('examination.create') }}"><i class="fas fa-plus-circle mr-2"></i>Create
                                         Examination</a></li>
                             @endif
-                            @if (PermissionHelper::canFeature('view_exams'))
+                            @if (PermissionHelper::canFeature('view_exams') && Helper::schoolHasSecondary())
                                 <li class="{{ $pendingNlscAssessmentsCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="assess">
                                     <a href="{{ route('nlsc-assessments.pending') }}">
                                         <i class="fas fa-clipboard-list mr-2"></i>Create Assessment
@@ -411,7 +413,7 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if (PermissionHelper::canFeature('view_exams'))
+                            @if (PermissionHelper::canFeature('view_exams') && Helper::schoolHasSecondary())
                                 <li>
                                     <a href="{{ route('nlsc-assessments.manage') }}">
                                         <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments
@@ -642,6 +644,7 @@ use App\Helpers\PermissionHelper;
                         <ul class="sub-menu">
                             <li><a href="{{ route('all.my-classes') }}"><i class="fas fa-list mr-2"></i>All Classes</a></li>
                             @if(PermissionHelper::canFeature('view_classes'))
+                                @if(Helper::schoolHasSecondary())
                                 <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O-Level
                                         Electives</a></li>
 
@@ -653,6 +656,7 @@ use App\Helpers\PermissionHelper;
                                         (Project Work)</a></li>
                                 <li><a href="{{ route('school.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject
                                         Achievement</a></li>
+                                @endif
                             @endif
                         </ul>
                     </li>
@@ -956,7 +960,7 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if (PermissionHelper::canFeature('view_exams'))
+                            @if (PermissionHelper::canFeature('view_exams') && Helper::schoolHasSecondary())
                                 <li class="{{ $pendingNlscAssessmentsCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="assess">
                                     <a href="{{ route('nlsc-assessments.pending') }}">
                                         <i class="fas fa-clipboard-list mr-2"></i>Create Assessment &nbsp; &nbsp;
@@ -964,7 +968,7 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
-                            @if (PermissionHelper::canFeature('view_exams'))
+                            @if (PermissionHelper::canFeature('view_exams') && Helper::schoolHasSecondary())
                                 <li>
                                     <a href="{{ route('nlsc-assessments.manage') }}">
                                         <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments

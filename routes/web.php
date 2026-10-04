@@ -264,7 +264,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // SchoolNlscTopicController), so a school editing or deleting its
     // copy never touches the admin's master list.
     Route::controller(\App\Http\Controllers\SchoolNlscTopicController::class)
-        ->middleware(['module:classes'])
+        ->middleware(['module:classes', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-topics', 'index')->name('nlsc-topics');
@@ -282,7 +282,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // A school's OWN copy of Projects (Project Work) — see
     // SchoolNlscProjectController.
     Route::controller(\App\Http\Controllers\SchoolNlscProjectController::class)
-        ->middleware(['module:classes'])
+        ->middleware(['module:classes', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-projects', 'index')->name('nlsc-projects');
@@ -301,7 +301,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // A school's OWN copy of Subject Achievement — see
     // SchoolNlscSubjectAchievementController.
     Route::controller(\App\Http\Controllers\SchoolNlscSubjectAchievementController::class)
-        ->middleware(['module:classes'])
+        ->middleware(['module:classes', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
@@ -463,7 +463,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     // A-Level (Secondary) student subject combinations — separate from the
     // class-level subject pool above, since it's a per-student choice.
-    Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:classes'])->group(function () {
+    Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:classes', 'secondary.school'])->group(function () {
         Route::get('a-level-combinations', 'entry')->name('alevel.combinations.entry');
         Route::post('a-level-combinations/save', 'save')->name('alevel.combinations.save');
         Route::post('a-level-combinations/subjects', 'addSchoolSubject')->name('alevel.combinations.add-subject');
@@ -475,7 +475,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // compulsory pool, student picks their own extras on top" split as
     // A-Level combinations above, just capped at 2 electives instead of a
     // 3-principal/1-subsidiary combination.
-    Route::controller(\App\Http\Controllers\OLevelElectiveController::class)->middleware(['module:classes'])->group(function () {
+    Route::controller(\App\Http\Controllers\OLevelElectiveController::class)->middleware(['module:classes', 'secondary.school'])->group(function () {
         Route::get('o-level-electives', 'entry')->name('olevel.electives.entry');
         Route::post('o-level-electives/save', 'save')->name('olevel.electives.save');
         Route::post('o-level-electives/subjects', 'addSchoolSubject')->name('olevel.electives.add-subject');
@@ -810,7 +810,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // access must still be able to reach it.
     Route::controller(\App\Http\Controllers\NlscAssessmentController::class)
         ->prefix('examinations')
-        ->middleware(['module:examinations'])
+        ->middleware(['module:examinations', 'secondary.school'])
         ->group(function () {
             Route::get('/nlsc-assessments/pending', 'pending')->name('nlsc-assessments.pending');
             Route::get('/nlsc-assessments/manage', 'manage')->name('nlsc-assessments.manage');

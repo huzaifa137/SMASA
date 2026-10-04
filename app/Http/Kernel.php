@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'localized' => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
         'module'    => \App\Http\Middleware\CheckModuleAccess::class,
         'feature'   => \App\Http\Middleware\CheckFeatureAccess::class,
+        'secondary.school' => \App\Http\Middleware\EnsureSecondarySchool::class,
     ];
 }

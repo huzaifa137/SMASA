@@ -302,8 +302,8 @@ $controller = new Controller();
             box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.12);
         }
 
-        .teacher-search-box input:focus + .search-icon,
-        .teacher-search-box input:not(:placeholder-shown) + .search-icon {
+        .teacher-search-box input:focus+.search-icon,
+        .teacher-search-box input:not(:placeholder-shown)+.search-icon {
             color: #5351e4;
         }
 
@@ -360,6 +360,47 @@ $controller = new Controller();
             display: block;
             color: #cbd5e1;
         }
+
+        /* ─── Mobile: stack header buttons full-width ─────────────────────── */
+        @media (max-width: 768px) {
+
+            /* Let the header stack vertically */
+            .card-header.d-flex {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px;
+            }
+
+            /* Title stays left-aligned */
+            .card-header .card-title {
+                margin-bottom: 0;
+            }
+
+            /* Button group becomes a vertical stack */
+            .card-header .d-flex.gap-2.flex-wrap {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px !important;
+            }
+
+            /* Every button/link spans the full width */
+            .card-header .d-flex.gap-2.flex-wrap>a,
+            .card-header .d-flex.gap-2.flex-wrap>.btn {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 10px 14px;
+                font-size: 14px;
+                margin: 0 !important;
+            }
+
+            /* Keep icon spacing tidy */
+            .card-header .d-flex.gap-2.flex-wrap>a i,
+            .card-header .d-flex.gap-2.flex-wrap>.btn i {
+                margin-right: 6px !important;
+            }
+        }
     </style>
 @endsection
 
@@ -379,11 +420,12 @@ $controller = new Controller();
                                 <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
                                     <span
                                         class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
-                                        style="width: 20px; height: 20px; color:#5351e4;">
-                                        <i class="fas fa-plus" style="font-size: 12px;"></i>
-                                    </span>
+                                        style="width:20px; height:20px; color:#5351e4; font-size:16px; font-weight:600; line-height:20px;">
+                                        +
+                                    </span> &nbsp;
                                     Add Teacher
                                 </a>
+
                             @endif
                         </div>
                     </div>
@@ -469,23 +511,37 @@ $controller = new Controller();
                             flex: 0 0 100%;
                         }
 
-                        /* ── Fix 1: Pin the Action column to the right edge ──
-       So the edit/delete icons are ALWAYS visible, no scrolling needed. */
+                        /* ── Fix 1: Action column ──
+                   On wide screens the table fits (or nearly fits), so the edit/delete
+                   icons are pinned to the right edge with a solid background so they
+                   never show cells through them. On tablets/phones the pin is OFF:
+                   a pinned column there floats over the other columns while the table
+                   scrolls sideways, so the buttons simply scroll with their row. */
                         #teachersTable th:last-child,
                         #teachersTable td:last-child {
-                            position: sticky;
-                            right: 0;
-                            z-index: 2;
-                            /* sits above the scrolling row */
-                            box-shadow: -3px 0 8px rgba(0, 0, 0, 0.06);
-                            /* subtle separation line */
                             white-space: nowrap;
                             /* never wrap the buttons */
                         }
 
+                        @media (min-width: 992px) {
+
+                            #teachersTable th:last-child,
+                            #teachersTable td:last-child:not([colspan]) {
+                                position: sticky;
+                                right: 0;
+                                z-index: 2;
+                                background-color: #fff;
+                                box-shadow: -3px 0 8px rgba(0, 0, 0, 0.06);
+                            }
+
+                            #teachersTable.table-striped tbody tr:nth-of-type(odd) td:last-child:not([colspan]) {
+                                background-color: #f6f6f9;
+                            }
+                        }
+
                         /* ── Fix 2: Slim down the Role dropdown ──
-       The 220px inline style is what's forcing the table to be super wide.
-       This overrides it and shrinks it back to a comfortable size. */
+                   The 220px inline style is what's forcing the table to be super wide.
+                   This overrides it and shrinks it back to a comfortable size. */
                         #teachersTable .role-select {
                             width: 150px !important;
                             min-width: 150px !important;
@@ -499,7 +555,7 @@ $controller = new Controller();
                         }
 
                         /* ── Fix 3: Make sure the sticky background matches the striped rows ──
-       If you're using dark-mode / custom card colors, adjust the background below. */
+                   If you're using dark-mode / custom card colors, adjust the background below. */
                         @media (prefers-color-scheme: dark) {
 
                             #teachersTable th:last-child,
@@ -818,7 +874,7 @@ $controller = new Controller();
                 type: 'POST',
                 data: { role_id: roleId, _token: '{{ csrf_token() }}' },
                 success: function (response) {
-                    
+
                     sortTeachersTable();
                     SMASA.donePage('Success!', response.message || 'Role updated!');
                 },
@@ -837,9 +893,9 @@ $controller = new Controller();
         $(document).on('click', '.btn-view-teacher', function () {
             const teacherId = $(this).data('id');
             $('#modalContent').html(`
-                                <div class="d-flex justify-content-center py-5">
-                                    <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
-                                </div>`);
+                                            <div class="d-flex justify-content-center py-5">
+                                                <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+                                            </div>`);
             $('#teacherProfileModal').modal('show');
 
             $.ajax({
@@ -848,10 +904,10 @@ $controller = new Controller();
                 success: function (response) { displayTeacherProfile(response); },
                 error: function () {
                     $('#modalContent').html(`
-                                        <div class="text-center py-5">
-                                            <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
-                                            <p class="text-danger">Error loading teacher information.</p>
-                                        </div>`);
+                                                    <div class="text-center py-5">
+                                                        <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                                                        <p class="text-danger">Error loading teacher information.</p>
+                                                    </div>`);
                 }
             });
         });
@@ -969,25 +1025,25 @@ $controller = new Controller();
 
         function displayTeacherProfile(teacher) {
             const profileHtml = `
-                                <div class="container-fluid p-4">
-                                    <div class="row">
-                                        <div class="col-lg-4 mb-4">
-                                            <div class="card border-0 shadow-sm rounded-4 h-100">
-                                                <div class="card-body text-center p-4">
-                                                    <div class="position-relative d-inline-block mb-3">
-                                                        <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
-                                                            class="rounded-circle shadow"
-                                                            style="width:180px;height:180px;object-fit:cover;"
-                                                            alt="Teacher Profile">
+                                            <div class="container-fluid p-4">
+                                                <div class="row">
+                                                    <div class="col-lg-4 mb-4">
+                                                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                                                            <div class="card-body text-center p-4">
+                                                                <div class="position-relative d-inline-block mb-3">
+                                                                    <img src="${teacher.teacher_profile ? '/' + teacher.teacher_profile : '{{ asset('assets/images/brand/uplogolight.png') }}'}"
+                                                                        class="rounded-circle shadow"
+                                                                        style="width:180px;height:180px;object-fit:cover;"
+                                                                        alt="Teacher Profile">
+                                                                </div>
+                                                                <h4 class="fw-bold mb-1">
+                                                                    ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
+                                                                </h4>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <h4 class="fw-bold mb-1">
-                                                        ${escapeHtml(teacher.firstname)} ${escapeHtml(teacher.surname)}
-                                                    </h4>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
+                                            </div>`;
             $('#modalContent').html(profileHtml);
         }
 
@@ -1083,14 +1139,14 @@ $controller = new Controller();
                 if ($emptyRow.length === 0) {
                     const colspan = $('#teachersTable thead th').length;
                     $('#teachersTable tbody').append(`
-                        <tr class="teacher-no-results-row">
-                            <td colspan="${colspan}" class="teacher-no-results">
-                                <i class="fas fa-search"></i>
-                                <h5 class="mb-1">No teachers found</h5>
-                                <p class="mb-0">Try a different name, phone number, or role.</p>
-                            </td>
-                        </tr>
-                    `);
+                                    <tr class="teacher-no-results-row">
+                                        <td colspan="${colspan}" class="teacher-no-results">
+                                            <i class="fas fa-search"></i>
+                                            <h5 class="mb-1">No teachers found</h5>
+                                            <p class="mb-0">Try a different name, phone number, or role.</p>
+                                        </td>
+                                    </tr>
+                                `);
                 }
             } else {
                 $emptyRow.remove();

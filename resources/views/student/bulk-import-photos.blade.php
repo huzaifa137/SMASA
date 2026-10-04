@@ -441,6 +441,85 @@
                 max-width: 1320px;
             }
         }
+
+        /* ─── Mobile: stack page header title and subtitle ────────────────── */
+@media (max-width: 768px) {
+
+    .page-header {
+        padding: 20px 0 4px;
+        display: block !important;
+        text-align: left;
+    }
+
+    .page-header h2,
+    .page-header p {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        float: none !important;
+        clear: both !important;
+        flex: 0 0 100% !important;
+    }
+
+    .page-header h2 {
+        margin: 0 0 8px 0 !important;
+        line-height: 1.35;
+        font-size: 1.3rem;
+    }
+
+    .page-header p {
+        margin: 0 !important;
+        line-height: 1.45;
+        font-size: .85rem;
+    }
+
+    .page-header h2 i {
+        display: inline-block !important;
+        vertical-align: middle;
+        margin-right: 6px !important;
+    }
+}
+
+/* ─── Mobile: stack dark panel, match-by cards, action buttons ─────── */
+@media (max-width: 768px) {
+
+    /* Dark "Class & Stream" panel — tighten padding, kill radius */
+    .card-box > div[style*="linear-gradient(135deg, #1e293b"] {
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+
+    /* Inner 2-column grid → single column */
+    .card-box > div[style*="linear-gradient(135deg, #1e293b"] > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    /* Match-by option cards (3 columns) → single column */
+    #match-options {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    #match-options .match-option {
+        width: 100%;
+    }
+
+    /* Action buttons row — stack full width */
+    .card-box > div[style*="margin-top: 24px"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .card-box > div[style*="margin-top: 24px"] > button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .card-box > div[style*="margin-top: 24px"] > span {
+        text-align: center;
+    }
+}
     </style>
 @endsection
 

@@ -3,6 +3,13 @@
 
 @section('css')
     <style>
+        /* Not Bootstrap's .sticky-top (z-index:1020 > sidebar 1000): on small
+           screens it painted over the open side-menu. */
+        .urp-sticky-card { position: sticky; top: 80px; z-index: 1; }
+        @media (max-width: 992px) {
+            .urp-sticky-card { position: relative; top: 0; }
+        }
+
         :root {
             --urp-primary: #4f46e5;
             --urp-dark: #1e1b4b;
@@ -410,7 +417,7 @@
     <div class="row g-3">
         {{-- CREATE FORM --}}
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm sticky-top" style="border-radius:var(--radius);top:80px;">
+            <div class="card border-0 shadow-sm urp-sticky-card" style="border-radius:var(--radius);">
                 <div class="card-header bg-white border-bottom" style="border-radius:var(--radius) var(--radius) 0 0;">
                     <h6 class="mb-0 font-weight-700" style="color:var(--urp-dark);">
                         <i class="fa fa-plus-circle mr-2 text-primary"></i>Add New Role
