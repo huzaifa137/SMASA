@@ -2048,13 +2048,25 @@ class Helper extends Controller
             'stream_id' => $streamId,
         ]);
 
+        // A core subject has no per-student selection ($takers === null), so
+        // without a limit here marks of students who have since left the class
+        // (moved, deleted, promoted) were still counted, pushing "entered"
+        // above the class size (e.g. 5/4 = 125%). Count only students who are
+        // enrolled in this class-stream right now.
+        $enrolled = $takers ?? DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $classId)
+            ->where('stream', $streamId)
+            ->pluck('id');
+
         $studentsWithEveryMark = null;
 
         foreach ($assessmentIds as $assessmentId) {
             $studentsWithThisMark = \App\Models\NlscAssessmentMark::where('nlsc_assessment_id', $assessmentId)
                 ->whereNotNull('marks_obtained')
-                ->when($takers !== null, fn($q) => $q->whereIn('student_id', $takers))
-                ->pluck('student_id');
+                ->whereIn('student_id', $enrolled)
+                ->pluck('student_id')
+                ->unique();
 
             $studentsWithEveryMark = $studentsWithEveryMark === null
                 ? $studentsWithThisMark
@@ -2132,7 +2144,7 @@ class Helper extends Controller
 
                 $progressPercent = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
 
-                if ($progressPercent == 100) {
+                if ($progressPercent >= 100) {
                     $submittedSubjects++;
                 } else {
                     $hasPendingMarks = true;

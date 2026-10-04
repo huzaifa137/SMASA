@@ -21,3 +21,30 @@
 .smasa-hidden,
 .app-sidebar3 .side-menu .badge.smasa-hidden,
 .app-sidebar3 .side-menu li.smasa-hidden { display: none !important; }
+
+/* Loader logo: keep the logo clipped to the round ring on every navigation.
+   The square logo image was spilling out of the circle whenever the loader was re-shown
+   by a link click (only the first, page-load display was round). Selectors are deliberately
+   broad because the loader markup differs between layouts/smart-loader.js. */
+#global-loader img,
+.global-loader img,
+#smart-loader img,
+.smart-loader img,
+[id*="smart-loader"] img,
+[class*="smart-loader"] img,
+[class*="loader-logo"],
+[id*="loader-logo"] {
+    border-radius: 50% !important;
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background-clip: padding-box;
+}
+#global-loader :has(> img),
+.global-loader :has(> img),
+#smart-loader :has(> img),
+.smart-loader :has(> img),
+[class*="smart-loader"] :has(> img) {
+    overflow: hidden;
+    border-radius: 50%;
+}

@@ -1692,7 +1692,7 @@ use App\Http\Controllers\Helper;
                                                         @php
                                                             [$groupClassName, $groupStreamName] = array_pad(explode('|', $classGroupKey, 2), 2, null);
                                                             $classPending = $classSubjects->where('progress', '<', 100)->values();
-                                                            $classCompleted = $classSubjects->where('progress', 100)->values();
+                                                            $classCompleted = $classSubjects->where('progress', '>=', 100)->values();
                                                         @endphp
                                                         <div class="class-group">
                                                             <div class="class-group-header">

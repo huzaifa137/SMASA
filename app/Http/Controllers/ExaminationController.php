@@ -3424,9 +3424,12 @@ class ExaminationController extends Controller
                         ->whereNotNull('marks_obtained')
                         ->count();
 
-                $progressPercent = $studentCount > 0 ? round(($enteredMarks / $studentCount) * 100) : 0;
+                // Capped at 100: stray marks (e.g. a student who has left the
+                // class) must never produce 125% — the portal view sorts
+                // subjects into "< 100" or "= 100" and would drop the rest.
+                $progressPercent = $studentCount > 0 ? min(100, round(($enteredMarks / $studentCount) * 100)) : 0;
 
-                if ($progressPercent == 100) {
+                if ($progressPercent >= 100) {
                     $submittedSubjects++;
                 } else {
                     $hasPendingMarks = true;
