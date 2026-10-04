@@ -353,14 +353,7 @@ use App\Http\Controllers\Helper;
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
-                    Swal.fire({
-                        title: 'Success',
-                        text: response.message,
-                        icon: 'success',
-                        confirmButtonColor: '#28a745'
-                    }).then(() => {
-                        location.reload();
-                    });
+                    SMASA.donePage('Success', response.message);
                 },
                 error: function(xhr) {
                     Swal.fire('Error', 'An error occurred while updating the exam.', 'error');
@@ -499,10 +492,7 @@ use App\Http\Controllers\Helper;
                             data: formData,
                             success: function(response) {
                                 if (response.success) {
-                                    Swal.fire('Success', response.message, 'success')
-                                        .then(() => {
-                                            location.reload();
-                                        });
+                                    SMASA.donePage('Success', response.message);
 
                                     // Optional: Reset form immediately (won't hurt before reload)
                                     $('#create-exam-form')[0].reset();

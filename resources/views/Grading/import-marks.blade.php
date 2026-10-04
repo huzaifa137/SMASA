@@ -1059,7 +1059,7 @@ use App\Http\Controllers\Helper;
                                 modal.hide();
 
                                 // Optional: Refresh page or update UI
-                                window.location.reload();
+                                SMASA.reload();
                             });
                         });
 

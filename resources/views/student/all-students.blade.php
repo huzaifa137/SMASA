@@ -1033,7 +1033,7 @@ use App\Helpers\PermissionHelper;
     data-class/data-stream below — not a second server round-trip).
     Selection is mirrored into the URL (?class=&stream=) via
     history.replaceState so it survives a real page reload — including
-    the location.reload() that Save/Delete already trigger further down
+    the SMASA.refreshPage() that Save/Delete already trigger further down
     this file — without turning this filter into a real navigation. --}}
     @if(!empty($groupedStudents))
         <div class="card" style="margin-bottom:1.5rem;">
@@ -1213,9 +1213,9 @@ use App\Helpers\PermissionHelper;
         // ── Modal helpers ──────────────────────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-        document.querySelectorAll('.modal-overlay').forEach(m => {
+        SMASA.bind('student/all-students:0', function () { document.querySelectorAll('.modal-overlay').forEach(m => { if (m.__smb) return; m.__smb = true;
             m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
-        });
+        }); });
 
         // ── Avatar helpers ──────────────────────────────────────────────────
         const COLORS = ['#2f2ccb', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626'];
@@ -1537,8 +1537,7 @@ use App\Helpers\PermissionHelper;
                         saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                         saveBtn.disabled = false;
                         closeModal('editModal');
-                        Swal.fire({ icon: 'success', title: 'Updated!', text: data.message || 'Student updated successfully.', confirmButtonColor: '#2f2ccb', timer: 2500, timerProgressBar: true })
-                            .then(() => location.reload());
+                        SMASA.donePage('Updated!', data.message || 'Student updated successfully.');
                     })
                     .catch(() => {
                         saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
@@ -1767,14 +1766,7 @@ use App\Helpers\PermissionHelper;
                         .then(r => r.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: data.message,
-                                    icon: 'success',
-                                    confirmButtonColor: '#2f2ccb'
-                                }).then(() => {
-                                    location.reload();
-                                });
+                                SMASA.donePage('Success!', data.message);
                             } else {
                                 Swal.fire('Error', data.message, 'error');
                             }
@@ -1816,14 +1808,7 @@ use App\Helpers\PermissionHelper;
                         .then(r => r.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                Swal.fire({
-                                    title: 'Reactivated!',
-                                    text: data.message,
-                                    icon: 'success',
-                                    confirmButtonColor: '#2f2ccb'
-                                }).then(() => {
-                                    location.reload();
-                                });
+                                SMASA.donePage('Reactivated!', data.message);
                             } else {
                                 Swal.fire('Error', data.message, 'error');
                             }
@@ -1839,7 +1824,7 @@ use App\Helpers\PermissionHelper;
         // ── STREAM SEARCH ──────────────────────────────────────────────
         const searchTimers = {};
 
-        document.querySelectorAll('.stream-search-input').forEach(input => {
+        SMASA.bind('student/all-students:1', function () { document.querySelectorAll('.stream-search-input').forEach(input => { if (input.__smb) return; input.__smb = true;
             input.addEventListener('input', function () {
                 const senior = this.dataset.senior;
                 const stream = this.dataset.stream;
@@ -1850,7 +1835,7 @@ use App\Helpers\PermissionHelper;
                     loadStreamPage(senior, stream, this.value.trim(), 1);
                 }, 350); // debounce
             });
-        });
+        }); });
 
         function loadStreamPage(senior, stream, q, page) {
             const tbody = document.getElementById(`tbody-${senior}-${stream}`);
@@ -1973,7 +1958,7 @@ use App\Helpers\PermissionHelper;
             // Mirrors the current filter into the URL without ever
             // triggering a real navigation — so pagination (which never
             // reloads the page anyway) simply never disturbs it, and so a
-            // real reload (Save/Delete's location.reload(), or a manual
+            // real reload (Save/Delete's SMASA.refreshPage(), or a manual
             // refresh) restores the exact same filtered view instead of
             // silently resetting back to "All Classes".
             function syncUrl(senior, stream) {
@@ -2003,7 +1988,7 @@ use App\Helpers\PermissionHelper;
             });
 
             // Restore from the URL on load (covers a manual refresh and
-            // the location.reload() calls elsewhere on this page).
+            // the SMASA.refreshPage() calls elsewhere on this page).
             const initial = new URLSearchParams(window.location.search);
             const initialClass = initial.get('class') || '';
             const initialStream = initial.get('stream') || '';

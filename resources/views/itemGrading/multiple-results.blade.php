@@ -621,7 +621,7 @@
 
                             // Reload after delay
                             setTimeout(() => {
-                                location.reload();
+                                SMASA.reload();
                             }, 1500);
                         },
                         error: function(xhr) {
@@ -731,7 +731,7 @@
                             `,
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                location.reload();
+                                SMASA.reload();
                             });
                             return;
                         }

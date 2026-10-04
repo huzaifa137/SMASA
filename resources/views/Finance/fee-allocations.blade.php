@@ -2520,15 +2520,7 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Updated!',
-                                        text: data.message,
-                                        confirmButtonColor: '#2f2ccb',
-                                        timer: 2000
-                                    }).then(() => {
-                                        location.reload();
-                                    });
+                                    SMASA.donePage('Updated!', data.message);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',
@@ -2589,15 +2581,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: data.message,
-                                    confirmButtonColor: '#2f2ccb',
-                                    timer: 2000
-                                }).then(() => {
-                                    location.reload();
-                                });
+                                SMASA.donePage('Deleted!', data.message);
                             } else {
                                 Swal.fire({
                                     icon: 'error',

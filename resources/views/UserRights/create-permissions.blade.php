@@ -158,13 +158,7 @@ use App\Http\Controllers\Helper;
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (response) {
-                                Swal.fire(
-                                    'Success!',
-                                    'Feature has been created successfully.',
-                                    'success'
-                                ).then(() => {
-                                    location.reload();
-                                });
+                                SMASA.donePage('Success!', 'Feature has been created successfully.');
 
                                 $form[0].reset();
                             },
@@ -197,7 +191,7 @@ use App\Http\Controllers\Helper;
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btn-delete').forEach(button => {
+            SMASA.bind('UserRights/create-permissions:0', function () { document.querySelectorAll('.btn-delete').forEach(button => { if (button.__smb) return; button.__smb = true;
                 button.addEventListener('click', function () {
                     const name = this.dataset.name;
                     const scope = this.dataset.scope;
@@ -224,13 +218,7 @@ use App\Http\Controllers\Helper;
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.status === 'success') {
-                                        Swal.fire({
-                                            title: 'Deleted!',
-                                            text: data.message,
-                                            icon: 'success'
-                                        }).then(() => {
-                                            location.reload(); // 🔁 Reloads the page after success
-                                        });
+                                        SMASA.donePage('Deleted!', data.message);
                                     } else {
                                         Swal.fire('Error!', data.message, 'error');
                                     }
@@ -242,7 +230,7 @@ use App\Http\Controllers\Helper;
                         }
                     });
                 });
-            });
+            }); });
         });
     </script>
 @endsection

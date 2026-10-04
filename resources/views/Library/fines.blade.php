@@ -1015,13 +1015,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Paid!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Paid!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to process payment');
                     }
@@ -1098,13 +1092,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Waived!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Waived!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to waive fine');
                     }

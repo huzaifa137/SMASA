@@ -549,7 +549,7 @@
                             }).then((result) => {
                                 // Only reload after user clicks OK
                                 if (result.isConfirmed) {
-                                    location.reload();
+                                    SMASA.refresh();
                                 }
                             });
                         },
@@ -638,7 +638,7 @@
                                     }).then((result) => {
                                         // Only reload after user clicks OK
                                         if (result.isConfirmed) {
-                                            location.reload();
+                                            SMASA.refresh();
                                         }
                                     });
                                 },

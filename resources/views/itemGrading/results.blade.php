@@ -807,7 +807,7 @@
                                 allowOutsideClick: false
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    location.reload();
+                                    SMASA.reload();
                                 }
                             });
 
@@ -923,7 +923,7 @@
                             `,
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                location.reload();
+                                SMASA.reload();
                             });
                             return;
                         }

@@ -41,3 +41,4 @@
 		});
 	});
 </script>
+@include('layouts.partials.smasa-flash')

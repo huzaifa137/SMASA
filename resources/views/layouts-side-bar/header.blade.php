@@ -1414,15 +1414,7 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.status) {
-                                    Swal.fire({
-                                        title: "School Changed!",
-                                        text: data.message,
-                                        icon: "success",
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        location.reload();
-                                    });
+                                    SMASA.reload('School changed!', data.message);
                                 } else {
                                     Swal.fire("Error", data.message, "error");
                                 }

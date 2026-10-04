@@ -786,12 +786,7 @@ use App\Http\Controllers\Helper;
                     // marks entry only actually opens once the exam
                     // itself reaches that stage. Reload so the
                     // list above reflects the change and the form resets.
-                    Swal.fire({
-                        icon: 'success',
-                        title: isEditing ? 'Assessment updated' : 'Assessment created',
-                        text: 'Marks entry for this class-subject will use this once the exam reaches that stage.',
-                        confirmButtonColor: '#2C29CA',
-                    }).then(() => window.location.reload());
+                    SMASA.donePage(isEditing ? 'Assessment updated' : 'Assessment created', 'Marks entry for this class-subject will use this once the exam reaches that stage.');
                 })
                 .catch(() => {
                     Swal.fire('Error', 'Failed — check your connection.', 'error');
@@ -806,7 +801,7 @@ use App\Http\Controllers\Helper;
         // "Update" mode, and the change-event chain above transparently
         // re-selects the saved Topic/Project and Competency Area once
         // their options finish loading.
-        document.querySelectorAll('.edit-assessment-btn').forEach(btn => {
+        SMASA.bind('Examination/nlsc-assessments:0', function () { document.querySelectorAll('.edit-assessment-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 editingAssessmentId = row.dataset.assessmentId;
@@ -826,7 +821,7 @@ use App\Http\Controllers\Helper;
 
                 document.getElementById('createAssessmentCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
-        });
+        }); });
 
         document.getElementById('cancelEditBtn').addEventListener('click', function () {
             editingAssessmentId = null;
@@ -846,7 +841,7 @@ use App\Http\Controllers\Helper;
         });
 
         // ===== Delete an assessment =====
-        document.querySelectorAll('.delete-assessment-btn').forEach(btn => {
+        SMASA.bind('Examination/nlsc-assessments:1', function () { document.querySelectorAll('.delete-assessment-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const id = row.dataset.assessmentId;
@@ -871,11 +866,11 @@ use App\Http\Controllers\Helper;
                                 Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
     </script>
 @endsection

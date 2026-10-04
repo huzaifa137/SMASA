@@ -192,7 +192,7 @@ $controller = new Controller();
         })();
 
         // Assessment Type (numeric marks vs. a comment/mark scale) per subject
-        $('.assign-assessment-scale').on('change', function () {
+        $(document).on('change', '.assign-assessment-scale', function () {
             let $select = $(this);
             let classSubjectId = $select.data('class-subject-id');
             let scaleId = $select.val();
@@ -239,7 +239,7 @@ $controller = new Controller();
             });
         });
 
-        $('.assign-subject-teacher-1').on('change', function () {
+        $(document).on('change', '.assign-subject-teacher-1', function () {
             let classId = $(this).data('class-id');
             let teacherId = $(this).val();
             let selectElement = $(this);
@@ -260,15 +260,9 @@ $controller = new Controller();
                     },
                     success: function (response) {
                         if (response.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Assigned!',
-                                text: 'Subject Teacher 1 assigned successfully.',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
+                            
                             selectElement.prop('disabled', true);
-                            setTimeout(() => location.reload(), 1600);
+                            SMASA.done('Assigned!', 'Subject Teacher 1 assigned successfully.');
                         } else {
                             Swal.fire('Error', response.message, 'error');
                         }
@@ -295,7 +289,7 @@ $controller = new Controller();
         });
 
         // Remove Supervisor
-        $('.btn-remove-subject-teacher-1').on('click', function () {
+        $(document).on('click', '.btn-remove-subject-teacher-1', function () {
             let classId = $(this).data('class-id');
             Swal.fire({
                 title: 'Are you sure?',
@@ -316,14 +310,8 @@ $controller = new Controller();
                         },
                         success: function (response) {
                             if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Removed!',
-                                    text: 'Subject Teacher 1 removed successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                setTimeout(() => location.reload(), 1600);
+                                
+                                SMASA.done('Removed!', 'Subject Teacher 1 removed successfully.');
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
@@ -342,7 +330,7 @@ $controller = new Controller();
 
       $(document).ready(function () {
         
-        $('.assign-subject-teacher-2').on('change', function () {
+        $(document).on('change', '.assign-subject-teacher-2', function () {
             let classId = $(this).data('class-id');
             let teacherId = $(this).val();
             let selectElement = $(this);
@@ -363,15 +351,9 @@ $controller = new Controller();
                     },
                     success: function (response) {
                         if (response.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Assigned!',
-                                text: 'Subject Teacher 2 assigned successfully.',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
+                            
                             selectElement.prop('disabled', true);
-                            setTimeout(() => location.reload(), 1600);
+                            SMASA.done('Assigned!', 'Subject Teacher 2 assigned successfully.');
                         } else {
                             Swal.fire('Error', response.message, 'error');
                         }
@@ -398,7 +380,7 @@ $controller = new Controller();
         });
 
         // Remove Supervisor
-        $('.btn-remove-subject-teacher-2').on('click', function () {
+        $(document).on('click', '.btn-remove-subject-teacher-2', function () {
             let classId = $(this).data('class-id');
             Swal.fire({
                 title: 'Are you sure?',
@@ -419,14 +401,8 @@ $controller = new Controller();
                         },
                         success: function (response) {
                             if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Removed!',
-                                    text: 'Subject Teacher 2 removed successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                setTimeout(() => location.reload(), 1600);
+                                
+                                SMASA.done('Removed!', 'Subject Teacher 2 removed successfully.');
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }

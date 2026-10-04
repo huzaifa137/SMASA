@@ -1025,15 +1025,7 @@
             const data = await response.json();
 
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Issued!',
-                    text: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    location.reload();
-                });
+                SMASA.done('Issued!', data.message);
             } else {
                 throw new Error(data.message || 'Failed to issue book');
             }
@@ -1141,13 +1133,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Returned!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Returned!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to return book');
                     }
@@ -1191,13 +1177,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Renewed!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Renewed!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to renew book');
                     }
@@ -1241,13 +1221,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Updated!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Updated!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to mark book as lost');
                     }

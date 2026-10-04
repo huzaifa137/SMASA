@@ -979,13 +979,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Request Submitted!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Request Submitted!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to submit request');
                     }
@@ -1073,13 +1067,7 @@
                             case 'rejected': successMessage = 'Request rejected.'; break;
                             case 'fulfilled': successMessage = 'Request marked as fulfilled!'; break;
                         }
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Updated!',
-                            text: successMessage,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Updated!', successMessage);
                     } else {
                         throw new Error(data.message || 'Failed to update status');
                     }

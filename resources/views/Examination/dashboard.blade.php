@@ -2558,7 +2558,7 @@ use App\Helpers\PermissionHelper;
                                     .then(res => res.json().then(data => ({ ok: res.ok, data })))
                                     .then(({ ok, data }) => {
                                         if (ok && data.success) {
-                                            location.reload();
+                                            SMASA.refreshPage();
                                         } else {
                                             Swal.fire({
                                                 icon: 'error',
@@ -4763,13 +4763,7 @@ use App\Helpers\PermissionHelper;
                     },
                     success: function (response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated Successfully!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false,
-                            }).then(() => location.reload());
+                            SMASA.donePage('Updated Successfully!', response.message);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -4824,13 +4818,7 @@ use App\Helpers\PermissionHelper;
                     },
                     success: function (response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted Successfully!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false,
-                            }).then(() => location.reload());
+                            SMASA.donePage('Deleted Successfully!', response.message);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -5655,18 +5643,7 @@ use App\Helpers\PermissionHelper;
                             },
                             success: function (response) {
                                 if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: '<span style="font-size: 1.2rem; font-weight: 700;">Updated Successfully!</span>',
-                                        html: `
-    <div style="text-align: center;">
-    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981; margin-bottom: 10px;"></i>
-    <p style="color: #6c757d;">${response.message}</p>
-    </div>
-    `,
-                                        timer: 2000,
-                                        showConfirmButton: false,
-                                    }).then(() => location.reload());
+                                    SMASA.donePage('Updated successfully', response.message);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',
@@ -5911,14 +5888,7 @@ use App\Helpers\PermissionHelper;
                     },
                     success: function (res) {
                         if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: `<span style="color:#10B981;">Stage Updated!</span>`,
-                                html: `<div style="text-align:center;">The examination has moved to <strong>${to.label}</strong>.</div>`,
-                                confirmButtonColor: '#2C29CA',
-                                timer: 2000,
-                                timerProgressBar: true,
-                            }).then(() => { location.reload(); });
+                            SMASA.donePage('Updated successfully', res.message);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Unknown error.', confirmButtonColor: '#2C29CA' });
                         }

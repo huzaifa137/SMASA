@@ -894,13 +894,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Created!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Created!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to create reservation');
                     }
@@ -979,13 +973,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Updated!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => { location.reload(); });
+                        SMASA.done('Updated!', data.message);
                     } else {
                         throw new Error(data.message || 'Failed to update status');
                     }

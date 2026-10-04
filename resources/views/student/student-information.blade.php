@@ -387,7 +387,7 @@ use App\Helpers\PermissionHelper;
                                 confirmButtonText: 'OK'
                             }).then(() => {
                                 $('#editStudentModal').modal('hide');
-                                location.reload();
+                                SMASA.reload();
                             });
 
                         },

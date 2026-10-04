@@ -26,4 +26,5 @@
 @yield('css')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
+<meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}"><link href="{{ URL::asset('assets/css/smasa-ux.css') }}?v={{ @filemtime(public_path('assets/css/smasa-ux.css')) }}" rel="stylesheet" />
+<script src="{{ URL::asset('assets/js/smasa-ux.js') }}?v={{ @filemtime(public_path('assets/js/smasa-ux.js')) }}"></script>

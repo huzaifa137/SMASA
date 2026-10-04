@@ -999,7 +999,7 @@ use App\Helpers\PermissionHelper; ?>
             if (data.success) {
                 showToast(data.message, 'success');
                 closeModal();
-                setTimeout(() => location.reload(), 700);
+                setTimeout(() => SMASA.refreshPage(), 700);
             } else {
                 showToast(data.message || 'Save failed.', 'error');
             }
@@ -1034,15 +1034,7 @@ use App\Helpers\PermissionHelper; ?>
             const data = await res.json();
 
             if (data.success) {
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: 'Period deleted successfully.',
-                    timer: 1200,
-                    showConfirmButton: false
-                });
-
-                setTimeout(() => location.reload(), 600);
+                SMASA.donePage('Deleted!', 'Period deleted successfully.');
             } else {
                 Swal.fire({
                     icon: 'error',

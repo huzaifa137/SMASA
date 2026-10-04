@@ -117,7 +117,7 @@ $controller = new Controller();
     <script>
         $(document).ready(function() {
 
-            $('.assign-supervisor').on('change', function() {
+            $(document).on('change', '.assign-supervisor', function() {
                 let classId = $(this).data('class-id');
                 let teacherId = $(this).val();
                 let selectElement = $(this);
@@ -138,16 +138,10 @@ $controller = new Controller();
                         },
                         success: function(response) {
                             if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Assigned!',
-                                    text: 'Class supervisor assigned successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+                                
                                 selectElement.prop('disabled', true);
                                 // Optionally reload the page or row to show the delete icon
-                                setTimeout(() => location.reload(), 1600);
+                                SMASA.done('Assigned!', 'Class supervisor assigned successfully.');
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
@@ -171,7 +165,7 @@ $controller = new Controller();
             });
 
             // Remove Supervisor
-            $('.btn-remove-supervisor').on('click', function() {
+            $(document).on('click', '.btn-remove-supervisor', function() {
                 let classId = $(this).data('class-id');
                 Swal.fire({
                     title: 'Are you sure?',
@@ -192,14 +186,8 @@ $controller = new Controller();
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Removed!',
-                                        text: 'Supervisor removed successfully.',
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    });
-                                    setTimeout(() => location.reload(), 1600);
+                                    
+                                    SMASA.done('Removed!', 'Supervisor removed successfully.');
                                 } else {
                                     Swal.fire('Error', response.message, 'error');
                                 }
@@ -218,7 +206,7 @@ $controller = new Controller();
         $(document).ready(function() {
 
             // Delete class
-            $('.btn-delete-class').on('click', function() {
+            $(document).on('click', '.btn-delete-class', function() {
                 let classId = $(this).data('class-id');
                 let className = $(this).data('class-name');
 
@@ -239,16 +227,8 @@ $controller = new Controller();
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: response.message ||
-                                        'Class and related data deleted successfully.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    location.reload(); // reload page
-                                });
+                                SMASA.done('Deleted!', response.message ||
+                                        'Class and related data deleted successfully.');
                             },
                             // error: function (xhr) {
                             //     Swal.fire({

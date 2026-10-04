@@ -30,3 +30,5 @@
 @if(session('LoggedAdmin') || session('LoggedTeacher'))
 <script src="{{ URL::asset('js/push-init.js') }}"></script>
 @endif
+
+@include('layouts.partials.smasa-flash')

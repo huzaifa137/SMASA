@@ -498,7 +498,7 @@ $controller = new Controller();
                                         Swal.DismissReason.timer || result
                                             .dismiss === Swal.DismissReason.backdrop
                                     ) {
-                                        location.reload();
+                                        SMASA.reload();
                                     }
                                 });
                             },

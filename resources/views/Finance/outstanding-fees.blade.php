@@ -870,7 +870,7 @@ use App\Helpers\PermissionHelper;
                 .then(data => {
                     if (data.success) {
                         alert(data.message + ' Reloading with fresh figures...');
-                        window.location.reload();
+                        SMASA.reload();
                     } else {
                         alert(data.message || 'Something went wrong.');
                         btn.disabled = false;

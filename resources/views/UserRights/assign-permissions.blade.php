@@ -401,9 +401,7 @@ use App\Http\Controllers\Helper;
                                     _token: $('meta[name="csrf-token"]').attr('content')
                                 }),
                                 success: function (response) {
-                                    Swal.fire('Saved!', response.message, 'success').then(() => {
-                                        location.reload();
-                                    });
+                                    SMASA.donePage('Saved!', response.message);
                                 },
                                 // error: function (xhr) {
                                 //     $('body').html(xhr.responseText);
@@ -433,7 +431,7 @@ use App\Http\Controllers\Helper;
         $(document).ready(function () {
 
             // Add Permission
-            $('.add-permission').on('click', function (e) {
+            $(document).on('click', '.add-permission', function (e) {
                 e.preventDefault();
 
                 var roleId = $(this).data('role-id');
@@ -460,13 +458,7 @@ use App\Http\Controllers\Helper;
                             data: form.serialize(),
                             success: function (response) {
                                 if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: response.message,
-                                    }).then(() => {
-                                        location.reload();
-                                    });
+                                    SMASA.donePage('Success!', response.message);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',
@@ -484,7 +476,7 @@ use App\Http\Controllers\Helper;
             });
 
             // Remove Permission
-            $('.remove-permission').on('click', function (e) {
+            $(document).on('click', '.remove-permission', function (e) {
                 e.preventDefault();
 
                 var roleId = $(this).data('role-id');
@@ -517,7 +509,7 @@ use App\Http\Controllers\Helper;
                                         text: response.message,
                                     }).then(() => {
                                         $('[data-feature="' + permissionId + '"]').closest('.badge').remove();
-                                        location.reload();
+                                        SMASA.refreshPage();
                                     });
                                 } else {
                                     Swal.fire({
@@ -537,7 +529,7 @@ use App\Http\Controllers\Helper;
         });
 
         $(document).ready(function () {
-            $(".add-user-to-role").on('click', function (e) {
+            $(document).on('click', ".add-user-to-role", function (e) {
                 e.preventDefault();
 
                 var roleId = $(this).data("role-id");
@@ -566,15 +558,7 @@ use App\Http\Controllers\Helper;
                             success: function (response) {
                                 if (response.success) {
 
-                                    Swal.fire({
-                                        title: 'Success!',
-                                        text: 'User added to the role.',
-                                        icon: 'success',
-                                        confirmButtonText: 'Ok'
-                                    }).then(function () {
-
-                                        location.reload();
-                                    });
+                                    SMASA.donePage('Success!', 'User added to the role.');
                                 } else {
 
                                     Swal.fire({
@@ -609,7 +593,7 @@ use App\Http\Controllers\Helper;
         });
 
         $(document).ready(function () {
-            $(".delete-user").on('click', function (e) {
+            $(document).on('click', ".delete-user", function (e) {
                 e.preventDefault();
 
                 var userId = $(this).data("user-id");
@@ -635,14 +619,7 @@ use App\Http\Controllers\Helper;
                             },
                             success: function (response) {
                                 if (response.success) {
-                                    Swal.fire({
-                                        title: 'Removed!',
-                                        text: 'User has been removed from this role.',
-                                        icon: 'success',
-                                        confirmButtonText: 'Ok'
-                                    }).then(function () {
-                                        location.reload();
-                                    });
+                                    SMASA.donePage('Removed!', 'User has been removed from this role.');
                                 } else {
                                     Swal.fire({
                                         title: 'Error!',

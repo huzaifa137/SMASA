@@ -770,7 +770,7 @@ use App\Helpers\PermissionHelper;
                 })
                     .then(res => res.json())
                     .then(d => {
-                        Swal.fire('Revoked!', d.message, 'success').then(() => location.reload());
+                        SMASA.donePage('Revoked!', d.message);
                     });
             });
         }
@@ -792,7 +792,7 @@ use App\Helpers\PermissionHelper;
                     .then(res => res.json())
                     .then(d => {
                         Swal.fire(d.status === 'success' ? 'Done!' : 'Error', d.message, d.status === 'success' ? 'success' : 'error')
-                            .then(() => { if (d.status === 'success') location.reload(); });
+                            .then(() => { if (d.status === 'success') SMASA.refreshPage(); });
                     });
             });
         }

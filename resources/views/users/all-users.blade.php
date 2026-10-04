@@ -464,7 +464,7 @@ use App\Http\Controllers\Helper;
             | SHOW / HIDE PASSWORD
             |--------------------------------------------------------------------------
             */
-            $('.toggle-password').on('click', function () {
+            $(document).on('click', '.toggle-password', function () {
 
                 const target = $(this).data('target');
                 const input = $(target);
@@ -651,14 +651,7 @@ use App\Http\Controllers\Helper;
 
                             success: function (response) {
 
-                                Swal.fire(
-                                    'Submitted!',
-                                    response.message,
-                                    'success'
-                                ).then(() => {
-
-                                    location.reload();
-                                });
+                                SMASA.donePage('Submitted!', response.message);
                             },
 
                             error: function (xhr) {
@@ -720,7 +713,7 @@ use App\Http\Controllers\Helper;
         */
         $(document).ready(function () {
 
-            $('.btn-view-user').on('click', function () {
+            $(document).on('click', '.btn-view-user', function () {
 
                 let userId = $(this).data('user-id');
 
@@ -760,7 +753,7 @@ use App\Http\Controllers\Helper;
         $(document).ready(function () {
 
             // Open modal with user's current status
-            $('.btn-change-status').on('click', function () {
+            $(document).on('click', '.btn-change-status', function () {
 
                 const userId = $(this).data('id');
                 const currentStatus = $(this).data('status');
@@ -809,16 +802,10 @@ use App\Http\Controllers\Helper;
 
                                 $('#changeStatusModal').modal('hide');
 
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Updated!',
-                                    text: 'Account status has been changed.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
+                                
 
                                 // Reload page
-                                location.reload();
+                                SMASA.donePage('Updated!', 'Account status has been changed.');
                             },
 
                             error: function (data) {
@@ -971,7 +958,7 @@ use App\Http\Controllers\Helper;
                 $(`.user-dropdown[data-role-id="${roleId}"] .user-search-input`).val('').trigger('input');
             });
 
-            $('.user-search-input').on('input', function () {
+            $(document).on('input', '.user-search-input', function () {
                 const query = $(this).val().toLowerCase();
                 const dropdown = $(this).closest('.user-dropdown');
                 dropdown.find('.user-item').each(function () {
@@ -1008,7 +995,7 @@ use App\Http\Controllers\Helper;
                             success: function (response) {
                                 Swal.fire('Added!', response.message, 'success').then(() => {
                                     // Reload the page after user clicks OK on success alert
-                                    location.reload();
+                                    SMASA.refreshPage();
                                 });
 
                                 // Optional: UI updates before reload (won't persist after reload)
@@ -1090,7 +1077,7 @@ use App\Http\Controllers\Helper;
                         success: function (response) {
                             Swal.fire('Removed!', response.message, 'success').then(() => {
                                 // Reload page after user clicks OK on success alert
-                                location.reload();
+                                SMASA.refreshPage();
                             });
 
                             // Optional: UI updates before reload (won't persist)

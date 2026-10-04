@@ -2195,14 +2195,14 @@
     const csrfToken = '{{ csrf_token() }}';
 
     // ── List ↔ detail switching ──────────────────────────────────────────
-    document.querySelectorAll('.scheme-list-item').forEach(btn => {
+    SMASA.bind('Examination/grading-schemes/index:0', function () { document.querySelectorAll('.scheme-list-item').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
         btn.addEventListener('click', function () {
             document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.gs-detail').forEach(d => d.classList.remove('active'));
             this.classList.add('active');
             document.getElementById(this.dataset.target)?.classList.add('active');
         });
-    });
+    }); });
 
     function addBandRow(container, band = null) {
         const tpl = document.getElementById('bandRowTemplate').content.cloneNode(true);
@@ -2461,14 +2461,14 @@
                 title: 'Saved!',
                 text: result.value?.message || 'Grading scheme saved.',
                 confirmButtonColor: '#2C29CA',
-            }).then(() => window.location.reload());
+            }).then(() => window.SMASA.refreshPage());
         });
     }
 
     document.getElementById('btnNewScheme').addEventListener('click', () => openSchemeModal());
 
     // ── Edit ──────────────────────────────────────────────────────────────
-    document.querySelectorAll('.edit-scheme').forEach(el => {
+    SMASA.bind('Examination/grading-schemes/index:1', function () { document.querySelectorAll('.edit-scheme').forEach(el => { if (el.__smb) return; el.__smb = true;
         el.addEventListener('click', function (e) {
             e.preventDefault();
             const id = this.dataset.id;
@@ -2477,10 +2477,10 @@
             const scheme = window.__schemesById[id];
             openSchemeModal(scheme);
         });
-    });
+    }); });
 
     // ── Toggle Active with SweetAlert Confirmation ────────────────────────
-    document.querySelectorAll('.toggle-scheme').forEach(el => {
+    SMASA.bind('Examination/grading-schemes/index:2', function () { document.querySelectorAll('.toggle-scheme').forEach(el => { if (el.__smb) return; el.__smb = true;
         el.addEventListener('click', function (e) {
             e.preventDefault();
             const id = this.dataset.id;
@@ -2516,7 +2516,7 @@
                             timer: 2000,
                             timerProgressBar: true,
                         }).then(() => {
-                            window.location.reload();
+                            SMASA.refreshPage();
                         });
                     },
                     error: function (xhr) {
@@ -2530,10 +2530,10 @@
                 });
             });
         });
-    });
+    }); });
 
     // ── Delete ────────────────────────────────────────────────────────────
-    document.querySelectorAll('.delete-scheme').forEach(el => {
+    SMASA.bind('Examination/grading-schemes/index:3', function () { document.querySelectorAll('.delete-scheme').forEach(el => { if (el.__smb) return; el.__smb = true;
         el.addEventListener('click', function (e) {
             e.preventDefault();
             const id = this.dataset.id;
@@ -2553,7 +2553,7 @@
                     success: function (res) {
                         if (res.success) {
                             Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
-                                .then(() => window.location.reload());
+                                .then(() => window.SMASA.refreshPage());
                         } else {
                             Swal.fire('Cannot Delete', res.message, 'warning');
                         }
@@ -2564,7 +2564,7 @@
                 });
             });
         });
-    });
+    }); });
 </script>
     {{-- Build schemes data in PHP for JavaScript --}}
     @php
@@ -2632,7 +2632,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Update the click handler for scheme list items to save selection
-document.querySelectorAll('.scheme-list-item').forEach(btn => {
+SMASA.bind('Examination/grading-schemes/index:4', function () { document.querySelectorAll('.scheme-list-item').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
     btn.addEventListener('click', function() {
         // Remove active class from all items and details
         document.querySelectorAll('.scheme-list-item').forEach(b => b.classList.remove('active'));
@@ -2649,7 +2649,7 @@ document.querySelectorAll('.scheme-list-item').forEach(btn => {
             localStorage.setItem('selectedSchemeId', schemeId);
         }
     });
-});
+}); });
 </script>
 
 @endsection

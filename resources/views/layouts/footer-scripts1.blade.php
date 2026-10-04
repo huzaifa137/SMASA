@@ -30,3 +30,5 @@
 
 <!-- Custom js-->
 <script src="{{URL::asset('assets/js/custom.js')}}"></script>
+
+@include('layouts.partials.smasa-flash')

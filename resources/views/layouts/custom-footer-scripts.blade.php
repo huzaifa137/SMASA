@@ -13,3 +13,4 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Select2 JS -->
 @yield('js')
+@include('layouts.partials.smasa-flash')

@@ -552,8 +552,7 @@ $(document).ready(function() {
                 data: $form.serialize(),
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 success: function(response) {
-                    Swal.fire({ icon: 'success', title: 'Saved!', text: response.message, confirmButtonColor: '#2C29CA' })
-                        .then(() => location.reload());
+                    SMASA.reload('Saved!', response.message);
                     $form[0].reset();
                 },
                 error: function(xhr) {
@@ -679,7 +678,7 @@ $(document).ready(function() {
                 if (response.success) {
                     sessionStorage.setItem('toastMessage', `${termName} activated successfully`);
                     sessionStorage.setItem('toastType', 'success');
-                    location.reload();
+                    SMASA.reload();
                 } else {
                     $button.html(originalHtml).prop('disabled', false);
                     showToast('error', response.message || 'An error occurred');
@@ -702,7 +701,7 @@ $(document).ready(function() {
                 if (response.success) {
                     sessionStorage.setItem('toastMessage', `${termName} deactivated`);
                     sessionStorage.setItem('toastType', 'info');
-                    location.reload();
+                    SMASA.reload();
                 } else {
                     $button.html(originalHtml).prop('disabled', false);
                     showToast('error', response.message || 'An error occurred');

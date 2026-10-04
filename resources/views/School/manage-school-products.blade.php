@@ -611,18 +611,7 @@ $('#mergeProductBtn').on('click', function() {
     }).then((result) => {
         if (result.isConfirmed) {
             // Show success toast
-            Swal.fire({
-                icon: 'success',
-                title: 'Merged Successfully!',
-                text: 'The category has been merged. The page will reload.',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            }).then(() => {
-                window.location.reload();
-            });
+            SMASA.donePage('Merged Successfully!', 'The category has been merged. The page will reload.');
         }
     }).catch((error) => {
         Swal.fire({

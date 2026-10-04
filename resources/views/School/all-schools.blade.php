@@ -314,7 +314,7 @@ use App\Http\Controllers\Helper;
 
         function reloadKeepingPage() {
             sessionStorage.setItem('schoolsTable_page', table.page());
-            location.reload();
+            SMASA.reload();
         }
 
         // ── All click handlers below are delegated to `document` ──────

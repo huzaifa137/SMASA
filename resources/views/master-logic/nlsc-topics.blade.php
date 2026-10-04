@@ -530,9 +530,9 @@
 
         function openNtModal(id) { document.getElementById(id).classList.add('open'); }
         function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }
-        document.querySelectorAll('.nt-modal-overlay').forEach(m => {
+        SMASA.bind('master-logic/nlsc-topics:0', function () { document.querySelectorAll('.nt-modal-overlay').forEach(m => { if (m.__smb) return; m.__smb = true;
             m.addEventListener('click', e => { if (e.target === m) closeNtModal(m.id); });
-        });
+        }); });
 
         // ===== Searchable Subject dropdown =====
         (function () {
@@ -709,7 +709,7 @@
             openNtModal('topicModal');
         });
 
-        document.querySelectorAll('.edit-topic-btn').forEach(btn => {
+        SMASA.bind('master-logic/nlsc-topics:1', function () { document.querySelectorAll('.edit-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 document.getElementById('topicModalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit Topic';
@@ -717,7 +717,7 @@
                 document.getElementById('topicNameInput').value = row.querySelector('.topic-name-cell').textContent.trim();
                 openNtModal('topicModal');
             });
-        });
+        }); });
 
         document.getElementById('saveTopicBtn').addEventListener('click', function () {
             const id = document.getElementById('topicIdInput').value;
@@ -753,7 +753,7 @@
                         Swal.fire('Error', res.message || 'Failed to save.', 'error');
                         return;
                     }
-                    window.location.reload();
+                    SMASA.refreshPage();
                 })
                 .catch(() => {
                     $btn.disabled = false;
@@ -763,7 +763,7 @@
         });
 
         // ===== Delete Topic =====
-        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+        SMASA.bind('master-logic/nlsc-topics:2', function () { document.querySelectorAll('.delete-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const id = row.dataset.id;
@@ -794,12 +794,12 @@
                                 Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
 
         // ===== Delete ALL Topics (this Senior/Subject) =====
         document.getElementById('deleteAllTopicsBtn').addEventListener('click', function () {
@@ -836,7 +836,7 @@
                             Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                             return;
                         }
-                        window.location.reload();
+                        SMASA.refreshPage();
                     })
                     .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
             });
@@ -955,11 +955,11 @@
                 .catch(() => Swal.fire('Error', 'Failed to load — check your connection.', 'error'));
         }
 
-        document.querySelectorAll('.view-topic-btn').forEach(btn => {
+        SMASA.bind('master-logic/nlsc-topics:3', function () { document.querySelectorAll('.view-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 openViewTopicModal(this.closest('tr').dataset.id);
             });
-        });
+        }); });
 
         document.getElementById('addCompetencyBtn').addEventListener('click', function () {
             const topicId = document.getElementById('viewTopicIdInput').value;
@@ -1082,7 +1082,7 @@
                     resultBox.innerHTML = html;
 
                     if (res.topics_imported > 0 || res.competency_areas_imported > 0) {
-                        setTimeout(() => window.location.reload(), 1800);
+                        setTimeout(() => SMASA.refreshPage(), 1800);
                     }
                 })
                 .catch(() => {

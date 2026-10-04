@@ -382,10 +382,7 @@ $('body').html(data.responseText);
                 success: function (response) {
                     $('#editAcademicYearModal').modal('hide');
 
-                    Swal.fire('Updated!', 'Academic Year updated successfully.', 'success')
-                        .then(() => {
-                            location.reload();
-                        });
+                    SMASA.reload('Updated!', 'Academic Year updated successfully.');
                 },
                 // error: function(xhr) {
                 //     let errorText = 'Failed to update academic year.';
@@ -428,10 +425,7 @@ $('body').html(data.responseText);
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (res) {
-                                Swal.fire('Success', res.message, 'success').then(
-                                    () => {
-                                        location.reload();
-                                    });
+                                SMASA.reload('Success', res.message);
                             },
                             error: function () {
                                 Swal.fire('Error', 'Something went wrong!', 'error');

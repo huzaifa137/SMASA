@@ -818,9 +818,9 @@ $controller = new Controller();
                 type: 'POST',
                 data: { role_id: roleId, _token: '{{ csrf_token() }}' },
                 success: function (response) {
-                    Swal.fire({ title: 'Success!', text: response.message || 'Role updated!', icon: 'success', timer: 1500, showConfirmButton: false });
+                    
                     sortTeachersTable();
-                    setTimeout(() => location.reload(), 1500);
+                    SMASA.donePage('Success!', response.message || 'Role updated!');
                 },
                 error: function (xhr) {
                     Swal.fire({ title: 'Error!', text: xhr.responseJSON?.message || 'Error updating role.', icon: 'error' });

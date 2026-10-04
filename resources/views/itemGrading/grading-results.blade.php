@@ -819,12 +819,7 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Saved!',
-                                text: data.message,
-                                confirmButtonText: 'OK'
-                            }).then(() => location.reload());
+                            SMASA.reload('Saved!', data.message);
                         } else {
                             Swal.fire({
                                 icon: 'error',

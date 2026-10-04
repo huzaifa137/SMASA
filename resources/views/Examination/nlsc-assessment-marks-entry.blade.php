@@ -333,7 +333,7 @@ document.getElementById('saveMaxMarksBtn')?.addEventListener('click', function (
                 return;
             }
             // Keep spinner visible until the reload happens
-            location.reload();
+            SMASA.reload();
         })
         .catch(() => {
             Swal.fire('Error', 'Failed to update — check your connection.', 'error');

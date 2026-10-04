@@ -888,15 +888,7 @@ $c = $colors[$loop->index % count($colors)];
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Added!',
-                            text: 'Subject has been added successfully.',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload();
-                        });
+                        SMASA.done('Added!', 'Subject has been added successfully.');
                     } else {
                         throw new Error(data.message || 'Failed to add subject');
                     }
@@ -969,15 +961,7 @@ $c = $colors[$loop->index % count($colors)];
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Updated!',
-                            text: 'Subject has been updated successfully.',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload();
-                        });
+                        SMASA.done('Updated!', 'Subject has been updated successfully.');
                     } else {
                         throw new Error(data.message || 'Failed to update subject');
                     }
@@ -1050,15 +1034,7 @@ $c = $colors[$loop->index % count($colors)];
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: 'Subject has been deleted successfully.',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload();
-                        });
+                        SMASA.done('Deleted!', 'Subject has been deleted successfully.');
                     } else {
                         throw new Error(data.message || 'Failed to delete subject');
                     }

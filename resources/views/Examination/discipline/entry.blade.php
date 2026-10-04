@@ -603,7 +603,7 @@ use App\Http\Controllers\Helper;
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        location.reload();
+                        SMASA.refreshPage();
                     } else {
                         Swal.fire('Error', res.message || 'Could not add criterion.', 'error');
                     }
@@ -633,7 +633,7 @@ use App\Http\Controllers\Helper;
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) {
-                            location.reload();
+                            SMASA.refreshPage();
                         } else {
                             Swal.fire('Error', res.message || 'Could not remove criterion.', 'error');
                         }

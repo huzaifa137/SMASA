@@ -830,15 +830,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Added!',
-                                text: 'Author has been added successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Added!', 'Author has been added successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to add author');
                         }
@@ -911,15 +903,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated!',
-                                text: 'Author has been updated successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Updated!', 'Author has been updated successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to update author');
                         }
@@ -992,15 +976,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: 'Author has been deleted successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Deleted!', 'Author has been deleted successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to delete author');
                         }

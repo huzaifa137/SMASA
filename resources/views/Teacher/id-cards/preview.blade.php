@@ -395,7 +395,7 @@
                 })
                 .then(r => r.json())
                 .then(data => {
-                    Swal.fire('Revoked!', data.message, 'success').then(() => location.reload());
+                    SMASA.reload('Revoked!', data.message);
                 });
             }
         });

@@ -980,15 +980,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Added!',
-                                text: 'Category has been added successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Added!', 'Category has been added successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to add category');
                         }
@@ -1061,15 +1053,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated!',
-                                text: 'Category has been updated successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Updated!', 'Category has been updated successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to update category');
                         }
@@ -1142,15 +1126,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: 'Category has been deleted successfully.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.done('Deleted!', 'Category has been deleted successfully.');
                         } else {
                             throw new Error(data.message || 'Failed to delete category');
                         }

@@ -254,7 +254,7 @@ $controller = new Controller();
                                 form[0].reset();
                                 submitBtn.prop('disabled', false).html(
                                     'Send Message');
-                                location.reload();
+                                SMASA.reload();
                             });
                         },
                         error: function(data) {

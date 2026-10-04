@@ -196,13 +196,7 @@ use App\Http\Controllers\Helper;
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (response) {
-                                Swal.fire(
-                                    'Success!',
-                                    'Role has been created successfully.',
-                                    'success'
-                                ).then(() => {
-                                    location.reload();
-                                });
+                                SMASA.done('Success!', 'Role has been created successfully.');
 
                                 $form[0].reset();
                             },
@@ -240,7 +234,7 @@ use App\Http\Controllers\Helper;
             });
         });
 
-        $('.btn-edit-teacher').on('click', function () {
+        $(document).on('click', '.btn-edit-teacher', function () {
             const roleId = $(this).data('id');
 
             $.ajax({
@@ -283,9 +277,7 @@ use App\Http\Controllers\Helper;
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 success: function () {
-                    Swal.fire('Success', 'Role updated successfully.', 'success').then(() => {
-                        location.reload();
-                    });
+                    SMASA.done('Success', 'Role updated successfully.');
                 },
                 error: function (xhr) {
                     if (xhr.status === 422) {
@@ -328,13 +320,7 @@ use App\Http\Controllers\Helper;
                             _token: $('meta[name="csrf-token"]').attr('content') 
                         },
                         success: function (response) {
-                            Swal.fire(
-                                'Deleted!',
-                                'The role has been deleted.',
-                                'success'
-                            ).then(() => {
-                                location.reload(); 
-                            });
+                            SMASA.done('Deleted!', 'The role has been deleted.');
                         },
                         error: function (xhr) {
                             Swal.fire(

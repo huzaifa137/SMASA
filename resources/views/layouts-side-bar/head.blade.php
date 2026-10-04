@@ -27,6 +27,7 @@
 <link href="{{URL::asset('assets/plugins/web-fonts/font-awesome/font-awesome.min.css')}}" rel="stylesheet">
 <link href="{{URL::asset('assets/plugins/web-fonts/plugin.css')}}" rel="stylesheet" />
 <!-- Select2 css -->
-<link href="http://127.0.0.1:8000/assets/plugins/select2/select2.min.css" rel="stylesheet" />
+<link href="{{ URL::asset("assets/plugins/select2/select2.min.css") }}" rel="stylesheet" />
 
-@yield('css')
+@yield('css')<link href="{{ URL::asset('assets/css/smasa-ux.css') }}?v={{ @filemtime(public_path('assets/css/smasa-ux.css')) }}" rel="stylesheet" />
+<script src="{{ URL::asset('assets/js/smasa-ux.js') }}?v={{ @filemtime(public_path('assets/js/smasa-ux.js')) }}"></script>

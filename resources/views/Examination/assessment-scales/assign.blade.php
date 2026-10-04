@@ -906,14 +906,7 @@
                 success: function (res) {
                     $btn.prop('disabled', false).html(originalHtml);
                     if (res.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Saved!',
-                            text: res.message,
-                            confirmButtonColor: '#2C29CA',
-                            timer: 1500,
-                            timerProgressBar: true
-                        }).then(() => window.location.reload());
+                        SMASA.reload('Saved!', res.message);
                     } else {
                         Swal.fire('Error', res.message, 'error');
                     }

@@ -849,7 +849,7 @@
                         didOpen: () => {
                             // Attach event handlers after modal is opened
                             // Status change buttons
-                            document.querySelectorAll('.action-btn-status').forEach(btn => {
+                            SMASA.bind('Examination/index:0', function () { document.querySelectorAll('.action-btn-status').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
                                 btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -857,20 +857,20 @@
                                     Swal.close();
                                     updateExamStatus(examId, newStatus);
                                 });
-                            });
+                            }); });
 
                             // Delete button
-                            document.querySelectorAll('.action-btn-delete').forEach(btn => {
+                            SMASA.bind('Examination/index:1', function () { document.querySelectorAll('.action-btn-delete').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
                                 btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     Swal.close();
                                     deleteExam(examId);
                                 });
-                            });
+                            }); });
 
                             // Marks entry button
-                            document.querySelectorAll('.action-btn-marks').forEach(btn => {
+                            SMASA.bind('Examination/index:2', function () { document.querySelectorAll('.action-btn-marks').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
                                 btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -878,16 +878,16 @@
                                         window.location.href = `/examinations/${examId}/marks`;
                                     }
                                 });
-                            });
+                            }); });
 
                             // Close button
-                            document.querySelectorAll('.action-btn-close').forEach(btn => {
+                            SMASA.bind('Examination/index:3', function () { document.querySelectorAll('.action-btn-close').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
                                 btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     Swal.close();
                                 });
-                            });
+                            }); });
                         }
                     });
                 },
@@ -946,13 +946,7 @@
                     },
                     success: function (res) {
                         if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated!',
-                                text: res.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => location.reload());
+                            SMASA.donePage('Updated!', res.message);
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
@@ -995,13 +989,7 @@
                     },
                     success: function (res) {
                         if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: res.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => location.reload());
+                            SMASA.donePage('Deleted!', res.message);
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }

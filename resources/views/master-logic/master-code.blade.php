@@ -885,7 +885,7 @@
             $('#refreshBtn').on('click', function () {
                 $(this).html('<i class="fa fa-spinner fa-spin"></i> Refreshing...');
                 setTimeout(function () {
-                    location.reload();
+                    SMASA.reload();
                 }, 500);
             });
 

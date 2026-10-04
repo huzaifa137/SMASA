@@ -139,7 +139,7 @@ $controller = new Controller();
     <script>
         $(document).ready(function() {
 
-            $('.assign-class-teacher').on('change', function() {
+            $(document).on('change', '.assign-class-teacher', function() {
                 let classId = $(this).data('class-id');
                 let teacherId = $(this).val();
                 let selectElement = $(this);
@@ -160,16 +160,10 @@ $controller = new Controller();
                         },
                         success: function(response) {
                             if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Assigned!',
-                                    text: 'Class Teacher assigned successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+                                
                                 selectElement.prop('disabled', true);
                                 // Optionally reload the page or row to show the delete icon
-                                setTimeout(() => location.reload(), 1600);
+                                SMASA.done('Assigned!', 'Class Teacher assigned successfully.');
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
@@ -196,7 +190,7 @@ $controller = new Controller();
             });
 
             // Remove Supervisor
-            $('.btn-remove-supervisor').on('click', function() {
+            $(document).on('click', '.btn-remove-supervisor', function() {
                 let classId = $(this).data('class-id');
                 Swal.fire({
                     title: 'Are you sure?',
@@ -217,14 +211,8 @@ $controller = new Controller();
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Removed!',
-                                        text: 'ClassTeacher removed successfully.',
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    });
-                                    setTimeout(() => location.reload(), 1600);
+                                    
+                                    SMASA.done('Removed!', 'ClassTeacher removed successfully.');
                                 } else {
                                     Swal.fire('Error', response.message, 'error');
                                 }
@@ -245,7 +233,7 @@ $controller = new Controller();
     <script>
         $(document).ready(function() {
 
-            $('.btn-delete-stream').on('click', function(e) {
+            $(document).on('click', '.btn-delete-stream', function(e) {
                 e.preventDefault(); // Prevent the default link behavior
                 let streamId = $(this).data('stream-id');
 
@@ -269,16 +257,10 @@ $controller = new Controller();
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Deleted!',
-                                        text: 'Stream deleted successfully.',
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    });
+                                    
 
                                     $('tr[data-id="' + streamId + '"]').remove();
-                                    setTimeout(() => location.reload(), 1600);
+                                    SMASA.done('Deleted!', 'Stream deleted successfully.');
                                 } else {
                                     Swal.fire('Error', response.message ||
                                         'Failed to delete stream.', 'error');

@@ -1669,12 +1669,12 @@
             document.getElementById(targetId)?.classList.add('active');
         }
 
-        document.querySelectorAll('.scale-list-item').forEach(btn => {
+        SMASA.bind('Examination/assessment-scales/index:0', function () { document.querySelectorAll('.scale-list-item').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 activateScale(this.dataset.target);
                 localStorage.setItem('selectedScaleId', this.dataset.target.replace('scale-detail-', ''));
             });
-        });
+        }); });
 
         document.addEventListener('DOMContentLoaded', function () {
             const savedId = localStorage.getItem('selectedScaleId');
@@ -1917,23 +1917,23 @@
                     confirmButtonColor: '#2C29CA',
                     timer: 1500,
                     timerProgressBar: true,
-                }).then(() => window.location.reload());
+                }).then(() => window.SMASA.refreshPage());
             });
         }
 
         document.getElementById('btnNewScale').addEventListener('click', () => openScaleModal());
 
         // ── Edit ──────────────────────────────────────────────────────────────
-        document.querySelectorAll('.edit-scale').forEach(el => {
+        SMASA.bind('Examination/assessment-scales/index:1', function () { document.querySelectorAll('.edit-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 const scale = window.__scalesById[this.dataset.id];
                 openScaleModal(scale);
             });
-        });
+        }); });
 
         // ── Toggle Active ─────────────────────────────────────────────────────
-        document.querySelectorAll('.toggle-scale').forEach(el => {
+        SMASA.bind('Examination/assessment-scales/index:2', function () { document.querySelectorAll('.toggle-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 const id = this.dataset.id;
@@ -1943,14 +1943,14 @@
                     method: 'POST',
                     data: { is_active: nextActive },
                     headers: { 'X-CSRF-TOKEN': csrfToken },
-                    success: function () { window.location.reload(); },
+                    success: function () { SMASA.refreshPage(); },
                     error: function (xhr) { Swal.fire('Error', xhr.responseJSON?.message || 'Could not update scale.', 'error'); },
                 });
             });
-        });
+        }); });
 
         // ── Delete ────────────────────────────────────────────────────────────
-        document.querySelectorAll('.delete-scale').forEach(el => {
+        SMASA.bind('Examination/assessment-scales/index:3', function () { document.querySelectorAll('.delete-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 const id = this.dataset.id;
@@ -1970,7 +1970,7 @@
                         success: function (res) {
                             if (res.success) {
                                 Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
-                                    .then(() => window.location.reload());
+                                    .then(() => window.SMASA.refreshPage());
                             } else {
                                 Swal.fire('Cannot Delete', res.message, 'warning');
                             }
@@ -1981,7 +1981,7 @@
                     });
                 });
             });
-        });
+        }); });
     </script>
 
     @php

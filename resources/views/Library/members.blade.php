@@ -1603,8 +1603,7 @@ document.getElementById('addMemberForm').addEventListener('submit', function(e) 
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Registered!', text: data.message || 'Members registered successfully.',
-                    showConfirmButton: false, timer: 1500 }).then(() => location.reload());
+                SMASA.done('Registered!', data.message || 'Members registered successfully.');
             } else {
                 throw new Error(data.message || 'Failed to register');
             }
@@ -1648,8 +1647,7 @@ document.getElementById('editMemberForm').addEventListener('submit', function(e)
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Updated!', showConfirmButton: false, timer: 1500 })
-                        .then(() => location.reload());
+                    SMASA.done('Updated!');
                 } else throw new Error(data.message || 'Failed to update');
             })
             .catch(err => { Swal.fire({ icon: 'error', title: 'Oops...', text: err.message }); btn.disabled = false; });
@@ -1670,8 +1668,7 @@ function confirmDelete(memberId) {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Deleted!', showConfirmButton: false, timer: 1500 })
-                    .then(() => location.reload());
+                SMASA.done('Deleted!');
             } else throw new Error(data.message);
         })
         .catch(err => Swal.fire({ icon: 'error', title: 'Oops...', text: err.message }));

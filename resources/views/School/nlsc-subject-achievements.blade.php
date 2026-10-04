@@ -552,9 +552,9 @@
 
         function openNtModal(id) { document.getElementById(id).classList.add('open'); }
         function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }
-        document.querySelectorAll('.nt-modal-overlay').forEach(m => {
+        SMASA.bind('School/nlsc-subject-achievements:0', function () { document.querySelectorAll('.nt-modal-overlay').forEach(m => { if (m.__smb) return; m.__smb = true;
             m.addEventListener('click', e => { if (e.target === m) closeNtModal(m.id); });
-        });
+        }); });
 
         document.getElementById('assessmentTypeSelect').addEventListener('change', function () {
             window.location.href = this.value;
@@ -830,11 +830,11 @@
                 .catch(() => Swal.fire('Error', 'Failed to load — check your connection.', 'error'));
         }
 
-        document.querySelectorAll('.view-topic-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:1', function () { document.querySelectorAll('.view-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 openViewAchievementModal(this.closest('tr').dataset.topicId);
             });
-        });
+        }); });
 
         document.getElementById('addAchievementBtnInModal').addEventListener('click', function () {
             const topicId = document.getElementById('viewAchievementTopicIdInput').value;
@@ -933,7 +933,7 @@
                         Swal.fire('Error', res.message || 'Failed to add.', 'error');
                         return;
                     }
-                    window.location.reload();
+                    SMASA.refreshPage();
                 })
                 .catch(() => {
                     $btn.disabled = false;
@@ -943,7 +943,7 @@
         });
 
         // ===== Rename Topic =====
-        document.querySelectorAll('.rename-topic-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:2', function () { document.querySelectorAll('.rename-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const topicId = row.dataset.topicId;
@@ -971,18 +971,18 @@
                                 Swal.fire('Error', res.message || 'Failed to rename.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to rename — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
 
         // ===== Delete Topic ===== (also removes its Subject Achievement,
         // and any Competency Areas under Activities of Integration — both
         // cascade-delete at the DB level with the topic). No cascade-to-
         // schools option here — a school only ever deletes its OWN copy.
-        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:3', function () { document.querySelectorAll('.delete-topic-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const topicId = row.dataset.topicId;
@@ -1008,12 +1008,12 @@
                                 Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
 
         // ===== Add Subject Achievement =====
         document.getElementById('addAchievementBtn').addEventListener('click', () => {
@@ -1060,7 +1060,7 @@
                         Swal.fire('Error', res.message || 'Failed to save.', 'error');
                         return;
                     }
-                    window.location.reload();
+                    SMASA.refreshPage();
                 })
                 .catch(() => {
                     $btn.disabled = false;
@@ -1100,13 +1100,13 @@
                             Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                             return;
                         }
-                        window.location.reload();
+                        SMASA.refreshPage();
                     })
                     .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
             });
         });
 
-        document.querySelectorAll('.edit-achievement-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:4', function () { document.querySelectorAll('.edit-achievement-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 row.querySelector('.achievement-view').style.display = 'none';
@@ -1115,9 +1115,9 @@
                 row.querySelector('.edit-achievement-btn').style.display = 'none';
                 row.querySelector('.save-achievement-btn').style.display = 'inline-flex';
             });
-        });
+        }); });
 
-        document.querySelectorAll('.save-achievement-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:5', function () { document.querySelectorAll('.save-achievement-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const topicId = row.dataset.topicId;
@@ -1139,16 +1139,16 @@
                             Swal.fire('Error', res.message || 'Failed to save.', 'error');
                             return;
                         }
-                        window.location.reload();
+                        SMASA.refreshPage();
                     })
                     .catch(() => Swal.fire('Error', 'Failed to save — check your connection.', 'error'));
             });
-        });
+        }); });
 
         // No cascade-to-schools option here — a school only ever deletes its
         // OWN copy (see SchoolNlscSubjectAchievementController::destroy()),
         // that concept only exists on the admin screen.
-        document.querySelectorAll('.delete-achievement-btn').forEach(btn => {
+        SMASA.bind('School/nlsc-subject-achievements:6', function () { document.querySelectorAll('.delete-achievement-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const achievementId = row.dataset.achievementId;
@@ -1174,11 +1174,11 @@
                                 Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
     </script>
 @endsection

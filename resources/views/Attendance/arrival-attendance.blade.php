@@ -907,7 +907,7 @@ use App\Helpers\PermissionHelper;
                 .then(res => {
                     if (res.success) {
                         closeModal();
-                        location.reload();
+                        SMASA.reload();
                     } else {
                         alert('Error: ' + (res.message || 'Could not save.'));
                     }

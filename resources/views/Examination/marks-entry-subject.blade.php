@@ -1105,7 +1105,7 @@ use App\Helpers\PermissionHelper;
                                 allowOutsideClick: false
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    location.reload();
+                                    SMASA.reload();
                                 }
                             });
                         } else {

@@ -694,9 +694,9 @@
 
         function openNtModal(id) { document.getElementById(id).classList.add('open'); }
         function closeNtModal(id) { document.getElementById(id).classList.remove('open'); }
-        document.querySelectorAll('.nt-modal-overlay').forEach(m => {
+        SMASA.bind('master-logic/nlsc-projects:0', function () { document.querySelectorAll('.nt-modal-overlay').forEach(m => { if (m.__smb) return; m.__smb = true;
             m.addEventListener('click', e => { if (e.target === m) closeNtModal(m.id); });
-        });
+        }); });
 
         // ===== Searchable Subject dropdown =====
         (function () {
@@ -942,7 +942,7 @@
                         Swal.fire('Error', res.message || 'Failed to save.', 'error');
                         return;
                     }
-                    window.location.reload();
+                    SMASA.refreshPage();
                 })
                 .catch(() => {
                     $btn.disabled = false;
@@ -952,7 +952,7 @@
         });
 
         // ===== Delete Project =====
-        document.querySelectorAll('.delete-project-btn').forEach(btn => {
+        SMASA.bind('master-logic/nlsc-projects:1', function () { document.querySelectorAll('.delete-project-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const id = row.dataset.id;
@@ -983,12 +983,12 @@
                                 Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                                 return;
                             }
-                            window.location.reload();
+                            SMASA.refreshPage();
                         })
                         .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
                 });
             });
-        });
+        }); });
 
         // ===== Delete ALL Projects (this Senior/Subject) =====
         document.getElementById('deleteAllProjectsBtn').addEventListener('click', function () {
@@ -1025,7 +1025,7 @@
                             Swal.fire('Error', res.message || 'Failed to delete.', 'error');
                             return;
                         }
-                        window.location.reload();
+                        SMASA.refreshPage();
                     })
                     .catch(() => Swal.fire('Error', 'Failed to delete — check your connection.', 'error'));
             });
@@ -1145,11 +1145,11 @@
                 .catch(() => Swal.fire('Error', 'Failed to load — check your connection.', 'error'));
         }
 
-        document.querySelectorAll('.view-project-btn').forEach(btn => {
+        SMASA.bind('master-logic/nlsc-projects:2', function () { document.querySelectorAll('.view-project-btn').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
             btn.addEventListener('click', function () {
                 openViewProjectModal(this.closest('tr').dataset.id);
             });
-        });
+        }); });
 
         document.getElementById('addCompetencyBtn').addEventListener('click', function () {
             const projectId = document.getElementById('viewProjectIdInput').value;
@@ -1272,7 +1272,7 @@
                     resultBox.innerHTML = html;
 
                     if (res.projects_imported > 0 || res.competency_areas_imported > 0) {
-                        setTimeout(() => window.location.reload(), 1800);
+                        setTimeout(() => SMASA.refreshPage(), 1800);
                     }
                 })
                 .catch(() => {

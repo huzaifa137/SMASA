@@ -1361,15 +1361,7 @@ use App\Helpers\PermissionHelper;
                 },
                 success: function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Activated!',
-                            text: data.message || 'Timetable has been activated successfully.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.reload();
-                        });
+                        SMASA.donePage('Activated!', data.message || 'Timetable has been activated successfully.');
                     } else {
                         let detail = data.message || 'Could not activate.';
                         if (data.conflicts && data.conflicts.length) {
@@ -1419,15 +1411,7 @@ use App\Helpers\PermissionHelper;
                 },
                 success: function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: data.message || 'Timetable has been deleted.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.reload();
-                        });
+                        SMASA.donePage('Deleted!', data.message || 'Timetable has been deleted.');
                     } else {
                         Swal.fire({
                             icon: 'error',

@@ -736,14 +736,7 @@ function reactivateCard(cardId, studentName) {
             })
             .then(data => {
                 if (data.status === 'success') {
-                    Swal.fire({
-                        title: 'Reactivated!',
-                        text: data.message,
-                        icon: 'success',
-                        confirmButtonColor: '#2f2ccb'
-                    }).then(() => {
-                        location.reload();
-                    });
+                    SMASA.donePage('Reactivated!', data.message);
                 } else {
                     Swal.fire({
                         title: 'Error',

@@ -910,7 +910,7 @@ th {
                 .then(d => {
                     closeGenerateModal();
                     showToast(d.message, d.status === 'success' ? 'success' : 'error');
-                    if (d.status === 'success') setTimeout(() => location.reload(), 1500);
+                    if (d.status === 'success') setTimeout(() => SMASA.refreshPage(), 1500);
                 })
                 .catch(() => showToast('Server error. Try again.', 'error'))
                 .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Generate'; });
@@ -964,15 +964,9 @@ function revokeCard(cardId, name) {
         })
         .then(r => r.json())
         .then(d => {
-            Swal.fire({
-                title: 'Revoked!',
-                text: d.message,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            
 
-            setTimeout(() => location.reload(), 2000);
+            SMASA.donePage('Revoked!', d.message);
         })
         .catch(() => {
             Swal.fire({
@@ -986,7 +980,7 @@ function revokeCard(cardId, name) {
 }
 
         // Close modals on backdrop click
-        document.querySelectorAll('.modal-backdrop').forEach(el => {
+        SMASA.bind('student/id-cards/index:0', function () { document.querySelectorAll('.modal-backdrop').forEach(el => { if (el.__smb) return; el.__smb = true;
             el.addEventListener('click', function (e) {
                 if (e.target === this) {
                     this.classList.remove('open');
@@ -994,6 +988,6 @@ function revokeCard(cardId, name) {
                     if (frame) frame.src = '';
                 }
             });
-        });
+        }); });
     </script>
 @endsection

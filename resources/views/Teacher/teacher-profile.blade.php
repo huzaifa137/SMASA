@@ -300,13 +300,7 @@ $(document).ready(function() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     success: function(response) {
-                        Swal.fire(
-                            'Submitted!',
-                            response.message,
-                            'success'
-                        ).then(() => {
-                            location.reload(); // Reload page after success
-                        });
+                        SMASA.reload('Submitted!', response.message);
                     },
                     error: function(data) {
                         $('body').html(data.responseText);

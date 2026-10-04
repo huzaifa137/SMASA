@@ -639,13 +639,7 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            Swal.fire({
-                                title: 'Revoked!',
-                                text: data.message,
-                                icon: 'success'
-                            }).then(() => {
-                                location.reload();
-                            });
+                            SMASA.reload('Revoked!', data.message);
                         })
                         .catch(error => {
                             Swal.fire({
