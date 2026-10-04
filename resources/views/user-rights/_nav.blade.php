@@ -51,6 +51,26 @@
     }
 
     .urp-nav {
-    gap: 0.75rem !important;
-}
+        gap: 0.75rem !important;
+    }
+
+    /* ── Mobile: stack nav buttons full-width, one per row ── */
+    @media (max-width: 768px) {
+        .urp-nav {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem !important;
+        }
+
+        .urp-nav .btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            /* or center if you prefer centered text */
+            padding: .7rem 1rem;
+            font-size: .88rem;
+            text-align: left;
+        }
+    }
 </style>

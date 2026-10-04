@@ -97,6 +97,62 @@ body{background:var(--bg);}
 .report-tab.active{background:#2f2ccb;color:#fff;}
 .report-tab .tab-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:.78rem;opacity:.85;}
 
+/* ─── Mobile: report tabs stack one-per-row, text wraps nicely ────── */
+@media (max-width: 768px) {
+
+    .report-tabs {
+        flex-direction: column;
+        gap: .4rem;
+        padding: .5rem;
+        overflow-x: visible;
+        flex-wrap: nowrap;
+    }
+
+    /* Each tab is a full-width card with content split: icon + label
+       on the left, amount on the right */
+    .report-tab {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .75rem .9rem;
+        font-size: .88rem;
+        white-space: normal;
+        line-height: 1.3;
+    }
+
+    /* Icon stays a fixed size */
+    .report-tab > i {
+        flex-shrink: 0;
+        font-size: .95rem;
+    }
+
+    /* Amount pushed to the right, wraps to its own line if too long */
+    .report-tab .tab-amt {
+        margin-left: auto;
+        font-size: .78rem;
+        text-align: right;
+        white-space: nowrap;
+    }
+}
+
+/* ─── Very small phones: keep the amount tidy ────────────────────── */
+@media (max-width: 420px) {
+    .report-tab {
+        padding: .7rem .8rem;
+        font-size: .82rem;
+        gap: .5rem;
+    }
+
+    .report-tab > i {
+        font-size: .85rem;
+    }
+
+    .report-tab .tab-amt {
+        font-size: .72rem;
+    }
+}
+
 /* Cards */
 .fin-card{
     background:var(--surface);
@@ -356,7 +412,6 @@ body{background:var(--bg);}
     .filter-group{width:100%;}
     .report-table{min-width:600px;display:block;overflow-x:auto;}
     .fin-card-header{flex-direction:column;align-items:flex-start;}
-    .report-tabs{overflow-x:auto;flex-wrap:nowrap;}
 }
 
 /* Print Styles */

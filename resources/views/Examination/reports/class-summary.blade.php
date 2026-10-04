@@ -217,6 +217,214 @@ use App\Http\Controllers\Helper;
     }
 }
 
+/* ─── Mobile: stack hero fully + meta chips + filter + exports ──── */
+@media (max-width: 768px) {
+
+    /* Hero card tighter */
+    .rpt-hero-card {
+        padding: 1.15rem 1.15rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Hero main stacks */
+    .rpt-hero-main {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* Icon + info row tighter */
+    .rpt-hero-left {
+        gap: 0.85rem;
+        align-items: flex-start;
+    }
+
+    .rpt-hero-icon-wrapper {
+        width: 46px;
+        height: 46px;
+        font-size: 1.2rem;
+        border-radius: 12px;
+    }
+
+    .rpt-hero-info h4 {
+        font-size: 1.15rem;
+    }
+
+    .rpt-hero-info p {
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    /* Back button full width */
+    .rpt-hero-action {
+        width: 100%;
+        justify-content: center;
+        padding: 0.7rem 1rem;
+        font-size: 0.82rem;
+        transform: none !important;
+    }
+
+    /* Meta chips: stack each on own line, full width */
+    .rpt-meta-items {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .rpt-meta-item {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.72rem;
+        border-radius: 10px;
+    }
+
+    /* Filter bar tighter */
+    .rpt-filter-bar {
+        padding: 1rem !important;
+        border-radius: 12px;
+    }
+
+    /* Force filter columns to stack 1 per row */
+    .rpt-filter-bar .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .rpt-filter-bar label {
+        font-size: 0.72rem;
+    }
+
+    .rpt-filter-bar .form-select,
+    .rpt-filter-bar .form-control {
+        font-size: 0.82rem;
+        padding: 0.55rem 0.7rem;
+    }
+
+    /* Apply button full width */
+    .rpt-filter-bar .rpt-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 1rem;
+        font-size: 0.82rem;
+    }
+
+    /* Export buttons row: stack full-width with tight spacing */
+    .rpt-export-actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.4rem !important;
+    }
+
+    .rpt-export-actions .rpt-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        margin: 0 !important;
+    }
+
+    /* Stat grid: 2 per row */
+    .rpt-stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+
+    .rpt-stat-card {
+        padding: 0.85rem 0.75rem;
+    }
+
+    .rpt-stat-label {
+        font-size: 0.68rem;
+    }
+
+    .rpt-stat-value {
+        font-size: 1.25rem;
+    }
+
+    .rpt-stat-sub {
+        font-size: 0.65rem;
+    }
+
+    /* Panel tighter */
+    .rpt-panel {
+        padding: 1rem !important;
+        border-radius: 12px;
+    }
+
+    .rpt-panel-title {
+        font-size: 0.85rem;
+        padding-bottom: 0.6rem;
+        margin-bottom: 0.85rem;
+    }
+
+    /* Matrix table horizontal scroll */
+    .rpt-table-wrap {
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
+    }
+
+    .rpt-table-wrap .rpt-table {
+        min-width: 720px;
+    }
+
+    .rpt-table th,
+    .rpt-table td {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.78rem;
+    }
+
+    .rpt-table th {
+        font-size: 0.65rem;
+    }
+
+    /* Student name column keeps its place */
+    .rpt-table .rpt-name-col {
+        min-width: 140px;
+    }
+
+    /* Nav tabs (included partial) tighter */
+    .mb-3.no-print .rpt-nav,
+    .mb-3.no-print .nav-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ─── Very small phones (≤ 420px): extra tightening ────────────── */
+@media (max-width: 420px) {
+    .rpt-hero-card {
+        padding: 1rem 0.95rem;
+    }
+
+    .rpt-hero-info h4 {
+        font-size: 1.02rem;
+    }
+
+    .rpt-hero-info p {
+        font-size: 0.76rem;
+    }
+
+    /* Stat grid single column on tiny screens */
+    .rpt-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rpt-panel {
+        padding: 0.85rem !important;
+    }
+
+    .rpt-table th,
+    .rpt-table td {
+        padding: 0.5rem 0.55rem;
+        font-size: 0.74rem;
+    }
+}
 
 </style>
 
@@ -281,10 +489,10 @@ use App\Http\Controllers\Helper;
             </div>
         </form>
 
-        <div class="d-flex justify-content-end gap-2 mb-3 no-print">
-            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button> &nbsp;
+        <div class="rpt-export-actions d-flex justify-content-end gap-2 mb-3 no-print">
+            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button>
             <a href="{{ route('examination.reports.class-summary.pdf', array_merge(['examId' => $exam->id], request()->query())) }}"
-                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a> &nbsp;
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>
             <a href="{{ route('examination.reports.class-summary.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
                 class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
         </div>

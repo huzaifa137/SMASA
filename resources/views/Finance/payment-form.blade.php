@@ -573,6 +573,50 @@
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+
+        /* ─── Mobile: stack the form action buttons full-width ────────────── */
+@media (max-width: 768px) {
+
+    .form-actions {
+        flex-direction: column-reverse;   /* Submit on top, Cancel below */
+        align-items: stretch;
+        gap: 0.6rem;
+        padding-top: 1rem;
+    }
+
+    .form-actions .btn-fin {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.88rem;
+    }
+
+    /* Give the primary action a bit more visual weight */
+    .form-actions .btn-primary-fin {
+        order: 0;
+    }
+
+    .form-actions .btn-outline-fin {
+        order: 1;
+    }
+}
+
+/* ─── Very small phones (≤ 420px): slightly tighter ──────────────── */
+@media (max-width: 420px) {
+    .form-actions {
+        gap: 0.5rem;
+    }
+
+    .form-actions .btn-fin {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.82rem;
+    }
+
+    /* Let the button text wrap cleanly if it's very long */
+    .form-actions .btn-fin i {
+        flex-shrink: 0;
+    }
+}
     </style>
 @endsection
 

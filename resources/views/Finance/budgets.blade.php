@@ -386,6 +386,57 @@
                 padding: 1rem;
             }
         }
+
+        /* ─── Mobile: stack budget filter + create action bar ─────────── */
+        @media (max-width: 768px) {
+
+            .budget-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+                margin-bottom: 1.25rem !important;
+            }
+
+            /* Filter buttons wrapper — stack full-width, one per row */
+            .budget-actions .budget-filter-group {
+                display: flex !important;
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem !important;
+            }
+
+            .budget-actions .budget-filter-group .btn-fin {
+                width: 100%;
+                justify-content: center;
+                padding: 0.65rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            /* Create New Budget button — full width */
+            .budget-actions > a.btn-fin {
+                width: 100%;
+                justify-content: center;
+                padding: 0.75rem 1rem;
+                font-size: 0.88rem;
+            }
+        }
+
+        /* ─── Very small phones: slightly tighter ────────────────────── */
+        @media (max-width: 420px) {
+            .budget-actions {
+                gap: 0.5rem !important;
+            }
+
+            .budget-actions .budget-filter-group {
+                gap: 0.4rem !important;
+            }
+
+            .budget-actions .budget-filter-group .btn-fin,
+            .budget-actions > a.btn-fin {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 @endsection
 
@@ -430,9 +481,9 @@
     </div>
 
     {{-- Actions --}}
-    <div
+    <div class="budget-actions"
         style="margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <div class="budget-filter-group" style="display:flex;gap:.5rem;flex-wrap:wrap;">
             <button class="btn-fin btn-outline-fin" onclick="filterBudgets('all')">
                 <i class="fas fa-list"></i> All
             </button>

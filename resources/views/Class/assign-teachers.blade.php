@@ -604,13 +604,13 @@ use App\Helpers\PermissionHelper;
             }
 
             /* ---- Teacher/Supervisor select boxes ----
-                       NOTE: renamed from ".custom-select" -> ".teacher-select".
-                       Bootstrap 4 (loaded via dataTables.bootstrap4.min.css) ships its
-                       OWN ".custom-select" rule with its own height/line-height/padding
-                       and a native background-image chevron. That rule was colliding
-                       with this one and squashing the text inside the box, which is
-                       what caused the "cut-through" look in the dropdowns. Renaming
-                       the class avoids the collision entirely. */
+                                   NOTE: renamed from ".custom-select" -> ".teacher-select".
+                                   Bootstrap 4 (loaded via dataTables.bootstrap4.min.css) ships its
+                                   OWN ".custom-select" rule with its own height/line-height/padding
+                                   and a native background-image chevron. That rule was colliding
+                                   with this one and squashing the text inside the box, which is
+                                   what caused the "cut-through" look in the dropdowns. Renaming
+                                   the class avoids the collision entirely. */
             .teacher-select-wrapper {
                 position: relative;
             }
@@ -658,10 +658,10 @@ use App\Helpers\PermissionHelper;
             }
 
             /* ---- Searchable teacher dropdown (plain CSS/JS — no select2) ----
-                       The real <select class="teacher-select"> stays in the DOM
-                       (just hidden) so every bit of existing dirty-tracking /
-                       save logic above keeps working untouched. This just adds a
-                       type-to-filter text input + custom list on top of it. */
+                                   The real <select class="teacher-select"> stays in the DOM
+                                   (just hidden) so every bit of existing dirty-tracking /
+                                   save logic above keeps working untouched. This just adds a
+                                   type-to-filter text input + custom list on top of it. */
             .ts-combo {
                 position: relative;
             }
@@ -936,6 +936,272 @@ use App\Helpers\PermissionHelper;
                 .floating-action-bar {
                     flex-direction: column;
                 }
+            }
+
+            /* ─── Mobile: stack dashboard header, stat cards, class identity ──── */
+            @media (max-width: 768px) {
+
+                /* ── 1. Dashboard header title: force the icon onto its own line ── */
+                .dashboard-header {
+                    padding: 24px 20px;
+                    border-radius: var(--radius-xl);
+                }
+
+                .header-content {
+                    flex-direction: column;
+                    align-items: stretch !important;
+                    gap: 20px;
+                }
+
+                .header-title-section {
+                    width: 100%;
+                }
+
+                .header-title-section h2 {
+                    flex-direction: column;
+                    align-items: flex-start !important;
+                    gap: 12px;
+                    font-size: 22px;
+                    line-height: 1.25;
+                }
+
+                .header-title-section h2 .icon-circle {
+                    width: 44px;
+                    height: 44px;
+                }
+
+                .header-subtitle {
+                    flex-direction: column;
+                    align-items: flex-start !important;
+                    gap: 6px;
+                    font-size: 13px;
+                }
+
+                /* ── 2. Header stat cards: each full width ── */
+                .header-stats {
+                    flex-direction: column;
+                    width: 100%;
+                    gap: 10px;
+                }
+
+                .header-stats .stat-card {
+                    min-width: 0 !important;
+                    width: 100%;
+                    padding: 14px 20px;
+                    text-align: left;
+                }
+
+                .header-stats .stat-value {
+                    font-size: 24px;
+                }
+
+                /* ── 3. Class identity: avatar on top, info below ── */
+                .class-card-header-premium {
+                    flex-direction: column;
+                    align-items: stretch !important;
+                    gap: 14px;
+                    padding: 18px 20px;
+                }
+
+                .class-identity {
+                    flex-direction: column;
+                    align-items: flex-start !important;
+                    gap: 12px;
+                    width: 100%;
+                }
+
+                .class-avatar {
+                    width: 48px;
+                    height: 48px;
+                    font-size: 20px;
+                }
+
+                .class-info {
+                    width: 100%;
+                }
+
+                .class-info h5 {
+                    font-size: 16px;
+                    line-height: 1.3;
+                }
+
+                .class-info .class-meta {
+                    flex-direction: column;
+                    align-items: flex-start !important;
+                    gap: 4px;
+                    font-size: 12px;
+                }
+
+                /* Header actions row: badge + chevron stay on their own line */
+                .header-actions {
+                    width: 100%;
+                    justify-content: space-between;
+                }
+            }
+
+            /* ── 3. Class card header: keep avatar + info + chevron on one line ── */
+            .class-card-header-premium {
+                flex-direction: row;
+                align-items: center !important;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 14px 16px;
+            }
+
+            .class-identity {
+                flex-direction: row;
+                align-items: center !important;
+                gap: 12px;
+                width: auto;
+                flex: 1;
+                min-width: 0;
+                /* allows text to shrink/ellipsis instead of pushing chevron off */
+            }
+
+            .class-avatar {
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
+                flex-shrink: 0;
+            }
+
+            .class-info {
+                width: auto;
+                min-width: 0;
+                /* critical for ellipsis on long class names */
+            }
+
+            .class-info h5 {
+                font-size: 15px;
+                line-height: 1.25;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin: 0 0 2px 0;
+            }
+
+            .class-info .class-meta {
+                display: flex;
+                flex-direction: row;
+                align-items: center !important;
+                gap: 10px;
+                font-size: 11.5px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .class-info .class-meta span {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .header-actions {
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: auto;
+            }
+
+            .badge-pill.changes {
+                padding: 4px 10px;
+                font-size: 10.5px;
+                letter-spacing: 0.3px;
+            }
+
+            .toggle-btn {
+                width: 34px;
+                height: 34px;
+                flex-shrink: 0;
+            }
+
+            /* ── Floating action bar on mobile: search + badge + button all full width ── */
+            .floating-action-bar {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px;
+                padding: 16px;
+                top: 10px;
+                /* less sticky offset on small screens */
+            }
+
+            .search-container {
+                width: 100%;
+                min-width: 0 !important;
+                /* kill the 300px min-width that causes overflow */
+            }
+
+            .search-container input {
+                width: 100%;
+                padding: 12px 16px 12px 44px;
+                font-size: 14px;
+            }
+
+            .search-container .search-icon-wrapper {
+                left: 14px;
+                width: 20px;
+                height: 20px;
+            }
+
+            .changes-badge {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 16px;
+                font-size: 12.5px;
+            }
+
+            .btn-save-all {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 13.5px;
+            }
+
+            .search-container input {
+                width: 100%;
+                padding: 14px 20px 14px 50px;
+                border: 2px solid #e2e8f0;
+                border-radius: var(--radius-lg);
+                font-size: 14px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: #ffffff;
+                color: var(--text-primary);
+                font-weight: 500;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .search-container input::placeholder {
+                color: var(--text-muted);
+                font-weight: 500;
+            }
+
+            .search-container input:hover {
+                border-color: #cbd5e1;
+            }
+
+            .search-container input:focus {
+                outline: none;
+                border-color: var(--accent);
+                background: white;
+                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            }
+
+            .search-container .search-icon-wrapper {
+                position: absolute;
+                left: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #64748b;
+                transition: all 0.3s ease;
+            }
+
+            .search-container input:focus~.search-icon-wrapper {
+                color: var(--accent);
             }
         </style>
 
@@ -1398,8 +1664,8 @@ use App\Helpers\PermissionHelper;
             });
 
             // Expand first card by default
-            $('.class-card-body-premium').first().addClass('expanded');
-            $('.toggle-btn').first().addClass('rotated');
+            // $('.class-card-body-premium').first().addClass('expanded');
+            // $('.toggle-btn').first().addClass('rotated');
 
             function refreshDirtyState($select) {
                 const original = String($select.data('original') ?? '');

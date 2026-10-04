@@ -500,35 +500,156 @@ use App\Helpers\PermissionHelper;
             pointer-events: none;
         }
 
-        /* Responsive */
-        @media(max-width: 640px) {
+        /* ─── Mobile: stack hero, search, table (keep desktop table look) ── */
+        @media (max-width: 768px) {
+
+            /* Container spacing */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container-fluid.mt-5 {
+                margin-top: 1rem !important;
+            }
+
+            /* Hero */
             .fin-hero {
-                padding: 1.5rem;
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
             }
 
             .hero-title {
                 font-size: 1.25rem;
             }
 
-            .stat-grid {
-                grid-template-columns: 1fr 1fr;
+            .hero-sub {
+                font-size: .82rem;
             }
 
-            .tbl thead {
-                display: none;
+            /* Hero action buttons each full width */
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .5rem;
+                margin-top: 1rem;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+                padding: .6rem 1rem;
+            }
+
+            /* Stats: 2 per row */
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .6rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .stat-card {
+                padding: .9rem 1rem;
+                border-radius: 12px;
+            }
+
+            .stat-val {
+                font-size: 1.35rem;
+            }
+
+            .stat-label {
+                font-size: .66rem;
+            }
+
+            .stat-icon {
+                font-size: 1.1rem;
+            }
+
+            /* Panel head stacks: title, then search full width */
+            .panel-head {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .75rem;
+                padding: 1rem;
+            }
+
+            .search-bar {
+                width: 100%;
+                min-width: 0;
+            }
+
+            /* Table: horizontal scroll — keeps desktop layout intact */
+            .panel > div[style*="overflow-x:auto"] {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tbl {
+                min-width: 720px;
+                font-size: .8rem;
+            }
+
+            .tbl th {
+                padding: .55rem .75rem;
+                font-size: .66rem;
             }
 
             .tbl td {
-                display: block;
-                padding: .5rem 1rem;
+                padding: .7rem .75rem;
+                font-size: .82rem;
             }
 
-            .tbl td::before {
-                content: attr(data-label) ": ";
-                font-weight: 700;
-                color: var(--t3);
-                font-size: .72rem;
-                text-transform: uppercase;
+            /* Avatar slightly smaller */
+            .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: .78rem;
+            }
+
+            /* Action buttons in row stay inline but with tighter gap */
+            .action-btns {
+                gap: .35rem;
+                flex-wrap: nowrap;
+            }
+
+            /* Icon button size fits compact row */
+            .btn-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            /* Preview modal — bigger relative size on phone */
+            .modal-box {
+                max-width: 100%;
+                margin: .75rem;
+                border-radius: 16px;
+            }
+
+            .modal-box iframe {
+                height: 460px;
+            }
+
+            /* Pagination tighter */
+            .pagination .page-link {
+                min-width: 30px;
+                height: 30px;
+                font-size: .75rem;
+            }
+
+            /* Empty state smaller */
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .empty-state i {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): 1 stat per row ──────────────── */
+        @media (max-width: 420px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>

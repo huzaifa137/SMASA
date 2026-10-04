@@ -164,7 +164,6 @@
             border-bottom: 3px solid #2C29CA;
         }
 
-        /* Subtle glow accent */
         .alc-hero::before {
             content: '';
             position: absolute;
@@ -228,16 +227,13 @@
             font-style: italic;
         }
 
-        /* ===== Combo preview row (full text + short-form badge) ===== */
         .combo-row {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
             gap: .5rem;
             margin-top: .65rem;
-            /* a touch more breathing room above */
             padding-top: .15rem;
-            /* nudges the whole row down a bit */
         }
 
         .combo-row .combo-preview {
@@ -247,11 +243,7 @@
             justify-content: center;
             min-height: 34px;
             padding: .55rem .8rem;
-            /* slightly taller + wider padding */
             line-height: 1;
-            /* Optical centering nudge — text sits a hair low by default
-                                               because of the font's ascent/descent asymmetry. Pulling the
-                                               padding-top down pushes the text visually to the middle. */
             padding-top: .6rem;
             padding-bottom: .5rem;
         }
@@ -267,25 +259,18 @@
             border-radius: .5rem;
             padding: .6rem .8rem;
             padding-top: .65rem;
-            /* matches preview's optical nudge */
             padding-bottom: .55rem;
             letter-spacing: .02em;
             min-height: 34px;
             line-height: 1;
             white-space: nowrap;
             border: 1px dashed transparent;
-            /* matches preview's border width */
         }
 
         .combo-row .combo-shortform.is-visible {
             display: inline-flex;
         }
 
-        /* Warning badge for a saved combination that isn't actually
-            complete — fewer than 3 principal subjects, no subsidiary, or
-            (most subtly) built on a subject that's since been deleted. Kept
-            visually distinct from the amber "Unsaved" chip: that one just
-            means "not saved yet", this one means "saved, but wrong". */
         .combo-row .combo-flag {
             display: none;
             align-items: center;
@@ -313,7 +298,6 @@
             flex: none;
         }
 
-        /* ===== Per-row subject search ===== */
         .subject-search-wrap {
             position: relative;
             margin-bottom: .75rem;
@@ -353,18 +337,15 @@
             box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
         }
 
-        /* Hide filtered-out subject checkboxes */
         .subject-search-row~[data-principal-group] .form-check.is-filtered-out {
             display: none;
         }
 
-        /* Optional: subtle highlight for matches — remove if you don't want it */
         .subject-search-row~[data-principal-group] .form-check.is-match .form-check-label {
             color: #2C29CA;
             font-weight: 700;
         }
 
-        /* ===== "Apply a saved combination" quick-picker ===== */
         .combo-template-wrap {
             position: relative;
             margin-bottom: .75rem;
@@ -472,7 +453,6 @@
             text-align: center;
         }
 
-        /* ===== Unsaved chip (sits next to the short-form badge) ===== */
         .combo-row .pending-chip {
             display: none;
             align-items: center;
@@ -499,8 +479,6 @@
             display: inline-flex;
         }
 
-        /* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
-        /* ===== Subsidiary dropdown (matches Add Your Own Subject styling) ===== */
         .subsidiary-select {
             width: 100%;
             height: 44px;
@@ -520,10 +498,10 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             cursor: pointer;
-            /* line-height removed — let the fixed height center the text */
             transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-            /* Let the browser center the selected option text vertically */
             vertical-align: middle;
+            /* Give the dropdown enough room to show longer subject names */
+            min-width: 180px;
         }
 
         .subsidiary-select:hover {
@@ -537,7 +515,6 @@
             box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
         }
 
-        /* Dropdown list options — keep readable, browser controls their own height */
         .subsidiary-select option {
             color: #1e1b4b;
             background: #fff;
@@ -545,14 +522,18 @@
             padding: .5rem;
         }
 
-        /* ===== Manage Your Own Subjects — center the edit/delete icons ===== */
+        /* Widen the Subsidiary cell so the dropdown isn't cramped */
+        .alc-table td.subsidiary-cell,
+        .alc-table th.subsidiary-head {
+            min-width: 200px;
+        }
+
         .my-subject-row .my-subject-edit,
         .my-subject-row .my-subject-delete {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
-            /* kill Bootstrap .btn-sm padding */
             line-height: 1;
             flex: 0 0 auto;
         }
@@ -564,7 +545,6 @@
             font-size: .82rem;
         }
 
-        /* ===== Row wrapper: subject search + saved-combination picker ===== */
         .subject-search-row {
             display: flex;
             flex-wrap: wrap;
@@ -573,31 +553,25 @@
             align-items: flex-start;
         }
 
-        /* Each picker shares the row, growing to fill available space */
         .subject-search-row .subject-search-wrap,
         .subject-search-row .combo-template-wrap {
             position: relative;
             margin-bottom: 0;
-            /* margin moved to the row wrapper */
             flex: 1 1 200px;
-            /* grow evenly, wrap when < 200px each */
             min-width: 0;
-            /* lets the input shrink instead of overflowing */
             max-width: none;
-            /* remove the old 260px cap */
         }
 
-        /* ===== Student name search (above the combinations table) ===== */
-.student-search-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.75rem;
-    border-bottom: 2px solid #f0eeff;
-    background: linear-gradient(135deg, #fafaff 0%, #f7f6ff 100%);
-    flex-wrap: wrap;
-}
+        .student-search-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.75rem;
+            border-bottom: 2px solid #f0eeff;
+            background: linear-gradient(135deg, #fafaff 0%, #f7f6ff 100%);
+            flex-wrap: wrap;
+        }
 
         .student-search-wrap {
             position: relative;
@@ -605,40 +579,40 @@
             max-width: 420px;
         }
 
-.student-search-icon {
-    position: absolute;
-    top: 50%;
-    left: .9rem;
-    transform: translateY(-50%);
-    color: #2C29CA;                 /* brand blue by default */
-    font-size: .85rem;
-    pointer-events: none;
-    transition: color .18s;
-}
+        .student-search-icon {
+            position: absolute;
+            top: 50%;
+            left: .9rem;
+            transform: translateY(-50%);
+            color: #2C29CA;
+            font-size: .85rem;
+            pointer-events: none;
+            transition: color .18s;
+        }
 
-.student-search-input {
-    width: 100%;
-    height: 40px;
-    padding: 0 2.4rem 0 2.4rem;
-    border: 1.5px solid #2C29CA;              /* brand blue by default */
-    border-radius: .7rem;
-    background: #fff;
-    font-size: .85rem;
-    color: #1e1b4b;
-    outline: none;
-    box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);   /* soft ring by default */
-    transition: border-color .18s, box-shadow .18s, background .18s;
-}
+        .student-search-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 2.4rem 0 2.4rem;
+            border: 1.5px solid #2C29CA;
+            border-radius: .7rem;
+            background: #fff;
+            font-size: .85rem;
+            color: #1e1b4b;
+            outline: none;
+            box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
 
-.student-search-input::placeholder {
-    color: #b3b0d4;
-}
+        .student-search-input::placeholder {
+            color: #b3b0d4;
+        }
 
-.student-search-input:focus {
-    border-color: #2C29CA;
-    background: #fff;
-    box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);   /* stronger on focus */
-}
+        .student-search-input:focus {
+            border-color: #2C29CA;
+            background: #fff;
+            box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);
+        }
 
         .student-search-clear {
             position: absolute;
@@ -653,7 +627,6 @@
             color: #9a97c9;
             cursor: pointer;
             display: none;
-            /* shown only when input has text */
             align-items: center;
             justify-content: center;
             transition: background .15s, color .15s;
@@ -679,9 +652,71 @@
             color: #2C29CA;
         }
 
-        /* Hidden row when filtered out */
         tr[data-student-id].is-filtered-out {
             display: none;
+        }
+
+        /* ─── Mobile: stack add-subject form + save bar + subsidiary cell ─── */
+        @media (max-width: 768px) {
+
+            /* 1. "Add Your Own Subject" — Group / Name / Button all full-width */
+            .add-subject-row {
+                grid-template-columns: 1fr !important;
+                gap: .75rem !important;
+                align-items: stretch !important;
+            }
+
+            .add-subject-row #newSubjectGroup,
+            .add-subject-row #newSubjectName {
+                height: 46px !important;
+            }
+
+            .add-subject-row #addSubjectBtn {
+                width: 100%;
+                height: 46px !important;
+                justify-content: center;
+                padding: 0 1rem !important;
+            }
+
+            /* 2. Subsidiary cell — let the dropdown use the full cell width */
+            .alc-table td.subsidiary-cell,
+            .alc-table th.subsidiary-head {
+                min-width: 0 !important;
+                width: auto !important;
+            }
+
+            .subsidiary-select {
+                min-width: 0 !important;
+                width: 100% !important;
+                height: 42px;
+                font-size: .82rem;
+            }
+
+            /* 3. Save combinations footer — stack full-width */
+            .save-combinations-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                padding: 1.1rem 1.25rem !important;
+            }
+
+            .save-combinations-bar #pendingSummary {
+                text-align: center;
+                font-size: .8rem !important;
+                order: 2;
+            }
+
+            .save-combinations-bar #saveCombinationsBtn {
+                width: 100%;
+                justify-content: center;
+                order: 1;
+                padding: .85rem 1.2rem;
+                font-size: .88rem;
+            }
+
+            .save-combinations-bar .spacer {
+                display: none;
+            }
         }
     </style>
 @endsection
@@ -696,21 +731,21 @@
                     
                     <div class="col-12">
 
-                                    {{-- ===== HERO ===== --}}
-                <div class="alc-hero mb-4">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                        <div>
-                            <span class="hero-badge">
-                                <i class="fas fa-graduation-cap me-1"></i> A-Level Combinations
-                            </span>
-                            <h1 class="hero-title mt-1">Build Student Combinations</h1>
-                            <p class="hero-subtitle mb-0">
-                                Each student's own principal subjects + optional subsidiary. General
-                                Paper is compulsory for every student — it's implied automatically, not chosen here.
-                            </p>
+                        {{-- ===== HERO ===== --}}
+                        <div class="alc-hero mb-4">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                <div>
+                                    <span class="hero-badge">
+                                        <i class="fas fa-graduation-cap me-1"></i> A-Level Combinations
+                                    </span>
+                                    <h1 class="hero-title mt-1">Build Student Combinations</h1>
+                                    <p class="hero-subtitle mb-0">
+                                        Each student's own principal subjects + optional subsidiary. General
+                                        Paper is compulsory for every student — it's implied automatically, not chosen here.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
                         {{-- ===== CLASS/STREAM PICKER ===== --}}
                         <div class="alc-card mb-4">
@@ -732,11 +767,7 @@
                             </div>
                         </div>
 
-                        {{-- ===== ADD YOUR OWN SUBJECT ===== ---
-                        Adds to THIS school's own list only (school_alevel_subjects)
-                        — on top of the global Principal - Arts/Sciences/Subsidiary
-                        list every school starts with. See
-                        ALevelCombinationController::addSchoolSubject(). --}}
+                        {{-- ===== ADD YOUR OWN SUBJECT ===== --}}
                         @if($students->count())
                             <div class="alc-card mb-4"
                                 style="border-radius: 1.25rem; background: #fff; box-shadow: 0 8px 32px rgba(44, 41, 202, 0.12); border-top: 4px solid #2C29CA; overflow: hidden;">
@@ -756,7 +787,7 @@
                                     </div>
                                 </div>
                                 <div style="padding: 0 1.75rem 1.75rem;">
-                                    <div
+                                    <div class="add-subject-row"
                                         style="display: grid; grid-template-columns: 220px 1fr auto; gap: 1rem; align-items: end;">
                                         <div>
                                             <label
@@ -792,13 +823,7 @@
                             </div>
                         @endif
 
-                        {{-- ===== MANAGE YOUR OWN SUBJECTS (edit/delete) ===== ---
-                        Everything this school has added via "Add Your Own Subject"
-                        above — renamed/regrouped or removed here without touching
-                        the global Principal - Arts/Sciences/Subsidiary list every
-                        school starts with. See
-                        ALevelCombinationController::updateSchoolSubject()/
-                        deleteSchoolSubject(). --}}
+                        {{-- ===== MANAGE YOUR OWN SUBJECTS ===== --}}
                         @if($students->count() && $mySchoolSubjects->count())
                             <div class="alc-card mb-4"
                                 style="border-radius: 1.25rem; background: #fff; box-shadow: 0 8px 32px rgba(44, 41, 202, 0.12); border-top: 4px solid #2C29CA; overflow: hidden;">
@@ -842,13 +867,6 @@
                         {{-- ===== COMBINATIONS GRID ===== --}}
                         @if($students->count())
                             @php
-                                // Every subject id a checkbox/option actually exists
-                                // for right now — used below to catch a saved
-                                // combination that still references a subject
-                                // (school-added or global) which has since been
-                                // deleted. Without this, a deleted subject just
-                                // silently disappears from the count with no
-                                // indication anything is wrong.
                                 $allValidSubjectIds = collect();
                                 foreach ($principalSubjects as $subjectsInGroup) {
                                     $allValidSubjectIds = $allValidSubjectIds->concat($subjectsInGroup->pluck('md_id'));
@@ -859,7 +877,6 @@
                                     ->all();
                             @endphp
                             <div class="alc-card mb-4">
-                                {{-- Student-name search: filters the table rows live as you type. --}}
                                 <div class="student-search-bar">
                                     <div class="student-search-wrap">
                                         <i class="fas fa-user-search student-search-icon"></i>
@@ -880,7 +897,7 @@
                                                 <th>Student</th>
                                                 <th>General Paper</th>
                                                 <th>Principal Subjects</th>
-                                                <th>Subsidiary</th>
+                                                <th class="subsidiary-head">Subsidiary</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -890,12 +907,6 @@
                                                     $existingPrincipals = $existing->principal_subject_ids ?? [];
                                                     $existingSubsidiary = $existing->subsidiary_subject_id ?? null;
 
-                                                    // Did the saved combination reference a subject
-                                                    // that no longer exists (deleted since it was
-                                                    // saved)? Once deleted its checkbox/option is
-                                                    // simply gone, so this is the only way to tell
-                                                    // "the teacher only ever picked 2" apart from
-                                                    // "this used to be 3 until one was removed".
                                                     $hadDeletedSubjects = false;
                                                     foreach ($existingPrincipals as $pid) {
                                                         if (!in_array((string) $pid, $allValidSubjectIds, true)) {
@@ -914,8 +925,6 @@
                                                     <td><span class="gp-chip">GP — compulsory</span></td>
 
                                                     <td>
-                                                        {{-- Both pickers on one row: subject filter on the left,
-                                                        saved-combination quick-apply on the right. --}}
                                                         <div class="subject-search-row">
                                                             <div class="subject-search-wrap">
                                                                 <i class="fas fa-search subject-search-icon"></i>
@@ -961,7 +970,7 @@
                                                             @endif
                                                         @endforeach
                                                     </td>
-                                                    <td>
+                                                    <td class="subsidiary-cell">
                                                         <select class="form-select form-control-sm subsidiary-select">
                                                             <option value="">None</option>
                                                             @foreach($subsidiarySubjects as $sub)
@@ -976,12 +985,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="card-body-custom d-flex align-items-center justify-content-end gap-3">
+                                <div class="card-body-custom d-flex align-items-center justify-content-end gap-3 save-combinations-bar">
                                     <span id="pendingSummary"
                                         style="display:none; font-size:.82rem; font-weight:700; color:#9a6b00;">
                                         <i class="fas fa-triangle-exclamation"></i> <span id="pendingCount">0</span> student(s)
                                         have unsaved changes
-                                    </span> &nbsp; &nbsp;
+                                    </span>
+                                    <span class="spacer">&nbsp;&nbsp;</span>
                                     <button id="saveCombinationsBtn" class="btn-save">
                                         <i class="fas fa-save me-2"></i> <span id="saveBtnLabel">Save All Combinations</span>
                                     </button>
@@ -1003,17 +1013,11 @@
             </div>
         </div>
     </div>
-    </div>
-    </div>
-    </div>
     <script>
         const PRINCIPAL_LIMIT = 3;
         const SELECTED_CLASS_ID = @json($selectedClassId);
         const SELECTED_STREAM_ID = @json($selectedStreamId);
 
-        // Shared toast style — small, top-right, auto-dismissing —
-        // reused by Add/Rename/Delete on this school's own subjects so
-        // all three feel consistent instead of only Add having one.
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -1026,10 +1030,6 @@
             },
         });
 
-        // md_id -> subject name, for building the "Physics, Chemistry,
-        // Biology / Subsidiary Mathematics" preview text client-side
-        // without another round-trip — same subjects already rendered as
-        // checkboxes/options above, just flattened into a lookup map.
         const subjectNameMap = {};
         @foreach($principalSubjects as $group => $subjectsInGroup)
             @foreach($subjectsInGroup as $subject)
@@ -1040,26 +1040,8 @@
             subjectNameMap['{{ $sub->md_id }}'] = @json($sub->md_name);
         @endforeach
 
-            // Distinct combinations already saved somewhere in this school —
-            // see ALevelCombinationController::entry()'s $savedCombinationOptions
-            // — offered as one-click templates via the "Apply a saved
-            // combination" picker below. Raw ids only; display labels are
-            // built lazily (once principalInitial()/subsidiaryShortform() are
-            // available further down) so this can stay right next to
-            // subjectNameMap regardless of declaration order.
-            const savedCombinationOptions = @json($savedCombinationOptions);
-
-        // Each row's principal subjects, in the order the user actually
-        // checked them (or, on first load, the order they were originally
-        // saved in) — NOT DOM/render order, which is fixed by subject-list
-        // position and would otherwise silently reorder an already-saved
-        // combination every time this page is reopened.
+        const savedCombinationOptions = @json($savedCombinationOptions);
         const rowPrincipalOrder = new WeakMap();
-
-        // Rows with a change made this session that hasn't been sent to
-        // Save yet — drives the per-row "Unsaved" chip and the Save
-        // button's pending count, so a forgotten combination is obvious
-        // rather than silently lost on refresh/navigation.
         const dirtyRows = new Set();
 
         function principalOrderFor(row) {
@@ -1093,16 +1075,10 @@
             updateComboFlag(row);
         }
 
-        // "Physics" / "Chemistry" / "Mathematics" -> "P" / "C" / "M".
         function principalInitial(name) {
             return (name || '').trim().charAt(0).toUpperCase();
         }
 
-        // The two standard UACE subsidiaries get their conventional short
-        // forms; anything else (including a school's own custom
-        // subsidiary — see "Add Your Own Subject") falls back to a
-        // reasonable "Sub" + the distinguishing word, since there's no
-        // fixed convention for a name nobody has agreed on yet.
         function subsidiaryShortform(name) {
             const n = (name || '').toLowerCase();
             if (n.includes('ict')) return 'ICT';
@@ -1113,8 +1089,6 @@
             return firstWord ? 'Sub' + firstWord.charAt(0).toUpperCase() + firstWord.slice(1) : 'Sub';
         }
 
-        // The short-form badge shown beside the full combo preview, e.g.
-        // "Physics, Chemistry, Mathematics / Subsidiary ICT" -> "PCM/ICT".
         function updateComboShortform(row) {
             const badge = row.querySelector('[data-role="combo-shortform"]');
             if (!badge) return;
@@ -1137,15 +1111,6 @@
             badge.style.display = short ? 'inline-block' : 'none';
         }
 
-        // A complete A-Level combination is exactly 3 principal subjects
-        // plus 1 subsidiary — anything else that isn't simply untouched
-        // ("No combination selected yet") is flagged right next to the
-        // short-form badge, so a class teacher scanning the list spots a
-        // gap without having to open every row. This is also what catches
-        // a subject that was deleted after the combination was saved: its
-        // checkbox is just gone, so the checked count quietly drops below
-        // 3 — exactly the same state as never having picked a third
-        // subject, and caught by the same check.
         function updateComboFlag(row) {
             const flag = row.querySelector('[data-role="combo-flag"]');
             if (!flag) return;
@@ -1188,10 +1153,6 @@
 
         function markRowDirty(row) {
             dirtyRows.add(row);
-            // The "a subject was deleted" hint only makes sense against the
-            // originally-saved data — once the teacher starts editing this row
-            // themselves, fall back to the plain "incomplete" wording instead of
-            // still blaming a deletion that may no longer be the reason.
             row.dataset.hadDeletedSubjects = '0';
             const chip = row.querySelector('[data-role="pending-chip"]');
             if (chip) chip.classList.add('is-visible');
@@ -1221,8 +1182,6 @@
             }
         }
 
-        // A forgotten, unsaved combination is easy to lose by navigating
-        // away entirely — warn on the way out too, not just on-page.
         window.addEventListener('beforeunload', (e) => {
             if (dirtyRows.size > 0) {
                 e.preventDefault();
@@ -1230,9 +1189,6 @@
             }
         });
 
-        // Once PRINCIPAL_LIMIT are checked in a row, lock the rest until
-        // the user frees a slot by unchecking one — rather than letting
-        // them keep piling on and only rejecting it later at Save.
         function applyPrincipalLimit(row) {
             const order = principalOrderFor(row);
             const atLimit = order.length >= PRINCIPAL_LIMIT;
@@ -1243,10 +1199,6 @@
             });
         }
 
-        // Wire one principal checkbox: keeps rowPrincipalOrder in sync
-        // (append on check, remove on uncheck) instead of just re-deriving
-        // order from :checked position every time, then re-renders the
-        // preview and the 3-subject lock for that row.
         function wirePrincipalCheckbox(cb, row) {
             cb.addEventListener('change', () => {
                 const order = principalOrderFor(row);
@@ -1262,15 +1214,6 @@
             });
         }
 
-        // Wire up every row: seed each row's check-order from whatever was
-        // actually saved (data-initial-principals — see
-        // ALevelCombinationController::entry()/$existingPrincipals), fall
-        // back to current DOM order for anything checked that wasn't in
-        // that saved list (shouldn't normally happen, but keeps a stray
-        // checked box from vanishing off the preview), then render once
-        // immediately so already-saved combinations show right away
-        // rather than only after the next edit — nothing here counts as a
-        // "change" yet, so rows start clean, not pending.
         document.querySelectorAll('tr[data-student-id]').forEach(row => {
             let initial = [];
             try {
@@ -1308,7 +1251,6 @@
             const $btn = this;
             const originalHTML = $btn.innerHTML;
 
-            // Step 1: spinner state
             $btn.disabled = true;
             $btn.style.background = '#4d4be0';
             $btn.style.cursor = 'not-allowed';
@@ -1326,7 +1268,6 @@
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success) {
-                        // Restore on failure
                         $btn.disabled = false;
                         $btn.style.background = '#2C29CA';
                         $btn.style.cursor = 'pointer';
@@ -1339,7 +1280,6 @@
                     subjectNameMap[subject.md_id] = subject.md_name;
                     document.getElementById('newSubjectName').value = '';
 
-                    // Drop the new checkbox/option into every student row
                     document.querySelectorAll('tr[data-student-id]').forEach(row => {
                         if (subject.md_misc1 === 'Subsidiary') {
                             const select = row.querySelector('.subsidiary-select');
@@ -1367,23 +1307,18 @@
                         applyPrincipalLimit(row);
                     });
 
-                    // Also drop it into the "Manage Your Own Subjects" list so it
-                    // can be renamed/deleted right away without a page reload.
                     if (subject.id) {
                         addRowToManageList(subject);
                     }
 
-                    // Step 2: success state on the button itself
                     $btn.style.background = '#1e9e5a';
                     $btn.innerHTML = '<i class="fas fa-check"></i> Added!';
 
-                    // Small toast, no click needed
                     Toast.fire({
                         icon: 'success',
                         title: `"${subject.md_name}" added`,
                     });
 
-                    // Step 3: hold "Added!" for 2 seconds, then reset
                     setTimeout(() => {
                         $btn.disabled = false;
                         $btn.style.background = '#2C29CA';
@@ -1392,7 +1327,6 @@
                     }, 2000);
                 })
                 .catch(() => {
-                    // Restore on network error
                     $btn.disabled = false;
                     $btn.style.background = '#2C29CA';
                     $btn.style.cursor = 'pointer';
@@ -1401,13 +1335,6 @@
                 });
         });
 
-        // ===== MANAGE YOUR OWN SUBJECTS (edit/delete) =====
-        // addSchoolSubject() (above) only ever returns {md_id, md_name,
-        // md_misc1} — no real ->id — since that's all the combinations
-        // grid needs. The manage list needs the real id too (that's what
-        // update/delete are keyed on), so this builds its row from the
-        // full {id, md_id, md_name, md_misc1} shape
-        // updateSchoolSubject()/addSchoolSubject() both return.
         function addRowToManageList(subject) {
             const list = document.getElementById('mySubjectsList');
             if (!list) return;
@@ -1456,10 +1383,6 @@
                             return false;
                         }
 
-                        // showLoaderOnConfirm swaps the "Save" button for a
-                        // spinner for the duration of this promise, instead
-                        // of a separate loading state we'd have to manage
-                        // ourselves.
                         return fetch(`{{ url('a-level-combinations/subjects') }}/${row.dataset.id}`, {
                             method: 'PUT',
                             headers: {
@@ -1491,8 +1414,6 @@
                     nameEl.textContent = subject.md_name;
                     row.querySelector('.badge').textContent = subject.md_misc1;
 
-                    // Reflect the new name/group everywhere this subject's
-                    // checkbox/option already appears.
                     document.querySelectorAll('tr[data-student-id]').forEach(studentRow => {
                         const cb = studentRow.querySelector(`.principal-checkbox[value="${mdId}"]`);
                         if (cb) {
@@ -1618,10 +1539,6 @@
                 });
         });
 
-        // ===== Per-row subject search =====
-        // Filters each student's Principal - Arts / Sciences checkboxes
-        // live as the user types. Matching is case-insensitive substring
-        // against the label text (stored in data-subject-name).
         document.querySelectorAll('tr[data-student-id]').forEach(row => {
             const input = row.querySelector('.subject-search-input');
             if (!input) return;
@@ -1639,11 +1556,6 @@
             });
         });
 
-        // ===== Student name search =====
-        // Filters table rows live as the user types — matches against the
-        // student name in the first cell (surname + first name), case-
-        // insensitive substring. Also shows a live "x of y" counter so a
-        // teacher can tell whether the list is currently filtered.
         (function () {
             const input = document.getElementById('studentSearchInput');
             const clearBtn = document.getElementById('studentSearchClear');
@@ -1653,8 +1565,6 @@
             const rows = Array.from(document.querySelectorAll('tr[data-student-id]'));
             const total = rows.length;
 
-            // Cache each row's lowercase name once, so typing doesn't have to
-            // re-read the DOM for every keystroke.
             const rowNameCache = new WeakMap();
             rows.forEach(row => {
                 const cell = row.querySelector('td');
@@ -1672,10 +1582,8 @@
                     if (match) visible++;
                 });
 
-                // Clear button visibility
                 clearBtn.classList.toggle('is-visible', q !== '');
 
-                // Count label
                 if (q === '') {
                     countEl.textContent = '';
                 } else {
@@ -1698,19 +1606,9 @@
                 applyFilter();
             });
 
-            // Initial render (in case the input has a value, e.g. browser
-            // restored it on back-navigation)
             applyFilter();
         })();
 
-        // ===== "Apply a saved combination" quick-picker =====
-        // Turns each already-saved combination into a one-click template:
-        // typing filters by short form (e.g. "pcm") or full subject names,
-        // clicking a result checks this row's boxes and sets its
-        // subsidiary to match, then leaves it as a normal pending edit —
-        // Save/Change works exactly as if the boxes had been ticked by
-        // hand. If nothing has ever been saved in this school yet, the
-        // whole picker is hidden rather than showing an always-empty box.
         function comboOptionLabel(opt) {
             const principalNames = (opt.principal_subject_ids || []).map(id => subjectNameMap[id] || id);
             const subsidiaryName = opt.subsidiary_subject_id
@@ -1773,9 +1671,6 @@
                         </div>
                     `).join('');
 
-                // Text content set via DOM (not template-interpolated into
-                // the HTML string above) so a subject name can never be
-                // parsed as markup.
                 panel.querySelectorAll('.combo-template-option').forEach((el, i) => {
                     const opt = matches[i];
                     el.querySelector('.combo-template-option-label').textContent = opt.short;
@@ -1784,8 +1679,6 @@
                         `${opt.count} student${opt.count > 1 ? 's' : ''}`;
 
                     el.addEventListener('mousedown', (e) => {
-                        // mousedown (fires before the input's blur closes
-                        // the panel) rather than click.
                         e.preventDefault();
                         applyComboTemplate(row, opt);
                         const input = row.querySelector('.combo-template-input');

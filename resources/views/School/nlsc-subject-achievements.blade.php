@@ -359,6 +359,35 @@
             .nt-filter-form { flex-wrap: wrap; }
             .nt-filter-field { flex: 1 1 100%; }
         }
+
+        /* ─── Mobile: stack the two action buttons full-width ─────────────── */
+@media (max-width: 768px) {
+
+    /* The filter card body already stacks its children vertically via
+       the existing `.nt-filter-bar` rule at this breakpoint, but the
+       action buttons still sit inline because of `flex-shrink-0`.
+       Force them to take the full row. */
+    .nt-filter-bar > #addTopicBtn,
+    .nt-filter-bar > #deleteAllAchievementsBtn {
+        width: 100%;
+        flex: 1 1 100%;
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .7rem 1rem;
+        margin-left: 0 !important;   /* kill any inherited margin */
+    }
+
+    /* Also give them a little vertical breathing room between each other */
+    .nt-filter-bar > #addTopicBtn {
+        margin-bottom: 0;
+    }
+
+    .nt-filter-bar > #deleteAllAchievementsBtn {
+        margin-top: 0;
+    }
+}
     </style>
 @endsection
 

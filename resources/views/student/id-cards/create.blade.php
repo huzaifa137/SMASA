@@ -328,6 +328,30 @@ use App\Helpers\PermissionHelper;
             padding: .7rem 1rem;
             text-align: left;
         }
+
+        @media(max-width:640px) {
+    .fin-hero {
+        padding: 1.5rem;
+    }
+
+    .hero-title {
+        font-size: 1.25rem;
+    }
+
+    .form-body {
+        padding: 1rem;
+    }
+
+    /* 👇 new rules */
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
     </style>
 @endsection
 

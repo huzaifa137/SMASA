@@ -302,6 +302,88 @@
 
         .nt-select.no-match .nt-select-list { display: none; }
         .nt-select.no-match .nt-select-empty { display: block; }
+
+        /* ─── Mobile: stack the filters card + table actions ──────────────── */
+@media (max-width: 768px) {
+
+    /* ── 1. Filter row (form + action buttons) stacks full-width ── */
+    .nt-card-filters .card-body-custom {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+    }
+
+    /* The form itself also stacks vertically */
+    .nt-card-filters #filterForm {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+        width: 100%;
+    }
+
+    /* Every filter field (Assessment Type / Senior / Subject) full width */
+    .nt-card-filters #filterForm > div {
+        width: 100%;
+        min-width: 0 !important;   /* kill the inline min-width:220px / 200px */
+    }
+
+    /* The two action buttons (Add Topic / Delete All Topics) full width */
+    .nt-card-filters #addTopicBtn,
+    .nt-card-filters #deleteAllTopicsBtn {
+        width: 100%;
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .7rem 1rem;
+    }
+
+    /* ── 2. Table action buttons stack when the row is narrow ── */
+    .nt-table td:last-child {
+        white-space: normal;
+    }
+
+    .nt-action-btn {
+        display: inline-flex;
+        margin-bottom: 4px;
+    }
+
+    /* ── 3. Hero padding tighter ── */
+    .nt-hero {
+        padding: 1.25rem 1.25rem 1.5rem;
+        border-radius: 1.25rem;
+    }
+
+    .nt-hero .hero-title {
+        font-size: 1.2rem;
+    }
+
+    .nt-hero .hero-subtitle {
+        font-size: .8rem;
+    }
+
+    /* ── 4. View Topic modal — stack the two footer buttons ── */
+    #viewTopicModal .nt-modal-ft {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: .5rem;
+    }
+
+    #viewTopicModal .nt-modal-ft > button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* The "Add competency area" row also stacks: input on top, button below */
+    #viewTopicModal .nt-modal-body > div[style*="display:flex"] {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    #viewTopicModal .nt-modal-body > div[style*="display:flex"] > button {
+        width: 100%;
+    }
+}
     </style>
 @endsection
 

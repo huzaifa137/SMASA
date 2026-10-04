@@ -425,7 +425,154 @@
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
     }
 
-    /* Responsive */
+    /* ─── Mobile: stack hero, class cards, stream actions ────────────── */
+    @media (max-width: 768px) {
+
+        /* Outer container padding tighter */
+        .side-app[style*="padding: 1.5rem"] {
+            padding: 0.75rem !important;
+        }
+
+        /* Hero section tighter */
+        .hero-section {
+            padding: 1.25rem 1.15rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-section h1 {
+            font-size: 1.35rem !important;
+            line-height: 1.25;
+        }
+
+        .hero-section p {
+            font-size: 0.85rem !important;
+        }
+
+        /* Hero badge: tighter */
+        .hero-section .badge {
+            font-size: 0.8rem !important;
+            padding: 0.4rem 0.85rem !important;
+        }
+
+        /* Header buttons stack full-width */
+        .header-buttons {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            width: 100%;
+            margin-top: 0.85rem;
+        }
+
+        .header-buttons .btn-glass {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.7rem 1rem !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* Class grid 1 column (already handled by existing 768px rule) */
+
+        /* Stream cards tighter */
+        .stream-card {
+            padding: 0.9rem;
+            border-radius: 14px;
+        }
+
+        .stream-name {
+            font-size: 0.9rem;
+        }
+
+        .stream-stats {
+            gap: 0.75rem;
+            margin-top: 0.4rem;
+        }
+
+        .stat-chip {
+            font-size: 0.7rem;
+        }
+
+        /* Action buttons stack full-width */
+        .action-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+            padding-top: 0.65rem;
+            margin-top: 0.65rem;
+        }
+
+        .action-group .btn-primary-modern,
+        .action-group .btn-outline-modern,
+        .action-group .btn-edit-modern {
+            width: 100%;
+            justify-content: center;
+            padding: 0.65rem 1rem;
+            font-size: 0.78rem;
+        }
+
+        /* Subject tags: smaller and wrap nicely */
+        .subject-tags {
+            gap: 0.4rem;
+            margin-top: 0.65rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .subject-tag {
+            font-size: 0.68rem;
+            padding: 0.28rem 0.7rem;
+            flex: 0 1 auto;
+        }
+
+        /* Card header tighter on mobile */
+        .card-header-modern {
+            padding: 1rem 1.15rem;
+        }
+
+        .class-name {
+            font-size: 1.05rem;
+        }
+
+        .stream-count {
+            font-size: 0.65rem;
+            padding: 0.22rem 0.65rem;
+        }
+    }
+
+    /* ─── Very small phones (≤ 420px): additional tightening ────────── */
+    @media (max-width: 420px) {
+        .hero-section {
+            padding: 1rem;
+            border-radius: 16px;
+        }
+
+        .hero-section h1 {
+            font-size: 1.15rem !important;
+        }
+
+        .stream-card {
+            padding: 0.8rem;
+        }
+
+        .stream-name {
+            font-size: 0.85rem;
+        }
+
+        .stat-chip {
+            font-size: 0.65rem;
+        }
+
+        .progress-text {
+            font-size: 0.7rem;
+        }
+
+        .subject-tag {
+            font-size: 0.62rem;
+            padding: 0.25rem 0.6rem;
+        }
+    }
+
+    /* Responsive (existing rules kept for reference) */
     @media (max-width: 768px) {
         .class-grid {
             grid-template-columns: 1fr;

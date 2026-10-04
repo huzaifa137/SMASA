@@ -216,6 +216,234 @@ use App\Http\Controllers\Helper;
                     padding: 0.2rem 0.6rem;
                 }
             }
+
+            /* ─── Mobile: stack hero, meta chips, filters, exports, bars ── */
+            @media (max-width: 768px) {
+
+                /* Hero card tighter */
+                .rpt-hero-card {
+                    padding: 1.15rem 1.15rem;
+                    border-radius: 16px;
+                    margin-bottom: 1.5rem;
+                }
+
+                /* Hero main stacks */
+                .rpt-hero-main {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                    padding-bottom: 1rem;
+                }
+
+                /* Icon + info row tighter */
+                .rpt-hero-left {
+                    gap: 0.85rem;
+                    align-items: flex-start;
+                }
+
+                .rpt-hero-icon-wrapper {
+                    width: 46px;
+                    height: 46px;
+                    font-size: 1.2rem;
+                    border-radius: 12px;
+                }
+
+                .rpt-hero-info h4 {
+                    font-size: 1.15rem;
+                }
+
+                .rpt-hero-info p {
+                    font-size: 0.82rem;
+                    line-height: 1.45;
+                }
+
+                /* Back button full width */
+                .rpt-hero-action {
+                    width: 100%;
+                    justify-content: center;
+                    padding: 0.7rem 1rem;
+                    font-size: 0.82rem;
+                    transform: none !important;
+                }
+
+                /* Meta chips: stack each on own row, full width */
+                .rpt-meta-items {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 0.4rem;
+                    width: 100%;
+                }
+
+                .rpt-meta-item {
+                    width: 100%;
+                    justify-content: flex-start;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.72rem;
+                    border-radius: 10px;
+                }
+
+                /* Filter bar: force columns to 1 per row */
+                .rpt-filter-bar {
+                    padding: 1rem !important;
+                    border-radius: 12px;
+                }
+
+                .rpt-filter-bar .row > [class*="col-"] {
+                    flex: 0 0 100%;
+                    max-width: 100%;
+                }
+
+                .rpt-filter-bar label {
+                    font-size: 0.72rem;
+                }
+
+                .rpt-filter-bar .form-select,
+                .rpt-filter-bar .form-control {
+                    font-size: 0.82rem;
+                    padding: 0.55rem 0.7rem;
+                }
+
+                /* Apply button full width */
+                .rpt-filter-bar .rpt-btn {
+                    width: 100%;
+                    justify-content: center;
+                    padding: 0.65rem 1rem;
+                    font-size: 0.82rem;
+                }
+
+                /* Export buttons row: stack full-width with tight spacing */
+                .rpt-export-actions {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 0.4rem !important;
+                }
+
+                .rpt-export-actions .rpt-btn {
+                    width: 100%;
+                    justify-content: center;
+                    padding: 0.6rem 1rem;
+                    font-size: 0.8rem;
+                    margin: 0 !important;
+                }
+
+                /* Stat grid: 2 per row on phones */
+                .rpt-stat-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.6rem;
+                }
+
+                .rpt-stat-card {
+                    padding: 0.85rem 0.75rem;
+                }
+
+                .rpt-stat-label {
+                    font-size: 0.68rem;
+                }
+
+                .rpt-stat-value {
+                    font-size: 1.25rem;
+                }
+
+                /* Panels: full width */
+                .rpt-panel {
+                    padding: 1rem !important;
+                    border-radius: 12px;
+                }
+
+                .rpt-panel-title {
+                    font-size: 0.85rem;
+                    padding-bottom: 0.6rem;
+                    margin-bottom: 0.85rem;
+                }
+
+                /* Grade distribution bars + gender comparison bars tighter */
+                .rpt-bar-row {
+                    gap: 0.5rem;
+                }
+
+                .rpt-bar-label {
+                    font-size: 0.75rem;
+                    min-width: 70px;
+                }
+
+                .rpt-bar-value {
+                    font-size: 0.72rem;
+                    min-width: 40px;
+                }
+
+                /* Subject averages bars: stack the H/L detail below the bar */
+                .rpt-panel .rpt-bar-row .rpt-bar-label[title] {
+                    max-width: 100%;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                /* The 4th child (entries · H / L detail) needs to stack under */
+                .rpt-panel .rpt-bar-row > div:last-child {
+                    width: 100% !important;
+                    text-align: left !important;
+                    padding-left: 0;
+                    font-size: 0.68rem !important;
+                    flex-basis: 100%;
+                    order: 10;
+                }
+            }
+
+            /* ─── Very small phones (≤ 420px): extra tightening ─────── */
+            @media (max-width: 420px) {
+                .rpt-hero-card {
+                    padding: 1rem 0.95rem;
+                }
+
+                .rpt-hero-info h4 {
+                    font-size: 1.02rem;
+                }
+
+                .rpt-hero-info p {
+                    font-size: 0.76rem;
+                }
+
+                /* Stat grid: single column on tiny phones */
+                .rpt-stat-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .rpt-panel {
+                    padding: 0.85rem !important;
+                }
+
+                .rpt-bar-label {
+                    font-size: 0.7rem;
+                    min-width: 60px;
+                }
+
+                .rpt-bar-value {
+                    font-size: 0.68rem;
+                    min-width: 34px;
+                }
+            }
+
+            /* ─── Mobile: add breathing room between stacked report panels ── */
+@media (max-width: 768px) {
+
+    /* The grid row wrapping Gender Comparison + Top 10 Performers */
+    .row.g-3 {
+        row-gap: 1rem !important;
+    }
+
+    /* Each column inside that row also gets a small bottom margin
+       as a fallback in case row-gap isn't supported */
+    .row.g-3 > [class*="col-"] {
+        margin-bottom: 0.25rem;
+    }
+
+    /* Space between the Top 10 panel and Subject Averages panel below */
+    .rpt-panel.mt-4 {
+        margin-top: 1.25rem !important;
+    }
+}
         </style>
 
         <div class="mb-3 no-print">
@@ -291,8 +519,8 @@ use App\Http\Controllers\Helper;
             });
         </script>
 
-        <div class="d-flex justify-content-end gap-2 mb-3 no-print">
-            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button> &nbsp;
+        <div class="rpt-export-actions d-flex justify-content-end gap-2 mb-3 no-print">
+            <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button>
             <a href="{{ route('examination.reports.grade-analysis.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
                 class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
         </div>

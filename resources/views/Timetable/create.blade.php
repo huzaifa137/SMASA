@@ -652,6 +652,7 @@
         @media (max-width: 900px) {
             .tt-root {
                 flex-direction: column;
+                margin-top: 1em;
             }
 
             .tt-left {
@@ -722,6 +723,143 @@
 
             .tt-btn {
                 justify-content: center;
+            }
+        }
+
+        /* ─── Mobile: stack topbar and left-panel content cleanly ──────── */
+        @media (max-width: 768px) {
+
+            /* Topbar: stack Back button and Step indicator */
+            .tt-topbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+                padding: 1rem 1.15rem;
+            }
+
+            .tt-back {
+                width: 100%;
+                justify-content: center;
+                padding: 0.7rem 1rem;
+                font-size: 0.82rem;
+            }
+
+            .tt-topbar-status {
+                justify-content: center;
+                width: 100%;
+                font-size: 0.72rem;
+            }
+
+            /* Left panel: stack title and steps vertically, tighter padding */
+            .tt-left {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1.75rem 1.25rem;
+                gap: 1.75rem;
+                min-height: auto;
+            }
+
+            .tt-logo-area {
+                margin-bottom: 1.5rem;
+            }
+
+            .tt-left-eyebrow {
+                margin-bottom: 0.75rem;
+            }
+
+            .tt-left-title {
+                font-size: 1.9rem;
+                line-height: 1.1;
+            }
+
+            .tt-left-title br {
+                display: none;
+            }
+
+            .tt-left-title em {
+                display: inline;
+            }
+
+            .tt-left-desc {
+                max-width: 100%;
+                font-size: 0.82rem;
+                margin-top: 1rem;
+            }
+
+            /* Step pills: full-width each, tighter */
+            .tt-left-steps {
+                flex-direction: column;
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .tt-pill {
+                padding: 0.65rem 0.85rem;
+            }
+
+            .tt-pill-num {
+                width: 1.6rem;
+                height: 1.6rem;
+                font-size: 0.68rem;
+            }
+
+            .tt-pill-label {
+                font-size: 0.76rem;
+            }
+
+            /* Form area tighter */
+            .tt-form-area {
+                padding: 1.25rem 1rem;
+            }
+
+            /* Hint box tighter */
+            .tt-hint {
+                padding: 0.85rem 1rem;
+                font-size: 0.76rem;
+            }
+
+            .tt-hint-icon {
+                width: 1.75rem;
+                height: 1.75rem;
+                font-size: 0.72rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): extra tightening ───────────── */
+        @media (max-width: 420px) {
+            .tt-left {
+                padding: 1.5rem 1rem;
+            }
+
+            .tt-left-title {
+                font-size: 1.5rem;
+            }
+
+            .tt-left-desc {
+                font-size: 0.78rem;
+            }
+
+            .tt-topbar {
+                padding: 0.85rem 1rem;
+            }
+
+            .tt-form-area {
+                padding: 1rem 0.85rem;
+            }
+
+            .tt-fgroup {
+                margin-bottom: 1.75rem;
+            }
+
+            .tt-float input,
+            .tt-float select {
+                font-size: 0.82rem;
+                padding: 0.9rem 0.85rem 0.55rem;
+            }
+
+            .tt-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.8rem;
             }
         }
     </style>

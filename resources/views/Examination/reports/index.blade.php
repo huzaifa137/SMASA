@@ -394,6 +394,184 @@ use App\Helpers\PermissionHelper;
                     grid-template-columns: 1fr;
                 }
             }
+
+            /* ─── Mobile: stack hero actions + exam card buttons ────────── */
+            @media (max-width: 768px) {
+
+                /* Hero card padding tighter */
+                .rpt-hero-card {
+                    padding: 1.15rem 1.15rem;
+                    border-radius: 16px;
+                    margin-bottom: 1.5rem;
+                }
+
+                /* Hero main stacks fully */
+                .rpt-hero-main {
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                    padding-bottom: 1rem;
+                }
+
+                /* Hero left: icon + text tighter */
+                .rpt-hero-left {
+                    gap: 0.9rem;
+                    align-items: flex-start;
+                }
+
+                .rpt-hero-icon-wrapper {
+                    width: 46px;
+                    height: 46px;
+                    font-size: 1.2rem;
+                    border-radius: 12px;
+                }
+
+                .rpt-hero-info h4 {
+                    font-size: 1.15rem;
+                }
+
+                .rpt-hero-info p {
+                    font-size: 0.82rem;
+                }
+
+                /* Action buttons: each full width, stacked */
+                .rpt-hero-main .d-flex.flex-wrap {
+                    flex-direction: column;
+                    width: 100%;
+                    gap: 0.5rem !important;
+                }
+
+                .rpt-hero-action {
+                    width: 100%;
+                    justify-content: center;
+                    padding: 0.7rem 1rem;
+                    font-size: 0.82rem;
+                }
+
+                /* Features grid: tighter */
+                .rpt-hero-features {
+                    grid-template-columns: 1fr;
+                    gap: 0.6rem;
+                }
+
+                .rpt-feature {
+                    padding: 0.55rem 0.65rem;
+                    gap: 0.7rem;
+                }
+
+                .rpt-feature-icon {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 0.9rem;
+                }
+
+                .rpt-feature-title {
+                    font-size: 0.78rem;
+                }
+
+                .rpt-feature-desc {
+                    font-size: 0.68rem;
+                }
+
+                /* Exam grid: single column, tighter gap */
+                .rpt-exam-grid {
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+
+                /* Exam card header: tighter */
+                .rpt-exam-card-header {
+                    padding: 1rem 1.1rem;
+                }
+
+                .rpt-exam-title {
+                    font-size: 0.92rem;
+                }
+
+                .rpt-exam-code {
+                    font-size: 0.66rem;
+                    padding: 0.18rem 0.45rem;
+                }
+
+                /* Status pill: smaller */
+                .status-pill {
+                    font-size: 0.62rem;
+                    padding: 0.22rem 0.6rem;
+                }
+
+                /* Exam stats: grid 2x2 for better alignment */
+                .rpt-exam-stats {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.6rem 0.75rem;
+                    padding: 0.9rem 1.1rem;
+                }
+
+                .rpt-exam-stat {
+                    font-size: 0.7rem;
+                }
+
+                .rpt-exam-stat strong {
+                    font-size: 1rem;
+                }
+
+                /* Exam action buttons: stack full-width */
+                .rpt-exam-actions {
+                    flex-direction: column;
+                    padding: 0 1.1rem 1rem;
+                    gap: 0.5rem;
+                }
+
+                .rpt-exam-actions a {
+                    flex: unset;
+                    min-width: 0;
+                    width: 100%;
+                    justify-content: center;
+                    padding: 0.6rem 1rem;
+                    font-size: 0.78rem;
+                }
+
+                .rpt-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+
+            /* ─── Very small phones (≤ 420px): additional tightening ─── */
+            @media (max-width: 420px) {
+                .rpt-hero-card {
+                    padding: 1rem 0.95rem;
+                }
+
+                .rpt-hero-info h4 {
+                    font-size: 1.05rem;
+                }
+
+                .rpt-hero-info p {
+                    font-size: 0.76rem;
+                }
+
+                .rpt-exam-title {
+                    font-size: 0.86rem;
+                }
+
+                .rpt-exam-stats {
+                    gap: 0.5rem 0.5rem;
+                    padding: 0.8rem 1rem;
+                }
+
+                .rpt-exam-stat strong {
+                    font-size: 0.95rem;
+                }
+
+                .rpt-exam-stat {
+                    font-size: 0.66rem;
+                }
+
+                .rpt-exam-actions a {
+                    padding: 0.55rem 0.9rem;
+                    font-size: 0.74rem;
+                }
+            }
         </style>
 
         @if (session('error'))

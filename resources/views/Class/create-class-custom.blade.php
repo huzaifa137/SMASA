@@ -70,6 +70,45 @@
                 border-radius: 8px;
                 margin-bottom: 20px;
             }
+
+            /* ─── Mobile: stack section title + control buttons ───────────────── */
+@media (max-width: 768px) {
+
+    /* Header row: stack title above buttons */
+    .subject-section-card > .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+        margin-bottom: 1rem !important;
+    }
+
+    /* Title takes full width, stays left-aligned */
+    .subject-section-card > .d-flex.justify-content-between.align-items-center > .section-title {
+        width: 100%;
+        margin-bottom: 0 !important;
+    }
+
+    /* Control buttons wrapper: full width, stack vertically */
+    .subject-section-card .subject-control-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        margin-bottom: 0;
+        padding: 10px;
+    }
+
+    /* Each button spans the full width */
+    .subject-section-card .subject-control-buttons > .btn {
+        width: 100%;
+        margin-right: 0 !important;
+        padding: 9px 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+}
         </style>
 
         <div class="row">
@@ -148,7 +187,7 @@
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h5 class="section-title mb-0">{{ $title }}</h5>
                                             <div class="subject-control-buttons">
-                                                <button type="button" class="btn btn-sm btn-check-all"
+                                                <button type="button" class="btn btn-sm btn-check-all text-white"
                                                     onclick="toggleBucket('{{ $bucketKey }}', true)">
                                                     <i class="fas fa-check-double"></i> Check All
                                                 </button>

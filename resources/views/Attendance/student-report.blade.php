@@ -179,7 +179,6 @@ use App\Http\Controllers\Helper;
         right: 1rem;
         top: 1rem;
         font-size: 2rem;
-        /* opacity: 0.1; */
     }
 
     .stat-value-premium {
@@ -440,6 +439,198 @@ table.premium-table thead th {
     color: #FFF !important;
     background: #5c5aee !important;
 }
+
+    /* ─── Mobile: stack hero, filter panel, summary grid ─────────────── */
+    @media (max-width: 768px) {
+
+        /* Outer container tighter */
+        .side-app[style*="padding: 1.5rem"] {
+            padding: 0.75rem !important;
+        }
+
+        /* Glass header stacks + tighter */
+        .glass-header {
+            padding: 1.25rem 1.15rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+
+        .glass-header h1 {
+            font-size: 1.35rem !important;
+            line-height: 1.25;
+        }
+
+        .glass-header p {
+            font-size: 0.9rem !important;
+            line-height: 1.3;
+        }
+
+        /* Header badges tighter */
+        .glass-header .date-range-badge {
+            font-size: 0.78rem !important;
+            padding: 0.35rem 0.8rem !important;
+            margin-left: 0 !important;
+        }
+
+        /* Header action buttons stack full-width */
+        .glass-header .d-flex.gap-3 {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            width: 100%;
+        }
+
+        .glass-header .d-flex.gap-3 > .btn,
+        .glass-header .d-flex.gap-3 > a.btn {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.7rem 1rem !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* Filter card tighter */
+        .filter-card {
+            padding: 1.15rem;
+            border-radius: 18px;
+            margin-bottom: 1.25rem;
+        }
+
+        .filter-title {
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Form controls + button full-width stacked */
+        .form-control-modern,
+        .form-select-modern {
+            font-size: 0.82rem;
+            padding: 0.55rem 0.9rem;
+        }
+
+        .btn-generate {
+            padding: 0.7rem 1rem;
+            font-size: 0.82rem;
+        }
+
+        /* Summary grid: 2 per row on phones, tighter */
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat-card-premium {
+            padding: 0.85rem 0.9rem;
+            border-radius: 16px;
+        }
+
+        .stat-icon {
+            font-size: 1.4rem;
+            right: 0.75rem;
+            top: 0.75rem;
+        }
+
+        .stat-value-premium {
+            font-size: 1.35rem;
+        }
+
+        .stat-label-premium {
+            font-size: 0.65rem;
+        }
+
+        /* Data card header stacks */
+        .card-header-modern {
+            padding: 1rem;
+            gap: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+        }
+
+        /* Search bar full width */
+        .search-input-sm {
+            width: 100%;
+        }
+
+        /* Tables: min-width for horizontal scroll */
+        .table-responsive-custom {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive-custom table.premium-table {
+            min-width: 720px;
+        }
+
+        .premium-table th {
+            padding: 0.7rem 0.75rem;
+            font-size: 0.65rem;
+        }
+
+        .premium-table td {
+            padding: 0.7rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Student cell tighter */
+        .student-cell {
+            gap: 0.5rem;
+        }
+
+        .student-avatar-sm {
+            width: 28px;
+            height: 28px;
+            font-size: 0.65rem;
+        }
+
+        /* Badge status tighter */
+        .badge-status {
+            padding: 0.2rem 0.6rem;
+            font-size: 0.65rem;
+        }
+
+        /* Rate bar tighter */
+        .rate-bar {
+            gap: 0.5rem;
+        }
+
+        .rate-percent {
+            font-size: 0.75rem;
+            min-width: 38px;
+        }
+
+        /* Empty state padding */
+        .empty-state-premium {
+            padding: 2.5rem 1.25rem;
+        }
+
+        .empty-state-premium i {
+            font-size: 2.5rem;
+        }
+
+        .empty-state-premium h5 {
+            font-size: 1rem;
+        }
+
+        .empty-state-premium p {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* ─── Very small phones (≤ 420px): 1 stat per row ───────────────── */
+    @media (max-width: 420px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .glass-header h1 {
+            font-size: 1.15rem !important;
+        }
+
+        .stat-value-premium {
+            font-size: 1.6rem;
+        }
+    }
 
 </style>
 @endsection

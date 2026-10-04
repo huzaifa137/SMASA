@@ -197,17 +197,17 @@
         border-collapse: collapse;
     }
 
-.lib-table th {
-    padding: .75rem 1rem;
-    text-align: left;
-    font-size: .75rem;
-    font-weight: 700;
-    color: #fff;
-    background: #2c29ca;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    border-bottom: none;
-}
+    .lib-table th {
+        padding: .75rem 1rem;
+        text-align: left;
+        font-size: .75rem;
+        font-weight: 700;
+        color: #fff;
+        background: #2c29ca;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: none;
+    }
 
     .lib-table td {
         padding: .85rem 1rem;
@@ -419,6 +419,145 @@
         height: 100%;
         border-radius: 999px;
         background: var(--lib-blue);
+    }
+
+    /* ─── Mobile: stack hero, filters, table actions, modal ──────────── */
+    @media (max-width: 768px) {
+
+        /* Outer wrapper padding */
+        .container-fluid, div[style*="padding:1.5rem;"] {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        /* Hero */
+        .lib-hero {
+            padding: 1.25rem 1.15rem;
+            border-radius: 16px;
+            margin-bottom: 1.15rem;
+        }
+
+        .lib-hero > div[style*="font-size:1.6rem"] {
+            font-size: 1.25rem !important;
+        }
+
+        .lib-hero > div[style*="font-size:.875rem"] {
+            font-size: .82rem !important;
+            margin-bottom: .75rem !important;
+        }
+
+        .stat-chip {
+            padding: .4rem .75rem;
+            font-size: .78rem;
+        }
+
+        /* Filter card */
+        .lib-card-body[style*="padding:1rem 1.5rem"] {
+            padding: .9rem 1rem !important;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: .55rem;
+        }
+
+        .filter-bar .form-control {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .filter-bar label[style*="display:flex"] {
+            width: 100%;
+            padding: .5rem 0;
+        }
+
+        .filter-bar .btn-lib {
+            width: 100%;
+            justify-content: center;
+            padding: .65rem 1rem;
+        }
+
+        /* Card header: stack title above action buttons */
+        .lib-card-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: .65rem;
+            padding: 1rem;
+        }
+
+        .lib-card-header > div[style*="display:flex"] {
+            flex-direction: column;
+            gap: .5rem !important;
+            width: 100%;
+        }
+
+        .lib-card-header > div[style*="display:flex"] .btn-lib {
+            width: 100%;
+            justify-content: center;
+            padding: .6rem 1rem;
+        }
+
+        /* Table horizontal scroll */
+        .lib-card > div[style*="overflow-x:auto"] {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .lib-table {
+            min-width: 760px;
+            font-size: .78rem;
+        }
+
+        .lib-table th {
+            padding: .55rem .65rem;
+            font-size: .66rem;
+        }
+
+        .lib-table td {
+            padding: .65rem .7rem;
+            font-size: .78rem;
+        }
+
+        /* Book cover thumbnails slightly smaller */
+        .book-cover-thumb,
+        .book-cover-placeholder {
+            width: 30px;
+            height: 40px;
+        }
+
+        /* Action buttons wrap */
+        .lib-table td > div[style*="display:flex"] {
+            gap: .3rem !important;
+        }
+
+        /* Modal full width */
+        .modal-box {
+            max-width: 100%;
+            margin: .75rem;
+            padding: 1.4rem;
+            border-radius: 16px;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+        }
+
+        /* Empty state smaller */
+        .empty-state {
+            padding: 2rem 1rem;
+        }
+
+        .empty-state i {
+            font-size: 2.2rem;
+        }
+
+        /* Pagination tighter */
+        .pagination .page-link {
+            min-width: 30px;
+            height: 30px;
+            font-size: .75rem;
+        }
     }
 </style>
 @endsection

@@ -355,6 +355,41 @@
             transition: width .3s;
         }
 
+        /* ─── Mobile: stack the two action buttons full-width ────────── */
+        @media (max-width: 768px) {
+
+            .payroll-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.6rem !important;
+                margin-bottom: 1.25rem !important;
+            }
+
+            .payroll-actions > div,
+            .payroll-actions > a {
+                width: 100%;
+            }
+
+            .payroll-actions .btn-fin {
+                width: 100%;
+                justify-content: center;
+                padding: 0.75rem 1rem;
+                font-size: 0.88rem;
+            }
+        }
+
+        /* ─── Very small phones: slightly tighter ────────────────────── */
+        @media (max-width: 420px) {
+            .payroll-actions {
+                gap: 0.5rem !important;
+            }
+
+            .payroll-actions .btn-fin {
+                padding: 0.7rem 0.9rem;
+                font-size: 0.82rem;
+            }
+        }
+
         /* Responsive */
         @media(max-width:900px) {
             .stat-grid {
@@ -435,7 +470,7 @@
     </div>
 
     {{-- Actions --}}
-    <div
+    <div class="payroll-actions"
         style="margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
         <div>
             <a href="{{ route('finance.salary-structures') }}" class="btn-fin btn-outline-fin">

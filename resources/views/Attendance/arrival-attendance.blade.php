@@ -553,10 +553,199 @@ use App\Helpers\PermissionHelper;
         }
 
         .method-tag i {
-    margin-right: 0.25rem;
-    font-size: 0.7rem;
-}
+            margin-right: 0.25rem;
+            font-size: 0.7rem;
+        }
 
+        /* ─── Mobile: stack hero, tabs, filter bar, table actions ───────── */
+        @media (max-width: 768px) {
+
+            /* Container spacing */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container-fluid.mt-5 {
+                margin-top: 1rem !important;
+            }
+
+            /* Hero: stack title above action buttons */
+            .arr-hero {
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: .75rem;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-sub {
+                font-size: .82rem;
+            }
+
+            /* Hero right-side actions stack full-width */
+            .arr-hero > div:last-child {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: .5rem !important;
+            }
+
+            .arr-hero .hero-badge,
+            .arr-hero .btn {
+                width: 100%;
+                justify-content: center;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            /* Stats grid: 2 per row on mobile */
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .5rem;
+            }
+
+            .stat-box {
+                padding: .8rem .5rem;
+            }
+
+            .stat-box .sv {
+                font-size: 1.5rem;
+            }
+
+            .stat-box .sl {
+                font-size: .68rem;
+                margin-top: .2rem;
+            }
+
+            /* Panel tighter */
+            .panel {
+                padding: 1.1rem;
+                border-radius: 14px;
+            }
+
+            .panel-title {
+                font-size: .9rem;
+                margin-bottom: 1rem;
+            }
+
+            /* Type tabs full-width side-by-side */
+            .type-tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: .5rem;
+            }
+
+            .type-tab {
+                padding: .55rem .75rem;
+                font-size: .82rem;
+                text-align: center;
+                justify-content: center;
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+            }
+
+            /* Filter bar stacks full-width */
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .5rem;
+            }
+
+            .filter-bar select,
+            .filter-bar input[type=date] {
+                width: 100%;
+            }
+
+            .filter-bar .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Trend row: smaller bars + tighter labels */
+            .panel > div[style*="gap:1.5rem"] {
+                gap: .5rem !important;
+            }
+
+            .trend-wrap {
+                height: 32px;
+            }
+
+            .trend-label {
+                font-size: .6rem;
+            }
+
+            /* Make the table horizontally scrollable cleanly */
+            .att-table-wrap {
+                border-radius: 10px;
+            }
+
+            table.att-table {
+                min-width: 700px;
+                font-size: .78rem;
+            }
+
+            table.att-table thead th {
+                padding: .55rem .7rem;
+                font-size: .66rem;
+            }
+
+            table.att-table tbody td {
+                padding: .6rem .7rem;
+            }
+
+            /* Empty state smaller padding */
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .empty-state i {
+                font-size: 2.2rem;
+            }
+
+            /* Modal: full-width on phones */
+            .modal-box {
+                max-width: 100%;
+                margin: .75rem;
+                border-radius: 14px;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding-left: 1.1rem;
+                padding-right: 1.1rem;
+            }
+
+            /* Modal footer: stack buttons full-width */
+            .modal-footer {
+                flex-direction: column-reverse;
+                gap: .5rem;
+            }
+
+            .modal-footer .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Time notice wraps text nicely */
+            .time-notice {
+                font-size: .78rem;
+                padding: .55rem .75rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): 1 stat per row ──────────────── */
+        @media (max-width: 420px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endsection
 

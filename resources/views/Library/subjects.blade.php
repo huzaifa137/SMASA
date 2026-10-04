@@ -651,7 +651,7 @@
 <div style="padding:1.5rem;">
 
     <div class="lib-hero mb-4">
-        <div style="font-size:1.6rem;font-weight:800;margin:0 0 .25rem;"><i class="fas fa-book-open" style="color:var(--lib-blue);margin-right:.5rem;"></i>Subjects</div>
+        <div style="font-size:1.6rem;font-weight:800;margin:0 0 .25rem;"><i class="fas fa-book-open" style="color:var(--lib-white);margin-right:.5rem;"></i>Subjects</div>
         <div style="font-size:.875rem;opacity:.7;">Manage subject areas for your library collection</div>
     </div>
 

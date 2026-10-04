@@ -339,6 +339,182 @@
             color: var(--muted);
             font-size: .84rem;
         }
+
+        /* ─── Mobile: stack topbar, class list, panel actions ─────────── */
+        @media (max-width: 768px) {
+
+            /* Topbar padding tighter */
+            .ags-topbar {
+                padding: 1.25rem 1.15rem;
+                border-radius: 14px;
+                margin-bottom: 1rem;
+            }
+
+            /* Topbar inner stacks vertically */
+            .ags-topbar-inner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .85rem;
+            }
+
+            .ags-topbar-left {
+                align-items: flex-start;
+                gap: .75rem;
+            }
+
+            /* Topbar icon smaller */
+            .ags-topbar-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
+                margin-right: 0;
+                border-radius: 12px;
+            }
+
+            /* Title/subtitle tighter */
+            .ags-topbar-title {
+                font-size: 1.15rem;
+            }
+
+            .ags-topbar-subtitle {
+                font-size: .78rem;
+                line-height: 1.45;
+            }
+
+            /* Back button full width, centered */
+            .ags-back {
+                width: 100%;
+                justify-content: center;
+                padding: .65rem 1rem;
+                font-size: .8rem;
+            }
+
+            /* Class list panel: shorter scroll area on mobile */
+            .ags-class-list {
+                max-height: 42vh;
+                padding: .4rem;
+            }
+
+            /* Class items tighter */
+            .ags-class-item {
+                padding: .6rem .7rem;
+                font-size: .8rem;
+            }
+
+            .ags-class-item .ags-stream-name {
+                font-size: .7rem;
+            }
+
+            /* Card headers tighter */
+            .ags-card-header {
+                padding: .85rem 1rem .7rem;
+                font-size: .78rem;
+            }
+
+            /* Panel body tighter */
+            .ags-panel-body {
+                padding: 1rem 1rem 1.2rem;
+            }
+
+            /* Info banner tighter */
+            .ags-info-banner {
+                font-size: .74rem;
+                padding: .65rem .8rem;
+            }
+
+            /* Subject rows tighter */
+            .ags-subject-row {
+                padding: .65rem .2rem;
+            }
+
+            .ags-subject-name {
+                font-size: .82rem;
+                /* allow long names to wrap instead of pushing the toggle off */
+                word-break: break-word;
+                padding-right: .5rem;
+            }
+
+            /* Switch stays the same size, but we ensure it's not squeezed */
+            .ags-switch {
+                width: 42px;
+                height: 24px;
+                flex-shrink: 0;
+            }
+
+            /* Summary chips: wrap nicely, tighter padding */
+            .ags-summary-strip {
+                gap: .45rem;
+                font-size: .72rem;
+            }
+
+            .ags-summary-chip {
+                padding: .3rem .65rem;
+                font-size: .7rem;
+            }
+
+            /* Save button: full width */
+            .ags-save-row {
+                justify-content: stretch;
+            }
+
+            .btn-ags-save {
+                width: 100%;
+                justify-content: center;
+                padding: .75rem 1rem;
+                font-size: .82rem;
+            }
+
+            /* Loading / prompt states tighter */
+            .ags-loading, .ags-select-prompt {
+                padding: 2.25rem 1rem;
+                font-size: .8rem;
+            }
+
+            /* Empty state tighter */
+            .ags-empty-state {
+                padding: 2.25rem 1.25rem;
+                font-size: .8rem;
+            }
+
+            .ags-empty-state i {
+                font-size: 1.8rem;
+                margin-bottom: .6rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): additional tightening ─────── */
+        @media (max-width: 420px) {
+            .ags-topbar {
+                padding: 1rem 1rem;
+            }
+
+            .ags-topbar-title {
+                font-size: 1.05rem;
+            }
+
+            .ags-topbar-subtitle {
+                font-size: .74rem;
+            }
+
+            .ags-topbar-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .ags-class-list {
+                max-height: 36vh;
+            }
+
+            .ags-subject-name {
+                font-size: .78rem;
+            }
+
+            .ags-summary-chip {
+                font-size: .66rem;
+                padding: .28rem .6rem;
+            }
+        }
     </style>
 @endsection
 

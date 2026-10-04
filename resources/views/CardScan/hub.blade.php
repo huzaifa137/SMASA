@@ -190,6 +190,7 @@
             font-size: .9rem;
             color: var(--t1);
             background: var(--bg);
+            min-width: 0;
         }
 
         .input-row input:focus {
@@ -552,6 +553,192 @@
 
         .stat-chip i {
             font-size: .75rem
+        }
+
+        /* ─── Mobile: stack hero, category grid, manual entry, chips ───── */
+        @media (max-width: 768px) {
+
+            /* Container: tighter padding, no huge top margin */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container-fluid.mt-5 {
+                margin-top: 1rem !important;
+            }
+
+            /* Hero: stack title + buttons */
+            .scan-hero {
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: .75rem;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-sub {
+                font-size: .82rem;
+            }
+
+            /* Hero action buttons full width, stacked */
+            .scan-hero > div:last-child {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: .5rem !important;
+            }
+
+            .scan-hero .hero-badge {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+                display: inline-flex;
+            }
+
+            .scan-hero .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Stat chips: wrap gracefully, full-width when alone */
+            .stat-chips {
+                gap: .4rem;
+            }
+
+            .stat-chip {
+                font-size: .74rem;
+                padding: .3rem .6rem;
+            }
+
+            /* Panels tighter padding */
+            .panel {
+                padding: 1.1rem;
+                border-radius: 14px;
+            }
+
+            .panel-title {
+                font-size: .9rem;
+                margin-bottom: 1rem;
+            }
+
+            /* Category grid stays 2-up on most phones, 1-up on very small */
+            .cat-grid {
+                gap: .55rem;
+            }
+
+            .cat-btn {
+                padding: .7rem;
+            }
+
+            .cat-btn .cat-icon {
+                width: 32px;
+                height: 32px;
+                font-size: .9rem;
+                margin-bottom: .4rem;
+            }
+
+            .cat-btn .cat-label {
+                font-size: .78rem;
+            }
+
+            .cat-btn .cat-desc {
+                font-size: .66rem;
+                line-height: 1.25;
+            }
+
+            /* Scanner wrap: shorter min height so it doesn't dominate */
+            .scanner-wrap {
+                min-height: 180px;
+            }
+
+            /* Scanner Start/Stop buttons stack full-width */
+            .panel > div[style*="justify-content:center"] {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .panel > div[style*="justify-content:center"] .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Manual entry: input + button full-width stacked */
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .5rem;
+            }
+
+            .input-row input {
+                width: 100%;
+                font-size: .85rem;
+            }
+
+            .input-row .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Result person row: stack avatar above name if cramped */
+            .person-name {
+                font-size: .95rem;
+            }
+
+            .person-meta {
+                font-size: .76rem;
+            }
+
+            /* Info grid: single column on phones so long values don't wrap awkwardly */
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Borrow rows stack their contents */
+            .borrow-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .35rem;
+            }
+
+            /* Book item: same treatment */
+            .book-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .25rem;
+            }
+
+            /* Result card header wraps text */
+            .result-header {
+                font-size: .82rem;
+                padding: .7rem .85rem;
+            }
+
+            .result-body {
+                padding: 1rem;
+            }
+
+            /* Recent scan item: time drops below on narrow */
+            .scan-item {
+                flex-wrap: wrap;
+            }
+
+            .scan-item .si-time {
+                width: 100%;
+                text-align: right;
+                margin-top: .15rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 480px): 1-up categories ───────────── */
+        @media (max-width: 480px) {
+            .cat-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 @endsection

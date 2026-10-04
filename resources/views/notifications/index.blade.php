@@ -415,9 +415,172 @@
         }
 
         .lib-table td.actions-cell {
-    white-space: nowrap;
-}
+            white-space: nowrap;
+        }
 
+        /* ─── Mobile: stack hero, stat cards, table ─────────────────────── */
+        @media (max-width: 768px) {
+
+            /* Container padding tighter */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            /* Hero stacks its two children */
+            .lib-hero-sm {
+                padding: 1.25rem 1.15rem;
+                border-radius: 18px;
+                margin-top: 1.25rem;
+                margin-bottom: 1.25rem;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: .85rem;
+            }
+
+            .lib-hero-sm h4 {
+                font-size: 1.1rem;
+            }
+
+            .lib-hero-sm small {
+                font-size: .78rem;
+                display: block;
+                margin-top: .2rem;
+            }
+
+            /* Send Notification button full width */
+            .lib-hero-sm .btn-primary-lib {
+                width: 100%;
+                justify-content: center;
+                padding: .7rem 1rem;
+                font-size: .85rem;
+            }
+
+            /* Stat grid: 2 per row on phones ≥ 541px, 1 per row below (already
+               handled by your existing 900px → 2col and 540px → 1col rules) */
+
+            /* Stat cards tighter */
+            .stat-card {
+                padding: 1.1rem 1.15rem;
+            }
+
+            .stat-card .icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                margin-bottom: .75rem;
+            }
+
+            .stat-card .val {
+                font-size: 1.5rem;
+            }
+
+            .stat-card .label {
+                font-size: .75rem;
+            }
+
+            /* Card header padding tighter */
+            .lib-card-header {
+                padding: 1rem 1.15rem;
+            }
+
+            .lib-card-header h6 {
+                font-size: .88rem;
+            }
+
+            /* Table: horizontal scroll */
+            .lib-card-body > div[style*="overflow-x"] {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .lib-table {
+                min-width: 720px;
+            }
+
+            .lib-table th,
+            .lib-table td {
+                padding: .7rem .75rem;
+                font-size: .8rem;
+            }
+
+            .lib-table th {
+                font-size: .68rem;
+            }
+
+            /* Notification title/body: avoid ellipsis cutting off too much */
+            .lib-table td .fw-semibold {
+                font-size: .85rem;
+            }
+
+            .lib-table td .text-muted.small {
+                font-size: .72rem;
+            }
+
+            /* Action buttons in table */
+            .lib-table td.actions-cell,
+            .lib-table td:last-child {
+                padding-right: .75rem;
+            }
+
+            .btn-sm-lib {
+                padding: .4rem .7rem;
+                font-size: .74rem;
+            }
+
+            /* Pagination footer */
+            .lib-card-footer {
+                padding: .75rem 1rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): extra tightening ─────────── */
+        @media (max-width: 420px) {
+            .lib-hero-sm {
+                padding: 1rem 1rem;
+                border-radius: 16px;
+            }
+
+            .lib-hero-sm h4 {
+                font-size: 1rem;
+            }
+
+            .lib-hero-sm small {
+                font-size: .72rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-card .val {
+                font-size: 1.35rem;
+            }
+
+            .stat-card .label {
+                font-size: .72rem;
+            }
+
+            .lib-table th,
+            .lib-table td {
+                padding: .6rem .65rem;
+                font-size: .76rem;
+            }
+
+            .lib-table td .fw-semibold {
+                font-size: .8rem;
+            }
+
+            .badge-lib {
+                font-size: .68rem;
+                padding: .2rem .55rem;
+            }
+
+            .btn-sm-lib {
+                padding: .35rem .6rem;
+                font-size: .7rem;
+            }
+        }
     </style>
 @endsection
 
@@ -436,13 +599,6 @@
             </a>
             @endif
         </div>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
 
         {{-- Stats Cards --}}
         <div class="stat-grid">
@@ -579,7 +735,7 @@
                 text: 'This will remove the notification and all its delivery records.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
+                confirmColor: '#dc3545',
                 confirmButtonText: 'Yes, delete it',
             }).then(result => {
                 if (result.isConfirmed) {

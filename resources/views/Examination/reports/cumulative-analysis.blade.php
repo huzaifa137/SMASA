@@ -136,6 +136,219 @@ use App\Http\Controllers\Helper;
             color: #8b8fa3;
             margin-left: 0.25rem;
         }
+
+        /* ─── Mobile: stack hero, filters, export buttons, tables ─────── */
+        @media (max-width: 768px) {
+
+            /* Hero card tighter */
+            .rpt-hero-card {
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
+                margin-bottom: 1.25rem;
+            }
+
+            /* Hero main stacks */
+            .rpt-hero-main {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+
+            .rpt-hero-left {
+                align-items: flex-start;
+                gap: 0.85rem;
+            }
+
+            .rpt-hero-icon-wrapper {
+                width: 46px;
+                height: 46px;
+                font-size: 1.2rem;
+                border-radius: 12px;
+            }
+
+            .rpt-hero-info h4 {
+                font-size: 1.15rem;
+            }
+
+            .rpt-hero-info p {
+                font-size: 0.82rem;
+                line-height: 1.45;
+            }
+
+            /* Back button full width */
+            .rpt-hero-action {
+                width: 100%;
+                justify-content: center;
+                padding: 0.7rem 1rem;
+                font-size: 0.82rem;
+            }
+
+            /* Filter bar tighter padding */
+            .rpt-filter-bar {
+                padding: 1rem !important;
+                border-radius: 12px;
+            }
+
+            .rpt-filter-bar label {
+                font-size: 0.72rem;
+            }
+
+            /* Filter grid columns stack into 1 per row on mobile */
+            .rpt-filter-bar .row > [class*="col-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .rpt-filter-bar .form-select,
+            .rpt-filter-bar .form-control {
+                font-size: 0.82rem;
+                padding: 0.55rem 0.7rem;
+            }
+
+            /* Term group labels tighter */
+            .cml-term-group-label {
+                font-size: 0.65rem;
+            }
+
+            /* Exam chips: 2 per row on mobile */
+            .cml-exam-picker {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .cml-exam-chip {
+                font-size: 0.72rem;
+                padding: 0.45rem 0.55rem;
+                gap: 0.4rem;
+            }
+
+            /* Refresh button full-width */
+            .rpt-filter-bar .rpt-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.65rem 1rem;
+                font-size: 0.82rem;
+            }
+
+            /* Export buttons: stack full-width */
+            .no-print.d-flex.justify-content-end {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.5rem !important;
+            }
+
+            .no-print.d-flex.justify-content-end .rpt-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.65rem 1rem;
+                font-size: 0.8rem;
+                margin-left: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Stat grid: 2 per row on mobile */
+            .rpt-stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+
+            .rpt-stat-card {
+                padding: 0.85rem 0.75rem;
+            }
+
+            .rpt-stat-label {
+                font-size: 0.68rem;
+            }
+
+            .rpt-stat-value {
+                font-size: 1.25rem;
+            }
+
+            .rpt-stat-sub {
+                font-size: 0.65rem;
+            }
+
+            /* Panel tighter */
+            .rpt-panel {
+                padding: 1rem !important;
+                border-radius: 12px;
+            }
+
+            .rpt-panel-title {
+                font-size: 0.85rem;
+                padding-bottom: 0.6rem;
+                margin-bottom: 0.85rem;
+            }
+
+            /* Tables: horizontal scroll */
+            .rpt-table-wrap {
+                -webkit-overflow-scrolling: touch;
+                border-radius: 10px;
+            }
+
+            .rpt-table-wrap .rpt-table {
+                min-width: 640px;
+            }
+
+            .rpt-table th,
+            .rpt-table td {
+                padding: 0.55rem 0.65rem;
+                font-size: 0.78rem;
+            }
+
+            .rpt-table th {
+                font-size: 0.65rem;
+            }
+
+            /* Name column keeps its place */
+            .rpt-table .rpt-name-col {
+                min-width: 140px;
+            }
+
+            /* Subject deep-dive select full-width */
+            .rpt-panel form select[name="subject_key"] {
+                max-width: 100% !important;
+                width: 100%;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): extra tightening ───────────── */
+        @media (max-width: 420px) {
+            .rpt-hero-card {
+                padding: 1rem 0.95rem;
+            }
+
+            .rpt-hero-info h4 {
+                font-size: 1.02rem;
+            }
+
+            .rpt-hero-info p {
+                font-size: 0.76rem;
+            }
+
+            /* Exam chips: 1 per row on very small phones */
+            .cml-exam-picker {
+                grid-template-columns: 1fr;
+            }
+
+            /* Stat grid: single column on very small phones */
+            .rpt-stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .rpt-panel {
+                padding: 0.85rem !important;
+            }
+
+            .rpt-table th,
+            .rpt-table td {
+                padding: 0.5rem 0.55rem;
+                font-size: 0.74rem;
+            }
+        }
     </style>
 @endsection
 

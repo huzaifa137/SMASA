@@ -638,6 +638,217 @@
             padding: 1.25rem;
         }
     }
+
+    /* ─── Mobile: stack header, stats, toolbar, cards ────────────────── */
+    @media (max-width: 768px) {
+
+        /* Outer container tighter */
+        .side-app[style*="padding: 1.5rem"] {
+            padding: 0.75rem !important;
+        }
+
+        /* Glass header stacks */
+        .glass-header {
+            padding: 1.25rem 1.15rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+
+        .glass-header h1 {
+            font-size: 1.35rem !important;
+            line-height: 1.25;
+        }
+
+        .glass-header p {
+            font-size: 0.85rem !important;
+        }
+
+        .glass-header .row > [class*="col-"] {
+            text-align: left !important;
+        }
+
+        /* Header badges: shrink + wrap nicely */
+        .glass-header .subject-badge {
+            font-size: 0.78rem !important;
+            padding: 0.35rem 0.75rem !important;
+        }
+
+        /* Header buttons stack full-width */
+        .header-buttons {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            width: 100%;
+            margin-top: 0.75rem;
+        }
+
+        .header-buttons .date-picker-glass,
+        .header-buttons .btn-glass {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.7rem 1rem !important;
+            font-size: 0.85rem !important;
+            text-align: center;
+        }
+
+        /* Stats: 2 per row on small phones */
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat-card {
+            padding: 0.85rem 0.5rem;
+            border-radius: 16px;
+        }
+
+        .stat-number {
+            font-size: 1.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+        }
+
+        /* Toolbar stacks vertically */
+        .toolbar-modern {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.65rem;
+            padding: 0.9rem;
+        }
+
+        .search-wrapper {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .filter-select {
+            width: 100%;
+            min-width: 0;
+        }
+
+        /* Bulk actions: full-width, each button equal */
+        .bulk-actions {
+            width: 100%;
+            flex-direction: column;
+            padding: 0.5rem;
+            border-radius: 20px;
+            gap: 0.4rem;
+        }
+
+        .bulk-label {
+            text-align: center;
+            padding: 0.25rem 0;
+            width: 100%;
+        }
+
+        .btn-bulk {
+            width: 100%;
+            justify-content: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        /* Student cards grid: full width, tighter */
+        .students-grid {
+            grid-template-columns: 1fr;
+            gap: 0.9rem;
+            margin-bottom: 8rem;
+        }
+
+        .card-content {
+            padding: 1rem;
+        }
+
+        /* Status pills: tighter gap and font */
+        .status-pills {
+            gap: 0.35rem;
+        }
+
+        .status-pill {
+            padding: 0.55rem 0.5rem;
+            font-size: 0.68rem;
+            gap: 0.3rem;
+            border-radius: 12px;
+        }
+
+        /* Time inputs stay side-by-side but tighter */
+        .time-inputs {
+            gap: 0.5rem;
+        }
+
+        /* Save-all bar at bottom (already styled fixed but tighter) */
+        .save-actions {
+            padding: 0.9rem 1rem !important;
+            flex-direction: column-reverse;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .save-status-modern {
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            font-size: 0.78rem;
+            padding: 0.5rem 0.9rem;
+        }
+
+        .btn-save-modern {
+            width: 100%;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+        }
+
+        .save-actions-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        /* The "Save Attendance" button inside each card */
+        .save-actions-stats .btn-save-modern {
+            font-size: 0.8rem;
+            padding: 0.7rem 1rem;
+        }
+
+        /* Toast on mobile fits screen */
+        .toast-notification {
+            top: 60px;
+            right: 10px;
+            left: 10px;
+            font-size: 0.78rem;
+            text-align: center;
+        }
+    }
+
+    /* ─── Very small phones (≤ 420px): stack stats one per row ─────── */
+    @media (max-width: 420px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .glass-header h1 {
+            font-size: 1.15rem !important;
+        }
+
+        /* Student avatar smaller */
+        .student-avatar {
+            width: 46px;
+            height: 46px;
+            font-size: 1rem;
+        }
+
+        .student-name {
+            font-size: 0.92rem;
+        }
+    }
 </style>
 
 <style>

@@ -470,6 +470,43 @@ use App\Helpers\PermissionHelper;
                 min-width: 850px;
             }
         }
+
+        /* ─── Mobile: stack export-bar buttons full-width ────────────── */
+        @media (max-width: 768px) {
+
+            .export-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .export-bar .btn-fin {
+                width: 100%;
+                justify-content: center;
+                padding: 0.65rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            /* Summary grid: stack the 3 metrics vertically on mobile */
+            .collection-summary-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+                text-align: left !important;
+            }
+
+            .collection-summary-grid > div {
+                padding: 0.65rem 0.9rem;
+                background: #fafbff;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .export-bar .btn-fin {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 @endsection
 
@@ -746,7 +783,7 @@ use App\Helpers\PermissionHelper;
                     $totalPaidAll = $totalBilledAll - $totalOutstanding;
                     $collectionRate = $totalBilledAll > 0 ? round(($totalPaidAll / $totalBilledAll) * 100) : 0;
                 @endphp
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;">
+                <div class="collection-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;">
                     <div>
                         <div style="font-size:.75rem;color:var(--text-3);">Total Billed (Selected)</div>
                         <div style="font-size:1.2rem;font-weight:700;">UGX {{ number_format($totalBilledAll, 0) }}</div>
@@ -767,7 +804,6 @@ use App\Helpers\PermissionHelper;
                     </div>
                 </div>
             </div>
-        </div>
         </div>
 
     @endif

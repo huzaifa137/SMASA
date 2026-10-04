@@ -379,6 +379,29 @@
         #specificStudentsBox {
             display: none;
         }
+
+        /* ── Hero mobile stack (button spans full width) ── */
+@media (max-width: 576px) {
+    .lib-hero-sm {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.25rem 1.25rem;
+        border-radius: 18px;
+        margin-top: 1rem;
+        gap: .9rem;
+    }
+
+    .lib-hero-sm > div {
+        width: 100%;
+    }
+
+    .lib-hero-sm .btn-lib {
+        width: 100%;
+        justify-content: center;
+        padding: .7rem 1rem;
+        font-size: .9rem;
+    }
+}
     </style>
 @endsection
 

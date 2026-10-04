@@ -398,6 +398,138 @@
         border-radius: 50%;
         flex-shrink: 0;
     }
+
+    /* ─── Mobile: stack hero, chart height, table scroll, quick actions ── */
+    @media (max-width: 768px) {
+
+        /* Hero */
+        .lib-hero {
+            padding: 1.25rem 1.15rem;
+            border-radius: 16px;
+            margin-bottom: 1.25rem;
+        }
+
+        .lib-hero h1 {
+            font-size: 1.25rem;
+            gap: .5rem;
+        }
+
+        .lib-hero p {
+            font-size: .82rem;
+        }
+
+        .hero-badge {
+            font-size: .7rem;
+            padding: .2rem .6rem;
+        }
+
+        /* Stat grid: 2-per-row on phones (existing 900px breakpoint handles it) */
+
+        .stat-card {
+            padding: 1.1rem 1.15rem;
+            border-radius: 12px;
+        }
+
+        .stat-card .icon {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+            margin-bottom: .75rem;
+        }
+
+        .stat-card .val {
+            font-size: 1.5rem;
+        }
+
+        .stat-card .label {
+            font-size: .72rem;
+        }
+
+        .stat-card .sub {
+            font-size: .68rem;
+        }
+
+        /* Card padding tighter */
+        .lib-card-body {
+            padding: 1rem 1.1rem;
+        }
+
+        .lib-card-header {
+            padding: .9rem 1.1rem;
+        }
+
+        .lib-card-header h3 {
+            font-size: .88rem;
+        }
+
+        /* Quick actions: each button full width */
+        .lib-card-body[style*="flex-wrap:wrap"] {
+            flex-direction: column;
+            gap: .5rem !important;
+        }
+
+        .lib-card-body[style*="flex-wrap:wrap"] .btn-lib {
+            width: 100%;
+            justify-content: center;
+            padding: .7rem 1rem;
+        }
+
+        /* Chart shorter on phone so it doesn't dominate */
+        .chart-wrap {
+            height: 180px;
+        }
+
+        /* Category pill: smaller text */
+        .cat-pill {
+            padding: .5rem .7rem;
+            font-size: .78rem;
+        }
+
+        /* Popular books rank row: tighter gap */
+        .book-rank {
+            gap: .7rem;
+            padding: .65rem 0;
+        }
+
+        .rank-num {
+            width: 26px;
+            height: 26px;
+            font-size: .78rem;
+        }
+
+        .rank-info .title {
+            font-size: .82rem;
+        }
+
+        .rank-info .meta {
+            font-size: .7rem;
+        }
+
+        .rank-count {
+            font-size: .8rem;
+        }
+
+        /* Recent borrowings table: horizontal scroll */
+        .lib-card > div[style*="overflow-x:auto"] {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .lib-table {
+            min-width: 520px;
+            font-size: .8rem;
+        }
+
+        .lib-table th {
+            padding: .55rem .7rem;
+            font-size: .68rem;
+        }
+
+        .lib-table td {
+            padding: .65rem .7rem;
+            font-size: .8rem;
+        }
+    }
 </style>
 @endsection
 

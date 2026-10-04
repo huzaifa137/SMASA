@@ -309,6 +309,142 @@
             display: block;
             margin-bottom: .75rem
         }
+
+        /* ─── Mobile: stack hero, filter bar, table ───────────────────── */
+        @media (max-width: 768px) {
+
+            /* Container spacing */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container-fluid.mt-5 {
+                margin-top: 1rem !important;
+            }
+
+            /* Hero stacks vertically */
+            .rep-hero {
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: .75rem;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-sub {
+                font-size: .82rem;
+            }
+
+            /* Hero right-side badge full width */
+            .rep-hero > div:last-child {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: .5rem !important;
+            }
+
+            .rep-hero .hero-badge {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+                display: inline-flex;
+            }
+
+            /* Panel tighter */
+            .panel {
+                padding: 1.1rem;
+                border-radius: 14px;
+            }
+
+            .panel-title {
+                font-size: .9rem;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+
+            /* Panel title "X records" line drops below on narrow */
+            .panel-title > span[style*="margin-left:auto"] {
+                margin-left: 0 !important;
+                width: 100%;
+                display: block;
+                margin-top: .35rem;
+            }
+
+            /* Filter bar stacks full-width */
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .5rem;
+            }
+
+            .filter-bar label {
+                margin-bottom: -.15rem;
+            }
+
+            .filter-bar select,
+            .filter-bar input[type=date] {
+                width: 100%;
+            }
+
+            .filter-bar .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Table horizontal scroll */
+            .rep-table-wrap {
+                border-radius: 10px;
+            }
+
+            table.rep-table {
+                min-width: 700px;
+                font-size: .78rem;
+            }
+
+            table.rep-table thead th {
+                padding: .55rem .7rem;
+                font-size: .66rem;
+            }
+
+            table.rep-table tbody td {
+                padding: .6rem .7rem;
+            }
+
+            /* Rate bar: smaller min width so it doesn't push columns wider */
+            .rate-bar-bg {
+                min-width: 40px;
+            }
+
+            .rate-val {
+                font-size: .76rem;
+                min-width: 34px;
+            }
+
+            /* Summary footer chips: stack full width */
+            .panel > div[style*="margin-top:1.25rem"] {
+                flex-direction: column;
+                gap: .5rem !important;
+            }
+
+            .panel > div[style*="margin-top:1.25rem"] > div {
+                width: 100%;
+                font-size: .82rem !important;
+            }
+
+            /* Empty state smaller */
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .empty-state i {
+                font-size: 2.2rem;
+            }
+        }
     </style>
 @endsection
 

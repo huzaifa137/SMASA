@@ -222,16 +222,16 @@ use App\Helpers\PermissionHelper;
             border-collapse: collapse;
         }
 
-th {
-    background: #2c29ca;
-    color: #ffffff;
-    font-size: .73rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    padding: .7rem 1rem;
-    text-align: left;
-}
+        th {
+            background: #2c29ca;
+            color: #ffffff;
+            font-size: .73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            padding: .7rem 1rem;
+            text-align: left;
+        }
 
         td {
             padding: .75rem 1rem;
@@ -471,21 +471,7 @@ th {
             display: block;
         }
 
-        @media(max-width:640px) {
-            .fin-hero {
-                padding: 1.5rem;
-            }
-
-            .hero-title {
-                font-size: 1.25rem;
-            }
-
-            .stat-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-          /* ── Pagination ── */
+        /* ── Pagination ── */
         .pagination {
             display: flex;
             gap: .25rem;
@@ -527,6 +513,180 @@ th {
             pointer-events: none;
         }
 
+        /* ─── Mobile: stack hero actions, filter, table scroll ────────── */
+        @media (max-width: 768px) {
+
+            /* Container spacing */
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container-fluid.mt-5 {
+                margin-top: 1rem !important;
+            }
+
+            /* Hero: smaller padding + stack actions */
+            .fin-hero {
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-sub {
+                font-size: .82rem;
+            }
+
+            /* Hero action buttons each full width stacked */
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .5rem;
+                margin-top: 1rem;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+                padding: .6rem 1rem;
+            }
+
+            /* Stats: 2 per row on mobile */
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .6rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .stat-card {
+                padding: .9rem 1rem;
+                border-radius: 12px;
+            }
+
+            .stat-val {
+                font-size: 1.35rem;
+            }
+
+            .stat-label {
+                font-size: .66rem;
+            }
+
+            .stat-icon {
+                font-size: 1.1rem;
+            }
+
+            /* Filter bar: stack full-width */
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: .6rem;
+                padding: 1rem;
+            }
+
+            .filter-bar > div {
+                width: 100%;
+            }
+
+            .filter-bar select,
+            .filter-bar input {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .filter-bar .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Table card */
+            .tbl-wrap {
+                border-radius: 12px;
+            }
+
+            .tbl-head {
+                padding: .85rem 1rem;
+            }
+
+            .tbl-head h6 {
+                font-size: .9rem;
+            }
+
+            /* Table: horizontal scroll */
+            .tbl-wrap > div[style*="overflow-x:auto"] {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tbl-wrap table {
+                min-width: 720px;
+                font-size: .78rem;
+            }
+
+            .tbl-wrap th {
+                padding: .55rem .7rem;
+                font-size: .66rem;
+            }
+
+            .tbl-wrap td {
+                padding: .6rem .7rem;
+            }
+
+            /* Student cell: tighter */
+            .stu-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: .72rem;
+            }
+
+            /* Action buttons wrap nicely */
+            .btn-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            /* Modal */
+            .modal-box {
+                padding: 1.25rem;
+                border-radius: 16px;
+                max-width: 100%;
+                margin: .75rem;
+            }
+
+            .modal-title {
+                font-size: 1rem;
+            }
+
+            /* Preview modal iframe height */
+            #previewFrame {
+                height: 400px !important;
+            }
+
+            /* Pagination tighter */
+            .pagination .page-link {
+                min-width: 30px;
+                height: 30px;
+                font-size: .75rem;
+            }
+
+            /* Empty state smaller */
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .empty-state i {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): 1 stat per row ────────────── */
+        @media (max-width: 420px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endsection
 

@@ -337,6 +337,166 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* ─── Mobile: stack hero stats + notification rows ─────────────── */
+        @media (max-width: 768px) {
+
+            /* Hero: tighter padding */
+            .fin-hero {
+                padding: 1.35rem 1.15rem 2.5rem;
+                margin-top: 1rem;
+                border-radius: 0 0 16px 16px;
+            }
+
+            /* Hero title smaller */
+            .fin-hero h1 {
+                font-size: 1.3rem;
+                line-height: 1.25;
+            }
+
+            .fin-hero p {
+                font-size: .82rem;
+            }
+
+            /* Hero badge tighter */
+            .hero-badge {
+                font-size: .7rem;
+                padding: .25rem .65rem;
+            }
+
+            /* Hero stats row: stack each on its own line, full width */
+            .fin-hero > div > div[style*="display: flex"][style*="gap: 2rem"] {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: .5rem !important;
+                margin-top: 1rem !important;
+            }
+
+            .hero-stat {
+                background: rgba(255, 255, 255, .06);
+                padding: .5rem .85rem;
+                border-radius: 10px;
+                width: 100%;
+                justify-content: flex-start;
+                font-size: .78rem;
+            }
+
+            /* Mark-all-read button full width */
+            #markAllReadBtn {
+                width: 100%;
+                justify-content: center;
+                padding: .65rem 1rem;
+                font-size: .8rem;
+            }
+
+            /* KPI grid already 2-col at 900px, then 1-col at 560px */
+
+            /* KPI cards: tighter padding */
+            .kpi {
+                padding: 1.15rem 1.15rem;
+            }
+
+            .kpi-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                margin-bottom: .7rem;
+            }
+
+            .kpi-val {
+                font-size: 1.4rem;
+            }
+
+            .kpi-val small {
+                font-size: .78rem;
+            }
+
+            /* Card header padding tighter */
+            .fc-hd {
+                padding: 1rem 1.15rem;
+            }
+
+            .fc-hd h3 {
+                font-size: .88rem;
+            }
+
+            /* Notification rows: stack the timestamp below */
+            .txn {
+                flex-wrap: wrap;
+                align-items: flex-start;
+                gap: .65rem;
+                padding: .75rem .3rem;
+            }
+
+            .txn-ico {
+                width: 38px;
+                height: 38px;
+                font-size: .85rem;
+            }
+
+            .txn-name {
+                font-size: .82rem;
+                line-height: 1.3;
+            }
+
+            .txn-meta {
+                font-size: .7rem;
+                line-height: 1.4;
+            }
+
+            /* The timestamp column drops to its own line */
+            .txn-extra {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: left;
+                font-size: .68rem;
+                padding-left: 48px; /* aligns under the text, next to the icon */
+                white-space: normal;
+            }
+
+            .unread-dot {
+                margin-left: .35rem;
+            }
+
+            /* Notification card body tighter */
+            .fc-bd {
+                padding: 1.15rem;
+            }
+        }
+
+        /* ─── Very small phones (≤ 420px): additional tightening ────── */
+        @media (max-width: 420px) {
+            .fin-hero {
+                padding: 1.15rem 1rem 2rem;
+            }
+
+            .fin-hero h1 {
+                font-size: 1.15rem;
+            }
+
+            .hero-stat {
+                font-size: .74rem;
+                padding: .45rem .7rem;
+            }
+
+            .kpi {
+                padding: 1rem;
+            }
+
+            .kpi-val {
+                font-size: 1.25rem;
+            }
+
+            .kpi-lbl {
+                font-size: .72rem;
+            }
+
+            /* For very small phones, remove the padding-left so
+               the timestamp aligns to the left edge cleanly */
+            .txn-extra {
+                padding-left: 0;
+            }
+        }
     </style>
 @endsection
 

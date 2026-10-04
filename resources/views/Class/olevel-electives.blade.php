@@ -157,9 +157,7 @@
             color: #a3a0c9;
         }
 
-        /* ===== Elective count badge (replaces A-Level's combo preview —
-           there's no short-form/PCM-style text to build for a flat "pick
-           up to 2" list, just how many of the 2 slots are filled) ===== */
+        /* ===== Elective count badge ===== */
         .elective-count {
             display: inline-flex;
             align-items: center;
@@ -266,98 +264,147 @@
             max-width: 340px;
         }
 
-.student-search-icon {
-    position: absolute;
-    top: 50%;
-    left: .85rem;
-    transform: translateY(-50%);
-    color: #2C29CA;              /* brand blue by default */
-    font-size: .8rem;
-    pointer-events: none;
-    transition: color .18s;
-}
+        .student-search-icon {
+            position: absolute;
+            top: 50%;
+            left: .85rem;
+            transform: translateY(-50%);
+            color: #2C29CA;
+            font-size: .8rem;
+            pointer-events: none;
+            transition: color .18s;
+        }
 
-.student-search-input {
-    width: 100%;
-    height: 40px;
-    padding: 0 2.2rem 0 2.1rem;
-    border: 1.5px solid #2C29CA;                       /* blue by default */
-    border-radius: .7rem;
-    background: #fff;
-    font-size: .85rem;
-    color: #1e1b4b;
-    outline: none;
-    box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);  /* soft ring by default */
-    transition: border-color .18s, box-shadow .18s, background .18s;
-}
+        .student-search-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 2.2rem 0 2.1rem;
+            border: 1.5px solid #2C29CA;
+            border-radius: .7rem;
+            background: #fff;
+            font-size: .85rem;
+            color: #1e1b4b;
+            outline: none;
+            box-shadow: 0 0 0 .18rem rgba(44, 41, 202, .12);
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
 
-.student-search-input::placeholder {
-    color: #b3b0d4;
-}
+        .student-search-input::placeholder {
+            color: #b3b0d4;
+        }
 
-.student-search-input:focus {
-    border-color: #2C29CA;
-    background: #fff;
-    box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);  /* stronger on focus */
-}
+        .student-search-input:focus {
+            border-color: #2C29CA;
+            background: #fff;
+            box-shadow: 0 0 0 .28rem rgba(44, 41, 202, .20);
+        }
 
-.student-search-clear {
-    display: none;
-    position: absolute;
-    top: 50%;
-    right: .6rem;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: #2C29CA;                /* brand blue when visible */
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    transition: background .15s, color .15s;
-}
+        .student-search-clear {
+            display: none;
+            position: absolute;
+            top: 50%;
+            right: .6rem;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #2C29CA;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, color .15s;
+        }
 
-.student-search-clear:hover {
-    background: #eef0ff;
-    color: #2C29CA;
-}
+        .student-search-clear:hover {
+            background: #eef0ff;
+            color: #2C29CA;
+        }
 
-.student-search-clear.is-visible {
-    display: inline-flex;
-}
+        .student-search-clear.is-visible {
+            display: inline-flex;
+        }
 
         .student-search-count {
             font-size: .78rem;
             color: #6b6899;
         }
 
-        /* ===== Manage Your Own Electives — center the edit/delete icons ===== */
-.my-subject-row .my-subject-edit,
-.my-subject-row .my-subject-delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;                    /* kill Bootstrap .btn-sm padding */
-    line-height: 1;
-    flex: 0 0 auto;
-}
+        /* ===== Manage Your Own Electives — center icons ===== */
+        .my-subject-row .my-subject-edit,
+        .my-subject-row .my-subject-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
 
-.my-subject-row .my-subject-edit i,
-.my-subject-row .my-subject-delete i {
-    display: block;
-    line-height: 1;
-    font-size: .82rem;
-}
+        .my-subject-row .my-subject-edit i,
+        .my-subject-row .my-subject-delete i {
+            display: block;
+            line-height: 1;
+            font-size: .82rem;
+        }
 
-.elective-count.is-empty {
-    color: #dc3545;
-    font-weight: 500;
-    font-style: italic;
-    border-color: #f6c4c0;
-    background: #fdecea;
-}
+        .elective-count.is-empty {
+            color: #dc3545;
+            font-weight: 500;
+            font-style: italic;
+            border-color: #f6c4c0;
+            background: #fdecea;
+        }
+
+        /* ─── Mobile: stack add-elective form + save bar ──────────────────── */
+        @media (max-width: 768px) {
+
+            /* ── 1. "Add Your Own Elective" input + button ── */
+            .add-elective-row {
+                grid-template-columns: 1fr !important;
+                gap: .75rem !important;
+                align-items: stretch !important;
+            }
+
+            .add-elective-row #newSubjectName {
+                height: 46px !important;
+            }
+
+            .add-elective-row #addSubjectBtn {
+                width: 100%;
+                height: 46px !important;
+                justify-content: center;
+                padding: 0 1rem !important;
+            }
+
+            /* ── 2. Save electives footer bar ── */
+            .save-electives-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                padding: 1.1rem 1.25rem !important;
+            }
+
+            .save-electives-bar #pendingSummary {
+                text-align: center;
+                font-size: .8rem !important;
+                order: 2;
+            }
+
+            .save-electives-bar #saveElectivesBtn {
+                width: 100%;
+                justify-content: center;
+                order: 1;
+                padding: .85rem 1.2rem;
+                font-size: .88rem;
+            }
+
+            /* Kill the &nbsp;&nbsp; spacing between them */
+            .save-electives-bar .spacer {
+                display: none;
+            }
+        }
     </style>
 @endsection
 
@@ -405,10 +452,7 @@
                             </div>
                         </div>
 
-                        {{-- ===== ADD YOUR OWN ELECTIVE ===== ---
-                        Adds to THIS school's own list only (school_olevel_electives)
-                        — on top of the global elective list every school starts
-                        with. See OLevelElectiveController::addSchoolSubject(). --}}
+                        {{-- ===== ADD YOUR OWN ELECTIVE ===== --}}
                         @if($students->count())
                             <div class="ole-card mb-4"
                                 style="border-radius: 1.25rem; background: #fff; box-shadow: 0 8px 32px rgba(44, 41, 202, 0.12); border-top: 4px solid #2C29CA; overflow: hidden;">
@@ -428,7 +472,7 @@
                                     </div>
                                 </div>
                                 <div style="padding: 0 1.75rem 1.75rem;">
-                                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                                    <div class="add-elective-row" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
                                         <div>
                                             <label
                                                 style="display: block; font-size: .7rem; font-weight: 700; color: #6b6899; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .5rem;">Elective
@@ -452,11 +496,7 @@
                                 </div>
                             </div>
 
-                            {{-- ===== MANAGE YOUR OWN ELECTIVES ===== ---
-                            Rename/delete a subject added above — doesn't touch
-                            the global elective list every school starts with.
-                            See OLevelElectiveController::updateSchoolSubject()/
-                            deleteSchoolSubject(). --}}
+                            {{-- ===== MANAGE YOUR OWN ELECTIVES ===== --}}
                             @if($mySchoolSubjects->count())
                                 <div class="ole-card mb-4"
                                     style="border-radius: 1.25rem; background: #fff; box-shadow: 0 8px 32px rgba(44, 41, 202, 0.12); border-top: 4px solid #2C29CA; overflow: hidden;">
@@ -497,7 +537,6 @@
 
                             {{-- ===== ELECTIVES GRID ===== --}}
                             <div class="ole-card mb-4">
-                                {{-- Student-name search: filters the table rows live as you type. --}}
                                 <div class="student-search-bar">
                                     <div class="student-search-wrap">
                                         <i class="fas fa-user-search student-search-icon"></i>
@@ -561,12 +600,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="card-body-custom d-flex align-items-center justify-content-end gap-3">
+                                <div class="card-body-custom d-flex align-items-center justify-content-end gap-3 save-electives-bar">
                                     <span id="pendingSummary"
                                         style="display:none; font-size:.82rem; font-weight:700; color:#9a6b00;">
                                         <i class="fas fa-triangle-exclamation"></i> <span id="pendingCount">0</span> student(s)
                                         have unsaved changes
-                                    </span> &nbsp; &nbsp;
+                                    </span>
+                                    <span class="spacer">&nbsp;&nbsp;</span>
                                     <button id="saveElectivesBtn" class="btn-save">
                                         <i class="fas fa-save me-2"></i> <span id="saveBtnLabel">Save All Electives</span>
                                     </button>
@@ -588,13 +628,9 @@
             </div>
         </div>
     </div>
- </div>
-        </div>
-    </div>
     <script>
         const ELECTIVE_LIMIT = {{ \App\Http\Controllers\OLevelElectiveController::ELECTIVE_LIMIT }};
 
-        // Shared toast style — small, top-right, auto-dismissing.
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -607,20 +643,12 @@
             },
         });
 
-        // md_id -> subject name, for the "2/2 electives chosen" style text
-        // and for reflecting a rename everywhere without a page reload.
         const subjectNameMap = {};
         @foreach($electiveSubjects as $subject)
             subjectNameMap['{{ $subject->md_id }}'] = @json($subject->md_name);
         @endforeach
 
-        // Each row's electives, in the order the user actually checked them
-        // (or, on first load, the order they were originally saved in).
         const rowElectiveOrder = new WeakMap();
-
-        // Rows with a change made this session that hasn't been sent to
-        // Save yet — drives the per-row "Unsaved" chip and the Save
-        // button's pending count.
         const dirtyRows = new Set();
 
         function electiveOrderFor(row) {
@@ -677,8 +705,6 @@
             }
         }
 
-        // A forgotten, unsaved change is easy to lose by navigating away
-        // entirely — warn on the way out too, not just on-page.
         window.addEventListener('beforeunload', (e) => {
             if (dirtyRows.size > 0) {
                 e.preventDefault();
@@ -686,8 +712,6 @@
             }
         });
 
-        // Once ELECTIVE_LIMIT are checked in a row, lock the rest until the
-        // user frees a slot by unchecking one.
         function applyElectiveLimit(row) {
             const order = electiveOrderFor(row);
             const atLimit = order.length >= ELECTIVE_LIMIT;
@@ -713,10 +737,6 @@
             });
         }
 
-        // Wire up every row: seed each row's check-order from whatever was
-        // actually saved (data-initial-electives), then render once
-        // immediately — nothing here counts as a "change" yet, so rows
-        // start clean, not pending.
         document.querySelectorAll('tr[data-student-id]').forEach(row => {
             let initial = [];
             try {
@@ -776,7 +796,6 @@
                     subjectNameMap[subject.md_id] = subject.md_name;
                     document.getElementById('newSubjectName').value = '';
 
-                    // Drop the new checkbox into every student row.
                     document.querySelectorAll('tr[data-student-id]').forEach(row => {
                         const list = row.querySelector('.elective-checkbox-list');
                         if (!list) return;
@@ -822,7 +841,6 @@
                 });
         });
 
-        // ===== MANAGE YOUR OWN ELECTIVES (edit/delete) =====
         function addRowToManageList(subject) {
             const list = document.getElementById('mySubjectsList');
             if (!list) return;
@@ -1010,7 +1028,6 @@
                 });
         });
 
-        // ===== Per-row elective search =====
         document.querySelectorAll('tr[data-student-id]').forEach(row => {
             const input = row.querySelector('.subject-search-input');
             if (!input) return;
@@ -1026,7 +1043,6 @@
             });
         });
 
-        // ===== Student name search =====
         (function () {
             const input = document.getElementById('studentSearchInput');
             const clearBtn = document.getElementById('studentSearchClear');

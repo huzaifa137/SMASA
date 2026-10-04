@@ -127,6 +127,34 @@
             color: #fff;
         }
 
+        /* ── Hero mobile stack ── */
+        @media (max-width: 576px) {
+            .lib-hero-sm {
+                padding: 1.25rem 1.25rem;
+                border-radius: 18px;
+                margin-top: 1rem;
+            }
+
+            .lib-hero-sm .hero-inner {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: .85rem;
+            }
+
+            .lib-hero-sm .hero-actions {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: .5rem;
+            }
+
+            .lib-hero-sm .hero-actions .btn-lib {
+                flex: 1 1 auto;
+                justify-content: center;
+                min-width: 120px;
+            }
+        }
+
         /* ── Stat Grid ── */
         .stat-grid {
             display: grid;
@@ -221,6 +249,33 @@
             border-top: 1px solid var(--border);
         }
 
+        @media (max-width: 576px) {
+            .lib-card-body {
+                padding: 1rem;
+            }
+
+            .lib-card-header {
+                padding: .9rem 1rem;
+            }
+
+            .lib-card-footer {
+                padding: .75rem 1rem;
+            }
+        }
+
+        /* ── Notification detail row stack ── */
+        @media (max-width: 576px) {
+            .notif-detail-row {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: .85rem !important;
+            }
+
+            .notif-detail-row .notif-icon-badge {
+                align-self: flex-start;
+            }
+        }
+
         /* ── Table ── */
         .lib-table {
             width: 100%;
@@ -238,6 +293,7 @@
             border-bottom: 1px solid var(--border);
             background: #3431ca;
             color: #FFF;
+            white-space: nowrap;
         }
 
         .lib-table td {
@@ -253,6 +309,15 @@
 
         .lib-table tr:hover td {
             background: #f8faff;
+        }
+
+        .lib-table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .lib-table-scroll .lib-table {
+            min-width: 560px;
         }
 
         /* ── Badges ── */
@@ -479,6 +544,20 @@
         .alert {
             border-radius: var(--radius);
         }
+
+        /* ── Pagination mobile ── */
+        @media (max-width: 576px) {
+            .lib-card-footer nav {
+                display: flex;
+                justify-content: center;
+            }
+
+            .lib-card-footer .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: .25rem;
+            }
+        }
     </style>
 @endsection
 
@@ -486,20 +565,22 @@
     <div class="container-fluid px-0">
 
         {{-- Hero Header with Back & Delete buttons --}}
-        <div class="lib-hero-sm d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h4><i class="fas fa-bell me-2"></i> Notification Details</h4>
-                <small>View notification and its delivery status</small>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('notifications.index') }}" class="btn-lib btn-outline-lib">
-                    <i class="fas fa-arrow-left me-1"></i> Back
-                </a>
-                @if(PermissionHelper::canFeature('delete_notification'))
-                <button class="btn-lib btn-danger-lib" onclick="deleteNotification({{ $notification->id }})">
-                    <i class="fas fa-trash me-1"></i> Delete
-                </button>
-                @endif
+        <div class="lib-hero-sm">
+            <div class="hero-inner d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h4><i class="fas fa-bell me-2"></i> Notification Details</h4>
+                    <small>View notification and its delivery status</small>
+                </div>
+                <div class="hero-actions d-flex gap-2 flex-wrap">
+                    <a href="{{ route('notifications.index') }}" class="btn-lib btn-outline-lib">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </a>
+                    @if(PermissionHelper::canFeature('delete_notification'))
+                        <button class="btn-lib btn-danger-lib" onclick="deleteNotification({{ $notification->id }})">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -513,15 +594,20 @@
         {{-- Notification Details Card --}}
         <div class="lib-card">
             <div class="lib-card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <span class="badge-lib badge-{{ $notification->color }} p-3" style="font-size:1.2rem; border-radius:12px;">
+                <div class="notif-detail-row d-flex align-items-start gap-3">
+                    <span class="notif-icon-badge badge-lib badge-{{ $notification->color }} p-3"
+                          style="font-size:1.2rem; border-radius:12px;">
                         <i class="fas fa-{{ $notification->icon }}"></i>
                     </span>
                     <div class="flex-grow-1">
                         <h5 class="mb-1 fw-semibold">{{ $notification->title }}</h5>
                         <p class="text-muted mb-2">{{ $notification->body }}</p>
                         <div class="d-flex flex-wrap gap-3 small text-muted">
-                            <span><span class="badge-lib badge-{{ $notification->color }}">{{ ucfirst($notification->type) }}</span></span>
+                            <span>
+                                <span class="badge-lib badge-{{ $notification->color }}">
+                                    {{ ucfirst($notification->type) }}
+                                </span>
+                            </span>
                             <span><i class="fas fa-layer-group me-1"></i>{{ $notification->module ?? '—' }}</span>
                             <span><i class="fas fa-user me-1"></i>Sent by {{ $sender->name ?? 'System' }}</span>
                             <span><i class="fas fa-clock me-1"></i>{{ $notification->created_at->format('d M Y, h:i A') }}</span>
@@ -559,7 +645,7 @@
                 <span class="badge-lib badge-gray">{{ $recipients->total() }} total</span>
             </div>
             <div class="lib-card-body p-0">
-                <div style="overflow-x:auto;">
+                <div class="lib-table-scroll">
                     <table class="lib-table">
                         <thead>
                             <tr>
@@ -581,7 +667,9 @@
                                             <span class="badge-lib badge-amber"><i class="fas fa-clock me-1"></i>Unread</span>
                                         @endif
                                     </td>
-                                    <td class="text-muted small">{{ $r->read_at ? $r->read_at->format('d M Y, h:i A') : '—' }}</td>
+                                    <td class="text-muted small">
+                                        {{ $r->read_at ? $r->read_at->format('d M Y, h:i A') : '—' }}
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -598,8 +686,7 @@
                 </div>
             @endif
         </div>
-    </div>
-     </div>
+    </div> </div>
     </div>
 
     {{-- Delete Form (hidden) --}}

@@ -43,8 +43,6 @@ use App\Helpers\PermissionHelper;
         --mono: 'JetBrains Mono', monospace;
     }
 
-    
-
     body {
         background: #F8FAFC;
     }
@@ -391,6 +389,149 @@ use App\Helpers\PermissionHelper;
     .panel-body::-webkit-scrollbar-thumb {
         background: var(--brand);
         border-radius: 99px;
+    }
+
+    /* ─── Mobile: stack glass header buttons + tighten layout ────────── */
+    @media (max-width: 768px) {
+
+        /* Header padding tighter */
+        .glass-header {
+            padding: 1.25rem 1.15rem;
+            border-radius: 22px;
+            margin-bottom: 1.25rem;
+        }
+
+        .glass-header h1 {
+            font-size: 1.5rem !important;
+        }
+
+        .glass-header p {
+            font-size: 0.9rem !important;
+        }
+
+        /* Header action buttons stack full-width */
+        .glass-header .d-flex.flex-wrap {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.6rem !important;
+            width: 100%;
+        }
+
+        .glass-header .d-flex.flex-wrap > a.btn {
+            width: 100%;
+            justify-content: center;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.85rem !important;
+            white-space: normal !important;
+        }
+
+        /* Outer container padding tighter */
+        .side-app[style*="padding: 1.5rem"] {
+            padding: 0.75rem !important;
+        }
+    }
+
+    /* ─── Mobile: stat cards stack one per row ───────────────────────── */
+    @media (max-width: 768px) {
+        .stat-card-new {
+            padding: 1.1rem;
+            border-radius: 22px;
+        }
+
+        .stat-card-new h2 {
+            font-size: 1.8rem !important;
+        }
+
+        .stat-card-new .stat-gradient-bg {
+            width: 100px;
+            height: 100px;
+        }
+    }
+
+    /* ─── Mobile: donut + legend stack vertically ────────────────────── */
+    @media (max-width: 576px) {
+        .donut-wrap {
+            flex-direction: column;
+            align-items: center;
+            text-align: left;
+        }
+
+        .donut-wrap > svg {
+            margin-bottom: 0.75rem;
+        }
+
+        .donut-legend {
+            width: 100%;
+        }
+
+        .legend-item {
+            font-size: 12px !important;
+            margin-bottom: 8px !important;
+        }
+    }
+
+    /* ─── Mobile: attendance table horizontal scroll ─────────────────── */
+    @media (max-width: 768px) {
+        .arr-table {
+            min-width: 620px;
+        }
+
+        .arr-table th,
+        .arr-table td {
+            padding: 0.7rem 0.75rem !important;
+            font-size: 0.78rem !important;
+        }
+
+        .arr-table th {
+            font-size: 0.66rem !important;
+        }
+
+        /* Force the wrapping div to scroll horizontally */
+        .form-card > .card-body > div[style*="overflow-x: auto"] {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    /* ─── Mobile: quick cards tighter ────────────────────────────────── */
+    @media (max-width: 576px) {
+        .quick-card {
+            padding: 12px 14px;
+            gap: 12px;
+        }
+
+        .quick-card .qc-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 15px;
+        }
+
+        .qc-title {
+            font-size: 13px;
+        }
+
+        .qc-sub {
+            font-size: 11px;
+        }
+    }
+
+    /* ─── Mobile: class rows ─────────────────────────────────────────── */
+    @media (max-width: 576px) {
+        .class-row {
+            padding: 10px 12px;
+        }
+
+        .cr-name {
+            font-size: 12px;
+        }
+
+        .cr-meta {
+            font-size: 10px;
+        }
+
+        .cr-rate {
+            font-size: 16px;
+        }
     }
 </style>
 @endsection

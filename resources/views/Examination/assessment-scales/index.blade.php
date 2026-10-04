@@ -67,26 +67,63 @@
             color: var(--border);
         }
 
+        /* ── TOP BAR: Premium Dark Gradient ── */
         .as-topbar {
+            background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
+            border-radius: 1.25rem;
+            padding: 1.75rem 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
             display: flex;
             flex-wrap: wrap;
             gap: 1.25rem;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 50%, #DBEAFE 100%);
-            border: 1px solid rgba(44, 41, 202, .12);
-            border-radius: 1rem;
-            padding: 1.25rem 1.75rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(44, 41, 202, .08);
-            position: relative;
-            overflow: hidden;
+        }
+
+        .as-topbar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, .1), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, .08), transparent),
+                radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, .12), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, .06), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, .1), transparent),
+                radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, .08), transparent);
+            background-size: 200px 200px;
+            opacity: 0.5;
+            pointer-events: none;
+            animation: asParticleMove 20s linear infinite;
+        }
+
+        @keyframes asParticleMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-20px, -20px); }
+        }
+
+        .as-topbar::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
         .as-topbar-left {
             display: flex;
-            align-items: center;
-            gap: 1rem;
+            align-items: flex-start;
+            gap: 1.25rem;
             flex: 1;
             min-width: 200px;
             position: relative;
@@ -94,86 +131,118 @@
         }
 
         .as-topbar-icon {
-            width: 50px;
-            height: 50px;
+            width: 54px;
+            height: 54px;
             border-radius: .75rem;
-            background: linear-gradient(135deg, var(--primary) 0%, #6366F1 50%, #818CF8 100%);
+            background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
             color: #fff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 12px rgba(44, 41, 202, .3);
+            font-size: 1.3rem;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, .3);
+            transition: all .3s ease;
+            flex-shrink: 0;
+        }
+
+        .as-topbar-icon:hover {
+            transform: scale(1.08) rotate(-5deg);
+            box-shadow: 0 6px 24px rgba(99, 102, 241, .4);
         }
 
         .as-topbar-title {
             font-weight: 800;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             margin: 0;
+            color: #ffffff !important;
             letter-spacing: -.02em;
-            background: linear-gradient(135deg, #9fa5c0 0%, #2C29CA 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            line-height: 1.2;
         }
 
         .as-topbar-subtitle {
             margin: 0;
             font-size: .85rem;
-            color: #4B5563;
-            max-width: 56ch;
+            color: rgba(255, 255, 255, .6);
+            line-height: 1.4;
+            max-width: 48ch;
         }
 
         .as-topbar-actions {
             display: flex;
+            align-items: center;
             gap: .6rem;
             flex-shrink: 0;
+            flex-wrap: wrap;
             position: relative;
             z-index: 1;
         }
 
         .btn-as-secondary {
-            border: 1px solid rgba(44, 41, 202, .15);
-            background: rgba(255, 255, 255, .7);
-            color: var(--ink);
-            font-weight: 600;
-            font-size: .82rem;
-            padding: .55rem 1rem;
-            border-radius: .6rem;
             display: inline-flex;
             align-items: center;
-            gap: .5rem;
+            gap: .6rem;
+            padding: .6rem 1.2rem;
+            background: rgba(255, 255, 255, .06);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .8);
+            font-weight: 600;
+            font-size: .82rem;
+            border-radius: .6rem;
             text-decoration: none;
+            transition: all .25s ease;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .btn-as-secondary:hover {
-            background: #fff;
-            border-color: rgba(44, 41, 202, .3);
-            color: var(--primary);
+            background: rgba(255, 255, 255, .12);
+            color: #ffffff;
+            text-decoration: none;
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, .15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+
+        .btn-as-secondary:active {
+            transform: translateY(0);
         }
 
         .btn-as-primary {
-            border: none;
-            background: linear-gradient(135deg, var(--primary) 0%, #6366F1 50%, #818CF8 100%);
-            color: #fff;
-            font-weight: 600;
-            font-size: .82rem;
-            padding: .55rem 1.1rem;
-            border-radius: .6rem;
             display: inline-flex;
             align-items: center;
-            gap: .5rem;
-            box-shadow: 0 4px 12px rgba(44, 41, 202, .25);
+            gap: .6rem;
+            padding: .6rem 1.4rem;
+            background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: .82rem;
+            border: none;
+            border-radius: .6rem;
+            text-decoration: none;
+            transition: all .25s ease;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
             cursor: pointer;
             white-space: nowrap;
         }
 
         .btn-as-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(44, 41, 202, .35);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
+            color: #ffffff;
         }
 
+        .btn-as-primary:active {
+            transform: translateY(0) scale(1);
+        }
+
+        .btn-as-secondary span,
+        .btn-as-primary span {
+            display: inline;
+        }
+
+        /* ── STATS ── */
         .as-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -207,11 +276,13 @@
             color: var(--primary);
         }
 
+        /* ── SPLIT LAYOUT ── */
         .as-split {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 300px minmax(0, 1fr);
             gap: 1.1rem;
             align-items: start;
+            width: 100%;
         }
 
         .as-list-panel {
@@ -219,6 +290,8 @@
             border: 1px solid var(--border);
             border-radius: .7rem;
             overflow: hidden;
+            width: 100%;
+            min-width: 0;
         }
 
         .as-list-panel-head {
@@ -249,6 +322,7 @@
             padding: .6rem .7rem;
             margin-bottom: .2rem;
             cursor: pointer;
+            transition: all .2s ease;
         }
 
         .scale-list-item:hover {
@@ -297,11 +371,16 @@
             opacity: .5;
         }
 
+        /* ── DETAIL PANEL ── */
         .as-detail-panel {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: .7rem;
+            border-radius: .8rem;
             min-height: 60vh;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(27, 29, 40, .04);
+            width: 100%;
+            min-width: 0;
         }
 
         .as-detail {
@@ -311,6 +390,12 @@
 
         .as-detail.active {
             display: block;
+            animation: fadeSlideIn .3s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .detail-top {
@@ -319,9 +404,9 @@
             justify-content: space-between;
             align-items: flex-start;
             gap: .75rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid #F3F4F6;
             padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .detail-title-row {
@@ -332,33 +417,19 @@
         }
 
         .detail-title-row h4 {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             font-weight: 800;
             margin: 0;
             color: var(--ink);
+            letter-spacing: -.02em;
         }
 
-        .badge-pill {
-            font-size: .68rem;
-            font-weight: 700;
-            padding: .2rem .55rem;
-            border-radius: 1rem;
-            text-transform: uppercase;
-            letter-spacing: .02em;
-        }
-
-        .badge-default {
-            background: var(--amber-bg);
-            color: var(--amber);
-        }
-
-        .badge-inactive {
-            background: var(--gray-bg);
-            color: var(--muted);
-        }
-
-        .badge-linked {
-            background: var(--primary-light);
+        .detail-title-row h4::before {
+            content: '\f5fd';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-right: .5rem;
+            font-size: 1rem;
             color: var(--primary);
         }
 
@@ -373,6 +444,7 @@
             display: flex;
             gap: .45rem;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
 
         .icon-btn {
@@ -385,6 +457,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: all .2s ease;
+            cursor: pointer;
         }
 
         .icon-btn:hover {
@@ -398,6 +472,50 @@
             border-color: var(--red-bg);
         }
 
+        .icon-btn.edit-scale {
+            color: #2C29CA;
+            border-color: rgba(44, 41, 202, 0.2);
+        }
+
+        .icon-btn.edit-scale:hover {
+            background: rgba(44, 41, 202, 0.1);
+            color: #2C29CA;
+            border-color: #2C29CA;
+        }
+
+        .icon-btn.toggle-scale[data-active="1"] {
+            color: #12875A;
+            border-color: rgba(18, 135, 90, 0.2);
+        }
+
+        .icon-btn.toggle-scale[data-active="1"]:hover {
+            background: rgba(18, 135, 90, 0.1);
+            color: #12875A;
+            border-color: #12875A;
+        }
+
+        .icon-btn.toggle-scale[data-active="0"] {
+            color: #6B7280;
+            border-color: rgba(107, 114, 128, 0.2);
+        }
+
+        .icon-btn.toggle-scale[data-active="0"]:hover {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6B7280;
+            border-color: #6B7280;
+        }
+
+        .icon-btn.danger.delete-scale {
+            color: #C4293A;
+            border-color: rgba(196, 41, 58, 0.2);
+        }
+
+        .icon-btn.danger.delete-scale:hover {
+            background: rgba(196, 41, 58, 0.1);
+            color: #C4293A;
+            border-color: #C4293A;
+        }
+
         .detail-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -406,69 +524,195 @@
         }
 
         .detail-stat {
-            background: var(--bg);
-            border-radius: .5rem;
-            padding: .65rem .8rem;
+            background: linear-gradient(135deg, #F8F7FF 0%, #F3F1FF 100%);
+            border-radius: .6rem;
+            padding: .7rem .9rem;
+            border: 1px solid rgba(44, 41, 202, .06);
+            transition: all .2s ease;
+        }
+
+        .detail-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 41, 202, .08);
         }
 
         .detail-stat .label {
-            font-size: .68rem;
+            font-size: .65rem;
             color: var(--muted);
             text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: .02em;
+            font-weight: 700;
+            letter-spacing: .04em;
         }
 
         .detail-stat .value {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1.1rem;
+            font-weight: 800;
             color: var(--ink);
+            margin-top: .1rem;
         }
 
         .section-label {
             font-size: .75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .03em;
+            letter-spacing: .06em;
             color: var(--muted);
-            margin-bottom: .5rem;
+            margin-bottom: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
         }
 
+        .section-label::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 99px;
+        }
+
+        /* ── BAND TABLE ── */
         .band-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: .85rem;
+            background: var(--surface);
+            border-radius: .75rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(27, 29, 40, .04);
+        }
+
+        .band-table thead {
+            background: #2C29CA;
         }
 
         .band-table thead th {
             text-align: left;
             font-size: .7rem;
             text-transform: uppercase;
-            letter-spacing: .03em;
-            color: var(--muted);
+            letter-spacing: .06em;
+            color: #ffffff;
             font-weight: 700;
-            padding: .5rem .6rem;
-            border-bottom: 1px solid var(--border);
+            padding: .75rem .8rem;
+            border-bottom: 2px solid rgba(255, 255, 255, .15);
+            position: relative;
         }
 
-        .band-table tbody td {
-            padding: .55rem .6rem;
-            border-bottom: 1px solid var(--border);
-            color: var(--ink);
+        .band-table thead th:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: rgba(255, 255, 255, .15);
         }
 
-        .band-table tbody tr:last-child td {
+        .band-table tbody tr {
+            transition: all .2s ease;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .band-table tbody tr:hover {
+            background: #F8F7FF;
+            transform: translateX(2px);
+        }
+
+        .band-table tbody tr:last-child {
             border-bottom: none;
         }
 
+        .band-table tbody td {
+            padding: .65rem .8rem;
+            color: var(--ink);
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .band-table tbody tr:nth-child(even) {
+            background: #FAFAFE;
+        }
+
+        .band-table tbody tr:nth-child(even):hover {
+            background: #F5F4FF;
+        }
+
+        .band-table tbody td:first-child {
+            font-weight: 600;
+        }
+
+        .band-table tbody td:last-child {
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+        }
+
         .grade-chip {
-            display: inline-block;
-            background: var(--primary-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            background: linear-gradient(135deg, var(--primary-soft) 0%, #EEEDFC 100%);
             color: var(--primary);
             font-weight: 700;
             font-size: .78rem;
-            padding: .18rem .55rem;
-            border-radius: .35rem;
+            padding: .25rem .65rem;
+            border-radius: .4rem;
+            border: 1px solid rgba(44, 41, 202, .08);
+            transition: all .2s ease;
+        }
+
+        .grade-chip::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: .3;
+        }
+
+        .grade-chip:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(44, 41, 202, .15);
+        }
+
+        .badge-pill {
+            font-size: .65rem;
+            font-weight: 700;
+            padding: .25rem .65rem;
+            border-radius: 99px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .badge-pill::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: .5;
+        }
+
+        .badge-default {
+            background: var(--amber-bg);
+            color: var(--amber);
+            border: 1px solid rgba(180, 119, 11, .15);
+        }
+
+        .badge-inactive {
+            background: #F3F4F6;
+            color: #6B7280;
+            border: 1px solid rgba(107, 114, 128, .15);
+        }
+
+        .badge-linked {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid rgba(44, 41, 202, .15);
         }
 
         .as-empty-detail {
@@ -481,17 +725,11 @@
             color: var(--border);
         }
 
-        @media (max-width: 860px) {
-            .as-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
+        /* ── RESPONSIVE FIXES ── */
+        @media (max-width: 992px) {
             .as-split {
-                grid-template-columns: 1fr;
-            }
-
-            .as-scale-list {
-                max-height: none;
+                grid-template-columns: 260px minmax(0, 1fr);
+                gap: .9rem;
             }
 
             .detail-stats {
@@ -499,6 +737,261 @@
             }
         }
 
+        @media (max-width: 860px) {
+            .as-split {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .as-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .as-scale-list {
+                max-height: 280px;
+            }
+
+            .as-list-panel {
+                width: 100%;
+            }
+
+            .as-detail-panel {
+                width: 100%;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .as-topbar {
+                padding: 1.5rem 1.5rem;
+                border-radius: 1rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .as-topbar-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .75rem;
+            }
+
+            .as-topbar-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
+            }
+
+            .as-topbar-title {
+                font-size: 1.25rem;
+            }
+
+            .as-topbar-subtitle {
+                font-size: .8rem;
+                max-width: 100%;
+            }
+
+            .as-topbar-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-as-secondary,
+            .btn-as-primary {
+                width: 100%;
+                justify-content: center;
+                padding: .6rem 1.2rem;
+            }
+
+            .as-detail {
+                padding: 1.1rem 1rem;
+            }
+
+            .detail-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .detail-actions {
+                justify-content: flex-end;
+            }
+
+            .band-table {
+                font-size: .78rem;
+            }
+
+            .band-table thead th,
+            .band-table tbody td {
+                padding: .5rem .6rem;
+            }
+
+            .grade-chip {
+                font-size: .7rem;
+                padding: .2rem .5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .as-topbar {
+                padding: 1.25rem 1.25rem;
+                border-radius: .85rem;
+            }
+
+            .as-topbar-title {
+                font-size: 1.1rem;
+            }
+
+            .btn-as-secondary span,
+            .btn-as-primary span {
+                display: none;
+            }
+
+            .btn-as-secondary,
+            .btn-as-primary {
+                justify-content: center;
+                min-width: auto;
+            }
+
+            .as-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: .5rem;
+            }
+
+            .as-stat {
+                padding: .6rem .7rem;
+            }
+
+            .as-stat .value {
+                font-size: 1rem;
+            }
+
+            .band-table {
+                font-size: .7rem;
+            }
+
+            .band-table thead th,
+            .band-table tbody td {
+                padding: .4rem .4rem;
+            }
+
+            .detail-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: .5rem;
+            }
+
+            .detail-stat .value {
+                font-size: .95rem;
+            }
+
+            .as-detail {
+                padding: 1rem .85rem;
+            }
+        }
+
+        /* ─── Mobile: stack detail actions + table scroll ──────────────── */
+        @media (max-width: 768px) {
+
+            /* Detail actions: stack the assign button + icon buttons */
+            .detail-actions {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                gap: .5rem;
+            }
+
+            /* Assign to Classes button: full width */
+            .detail-actions > a.btn {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: .7rem 1rem !important;
+                font-size: .82rem !important;
+            }
+
+            /* The three icon buttons (Edit / Toggle / Delete) → row of 3 equal chips */
+            .detail-actions > .icon-btn {
+                width: 100%;
+                height: auto;
+                padding: .6rem .5rem;
+                gap: .4rem;
+                font-size: .75rem;
+                font-weight: 600;
+                justify-content: center;
+            }
+
+            /* Turn them into a horizontal row of 3 by wrapping the buttons
+               in a grid via the parent — but since we can't change HTML,
+               this simpler approach keeps them stacked full-width, which
+               reads cleanly on mobile. If you prefer a 3-across row, use
+               the fallback below. */
+
+            /* Make the presets table horizontally scrollable */
+            .as-detail .band-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                min-width: 100%;
+            }
+
+            /* Actually hide the table wrapper and add scroll to inner */
+            .as-detail > .band-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .band-table thead th,
+            .band-table tbody td {
+                white-space: nowrap;
+            }
+
+            /* Section label tighter */
+            .section-label {
+                font-size: .7rem;
+            }
+
+            /* Detail title row: full width, allow wrapping */
+            .detail-title-row {
+                width: 100%;
+            }
+
+            .detail-title-row h4 {
+                font-size: 1.05rem;
+                word-break: break-word;
+            }
+
+            /* Badge pills wrap nicely */
+            .detail-title-row .badge-pill {
+                font-size: .6rem;
+                padding: .2rem .55rem;
+            }
+
+            /* Detail description: shorter max width */
+            .detail-desc {
+                font-size: .82rem;
+                max-width: 100%;
+            }
+        }
+
+        /* ─── Optional: 3-across icon buttons on tablets ───────────────── */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .detail-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .detail-actions > a.btn {
+                width: 100% !important;
+            }
+
+            .detail-actions > .icon-btn {
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                flex: 0 0 auto;
+            }
+        }
+
+        /* ── FORM STYLES (for SweetAlert modal) ── */
         .preset-row {
             display: grid;
             grid-template-columns: .8fr 1.6fr 1fr auto;
@@ -511,9 +1004,150 @@
             font-size: .82rem;
         }
 
-        .as-swal-confirm {
-            background: var(--primary) !important;
+        .swal2-popup {
+            border-radius: 1rem !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .swal2-title {
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            color: #1B1D28 !important;
+            padding: 0 !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .swal2-html-container {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .swal2-actions {
+            margin-top: 1.25rem !important;
+            gap: 0.5rem !important;
+        }
+
+        .swal2-confirm {
+            padding: 0.6rem 1.8rem !important;
             font-weight: 600 !important;
+            border-radius: 0.5rem !important;
+            font-size: 0.85rem !important;
+            background: linear-gradient(135deg, #2C29CA, #6366F1) !important;
+            box-shadow: 0 4px 14px rgba(44, 41, 202, 0.25) !important;
+            transition: all 0.2s !important;
+            letter-spacing: 0.01em !important;
+        }
+
+        .swal2-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(44, 41, 202, 0.35) !important;
+        }
+
+        .swal2-cancel,
+        .as-swal-cancel {
+            padding: 0.6rem 1.8rem !important;
+            font-weight: 600 !important;
+            border-radius: 0.5rem !important;
+            font-size: 0.85rem !important;
+            background: #F3F4F6 !important;
+            color: #374151 !important;
+            border: 1px solid #E5E7EB !important;
+            transition: all 0.2s !important;
+        }
+
+        .swal2-cancel:hover,
+        .as-swal-cancel:hover {
+            background: #E5E7EB !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .swal2-close {
+            color: #6B7280 !important;
+            transition: all 0.2s !important;
+        }
+
+        .swal2-close:hover {
+            color: #1B1D28 !important;
+            transform: rotate(90deg) !important;
+        }
+
+        /* ─── SweetAlert modal mobile fixes ───────────────────────────── */
+        @media (max-width: 640px) {
+            .swal2-popup {
+                padding: 1rem !important;
+                margin: .5rem !important;
+                border-radius: 1rem !important;
+            }
+
+            .swal2-title {
+                font-size: 1.05rem !important;
+            }
+
+            /* The preset rows inside the modal (built dynamically) —
+               make each row stack vertically on narrow screens */
+            .preset-row {
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: .4rem !important;
+                padding: .5rem !important;
+            }
+
+            .preset-row > .preset-min,
+            .preset-row > .preset-max {
+                grid-column: span 1;
+            }
+
+            .preset-row > .preset-label {
+                grid-column: 1 / -1;
+            }
+
+            .preset-row > .preset-remark {
+                grid-column: 1 / -1;
+            }
+
+            .preset-row > .remove-preset-row {
+                grid-column: 3;
+                justify-self: end;
+                width: 100%;
+                height: 32px;
+            }
+
+            /* Header in the modal form: tighter */
+            .swal2-popup .swal2-html-container form > div:first-child {
+                margin: -1rem -1rem 1rem -1rem !important;
+                padding: 1rem !important;
+            }
+
+            /* Two-column grids in the form → single column */
+            .swal2-popup form > div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: .6rem !important;
+            }
+
+            /* Score settings 3-column grid → single column */
+            .swal2-popup form > div[style*="grid-template-columns: 1fr 1fr 1fr"],
+            .swal2-popup form > div[style*="grid-template-columns: 1fr 1fr 1fr"],
+            .swal2-popup form > div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Anything with inline grid 3-col inside the swal */
+            .swal2-popup form div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: .6rem !important;
+            }
+
+            /* Preset header row (labels Above the fields) */
+            .swal2-popup form div[style*="grid-template-columns: 0.55fr"] {
+                display: none !important;
+            }
+
+            /* Reduce input padding inside modal */
+            .swal2-popup input,
+            .swal2-popup select {
+                font-size: .82rem !important;
+                padding: .5rem .7rem !important;
+            }
         }
     </style>
 @endsection
@@ -522,12 +1156,12 @@
     <div class="side-app">
         <div class="as-app">
 
+            {{-- ── TOP BAR ── --}}
             <div class="as-topbar">
                 <div class="as-topbar-left">
                     <div class="as-topbar-icon"><i class="fas fa-comment-dots"></i></div>
                     <div>
-                        <h3 class="as-topbar-title"
-                            style="color: #fff !important; -webkit-text-fill-color: #fff !important;">
+                        <h3 class="as-topbar-title">
                             Assessment Scales
                         </h3>
                         <p class="as-topbar-subtitle">Define comment/score scales (like the 1–3 Early Years scale) for
@@ -546,660 +1180,6 @@
                 </div>
             </div>
 
-            <style>
-                /* ── TOP BAR: Premium Dark Gradient (matches Grading Schemes) ── */
-                .as-topbar {
-                    background: linear-gradient(135deg, #0F0E1A 0%, #1B1D28 40%, #2C29CA 100%);
-                    border-radius: 1.25rem;
-                    padding: 1.75rem 2.5rem;
-                    margin-bottom: 1.5rem;
-                    position: relative;
-                    overflow: hidden;
-                    box-shadow: 0 8px 40px rgba(44, 41, 202, .2);
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 1.25rem;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-
-                .as-topbar::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-image:
-                        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, .1), transparent),
-                        radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, .08), transparent),
-                        radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, .12), transparent),
-                        radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, .06), transparent),
-                        radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, .1), transparent),
-                        radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, .08), transparent);
-                    background-size: 200px 200px;
-                    opacity: 0.5;
-                    pointer-events: none;
-                    animation: asParticleMove 20s linear infinite;
-                }
-
-                @keyframes asParticleMove {
-                    0% {
-                        transform: translate(0, 0);
-                    }
-
-                    100% {
-                        transform: translate(-20px, -20px);
-                    }
-                }
-
-                .as-topbar::after {
-                    content: '';
-                    position: absolute;
-                    top: -30%;
-                    right: -10%;
-                    width: 500px;
-                    height: 500px;
-                    background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
-                    border-radius: 50%;
-                    pointer-events: none;
-                }
-
-                .as-topbar .as-topbar-glow-bottom {
-                    position: absolute;
-                    bottom: -40%;
-                    left: -5%;
-                    width: 400px;
-                    height: 400px;
-                    background: radial-gradient(circle, rgba(44, 41, 202, .1) 0%, transparent 70%);
-                    border-radius: 50%;
-                    pointer-events: none;
-                }
-
-                .as-topbar-left {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 1.25rem;
-                    flex: 1;
-                    min-width: 200px;
-                    position: relative;
-                    z-index: 1;
-                }
-
-                .as-topbar-icon {
-                    width: 54px;
-                    height: 54px;
-                    border-radius: .75rem;
-                    background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
-                    color: #fff;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1.3rem;
-                    box-shadow: 0 4px 16px rgba(99, 102, 241, .3);
-                    transition: all .3s ease;
-                    flex-shrink: 0;
-                }
-
-                .as-topbar-icon:hover {
-                    transform: scale(1.08) rotate(-5deg);
-                    box-shadow: 0 6px 24px rgba(99, 102, 241, .4);
-                }
-
-                .as-topbar-title {
-                    font-weight: 800;
-                    font-size: 1.5rem;
-                    margin: 0;
-                    color: #ffffff !important;
-                    letter-spacing: -.02em;
-                    line-height: 1.2;
-                }
-
-                .as-topbar-subtitle {
-                    margin: 0;
-                    font-size: .85rem;
-                    color: rgba(255, 255, 255, .6);
-                    line-height: 1.4;
-                    max-width: 48ch;
-                }
-
-                .as-topbar-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: .6rem;
-                    flex-shrink: 0;
-                    flex-wrap: wrap;
-                    position: relative;
-                    z-index: 1;
-                }
-
-                .btn-as-secondary {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: .6rem;
-                    padding: .6rem 1.2rem;
-                    background: rgba(255, 255, 255, .06);
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, .08);
-                    color: rgba(255, 255, 255, .8);
-                    font-weight: 600;
-                    font-size: .82rem;
-                    border-radius: .6rem;
-                    text-decoration: none;
-                    transition: all .25s ease;
-                    white-space: nowrap;
-                }
-
-                .btn-as-secondary:hover {
-                    background: rgba(255, 255, 255, .12);
-                    color: #ffffff;
-                    text-decoration: none;
-                    transform: translateY(-2px);
-                    border-color: rgba(255, 255, 255, .15);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
-                }
-
-                .btn-as-secondary:active {
-                    transform: translateY(0);
-                }
-
-                .btn-as-primary {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: .6rem;
-                    padding: .6rem 1.4rem;
-                    background: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
-                    color: #ffffff;
-                    font-weight: 700;
-                    font-size: .82rem;
-                    border: none;
-                    border-radius: .6rem;
-                    text-decoration: none;
-                    transition: all .25s ease;
-                    box-shadow: 0 4px 20px rgba(99, 102, 241, .3);
-                    cursor: pointer;
-                    white-space: nowrap;
-                }
-
-                .btn-as-primary:hover {
-                    transform: translateY(-2px) scale(1.02);
-                    box-shadow: 0 6px 28px rgba(99, 102, 241, .4);
-                    color: #ffffff;
-                }
-
-                .btn-as-primary:active {
-                    transform: translateY(0) scale(1);
-                }
-
-                .btn-as-secondary span,
-                .btn-as-primary span {
-                    display: inline;
-                }
-
-                @media (max-width: 768px) {
-                    .as-topbar {
-                        padding: 1.5rem 1.5rem;
-                        border-radius: 1rem;
-                        flex-direction: column;
-                        align-items: stretch;
-                    }
-
-                    .as-topbar-left {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: .75rem;
-                    }
-
-                    .as-topbar-icon {
-                        width: 44px;
-                        height: 44px;
-                        font-size: 1.1rem;
-                    }
-
-                    .as-topbar-title {
-                        font-size: 1.25rem;
-                    }
-
-                    .as-topbar-subtitle {
-                        font-size: .8rem;
-                        max-width: 100%;
-                    }
-
-                    .as-topbar-actions {
-                        width: 100%;
-                        flex-direction: column;
-                    }
-
-                    .btn-as-secondary,
-                    .btn-as-primary {
-                        width: 100%;
-                        justify-content: center;
-                        padding: .6rem 1.2rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .as-topbar {
-                        padding: 1.25rem 1.25rem;
-                        border-radius: .85rem;
-                    }
-
-                    .as-topbar-title {
-                        font-size: 1.1rem;
-                    }
-
-                    .btn-as-secondary span,
-                    .btn-as-primary span {
-                        display: none;
-                    }
-
-                    .btn-as-secondary,
-                    .btn-as-primary {
-                        justify-content: center;
-                        min-width: auto;
-                    }
-                }
-
-                .band-table {
-                    width: 100%;
-                    border-collapse: separate;
-                    border-spacing: 0;
-                    font-size: .85rem;
-                    background: var(--surface);
-                    border-radius: .75rem;
-                    overflow: hidden;
-                    box-shadow: 0 1px 3px rgba(27, 29, 40, .04);
-                }
-
-                .band-table thead {
-                    background: #2C29CA;
-                }
-
-                .band-table thead th {
-                    text-align: left;
-                    font-size: .7rem;
-                    text-transform: uppercase;
-                    letter-spacing: .06em;
-                    color: #ffffff;
-                    font-weight: 700;
-                    padding: .75rem .8rem;
-                    border-bottom: 2px solid rgba(255, 255, 255, .15);
-                    position: relative;
-                }
-
-                .band-table thead th:not(:last-child)::after {
-                    content: '';
-                    position: absolute;
-                    right: 0;
-                    top: 25%;
-                    height: 50%;
-                    width: 1px;
-                    background: rgba(255, 255, 255, .15);
-                }
-
-                .band-table tbody tr {
-                    transition: all .2s ease;
-                    border-bottom: 1px solid #F3F4F6;
-                }
-
-                .band-table tbody tr:hover {
-                    background: #F8F7FF;
-                    transform: translateX(2px);
-                }
-
-                .band-table tbody tr:last-child {
-                    border-bottom: none;
-                }
-
-                .band-table tbody td {
-                    padding: .65rem .8rem;
-                    color: var(--ink);
-                    font-weight: 500;
-                    vertical-align: middle;
-                }
-
-                .band-table tbody tr:nth-child(even) {
-                    background: #FAFAFE;
-                }
-
-                .band-table tbody tr:nth-child(even):hover {
-                    background: #F5F4FF;
-                }
-
-                .grade-chip {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: .35rem;
-                    background: linear-gradient(135deg, var(--primary-soft) 0%, #EEEDFC 100%);
-                    color: var(--primary);
-                    font-weight: 700;
-                    font-size: .78rem;
-                    padding: .25rem .65rem;
-                    border-radius: .4rem;
-                    border: 1px solid rgba(44, 41, 202, .08);
-                    transition: all .2s ease;
-                }
-
-                .grade-chip::before {
-                    content: '';
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 50%;
-                    background: var(--primary);
-                    opacity: .3;
-                }
-
-                .grade-chip:hover {
-                    transform: scale(1.05);
-                    box-shadow: 0 2px 8px rgba(44, 41, 202, .15);
-                }
-
-                .grade-chip.grade-distinction {
-                    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-                    color: #065F46;
-                    border-color: rgba(6, 95, 70, .15);
-                }
-
-                .grade-chip.grade-distinction::before {
-                    background: #065F46;
-                    opacity: .4;
-                }
-
-                .grade-chip.grade-credit {
-                    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
-                    color: #1E40AF;
-                    border-color: rgba(30, 64, 175, .15);
-                }
-
-                .grade-chip.grade-credit::before {
-                    background: #1E40AF;
-                    opacity: .4;
-                }
-
-                .grade-chip.grade-pass {
-                    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-                    color: #92400E;
-                    border-color: rgba(146, 64, 14, .15);
-                }
-
-                .grade-chip.grade-pass::before {
-                    background: #92400E;
-                    opacity: .4;
-                }
-
-                .grade-chip.grade-fail {
-                    background: linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%);
-                    color: #991B1B;
-                    border-color: rgba(153, 27, 27, .15);
-                }
-
-                .grade-chip.grade-fail::before {
-                    background: #991B1B;
-                    opacity: .4;
-                }
-
-                .band-table tbody td:first-child {
-                    font-weight: 600;
-                }
-
-                .band-table tbody td:last-child {
-                    font-weight: 700;
-                    color: var(--primary);
-                    text-align: center;
-                }
-
-                .icon-btn.edit-scale {
-                    color: #2C29CA;
-                    border-color: rgba(44, 41, 202, 0.2);
-                }
-
-                .icon-btn.edit-scale:hover {
-                    background: rgba(44, 41, 202, 0.1);
-                    color: #2C29CA;
-                    border-color: #2C29CA;
-                }
-
-                .icon-btn.toggle-scale[data-active="1"] {
-                    color: #12875A;
-                    border-color: rgba(18, 135, 90, 0.2);
-                }
-
-                .icon-btn.toggle-scale[data-active="1"]:hover {
-                    background: rgba(18, 135, 90, 0.1);
-                    color: #12875A;
-                    border-color: #12875A;
-                }
-
-                .icon-btn.toggle-scale[data-active="0"] {
-                    color: #6B7280;
-                    border-color: rgba(107, 114, 128, 0.2);
-                }
-
-                .icon-btn.toggle-scale[data-active="0"]:hover {
-                    background: rgba(107, 114, 128, 0.1);
-                    color: #6B7280;
-                    border-color: #6B7280;
-                }
-
-                .icon-btn.danger.delete-scale {
-                    color: #C4293A;
-                    border-color: rgba(196, 41, 58, 0.2);
-                }
-
-                .icon-btn.danger.delete-scale:hover {
-                    background: rgba(196, 41, 58, 0.1);
-                    color: #C4293A;
-                    border-color: #C4293A;
-                }
-
-                .gs-detail-panel {
-                    background: var(--surface);
-                    border: 1px solid var(--border);
-                    border-radius: .8rem;
-                    min-height: 70vh;
-                    overflow: hidden;
-                    box-shadow: 0 2px 8px rgba(27, 29, 40, .04);
-                }
-
-                .gs-detail {
-                    display: none;
-                    padding: 1.5rem 1.75rem;
-                }
-
-                .gs-detail.active {
-                    display: block;
-                    animation: fadeSlideIn .3s ease;
-                }
-
-                @keyframes fadeSlideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(8px);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .section-label {
-                    font-size: .75rem;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: .06em;
-                    color: var(--muted);
-                    margin-bottom: .75rem;
-                    display: flex;
-                    align-items: center;
-                    gap: .5rem;
-                }
-
-                .section-label::before {
-                    content: '';
-                    width: 3px;
-                    height: 16px;
-                    background: var(--primary);
-                    border-radius: 99px;
-                }
-
-                .detail-stats {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: .75rem;
-                    margin-bottom: 1.5rem;
-                }
-
-                .detail-stat {
-                    background: linear-gradient(135deg, #F8F7FF 0%, #F3F1FF 100%);
-                    border-radius: .6rem;
-                    padding: .7rem .9rem;
-                    border: 1px solid rgba(44, 41, 202, .06);
-                    transition: all .2s ease;
-                }
-
-                .detail-stat:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(44, 41, 202, .08);
-                }
-
-                .detail-stat .label {
-                    font-size: .65rem;
-                    color: var(--muted);
-                    text-transform: uppercase;
-                    font-weight: 700;
-                    letter-spacing: .04em;
-                }
-
-                .detail-stat .value {
-                    font-size: 1.1rem;
-                    font-weight: 800;
-                    color: var(--ink);
-                    margin-top: .1rem;
-                }
-
-                .detail-top {
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    gap: .75rem;
-                    border-bottom: 2px solid #F3F4F6;
-                    padding-bottom: 1rem;
-                    margin-bottom: 1.25rem;
-                }
-
-                .detail-title-row h4 {
-                    font-size: 1.2rem;
-                    font-weight: 800;
-                    margin: 0;
-                    color: var(--ink);
-                    letter-spacing: -.02em;
-                }
-
-                .detail-title-row h4::before {
-                    content: '\f5fd';
-                    font-family: 'Font Awesome 6 Free';
-                    font-weight: 900;
-                    margin-right: .5rem;
-                    font-size: 1rem;
-                    color: var(--primary);
-                }
-
-                .badge-pill {
-                    font-size: .65rem;
-                    font-weight: 700;
-                    padding: .25rem .65rem;
-                    border-radius: 99px;
-                    text-transform: uppercase;
-                    letter-spacing: .04em;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: .3rem;
-                }
-
-                .badge-pill::before {
-                    content: '';
-                    width: 5px;
-                    height: 5px;
-                    border-radius: 50%;
-                    background: currentColor;
-                    opacity: .5;
-                }
-
-                .badge-default {
-                    background: var(--amber-bg);
-                    color: var(--amber);
-                    border: 1px solid rgba(180, 119, 11, .15);
-                }
-
-                .badge-inactive {
-                    background: #F3F4F6;
-                    color: #6B7280;
-                    border: 1px solid rgba(107, 114, 128, .15);
-                }
-
-                .badge-linked {
-                    background: var(--primary-light);
-                    color: var(--primary);
-                    border: 1px solid rgba(44, 41, 202, .15);
-                }
-
-                @media (max-width: 768px) {
-                    .band-table {
-                        font-size: .78rem;
-                    }
-
-                    .band-table thead th,
-                    .band-table tbody td {
-                        padding: .5rem .6rem;
-                    }
-
-                    .detail-stats {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-
-                    .detail-top {
-                        flex-direction: column;
-                        align-items: stretch;
-                    }
-
-                    .detail-actions {
-                        justify-content: flex-end;
-                    }
-
-                    .grade-chip {
-                        font-size: .7rem;
-                        padding: .2rem .5rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .band-table {
-                        font-size: .7rem;
-                    }
-
-                    .band-table thead th,
-                    .band-table tbody td {
-                        padding: .4rem .4rem;
-                    }
-
-                    .detail-stats {
-                        grid-template-columns: 1fr 1fr;
-                        gap: .5rem;
-                    }
-
-                    .detail-stat .value {
-                        font-size: .95rem;
-                    }
-
-                    .gs-detail {
-                        padding: 1rem;
-                    }
-                }
-            </style>
-
             @php
                 $totalScales = $scales->count();
                 $activeScales = $scales->where('is_active', true)->count();
@@ -1207,6 +1187,7 @@
                 $subjectsCovered = $scales->sum('class_subjects_count');
             @endphp
 
+            {{-- ── STATS ── --}}
             <div class="as-stats">
                 <div class="as-stat">
                     <div class="label">Total Scales</div>
@@ -1227,8 +1208,10 @@
                 </div>
             </div>
 
+            {{-- ── MAIN CONTENT ── --}}
             @if ($scales->count())
                 <div class="as-split">
+                    {{-- LEFT: Scale List --}}
                     <div class="as-list-panel">
                         <div class="as-list-panel-head">Scales ({{ $totalScales }})</div>
                         <ul class="as-scale-list" id="scaleList">
@@ -1253,6 +1236,7 @@
                         </ul>
                     </div>
 
+                    {{-- RIGHT: Detail Panel --}}
                     <div class="as-detail-panel">
                         @foreach ($scales as $scale)
                             <div class="as-detail {{ $loop->first ? 'active' : '' }}" id="scale-detail-{{ $scale->id }}">
@@ -1293,6 +1277,7 @@
                                    border: 1.5px solid #2C29CA;
                                    border-radius: 0.5rem;
                                    transition: all 0.25s ease;
+                                   white-space: nowrap;
                                " onmouseover="this.style.background='#2C29CA'; this.style.color='#ffffff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(44, 41, 202, 0.25)';"
                                             onmouseout="this.style.background='#EEEDFC'; this.style.color='#2C29CA'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                             <i class="fas fa-sitemap"></i>
@@ -1366,8 +1351,6 @@
             @endif
 
         </div>
-    </div>
-     </div>
     </div>
 
     {{-- ── Create / Edit Modal (hidden template, injected via SweetAlert) ── --}}
@@ -1585,77 +1568,6 @@
         </div>
     </template>
 
-    <style>
-        /* SweetAlert2 modal customization */
-        .swal2-popup {
-            border-radius: 1rem !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-        }
-
-        .swal2-title {
-            font-size: 1.25rem !important;
-            font-weight: 700 !important;
-            color: #1B1D28 !important;
-            padding: 0 !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        .swal2-html-container {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .swal2-actions {
-            margin-top: 1.25rem !important;
-            gap: 0.5rem !important;
-        }
-
-        .swal2-confirm {
-            padding: 0.6rem 1.8rem !important;
-            font-weight: 600 !important;
-            border-radius: 0.5rem !important;
-            font-size: 0.85rem !important;
-            background: linear-gradient(135deg, #2C29CA, #6366F1) !important;
-            box-shadow: 0 4px 14px rgba(44, 41, 202, 0.25) !important;
-            transition: all 0.2s !important;
-            letter-spacing: 0.01em !important;
-        }
-
-        .swal2-confirm:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(44, 41, 202, 0.35) !important;
-        }
-
-        .swal2-cancel,
-        .as-swal-cancel {
-            padding: 0.6rem 1.8rem !important;
-            font-weight: 600 !important;
-            border-radius: 0.5rem !important;
-            font-size: 0.85rem !important;
-            background: #F3F4F6 !important;
-            color: #374151 !important;
-            border: 1px solid #E5E7EB !important;
-            transition: all 0.2s !important;
-        }
-
-        .swal2-cancel:hover,
-        .as-swal-cancel:hover {
-            background: #E5E7EB !important;
-            transform: translateY(-2px) !important;
-        }
-
-        .swal2-close {
-            color: #6B7280 !important;
-            transition: all 0.2s !important;
-        }
-
-        .swal2-close:hover {
-            color: #1B1D28 !important;
-            transform: rotate(90deg) !important;
-        }
-    </style>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -1669,12 +1581,15 @@
             document.getElementById(targetId)?.classList.add('active');
         }
 
-        SMASA.bind('Examination/assessment-scales/index:0', function () { document.querySelectorAll('.scale-list-item').forEach(btn => { if (btn.__smb) return; btn.__smb = true;
-            btn.addEventListener('click', function () {
-                activateScale(this.dataset.target);
-                localStorage.setItem('selectedScaleId', this.dataset.target.replace('scale-detail-', ''));
+        SMASA.bind('Examination/assessment-scales/index:0', function () {
+            document.querySelectorAll('.scale-list-item').forEach(btn => {
+                if (btn.__smb) return; btn.__smb = true;
+                btn.addEventListener('click', function () {
+                    activateScale(this.dataset.target);
+                    localStorage.setItem('selectedScaleId', this.dataset.target.replace('scale-detail-', ''));
+                });
             });
-        }); });
+        });
 
         document.addEventListener('DOMContentLoaded', function () {
             const savedId = localStorage.getItem('selectedScaleId');
@@ -1698,8 +1613,6 @@
                 const min = preset.min_score ?? preset.score ?? '';
                 const max = preset.max_score ?? preset.score ?? '';
                 row.querySelector('.preset-min').value = min;
-                // Only show a "To" value when it's an actual range — a
-                // single-value preset (min === max) renders as just one number.
                 row.querySelector('.preset-max').value = (max !== '' && parseFloat(max) !== parseFloat(min)) ? max : '';
                 row.querySelector('.preset-label').value = preset.label ?? '';
                 row.querySelector('.preset-remark').value = preset.remark ?? '';
@@ -1719,7 +1632,7 @@
                 const max = maxEl ? maxEl.value.trim() : '';
                 const label = labelEl ? labelEl.value.trim() : '';
 
-                if (min === '' && !label) return; // fully blank row — ignore silently
+                if (min === '' && !label) return;
 
                 if (min === '' || !label) {
                     skippedRows.push({ row: i + 1, missing: min === '' ? 'From score' : 'Label' });
@@ -1769,9 +1682,6 @@
                     const conflictNotice = popup.querySelector('#customScoreConflictNotice');
                     const linkedGradingOption = popup.querySelector('#linkedGradingOption');
 
-                    // Custom (unbounded) scores and a linked, percentage-based
-                    // grading scheme can't coexist. Keep the two controls in
-                    // sync so the form can never be submitted contradictorily.
                     function syncCustomScoreVsGrading(source) {
                         const customOn = allowCustomCheckbox.checked;
                         const linkedSelected = gradeModeSelect.value === 'linked_grading_scheme';
@@ -1858,8 +1768,6 @@
                         }
                         return false;
                     }
-                    // Presets only need to sit inside min/max when custom
-                    // (unbounded) scores are off.
                     if (!allowCustomScore) {
                         for (const p of presets) {
                             if (p.min_score < parseFloat(minScore) || p.max_score > parseFloat(maxScore)) {
@@ -1881,9 +1789,6 @@
                         presets,
                     };
 
-                    // Submit here, inside preConfirm — a server-side error keeps
-                    // this same modal open (fields + presets intact) instead of
-                    // closing it and popping a separate, disconnected error box.
                     Swal.showLoading();
                     try {
                         const res = await $.ajax({
@@ -1924,64 +1829,73 @@
         document.getElementById('btnNewScale').addEventListener('click', () => openScaleModal());
 
         // ── Edit ──────────────────────────────────────────────────────────────
-        SMASA.bind('Examination/assessment-scales/index:1', function () { document.querySelectorAll('.edit-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const scale = window.__scalesById[this.dataset.id];
-                openScaleModal(scale);
-            });
-        }); });
-
-        // ── Toggle Active ─────────────────────────────────────────────────────
-        SMASA.bind('Examination/assessment-scales/index:2', function () { document.querySelectorAll('.toggle-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                const nextActive = this.dataset.active === '1' ? 0 : 1;
-                $.ajax({
-                    url: `{{ url('examinations/assessment-scales') }}/${id}/toggle-active`,
-                    method: 'POST',
-                    data: { is_active: nextActive },
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
-                    success: function () { SMASA.refreshPage(); },
-                    error: function (xhr) { Swal.fire('Error', xhr.responseJSON?.message || 'Could not update scale.', 'error'); },
+        SMASA.bind('Examination/assessment-scales/index:1', function () {
+            document.querySelectorAll('.edit-scale').forEach(el => {
+                if (el.__smb) return; el.__smb = true;
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const scale = window.__scalesById[this.dataset.id];
+                    openScaleModal(scale);
                 });
             });
-        }); });
+        });
 
-        // ── Delete ────────────────────────────────────────────────────────────
-        SMASA.bind('Examination/assessment-scales/index:3', function () { document.querySelectorAll('.delete-scale').forEach(el => { if (el.__smb) return; el.__smb = true;
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                Swal.fire({
-                    title: 'Delete this assessment scale?',
-                    text: 'This cannot be undone. Scales attached to a class subject cannot be deleted.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it',
-                    confirmButtonColor: '#C4293A',
-                }).then(result => {
-                    if (!result.isConfirmed) return;
+        // ── Toggle Active ─────────────────────────────────────────────────────
+        SMASA.bind('Examination/assessment-scales/index:2', function () {
+            document.querySelectorAll('.toggle-scale').forEach(el => {
+                if (el.__smb) return; el.__smb = true;
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const id = this.dataset.id;
+                    const nextActive = this.dataset.active === '1' ? 0 : 1;
                     $.ajax({
-                        url: `{{ url('examinations/assessment-scales') }}/${id}`,
-                        method: 'DELETE',
+                        url: `{{ url('examinations/assessment-scales') }}/${id}/toggle-active`,
+                        method: 'POST',
+                        data: { is_active: nextActive },
                         headers: { 'X-CSRF-TOKEN': csrfToken },
-                        success: function (res) {
-                            if (res.success) {
-                                Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
-                                    .then(() => window.SMASA.refreshPage());
-                            } else {
-                                Swal.fire('Cannot Delete', res.message, 'warning');
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scale.', 'warning');
-                        },
+                        success: function () { SMASA.refreshPage(); },
+                        error: function (xhr) { Swal.fire('Error', xhr.responseJSON?.message || 'Could not update scale.', 'error'); },
                     });
                 });
             });
-        }); });
+        });
+
+        // ── Delete ────────────────────────────────────────────────────────────
+        SMASA.bind('Examination/assessment-scales/index:3', function () {
+            document.querySelectorAll('.delete-scale').forEach(el => {
+                if (el.__smb) return; el.__smb = true;
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const id = this.dataset.id;
+                    Swal.fire({
+                        title: 'Delete this assessment scale?',
+                        text: 'This cannot be undone. Scales attached to a class subject cannot be deleted.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete it',
+                        confirmButtonColor: '#C4293A',
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        $.ajax({
+                            url: `{{ url('examinations/assessment-scales') }}/${id}`,
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            success: function (res) {
+                                if (res.success) {
+                                    Swal.fire({ icon: 'success', title: 'Deleted', confirmButtonColor: '#2C29CA' })
+                                        .then(() => window.SMASA.refreshPage());
+                                } else {
+                                    Swal.fire('Cannot Delete', res.message, 'warning');
+                                }
+                            },
+                            error: function (xhr) {
+                                Swal.fire('Cannot Delete', xhr.responseJSON?.message || 'Could not delete scale.', 'warning');
+                            },
+                        });
+                    });
+                });
+            });
+        });
     </script>
 
     @php

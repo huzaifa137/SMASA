@@ -516,6 +516,11 @@
 
             .search-bar {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-bar input {
+                width: 100%;
             }
 
             .search-bar button {
