@@ -26,6 +26,7 @@ use Throwable;
  *        description: Navy letterhead, two-column marks table
  *        accent: #1e3a8a
  *        progressive: true      (optional - load the Progressive Assessment Record)
+ *        major_first: true      (optional - list the class's Aggregate Subjects first and flag them as is_major)
  *        toggles: show_logo, show_photo, show_qr, show_remarks
  *        off_by_default: show_stu_house
  *      --}}
@@ -170,6 +171,9 @@ class CustomReportCards
             // "progressive: true" asks the system to also load the Progressive
             // Assessment Record (every sitting of the term) for this design.
             'progressive' => in_array(strtolower($raw['progressive'] ?? ''), ['1', 'true', 'yes'], true),
+            // "major_first: true" lists the subjects ticked under Examinations ->
+            // Aggregate Subjects first and flags them ($subject->is_major).
+            'major_first' => in_array(strtolower($raw['major_first'] ?? ''), ['1', 'true', 'yes'], true),
             'toggles' => $toggles,
             'off_by_default' => $off,
             'has_header' => !empty($raw),

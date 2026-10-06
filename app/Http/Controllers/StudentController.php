@@ -798,8 +798,6 @@ class StudentController extends Controller
             'birth_certificate_entry_number' => $request->birth_certificate_entry_number,
             'registration_number' => $request->registration_number,
             'admission_number' => $request->admission_number,
-            'paycode' => $request->paycode,
-            'section' => \App\Support\StudentImportFields::normalizeSection($request->section),
             'admission_year' => $request->admission_year,
             'date_of_admission' => $request->date_of_admission,
             'ple_score' => $request->ple_score,
@@ -817,6 +815,19 @@ class StudentController extends Controller
             'comments' => $request->comments,
             'student_photo' => $photoPath ?? $student->student_photo, // 👈 keep old if not updated
         ]));
+
+        // Only touch these when the form actually sent them, so a form that
+        // doesn't have the fields can never blank a saved value.
+        $optional = [];
+        if ($request->has('paycode')) {
+            $optional['paycode'] = trim((string) $request->paycode) ?: null;
+        }
+        if ($request->has('section')) {
+            $optional['section'] = \App\Support\StudentImportFields::normalizeSection($request->section);
+        }
+        if ($optional) {
+            $student->update($optional);
+        }
 
         return response()->json([
             'success' => true,

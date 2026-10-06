@@ -1416,6 +1416,8 @@ use App\Helpers\PermissionHelper;
                                                             <div class="section-hd"><i class="fas fa-graduation-cap"></i> Academic Information</div>
                                                             <div class="info-grid">
                                                                 ${infoItem('LIN Number', s.admission_number)}
+                                                                ${infoItem('School Pay / Pay Code', s.paycode)}
+                                                                ${infoItem('Section', s.section)}
                                                                 ${infoItem('Registration Number', s.registration_number)}
                                                                 ${infoItem('Date of Admission', fmtDate(s.date_of_admission))}
                                                                 ${infoItem('Admission Year', s.admission_year)}
@@ -1527,6 +1529,14 @@ use App\Helpers\PermissionHelper;
                                                         <div class="form-grid-3">
                                                             <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-control" id="ef_reg" value="${esc(s.registration_number)}"></div>
                                                             <div class="form-group"><label class="form-label">LIN No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
+                                                            <div class="form-group"><label class="form-label">School Pay / Pay Code</label><input type="text" class="form-control" id="ef_paycode" value="${esc(s.paycode)}"></div>
+                                                            <div class="form-group"><label class="form-label">Section</label>
+                                                                <select class="form-control" id="ef_section">
+                                                                    <option value="">-- Select --</option>
+                                                                    <option value="DAY" ${s.section === 'DAY' ? 'selected' : ''}>Day</option>
+                                                                    <option value="BOARDING" ${s.section === 'BOARDING' ? 'selected' : ''}>Boarding</option>
+                                                                </select>
+                                                            </div>
                                                             <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
                                                             <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
                                                             <div class="form-group"><label class="form-label">Class / Senior *</label><select class="form-control" id="ef_senior">${classOptions}</select></div>
@@ -1737,6 +1747,8 @@ use App\Helpers\PermissionHelper;
                 fd.append('birth_certificate_entry_number', document.getElementById('ef_bc')?.value || '');
                 fd.append('registration_number', document.getElementById('ef_reg')?.value || '');
                 fd.append('admission_number', document.getElementById('ef_adm')?.value || '');
+                fd.append('paycode', document.getElementById('ef_paycode')?.value || '');
+                fd.append('section', document.getElementById('ef_section')?.value || '');
                 fd.append('admission_year', document.getElementById('ef_admyr')?.value || '');
                 fd.append('date_of_admission', document.getElementById('ef_admdt')?.value || '');
                 fd.append('ple_score', document.getElementById('ef_ple')?.value || '');

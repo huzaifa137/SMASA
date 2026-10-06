@@ -26,6 +26,7 @@ class CustomReportData
     public static function buildAll(array $slips, object $exam, $schoolId, array $termDates, array $custom): array
     {
         self::$savedMemo = [];
+        self::$majorMemo = [];
 
         $school = self::schoolInfo($schoolId);
         $gradeScale = self::gradeScale($exam);
@@ -125,8 +126,20 @@ class CustomReportData
         ];
 
         // ── Subjects
+        // Designs that declare "major_first: true" list the subjects ticked
+        // under Examinations -> Aggregate Subjects (class_subjects.
+        // counts_towards_aggregate) first, in their existing order, followed
+        // by the rest in their existing order.
+        $majorKeys = !empty($custom['meta']['major_first'])
+            ? self::majorSubjectKeys($schoolId, $s->senior ?? null, $s->stream ?? null)
+            : [];
+        if ($majorKeys) {
+            [$majorMarks, $otherMarks] = $subjMarks->partition(fn($sm) => isset($majorKeys[Helper::subjectKey($sm)]));
+            $subjMarks = $majorMarks->concat($otherMarks)->values();
+        }
+
         $r->is_comment_scale = $isEarly;
-        $r->subjects = $subjMarks->map(function ($sm, $i) use ($prevSubj) {
+        $r->subjects = $subjMarks->map(function ($sm, $i) use ($prevSubj, $majorKeys) {
             $prev = $prevSubj->get(Helper::subjectKey($sm)) ?? ($sm->subject_id ? $prevSubj->get($sm->subject_id) : null);
             $dev = null;
             if ($prev && ($prev->total_marks ?? 0) > 0 && ($sm->percentage ?? null) !== null) {
@@ -136,6 +149,7 @@ class CustomReportData
             return (object) [
                 'no' => $i + 1,
                 'name' => $sm->subject_name,
+                'is_major' => isset($majorKeys[Helper::subjectKey($sm)]),
                 'type' => $sm->subject_type ?? null,
                 'marks' => $sm->marks_obtained,
                 'total' => $sm->total_marks,
@@ -354,6 +368,31 @@ class CustomReportData
     private static function roman(?int $n): string
     {
         return [1 => 'I', 2 => 'II', 3 => 'III'][$n] ?? '';
+    }
+
+    /**
+     * Keys ("subject_id|custom_subject_id", see Helper::subjectKey) of the
+     * subjects flagged as Aggregate Subjects for a class/stream. Memoised
+     * per run - a bulk print asks once per class, not once per student.
+     */
+    private static array $majorMemo = [];
+
+    private static function majorSubjectKeys($schoolId, $classId, $streamId): array
+    {
+        if (!$classId) {
+            return [];
+        }
+
+        $memoKey = $schoolId . '|' . $classId . '|' . $streamId;
+
+        return self::$majorMemo[$memoKey] ??= DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->where('counts_towards_aggregate', true)
+            ->get(['subject_id', 'custom_subject_id'])
+            ->mapWithKeys(fn($row) => [Helper::subjectKey($row) => true])
+            ->all();
     }
 
     private static function schoolInfo($schoolId): object
