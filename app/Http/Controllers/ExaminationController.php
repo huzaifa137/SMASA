@@ -158,7 +158,8 @@ class ExaminationController extends Controller
 
             // Each class_stream value is encoded as "classId_streamId"
             foreach ($validated['class_streams'] as $cs) {
-                [$classId, $streamId] = explode('_', $cs);
+                // limit 2: stream ids such as NO_STREAM contain an underscore themselves
+                [$classId, $streamId] = array_pad(explode('_', $cs, 2), 2, null);
                 $streamId = $streamId ?: null;
 
                 // 🔥 Per-class grading scheme override (null = use exam default)
@@ -720,8 +721,14 @@ class ExaminationController extends Controller
             ->where('school_id', Session('LoggedSchool'))
             ->firstOrFail();
 
-        // Optional: Restrict deletion based on status ie ['draft','closed']
-        if (!in_array($exam->status, ['draft'])) {
+        // Only draft exams can be deleted — except an exam with no classes
+        // attached at all. Nothing can be entered or released for that exam
+        // (e.g. its classes were removed when a school product category was
+        // split off), it can't even be edited (an exam needs at least one
+        // class), so it is safe to remove from any status.
+        $hasNoClasses = !ExaminationClass::where('examination_id', $exam->id)->exists();
+
+        if (!in_array($exam->status, ['draft']) && !$hasNoClasses) {
             return response()->json([
                 'success' => false,
                 'message' => 'Only draft or closed examinations can be deleted. Active or ongoing exams cannot be deleted.'
@@ -738,6 +745,10 @@ class ExaminationController extends Controller
             $deletedMarks = ExaminationMark::where('examination_id', $id)->delete();
             $deletedClasses = ExaminationClass::where('examination_id', $id)->delete();
             $deletedDiscipline = StudentDisciplineRating::where('examination_id', $id)->delete();
+            // Rows that point at the exam but have no cascading foreign key
+            DB::table('examination_subject_settings')->where('examination_id', $id)->delete();
+            DB::table('report_card_remarks')->where('examination_id', $id)->delete();
+            DB::table('student_exam_summaries')->where('exam_id', $id)->delete();
             $exam->delete();
 
             DB::commit();
@@ -2271,6 +2282,101 @@ class ExaminationController extends Controller
         })->values();
 
         return response()->json(['success' => true, 'items' => $items]);
+    }
+
+    /**
+     * Copy one class' saved design (for ONE Design Template) onto other
+     * classes — e.g. design P7 once, then copy it to P4/P5/P6 so they all
+     * share the same look. Each target gets its own row (same as saving
+     * for several classes at once), so they can still be tweaked
+     * individually afterwards. An existing saved design on a target for
+     * this template is overwritten.
+     *
+     * Only classes of the same family as the template (Nursery / Primary /
+     * Secondary) that are part of this exam are accepted as targets —
+     * exactly the set the customise page offers.
+     */
+    public function copyPassslipSettings(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('generate_reports');
+
+        $request->validate([
+            'source_class_id' => 'required|integer',
+            'target_class_ids' => 'required|array|min:1',
+            'target_class_ids.*' => 'integer',
+            'template' => 'required|string|in:' . implode(',', self::PASSSLIP_TEMPLATE_KEYS),
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+        $template = $request->input('template');
+        $sourceClassId = (int) $request->input('source_class_id');
+
+        // Make sure the exam belongs to this school.
+        Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+
+        $source = DB::table('passslip_settings')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $sourceClassId)
+            ->where('template', $template)
+            ->first();
+
+        if (!$source) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The source class has no saved design for this template yet. Save it first, then copy.',
+            ], 422);
+        }
+
+        $settings = json_decode($source->settings, true);
+        $settings = is_array($settings) ? $settings : [];
+        $settings['template'] = $template;
+
+        // Classes this page can legitimately apply to (same family as the template).
+        $isNursery = self::isNurseryTemplateKey($template);
+        $isSecondary = str_starts_with($template, 'secondary-');
+
+        $allowedClassIds = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->pluck('class_id')
+            ->unique()
+            ->filter(function ($classId) use ($isNursery, $isSecondary) {
+                $classIsNursery = Helper::isNurseryClass($classId);
+                $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($classId);
+
+                if ($isNursery) {
+                    return $classIsNursery;
+                }
+                if ($isSecondary) {
+                    return $classIsSecondary;
+                }
+                return !$classIsNursery && !$classIsSecondary;
+            })
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $targets = collect($request->input('target_class_ids'))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->reject(fn ($id) => $id === $sourceClassId)
+            ->filter(fn ($id) => in_array($id, $allowedClassIds, true))
+            ->values()
+            ->all();
+
+        if (empty($targets)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Select at least one other class to copy this design to.',
+            ], 422);
+        }
+
+        Helper::savePassslipSettings($schoolId, $targets, $settings);
+
+        return response()->json([
+            'success' => true,
+            'copied_to' => count($targets),
+            'message' => 'Design copied to ' . count($targets) . ' class(es).',
+        ]);
     }
 
     /**

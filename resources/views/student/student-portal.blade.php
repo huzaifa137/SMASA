@@ -274,8 +274,14 @@ use App\Http\Controllers\Helper;
                     //         });
                     //     }
                     // },
-                    error: function(data) {
-                        $('body').html(data.responseText);
+                    error: function (xhr) {
+                        let msg = 'An unexpected error occurred.';
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                            msg = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                        } else if (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) {
+                            msg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        Swal.fire({ icon: 'error', title: 'Could not save student', text: msg, confirmButtonColor: '#5351e4' });
                     },
                     complete: function() {
                         $submitBtn.prop('disabled', false).html(originalHtml);

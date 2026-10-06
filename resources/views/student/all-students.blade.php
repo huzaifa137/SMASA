@@ -1478,6 +1478,7 @@ use App\Helpers\PermissionHelper;
                     document.getElementById('editFooter').style.display = 'flex';
                     document.getElementById('editBody').innerHTML = buildEditForm(s);
                     initPhotoUpload();
+                    initEditClassStream(s);
                 })
                 .catch(() => {
                     document.getElementById('editBody').innerHTML = `<div class="empty-state"><p>Failed to load student data.</p></div>`;
@@ -1485,6 +1486,17 @@ use App\Helpers\PermissionHelper;
         }
 
         function buildEditForm(s) {
+            // Class dropdown — every class this school runs. If the student's
+            // current class isn't in that list (legacy data) it's still
+            // offered so just opening/saving the form never changes it.
+            const classList = Array.isArray(s.classes) ? [...s.classes] : [];
+            if (s.senior_id && !classList.some(c => String(c.id) === String(s.senior_id))) {
+                classList.push({ id: s.senior_id, name: s.senior || s.senior_id });
+            }
+            const classOptions = '<option value="">-- Select Class --</option>' + classList.map(c =>
+                `<option value="${esc(c.id)}" ${String(c.id) === String(s.senior_id) ? 'selected' : ''}>${esc(c.name)}</option>`
+            ).join('');
+
             const photoHtml = s.photo_url
                 ? `<img src="${s.photo_url}" class="photo-preview-thumb" id="currentThumb"> <small style="color:var(--t3);display:block;margin-top:.35rem;">Upload new to replace</small>`
                 : `<small style="color:var(--t3);">No photo uploaded yet</small>`;
@@ -1517,8 +1529,8 @@ use App\Helpers\PermissionHelper;
                                                             <div class="form-group"><label class="form-label">LIN No.</label><input type="text" class="form-control" id="ef_adm" value="${esc(s.admission_number)}"></div>
                                                             <div class="form-group"><label class="form-label">Admission Year</label><input type="number" class="form-control" id="ef_admyr" value="${esc(s.admission_year)}"></div>
                                                             <div class="form-group"><label class="form-label">Date of Admission</label><input type="date" class="form-control" id="ef_admdt" value="${(s.date_of_admission || '').split('T')[0]}"></div>
-                                                            <div class="form-group"><label class="form-label">Class / Senior</label><input type="text" class="form-control" id="ef_senior" value="${esc(s.senior)}" readonly></div>
-                                                            <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-control" id="ef_stream" value="${esc(s.stream)}" readonly></div>
+                                                            <div class="form-group"><label class="form-label">Class / Senior *</label><select class="form-control" id="ef_senior">${classOptions}</select></div>
+                                                            <div class="form-group"><label class="form-label">Stream *</label><select class="form-control" id="ef_stream"><option value="">Loading streams...</option></select></div>
                                                             <div class="form-group"><label class="form-label">PLE Score</label><input type="text" class="form-control" id="ef_ple" value="${esc(s.ple_score)}"></div>
                                                             <div class="form-group"><label class="form-label">UCE Score</label><input type="text" class="form-control" id="ef_uce" value="${esc(s.uce_score)}"></div>
                                                         </div>
@@ -1562,6 +1574,74 @@ use App\Helpers\PermissionHelper;
                                                         </div>
                                                         <div id="photoErr" style="font-size:.75rem;color:var(--r);margin-top:.35rem;"></div>
                                                     </div>`;
+        }
+
+        // ── Class → Stream cascade (same behaviour as Add New Student) ──
+        // Picking a class loads that class's streams into the Stream
+        // dropdown; picking a different class clears the old stream so a
+        // student can never be saved into a stream from another class.
+        let streamLoadToken = 0;
+
+        function loadEditStreams(classId, selectedStream, selectedStreamName) {
+            const streamSel = document.getElementById('ef_stream');
+            if (!streamSel) return Promise.resolve();
+
+            const token = ++streamLoadToken; // ignore stale responses if the class changes again quickly
+
+            if (!classId) {
+                streamSel.innerHTML = '<option value="">-- Select Stream --</option>';
+                streamSel.disabled = false;
+                return Promise.resolve();
+            }
+
+            streamSel.innerHTML = '<option value="">Loading streams...</option>';
+            streamSel.disabled = true;
+
+            return fetch(`{{ url('/students/streams/by-class') }}?class_id=${encodeURIComponent(classId)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+                .then(r => r.json())
+                .then(streams => {
+                    if (token !== streamLoadToken) return;
+                    const list = Array.isArray(streams) ? streams : [];
+                    let html = '<option value="">-- Select Stream --</option>';
+
+                    list.forEach(st => {
+                        const val = st.stream_id;
+                        html += `<option value="${esc(val)}" ${String(val) === String(selectedStream) ? 'selected' : ''}>${esc(st.display_name || val)}</option>`;
+                    });
+
+                    // Legacy: current stream isn't registered under this class
+                    // — keep it selectable so saving other fields is unaffected.
+                    if (selectedStream && !list.some(st => String(st.stream_id) === String(selectedStream))) {
+                        html += `<option value="${esc(selectedStream)}" selected>${esc(selectedStreamName || selectedStream)}</option>`;
+                    }
+
+                    if (list.length === 0 && !selectedStream) {
+                        html = '<option value="">No streams found</option>';
+                    }
+
+                    streamSel.innerHTML = html;
+                    streamSel.disabled = false;
+                })
+                .catch(() => {
+                    if (token !== streamLoadToken) return;
+                    streamSel.innerHTML = '<option value="">Failed to load streams</option>';
+                    streamSel.disabled = false;
+                });
+        }
+
+        function initEditClassStream(s) {
+            const classSel = document.getElementById('ef_senior');
+            if (!classSel) return;
+
+            // Initial load: current class + its streams, current stream pre-selected.
+            loadEditStreams(s.senior_id, s.stream_id, s.stream);
+
+            classSel.addEventListener('change', function () {
+                // Different class chosen → stream starts empty, then loads.
+                loadEditStreams(this.value, null, null);
+            });
         }
 
         function esc(v) { return (v ?? '').toString().replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -1614,8 +1694,16 @@ use App\Helpers\PermissionHelper;
             const ln = document.getElementById('ef_lastname')?.value.trim();
             const gn = document.getElementById('ef_gender')?.value;
 
+            const sr = document.getElementById('ef_senior')?.value || '';
+            const st = document.getElementById('ef_stream')?.value || '';
+
             if (!fn || !ln || !gn) {
                 Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'First name, last name and gender are required.', confirmButtonColor: '#2f2ccb' });
+                return;
+            }
+
+            if (!sr || !st) {
+                Swal.fire({ icon: 'warning', title: 'Class & Stream', text: 'Please select both a class and a stream.', confirmButtonColor: '#2f2ccb' });
                 return;
             }
 
@@ -1641,6 +1729,8 @@ use App\Helpers\PermissionHelper;
                 fd.append('firstname', fn);
                 fd.append('lastname', ln);
                 fd.append('gender', gn);
+                fd.append('senior', sr);
+                fd.append('stream', st);
                 fd.append('date_of_birth', document.getElementById('ef_dob')?.value || '');
                 fd.append('place_of_birth', document.getElementById('ef_pob')?.value || '');
                 fd.append('nationality', document.getElementById('ef_nat')?.value || '');
@@ -1672,17 +1762,24 @@ use App\Helpers\PermissionHelper;
                     headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                     body: fd
                 })
-                    .then(r => r.json())
+                    .then(async r => {
+                        const data = await r.json().catch(() => ({}));
+                        if (!r.ok || data.success === false) {
+                            const firstValidationError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+                            throw new Error(data.message || firstValidationError || 'Failed to update student.');
+                        }
+                        return data;
+                    })
                     .then(data => {
                         saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                         saveBtn.disabled = false;
                         closeModal('editModal');
                         SMASA.donePage('Updated!', data.message || 'Student updated successfully.');
                     })
-                    .catch(() => {
+                    .catch(err => {
                         saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                         saveBtn.disabled = false;
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update student.', confirmButtonColor: '#2f2ccb' });
+                        Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to update student.', confirmButtonColor: '#2f2ccb' });
                     });
             });
         }

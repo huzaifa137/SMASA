@@ -335,10 +335,10 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                     MAX(
                         CAST(
                             SUBSTRING_INDEX(
-                                SUBSTRING_INDEX(Student_ID, '-', 4),
-                                '-',
-                                -1
-                            ) AS UNSIGNED
+                        SUBSTRING_INDEX(Student_ID, '-', -2),
+                        '-',
+                        1
+                    ) AS UNSIGNED
                         )
                     ) as max_number
                 ")
@@ -354,10 +354,10 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                     MAX(
                         CAST(
                             SUBSTRING_INDEX(
-                                SUBSTRING_INDEX(registration_number, '-', 4),
-                                '-',
-                                -1
-                            ) AS UNSIGNED
+                        SUBSTRING_INDEX(registration_number, '-', -2),
+                        '-',
+                        1
+                    ) AS UNSIGNED
                         )
                     ) as max_number
                 ")

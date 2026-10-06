@@ -366,9 +366,10 @@ class SchoolController extends Controller
     public function deleteSchool(School $schoolId)
     {
         try {
-            SchoolProfile::where('school_id', $schoolId->id)->delete();
-            House::where('Number', $schoolId->registration_code)->delete();
-            $schoolId->delete();
+            // Removes the school and everything attached to it: students and
+            // their photos, teachers, marks, classes, subjects, finance,
+            // library, uploaded files, house record and profile.
+            app(\App\Services\SchoolDeletionService::class)->delete($schoolId);
 
             return response()->json(['success' => true]);
 

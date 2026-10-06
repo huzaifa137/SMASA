@@ -184,10 +184,34 @@ class SchoolProductMergeService
             // values before deleting from those three tables.
 
             if (!empty($classIds)) {
+                // Exams whose ONLY classes are the doomed ones would be left
+                // with no class at all: they could never be edited ("At least
+                // one class must sit this examination") or released again.
+                // Work out which those are before their class rows go.
+                $orphanExamIds = DB::table('examination_classes')
+                    ->where('school_id', $school->id)
+                    ->whereIn('class_id', $classIds)
+                    ->pluck('examination_id')
+                    ->unique()
+                    ->filter(fn($examId) => !DB::table('examination_classes')
+                        ->where('examination_id', $examId)
+                        ->whereNotIn('class_id', $classIds)
+                        ->exists())
+                    ->values()
+                    ->all();
+
                 DB::table('examination_classes')
                     ->where('school_id', $school->id)
                     ->whereIn('class_id', $classIds)
                     ->delete();
+
+                if (!empty($orphanExamIds)) {
+                    foreach (['examination_marks', 'examination_subject_settings', 'report_card_remarks', 'student_discipline_ratings'] as $table) {
+                        DB::table($table)->whereIn('examination_id', $orphanExamIds)->delete();
+                    }
+                    DB::table('student_exam_summaries')->whereIn('exam_id', $orphanExamIds)->delete();
+                    DB::table('examinations')->where('school_id', $school->id)->whereIn('id', $orphanExamIds)->delete();
+                }
             }
 
             // Students who belong to the doomed classes. Linked (consolidated)

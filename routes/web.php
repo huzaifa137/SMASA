@@ -174,7 +174,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // Subsidiary) — the super-admin-managed counterpart to what a school
     // can already add for itself on /a-level-combinations. See
     // MasterDataController::secondaryALevelSubjectsIndex().
-    Route::controller(\App\Http\Controllers\MasterDataController::class)
+    Route::controller(MasterDataController::class)
         ->middleware(['AdminAuth'])
         ->prefix('admin')
         ->name('admin.')
@@ -415,6 +415,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     Route::controller(\App\Http\Controllers\CustomSubjectController::class)->middleware(['module:classes'])->group(function () {
         Route::get('/custom-subjects/switch', 'showSwitchPrompt')->name('school.custom-subjects.switch');
         Route::post('/custom-subjects/switch', 'confirmSwitch')->name('school.custom-subjects.confirm');
+        Route::get('/custom-subjects/revert', 'showRevertPrompt')->name('school.custom-subjects.revert');
+        Route::post('/custom-subjects/revert', 'confirmRevert')->name('school.custom-subjects.revert.confirm');
         Route::get('/custom-subjects', 'manage')->name('school.custom-subjects.manage');
         Route::post('/custom-subjects', 'store')->name('school.custom-subjects.store');
         Route::put('/custom-subjects/{subject}', 'update')->name('school.custom-subjects.update');
@@ -766,6 +768,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{id}/passslips/preview', 'passslipPreview')->name('passslips.preview');
             Route::get('/{id}/passslips/settings', 'getPassslipSettings')->name('passslips.settings.get');
             Route::post('/{id}/passslips/settings', 'savePassslipSettings')->name('passslips.settings.save');
+            Route::post('/{id}/passslips/settings/copy', 'copyPassslipSettings')->name('passslips.settings.copy');
             Route::get('/{id}/passslips/settings/list', 'listPassslipSettings')->name('passslips.settings.list');
             Route::delete('/{id}/passslips/settings/{classId}', 'deletePassslipSettings')->name('passslips.settings.delete');
 

@@ -557,6 +557,26 @@ selected classes" is clicked. --}}
             opacity: .65;
         }
 
+        .cz-saved-tab .cz-saved-tab-copy {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: .6rem;
+            opacity: .65;
+        }
+
+        .cz-saved-tab .cz-saved-tab-copy:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, .12);
+        }
+
+        .cz-saved-tab.active .cz-saved-tab-copy:hover {
+            background: rgba(255, 255, 255, .25);
+        }
+
         .cz-saved-tab .cz-saved-tab-remove:hover {
             opacity: 1;
             background: rgba(0, 0, 0, .12);
@@ -1056,6 +1076,7 @@ selected classes" is clicked. --}}
 // page, and vice versa.
 const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?template={{ $template }}';
         const DELETE_URL_BASE = '{{ url('examinations/'.$exam->id.'/passslips/settings') }}';
+        const COPY_URL = '{{ route('examination.passslips.settings.copy', $exam->id) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
         // Same per-template "off unless saved otherwise" keys the PHP side
         // uses when rendering the actual slip (see $offByDefaultKeys above),
@@ -1383,6 +1404,10 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 <span class="cz-saved-tab" data-class-id="${it.class_id}" onclick="selectSavedTab(${it.class_id})">
                     <i class="fas fa-sliders-h" style="font-size:.62rem;"></i>
                     <span>${it.class_name}</span>
+                    <span class="cz-saved-tab-copy" title="Copy this design to other classes"
+                          onclick="copySavedTab(event, ${it.class_id}, '${(it.class_name + '').replace(/'/g, "\\'")}')">
+                        <i class="fas fa-copy"></i>
+                    </span>
                     <span class="cz-saved-tab-remove" title="Remove this class's saved customisation"
                           onclick="removeSavedTab(event, ${it.class_id}, '${(it.class_name + '').replace(/'/g, "\\'")}')">
                         <i class="fas fa-times"></i>
@@ -1438,6 +1463,98 @@ function selectSavedTab(classId) {
         setActiveSavedTab(classId);
     }
 }
+
+        /* Copy a saved class' design (for the CURRENT template) onto other
+           classes of this page — e.g. design P7 once, then copy to P4-P6.
+           Targets that already have a saved design for this template are
+           flagged and get overwritten. Works for every Design Template
+           because it always uses currentTemplate() and the class chips
+           this page already renders for the template's own family. */
+        async function copySavedTab(evt, sourceClassId, sourceName) {
+            evt.stopPropagation(); // don't also trigger selectSavedTab()
+
+            const template = currentTemplate();
+            const targets = Array.from(document.querySelectorAll('.cz-class-chip'))
+                .filter(chip => chip.dataset.classId !== String(sourceClassId))
+                .map(chip => ({
+                    id: chip.dataset.classId,
+                    name: chip.textContent.trim(),
+                    hasSaved: savedTabsCache.some(it => String(it.class_id) === chip.dataset.classId),
+                }));
+
+            if (targets.length === 0) {
+                Swal.fire({ icon: 'info', title: 'No other classes', text: 'There are no other classes in this exam to copy to.', confirmButtonColor: '#2f2ccb' });
+                return;
+            }
+
+            const escHtml = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            const listHtml = targets.map(t => `
+                <label style="display:flex;align-items:center;gap:.5rem;padding:.35rem .25rem;cursor:pointer;font-size:.85rem;">
+                    <input type="checkbox" class="cz-copy-target" value="${t.id}">
+                    <span>${escHtml(t.name)}</span>
+                    ${t.hasSaved ? '<small style="color:#b45309;margin-left:auto;">has a saved design — will be replaced</small>' : ''}
+                </label>`).join('');
+
+            const result = await Swal.fire({
+                title: 'Copy design',
+                html: `
+                    <div style="text-align:left;font-size:.85rem;margin-bottom:.5rem;">
+                        Copy <strong>${escHtml(sourceName)}</strong>'s saved design to:
+                    </div>
+                    <label style="display:flex;align-items:center;gap:.5rem;padding:.35rem .25rem;font-size:.8rem;font-weight:600;border-bottom:1px solid #e2e8f0;cursor:pointer;">
+                        <input type="checkbox" id="czCopyAll"> Select all
+                    </label>
+                    <div style="text-align:left;max-height:260px;overflow:auto;">${listHtml}</div>`,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-copy"></i> Copy design',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#2f2ccb',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true,
+                didOpen: () => {
+                    const all = document.getElementById('czCopyAll');
+                    all.addEventListener('change', () => {
+                        document.querySelectorAll('.cz-copy-target').forEach(cb => cb.checked = all.checked);
+                    });
+                },
+                preConfirm: () => {
+                    const ids = Array.from(document.querySelectorAll('.cz-copy-target:checked')).map(cb => parseInt(cb.value, 10));
+                    if (ids.length === 0) {
+                        Swal.showValidationMessage('Select at least one class.');
+                        return false;
+                    }
+                    return ids;
+                },
+            });
+            if (!result.isConfirmed) return;
+
+            fetch(COPY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    source_class_id: sourceClassId,
+                    target_class_ids: result.value,
+                    template: template,
+                }),
+            })
+                .then(async r => {
+                    const res = await r.json().catch(() => ({}));
+                    if (!r.ok || !res.success) throw new Error(res.message || 'Failed to copy the design.');
+                    return res;
+                })
+                .then(res => {
+                    fetchSavedList();
+                    Swal.fire({ icon: 'success', title: 'Copied!', text: res.message, timer: 1800, showConfirmButton: false });
+                })
+                .catch(err => {
+                    Swal.fire({ icon: 'error', title: 'Could not copy', text: err.message || 'Please check your connection and try again.', confirmButtonColor: '#2f2ccb' });
+                });
+        }
 
         /* Delete a saved profile. Doesn't touch other classes' saved
            data — only the row for this one class. */

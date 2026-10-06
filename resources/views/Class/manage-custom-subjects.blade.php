@@ -192,7 +192,14 @@
                     @include('layouts.class-buttons')
                     <div class="card-body bg-light">
 
-                        <h4 class="mb-3">Manage My Subjects</h4>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                            <h4 class="mb-0">Manage My Subjects</h4>
+                            @if ($school->custom_subjects_active)
+                                <a href="{{ route('school.custom-subjects.revert') }}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-arrow-right-arrow-left me-1"></i> Switch back to default subjects
+                                </a>
+                            @endif
+                        </div>
 
                         @if (!$school->custom_subjects_active)
                             <div class="switch-banner">

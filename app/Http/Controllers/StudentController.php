@@ -417,9 +417,9 @@ class StudentController extends Controller
             MAX(
                 CAST(
                     SUBSTRING_INDEX(
-                        SUBSTRING_INDEX(Student_ID, '-', 4),
+                        SUBSTRING_INDEX(Student_ID, '-', -2),
                         '-',
-                        -1
+                        1
                     ) AS UNSIGNED
                 )
             ) as max_number
@@ -433,9 +433,9 @@ class StudentController extends Controller
             MAX(
                 CAST(
                     SUBSTRING_INDEX(
-                        SUBSTRING_INDEX(registration_number, '-', 4),
+                        SUBSTRING_INDEX(registration_number, '-', -2),
                         '-',
-                        -1
+                        1
                     ) AS UNSIGNED
                 )
             ) as max_number
@@ -602,8 +602,18 @@ class StudentController extends Controller
     } catch (\Exception $e) {
         DB::rollBack();
 
+        $message = $e->getMessage();
+
+        if ($e instanceof \Illuminate\Database\QueryException && ($e->errorInfo[1] ?? null) == 1062) {
+            $message = str_contains($e->getMessage(), 'registration_number')
+                ? 'This Student ID is already used by another student. Please refresh the Student ID and try again.'
+                : 'A student with these details already exists.';
+        }
+
         return response()->json([
-            'error' => $e->getMessage(),
+            'status' => 'error',
+            'message' => $message,
+            'error' => $message,
         ], 500);
     }
 }
@@ -702,7 +712,56 @@ class StudentController extends Controller
             'gender' => 'required|string|in:Male,Female,Other',
             'date_of_birth' => 'nullable|date',
             'student_photo' => 'nullable|image|mimes:jpg,png,gif',
+            'senior' => 'nullable|string|max:255',
+            'stream' => 'nullable|string|max:255',
         ]);
+
+        // Class / Stream are only touched when the edit form actually sent
+        // a DIFFERENT pair than what's already on the student — so saving
+        // other fields on a legacy record never trips over class/stream
+        // validation. When it did change, both values must be present and
+        // the stream must really belong to the chosen class for this school.
+        $classStreamUpdate = [];
+        $newSenior = $request->input('senior');
+        $newStream = $request->input('stream');
+
+        if (($newSenior !== null && $newSenior !== '') || ($newStream !== null && $newStream !== '')) {
+            $changed = (string) $newSenior !== (string) $student->senior
+                || (string) $newStream !== (string) $student->stream;
+
+            if ($changed) {
+                $schoolId = Session('LoggedSchool');
+
+                if (empty($newSenior) || empty($newStream)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select both a class and a stream.',
+                    ], 422);
+                }
+
+                $classExists = Classroom::where('school_id', $schoolId)
+                    ->where('class_name', $newSenior)
+                    ->exists();
+
+                $streamBelongsToClass = Stream::where('school_id', $schoolId)
+                    ->where('class_id', $newSenior)
+                    ->where('stream_id', $newStream)
+                    ->exists();
+
+                if (!$classExists || !$streamBelongsToClass) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'The selected stream does not belong to the selected class.',
+                    ], 422);
+                }
+
+                $classStreamUpdate = ['senior' => $newSenior, 'stream' => $newStream];
+            }
+        }
+
+        // senior/stream were validated above but are applied only through
+        // $classStreamUpdate, never straight from $validated.
+        unset($validated['senior'], $validated['stream']);
 
         $photoPath = null;
 
@@ -730,7 +789,7 @@ class StudentController extends Controller
             $photoPath = $studentId;
         }
 
-        $student->update(array_merge($validated, [
+        $student->update(array_merge($validated, $classStreamUpdate, [
             'place_of_birth' => $request->place_of_birth,
             'nationality' => $request->nationality,
             'birth_certificate_entry_number' => $request->birth_certificate_entry_number,
@@ -1053,6 +1112,19 @@ class StudentController extends Controller
 
             'stream_id' => $student->stream,
             'stream' => Helper::recordMdname($student->stream),
+
+            // Every class this school runs — powers the Class / Senior
+            // dropdown in the Edit Student modal (same source the Add
+            // Student page uses: the school's own Classroom rows).
+            'classes' => Classroom::where('school_id', $student->school_id ?: Session('LoggedSchool'))
+                ->pluck('class_name')
+                ->unique()
+                ->values()
+                ->map(fn ($classId) => [
+                    'id' => (string) $classId,
+                    'name' => Helper::recordMdname($classId) ?: $classId,
+                ])
+                ->all(),
 
             'primary_contact' => $student->primary_contact,
             'other_contact' => $student->other_contact,

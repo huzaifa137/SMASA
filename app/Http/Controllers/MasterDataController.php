@@ -155,7 +155,6 @@ class MasterDataController extends Controller
             ->get();
 
         $controls = self::$controls;
-        $pages = self::$pages;
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
@@ -489,26 +488,7 @@ public function dropDown($links)
 
         $list_id = $this->rgf('master_codes', $masterCode, "id", "mc_code");
 
-        if ($masterCode == config('constants.options.PROCUREMENT_CATEGORY')) {
-
-            $md_code = 'ppd_' . str_replace(' ', '_', strtolower($masterRecord->md_code));
-            $md_name = 'ppd_' . str_replace(' ', '_', strtolower($masterRecord->md_name));
-
-            $md_code1 = 'ppt_' . str_replace(' ', '_', strtolower($masterRecord->md_code));
-            $md_name2 = 'ppt_' . str_replace(' ', '_', strtolower($masterRecord->md_name));
-
-            if (Schema::hasColumn('procurement_dates', $md_code) || Schema::hasColumn('procurement_dates', $md_name)) {
-                Schema::table('procurement_dates', function (Blueprint $table) use ($md_name) {
-                    $table->dropColumn($md_name);
-                });
-            }
-
-            if (Schema::hasColumn('procurement_plan_thresholds', $md_code1) || Schema::hasColumn('procurement_plan_thresholds', $md_name2)) {
-                Schema::table('procurement_plan_thresholds', function (Blueprint $table) use ($md_name2) {
-                    $table->dropColumn($md_name);
-                });
-            }
-        }
+       
 
         DB::table('master_datas')
             ->where('md_id', $md_id)
