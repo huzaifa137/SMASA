@@ -12,19 +12,22 @@ namespace App\Support;
  *   $r->school      name, name_arabic, motto, logo_url, phone, email, location, website
  *   $r->student     full_name, first_name, last_name, other_names, admission_no, paycode,
  *                   class_name, stream, gender, dob, age, house, status, photo_url,
+ *                   lin (LIN No.), school_pay (paycode), section (DAY / BOARDING if known),
  *                   class_teacher, raw (the full students row)
- *   $r->exam        id, name, title, term, term_label, academic_year, pass_mark, start_date, end_date
+ *   $r->exam        id, name, title, term, term_label, term_roman, academic_year, pass_mark, start_date, end_date
  *   $r->term_dates  ends_on, next_starts_on   (formatted d M Y, or null)
  *   $r->subjects[]  no, name, type, marks, total, percentage, grade, points, remark,
  *                   teacher, initials, class_average, dev, marks_display, pct_display
  *   $r->summary     total_obtained, total_max, percentage, average_mark, grade, remark,
- *                   rank, class_total, rank_label, subjects_count, aggregate, division,
+ *                   rank, class_total, rank_label, subjects_count, aggregate, division, division_short,
  *                   passed, result, status, total_delta, average_delta
  *   $r->attendance  present, days_opened, absent, percentage
  *   $r->growth[]    label, percentage, exam_name, total
  *   $r->discipline[] name, rating
  *   $r->grade_scale[] grade, min, max, remark, points
  *   $r->remarks     class_teacher{name,remark,signature_url}, head_teacher{...}
+ *   $r->progressive null, or {subjects[]{name,code}, rows[]{exam_id,name,label,is_current,cells[]{marks,points},avg,avg_points,agg,div,div_short}}
+ *                   (only when the design header says "progressive: true")
  *   $r->qr_text     text to encode in the QR code
  *   $r->generated_at, $r->level, $r->accent, $r->index, $r->count
  *   $r->on('show_qr')   -> bool   (query string > school's saved settings > default)
@@ -44,6 +47,8 @@ class CustomReport
     public object $remarks;
     public string $qr_text = '';
     public string $generated_at = '';
+    public string $issued_on = '';
+    public ?object $progressive = null;
     public string $level = 'primary';
     public string $accent = '#1e3a8a';
     public bool $is_comment_scale = false;

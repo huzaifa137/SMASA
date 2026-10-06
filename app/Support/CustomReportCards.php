@@ -25,6 +25,7 @@ use Throwable;
  *        level: primary
  *        description: Navy letterhead, two-column marks table
  *        accent: #1e3a8a
+ *        progressive: true      (optional - load the Progressive Assessment Record)
  *        toggles: show_logo, show_photo, show_qr, show_remarks
  *        off_by_default: show_stu_house
  *      --}}
@@ -166,6 +167,9 @@ class CustomReportCards
             'level' => $level,
             'description' => $raw['description'] ?? null,
             'accent' => $accent,
+            // "progressive: true" asks the system to also load the Progressive
+            // Assessment Record (every sitting of the term) for this design.
+            'progressive' => in_array(strtolower($raw['progressive'] ?? ''), ['1', 'true', 'yes'], true),
             'toggles' => $toggles,
             'off_by_default' => $off,
             'has_header' => !empty($raw),

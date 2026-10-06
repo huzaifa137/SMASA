@@ -1101,6 +1101,35 @@ class ExaminationController extends Controller
     public function renderCustomSlips(array $custom, $exam, $schoolId, array $slips, string $mode, array $extra = [])
     {
         $termDates = Helper::passslipTermDates($schoolId);
+
+        // Designs that declare "progressive: true" also get the Progressive
+        // Assessment Record (all sittings of the term, per subject) - built
+        // here so every route (single / class / all / preview / parent
+        // portal / admin studio) behaves the same.
+        if (!empty($custom['meta']['progressive'])) {
+            foreach ($slips as $i => $slip) {
+                if (array_key_exists('progressiveAssessment', $slip) && $slip['progressiveAssessment'] !== null) {
+                    continue;
+                }
+                $st = (object) $slip['student'];
+                $slips[$i]['progressiveAssessment'] = $this->buildProgressiveAssessmentData(
+                    $exam->id,
+                    $st->id,
+                    $schoolId,
+                    $st->senior,
+                    $st->stream,
+                    $exam->term,
+                    $exam->academic_year,
+                    false,
+                    null,
+                    null,
+                    null,
+                    $st,
+                    $this->parseIdCsv(request('progressive_exam_ids'))
+                );
+            }
+        }
+
         $reports = CustomReportData::buildAll($slips, $exam, $schoolId, $termDates, $custom);
         $page = (object) Helper::passslipPageSizing();
 

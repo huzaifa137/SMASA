@@ -582,7 +582,7 @@ $controller = new Controller();
                                         <th>Role</th>
                                         <th class="text-center">Status</th>
                                         @if(PermissionHelper::canFeature('edit_teacher') || PermissionHelper::canFeature('delete_teacher'))
-                                            <th class="text-center">Action</th>
+                                            <th class="text-center" style="background-color: #2C29CA;">Action</th>
                                         @endif
                                     </tr>
                                 </thead>

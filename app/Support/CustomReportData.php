@@ -88,8 +88,14 @@ class CustomReportData
             'other_names' => $s->other_names ?? '',
             'admission_no' => $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—')),
             'paycode' => $s->paycode ?? '—',
+            // LIN No. is stored in students.admission_number (see StudentImportFields).
+            'lin' => $s->admission_number ?? '—',
+            // "School Pay" code = the student's paycode.
+            'school_pay' => $s->paycode ?? '—',
+            // DAY / BOARDING when the registration number carries it, else null.
+            'section' => self::sectionFromRegistrationNumber($s->registration_number ?? null),
             'class_name' => Helper::recordMdname($s->senior ?? null) ?? '—',
-            'stream' => $s->stream ?? '',
+            'stream' => ($s->stream ?? '') === 'NO_STREAM' ? '' : ($s->stream ?? ''),
             'gender' => $s->gender ?? '—',
             'dob' => $dob?->format('d M Y') ?? '—',
             'age' => $dob?->age,
@@ -107,6 +113,7 @@ class CustomReportData
             'name' => $exam->exam_name,
             'term' => $exam->term,
             'term_label' => $termLabel,
+            'term_roman' => self::roman(Term::number($exam->term)),
             'academic_year' => $exam->academic_year,
             'pass_mark' => $exam->pass_mark ?? null,
             'start_date' => $exam->start_date ?? null,
@@ -172,6 +179,7 @@ class CustomReportData
             'subjects_count' => $subjMarks->count(),
             'aggregate' => $avgSummary['aggregate'] ?? ($examSummary->last()['aggregate'] ?? null),
             'division' => $avgSummary['division'] ?? ($examSummary->last()['division'] ?? null),
+            'division_short' => Helper::divisionShort($avgSummary['division'] ?? ($examSummary->last()['division'] ?? null)),
             'passed' => $passed,
             'result' => $passed ? 'PASS' : 'FAIL',
             'status' => $r->student->status,
@@ -222,11 +230,118 @@ class CustomReportData
         }
 
         $r->generated_at = now()->format('d M Y, H:i');
+        $r->issued_on = now()->format('Y-m-d');
+        $r->progressive = self::progressive($slip['progressiveAssessment'] ?? null, $exam, $r->grade_scale);
 
         return $r;
     }
 
     // ─── Pieces ─────────────────────────────────────────────────────────────
+
+    /**
+     * Progressive Assessment Record: one row per sitting of the term, one
+     * cell (marks + grade points) per subject, plus the row's AVG / AGG / DIV.
+     * Mirrors partials/progressive-assessment-record.blade.php.
+     */
+    private static function progressive(?array $pa, object $exam, array $gradeScale): ?object
+    {
+        if (!$pa) {
+            return null;
+        }
+
+        $exams = collect($pa['examsList'] ?? []);
+        $subjects = collect($pa['subjectMarks'] ?? [])->values();
+        $summary = collect($pa['examSummary'] ?? []);
+
+        if ($exams->isEmpty() || $subjects->isEmpty()) {
+            return null;
+        }
+
+        $codes = [
+            'beginningofterm' => 'BOT', 'bot' => 'BOT', 'midterm' => 'MOT', 'mot' => 'MOT',
+            'endofterm' => 'EOT', 'eot' => 'EOT', 'continuousassessment' => 'CA', 'ca' => 'CA',
+        ];
+        $base = function ($ex) use ($codes) {
+            $type = trim((string) ($ex->exam_type ?? ''));
+            $norm = strtolower(preg_replace('/[^a-z]/i', '', $type));
+            if ($norm !== '' && isset($codes[$norm])) {
+                return $codes[$norm];
+            }
+
+            return strtoupper($type !== '' ? $type : trim((string) $ex->exam_name));
+        };
+        $counts = $exams->map($base)->countBy();
+        $seen = [];
+
+        $pointsFor = function ($avg) use ($gradeScale) {
+            foreach ($gradeScale as $b) {
+                if ($avg >= $b->min && $avg <= $b->max) {
+                    return $b->points !== null ? (int) $b->points : null;
+                }
+            }
+
+            return null;
+        };
+
+        $rows = $exams->values()->map(function ($ex) use ($subjects, $summary, $exam, $base, $counts, &$seen, $pointsFor) {
+            $b = $base($ex);
+            $seen[$b] = ($seen[$b] ?? 0) + 1;
+
+            $cells = $subjects->map(fn($sm) => (object) [
+                'marks' => $sm->exams[$ex->id]['marks_obtained'] ?? null,
+                'points' => $sm->exams[$ex->id]['points'] ?? null,
+            ])->all();
+
+            $vals = collect($cells)->pluck('marks')->filter(fn($v) => $v !== null);
+            $avg = $vals->isNotEmpty() ? (int) round($vals->avg()) : null;
+            $es = $summary->get($ex->id);
+
+            return (object) [
+                'exam_id' => $ex->id,
+                'name' => strtoupper(trim((string) $ex->exam_name)),
+                'label' => ($counts[$b] ?? 1) > 1 ? $b . ' ' . $seen[$b] : $b,
+                'is_current' => (int) $ex->id === (int) $exam->id,
+                'cells' => $cells,
+                'avg' => $avg,
+                'avg_points' => $avg !== null ? $pointsFor($avg) : null,
+                'agg' => $es['aggregate'] ?? null,
+                'div' => $es['division'] ?? null,
+                'div_short' => Helper::divisionShort($es['division'] ?? null),
+            ];
+        })->all();
+
+        return (object) [
+            'subjects' => $subjects->map(fn($sm) => (object) [
+                'name' => $sm->subject_name,
+                'code' => strtoupper(mb_substr(trim((string) $sm->subject_name), 0, 4)),
+            ])->all(),
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * Registration numbers look like "<house>-<CATEGORY>-<seq>-<year>"
+     * (see StudentBulkImport). Only DAY / BOARDING categories are meaningful
+     * as a report-card "Section"; anything else returns null.
+     */
+    private static function sectionFromRegistrationNumber(?string $reg): ?string
+    {
+        if ($reg && preg_match('/-([A-Z]+)-\d+-\d{4}$/', strtoupper($reg), $m)) {
+            if ($m[1] === 'DAY') {
+                return 'DAY';
+            }
+            if (in_array($m[1], ['BOARDING', 'BRD', 'BDG'], true)) {
+                return 'BOARDING';
+            }
+        }
+
+        return null;
+    }
+
+    private static function roman(?int $n): string
+    {
+        return [1 => 'I', 2 => 'II', 3 => 'III'][$n] ?? '';
+    }
 
     private static function schoolInfo($schoolId): object
     {
