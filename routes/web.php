@@ -192,6 +192,30 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/secondary-olevel-subjects/{md_id}', 'deleteSecondaryOLevelSubject')->name('secondary-olevel-subjects.delete');
         });
 
+    // Custom (per-school) report cards — platform-admin only (checked in the
+    // controller via Helper::isPlatformAdmin(), since AdminAuth also admits
+    // school sessions).
+    Route::controller(\App\Http\Controllers\CustomReportCardController::class)
+        ->middleware(['AdminAuth'])
+        ->prefix('admin/custom-report-cards')
+        ->name('admin.custom-report-cards.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/sync', 'sync')->name('sync');
+            Route::put('/templates/{id}', 'updateTemplate')->name('templates.update');
+            Route::delete('/templates/{id}', 'destroyTemplate')->name('templates.delete');
+
+            Route::get('/assignments', 'assignments')->name('assignments');
+            Route::post('/assignments', 'assign')->name('assign');
+            Route::put('/assignments/{id}', 'updateAssignment')->name('assignments.update');
+            Route::delete('/assignments/{id}', 'unassign')->name('assignments.delete');
+
+            Route::get('/studio', 'studio')->name('studio');
+            Route::get('/studio/exams', 'studioExams')->name('studio.exams');
+            Route::get('/studio/students', 'studioStudents')->name('studio.students');
+            Route::get('/studio/preview', 'preview')->name('studio.preview');
+        });
+
     // NLSC (New Lower Secondary Curriculum, Senior 1-4) Topic catalogue —
     // platform-wide, super-admin-managed, same shape as the A-Level
     // subject list above but for Topics + their Competency Areas. See

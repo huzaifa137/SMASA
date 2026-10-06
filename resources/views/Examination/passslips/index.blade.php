@@ -913,12 +913,13 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
 
+                @php $customDesigns = \App\Support\CustomReportCards::activeForSchool($exam->school_id); @endphp
                 @if(Helper::schoolHasNonSecondary($exam->school_id))
                 <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=classic" class="stack-btn">
                     <div class="ic"><i class="fas fa-graduation-cap"></i></div>
                     <div>
                         <div class="t">Customize Primary</div>
-                        <div class="d">Classic / Modern / Minimal</div>
+                        <div class="d">{{ $customDesigns['primary']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['primary']['template']->name : 'Classic / Modern / Minimal' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
@@ -930,7 +931,7 @@ use App\Http\Controllers\Helper;
                     <div class="ic"><i class="fas fa-child"></i></div>
                     <div>
                         <div class="t">Customize Nursery</div>
-                        <div class="d">Baby / Middle / Top Class</div>
+                        <div class="d">{{ $customDesigns['nursery']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['nursery']['template']->name : 'Baby / Middle / Top Class' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>
@@ -942,7 +943,7 @@ use App\Http\Controllers\Helper;
                     <div class="ic"><i class="fas fa-user-graduate"></i></div>
                     <div>
                         <div class="t">Customize Secondary</div>
-                        <div class="d">O-Level / A-Level report card</div>
+                        <div class="d">{{ $customDesigns['secondary']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['secondary']['template']->name : 'O-Level / A-Level report card' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
                 </a>

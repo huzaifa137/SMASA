@@ -73,6 +73,28 @@ class Helper extends Controller
         );
     }
 
+    // Platform (TechSate) administrators ONLY - NOT school administrators, NOT
+    // sales representatives. AdminAuth lets school sessions through too, so
+    // platform-wide screens (e.g. Custom Report Cards) must check this as well.
+    public static function isPlatformAdmin(): bool
+    {
+        // Helper::isPlatformAdmin()
+
+        $adminId = session('LoggedAdmin');
+        if (!$adminId) {
+            return false;
+        }
+
+        $roleId = self::getcompanyAdministratorsId();
+        if (!$roleId) {
+            return false;
+        }
+
+        $admin = User::find($adminId);
+
+        return $admin && data_get($admin, 'attached_company_role') == $roleId;
+    }
+
     // TechSateAdmins and School Admins and Sales Representatives Teacher access ability (URPF)
     public static function isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
     {

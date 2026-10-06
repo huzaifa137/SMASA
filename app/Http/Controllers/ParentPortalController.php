@@ -209,6 +209,20 @@ class ParentPortalController extends Controller
             ? $examController->buildMultiExamPassslipData($examIds, $studentId, $student->school_id, $avgExamIds, $student)
             : $examController->buildPassslipData($examId, $studentId, $student->school_id, $exam, $student);
 
+        // The school may have its OWN custom report-card design for this
+        // level (assigned by a platform admin) - parents see the same one
+        // the school prints.
+        if ($custom = $examController->resolveCustomSlip($student->school_id, $student->senior)) {
+            return $examController->renderCustomSlips(
+                $custom,
+                $exam,
+                $student->school_id,
+                [$examController->slipFromPassslipData($student, $passslipData)],
+                'single',
+                ['parentView' => true, 'backUrl' => route('parents.results', $student->id)]
+            );
+        }
+
         $qrText = $passslipData['qrText'] ?? '';
         $subjectMarks = $passslipData['subjectMarks'] ?? collect();
         $totalObtained = $passslipData['totalObtained'] ?? 0;

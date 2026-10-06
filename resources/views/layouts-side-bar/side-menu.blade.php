@@ -522,6 +522,14 @@ use App\Helpers\PermissionHelper;
                 </a>
             </li>
 
+            @if(\App\Http\Controllers\Helper::isPlatformAdmin())
+            <li class="slide">
+                <a class="side-menu__item" href="{{ route('admin.custom-report-cards.index') }}">
+                    <i class="fas fa-file-invoice fa-2x mr-3"></i>Custom Report Cards
+                </a>
+            </li>
+            @endif
+
             <li class="slide has-sub">
                 <a class="side-menu__item" href="#" data-toggle="submenu">
                     <i class="fas fa-database fa-2x mr-3"></i>

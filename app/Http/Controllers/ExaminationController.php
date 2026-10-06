@@ -17,6 +17,8 @@ use App\Models\DisciplineCriteria;
 use App\Models\StudentDisciplineRating;
 use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
+use App\Support\CustomReportCards;
+use App\Support\CustomReportData;
 use Carbon\Carbon;
 
 class ExaminationController extends Controller
@@ -1024,6 +1026,103 @@ class ExaminationController extends Controller
         };
     }
 
+    // ─── Custom (per-school) report cards ──────────────────────────────────
+    // A platform admin can assign a school its OWN report-card design per
+    // level (Nursery / Primary / Secondary) - see App\Support\CustomReportCards
+    // and Admin → Custom Report Cards. When a school has an active
+    // assignment for a class's level, every print route below renders that
+    // design instead of Classic/Modern/Minimal/etc. A school with no
+    // assignment is completely unaffected.
+
+    /**
+     * The custom design that applies to ONE class (single student / one
+     * class print / live preview), or null to use the built-in designs.
+     */
+    public function resolveCustomSlip($schoolId, $classId): ?array
+    {
+        return CustomReportCards::resolveForClass($schoolId, $classId, request('template'));
+    }
+
+    /**
+     * Bulk print across several classes renders ONE Blade view, so a custom
+     * design only applies when every class in the run is the same level.
+     * A mixed Nursery + Primary + Secondary run keeps the legacy behaviour
+     * (built-in Primary fallback) - print those per class instead.
+     */
+    public function resolveCustomSlipForClasses($schoolId, $classIds): ?array
+    {
+        $levels = collect($classIds)
+            ->map(fn($c) => CustomReportCards::levelForClass($c))
+            ->unique()
+            ->values();
+
+        if ($levels->count() !== 1) {
+            return null;
+        }
+
+        return CustomReportCards::resolve($schoolId, $levels->first(), request('template'));
+    }
+
+    /**
+     * Turn buildPassslipData()/buildMultiExamPassslipData() output for ONE
+     * student into the slip array shape passslipClass()/passslipAll() use.
+     */
+    public function slipFromPassslipData($student, array $passslipData): array
+    {
+        return [
+            'student' => $student,
+            'qrText' => $passslipData['qrText'] ?? '',
+            'subjectMarks' => $passslipData['subjectMarks'] ?? collect(),
+            'totalObtained' => $passslipData['totalObtained'] ?? 0,
+            'totalMax' => $passslipData['totalMax'] ?? 0,
+            'percentage' => $passslipData['percentage'] ?? 0,
+            'overallGrade' => $passslipData['overallGrade'] ?? '—',
+            'overallRemark' => $passslipData['overallRemark'] ?? '—',
+            'classRank' => $passslipData['classRank'] ?? '—',
+            'classTotal' => $passslipData['classTotal'] ?? 0,
+            'growthData' => $passslipData['growthData'] ?? [],
+            'previousSubjectMarks' => $passslipData['previousSubjectMarks'] ?? collect(),
+            'isEarlyYears' => $passslipData['isEarlyYears'] ?? false,
+            'earlyYearsAverage' => $passslipData['earlyYearsAverage'] ?? null,
+            'earlyYearsMaxMark' => $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark(),
+            'useAvg' => $passslipData['useAvg'] ?? false,
+            'examSummary' => $passslipData['examSummary'] ?? [],
+            'avgSummary' => $passslipData['avgSummary'] ?? null,
+            'disciplineRatings' => $passslipData['disciplineRatings'] ?? collect(),
+        ];
+    }
+
+    /**
+     * Render a school's custom design for a set of slips. $mode is
+     * 'single' | 'class' | 'all' (class/all auto-open the print dialog, same
+     * as the built-in designs). $extra lets callers add view flags such as
+     * parentView / backUrl / embed.
+     */
+    public function renderCustomSlips(array $custom, $exam, $schoolId, array $slips, string $mode, array $extra = [])
+    {
+        $termDates = Helper::passslipTermDates($schoolId);
+        $reports = CustomReportData::buildAll($slips, $exam, $schoolId, $termDates, $custom);
+        $page = (object) Helper::passslipPageSizing();
+
+        $first = $reports[0] ?? null;
+        $subtitle = match ($mode) {
+            'single' => $first?->student->full_name ?? '',
+            'class' => trim(($first?->student->class_name ?? '') . ($first && $first->student->stream !== '' ? ' – ' . $first->student->stream : '')),
+            default => 'All classes',
+        };
+
+        return view($custom['view'], [
+            'exam' => $exam,
+            'reports' => $reports,
+            'mode' => $mode,
+            'custom' => $custom,
+            'page' => $page,
+            'termDates' => $termDates,
+            'toolbarSubtitle' => $subtitle,
+            'embed' => request()->boolean('embed'),
+        ] + $extra);
+    }
+
     // ─── Discipline / Conduct Ratings ───────────────────────────────────────
     // Per-school configurable criteria (Punctuality, Behaviour, ...), rated
     // A/B/C by the class teacher per exam. Feeds the "Discipline" block on
@@ -1405,6 +1504,17 @@ class ExaminationController extends Controller
             $passslipData = $this->buildPassslipData($examId, $studentId, $schoolId, $exam, $student);
         }
 
+        // Custom (per-school) report card assigned for this class's level?
+        if ($custom = $this->resolveCustomSlip($schoolId, $student->senior)) {
+            return $this->renderCustomSlips(
+                $custom,
+                $exam,
+                $schoolId,
+                [$this->slipFromPassslipData($student, $passslipData)],
+                'single'
+            );
+        }
+
         // 🔥 KEY FIX: Extract individual variables from the array
         $qrText = $passslipData['qrText'] ?? '';
         $subjectMarks = $passslipData['subjectMarks'] ?? collect();
@@ -1530,6 +1640,9 @@ class ExaminationController extends Controller
 
         $this->applySavedPassslipSettings($schoolId, $classId);
 
+        // Custom (per-school) report card for this class's level, if assigned.
+        $custom = $this->resolveCustomSlip($schoolId, $classId);
+
         // ✅ Removed orderBy('lastname') - we'll sort by performance instead
         $students = DB::table('students')
             ->where('school_id', $schoolId)
@@ -1544,7 +1657,7 @@ class ExaminationController extends Controller
         // Nursery's and Secondary's report layouts don't have a
         // Progressive Assessment Record section — skip the extra query
         // work for those families.
-        $isNurseryForProgressive = $this->isNurseryClass($classId) || $this->isSecondaryClass($classId);
+        $isNurseryForProgressive = $this->isNurseryClass($classId) || $this->isSecondaryClass($classId) || $custom !== null;
 
         // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
         $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList, $classId, $streamId, $isNurseryForProgressive) {
@@ -1604,6 +1717,10 @@ class ExaminationController extends Controller
                 return strcmp($a['student']->lastname, $b['student']->lastname);
             })
             ->values(); // Reset array keys
+
+        if ($custom) {
+            return $this->renderCustomSlips($custom, $exam, $schoolId, $slips->all(), 'class');
+        }
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
@@ -1677,6 +1794,12 @@ class ExaminationController extends Controller
             $this->resolveBulkPassslipTemplate($schoolId, $examClasses->first()->class_id);
         }
 
+        // Custom (per-school) report card - only when every class in this
+        // bulk run is the same level (see resolveCustomSlipForClasses()).
+        $custom = $examClasses->isNotEmpty()
+            ? $this->resolveCustomSlipForClasses($schoolId, $examClasses->pluck('class_id'))
+            : null;
+
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
         $multiExam = count($examIds) > 1;
         $examsList = collect([$exam]);
@@ -1690,7 +1813,7 @@ class ExaminationController extends Controller
                 ->where('stream', $ec->stream_id)
                 ->get(); // ✅ Removed orderBy('lastname')
 
-            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id) || $this->isSecondaryClass($ec->class_id);
+            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id) || $this->isSecondaryClass($ec->class_id) || $custom !== null;
 
             // Progressive Assessment Record's "Sittings" picker, resolved
             // per-class directly from that class's own saved settings —
@@ -1764,6 +1887,10 @@ class ExaminationController extends Controller
             })
             ->values() // Reset array keys
             ->toArray();
+
+        if ($custom) {
+            return $this->renderCustomSlips($custom, $exam, $schoolId, $allSlips, 'all');
+        }
 
         $useAvg = $multiExam && count($avgExamIds) >= 2;
 
@@ -1928,6 +2055,20 @@ class ExaminationController extends Controller
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
+        // ── Custom (per-school) design assigned? It is THE default here. ──
+        // Whatever ?template= was asked for (classic / nursery-classic / ...),
+        // map it to a level; if this school has an active custom design for
+        // that level, show it instead (locked schools can't opt out, unlocked
+        // ones can still reach the built-ins with an explicit built-in key).
+        $requested = $request->query('template', 'classic');
+        $requestedLevel = CustomReportCards::isCustomTemplateKey($requested)
+            ? (CustomReportCards::readMeta((string) CustomReportCards::slugFromKey($requested))['level'] ?? 'primary')
+            : CustomReportCards::levelForBuiltinKey($requested);
+
+        if ($custom = CustomReportCards::resolve($schoolId, $requestedLevel, $requested)) {
+            return $this->customizeCustomDesign($exam, $schoolId, $custom);
+        }
+
         $template = $request->query('template', 'classic');
         if (!in_array($template, self::PASSSLIP_TEMPLATE_KEYS, true)) {
             $template = 'classic';
@@ -1995,6 +2136,38 @@ class ExaminationController extends Controller
     }
 
     /**
+     * "Customize this design" for a school's CUSTOM report card. Much leaner
+     * than the built-in designer: the layout is fixed (it is the school's own
+     * design), so the panel only offers the switches/accent the design file
+     * declared, next to a live preview, saved per class like every other
+     * design. See resources/views/Examination/passslips/customize-custom.blade.php.
+     */
+    private function customizeCustomDesign($exam, $schoolId, array $custom)
+    {
+        $examClasses = DB::table('examination_classes')
+            ->where('examination_id', $exam->id)
+            ->where('school_id', $schoolId)
+            ->get()
+            ->filter(fn($ec) => CustomReportCards::levelForClass($ec->class_id) === $custom['level'])
+            ->values();
+
+        $siblingExams = Examination::where('school_id', $schoolId)
+            ->where('academic_year', $exam->academic_year)
+            ->where('id', '!=', $exam->id)
+            ->orderBy('start_date')
+            ->get();
+
+        return view('Examination.passslips.customize-custom', [
+            'exam' => $exam,
+            'custom' => $custom,
+            'template' => $custom['key'],
+            'examClasses' => $examClasses,
+            'siblingExams' => $siblingExams,
+            'toggleGroups' => CustomReportCards::toggleGroups($custom['meta']),
+        ]);
+    }
+
+    /**
      * Read-only, non-release-gated single-student render used ONLY by
      * the "Customize this design" page's live preview iframe. Unlike
      * passslipStudent()/passslipClass()/passslipAll(), it deliberately:
@@ -2032,8 +2205,18 @@ class ExaminationController extends Controller
         // student with the Primary slip (Progressive Assessment Record
         // and all). Restrict to this exam's own classes of the right
         // family, and never fall back across families.
-        $wantsNurseryTemplate = self::isNurseryTemplateKey($request->query('template'));
-        $wantsSecondaryTemplate = self::isSecondaryTemplateKey($request->query('template'));
+        // A custom design key ("custom-<slug>") belongs to whichever level
+        // its design file declares; built-in keys keep their prefix rules.
+        $previewLevel = null;
+        if (CustomReportCards::isCustomTemplateKey($request->query('template'))) {
+            $previewLevel = CustomReportCards::readMeta((string) CustomReportCards::slugFromKey($request->query('template')))['level'] ?? 'primary';
+        }
+        $wantsNurseryTemplate = $previewLevel !== null
+            ? $previewLevel === 'nursery'
+            : self::isNurseryTemplateKey($request->query('template'));
+        $wantsSecondaryTemplate = $previewLevel !== null
+            ? $previewLevel === 'secondary'
+            : self::isSecondaryTemplateKey($request->query('template'));
 
         $familyClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
@@ -2114,6 +2297,20 @@ class ExaminationController extends Controller
             $passslipData = $this->buildMultiExamPassslipData($examIds, $student->id, $schoolId, $avgExamIds, $student);
         } else {
             $passslipData = $this->buildPassslipData($examId, $student->id, $schoolId, $exam, $student);
+        }
+
+        // Custom design assigned to this school for this student's level?
+        // (Only ever the design ASSIGNED to the school - an unassigned
+        // custom key falls through to the built-in preview.)
+        if ($custom = $this->resolveCustomSlip($schoolId, $student->senior)) {
+            return $this->renderCustomSlips(
+                $custom,
+                $exam,
+                $schoolId,
+                [$this->slipFromPassslipData($student, $passslipData)],
+                'single',
+                ['embed' => true]
+            );
         }
 
         $qrText = $passslipData['qrText'] ?? '';
@@ -2225,7 +2422,18 @@ class ExaminationController extends Controller
             'class_ids' => 'required|array|min:1',
             'class_ids.*' => 'integer',
             'settings' => 'required|array',
-            'settings.template' => 'nullable|string|in:' . implode(',', self::PASSSLIP_TEMPLATE_KEYS),
+            'settings.template' => ['nullable', 'string', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '' || in_array($value, self::PASSSLIP_TEMPLATE_KEYS, true)) {
+                    return;
+                }
+
+                // A custom design key is only valid if it is the design
+                // actually assigned to THIS school.
+                $assigned = collect(CustomReportCards::activeForSchool(Session('LoggedSchool')))->pluck('key');
+                if (!$assigned->contains($value)) {
+                    $fail('Unknown design template.');
+                }
+            }],
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -2261,11 +2469,18 @@ class ExaminationController extends Controller
         $template = $request->query('template', 'classic');
         $isNurseryTemplate = self::isNurseryTemplateKey($template);
 
+        // Custom design: list the classes of the level the design is for.
+        $customLevel = CustomReportCards::isCustomTemplateKey($template)
+            ? (CustomReportCards::readMeta((string) CustomReportCards::slugFromKey($template))['level'] ?? 'primary')
+            : null;
+
         $classIds = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->get()
-            ->reject(fn ($ec) => Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
+            ->reject(fn ($ec) => $customLevel !== null
+                ? CustomReportCards::levelForClass($ec->class_id) !== $customLevel
+                : Helper::isNurseryClass($ec->class_id) !== $isNurseryTemplate)
             ->pluck('class_id')
             ->unique()
             ->values()
@@ -2304,7 +2519,18 @@ class ExaminationController extends Controller
             'source_class_id' => 'required|integer',
             'target_class_ids' => 'required|array|min:1',
             'target_class_ids.*' => 'integer',
-            'template' => 'required|string|in:' . implode(',', self::PASSSLIP_TEMPLATE_KEYS),
+            'template' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (in_array($value, self::PASSSLIP_TEMPLATE_KEYS, true)) {
+                    return;
+                }
+
+                // A custom design key is only valid if it is the design
+                // actually assigned to THIS school.
+                $assigned = collect(CustomReportCards::activeForSchool(Session('LoggedSchool')))->pluck('key');
+                if (!$assigned->contains($value)) {
+                    $fail('Unknown design template.');
+                }
+            }],
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -2335,12 +2561,22 @@ class ExaminationController extends Controller
         $isNursery = self::isNurseryTemplateKey($template);
         $isSecondary = str_starts_with($template, 'secondary-');
 
+        // Custom design: the eligible classes are those of the level the
+        // design file declares (Nursery / Primary / Secondary).
+        $customLevel = CustomReportCards::isCustomTemplateKey($template)
+            ? (CustomReportCards::readMeta((string) CustomReportCards::slugFromKey($template))['level'] ?? 'primary')
+            : null;
+
         $allowedClassIds = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->pluck('class_id')
             ->unique()
-            ->filter(function ($classId) use ($isNursery, $isSecondary) {
+            ->filter(function ($classId) use ($isNursery, $isSecondary, $customLevel) {
+                if ($customLevel !== null) {
+                    return CustomReportCards::levelForClass($classId) === $customLevel;
+                }
+
                 $classIsNursery = Helper::isNurseryClass($classId);
                 $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($classId);
 
