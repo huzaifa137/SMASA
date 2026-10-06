@@ -26,6 +26,7 @@ class StudentImportFields
     public const FIELDS = [
         ['key' => 'admission_number', 'label' => 'LIN No.', 'group' => 'Identification'],
         ['key' => 'paycode', 'label' => 'Paycode', 'group' => 'Identification'],
+        ['key' => 'section', 'label' => 'Section', 'group' => 'Identification'],
         ['key' => 'primary_contact', 'label' => 'Primary Contact', 'group' => 'Contact & Address'],
         ['key' => 'other_contact', 'label' => 'Other Contact', 'group' => 'Contact & Address'],
         ['key' => 'home_address', 'label' => 'Home Address', 'group' => 'Contact & Address'],
@@ -60,7 +61,8 @@ class StudentImportFields
      */
     public const ALIASES = [
         'admission_number' => ['LIN', 'LIN No', 'LIN Number', 'Admission No', 'Admission Number'],
-        'paycode' => ['Pay Code'],
+        'paycode' => ['Pay Code', 'School Pay', 'SchoolPay'],
+        'section' => ['Day/Boarding', 'Day or Boarding', 'Boarding Status', 'Student Section'],
         'primary_contact' => ['Phone', 'Contact', 'Phone Number', 'Telephone', 'Tel', 'Mobile'],
         'other_contact' => ['Other Phone', 'Secondary Contact', 'Alt Contact', 'Alternative Contact'],
         'home_address' => ['Address', 'Residence'],
@@ -79,6 +81,30 @@ class StudentImportFields
         'medical_history' => ['Medical', 'Medical Notes'],
         'comments' => ['Comment', 'Remarks', 'Notes'],
     ];
+
+    /**
+     * Normalises a Section value to 'DAY' or 'BOARDING' (null when it is
+     * empty or not recognisable). Accepts "day", "Day Scholar", "D",
+     * "boarding", "Boarder", "B" and similar, in any case.
+     */
+    public static function normalizeSection($value): ?string
+    {
+        $v = strtolower(preg_replace('/[^a-z]/i', '', (string) $value));
+
+        if ($v === '') {
+            return null;
+        }
+
+        if (in_array($v, ['d', 'day', 'days', 'dayscholar', 'dayscholars'], true) || str_starts_with($v, 'day')) {
+            return 'DAY';
+        }
+
+        if (in_array($v, ['b', 'bd', 'brd', 'bdg', 'boarding', 'boarder', 'boarders'], true) || str_starts_with($v, 'board')) {
+            return 'BOARDING';
+        }
+
+        return null;
+    }
 
     /** Lower-case, letters+digits only: the comparison form of a heading. */
     public static function normalizeHeading($heading): string

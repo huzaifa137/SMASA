@@ -22,6 +22,20 @@
         'LUGANDA' => 'LUG', 'KISWAHILI' => 'KISWA', 'WRITING' => 'WRI', 'READING' => 'READ',
     ];
     $codeFor = fn($subject) => $subjectCodes[strtoupper(trim($subject->name))] ?? $subject->code;
+
+    // Short forms printed in the ASSESSMENT column of the Progressive Assessment
+    // Record instead of the full exam name. The builder already produces
+    // BOT / MOT / EOT / CA (numbered CA 1, CA 2 ... when repeated); list a
+    // replacement here to print something different, e.g. MOT => 'MID'.
+    $assessmentCodes = ['MOT' => 'MID'];
+    $assessmentLabel = function ($row) use ($assessmentCodes) {
+        $label = trim((string) $row->label);
+        // keep any trailing number: "CA 2" -> base "CA", suffix " 2"
+        if (preg_match('/^(\D+?)(\s+\d+)?$/', $label, $m)) {
+            return ($assessmentCodes[$m[1]] ?? $m[1]) . ($m[2] ?? '');
+        }
+        return $label;
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -180,7 +194,7 @@
             <tbody>
             @foreach($paRows as $row)
                 <tr>
-                    <td class="lbl">{{ $row->name }}</td>
+                    <td class="lbl" title="{{ $row->name }}">{{ $assessmentLabel($row) }}</td>
                     @foreach($row->cells as $cell)
                         <td>{{ $cell->marks !== null ? (int) round($cell->marks) : '—' }}</td>
                         <td class="pts">{{ $cell->points ?? '' }}</td>

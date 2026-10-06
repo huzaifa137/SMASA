@@ -405,6 +405,15 @@ use App\Http\Controllers\Helper;
                                 </div>
 
                                 <div class="form-group">
+                                    <label>Section</label>
+                                    <select name="section" class="form-control">
+                                        <option value="">-- Select --</option>
+                                        <option value="DAY">Day</option>
+                                        <option value="BOARDING">Boarding</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
                                     <label>Primary Contact</label>
                                     <input type="text" name="primary_contact" class="form-control">
                                 </div>

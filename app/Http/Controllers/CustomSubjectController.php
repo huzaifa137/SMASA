@@ -124,9 +124,42 @@ class CustomSubjectController extends Controller
             'subject_name' => 'required|string|max:255',
             'subject_code' => 'nullable|string|max:50',
             'is_active'    => 'nullable|boolean',
+            'merge'        => 'nullable|boolean',
         ]);
 
-        $subject->subject_name = $request->subject_name;
+        $newName = trim($request->subject_name);
+
+        // The table has a unique key on (school_id, class_type, subject_name)
+        // and MySQL compares names case-insensitively, so "Religious
+        // Education" and "religious education " are the same subject. Check
+        // first instead of letting the database throw a 500.
+        $duplicate = CustomSubject::forSchool($subject->school_id)
+            ->ofType($subject->class_type)
+            ->where('id', '!=', $subject->id)
+            ->where('subject_name', $newName)
+            ->first();
+
+        if ($duplicate) {
+            if (!$request->boolean('merge')) {
+                return response()->json([
+                    'success'     => false,
+                    'conflict'    => true,
+                    'existing_id' => $duplicate->id,
+                    'message'     => 'Another subject in this category is already called "' . $duplicate->subject_name . '".',
+                ], 409);
+            }
+
+            $summary = $this->mergeInto($subject, $duplicate, $request->subject_code);
+
+            return response()->json([
+                'success' => true,
+                'merged'  => true,
+                'subject' => $duplicate->fresh(),
+                'message' => $summary,
+            ]);
+        }
+
+        $subject->subject_name = $newName;
         $subject->subject_code = $request->subject_code;
         if ($request->has('is_active')) {
             $subject->is_active = $request->boolean('is_active');
@@ -134,6 +167,95 @@ class CustomSubjectController extends Controller
         $subject->save();
 
         return response()->json(['success' => true, 'subject' => $subject]);
+    }
+
+    /**
+     * Folds $source into $target (both belong to the same school and
+     * category): class assignments, exam subject settings and marks that
+     * point at $source are moved to $target, then $source is removed.
+     *
+     * Where a class already has $target, the duplicate class row is dropped.
+     * Where a student already has a mark under $target for the same exam,
+     * the existing $target mark wins and the other is left untouched - in
+     * that case $source is deactivated instead of deleted so nothing is lost.
+     */
+    private function mergeInto(CustomSubject $source, CustomSubject $target, ?string $code = null): string
+    {
+        $schoolId = $source->school_id;
+        $leftoverMarks = 0;
+        $movedClasses = 0;
+
+        DB::transaction(function () use ($source, $target, $schoolId, $code, &$leftoverMarks, &$movedClasses) {
+            $rows = ClassSubject::where('school_id', $schoolId)
+                ->where('custom_subject_id', $source->id)
+                ->get();
+
+            foreach ($rows as $row) {
+                $alreadyThere = ClassSubject::where('school_id', $schoolId)
+                    ->where('class_id', $row->class_id)
+                    ->where('stream_id', $row->stream_id)
+                    ->where('custom_subject_id', $target->id)
+                    ->exists();
+
+                if ($alreadyThere) {
+                    $row->delete();
+                    continue;
+                }
+
+                $row->custom_subject_id = $target->id;
+                $row->save();
+                $movedClasses++;
+            }
+
+            // Exam subject settings (no unique key, plain re-point).
+            DB::table('examination_subject_settings')
+                ->where('school_id', $schoolId)
+                ->where('custom_subject_id', $source->id)
+                ->update(['custom_subject_id' => $target->id]);
+
+            // Marks: skip any that would collide with an existing target mark.
+            $existing = DB::table('examination_marks')
+                ->where('school_id', $schoolId)
+                ->where('custom_subject_id', $target->id)
+                ->get(['examination_id', 'student_id'])
+                ->mapWithKeys(fn($r) => [$r->examination_id . '|' . $r->student_id => true]);
+
+            $sourceMarks = DB::table('examination_marks')
+                ->where('school_id', $schoolId)
+                ->where('custom_subject_id', $source->id)
+                ->get(['id', 'examination_id', 'student_id']);
+
+            $movable = $sourceMarks
+                ->reject(fn($r) => isset($existing[$r->examination_id . '|' . $r->student_id]))
+                ->pluck('id');
+
+            foreach ($movable->chunk(500) as $chunk) {
+                DB::table('examination_marks')
+                    ->whereIn('id', $chunk->all())
+                    ->update(['custom_subject_id' => $target->id]);
+            }
+
+            $leftoverMarks = $sourceMarks->count() - $movable->count();
+
+            if ($code !== null && $code !== '') {
+                $target->subject_code = $code;
+                $target->save();
+            }
+
+            if ($leftoverMarks > 0) {
+                $source->is_active = false;
+                $source->save();
+            } else {
+                $source->delete();
+            }
+        });
+
+        $msg = 'Merged into "' . $target->subject_name . '".';
+        if ($leftoverMarks > 0) {
+            $msg .= " {$leftoverMarks} duplicate mark(s) already existed under the target subject and were left as they were, so the old subject was deactivated instead of deleted.";
+        }
+
+        return $msg;
     }
 
     public function destroy(CustomSubject $subject)

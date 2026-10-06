@@ -128,6 +128,14 @@ use App\Helpers\PermissionHelper;
                                                         class="form-control">
                                                 </div>
                                                 <div class="form-group">
+                                                    <label>Section</label>
+                                                    <select name="section" id="edit_section" class="form-control">
+                                                        <option value="">-- Select --</option>
+                                                        <option value="DAY">Day</option>
+                                                        <option value="BOARDING">Boarding</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
                                                     <label>{{ trans('common.class') }}</label>
 
                                                     <select class="form-control select2" id="edit_senior"
@@ -332,6 +340,7 @@ use App\Helpers\PermissionHelper;
                         $('#edit_gender').val(student.gender);
                         $('#edit_admission_number').val(student.admission_number);
                         $('#edit_paycode').val(student.paycode);
+                        $('#edit_section').val(student.section || '');
                         $('#edit_senior').val(student.senior_id);
                         $('#edit_stream').val(student.stream_id);
                         $('#edit_primary_contact').val(student.primary_contact);

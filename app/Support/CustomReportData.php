@@ -93,7 +93,10 @@ class CustomReportData
             // "School Pay" code = the student's paycode.
             'school_pay' => $s->paycode ?? '—',
             // DAY / BOARDING when the registration number carries it, else null.
-            'section' => self::sectionFromRegistrationNumber($s->registration_number ?? null),
+            // students.section (DAY / BOARDING) first; the registration-number
+            // guess is only a fallback for students saved before Section existed.
+            'section' => StudentImportFields::normalizeSection($s->section ?? null)
+                ?? self::sectionFromRegistrationNumber($s->registration_number ?? null),
             'class_name' => Helper::recordMdname($s->senior ?? null) ?? '—',
             'stream' => ($s->stream ?? '') === 'NO_STREAM' ? '' : ($s->stream ?? ''),
             'gender' => $s->gender ?? '—',
@@ -266,6 +269,16 @@ class CustomReportData
             $norm = strtolower(preg_replace('/[^a-z]/i', '', $type));
             if ($norm !== '' && isset($codes[$norm])) {
                 return $codes[$norm];
+            }
+
+            // Type not one of the standard ones: read it off the exam's name
+            // (e.g. "BEGINNING OF TERM 3 EXAMINATION" -> BOT) before falling
+            // back to the long text.
+            $nameNorm = strtolower(preg_replace('/[^a-z]/i', '', (string) ($ex->exam_name ?? '')));
+            foreach (['beginningofterm' => 'BOT', 'midterm' => 'MOT', 'endofterm' => 'EOT', 'continuousassessment' => 'CA'] as $needle => $code) {
+                if ($nameNorm !== '' && str_contains($nameNorm, $needle)) {
+                    return $code;
+                }
             }
 
             return strtoupper($type !== '' ? $type : trim((string) $ex->exam_name));

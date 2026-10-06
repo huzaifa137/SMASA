@@ -562,6 +562,55 @@
                         },
                         error: function (xhr) {
                             Swal.close();
+
+                            // Renaming onto a name that already exists in this
+                            // category: offer to merge the two subjects.
+                            if (isEdit && xhr.status === 409 && xhr.responseJSON && xhr.responseJSON.conflict) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Subject already exists',
+                                    html: `${xhr.responseJSON.message}<br><br>
+                                           Do you want to <strong>merge</strong> this subject into the existing one?
+                                           <br><small class="text-muted">Classes, exam settings and marks using this subject will be moved to the existing subject, and this duplicate will be removed.</small>`,
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Yes, merge them',
+                                    cancelButtonText: 'No, keep both'
+                                }).then((mergeResult) => {
+                                    if (!mergeResult.isConfirmed) {
+                                        return;
+                                    }
+                                    Swal.fire({ title: 'Merging...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                                    $.ajax({
+                                        url: `/custom-subjects/${id}`,
+                                        method: 'POST',
+                                        data: Object.assign({}, payload, { merge: 1 }),
+                                        dataType: 'json',
+                                        success: function (response) {
+                                            modal.hide();
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Merged',
+                                                text: response.message || 'Subjects merged.',
+                                                confirmButtonText: 'OK',
+                                                allowOutsideClick: false,
+                                                allowEscapeKey: false
+                                            }).then(() => SMASA.refresh());
+                                        },
+                                        error: function (x) {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: (x.responseJSON && x.responseJSON.message) || 'Could not merge the subjects.',
+                                                confirmButtonColor: '#d33'
+                                            });
+                                        }
+                                    });
+                                });
+                                return;
+                            }
+
                             let errorMessage = 'Something went wrong.';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMessage = xhr.responseJSON.message;

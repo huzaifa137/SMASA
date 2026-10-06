@@ -565,8 +565,11 @@ class StudentController extends Controller
                 'senior' => $request->input('senior'),
                 'stream' => $request->input('stream') ?: \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL,
                 'linked_student_id' => $linkedStudentId, // ◄── NEW LINE #2
-                'admission_number' => $request->input('Admission_Number', null),
+                // The form posts this as `admission_number`; the old capitalised
+                // `Admission_Number` key never matched, so the LIN was dropped.
+                'admission_number' => $request->input('admission_number', $request->input('Admission_Number')) ?: null,
                 'paycode' => $request->input('paycode', null),
+                'section' => \App\Support\StudentImportFields::normalizeSection($request->input('section')),
                 'gender' => $validated['gender'],
                 'school_id' => $validated['School'],
                 'primary_contact' => $validated['primary_contact'] ?? null,
@@ -796,6 +799,7 @@ class StudentController extends Controller
             'registration_number' => $request->registration_number,
             'admission_number' => $request->admission_number,
             'paycode' => $request->paycode,
+            'section' => \App\Support\StudentImportFields::normalizeSection($request->section),
             'admission_year' => $request->admission_year,
             'date_of_admission' => $request->date_of_admission,
             'ple_score' => $request->ple_score,
@@ -1106,6 +1110,7 @@ class StudentController extends Controller
             'gender' => $student->gender,
             'admission_number' => $student->admission_number,
             'paycode' => $student->paycode,
+            'section' => $student->section,
 
             'senior_id' => $student->senior,
             'senior' => Helper::recordMdname($student->senior),

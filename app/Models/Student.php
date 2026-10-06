@@ -17,6 +17,7 @@ class Student extends Model
     'linked_student_id',
     'admission_number',
     'paycode',
+    'section',
     'primary_contact',
     'other_contact',
     'student_photo',

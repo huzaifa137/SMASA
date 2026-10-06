@@ -218,6 +218,8 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
                 $value = $this->normalizeDate($raw);
             } elseif (in_array($key, StudentImportFields::NUMERIC_KEYS, true)) {
                 $value = $this->normalizeNumber($raw);
+            } elseif ($key === 'section') {
+                $value = StudentImportFields::normalizeSection($this->cellToText($raw));
             } else {
                 $value = $this->cellToText($raw);
             }
