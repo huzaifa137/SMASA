@@ -118,9 +118,9 @@ show_next_term_starts_on
         }
 
         .cs-center .addr {
-            margin-top: 2mm;
-            font-size: 13.5px;
-            line-height: 1.35;
+            margin-top: 1.5mm;
+            font-size: 15.5px;
+            line-height: 1.3;
             color: #1b2340
         }
 
@@ -129,18 +129,18 @@ show_next_term_starts_on
         }
 
         .cs-center .motto {
-            margin-top: 1.5mm;
-            font: italic 15.5px Georgia, "Times New Roman", serif;
+            margin-top: 1mm;
+            font: italic 17px Georgia, "Times New Roman", serif;
             color: #1b2340
         }
 
         .cs-pill {
             display: inline-block;
-            margin-top: 2mm;
+            margin-top: 1.5mm;
             background: var(--ac-dark);
             color: #fff;
             border-radius: 7px;
-            padding: 5px 22px;
+            padding: 4px 22px;
             font-weight: 800;
             font-size: 18px;
             letter-spacing: .4px
@@ -163,13 +163,13 @@ show_next_term_starts_on
         .cs-rule {
             border: 0;
             border-top: 1.4px solid var(--ac);
-            margin: 3.5mm 0
+            margin: 3mm 0
         }
 
         .cs-info {
             display: grid;
             grid-template-columns: 1.7fr .95fr 1.15fr;
-            gap: 2.5mm 4mm;
+            gap: 2mm 4mm;
             font-size: 15px;
             padding: 0 1mm
         }
@@ -195,7 +195,7 @@ show_next_term_starts_on
         }
 
         .cs-h {
-            margin: 2mm 0 2.5mm;
+            margin: 1.5mm 0 2mm;
             text-align: center;
             font-size: 19px;
             font-weight: 800;
@@ -239,8 +239,8 @@ show_next_term_starts_on
         .cs-tot {
             display: flex;
             justify-content: space-between;
-            margin-top: 4mm;
-            padding: 3mm 7mm;
+            margin-top: 3mm;
+            padding: 2.5mm 7mm;
             font-size: 15px;
             border-top: 1px dashed #555;
             border-bottom: 1px dashed #555
@@ -304,8 +304,9 @@ show_next_term_starts_on
             display: grid;
             grid-template-columns: 1fr 41mm;
             column-gap: 6mm;
-            margin-top: 5mm;
-            font-size: 15px
+            margin-top: 4mm;
+            font-size: 15px;
+            align-items: start
         }
 
         .cs-cmt .row {
@@ -331,19 +332,24 @@ show_next_term_starts_on
         }
 
         .cs-cmt .g {
+            padding-top: 1.5mm;
             padding-bottom: 2mm;
             font-size: 11.5px;
             font-weight: 800;
             text-transform: uppercase;
             line-height: 1.3;
-            color: #111
+            color: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start
         }
 
         .cs-cmt .g img {
             display: block;
             max-height: 12mm;
             max-width: 40mm;
-            margin-top: 1mm
+            margin-top: 0;
+            align-self: flex-end
         }
 
         /* footer: term dates left / right, school name centred */
@@ -380,6 +386,12 @@ show_next_term_starts_on
             color: var(--ac);
             padding-top: 1mm
         }
+
+        /* push each teacher's name + signature to the right edge of the column */
+.cs-cmt .g {
+    align-items: flex-end;   /* was flex-start: short names stopped early */
+    text-align: right;       /* also right-aligns the name if it wraps */
+}
     </style>
 </head>
 
@@ -477,7 +489,7 @@ show_next_term_starts_on
 
                     {{-- ── Progressive assessment record ── --}}
                     @if($paRows->isNotEmpty())
-                        <div class="cs-h" style="margin-top:4mm">PROGRESSIVE ASSESSMENT RECORD</div>
+                        <div class="cs-h" style="margin-top:2.5mm">PROGRESSIVE ASSESSMENT RECORD</div>
                         <table class="cs-pa-t">
                             <thead>
                                 <tr>
