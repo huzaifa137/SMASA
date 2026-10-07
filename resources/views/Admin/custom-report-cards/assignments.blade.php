@@ -278,9 +278,12 @@
                                                     <span class="crc-sw-text"><b>Locked</b><small>Can't switch back</small></span>
                                                 </label>
                                                 <div class="crc-btns">
-                                                    <button class="btn btn-success"><i class="fas fa-save mr-1"></i>Save</button>
-                                                    <button type="submit" form="un-{{ $a->id }}" class="btn btn-outline-danger"
-                                                            onclick="return confirm('Remove this assignment?')" title="Remove assignment">
+                                                    <button type="button" class="btn btn-success" onclick="confirmAssignmentSave(this)">
+                                                        <i class="fas fa-save mr-1"></i>Save
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                            onclick="confirmAssignmentRemove({{ $a->id }}, '{{ addslashes($a->template->name ?? 'this design') }}', '{{ addslashes($school->name) }}', '{{ addslashes($ll) }}')"
+                                                            title="Remove assignment">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
                                                 </div>
@@ -335,7 +338,9 @@
                                                         <span class="crc-sw-track"></span>
                                                         <span class="crc-sw-text"><b>Lock to custom</b><small>Can't switch back</small></span>
                                                     </label>
-                                                    <button class="btn btn-primary"><i class="fas fa-plus mr-1"></i>Assign design</button>
+                                                    <button type="button" class="btn btn-primary" onclick="confirmAssign(this)">
+                                                        <i class="fas fa-plus mr-1"></i>Assign design
+                                                    </button>
                                                 </div>
                                             </form>
                                         @endif
@@ -357,6 +362,7 @@
 @endsection
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function () {
     const KEY    = 'crc_assign_school';
@@ -413,5 +419,72 @@
         noRes.style.display = 'block';
     }
 })();
+
+/* ---------- SweetAlert confirmation helpers ---------- */
+
+function confirmAssignmentSave(button) {
+    const form = button.closest('form');
+    Swal.fire({
+        title: 'Save Assignment?',
+        text: 'Save the changes to this level assignment?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#12a150',
+        cancelButtonColor: '#68718a',
+        confirmButtonText: 'Yes, save it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
+
+function confirmAssignmentRemove(id, designName, schoolName, levelName) {
+    Swal.fire({
+        title: 'Remove Assignment?',
+        html: 'Remove the <strong>' + designName + '</strong> design from <strong>' + schoolName + '</strong> (' + levelName + ')?<br><small class="text-muted">This will switch this level back to the standard design.</small>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d93a3a',
+        cancelButtonColor: '#68718a',
+        confirmButtonText: 'Yes, remove it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('un-' + id).submit();
+        }
+    });
+}
+
+function confirmAssign(button) {
+    const form = button.closest('form');
+    const select = form.querySelector('select[name="template_id"]');
+    if (!select.value) {
+        Swal.fire({
+            title: 'No design selected',
+            text: 'Please choose a custom design from the dropdown first.',
+            icon: 'info',
+            confirmButtonColor: '#3b5bfd',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    const designName = select.options[select.selectedIndex].text;
+    Swal.fire({
+        title: 'Assign Design?',
+        html: 'Assign <strong>' + designName + '</strong> to this level?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3b5bfd',
+        cancelButtonColor: '#68718a',
+        confirmButtonText: 'Yes, assign it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
 </script>
 @endsection

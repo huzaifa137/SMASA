@@ -248,7 +248,7 @@ class CustomReportData
 
         $r->generated_at = now()->format('d M Y, H:i');
         $r->issued_on = now()->format('Y-m-d');
-        $r->progressive = self::progressive($slip['progressiveAssessment'] ?? null, $exam, $r->grade_scale);
+        $r->progressive = self::progressive($slip['progressiveAssessment'] ?? null, $exam, $r->grade_scale, $majorKeys);
 
         return $r;
     }
@@ -260,7 +260,7 @@ class CustomReportData
      * cell (marks + grade points) per subject, plus the row's AVG / AGG / DIV.
      * Mirrors partials/progressive-assessment-record.blade.php.
      */
-    private static function progressive(?array $pa, object $exam, array $gradeScale): ?object
+    private static function progressive(?array $pa, object $exam, array $gradeScale, array $majorKeys = []): ?object
     {
         if (!$pa) {
             return null;
@@ -310,11 +310,24 @@ class CustomReportData
             return null;
         };
 
-        $rows = $exams->values()->map(function ($ex) use ($subjects, $summary, $exam, $base, $counts, &$seen, $pointsFor) {
+        // Subjects ticked under Examinations -> Aggregate Subjects (same keys the
+        // Performance Record uses). Only these show points in the Progressive table.
+        $isMajor = fn($sm) => isset($majorKeys[Helper::subjectKey($sm)]);
+
+        // List aggregate subjects first, then the rest, each group keeping its
+        // existing order (same rule as the Performance Record). Cells and
+        // headers are both built from $subjects, so they stay aligned.
+        if ($majorKeys) {
+            [$majorSubjects, $otherSubjects] = $subjects->partition($isMajor);
+            $subjects = $majorSubjects->concat($otherSubjects)->values();
+        }
+
+        $rows = $exams->values()->map(function ($ex) use ($subjects, $summary, $exam, $base, $counts, &$seen, $pointsFor, $isMajor) {
             $b = $base($ex);
             $seen[$b] = ($seen[$b] ?? 0) + 1;
 
             $cells = $subjects->map(fn($sm) => (object) [
+                'is_major' => $isMajor($sm),
                 'marks' => $sm->exams[$ex->id]['marks_obtained'] ?? null,
                 'points' => $sm->exams[$ex->id]['points'] ?? null,
             ])->all();
@@ -340,6 +353,7 @@ class CustomReportData
         return (object) [
             'subjects' => $subjects->map(fn($sm) => (object) [
                 'name' => $sm->subject_name,
+                'is_major' => $isMajor($sm),
                 'code' => strtoupper(mb_substr(trim((string) $sm->subject_name), 0, 4)),
             ])->all(),
             'rows' => $rows,

@@ -7,7 +7,7 @@ Progressive Assessment Record.
 accent: #1d3da8
 progressive: true
 major_first: true
-toggles: show_logo, show_photo, show_motto, show_remarks, show_signatures, show_section_progressive, show_term_ends_on,
+toggles: show_logo, show_watermark, show_photo, show_motto, show_remarks, show_signatures, show_section_progressive, show_term_ends_on,
 show_next_term_starts_on
 --}}
 @php
@@ -84,18 +84,47 @@ show_next_term_starts_on
             position: relative
         }
 
+        /* watermark: school logo centred behind the content */
+        .cs-wm {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55%;
+            max-width: 380px;
+            opacity: .08;
+            z-index: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .cs-wm img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            filter: grayscale(100%)
+        }
+
+        .cs-frame>*:not(.cs-wm) {
+            position: relative;
+            z-index: 1
+        }
+
         /* header */
         .cs-head {
             display: grid;
-            grid-template-columns: 32mm 1fr 36mm;
+            grid-template-columns: 36mm 1fr 36mm;
             gap: 3mm;
             align-items: start
         }
 
         .cs-logo {
-            width: 34mm;
-            height: 34mm;
-            object-fit: contain
+            width: 36mm;
+            height: 43mm;
+            object-fit: contain;
+            display: block
         }
 
         .cs-center {
@@ -401,7 +430,8 @@ show_next_term_starts_on
     @foreach($reports as $r)
         @php
             $nameParts = preg_split('/\s+[-–—]\s+/u', (string) $r->school->name, 2);
-            $classLine = trim($r->student->class_name . ' ' . $r->student->stream);
+            $dottedClass = preg_replace('/^\s*([A-Za-z])\.?\s*(\d+)/u', '$1.$2', (string) $r->student->class_name);
+            $classLine = trim($dottedClass . ' ' . $r->student->stream);
             $section = $r->student->section ?: $defaultSection;
             $showPa = $r->on('show_section_progressive') && $r->progressive;
             $paRows = $showPa ? collect($r->progressive->rows)->reject(fn($row) => $row->is_current)->values() : collect();
@@ -410,6 +440,11 @@ show_next_term_starts_on
         <div class="crc-sheet">
             <div class="cs" style="--ac: {{ $r->accent }}">
                 <div class="cs-frame">
+
+                    {{-- ── Watermark (school logo, centred) ── --}}
+                    @if($r->on('show_watermark') && $r->school->logo_url)
+                        <div class="cs-wm"><img src="{{ $r->school->logo_url }}" alt=""></div>
+                    @endif
 
                     {{-- ── Letterhead ── --}}
                     <div class="cs-head">
@@ -472,7 +507,7 @@ show_next_term_starts_on
                                 <tr class="{{ $s->is_major ? 'major' : '' }}">
                                     <td class="subj">{{ $s->name }}</td>
                                     <td class="ct">{{ $s->marks_display }}</td>
-                                    <td class="ct">{{ $s->grade }}</td>
+                                    <td class="ct">{{ $s->is_major ? $s->points : '' }}</td>
                                     <td>{{ $s->remark }}</td>
                                     <td>{{ $s->initials }}</td>
                                 </tr>
@@ -506,8 +541,8 @@ show_next_term_starts_on
                                     <tr>
                                         <td class="lbl" title="{{ $row->name }}">{{ $assessmentLabel($row) }}</td>
                                         @foreach($row->cells as $cell)
-                                            <td>{{ $cell->marks !== null ? (int) round($cell->marks) : '—' }}</td>
-                                            <td class="pts">{{ $cell->points ?? '' }}</td>
+                                            <td>{{ $cell->marks !== null ? (int) round($cell->marks) : 'x' }}</td>
+                                            <td class="pts">{{ $cell->is_major ? ($cell->points ?? '') : '' }}</td>
                                         @endforeach
                                         <td>{{ $row->avg ?? '—' }}</td>
                                         <td class="pts">{{ $row->avg_points ?? '' }}</td>

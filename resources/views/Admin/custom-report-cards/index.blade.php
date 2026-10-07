@@ -352,8 +352,8 @@
                         <div class="text-muted small">Drop a new <code>&lt;slug&gt;.blade.php</code> into the folder, then sync.
                         </div>
                     </div>
-                    <form method="POST" action="{{ route('admin.custom-report-cards.sync') }}">@csrf
-                        <button class="btn btn-primary px-4" style="border-radius:10px;">
+                    <form method="POST" action="{{ route('admin.custom-report-cards.sync') }}" id="sync-form">@csrf
+                        <button type="button" class="btn btn-primary px-4" style="border-radius:10px;" onclick="confirmSync()">
                             <i class="fas fa-layer-group mr-1"></i> Scan &amp; register new designs
                         </button>
                     </form>
@@ -422,9 +422,11 @@
                                         href="{{ route('admin.custom-report-cards.studio', ['slug' => $t->slug]) }}">
                                         <i class="fas fa-eye mr-1"></i>Preview
                                     </a>
-                                    <button class="btn btn-sm btn-success"><i class="fas fa-save mr-1"></i>Save</button>
-                                    <button type="submit" form="del-{{ $t->id }}" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Remove this design from the registry?')">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="confirmSave(this)">
+                                        <i class="fas fa-save mr-1"></i>Save
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="confirmDelete({{ $t->id }}, '{{ addslashes($t->name) }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -446,7 +448,63 @@
 
         @endif
     </div>
-        </div>
-            </div>
-                </div>
+    </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmSync() {
+            Swal.fire({
+                title: 'Scan & Register?',
+                text: 'This will scan the folder for new design files and register them.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2f6bff',
+                cancelButtonColor: '#6b7385',
+                confirmButtonText: 'Yes, scan now',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('sync-form').submit();
+                }
+            });
+        }
+
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Remove Design?',
+                html: 'Are you sure you want to remove <strong>' + name + '</strong> from the registry?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d93636',
+                cancelButtonColor: '#6b7385',
+                confirmButtonText: 'Yes, remove it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('del-' + id).submit();
+                }
+            });
+        }
+
+        function confirmSave(button) {
+            let form = button.closest('form');
+            Swal.fire({
+                title: 'Save Changes?',
+                text: 'Do you want to save the changes to this report card design?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#13a561',
+                cancelButtonColor: '#6b7385',
+                confirmButtonText: 'Yes, save it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+
 @endsection

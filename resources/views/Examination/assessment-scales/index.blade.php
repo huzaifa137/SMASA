@@ -1352,7 +1352,8 @@
 
         </div>
     </div>
-
+ </div>
+    </div>
     {{-- ── Create / Edit Modal (hidden template, injected via SweetAlert) ── --}}
     <template id="scaleFormTemplate">
         <form id="scaleForm" style="text-align:left; padding: 0.25rem 0;">
