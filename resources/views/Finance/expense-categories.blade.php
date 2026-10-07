@@ -642,9 +642,9 @@
 
     {{-- Add Category Button --}}
     <div style="margin-bottom:1.5rem;text-align:right;">
-        <button class="btn-fin btn-primary-fin" onclick="openAddModal()">
+        @if(\App\Helpers\PermissionHelper::canFeature('manage_expense_categories'))<button class="btn-fin btn-primary-fin" onclick="openAddModal()">
             <i class="fas fa-plus"></i> Add New Category
-        </button>
+        </button>@endif
     </div>
 
     {{-- Categories Grid --}}
@@ -657,9 +657,9 @@
             <div style="text-align:center;padding:3rem;">
                 <i class="fas fa-tags" style="font-size:3rem;opacity:.3;display:block;margin-bottom:1rem;"></i>
                 <p style="margin-bottom:1rem;">No expense categories yet. Create your first category to organize expenses.</p>
-                <button class="btn-fin btn-primary-fin" onclick="openAddModal()">
+                @if(\App\Helpers\PermissionHelper::canFeature('manage_expense_categories'))<button class="btn-fin btn-primary-fin" onclick="openAddModal()">
                     <i class="fas fa-plus"></i> Create Category
-                </button>
+                </button>@endif
             </div>
         @else
             <div class="categories-grid">
@@ -691,14 +691,14 @@
                             </div>
                         @endif
                         <div class="action-buttons">
-                            <button class="edit-cat"
+                            @if(\App\Helpers\PermissionHelper::canFeature('manage_expense_categories'))<button class="edit-cat"
                                 onclick="openEditModal({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ $cat->color }}', '{{ $cat->icon }}', '{{ addslashes($cat->description) }}', {{ $cat->is_active ? 'true' : 'false' }})">
                                 <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="delete-cat"
+                            </button>@endif
+                            @if(\App\Helpers\PermissionHelper::canFeature('manage_expense_categories'))<button class="delete-cat"
                                 onclick="confirmDeleteCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}')">
                                 <i class="fas fa-trash"></i> Delete
-                            </button>
+                            </button>@endif
                         </div>
                     </div>
                 @endforeach

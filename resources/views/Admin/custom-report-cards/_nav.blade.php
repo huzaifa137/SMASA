@@ -13,9 +13,7 @@
     <a href="{{ route('admin.custom-report-cards.assignments') }}" class="{{ $crcRoute === 'admin.custom-report-cards.assignments' ? 'active' : '' }}">School assignments</a>
     <a href="{{ route('admin.custom-report-cards.studio') }}" class="{{ $crcRoute === 'admin.custom-report-cards.studio' ? 'active' : '' }}">Preview studio</a>
 </div>
-@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-@if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
-@if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
+
 @if(!$ready)
     <div class="alert alert-warning"><strong>Run the migration first:</strong> <code>php artisan migrate</code> (creates the custom report card tables).</div>
 @endif

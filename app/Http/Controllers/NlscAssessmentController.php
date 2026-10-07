@@ -47,7 +47,7 @@ class NlscAssessmentController extends Controller
      */
     public function pending(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_nlsc_assessments');
 
         $examId = $request->query('examination_id');
 
@@ -67,7 +67,7 @@ class NlscAssessmentController extends Controller
      */
     public function index($examId, $classSubjectId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_nlsc_assessments');
 
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
@@ -110,7 +110,7 @@ class NlscAssessmentController extends Controller
      */
     public function manage()
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_nlsc_assessments');
 
         $assessments = Helper::myCreatedNlscAssessments();
 
@@ -119,7 +119,7 @@ class NlscAssessmentController extends Controller
 
     public function store(Request $request, $examId, $classSubjectId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_nlsc_assessments')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -178,7 +178,7 @@ class NlscAssessmentController extends Controller
      */
     public function update(Request $request, $examId, $classSubjectId, $id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_nlsc_assessments')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -251,7 +251,7 @@ class NlscAssessmentController extends Controller
      */
     public function destroy($examId, $classSubjectId, $id)
     {
-        if (!PermissionHelper::canFeature('delete_exam')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_assessments')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -295,7 +295,7 @@ class NlscAssessmentController extends Controller
      */
     public function marksEntry($examId, $classSubjectId, $assessmentId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('enter_nlsc_marks');
 
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
@@ -382,7 +382,7 @@ class NlscAssessmentController extends Controller
      */
     public function updateMaxMarks(Request $request, $assessmentId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_nlsc_assessments')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -438,7 +438,7 @@ class NlscAssessmentController extends Controller
      */
     public function saveAssessmentMarks(Request $request, $assessmentId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('enter_nlsc_marks')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -627,7 +627,7 @@ class NlscAssessmentController extends Controller
      */
     public function subjectMatterOptions(Request $request, $classSubjectId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_nlsc_assessments');
 
         $schoolId = Session('LoggedSchool');
 
@@ -703,7 +703,7 @@ class NlscAssessmentController extends Controller
      */
     public function competencyAreaOptions(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_nlsc_assessments');
 
         $request->validate([
             'assessment_type' => 'required|in:activities_of_integration,projects,subject_achievement',

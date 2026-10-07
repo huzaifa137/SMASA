@@ -486,9 +486,9 @@
             <i class="fas fa-arrow-left"></i> Back to Budgets
         </a>
         @if($budget->status == 'draft')
-            <button class="btn-fin btn-success-fin" onclick="confirmApproveBudget({{ $budget->id }})">
+            @if(\App\Helpers\PermissionHelper::canFeature('approve_budget'))<button class="btn-fin btn-success-fin" onclick="confirmApproveBudget({{ $budget->id }})">
                 <i class="fas fa-check-circle"></i> Approve Budget
-            </button>
+            </button>@endif
             <form id="approveBudgetForm{{ $budget->id }}" method="POST"
                 action="{{ route('finance.budgets.approve', $budget->id) }}" style="display:none;">
                 @csrf

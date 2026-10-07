@@ -702,12 +702,12 @@ body{background:var(--bg);}
     <div class="fin-card-header">
         <h3><i class="fas fa-filter"></i> Payments Filters</h3>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-csv"></i> Export CSV
-            </a>
-            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+            </a>@endif
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
+            </a>@endif
         </div>
     </div>
     <div class="filters">
@@ -885,12 +885,12 @@ body{background:var(--bg);}
     <div class="fin-card-header">
         <h3><i class="fas fa-filter"></i> Expenses Filters</h3>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-csv"></i> Export CSV
-            </a>
-            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+            </a>@endif
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
+            </a>@endif
         </div>
     </div>
     <div class="filters">
@@ -1088,12 +1088,12 @@ body{background:var(--bg);}
     <div class="fin-card-header">
         <h3><i class="fas fa-filter"></i> Payroll Filters</h3>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-            <a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.csv', request()->query()) }}" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-csv"></i> Export CSV
-            </a>
-            <a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
+            </a>@endif
+            @if(\App\Helpers\PermissionHelper::canFeature('export_financial_reports'))<a href="{{ route('finance.reports.export.pdf', request()->query()) }}" target="_blank" class="btn-fin btn-outline-fin btn-sm-fin">
                 <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
+            </a>@endif
         </div>
     </div>
     <div class="filters">

@@ -355,9 +355,9 @@
 
     {{-- Action Buttons --}}
     <div class="action-row">
-        <a href="{{ route('teacher-id-cards.print', $card->id) }}" class="btn btn-primary" target="_blank">
+        @if(PermissionHelper::canFeature('print_teacher_cards'))<a href="{{ route('teacher-id-cards.print', $card->id) }}" class="btn btn-primary" target="_blank">
             <i class="fas fa-print"></i> Print / Download PDF
-        </a>
+        </a>@endif
         @if($card->status === 'active' && PermissionHelper::canFeature('revoke_teacher_cards'))
             <button class="btn btn-danger" onclick="revokeCard({{ $card->id }})">
                 <i class="fas fa-ban"></i> Revoke Card

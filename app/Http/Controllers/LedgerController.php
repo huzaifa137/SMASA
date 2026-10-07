@@ -34,7 +34,7 @@ class LedgerController extends Controller
 
     public function chartOfAccounts()
     {
-        PermissionHelper::denyUnlessFeature('manage_ledger');
+        PermissionHelper::denyUnlessFeature('view_chart_of_accounts');
 
         $schoolId = session('LoggedSchool');
 
@@ -63,7 +63,7 @@ class LedgerController extends Controller
 
     public function storeAccount(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('manage_ledger');
+        PermissionHelper::denyUnlessFeature('manage_chart_of_accounts');
         $schoolId = session('LoggedSchool');
 
         $validated = $request->validate([
@@ -85,7 +85,7 @@ class LedgerController extends Controller
 
     public function updateAccount(Request $request, int $id)
     {
-        PermissionHelper::denyUnlessFeature('manage_ledger');
+        PermissionHelper::denyUnlessFeature('manage_chart_of_accounts');
         $schoolId = session('LoggedSchool');
 
         $account = ChartOfAccount::forSchool($schoolId)->findOrFail($id);
@@ -111,7 +111,7 @@ class LedgerController extends Controller
 
     public function destroyAccount(int $id)
     {
-        PermissionHelper::denyUnlessFeature('manage_ledger');
+        PermissionHelper::denyUnlessFeature('manage_chart_of_accounts');
         $schoolId = session('LoggedSchool');
 
         $account = ChartOfAccount::forSchool($schoolId)->findOrFail($id);
@@ -135,7 +135,7 @@ class LedgerController extends Controller
 
     public function seedDefaultAccounts()
     {
-        PermissionHelper::denyUnlessFeature('manage_ledger');
+        PermissionHelper::denyUnlessFeature('manage_chart_of_accounts');
         $schoolId = session('LoggedSchool');
 
         ChartOfAccount::seedDefaults($schoolId, session('LoggedUser'));
@@ -149,7 +149,7 @@ class LedgerController extends Controller
 
     public function generalLedger(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('view_general_ledger');
 
         $schoolId = session('LoggedSchool');
         ChartOfAccount::seedDefaults($schoolId, session('LoggedUser'));
@@ -200,7 +200,7 @@ class LedgerController extends Controller
 
     public function studentFeeLedgerSearch(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('view_student_fee_ledger');
 
         $schoolId = session('LoggedSchool');
         $search = $request->get('q', '');
@@ -223,7 +223,7 @@ class LedgerController extends Controller
 
     public function studentFeeLedgerDetail(Request $request, int $studentId)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('view_student_fee_ledger');
 
         $schoolId = session('LoggedSchool');
         $student = Student::where('school_id', $schoolId)->findOrFail($studentId);
@@ -300,7 +300,7 @@ class LedgerController extends Controller
 
     public function trialBalance(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('view_trial_balance');
 
         $schoolId = session('LoggedSchool');
         ChartOfAccount::seedDefaults($schoolId, session('LoggedUser'));

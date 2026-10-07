@@ -497,9 +497,9 @@
                 <i class="fas fa-archive"></i> Closed
             </button>
         </div>
-        <a href="{{ route('finance.budgets.create') }}" class="btn-fin btn-primary-fin">
+        @if(\App\Helpers\PermissionHelper::canFeature('add_budget'))<a href="{{ route('finance.budgets.create') }}" class="btn-fin btn-primary-fin">
             <i class="fas fa-plus"></i> Create New Budget
-        </a>
+        </a>@endif
     </div>
 
     {{-- Budgets Grid --}}
@@ -512,9 +512,9 @@
             <div style="text-align:center;padding:3rem;">
                 <i class="fas fa-chart-line" style="font-size:3rem;opacity:.3;display:block;margin-bottom:1rem;"></i>
                 <p style="margin-bottom:1rem;">No budgets created yet. Create your first budget to start planning.</p>
-                <a href="{{ route('finance.budgets.create') }}" class="btn-fin btn-primary-fin">
+                @if(\App\Helpers\PermissionHelper::canFeature('add_budget'))<a href="{{ route('finance.budgets.create') }}" class="btn-fin btn-primary-fin">
                     <i class="fas fa-plus"></i> Create Budget
-                </a>
+                </a>@endif
             </div>
         @else
             <div class="budget-grid" id="budgetGrid">
@@ -582,11 +582,11 @@
 
                        <div style="margin-top:.5rem;display:flex;gap:.5rem;justify-content:flex-end;">
     @if($budget->status == 'draft')
-        <a href="{{ route('finance.budgets.edit', $budget->id) }}"
+        @if(\App\Helpers\PermissionHelper::canFeature('edit_budget'))<a href="{{ route('finance.budgets.edit', $budget->id) }}"
             class="btn-fin btn-sm btn-outline-fin"
             onclick="event.stopPropagation()">
             <i class="fas fa-pen"></i> Edit
-        </a>
+        </a>@endif
         <button class="btn-fin btn-sm btn-success-fin"
             onclick="event.stopPropagation(); confirmApproveBudget({{ $budget->id }})">
             <i class="fas fa-check"></i> Approve

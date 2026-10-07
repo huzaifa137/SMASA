@@ -863,16 +863,16 @@
                                     <td>
                                         @if($fine->status === 'unpaid')
                                             <div style="display:flex;gap:.4rem;">
-                                                <button onclick="confirmPay({{ $fine->id }}, {{ $fine->amount }})" 
+                                                @if(\App\Helpers\PermissionHelper::canFeature('collect_fines'))<button onclick="confirmPay({{ $fine->id }}, {{ $fine->amount }})" 
                                                         class="btn-lib btn-primary-lib"
                                                         style="padding:.3rem .65rem;">
                                                     <i class="fas fa-check"></i> Pay
-                                                </button>
-                                                <button onclick="openWaive({{ $fine->id }}, {{ $fine->amount }})" 
+                                                </button>@endif
+                                                @if(\App\Helpers\PermissionHelper::canFeature('waive_fines'))<button onclick="openWaive({{ $fine->id }}, {{ $fine->amount }})" 
                                                         class="btn-lib btn-warning-lib"
                                                         style="padding:.3rem .65rem;">
                                                     <i class="fas fa-hand-holding-usd"></i> Waive
-                                                </button>
+                                                </button>@endif
                                             </div>
                                         @else
                                             <span style="font-size:.75rem;color:var(--text-3);">

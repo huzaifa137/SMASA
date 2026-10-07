@@ -104,6 +104,8 @@ class ExaminationController extends Controller
 
     public function store(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('create_exam');
+
         $validated = $request->validate([
             'exam_name' => 'required|string|max:255',
             'exam_type' => 'required|string|max:100',
@@ -195,7 +197,7 @@ class ExaminationController extends Controller
     public function updateStatus(Request $request, $id)
     {
 
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('change_exam_status')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to update exam status.'], 403);
         }
 
@@ -219,7 +221,7 @@ class ExaminationController extends Controller
     public function marksEntry($examId)
     {
 
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_marks_entry');
 
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher'); // assumes logged user id
@@ -333,7 +335,7 @@ class ExaminationController extends Controller
      */
     public function marksEntrySubject($examId, $classSubjectId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_marks_entry');
 
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
@@ -511,7 +513,7 @@ class ExaminationController extends Controller
     public function saveMarks(Request $request, $examId)
     {
 
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('enter_marks')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to enter marks.'], 403);
         }
 
@@ -1163,7 +1165,7 @@ class ExaminationController extends Controller
      */
     public function disciplineEntry(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_discipline');
 
         $schoolId = Session('LoggedSchool');
 
@@ -1232,7 +1234,7 @@ class ExaminationController extends Controller
      */
     public function saveDisciplineRatings(Request $request, $examId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('enter_discipline_ratings')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to enter discipline ratings.'], 403);
         }
 
@@ -1304,7 +1306,7 @@ class ExaminationController extends Controller
      */
     public function remarksEntry(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_remarks');
 
         $schoolId = Session('LoggedSchool');
 
@@ -1353,7 +1355,7 @@ class ExaminationController extends Controller
         }
 
         $headTeacher = Helper::headTeacherFor($schoolId);
-        $canEditHeadTeacherRemark = PermissionHelper::canFeature('edit_exam');
+        $canEditHeadTeacherRemark = PermissionHelper::canFeature('enter_remarks');
 
         return view('Examination.remarks.entry', compact(
             'exam',
@@ -1374,7 +1376,7 @@ class ExaminationController extends Controller
      */
     public function saveRemarks(Request $request, $examId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('enter_remarks')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to enter remarks.'], 403);
         }
 
@@ -1440,7 +1442,7 @@ class ExaminationController extends Controller
      */
     public function saveDisciplineCriteria(Request $request)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_discipline_criteria')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1487,7 +1489,7 @@ class ExaminationController extends Controller
 
     public function deleteDisciplineCriteria($id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_discipline_criteria')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1505,7 +1507,7 @@ class ExaminationController extends Controller
     public function passslipStudent($examId, $studentId)
     {
 
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -1648,7 +1650,7 @@ class ExaminationController extends Controller
      */
     public function passslipClass(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $request->validate([
             'class_id' => 'required|integer',
@@ -1800,7 +1802,7 @@ class ExaminationController extends Controller
 
     public function passslipAll($examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -1977,7 +1979,7 @@ class ExaminationController extends Controller
     public function passslipIndex($examId)
     {
 
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -2076,7 +2078,7 @@ class ExaminationController extends Controller
      */
     public function passslipCustomize(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('customize_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -2214,7 +2216,7 @@ class ExaminationController extends Controller
      */
     public function passslipPreview(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -2427,7 +2429,7 @@ class ExaminationController extends Controller
      */
     public function getPassslipSettings(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('customize_report_cards');
 
         $schoolId = Session('LoggedSchool');
         $classId = $request->query('class_id');
@@ -2445,7 +2447,7 @@ class ExaminationController extends Controller
      */
     public function savePassslipSettings(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('manage_report_card_settings');
 
         $request->validate([
             'class_ids' => 'required|array|min:1',
@@ -2480,7 +2482,7 @@ class ExaminationController extends Controller
      */
     public function listPassslipSettings(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('customize_report_cards');
 
         $schoolId = Session('LoggedSchool');
 
@@ -2542,7 +2544,7 @@ class ExaminationController extends Controller
      */
     public function copyPassslipSettings(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('manage_report_card_settings');
 
         $request->validate([
             'source_class_id' => 'required|integer',
@@ -2652,7 +2654,7 @@ class ExaminationController extends Controller
      */
     public function deletePassslipSettings(Request $request, $examId, $classId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('manage_report_card_settings');
 
         $schoolId = Session('LoggedSchool');
         $template = $request->query('template');
@@ -4124,7 +4126,7 @@ class ExaminationController extends Controller
     public function marksEntryPortal(Request $request)
     {
 
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_marks_entry');
 
 
         $schoolId = Session('LoggedSchool');
@@ -4221,7 +4223,7 @@ class ExaminationController extends Controller
 
     public function updateExaminationStatus(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('publish_results')) {
+        if (!PermissionHelper::canFeature('change_exam_status')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to publish results.'], 403);
         }
 
@@ -4576,7 +4578,7 @@ class ExaminationController extends Controller
 
     public function getResultsSummary($examId)
     {
-        if (!PermissionHelper::canFeature('generate_reports')) {
+        if (!PermissionHelper::canFeature('view_exam_reports')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

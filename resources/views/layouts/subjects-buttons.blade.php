@@ -48,32 +48,32 @@
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.add.new.student') }}"
+        @if(PermissionHelper::canFeature('add_student'))<a href="{{ route('students.add.new.student') }}"
             class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-user-plus me-2"></i>Add Students
-        </a>
+        </a>@endif
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.all.students') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+        @if(PermissionHelper::canFeature('view_students'))<a href="{{ route('students.all.students') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-users me-2"></i>All Students
-        </a>
+        </a>@endif
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.consolidation') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+        @if(PermissionHelper::canFeature('view_student_consolidation'))<a href="{{ route('students.consolidation') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-code-branch me-2"></i>Consolidate Students
-        </a>
+        </a>@endif
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
-        <a href="{{ route('students.bulk.photo.import.form') }}"
+        @if(PermissionHelper::canFeature('import_student_photos'))<a href="{{ route('students.bulk.photo.import.form') }}"
             class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-portrait me-2"></i>Bulk Photo Import
-        </a>
+        </a>@endif
     </div>
 
-    @if(PermissionHelper::canFeature('add_class') && in_array('Secondary A-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+    @if(PermissionHelper::canFeature('view_alevel_combinations') && in_array('Secondary A-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('alevel.combinations.entry') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
                 <i class="fas fa-graduation-cap me-2"></i> A-Level Combinations
@@ -81,7 +81,7 @@
         </div>
     @endif
 
-    @if(PermissionHelper::canFeature('add_class') && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+    @if(PermissionHelper::canFeature('view_olevel_electives') && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('olevel.electives.entry') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
                 <i class="fas fa-list-check me-2"></i> O-Level Electives
@@ -89,21 +89,27 @@
         </div>
     @endif
 
-    @if(PermissionHelper::canFeature('add_class') && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+    @if((PermissionHelper::canFeature('view_nlsc_topics') || PermissionHelper::canFeature('view_nlsc_projects') || PermissionHelper::canFeature('view_nlsc_achievements')) && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
+        @if(PermissionHelper::canFeature('view_nlsc_topics'))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('school.nlsc-topics') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
                 <i class="fas fa-book-open me-2"></i> Topics &amp; Competency Areas
             </a>
         </div>
+        @endif
+        @if(PermissionHelper::canFeature('view_nlsc_projects'))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('school.nlsc-projects') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
                 <i class="fas fa-diagram-project me-2"></i> Projects (Project Work)
             </a>
         </div>
+        @endif
+        @if(PermissionHelper::canFeature('view_nlsc_achievements'))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('school.nlsc-subject-achievements') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
                 <i class="fas fa-bullseye me-2"></i> Subject Achievement
             </a>
         </div>
+        @endif
     @endif
 </div>

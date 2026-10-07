@@ -338,6 +338,8 @@ class NotificationController extends Controller
      */
     public function deletePushSubscription(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('push_notifications');
+
         $subscriber = $this->resolvePushSubscriber();
 
         if (!$subscriber) {

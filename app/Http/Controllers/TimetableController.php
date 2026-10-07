@@ -81,7 +81,7 @@ class TimetableController extends Controller
 
     public function periods()
     {
-        PermissionHelper::denyUnlessFeature('view_timetable');
+        PermissionHelper::denyUnlessFeature('view_periods');
         Helper::authorizeTechSateAdminOrSchoolAdmins();
 
         $schoolId = session('LoggedSchool');
@@ -95,7 +95,7 @@ class TimetableController extends Controller
     public function storePeriod(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('edit_timetable')) {
+        if (!PermissionHelper::canFeature('manage_periods')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to manage timetable periods.'], 403);
         }
 
@@ -127,7 +127,7 @@ class TimetableController extends Controller
     public function updatePeriod(Request $request, $id)
     {
 
-     if (!PermissionHelper::canFeature('edit_timetable')) {
+     if (!PermissionHelper::canFeature('manage_periods')) {
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
 
@@ -151,7 +151,7 @@ class TimetableController extends Controller
     public function destroyPeriod($id)
     {
 
-     if (!PermissionHelper::canFeature('edit_timetable')) {
+     if (!PermissionHelper::canFeature('manage_periods')) {
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
 
@@ -387,7 +387,7 @@ class TimetableController extends Controller
     public function updateStatus(Request $request, $id)
     {
 
-     if (!PermissionHelper::canFeature('edit_timetable')) {
+     if (!PermissionHelper::canFeature('change_timetable_status')) {
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
 
@@ -531,7 +531,7 @@ class TimetableController extends Controller
 
     public function master(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_timetable');
+        PermissionHelper::denyUnlessFeature('view_master_timetable');
 
         $schoolId = session('LoggedSchool');
 
@@ -613,7 +613,7 @@ class TimetableController extends Controller
 
     public function teachersSummary(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_timetable');
+        PermissionHelper::denyUnlessFeature('view_teachers_summary');
 
         $schoolId = session('LoggedSchool');
 
@@ -674,7 +674,7 @@ class TimetableController extends Controller
 
     public function duplicate($id)
     {
-         if (!PermissionHelper::canFeature('create_timetable')) {
+         if (!PermissionHelper::canFeature('duplicate_timetable')) {
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
     

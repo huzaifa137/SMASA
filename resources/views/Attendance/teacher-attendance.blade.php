@@ -704,7 +704,7 @@
                   onchange="window.location.href='{{ route('attendance.teachers') }}?date='+this.value"
                   class="date-picker-glass"
                   style="padding: 0.6rem 1rem; font-size: 1rem; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: #FFF; cursor: pointer;">
-               @if(PermissionHelper::canFeature('attendance_reports'))
+               @if(PermissionHelper::canFeature('view_teacher_attendance_report'))
                   <a href="{{ route('attendance.teachers.report') }}" class="btn-glass"
                      style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                   <i class="fas fa-chart-bar"></i> Report
@@ -764,15 +764,15 @@
          <span class="auto-save-dot"></span>
          <span>Auto-save enabled</span>
       </div>
-      <button class="btn-mark-all" onclick="markAllPresent()" style="background: linear-gradient(135deg, #10b981, #059669);">
+      @if(PermissionHelper::canFeature('mark_teacher_attendance'))<button class="btn-mark-all" onclick="markAllPresent()" style="background: linear-gradient(135deg, #10b981, #059669);">
       <i class="fas fa-check-double"></i> All Present
-      </button>
-      <button class="btn-mark-all" onclick="markAllAbsent()" style="background: linear-gradient(135deg, #ef4444, #dc2626); margin-left: 0.5rem;">
+      </button>@endif
+      @if(PermissionHelper::canFeature('mark_teacher_attendance'))<button class="btn-mark-all" onclick="markAllAbsent()" style="background: linear-gradient(135deg, #ef4444, #dc2626); margin-left: 0.5rem;">
       <i class="fas fa-times-circle"></i> All Absent
-      </button>
-      <button class="btn-mark-all" onclick="resetAll()" style="background: #64748b; margin-left: 0.5rem;">
+      </button>@endif
+      @if(PermissionHelper::canFeature('mark_teacher_attendance'))<button class="btn-mark-all" onclick="resetAll()" style="background: #64748b; margin-left: 0.5rem;">
       <i class="fas fa-undo-alt"></i> Reset
-      </button>
+      </button>@endif
    </div>
    {{-- Teacher Grid --}}
    <div class="teacher-grid" id="teacherGrid">
@@ -844,12 +844,12 @@
                </select>
             </div>
             <div style="margin-top: 1rem;">
-               <button class="btn-save-modern" 
+               @if(PermissionHelper::canFeature('mark_teacher_attendance'))<button class="btn-save-modern" 
                   onclick="saveTeacherAttendance(this, {{ $teacher->id }})"
                   style="width: 100%; justify-content: center; border: none; cursor: pointer; border-radius: 60px; padding: 0.65rem 1.5rem; font-size: 0.8rem; font-weight: 700; color: white; background: linear-gradient(135deg, var(--brand), var(--brand-light)); display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(83,81,228,0.2);">
                <i class="fas fa-cloud-upload-alt"></i>
                <span>Save Attendance</span>
-               </button>
+               </button>@endif
             </div>
          </div>
       </div>

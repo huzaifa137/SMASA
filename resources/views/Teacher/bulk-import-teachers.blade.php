@@ -435,9 +435,9 @@
                     <em>All imported teachers get a default password of <code>123456789</code> and are prompted to change it
                         on first login.</em>
                 </div>
-                <a href="{{ route('teachers.download.template') }}" class="btn-purple-outline">
+                @if(\App\Helpers\PermissionHelper::canFeature('import_teachers'))<a href="{{ route('teachers.download.template') }}" class="btn-purple-outline">
                     <i class="fas fa-download"></i> Download Template
-                </a>
+                </a>@endif
 
                 <hr class="divider">
 

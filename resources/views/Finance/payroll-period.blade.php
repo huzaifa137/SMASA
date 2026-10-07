@@ -522,17 +522,17 @@
     {{-- Actions --}}
     <div style="margin-bottom:1.5rem;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
         @if($period->status == 'draft')
-            <button class="btn-fin btn-success-fin" onclick="confirmApprove({{ $period->id }})">
+            @if(\App\Helpers\PermissionHelper::canFeature('approve_payroll'))<button class="btn-fin btn-success-fin" onclick="confirmApprove({{ $period->id }})">
                 <i class="fas fa-check-circle"></i> Approve Payroll
-            </button>
+            </button>@endif
             <form id="approveForm{{ $period->id }}" method="POST" action="{{ route('finance.payroll.approve', $period->id) }}"
                 style="display:none;">
                 @csrf
             </form>
         @elseif($period->status == 'approved')
-            <button class="btn-fin btn-primary-fin" onclick="confirmMarkPaid({{ $period->id }})">
+            @if(\App\Helpers\PermissionHelper::canFeature('mark_payroll_paid'))<button class="btn-fin btn-primary-fin" onclick="confirmMarkPaid({{ $period->id }})">
                 <i class="fas fa-money-bill-wave"></i> Mark as Paid
-            </button>
+            </button>@endif
             <form id="paidForm{{ $period->id }}" method="POST" action="{{ route('finance.payroll.mark-paid', $period->id) }}"
                 style="display:none;">
                 @csrf

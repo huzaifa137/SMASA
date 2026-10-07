@@ -295,7 +295,7 @@
                             <a href="{{ route('library.books.edit', $book->id) }}" class="btn-lib btn-primary-lib"
                                 style="justify-content:center;"><i class="fas fa-edit"></i> Edit Book</a>
                         @endif
-                        @if($book->has_ebook && PermissionHelper::canFeature('library_reports'))
+                        @if($book->has_ebook && PermissionHelper::canFeature('download_ebook'))
                             <a href="{{ route('library.books.ebook', $book->id) }}"
                                 class="btn-lib btn-outline-lib" style="justify-content:center;"><i
                             class="fas fa-tablet-alt"></i> Download E-Book</a>

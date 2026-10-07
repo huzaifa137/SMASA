@@ -27,7 +27,7 @@ class GradingSchemeController extends Controller
 
     public function index()
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_grading_schemes');
 
         $schoolId = Session('LoggedSchool');
 
@@ -45,7 +45,7 @@ class GradingSchemeController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_exam')) {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -135,7 +135,7 @@ class GradingSchemeController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -212,7 +212,7 @@ class GradingSchemeController extends Controller
 
     public function toggleActive(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -227,7 +227,7 @@ class GradingSchemeController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

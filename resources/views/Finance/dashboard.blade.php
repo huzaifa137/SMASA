@@ -1083,13 +1083,13 @@
         </div>
         @if($pendingExpenses > 0 || $pendingPayroll > 0)
             <div style="position: relative; z-index: 1; margin-top: 1.2rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                @if($pendingExpenses > 0 && PermissionHelper::canFeature('manage_expenses'))
+                @if($pendingExpenses > 0 && PermissionHelper::canFeature('view_expenses'))
                     <a href="{{ route('finance.expenses.index') }}" class="alert-pill"
                         style="background: rgba(217, 119, 6, 0.25); color: #fcd34d; border: 1px solid rgba(217, 119, 6, 0.4);">
                         <i class="fas fa-exclamation-triangle"></i> {{ $pendingExpenses }} expense(s) pending
                     </a>
                 @endif
-                @if($pendingPayroll > 0 && PermissionHelper::canFeature('manage_payroll'))
+                @if($pendingPayroll > 0 && PermissionHelper::canFeature('view_payroll'))
                     <a href="{{ route('finance.payroll.index') }}" class="alert-pill"
                         style="background: rgba(62, 146, 204, 0.25); color: var(--sky); border: 1px solid rgba(62, 146, 204, 0.4);">
                         <i class="fas fa-clock"></i> {{ $pendingPayroll }} payroll(s) awaiting approval
@@ -1108,7 +1108,7 @@
 
     {{-- KPI ROW --}}
     <div class="kpi-grid">
-        <a href="{{ route('finance.payments.index') }}" style="text-decoration: none;">
+        @if(PermissionHelper::canFeature('view_payments'))<a href="{{ route('finance.payments.index') }}" style="text-decoration: none;">
             <div class="kpi">
                 <div class="kpi-accent" style="background: var(--electric);"></div>
                 <div class="kpi-icon"><i class="fas fa-arrow-down"></i></div>
@@ -1116,8 +1116,8 @@
                 <div class="kpi-lbl">Total Fee Collections</div>
                 <div class="kpi-foot trend-up"><i class="fas fa-check-circle"></i> {{ $collectionRate }}% collection rate</div>
             </div>
-        </a>
-        <a href="{{ route('finance.outstanding-fees') }}" style="text-decoration: none;">
+        </a>@endif
+        @if(PermissionHelper::canFeature('view_outstanding_fees'))<a href="{{ route('finance.outstanding-fees') }}" style="text-decoration: none;">
             <div class="kpi">
                 <div class="kpi-accent" style="background: #dc2626;"></div>
                 <div class="kpi-icon" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;"><i class="fas fa-exclamation-circle"></i></div>
@@ -1125,8 +1125,8 @@
                 <div class="kpi-lbl">Outstanding Fees</div>
                 <div class="kpi-foot trend-dn"><i class="fas fa-user-times"></i> {{ $feeStats->unpaid ?? 0 }} unpaid · {{ $feeStats->partial ?? 0 }} partial</div>
             </div>
-        </a>
-        @if(PermissionHelper::canFeature('manage_expenses'))
+        </a>@endif
+        @if(PermissionHelper::canFeature('view_expenses'))
             <a href="{{ route('finance.expenses.index') }}" style="text-decoration: none;">
                 <div class="kpi">
                     <div class="kpi-accent" style="background: #d97706;"></div>
@@ -1137,7 +1137,7 @@
                 </div>
             </a>
         @endif
-        @if(PermissionHelper::canFeature('manage_payroll'))
+        @if(PermissionHelper::canFeature('view_payroll'))
             <a href="{{ route('finance.payroll.index') }}" style="text-decoration: none;">
                 <div class="kpi">
                     <div class="kpi-accent" style="background: var(--navy);"></div>
@@ -1183,28 +1183,28 @@
                                 <span>Record Payment</span>
                             </a>
                         @endif
-                        @if(PermissionHelper::canFeature('manage_expenses'))
+                        @if(PermissionHelper::canFeature('add_expense'))
                             <a href="{{ route('finance.expenses.create') }}" class="qa">
                                 <div class="qa-ico" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;"><i class="fas fa-file-invoice-dollar"></i></div>
                                 <span>Add Expense</span>
                             </a>
                         @endif
-                        @if(PermissionHelper::canFeature('manage_payroll'))
+                        @if(PermissionHelper::canFeature('create_payroll_period'))
                             <a href="{{ route('finance.payroll.create') }}" class="qa">
                                 <div class="qa-ico" style="background: rgba(10, 36, 99, 0.1); color: var(--navy);"><i class="fas fa-users"></i></div>
                                 <span>Run Payroll</span>
                             </a>
                         @endif
-                        @if(PermissionHelper::canFeature('manage_fees'))
+                        @if(PermissionHelper::canFeature('view_fee_structures'))
                             <a href="{{ route('finance.fee-structures.index') }}" class="qa">
                                 <div class="qa-ico" style="background: rgba(62, 146, 204, 0.1); color: var(--electric);"><i class="fas fa-layer-group"></i></div>
                                 <span>Fee Structures</span>
                             </a>
                         @endif
-                        <a href="{{ route('finance.outstanding-fees') }}" class="qa">
+                        @if(PermissionHelper::canFeature('view_outstanding_fees'))<a href="{{ route('finance.outstanding-fees') }}" class="qa">
                             <div class="qa-ico" style="background: rgba(217, 119, 6, 0.1); color: #d97706;"><i class="fas fa-exclamation-triangle"></i></div>
                             <span>Defaulters</span>
-                        </a>
+                        </a>@endif
                         @if(PermissionHelper::canFeature('financial_reports'))
                             <a href="{{ route('finance.reports') }}" class="qa">
                                 <div class="qa-ico" style="background: rgba(8, 145, 178, 0.1); color: #0891b2;"><i class="fas fa-chart-bar"></i></div>
@@ -1274,7 +1274,7 @@
             <div class="fc" style="flex: 1;">
                 <div class="fc-hd">
                     <h3><i class="fas fa-receipt" style="color: var(--electric);"></i> Recent Payments</h3>
-                    <a href="{{ route('finance.payments.index') }}" class="sec-link">View All <i class="fas fa-arrow-right"></i></a>
+                    @if(PermissionHelper::canFeature('view_payments'))<a href="{{ route('finance.payments.index') }}" class="sec-link">View All <i class="fas fa-arrow-right"></i></a>@endif
                 </div>
                 <div class="fc-bd" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
                     @forelse($recentPayments as $pmt)
@@ -1300,7 +1300,7 @@
             <div class="fc" style="flex: 1;">
                 <div class="fc-hd">
                     <h3><i class="fas fa-layer-group" style="color: #d97706;"></i> Expense Breakdown</h3>
-                    @if(PermissionHelper::canFeature('manage_expenses'))
+                    @if(PermissionHelper::canFeature('view_expenses'))
                         <a href="{{ route('finance.expenses.index') }}" class="sec-link">Details <i class="fas fa-arrow-right"></i></a>
                     @endif
                 </div>

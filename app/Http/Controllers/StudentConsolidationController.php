@@ -29,7 +29,7 @@ class StudentConsolidationController extends Controller
      */
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_students');
+        PermissionHelper::denyUnlessFeature('view_student_consolidation');
 
         $schoolId = Helper::requireSchool();
 
@@ -76,7 +76,7 @@ class StudentConsolidationController extends Controller
      */
     public function search(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_students');
+        PermissionHelper::denyUnlessFeature('view_student_consolidation');
 
         $schoolId = Helper::requireSchool();
         $term = trim((string) $request->get('term'));
@@ -129,7 +129,7 @@ class StudentConsolidationController extends Controller
      */
     public function link(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_student');
+        PermissionHelper::denyUnlessFeature('manage_student_consolidation');
 
         $request->validate([
             'primary_student_id' => 'required|integer|different:duplicate_student_id',
@@ -170,7 +170,7 @@ class StudentConsolidationController extends Controller
      */
     public function deleteDuplicates(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_student');
+        PermissionHelper::denyUnlessFeature('delete_duplicate_students');
 
         $request->validate([
             'keep_student_id' => 'required|integer',
@@ -228,7 +228,7 @@ class StudentConsolidationController extends Controller
      */
     public function unlink(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_student');
+        PermissionHelper::denyUnlessFeature('manage_student_consolidation');
 
         $request->validate(['student_id' => 'required|integer']);
 
@@ -249,7 +249,7 @@ class StudentConsolidationController extends Controller
      */
     public function dismiss(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_student');
+        PermissionHelper::denyUnlessFeature('manage_student_consolidation');
 
         $ids = $request->get('student_ids');
         if (!is_array($ids) || count($ids) < 2) {

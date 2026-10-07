@@ -633,7 +633,7 @@
                     <strong>{{ $unassigned }} staff {{ $unassigned > 1 ? 'members have' : 'member has' }} no role
                         assigned</strong>
                     and cannot access any module.
-                    @if(PermissionHelper::canFeature('view_roles'))
+                    @if(PermissionHelper::canFeature('view_role_assignments'))
                         <a href="{{ route('urp.assign.index') }}" class="font-weight-bold ml-2"
                             style="color:#92400e;text-decoration:underline;">
                             Assign now &rarr;
@@ -689,8 +689,8 @@
                                 <i class="fa fa-user-tag fa-2x d-block mb-2" style="opacity:.2;color:var(--indigo);"></i>
                                 No roles yet.
                                 @if(PermissionHelper::canFeature('create_role'))
-                                    <br><a href="{{ route('urp.roles.index') }}" class="btn btn-sm btn-primary mt-2">Create First
-                                        Role</a>
+                                    <br>@if(PermissionHelper::canFeature('view_roles'))<a href="{{ route('urp.roles.index') }}" class="btn btn-sm btn-primary mt-2">Create First
+                                        Role</a>@endif
                                 @endif
                             </div>
                         @endforelse
@@ -761,7 +761,7 @@
                                     <div class="ac-sub">Toggle module &amp; feature access per role</div>
                                 </a>
                             @endif
-                            @if(PermissionHelper::canFeature('view_roles'))
+                            @if(PermissionHelper::canFeature('view_role_assignments'))
                                 <a href="{{ route('urp.assign.index') }}" class="action-card ac-orange">
                                     <div class="ac-icon" style="background:#fff7ed;color:var(--amber);">
                                         <i class="fa fa-users-cog"></i>

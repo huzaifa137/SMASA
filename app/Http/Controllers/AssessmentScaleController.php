@@ -30,7 +30,7 @@ class AssessmentScaleController extends Controller
 
     public function index()
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_assessment_scales');
 
         $schoolId = Session('LoggedSchool');
 
@@ -53,7 +53,7 @@ class AssessmentScaleController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_exam')) {
+        if (!PermissionHelper::canFeature('manage_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -102,7 +102,7 @@ class AssessmentScaleController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -150,7 +150,7 @@ class AssessmentScaleController extends Controller
 
     public function toggleActive(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -165,7 +165,7 @@ class AssessmentScaleController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -193,7 +193,7 @@ class AssessmentScaleController extends Controller
      */
     public function classSubjects($classId, $streamId)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('assign_assessment_scales');
 
         $schoolId = Session('LoggedSchool');
 
@@ -217,7 +217,7 @@ class AssessmentScaleController extends Controller
      */
     public function assignToClassSubject(Request $request)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('assign_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -259,7 +259,7 @@ class AssessmentScaleController extends Controller
      */
     public function assignPage($id)
     {
-        PermissionHelper::denyUnlessFeature('edit_class');
+        PermissionHelper::denyUnlessFeature('assign_assessment_scales');
 
         $schoolId = Session('LoggedSchool');
         $scale = AssessmentScale::where('id', $id)->where('school_id', $schoolId)->firstOrFail();
@@ -301,7 +301,7 @@ class AssessmentScaleController extends Controller
      */
     public function assignBulk(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('assign_assessment_scales')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

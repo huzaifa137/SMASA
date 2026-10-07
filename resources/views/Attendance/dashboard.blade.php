@@ -561,7 +561,7 @@ use App\Helpers\PermissionHelper;
     
     <div class="d-flex flex-wrap justify-content-lg-end" style="gap: 0.9rem;">
 
-        <a href="{{ route('attendance.students') }}"
+        @if(PermissionHelper::canFeature('view_student_attendance'))<a href="{{ route('attendance.students') }}"
            class="btn"
            style="
                 background: #FFF;
@@ -576,9 +576,9 @@ use App\Helpers\PermissionHelper;
            ">
             <i class="fas fa-user-graduate"></i>
             Students Attendance
-        </a>
+        </a>@endif
 
-        <a href="{{ route('attendance.teachers') }}"
+        @if(PermissionHelper::canFeature('view_teacher_attendance'))<a href="{{ route('attendance.teachers') }}"
            class="btn"
            style="
                 background: rgba(255,255,255,0.2);
@@ -593,7 +593,7 @@ use App\Helpers\PermissionHelper;
            ">
             <i class="fas fa-chalkboard-user"></i>
             Teacher Attendance
-        </a>
+        </a>@endif
 
     </div>
 
@@ -700,7 +700,7 @@ use App\Helpers\PermissionHelper;
                 <i class="fas fa-chart-line"></i>
                 7-Day Student Trend
             </div>
-            @if(PermissionHelper::canFeature('attendance_reports'))
+            @if(PermissionHelper::canFeature('view_student_attendance_report'))
                 <a href="{{ route('attendance.students.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
                     Full Report <i class="fas fa-arrow-right ms-1"></i>
                 </a>
@@ -745,7 +745,7 @@ use App\Helpers\PermissionHelper;
                 <i class="fas fa-chalkboard"></i>
                 Teacher Status Today
             </div>
-            @if(PermissionHelper::canFeature('attendance_reports'))
+            @if(PermissionHelper::canFeature('view_teacher_attendance_report'))
                 <a href="{{ route('attendance.teachers.report') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 11px; font-weight: 600;">
                     Report <i class="fas fa-arrow-right ms-1"></i>
                 </a>
@@ -882,7 +882,7 @@ use App\Helpers\PermissionHelper;
                     Quick Actions
                 </div>
 
-                <a href="{{ route('attendance.students') }}" class="quick-card">
+                @if(PermissionHelper::canFeature('view_student_attendance'))<a href="{{ route('attendance.students') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--brand-muted); color: var(--brand);">
                         <i class="fas fa-user-check"></i>
                     </div>
@@ -891,9 +891,9 @@ use App\Helpers\PermissionHelper;
                         <div class="qc-sub">Mark daily class attendance for your students</div>
                     </div>
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
-                </a>
+                </a>@endif
 
-                                @if(PermissionHelper::canFeature('attendance_reports'))
+                                @if(PermissionHelper::canFeature('view_student_attendance_report'))
                                 <a href="{{ route('attendance.students.report') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--success-muted); color: var(--success);">
                         <i class="fas fa-chart-simple"></i>
@@ -906,7 +906,7 @@ use App\Helpers\PermissionHelper;
                 </a>
                                 @endif
 
-                <a href="{{ route('attendance.teachers') }}" class="quick-card">
+                @if(PermissionHelper::canFeature('view_teacher_attendance'))<a href="{{ route('attendance.teachers') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--purple-muted); color: var(--purple);">
                         <i class="fas fa-chalkboard-user"></i>
                     </div>
@@ -915,9 +915,9 @@ use App\Helpers\PermissionHelper;
                         <div class="qc-sub">Record staff arrival & departure times</div>
                     </div>
                     <i class="fas fa-chevron-right ms-auto text-muted"></i>
-                </a>
+                </a>@endif
 
-                @if(PermissionHelper::canFeature('attendance_reports'))
+                @if(PermissionHelper::canFeature('view_teacher_attendance_report'))
                 <a href="{{ route('attendance.teachers.report') }}" class="quick-card">
                     <div class="qc-icon" style="background: var(--warning-muted); color: var(--warning);">
                         <i class="fas fa-chart-line"></i>
@@ -931,7 +931,7 @@ use App\Helpers\PermissionHelper;
                 @endif
 
                 {{-- My Classes (Teacher) --}}
-                @if(!empty($myClasses) && $myClasses->isNotEmpty() && PermissionHelper::canFeature('mark_attendance'))
+                @if(!empty($myClasses) && $myClasses->isNotEmpty() && PermissionHelper::canFeature('mark_student_attendance'))
                 <hr class="my-3" style="border-color: #E2E8F0;">
                 <div class="section-header mb-3" style="border-bottom: none; margin-bottom: 0.5rem;">
                     <i class="fas fa-book-open"></i>
@@ -964,9 +964,9 @@ use App\Helpers\PermissionHelper;
                     <i class="fas fa-clock" style="color: var(--brand); font-size: 1rem;"></i>
                     <span style="font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: #2C29CA;">Recent Teacher Arrivals Today</span>
                 </div>
-                <a href="{{ route('attendance.teachers') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
+                @if(PermissionHelper::canFeature('view_teacher_attendance'))<a href="{{ route('attendance.teachers') }}" class="btn btn-sm" style="background: var(--brand-muted); color: var(--brand); border-radius: 12px; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
                     View All <i class="fas fa-arrow-right ms-1"></i>
-                </a>
+                </a>@endif
             </div>
         </div>
         <div style="overflow-x: auto;">

@@ -590,17 +590,17 @@
                     <a href="{{ route('library.books.create') }}" class="btn-lib btn-primary-lib"><i class="fas fa-plus"></i>
                         Add Book</a>
                 @endif
-                @if(PermissionHelper::canFeature('manage_borrowing'))
+                @if(PermissionHelper::canFeature('view_borrowings'))
                     <a href="{{ route('library.borrowings') }}" class="btn-lib"
                         style="background:var(--lib-violet-l);color:var(--lib-violet);"><i
                             class="fas fa-hand-holding-heart"></i> Issue Book</a>
                 @endif
-                @if(PermissionHelper::canFeature('manage_members'))
+                @if(PermissionHelper::canFeature('view_members'))
                     <a href="{{ route('library.members') }}" class="btn-lib"
                         style="background:var(--lib-amber-l);color:var(--lib-amber);"><i class="fas fa-user-plus"></i> Add
                         Member</a>
                 @endif
-                @if(PermissionHelper::canFeature('manage_borrowing'))
+                @if(PermissionHelper::canFeature('view_fines'))
                     <a href="{{ route('library.fines') }}" class="btn-lib"
                         style="background:var(--lib-rose-l);color:var(--lib-rose);"><i class="fas fa-coins"></i> Manage
                         Fines</a>
@@ -610,11 +610,11 @@
                         style="background:var(--lib-green-l);color:var(--lib-green);"><i class="fas fa-chart-bar"></i>
                         Reports</a>
                 @endif
-                @if(PermissionHelper::canFeature('view_books'))
+                @if(PermissionHelper::canFeature('browse_catalogue'))
                     <a href="{{ route('library.catalogue') }}" class="btn-lib btn-outline-lib"><i class="fas fa-search"></i>
                         Book Catalogue</a>
                 @endif
-                @if(PermissionHelper::canFeature('manage_settings'))
+                @if(PermissionHelper::canFeature('view_library_settings'))
                     <a href="{{ route('library.settings') }}" class="btn-lib btn-outline-lib"><i class="fas fa-cog"></i>
                         Settings</a>
                 @endif
@@ -693,7 +693,7 @@
                 <div class="lib-card">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-history" style="color:var(--lib-teal);"></i> Recent Borrowings</h3>
-                        @if(PermissionHelper::canFeature('manage_borrowing'))
+                        @if(PermissionHelper::canFeature('view_borrowings'))
                             <a href="{{ route('library.borrowings') }}" class="btn-lib btn-sm-lib btn-outline-lib">View All</a>
                         @endif
                     </div>

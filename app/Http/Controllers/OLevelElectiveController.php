@@ -29,7 +29,7 @@ class OLevelElectiveController extends Controller
      */
     public function entry(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('view_olevel_electives');
 
         $schoolId = Session('LoggedSchool');
 
@@ -116,7 +116,7 @@ class OLevelElectiveController extends Controller
      */
     public function addSchoolSubject(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_olevel_subjects');
 
         $request->validate([
             'subject_name' => 'required|string|max:255',
@@ -154,7 +154,7 @@ class OLevelElectiveController extends Controller
      */
     public function updateSchoolSubject(Request $request, $id)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_olevel_subjects');
 
         $request->validate([
             'subject_name' => 'required|string|max:255',
@@ -198,7 +198,7 @@ class OLevelElectiveController extends Controller
      */
     public function deleteSchoolSubject($id)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_olevel_subjects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -231,7 +231,7 @@ class OLevelElectiveController extends Controller
      */
     public function save(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('save_olevel_electives')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

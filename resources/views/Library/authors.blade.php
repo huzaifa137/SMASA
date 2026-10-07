@@ -644,7 +644,7 @@
                                     <th>Nationality</th>
                                     <th>Bio</th>
                                     <th>Books</th>
-                                    @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                    @if(PermissionHelper::canFeature('manage_book_authors'))
                                         <th>Actions</th>
                                     @endif
                                 </tr>
@@ -670,15 +670,15 @@
                                         <td><span class="badge"
                                                 style="background:var(--lib-blue-l);color:var(--lib-blue);">{{ $author->books_count }}</span>
                                         </td>
-                                        @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                        @if(PermissionHelper::canFeature('manage_book_authors'))
                                             <td>
-                                                @if(PermissionHelper::canFeature('edit_book'))
+                                                @if(PermissionHelper::canFeature('manage_book_authors'))
                                                     <button
                                                         onclick="openEditAuthor({{ $author->id }},'{{ addslashes($author->name) }}','{{ addslashes($author->bio) }}','{{ addslashes($author->nationality) }}')"
                                                         class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i
                                                             class="fas fa-edit"></i></button>
                                                 @endif
-                                                @if($author->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                                @if($author->books_count == 0 && PermissionHelper::canFeature('manage_book_authors'))
                                                     <button type="button" 
                                                         onclick="confirmDelete({{ $author->id }})" 
                                                         class="btn-lib btn-danger-lib"
@@ -700,7 +700,7 @@
             </div>
 
             {{-- Add Author --}}
-            @if(PermissionHelper::canFeature('add_book'))
+            @if(PermissionHelper::canFeature('manage_book_authors'))
                 <div class="lib-card" style="position:sticky;top:1.5rem;">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Author</h3>

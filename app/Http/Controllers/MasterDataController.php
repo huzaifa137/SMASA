@@ -694,7 +694,7 @@ public function dropDown($links)
 
     public function secondaryALevelSubjectsIndex()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        PermissionHelper::denyUnlessFeature('view_secondary_subjects');
 
         $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
 
@@ -717,7 +717,7 @@ public function dropDown($links)
 
     public function storeSecondaryALevelSubject(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!PermissionHelper::canFeature('add_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -756,7 +756,7 @@ public function dropDown($links)
 
     public function updateSecondaryALevelSubject(Request $request, $md_id)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!PermissionHelper::canFeature('edit_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -786,7 +786,7 @@ public function dropDown($links)
 
     public function deleteSecondaryALevelSubject($md_id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -860,7 +860,7 @@ public function dropDown($links)
 
     public function secondaryOLevelSubjectsIndex()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        PermissionHelper::denyUnlessFeature('view_secondary_subjects');
 
         $subjects = DB::table('master_datas')
             ->where('md_master_code_id', config('constants.options.SECONDARY_OLEVEL_SUBJECTS'))
@@ -878,7 +878,7 @@ public function dropDown($links)
 
     public function storeSecondaryOLevelSubject(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!PermissionHelper::canFeature('add_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -919,7 +919,7 @@ public function dropDown($links)
 
     public function updateSecondaryOLevelSubject(Request $request, $md_id)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!PermissionHelper::canFeature('edit_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -961,7 +961,7 @@ public function dropDown($links)
 
     public function deleteSecondaryOLevelSubject($md_id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!PermissionHelper::canFeature('delete_secondary_subject')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

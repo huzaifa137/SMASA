@@ -195,9 +195,9 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
                             <h4 class="mb-0">Manage My Subjects</h4>
                             @if ($school->custom_subjects_active)
-                                <a href="{{ route('school.custom-subjects.revert') }}" class="btn btn-secondary btn-sm">
+                                @if(\App\Helpers\PermissionHelper::canFeature('switch_subject_mode'))<a href="{{ route('school.custom-subjects.revert') }}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-right-arrow-left me-1"></i> Switch back to default subjects
-                                </a>
+                                </a>@endif
                             @endif
                         </div>
 
@@ -206,8 +206,8 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                                 You haven't switched to your own subject list yet. You can build it below first,
                                 then head to the
-                                <a href="{{ route('school.custom-subjects.switch') }}" style="margin-top:3rem;"><strong>Switch
-                                        to Custom Subjects</strong></a>
+                                @if(\App\Helpers\PermissionHelper::canFeature('switch_subject_mode'))<a href="{{ route('school.custom-subjects.switch') }}" style="margin-top:3rem;"><strong>Switch
+                                        to Custom Subjects</strong></a>@endif
                                 page to confirm &mdash; your current subjects will be carried over automatically.
                             </div>
                         @endif

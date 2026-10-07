@@ -31,7 +31,7 @@ class UserRightsController extends Controller
 
     public function dashboard()
     {
-        PermissionHelper::denyUnlessFeature('view_dashboard');
+        PermissionHelper::denyUnlessFeature('view_urp_dashboard');
 
         $schoolId = session('LoggedSchool');
         $roles = SchoolRole::where('school_id', $schoolId)->withCount('teachers')->get();
@@ -317,7 +317,7 @@ class UserRightsController extends Controller
 
     public function assignRolesIndex()
     {
-        PermissionHelper::denyUnlessFeature('view_roles');
+        PermissionHelper::denyUnlessFeature('view_role_assignments');
 
         $schoolId = session('LoggedSchool');
         $teachers = Teacher::where('school_id', $schoolId)

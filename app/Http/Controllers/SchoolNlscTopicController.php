@@ -34,7 +34,7 @@ class SchoolNlscTopicController extends Controller
 {
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_topics');
 
         $schoolId = Session('LoggedSchool');
 
@@ -145,7 +145,7 @@ class SchoolNlscTopicController extends Controller
 
     public function competencyAreas($id)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_topics');
 
         $topic = SchoolNlscTopic::with('competencyAreas')
             ->where('school_id', Session('LoggedSchool'))
@@ -167,7 +167,7 @@ class SchoolNlscTopicController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('add_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -216,7 +216,7 @@ class SchoolNlscTopicController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -246,7 +246,7 @@ class SchoolNlscTopicController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -270,7 +270,7 @@ class SchoolNlscTopicController extends Controller
      */
     public function destroyAllTopics(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -296,7 +296,7 @@ class SchoolNlscTopicController extends Controller
 
     public function storeCompetencyArea(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('add_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -320,7 +320,7 @@ class SchoolNlscTopicController extends Controller
 
     public function updateCompetencyArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -340,7 +340,7 @@ class SchoolNlscTopicController extends Controller
 
     public function destroyCompetencyArea($id)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -363,7 +363,7 @@ class SchoolNlscTopicController extends Controller
      */
     public function destroyAllCompetencyAreas($topicId)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_topic')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

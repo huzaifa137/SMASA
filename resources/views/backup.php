@@ -9,7 +9,7 @@ php artisan migrate
 php artisan db:seed --class=NlscCompetencyAreaSeeder
 php artisan db:seed --class=NlscSubjectAchievementSeeder
 php artisan db:seed --class=NlscProjectSeeder
-
+php artisan db:seed --class=SystemModulesSeeder
 
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;

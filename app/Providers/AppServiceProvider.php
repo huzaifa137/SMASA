@@ -6,6 +6,7 @@ use App\Helpers\NumberHelper;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Helper;
 use App\Models\Student;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +23,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // ── Standard pagination design ──────────────────────────────
+        // Every ->links() / ->render() call in the system now renders the
+        // same pager used on /students/all-students (see
+        // resources/views/pagination/smasa.blade.php) unless a view name
+        // is passed explicitly.
+        Paginator::defaultView('pagination.smasa');
+        Paginator::defaultSimpleView('pagination.smasa-simple');
+
         // ── Parent portal sidebar ───────────────────────────────────
         // Every "parents.*" view (dashboard, results, attendance,
         // finance, child-overview) shares the same sidebar shell, so the

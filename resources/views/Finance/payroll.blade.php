@@ -477,9 +477,9 @@
                 <i class="fas fa-money-bill-wave"></i> Manage Salary Structures
             </a>
         </div>
-        <a href="{{ route('finance.payroll.create') }}" class="btn-fin btn-primary-fin">
+        @if(\App\Helpers\PermissionHelper::canFeature('create_payroll_period'))<a href="{{ route('finance.payroll.create') }}" class="btn-fin btn-primary-fin">
             <i class="fas fa-plus"></i> Create New Payroll Period
-        </a>
+        </a>@endif
     </div>
 
     {{-- Payroll Periods Grid --}}
@@ -492,9 +492,9 @@
             <div style="text-align:center;padding:3rem;">
                 <i class="fas fa-calendar-times" style="font-size:3rem;opacity:.3;display:block;margin-bottom:1rem;"></i>
                 <p style="margin-bottom:1rem;">No payroll periods created yet.</p>
-                <a href="{{ route('finance.payroll.create') }}" class="btn-fin btn-primary-fin">
+                @if(\App\Helpers\PermissionHelper::canFeature('create_payroll_period'))<a href="{{ route('finance.payroll.create') }}" class="btn-fin btn-primary-fin">
                     <i class="fas fa-plus"></i> Create First Payroll Period
-                </a>
+                </a>@endif
             </div>
         @else
             <div class="payroll-grid">

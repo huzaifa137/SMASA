@@ -25,7 +25,7 @@ class SchoolNlscSubjectAchievementController extends Controller
 {
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_achievements');
 
         $schoolId = Session('LoggedSchool');
 
@@ -67,7 +67,7 @@ class SchoolNlscSubjectAchievementController extends Controller
      */
     public function forTopic($topicId)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_achievements');
 
         $topic = SchoolNlscTopic::with('subjectAchievements')
             ->where('school_id', Session('LoggedSchool'))
@@ -94,7 +94,7 @@ class SchoolNlscSubjectAchievementController extends Controller
      */
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('add_nlsc_achievement')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -126,7 +126,7 @@ class SchoolNlscSubjectAchievementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_achievement')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -149,7 +149,7 @@ class SchoolNlscSubjectAchievementController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_achievement')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -175,7 +175,7 @@ class SchoolNlscSubjectAchievementController extends Controller
      */
     public function destroyAllForTopic(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_achievement')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -200,7 +200,7 @@ class SchoolNlscSubjectAchievementController extends Controller
      */
     public function destroyAll(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_achievement')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

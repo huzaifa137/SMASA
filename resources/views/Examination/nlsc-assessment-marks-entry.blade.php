@@ -189,7 +189,7 @@
                     </div>
                     <div class="col-md-5">
                         <label class="nt-form-label">Maximum Marks</label>
-                        @if(PermissionHelper::canFeature('edit_exam') && in_array($exam->status, ['active', 'marks_entry']))
+                        @if(PermissionHelper::canFeature('enter_nlsc_marks') && in_array($exam->status, ['active', 'marks_entry']))
                             <div class="max-marks-display" id="maxMarksDisplay">
                                 <input type="text" class="nt-form-control" value="{{ $assessment->max_marks ?? '—' }}" disabled style="max-width:140px;">
                                 <button type="button" class="btn-nt-secondary" id="editMaxMarksBtn">
@@ -268,7 +268,7 @@
         </div>
     </div>
 
-    @if(PermissionHelper::canFeature('edit_exam') && in_array($exam->status, ['active', 'marks_entry']) && $students->count())
+    @if(PermissionHelper::canFeature('enter_nlsc_marks') && in_array($exam->status, ['active', 'marks_entry']) && $students->count())
         <button type="button" id="saveMarksBtn" class="save-fab" {{ $assessment->max_marks ? '' : 'disabled' }}>
             <i class="fas fa-save me-2"></i> Save All Marks
         </button>

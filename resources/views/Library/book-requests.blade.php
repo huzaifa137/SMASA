@@ -832,23 +832,23 @@
                                             <td>
                                                 @if($req->status === 'pending')
                                                     <div style="display:flex;gap:.4rem;">
-                                                        <button onclick="updateStatus({{ $req->id }}, 'approved', '{{ addslashes($req->book_title) }}')" 
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('review_book_request'))<button onclick="updateStatus({{ $req->id }}, 'approved', '{{ addslashes($req->book_title) }}')" 
                                                                 class="btn-lib btn-success-lib"
                                                                 style="padding:.3rem .65rem;" title="Approve">
                                                             <i class="fas fa-check"></i>
-                                                        </button>
-                                                        <button onclick="updateStatus({{ $req->id }}, 'rejected', '{{ addslashes($req->book_title) }}')" 
+                                                        </button>@endif
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('review_book_request'))<button onclick="updateStatus({{ $req->id }}, 'rejected', '{{ addslashes($req->book_title) }}')" 
                                                                 class="btn-lib btn-danger-lib"
                                                                 style="padding:.3rem .65rem;" title="Reject">
                                                             <i class="fas fa-times"></i>
-                                                        </button>
+                                                        </button>@endif
                                                     </div>
                                                 @elseif($req->status === 'approved')
-                                                    <button onclick="updateStatus({{ $req->id }}, 'fulfilled', '{{ addslashes($req->book_title) }}')" 
+                                                    @if(\App\Helpers\PermissionHelper::canFeature('review_book_request'))<button onclick="updateStatus({{ $req->id }}, 'fulfilled', '{{ addslashes($req->book_title) }}')" 
                                                             class="btn-lib btn-primary-lib"
                                                             style="padding:.3rem .65rem;" title="Fulfill">
                                                         <i class="fas fa-check-double"></i> Fulfill
-                                                    </button>
+                                                    </button>@endif
                                                 @endif
                                                 @if($req->reason)
                                                     <div style="font-size:.72rem;color:var(--text-3);margin-top:.25rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"

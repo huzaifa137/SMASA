@@ -666,7 +666,7 @@
             <div style="overflow-x:auto;">
                 @if($subjects->count())
                 <table class="lib-table">
-                    <thead><tr><th>Subject</th><th>Description</th><th>Books</th><th>Status</th>@if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))<th>Actions</th>@endif</tr></thead>
+                    <thead><tr><th>Subject</th><th>Description</th><th>Books</th><th>Status</th>@if(PermissionHelper::canFeature('manage_book_subjects'))<th>Actions</th>@endif</tr></thead>
                     <tbody>
                         @foreach($subjects as $subject)
                         @php
@@ -737,12 +737,12 @@ $c = $colors[$loop->index % count($colors)];
                             <td style="color:var(--text-2);max-width:200px;">{{ Str::limit($subject->description, 60) ?? '—' }}</td>
                             <td><span class="badge" style="background:var(--lib-blue-l);color:var(--lib-blue);">{{ $subject->books_count }}</span></td>
                             <td><span class="badge {{ $subject->is_active ? 'badge-active' : 'badge-inactive' }}">{{ $subject->is_active ? 'Active' : 'Inactive' }}</span></td>
-                            @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                            @if(PermissionHelper::canFeature('manage_book_subjects'))
                                 <td>
-                                    @if(PermissionHelper::canFeature('edit_book'))
+                                    @if(PermissionHelper::canFeature('manage_book_subjects'))
                                         <button onclick="openEditSubject({{ $subject->id }},'{{ addslashes($subject->name) }}','{{ addslashes($subject->description) }}',{{ $subject->is_active ? 'true' : 'false' }})" class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;"><i class="fas fa-edit"></i></button>
                                     @endif
-                                    @if($subject->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                    @if($subject->books_count == 0 && PermissionHelper::canFeature('manage_book_subjects'))
                                     <button type="button" onclick="confirmDelete({{ $subject->id }})" class="btn-lib btn-danger-lib" style="padding:.35rem .75rem;"><i class="fas fa-trash"></i></button>
                                     @endif
                                 </td>
@@ -759,7 +759,7 @@ $c = $colors[$loop->index % count($colors)];
         </div>
 
         {{-- Add Subject --}}
-        @if(PermissionHelper::canFeature('add_book'))
+        @if(PermissionHelper::canFeature('manage_book_subjects'))
             <div class="lib-card" style="position:sticky;top:1.5rem;">
                 <div class="lib-card-header">
                     <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Subject</h3>

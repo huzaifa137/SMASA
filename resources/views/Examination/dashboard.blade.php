@@ -2122,12 +2122,12 @@ use App\Helpers\PermissionHelper;
                                                 </div>
                                                 <div class="mec-class-action" onclick="event.stopPropagation()">
                                                     @if ($class->is_released)
-                                                        <a href="{{ route('examination.passslips.index', $exam->id) }}"
+                                                        @if(PermissionHelper::canFeature('view_report_cards'))<a href="{{ route('examination.passslips.index', $exam->id) }}"
                                                             class="mec-badge mec-badge-released mec-badge-link"
                                                             title="Released {{ optional($class->released_at)->format('M d, Y H:i') }}{{ $class->released_by_name ? ' by ' . $class->released_by_name : '' }} — click to view pass slips">
                                                             <i class="fas fa-check-circle me-1"></i> Released
                                                             <i class="fas fa-arrow-right ms-1" style="font-size:.65em;"></i>
-                                                        </a>
+                                                        </a>@endif
                                                         @if (!in_array($exam->status, ['closed', 'results_released']))
                                                             <button type="button" class="mec-btn mec-btn-undo"
                                                                 onclick="mecRelease({{ $exam->id }}, {{ $class->examination_class_id }}, 'unrelease', this)">Undo</button>
@@ -3096,10 +3096,10 @@ use App\Helpers\PermissionHelper;
                                         }
                                     </style>
                                     <div class="pending-footer">
-                                        <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
+                                        @if(PermissionHelper::canFeature('view_marks_entry'))<a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
                                             <i class="fas fa-pen-alt"></i>
                                             Continue Entering Marks
-                                        </a>
+                                        </a>@endif
                                     </div>
                                 </div>
                             @endforeach
@@ -3391,7 +3391,7 @@ use App\Helpers\PermissionHelper;
             $esRows = collect(\App\Models\ExaminationSubjectSetting::forExam($exam->id));
             $esCustomised = $esRows->count();
         @endphp
-        <a href="{{ route('examination.subjects.edit', $exam->id) }}"
+        @if(PermissionHelper::canFeature('manage_exam_subjects'))<a href="{{ route('examination.subjects.edit', $exam->id) }}"
             class="btn-exam-subjects"
             title="Choose which subjects are sat and shown on pass slips for this examination{{ $esCustomised ? ' (' . $esCustomised . ' customised)' : '' }}">
             <i class="fas fa-list-check"></i>
@@ -3399,7 +3399,7 @@ use App\Helpers\PermissionHelper;
             @if($esCustomised > 0)
                 <span class="es-count">{{ $esCustomised }}</span>
             @endif
-        </a>
+        </a>@endif
     @endif
 </div>
                                                                                     <div class="epc-acts">
@@ -3607,18 +3607,20 @@ use App\Helpers\PermissionHelper;
                                             </div>
                                         </div>
                                         <div class="released-exam-footer">
-                                            @if(PermissionHelper::canFeature('generate_reports'))
-                                                <div class="d-flex gap-2 w-100">
+                                            <div class="d-flex gap-2 w-100">
+                                                @if(PermissionHelper::canFeature('view_report_cards'))
                                                     <button class="btn-view-results"
                                                         onclick="event.stopPropagation(); viewPassSlips({{ $exam->id }})">
                                                         <i class="fas fa-chart-bar me-1"></i> View Results
                                                     </button> &nbsp;
+                                                @endif
+                                                @if(PermissionHelper::canFeature('view_exam_reports'))
                                                     <button class="btn-download-report"
                                                         onclick="event.stopPropagation(); downloadResultsReport({{ $exam->id }})">
                                                         <i class="fas fa-download me-1"></i> Report
                                                     </button>
-                                                </div>
-                                            @endif
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -4269,14 +4271,14 @@ use App\Helpers\PermissionHelper;
                                     <i class="fas fa-plus-circle"></i> Create New Examination
                                 </a>
                             @endif
-                            <a href="{{ route('examination.grading-schemes.index') }}"
+                            @if(PermissionHelper::canFeature('view_grading_schemes'))<a href="{{ route('examination.grading-schemes.index') }}"
                                 class="btn btn-outline-purple w-100 mb-2">
                                 <i class="fas fa-sort-amount-up mr-2"></i> Grading Scales
-                            </a>
-                            <a href="{{ route('examination.assessment-scales.index') }}"
+                            </a>@endif
+                            @if(PermissionHelper::canFeature('view_assessment_scales'))<a href="{{ route('examination.assessment-scales.index') }}"
                                 class="btn btn-outline-purple w-100 mb-2">
                                 <i class="fas fa-ruler-combined mr-2"></i>Assessment Scales
-                            </a>
+                            </a>@endif
                         </div>
                         {{-- Recent Activity --}}
                         <div class="mt-4 pt-3" style="border-top: 2px solid #ede9ff;">

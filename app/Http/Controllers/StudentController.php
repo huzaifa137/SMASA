@@ -375,7 +375,7 @@ class StudentController extends Controller
     public function generateStudentID(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('view_student_details')) {
+        if (!PermissionHelper::canFeature('add_student')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1191,7 +1191,7 @@ class StudentController extends Controller
 
     public function moveStudentForm()
     {
-        PermissionHelper::denyUnlessFeature('edit_student');
+        PermissionHelper::denyUnlessFeature('transfer_student');
         $school_id = Session('LoggedSchool');
 
         $classrooms = Classroom::where('school_id', $school_id)->get();
@@ -1335,7 +1335,7 @@ class StudentController extends Controller
     public function moveStudent(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('edit_student')) {
+        if (!PermissionHelper::canFeature('transfer_student')) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to move students.'], 403);
         }
 
@@ -1500,6 +1500,8 @@ class StudentController extends Controller
 
     public function downloadStudentTemplate(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('import_students');
+
         Helper::requireSchool();
 
         $schoolId = Helper::requireSchool();

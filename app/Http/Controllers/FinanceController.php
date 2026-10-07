@@ -141,7 +141,7 @@ class FinanceController extends Controller
 
     public function feeStructures()
     {
-        PermissionHelper::denyUnlessFeature('manage_fees');
+        PermissionHelper::denyUnlessFeature('view_fee_structures');
         $schoolId = session('LoggedSchool');
         $structures = FeeStructure::where('school_id', $schoolId)
             ->orderByDesc('academic_year')
@@ -154,7 +154,7 @@ class FinanceController extends Controller
     public function createFeeStructure()
     {
 
-        PermissionHelper::denyUnlessFeature('manage_fees');
+        PermissionHelper::denyUnlessFeature('add_fee_structure');
 
         $schoolId = session('LoggedSchool');
         $classrooms = Classroom::where('school_id', $schoolId)
@@ -173,7 +173,7 @@ class FinanceController extends Controller
     public function storeFeeStructure(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('add_fee_structure')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to manage fee structures.'], 403);
         }
 
@@ -236,7 +236,7 @@ class FinanceController extends Controller
     public function editFeeStructure(int $id)
     {
 
-        PermissionHelper::denyUnlessFeature('manage_fees');
+        PermissionHelper::denyUnlessFeature('edit_fee_structure');
 
         $schoolId = session('LoggedSchool');
         $structure = FeeStructure::where('school_id', $schoolId)->with('items')->findOrFail($id);
@@ -257,7 +257,7 @@ class FinanceController extends Controller
     public function updateFeeStructure(Request $request, int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('edit_fee_structure')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -361,7 +361,7 @@ class FinanceController extends Controller
     public function deleteFeeStructure(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('delete_fee_structure')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete fee structures.'], 403);
         }
 
@@ -377,7 +377,7 @@ class FinanceController extends Controller
 
     public function feeCategories()
     {
-        PermissionHelper::denyUnlessFeature('manage_fees');
+        PermissionHelper::denyUnlessFeature('view_fee_categories');
 
         $schoolId = session('LoggedSchool');
         // Ensures the school has its starter set before we count usage.
@@ -394,7 +394,7 @@ class FinanceController extends Controller
 
     public function storeFeeCategory(Request $request)
     {
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('manage_fee_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -429,7 +429,7 @@ class FinanceController extends Controller
 
     public function updateFeeCategory(Request $request, int $id)
     {
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('manage_fee_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -468,7 +468,7 @@ class FinanceController extends Controller
 
     public function deleteFeeCategory(int $id)
     {
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('manage_fee_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -493,7 +493,7 @@ class FinanceController extends Controller
 
     public function feeAllocations()
     {
-        PermissionHelper::denyUnlessFeature('manage_fees');
+        PermissionHelper::denyUnlessFeature('view_fee_allocations');
         $schoolId = session('LoggedSchool');
         $year = request('year', date('Y'));
         $term = request('term', '');
@@ -534,7 +534,7 @@ class FinanceController extends Controller
     public function allocateFees(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('allocate_fees')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -619,7 +619,7 @@ class FinanceController extends Controller
     public function payments()
     {
 
-        PermissionHelper::denyUnlessFeature('view_finance');
+        PermissionHelper::denyUnlessFeature('view_payments');
 
         $schoolId = session('LoggedSchool');
         $year = request('year', date('Y'));
@@ -906,7 +906,7 @@ class FinanceController extends Controller
      */
     public function receiptPdf(int $id)
     {
-        PermissionHelper::denyUnlessFeature('view_finance');
+        PermissionHelper::denyUnlessFeature('print_receipt');
         $schoolId = session('LoggedSchool');
         $payment = FeePayment::where('school_id', $schoolId)
             ->with(['student', 'allocation.feeStructure', 'items.category'])
@@ -1049,7 +1049,7 @@ class FinanceController extends Controller
     public function reversePayment(Request $request, int $id)
     {
 
-        if (!PermissionHelper::canFeature('record_payment')) {
+        if (!PermissionHelper::canFeature('reverse_payment')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to reverse payments.'], 403);
         }
 
@@ -1076,7 +1076,7 @@ class FinanceController extends Controller
     public function expenses()
     {
 
-        PermissionHelper::denyUnlessFeature('manage_expenses');
+        PermissionHelper::denyUnlessFeature('view_expenses');
 
         $schoolId = session('LoggedSchool');
         $year = request('year', date('Y'));
@@ -1109,7 +1109,7 @@ class FinanceController extends Controller
 
     public function createExpense()
     {
-        PermissionHelper::denyUnlessFeature('manage_expenses');
+        PermissionHelper::denyUnlessFeature('add_expense');
 
         $schoolId = session('LoggedSchool');
         $categories = ExpenseCategory::where('school_id', $schoolId)->where('is_active', true)->get();
@@ -1119,7 +1119,7 @@ class FinanceController extends Controller
 
     public function storeExpense(Request $request)
     {
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('add_expense')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to add expenses.'], 403);
         }
 
@@ -1182,7 +1182,7 @@ class FinanceController extends Controller
     public function editExpense(int $id)
     {
 
-        PermissionHelper::denyUnlessFeature('manage_expenses');
+        PermissionHelper::denyUnlessFeature('edit_expense');
 
 
         $schoolId = session('LoggedSchool');
@@ -1194,7 +1194,7 @@ class FinanceController extends Controller
     public function updateExpense(Request $request, int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('edit_expense')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1217,7 +1217,7 @@ class FinanceController extends Controller
     public function deleteExpense(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('delete_expense')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete expenses.'], 403);
         }
 
@@ -1231,7 +1231,7 @@ class FinanceController extends Controller
     public function expenseCategories()
     {
 
-        PermissionHelper::denyUnlessFeature('manage_expenses');
+        PermissionHelper::denyUnlessFeature('view_expense_categories');
 
 
         $schoolId = session('LoggedSchool');
@@ -1245,7 +1245,7 @@ class FinanceController extends Controller
     public function storeExpenseCategory(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('manage_expense_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1265,7 +1265,7 @@ class FinanceController extends Controller
     public function deleteExpenseCategory(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('manage_expense_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1281,7 +1281,7 @@ class FinanceController extends Controller
     public function payroll()
     {
 
-        PermissionHelper::denyUnlessFeature('manage_payroll');  // human_resources module feature
+        PermissionHelper::denyUnlessFeature('view_payroll');  // human_resources module feature
 
         $schoolId = session('LoggedSchool');
         $periods = PayrollPeriod::where('school_id', $schoolId)
@@ -1292,7 +1292,7 @@ class FinanceController extends Controller
     public function createPayrollPeriod()
     {
 
-        PermissionHelper::denyUnlessFeature('manage_payroll');
+        PermissionHelper::denyUnlessFeature('create_payroll_period');
 
         $schoolId = session('LoggedSchool');
 
@@ -1313,7 +1313,7 @@ class FinanceController extends Controller
     public function storePayrollPeriod(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('manage_payroll')) {
+        if (!PermissionHelper::canFeature('create_payroll_period')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to manage payroll.'], 403);
         }
 
@@ -1370,6 +1370,8 @@ class FinanceController extends Controller
 
     public function showPayrollPeriod(int $id)
     {
+        PermissionHelper::denyUnlessFeature('view_payroll');
+
         $schoolId = session('LoggedSchool');
         $period = PayrollPeriod::where('school_id', $schoolId)
             ->with(['slips.teacher'])->findOrFail($id);
@@ -1379,7 +1381,7 @@ class FinanceController extends Controller
     public function approvePayrollPeriod(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_payroll')) {
+        if (!PermissionHelper::canFeature('approve_payroll')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1397,7 +1399,7 @@ class FinanceController extends Controller
     public function markPayrollPaid(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_payroll')) {
+        if (!PermissionHelper::canFeature('mark_payroll_paid')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1431,7 +1433,7 @@ class FinanceController extends Controller
 
     public function salaryStructures()
     {
-        PermissionHelper::denyUnlessFeature('manage_payroll');
+        PermissionHelper::denyUnlessFeature('view_salary_structures');
 
         $schoolId = session('LoggedSchool');
         $teachers = Teacher::where('school_id', $schoolId)
@@ -1443,7 +1445,7 @@ class FinanceController extends Controller
     public function storeSalaryStructure(Request $request)
     {
 
-        if (!PermissionHelper::canFeature('manage_payroll')) {
+        if (!PermissionHelper::canFeature('manage_salary_structures')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -1474,7 +1476,7 @@ class FinanceController extends Controller
 
     public function budgets()
     {
-        PermissionHelper::denyUnlessFeature('view_finance');
+        PermissionHelper::denyUnlessFeature('view_budgets');
 
         $schoolId = session('LoggedSchool');
         $budgets = Budget::where('school_id', $schoolId)->orderByDesc('academic_year')->get();
@@ -1483,7 +1485,7 @@ class FinanceController extends Controller
 
     public function createBudget()
     {
-        PermissionHelper::denyUnlessFeature('view_finance');
+        PermissionHelper::denyUnlessFeature('add_budget');
 
         $schoolId = session('LoggedSchool');
         $categories = ExpenseCategory::where('school_id', $schoolId)->get();
@@ -1493,7 +1495,7 @@ class FinanceController extends Controller
     public function storeBudget(Request $request)
     {
 
-      if (!PermissionHelper::canFeature('view_finance')) {
+      if (!PermissionHelper::canFeature('add_budget')) {
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
 
@@ -1582,6 +1584,8 @@ class FinanceController extends Controller
     }
     public function showBudget(int $id)
     {
+        PermissionHelper::denyUnlessFeature('view_budgets');
+
         $schoolId = session('LoggedSchool');
         $budget = Budget::where('school_id', $schoolId)->with('items')->findOrFail($id);
         return view('Finance.budget-detail', compact('budget'));
@@ -1929,7 +1933,7 @@ class FinanceController extends Controller
      */
     public function reportsExportCsv(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('export_financial_reports');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->reportFilters($request);
@@ -2010,7 +2014,7 @@ class FinanceController extends Controller
      */
     public function reportsExportPdf(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('export_financial_reports');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->reportFilters($request);
@@ -2046,7 +2050,7 @@ class FinanceController extends Controller
      */
     public function reportsExportExcel(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('export_financial_reports');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->reportFilters($request);
@@ -2125,7 +2129,7 @@ class FinanceController extends Controller
     public function outstandingFees(Request $request)
     {
 
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('view_outstanding_fees');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->outstandingFeesFilters($request);
@@ -2158,7 +2162,7 @@ class FinanceController extends Controller
      */
     public function outstandingFeesPdf(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('export_outstanding_fees');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->outstandingFeesFilters($request);
@@ -2184,7 +2188,7 @@ class FinanceController extends Controller
      */
     public function outstandingFeesExcel(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('financial_reports');
+        PermissionHelper::denyUnlessFeature('export_outstanding_fees');
 
         $schoolId = session('LoggedSchool');
         $filters = $this->outstandingFeesFilters($request);
@@ -2218,7 +2222,7 @@ class FinanceController extends Controller
      */
     public function recalculateBalances(Request $request)
     {
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('recalculate_balances')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -2360,7 +2364,7 @@ class FinanceController extends Controller
     public function updateFeeAllocation(Request $request, int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('edit_fee_allocation')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -2427,7 +2431,7 @@ class FinanceController extends Controller
     public function deleteFeeAllocation(int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_fees')) {
+        if (!PermissionHelper::canFeature('delete_fee_allocation')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -2448,7 +2452,7 @@ class FinanceController extends Controller
     public function updateExpenseCategory(Request $request, int $id)
     {
 
-        if (!PermissionHelper::canFeature('manage_expenses')) {
+        if (!PermissionHelper::canFeature('manage_expense_categories')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -2477,6 +2481,8 @@ class FinanceController extends Controller
 
     public function viewPayslip(int $id)
     {
+        PermissionHelper::denyUnlessFeature('view_payroll');
+
         $schoolId = session('LoggedSchool');
         $slip = PayrollSlip::where('school_id', $schoolId)
             ->with(['teacher', 'period'])
@@ -2504,6 +2510,8 @@ class FinanceController extends Controller
 
     public function editBudget(int $id)
     {
+        PermissionHelper::denyUnlessFeature('edit_budget');
+
         $schoolId = session('LoggedSchool');
         $budget = Budget::where('school_id', $schoolId)
             ->with('items')
@@ -2516,6 +2524,8 @@ class FinanceController extends Controller
 
     public function updateBudget(Request $request, int $id)
     {
+        PermissionHelper::denyUnlessFeature('edit_budget');
+
         $schoolId = session('LoggedSchool');
         $budget = Budget::where('school_id', $schoolId)->findOrFail($id);
 
@@ -2604,7 +2614,7 @@ class FinanceController extends Controller
     public function approveBudget(int $id)
     {
 
-    if (!PermissionHelper::canFeature('financial_reports')) {
+    if (!PermissionHelper::canFeature('approve_budget')) {
         return response()->json(['message' => 'Unauthorized. You do not have permission to approve budgets.'], 403);
     }
 

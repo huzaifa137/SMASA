@@ -389,8 +389,6 @@
                 font-size: .8rem;
             }
 
-            /* KPI grid already 2-col at 900px, then 1-col at 560px */
-
             /* KPI cards: tighter padding */
             .kpi {
                 padding: 1.15rem 1.15rem;
@@ -491,8 +489,6 @@
                 font-size: .72rem;
             }
 
-            /* For very small phones, remove the padding-left so
-               the timestamp aligns to the left edge cleanly */
             .txn-extra {
                 padding-left: 0;
             }
@@ -504,7 +500,10 @@
     @php
         $totalNotifications = $items->total() ?? $items->count();
         $unreadCount = $unreadCount ?? 0;
-        $lastNotification = $items->first()?->notification->created_at?->diffForHumans() ?? 'N/A';
+
+        // FIX: use the first row whose notification still exists (orphaned rows have a null notification)
+        $firstValid = collect($items->items())->first(fn($i) => $i->notification);
+        $lastNotification = $firstValid?->notification?->created_at?->diffForHumans() ?? 'N/A';
     @endphp
 
     <div class="side-app">
@@ -573,6 +572,8 @@
                         <div class="fc-bd" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
                             @if($items->count() > 0)
                                 @foreach($items as $item)
+                                    {{-- FIX: skip rows whose notification was deleted --}}
+                                    @continue(!$item->notification)
                                     @php
                                         $color = $item->notification->color ?? 'secondary';
                                         $icon = $item->notification->icon ?? 'bell';
@@ -596,7 +597,7 @@
                                             <div class="txn-meta">{{ Str::limit($item->notification->body, 80) }}</div>
                                         </div>
                                         <div class="txn-extra">
-                                            {{ $item->notification->created_at->diffForHumans() }}
+                                            {{ $item->notification->created_at?->diffForHumans() ?? '—' }}
                                             @if(!$item->is_read)
                                                 <span class="unread-dot"></span>
                                             @endif
@@ -622,8 +623,8 @@
             </div>
         </div>
     </div>
-    </div>
-    </div>
+      </div>
+        </div>
     </div>
 @endsection
 

@@ -753,22 +753,22 @@
                                                 @if(in_array($r->status, ['pending', 'ready']))
                                                     <div style="display:flex;gap:.4rem;">
                                                         @if($r->status === 'pending')
-                                                            <button onclick="updateStatus({{ $r->id }}, 'ready')" 
+                                                            @if(\App\Helpers\PermissionHelper::canFeature('manage_reservations'))<button onclick="updateStatus({{ $r->id }}, 'ready')" 
                                                                     class="btn-lib btn-success-lib"
                                                                     style="padding:.3rem .65rem;" title="Mark Ready">
                                                                 <i class="fas fa-check"></i>
-                                                            </button>
+                                                            </button>@endif
                                                         @endif
-                                                        <button onclick="updateStatus({{ $r->id }}, 'fulfilled')" 
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('manage_reservations'))<button onclick="updateStatus({{ $r->id }}, 'fulfilled')" 
                                                                 class="btn-lib btn-primary-lib"
                                                                 style="padding:.3rem .65rem;" title="Fulfil">
                                                             <i class="fas fa-book"></i>
-                                                        </button>
-                                                        <button onclick="updateStatus({{ $r->id }}, 'cancelled')" 
+                                                        </button>@endif
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('manage_reservations'))<button onclick="updateStatus({{ $r->id }}, 'cancelled')" 
                                                                 class="btn-lib btn-danger-lib"
                                                                 style="padding:.3rem .65rem;" title="Cancel">
                                                             <i class="fas fa-times"></i>
-                                                        </button>
+                                                        </button>@endif
                                                     </div>
                                                 @endif
                                             </td>

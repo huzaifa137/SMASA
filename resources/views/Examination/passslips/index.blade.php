@@ -653,9 +653,9 @@ use App\Http\Controllers\Helper;
 
         {{-- ── Top line ── --}}
         <div class="ps-topline">
-            <a href="{{ route('examination.index') }}" class="ps-back btn btn-primary">
+            @if(\App\Helpers\PermissionHelper::canFeature('view_exams'))<a href="{{ route('examination.index') }}" class="ps-back btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </a>@endif
             <div class="ps-lang-switch">
                 <button type="button" class="ps-lang-btn {{ $currentLang === 'en' ? 'active' : '' }}"
                     onclick="setLanguage('en')">
@@ -785,7 +785,7 @@ use App\Http\Controllers\Helper;
                                     $fullName .= ' ' . $student->other_names;
                                 }
                             @endphp
-                            <a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}?lang={{ $currentLang }}"
+                            @if(\App\Helpers\PermissionHelper::canFeature('view_report_cards'))<a href="{{ route('examination.passslips.student', [$exam->id, $student->id]) }}?lang={{ $currentLang }}"
                                 class="student-card student-link" data-name="{{ strtolower($fullName) }}"
                                 data-adm="{{ strtolower($student->adm_no ?? '') }}"
                                 data-class="{{ $student->class_id }}_{{ $student->stream_id }}"
@@ -818,7 +818,7 @@ use App\Http\Controllers\Helper;
                                 <div class="student-card-action">
                                     <i class="fas fa-print"></i> Print
                                 </div>
-                            </a>
+                            </a>@endif
                         @empty
                             <div class="empty-state">
                                 <i class="fas fa-user-graduate"></i>
@@ -872,12 +872,12 @@ use App\Http\Controllers\Helper;
                             (template, toggles, combined exams) is resolved
                             per-class server-side from its saved
                             passslip_settings row (applySavedPassslipSettings). --}}
-                            <form id="{{ $formId }}" action="{{ route('examination.passslips.class', $exam->id) }}" method="GET"
+                            @if(\App\Helpers\PermissionHelper::canFeature('view_report_cards'))<form id="{{ $formId }}" action="{{ route('examination.passslips.class', $exam->id) }}" method="GET"
                                 target="_blank" style="display:none;">
                                 <input type="hidden" name="class_id" value="{{ $ec->class_id }}">
                                 <input type="hidden" name="stream_id" value="{{ $safeStream }}">
                                 <input type="hidden" name="lang" value="{{ $currentLang }}">
-                            </form>
+                            </form>@endif
                         @endforeach
                     </div>
                 @else
@@ -895,38 +895,38 @@ use App\Http\Controllers\Helper;
                 <h3><i class="fas fa-th-large"></i> More Actions</h3>
                 <div class="desc">Discipline ratings, remarks &amp; design templates.</div>
 
-                <a href="{{ route('examination.discipline.entry', $exam->id) }}" class="stack-btn">
+                @if(\App\Helpers\PermissionHelper::canFeature('view_discipline'))<a href="{{ route('examination.discipline.entry', $exam->id) }}" class="stack-btn">
                     <div class="ic"><i class="fas fa-user-shield"></i></div>
                     <div>
                         <div class="t">Discipline Entry</div>
                         <div class="d">Rate punctuality, behaviour &amp; conduct</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
-                </a>
+                </a>@endif
 
-                <a href="{{ route('examination.remarks.entry', $exam->id) }}" class="stack-btn">
+                @if(\App\Helpers\PermissionHelper::canFeature('view_remarks'))<a href="{{ route('examination.remarks.entry', $exam->id) }}" class="stack-btn">
                     <div class="ic"><i class="fas fa-comment-alt"></i></div>
                     <div>
                         <div class="t">Remarks Entry</div>
                         <div class="d">Class &amp; Head Teacher remarks per student</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
-                </a>
+                </a>@endif
 
                 @php $customDesigns = \App\Support\CustomReportCards::activeForSchool($exam->school_id); @endphp
                 @if(Helper::schoolHasNonSecondary($exam->school_id))
-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=classic" class="stack-btn">
+                @if(\App\Helpers\PermissionHelper::canFeature('customize_report_cards'))<a href="{{ route('examination.passslips.customize', $exam->id) }}?template=classic" class="stack-btn">
                     <div class="ic"><i class="fas fa-graduation-cap"></i></div>
                     <div>
                         <div class="t">Customize Primary</div>
                         <div class="d">{{ $customDesigns['primary']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['primary']['template']->name : 'Classic / Modern / Minimal' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
-                </a>
+                </a>@endif
                 @endif
 
                 @if(Helper::schoolHasNonSecondary($exam->school_id))
-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-classic"
+                @if(\App\Helpers\PermissionHelper::canFeature('customize_report_cards'))<a href="{{ route('examination.passslips.customize', $exam->id) }}?template=nursery-classic"
                     class="stack-btn">
                     <div class="ic"><i class="fas fa-child"></i></div>
                     <div>
@@ -934,11 +934,11 @@ use App\Http\Controllers\Helper;
                         <div class="d">{{ $customDesigns['nursery']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['nursery']['template']->name : 'Baby / Middle / Top Class' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
-                </a>
+                </a>@endif
                 @endif
 
                 @if(Helper::schoolHasSecondary($exam->school_id))
-                <a href="{{ route('examination.passslips.customize', $exam->id) }}?template=secondary-classic"
+                @if(\App\Helpers\PermissionHelper::canFeature('customize_report_cards'))<a href="{{ route('examination.passslips.customize', $exam->id) }}?template=secondary-classic"
                     class="stack-btn">
                     <div class="ic"><i class="fas fa-user-graduate"></i></div>
                     <div>
@@ -946,7 +946,7 @@ use App\Http\Controllers\Helper;
                         <div class="d">{{ $customDesigns['secondary']['template']->name ?? '' ? 'Custom design: ' . $customDesigns['secondary']['template']->name : 'O-Level / A-Level report card' }}</div>
                     </div>
                     <i class="fas fa-chevron-right chev"></i>
-                </a>
+                </a>@endif
                 @endif
             </div>
 

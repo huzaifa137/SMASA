@@ -615,11 +615,11 @@
         </div>
         <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
             <div class="header-buttons" style="display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
-                <a href="{{ route('attendance.dashboard') }}" class="btn-glass"
+                @if(PermissionHelper::canFeature('view_attendance'))<a href="{{ route('attendance.dashboard') }}" class="btn-glass"
                    style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: #FFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                     <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-                @if(PermissionHelper::canFeature('attendance_reports'))
+                </a>@endif
+                @if(PermissionHelper::canFeature('view_student_attendance_report'))
                     <a href="{{ route('attendance.students.report') }}" class="btn-glass btn-glass-white"
                        style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; background: rgba(255,255,255,0.9); color: #333; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;">
                         <i class="fas fa-chart-bar"></i> Reports
@@ -699,19 +699,19 @@
                     <div class="action-group">
                        
                         @if($stream->taken)
-                            <a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?date={{ $today }}" 
+                            @if(PermissionHelper::canFeature('mark_student_attendance'))<a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?date={{ $today }}" 
                                class="btn-edit-modern">
                                 <i class="fas fa-edit"></i> Edit Attendance
-                            </a>
-                            <a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?view=details&date={{ $today }}" 
+                            </a>@endif
+                            @if(PermissionHelper::canFeature('mark_student_attendance'))<a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?view=details&date={{ $today }}" 
                                class="btn-outline-modern">
                                 <i class="fas fa-eye"></i> View Details
-                            </a>
+                            </a>@endif
                         @else
-                            <a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}" 
+                            @if(PermissionHelper::canFeature('mark_student_attendance'))<a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}" 
                                class="btn-primary-modern">
                                 <i class="fas fa-plus-circle"></i> Take Attendance
-                            </a>
+                            </a>@endif
                         @endif
                     </div>
 
@@ -722,11 +722,11 @@
                             <i class="fas fa-book"></i> By Subject:
                         </span>
                         @foreach($stream->subjects as $subj)
-                        <a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?class_subject_id={{ $subj->id }}&date={{ $today }}"
+                        @if(PermissionHelper::canFeature('mark_student_attendance'))<a href="{{ route('attendance.take', [$classroom->class_name, $stream->stream_id]) }}?class_subject_id={{ $subj->id }}&date={{ $today }}"
                            class="subject-tag" 
                            title="Take attendance for {{ $subj->subject_name }}">
                             <i class="fas fa-book-open"></i> {{ Str::limit($subj->subject_name, 20) }}
-                        </a>
+                        </a>@endif
                         @endforeach
                     </div>
                     @endif

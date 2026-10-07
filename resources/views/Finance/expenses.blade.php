@@ -356,9 +356,9 @@ body{background:var(--bg);}
 <div class="fin-card">
     <div class="fin-card-header">
         <h3><i class="fas fa-search"></i> Search & Filter</h3>
-        <a href="{{ route('finance.expenses.create') }}" class="btn-fin btn-primary-fin">
+        @if(\App\Helpers\PermissionHelper::canFeature('add_expense'))<a href="{{ route('finance.expenses.create') }}" class="btn-fin btn-primary-fin">
             <i class="fas fa-plus"></i> Add Expense
-        </a>
+        </a>@endif
     </div>
     <div class="filters">
         <div class="filter-group">
@@ -468,16 +468,16 @@ body{background:var(--bg);}
                         @endif
                     </td>
                     <td class="action-icons">
-                        <a href="{{ route('finance.expenses.edit', $expense->id) }}" title="Edit Expense">
+                        @if(\App\Helpers\PermissionHelper::canFeature('edit_expense'))<a href="{{ route('finance.expenses.edit', $expense->id) }}" title="Edit Expense">
                             <i class="fas fa-edit" style="color:#2f2ccb;"></i>
-                        </a>
-                        <form method="POST" action="{{ route('finance.expenses.destroy', $expense->id) }}" class="delete-expense-form" data-title="{{ $expense->title }}" data-amount="{{ number_format($expense->amount, 0) }}" style="display:inline;">
+                        </a>@endif
+                        @if(\App\Helpers\PermissionHelper::canFeature('delete_expense'))<form method="POST" action="{{ route('finance.expenses.destroy', $expense->id) }}" class="delete-expense-form" data-title="{{ $expense->title }}" data-amount="{{ number_format($expense->amount, 0) }}" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button type="button" class="delete-expense-btn" title="Delete Expense" onclick="confirmDeleteExpense(this)">
                                 <i class="fas fa-trash" style="color:#dc2626;"></i>
                             </button>
-                        </form>
+                        </form>@endif
                     </td>
                 </tr>
                 @empty
@@ -485,9 +485,9 @@ body{background:var(--bg);}
                     <td colspan="9" style="text-align:center;padding:3rem;">
                         <i class="fas fa-receipt" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
                         <p style="margin:0 0 1rem 0;">No expenses recorded yet.</p>
-                        <a href="{{ route('finance.expenses.create') }}" class="btn-fin btn-primary-fin">
+                        @if(\App\Helpers\PermissionHelper::canFeature('add_expense'))<a href="{{ route('finance.expenses.create') }}" class="btn-fin btn-primary-fin">
                             <i class="fas fa-plus"></i> Record First Expense
-                        </a>
+                        </a>@endif
                     </td>
                 </tr>
                 @endforelse

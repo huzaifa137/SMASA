@@ -728,7 +728,7 @@
                                     <th>Description</th>
                                     <th>Books</th>
                                     <th>Status</th>
-                                    @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                    @if(PermissionHelper::canFeature('manage_book_categories'))
                                         <th>Actions</th>
                                     @endif
                                 </tr>
@@ -752,16 +752,16 @@
                                                 {{ $cat->is_active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
-                                        @if(PermissionHelper::canFeature('edit_book') || PermissionHelper::canFeature('delete_book'))
+                                        @if(PermissionHelper::canFeature('manage_book_categories'))
                                             <td>
-                                                @if(PermissionHelper::canFeature('edit_book'))
+                                                @if(PermissionHelper::canFeature('manage_book_categories'))
                                                     <button
                                                         onclick="openEditModal({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ addslashes($cat->description) }}', '{{ $cat->color }}', {{ $cat->is_active ? 'true' : 'false' }})"
                                                         class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                 @endif
-                                                @if($cat->books_count == 0 && PermissionHelper::canFeature('delete_book'))
+                                                @if($cat->books_count == 0 && PermissionHelper::canFeature('manage_book_categories'))
                                                     <button type="button" 
                                                         onclick="confirmDelete({{ $cat->id }})" 
                                                         class="btn-lib btn-danger-lib"
@@ -783,7 +783,7 @@
             </div>
 
             {{-- Add Category Panel --}}
-            @if(PermissionHelper::canFeature('add_book'))
+            @if(PermissionHelper::canFeature('manage_book_categories'))
                 <div class="lib-card" style="position:sticky;top:1.5rem;">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-plus-circle" style="color:var(--lib-blue);"></i> Add Category</h3>

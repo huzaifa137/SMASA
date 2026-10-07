@@ -457,9 +457,9 @@ use App\Helpers\PermissionHelper;
                     </button>
 
                     <div style="margin-top:1rem;">
-                        <a href="{{ route('teacher-id-cards.print.bulk') }}" class="btn btn-outline" target="_blank">
+                        @if(PermissionHelper::canFeature('print_teacher_cards'))<a href="{{ route('teacher-id-cards.print.bulk') }}" class="btn btn-outline" target="_blank">
                             <i class="fas fa-print"></i> Print All Active Cards
-                        </a>
+                        </a>@endif
                     </div>
                 </div>
             </div>

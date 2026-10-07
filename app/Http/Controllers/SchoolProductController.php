@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\School;
 use App\Services\SchoolProductMergeService;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class SchoolProductController extends Controller
      */
     public function manage()
     {
+        PermissionHelper::denyUnlessFeature('view_subject_products');
+
         $school = School::with('products')->findOrFail(Helper::requireSchool());
 
         return view('School.manage-school-products', [
@@ -37,6 +40,8 @@ class SchoolProductController extends Controller
      */
     public function merge(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('merge_subject_products');
+
         $this->authorizeManage();
 
         $request->validate([
@@ -61,6 +66,8 @@ class SchoolProductController extends Controller
      */
     public function previewSplit(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('split_subject_products');
+
         $this->authorizeManage();
 
         $request->validate([
@@ -90,6 +97,8 @@ class SchoolProductController extends Controller
      */
     public function split(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('split_subject_products');
+
         // Splitting deletes real student/marks/finance data permanently,
         // so it's restricted to TechSate admins rather than every school
         // admin who can merge. Adjust this to match your own role model

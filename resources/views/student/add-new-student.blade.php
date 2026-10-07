@@ -271,10 +271,10 @@ use App\Http\Controllers\Helper;
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0 text-white">{{ trans('common.add_student') }}</h4>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('students.bulk.import.form') }}" class="btn text-white"
+                            @if(\App\Helpers\PermissionHelper::canFeature('import_students'))<a href="{{ route('students.bulk.import.form') }}" class="btn text-white"
                                 style="background-color: #059669;">
                                 <i class="fas fa-file-import text-white"></i> Bulk Import
-                            </a>
+                            </a>@endif
                             <a href="{{ url('students/all-students') }}" class="btn text-white"
                                 style="background-color: #5351e4;">
                                 <i class="fas fa-users text-white"></i>{{ trans('common.all_students') }}

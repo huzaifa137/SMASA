@@ -762,7 +762,7 @@ use App\Helpers\PermissionHelper;
         </div>
 
         {{-- Floating Save Button --}}
-        @if (in_array($exam->status, ['active', 'marks_entry']) && PermissionHelper::canFeature('edit_exam'))
+        @if (in_array($exam->status, ['active', 'marks_entry']) && PermissionHelper::canFeature('enter_marks'))
             <button type="button" id="saveMarksBtn" class="save-fab">
                 <i class="fas fa-save me-2"></i> Save All Marks
             </button>

@@ -264,9 +264,9 @@ use App\Http\Controllers\Helper;
                                         <button type="button" class="nt-action-btn btn-edit-sm edit-assessment-btn"><i class="fas fa-pen"></i> Edit</button>
                                         <button type="button" class="nt-action-btn btn-del-sm delete-assessment-btn"><i class="fas fa-trash"></i> Delete</button>
                                         @if($exam->status === 'marks_entry')
-                                            <a href="{{ route('nlsc-assessments.marks-entry', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id, 'assessmentId' => $a->id]) }}" class="btn btn-sm btn-primary" style="text-decoration:none; display:inline-block;">
+                                            @if(\App\Helpers\PermissionHelper::canFeature('enter_nlsc_marks'))<a href="{{ route('nlsc-assessments.marks-entry', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id, 'assessmentId' => $a->id]) }}" class="btn btn-sm btn-primary" style="text-decoration:none; display:inline-block;">
                                                 <i class="fas fa-list-check me-1"></i> Enter Assessment Marks
-                                            </a>
+                                            </a>@endif
                                         @endif
                                     </td>
                                 </tr>

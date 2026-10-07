@@ -11,13 +11,13 @@
 <div class="card-header">
     <div class="row w-100 g-2">
         <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-            <a href="{{ route('all.my-classes') }}" class="btn btn-white text-dark w-100 rounded">
+            @if(PermissionHelper::canFeature('view_classes'))<a href="{{ route('all.my-classes') }}" class="btn btn-white text-dark w-100 rounded">
                 <i class="fas fa-chalkboard-teacher me-2"></i> My Classes
-            </a>
+            </a>@endif
         </div>
         @if (Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives())
 
-            @if(PermissionHelper::canFeature('manage_streams'))
+            @if(PermissionHelper::canFeature('edit_class'))
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
                     <a href="{{ route('manage.classes') }}" class="btn btn-white text-dark w-100 rounded">
                         <i class="fas fa-sliders-h me-2"></i> Manage Classes
@@ -36,7 +36,7 @@
             @if ($customSubjectsSchool && $customSubjectsSchool->custom_subjects_enabled)
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
                     @if ($customSubjectsSchool->custom_subjects_active)
-                                    <a href="{{ route('school.custom-subjects.manage') }}"
+                                    @if(PermissionHelper::canFeature('view_custom_subjects'))<a href="{{ route('school.custom-subjects.manage') }}"
                                         class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
                                 display: flex;
                                 padding: 12px 20px;
@@ -53,9 +53,9 @@
                                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(16,185,129,.35)';">
                                         <i class="fas fa-book me-2"></i>&nbsp;
                                         <span>Manage My Subjects</span>
-                                    </a>
+                                    </a>@endif
                     @else
-                        <a href="{{ route('school.custom-subjects.switch') }}"
+                        @if(PermissionHelper::canFeature('switch_subject_mode'))<a href="{{ route('school.custom-subjects.switch') }}"
                             class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
                             display: flex;
                             padding: 12px 20px;
@@ -73,14 +73,14 @@
                             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(249,115,22,.35)';">
                             <i class="fas fa-exchange-alt me-2"></i> &nbsp;
                             <span>Switch to Custom Subjects</span>
-                        </a>
+                        </a>@endif
                     @endif
                 </div>
             @endif
 
             @if ($customSubjectsSchool)
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                    <a href="{{ route('school.products.manage') }}"
+                    @if(PermissionHelper::canFeature('view_subject_products'))<a href="{{ route('school.products.manage') }}"
                         class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
                             display: flex;
                             padding: 12px 20px;
@@ -98,13 +98,13 @@
                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(14,165,233,.35)';">
                         <i class="fas fa-layer-group me-2"></i>&nbsp;
                         <span>Manage School Products</span>
-                    </a>
+                    </a>@endif
                 </div>
             @endif
 
-            @if(PermissionHelper::canFeature('assign_class_teacher') || PermissionHelper::canFeature('assign_subject_teachers'))
+            @if(PermissionHelper::canFeature('view_teacher_assignments'))
                 <div class="col-12 col-sm-4 mb-2 mb-sm-0">
-                    <a href="{{ route('school.assign-teachers') }}"
+                    @if(PermissionHelper::canFeature('view_teacher_assignments'))<a href="{{ route('school.assign-teachers') }}"
                         class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
                             display: flex;
                             padding: 12px 20px;
@@ -122,7 +122,7 @@
                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(59,130,246,.35)';">
                         <i class="fas fa-user-tie me-2"></i>&nbsp;
                         <span>Assign Teachers</span>
-                    </a>
+                    </a>@endif
                 </div>
             @endif
         @endif

@@ -1519,10 +1519,10 @@
                         </div>
                     </div>
                     <div class="gs-topbar-v2-actions">
-                        <a href="{{ route('examination.create') }}" class="btn-gs-v2-glass">
+                        @if(\App\Helpers\PermissionHelper::canFeature('create_exam'))<a href="{{ route('examination.create') }}" class="btn-gs-v2-glass">
                             <i class="fas fa-arrow-left"></i>
                             <span>Back to Create Exam</span>
-                        </a>
+                        </a>@endif
                         <div class="gs-topbar-v2-action-divider"></div>
                         <button type="button" id="btnNewScheme" class="btn-gs-v2-gradient">
                             <i class="fas fa-plus-circle"></i>

@@ -32,36 +32,36 @@
                         </a></li>
                 @elseif($exam->status === 'active')
                     @if($pendingNlscForExam > 0)
-                        <li><a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+                        <li>@if(\App\Helpers\PermissionHelper::canFeature('view_nlsc_assessments'))<a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
                                 onclick="event.stopPropagation();">
                                 <i class="fas fa-clipboard-list text-danger me-2"></i> Create Assessment
                                 <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
-                            </a></li>
+                            </a>@endif</li>
                     @endif
                     <li><a class="dropdown-item" href="#"
                             onclick="event.stopPropagation(); updateExamStatus({{ $exam->id }}, 'marks_entry')">
                             <i class="fas fa-pen-alt text-warning me-2"></i> Open Marks Entry
                         </a></li>
-                    <li><a class="dropdown-item" href="{{ route('examination.marks.entry', $exam->id) }}"
+                    <li>@if(\App\Helpers\PermissionHelper::canFeature('view_marks_entry'))<a class="dropdown-item" href="{{ route('examination.marks.entry', $exam->id) }}"
                             onclick="event.stopPropagation();">
                             <i class="fas fa-table text-primary me-2"></i> Enter Marks
-                        </a></li>
+                        </a>@endif</li>
                 @elseif($exam->status === 'marks_entry')
                     @if($pendingNlscForExam > 0)
-                        <li><a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+                        <li>@if(\App\Helpers\PermissionHelper::canFeature('view_nlsc_assessments'))<a class="dropdown-item" href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
                                 onclick="event.stopPropagation();">
                                 <i class="fas fa-clipboard-list text-danger me-2"></i> Create Assessment
                                 <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
-                            </a></li>
+                            </a>@endif</li>
                     @endif
                     <li><a class="dropdown-item" href="#"
                             onclick="event.stopPropagation(); updateExamStatus({{ $exam->id }}, 'closed')">
                             <i class="fas fa-lock text-danger me-2"></i> Close Exam
                         </a></li>
-                    <li><a class="dropdown-item" href="{{ route('examination.marks.entry', $exam->id) }}"
+                    <li>@if(\App\Helpers\PermissionHelper::canFeature('view_marks_entry'))<a class="dropdown-item" href="{{ route('examination.marks.entry', $exam->id) }}"
                             onclick="event.stopPropagation();">
                             <i class="fas fa-table text-primary me-2"></i> Enter Marks
-                        </a></li>
+                        </a>@endif</li>
                 @elseif($exam->status === 'closed')
                     <li><a class="dropdown-item" href="#"
                             onclick="event.stopPropagation(); updateExamStatus({{ $exam->id }}, 'results_released')">
@@ -72,18 +72,18 @@
                 <li>
                     <hr class="dropdown-divider">
                 </li>
-                <li><a class="dropdown-item" href="{{ route('examination.subjects.edit', $exam->id) }}"
+                <li>@if(\App\Helpers\PermissionHelper::canFeature('manage_exam_subjects'))<a class="dropdown-item" href="{{ route('examination.subjects.edit', $exam->id) }}"
                         onclick="event.stopPropagation();">
                         <i class="fas fa-list-check text-primary me-2"></i> Exam Subjects
-                    </a></li>
+                    </a>@endif</li>
 
                 @if(in_array($exam->status, ['closed', 'results_released']))
-    <a href="{{ route('examination.passslips.index', $exam->id) }}"
+    @if(\App\Helpers\PermissionHelper::canFeature('view_report_cards'))<a href="{{ route('examination.passslips.index', $exam->id) }}"
        class="btn btn-sm fw-semibold"
        style="background: linear-gradient(135deg, #2C29CA, #5351e4);
               color: #fff; border-radius: .6rem; font-size: .75rem;">
         <i class="fas fa-id-card me-1"></i> Pass Slips
-    </a>
+    </a>@endif
 @endif
             </ul>
         </div>
@@ -92,14 +92,14 @@
     <h6 class="fw-bold mb-2" style="font-size: 0.95rem;">{{ $exam->exam_name }}</h6>
 
     @if($pendingNlscForExam > 0)
-        <a href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
+        @if(\App\Helpers\PermissionHelper::canFeature('view_nlsc_assessments'))<a href="{{ route('nlsc-assessments.pending', ['examination_id' => $exam->id]) }}"
            class="d-inline-flex align-items-center mb-2"
            onclick="event.stopPropagation();"
            style="background: #FEE2E2; color: #DC2626; padding: .25rem .65rem; border-radius: 10px;
                   font-size: .72rem; font-weight: 700; text-decoration: none;">
             <i class="fas fa-clipboard-list me-1"></i> Create Assessment
             <span class="badge badge-danger ms-1">{{ $pendingNlscForExam }}</span>
-        </a>
+        </a>@endif
     @endif
 
     <div class="mb-2">

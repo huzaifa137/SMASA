@@ -787,7 +787,7 @@
                 <div class="lib-card">
                     <div class="lib-card-header">
                         <h3><i class="fas fa-list" style="color:var(--lib-blue);"></i> Borrowing Records</h3>
-                        <button onclick="openBorrowModal()" class="btn-lib btn-primary-lib"><i class="fas fa-plus"></i> Issue Book</button>
+                        @if(\App\Helpers\PermissionHelper::canFeature('borrow_book'))<button onclick="openBorrowModal()" class="btn-lib btn-primary-lib"><i class="fas fa-plus"></i> Issue Book</button>@endif
                     </div>
                     <div style="overflow-x:auto;">
                         @if($borrowings->count())
@@ -851,18 +851,18 @@
                                             <td>
                                                 <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
                                                     @if($b->status === 'borrowed' || $b->status === 'overdue')
-                                                        <button onclick="confirmReturn({{ $b->id }})" class="btn-lib btn-primary-lib"
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('return_book'))<button onclick="confirmReturn({{ $b->id }})" class="btn-lib btn-primary-lib"
                                                                 style="padding:.3rem .7rem;" title="Return">
                                                             <i class="fas fa-undo"></i> Return
-                                                        </button>
-                                                        <button onclick="confirmRenew({{ $b->id }})" class="btn-lib btn-warning-lib"
+                                                        </button>@endif
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('renew_borrowing'))<button onclick="confirmRenew({{ $b->id }})" class="btn-lib btn-warning-lib"
                                                                 style="padding:.3rem .7rem;" title="Renew">
                                                             <i class="fas fa-sync"></i>
-                                                        </button>
-                                                        <button onclick="confirmMarkLost({{ $b->id }})" class="btn-lib btn-danger-lib"
+                                                        </button>@endif
+                                                        @if(\App\Helpers\PermissionHelper::canFeature('mark_book_lost'))<button onclick="confirmMarkLost({{ $b->id }})" class="btn-lib btn-danger-lib"
                                                                 style="padding:.3rem .7rem;" title="Mark Lost">
                                                             <i class="fas fa-exclamation-triangle"></i>
-                                                        </button>
+                                                        </button>@endif
                                                     @else
                                                         <span style="font-size:.75rem;color:var(--text-3);">
                                                             @if($b->return_date) Returned

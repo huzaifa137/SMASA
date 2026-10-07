@@ -441,9 +441,9 @@
                 <span>UGX {{ number_format($structures->sum('total_amount'), 0) }} Total</span>
             </div>
         </div>
-        <a href="{{ route('finance.fee-structures.create') }}" class="btn btn-primary">
+        @if(\App\Helpers\PermissionHelper::canFeature('add_fee_structure'))<a href="{{ route('finance.fee-structures.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> New Fee Structure
-        </a>
+        </a>@endif
     </div>
 
     <div class="card">
@@ -463,9 +463,9 @@
                 <div class="empty-icon"><i class="fas fa-layer-group"></i></div>
                 <h4>No Fee Structures Yet</h4>
                 <p>Create your first fee structure to start allocating fees to students.</p>
-                <a href="{{ route('finance.fee-structures.create') }}" class="btn btn-primary">
+                @if(\App\Helpers\PermissionHelper::canFeature('add_fee_structure'))<a href="{{ route('finance.fee-structures.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Create Fee Structure
-                </a>
+                </a>@endif
             </div>
         @else
             <div style="overflow-x:auto;">
@@ -525,18 +525,18 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        <a href="{{ route('finance.fee-structures.edit', $s->id) }}" class="btn btn-sm btn-outline"
+                                        @if(\App\Helpers\PermissionHelper::canFeature('edit_fee_structure'))<a href="{{ route('finance.fee-structures.edit', $s->id) }}" class="btn btn-sm btn-outline"
                                             title="Edit Structure">
                                             <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                        <form method="POST" action="{{ route('finance.fee-structures.destroy', $s->id) }}"
+                                        </a>@endif
+                                        @if(\App\Helpers\PermissionHelper::canFeature('delete_fee_structure'))<form method="POST" action="{{ route('finance.fee-structures.destroy', $s->id) }}"
                                             style="margin:0;" id="del-{{ $s->id }}">
                                             @csrf @method('DELETE')
                                             <button type="button" class="btn btn-sm btn-danger" title="Delete"
                                                 onclick="confirmDelete({{ $s->id }}, '{{ addslashes($s->name) }}')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                        </form>
+                                        </form>@endif
                                     </div>
                                 </td>
                             </tr>

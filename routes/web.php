@@ -288,7 +288,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // SchoolNlscTopicController), so a school editing or deleting its
     // copy never touches the admin's master list.
     Route::controller(\App\Http\Controllers\SchoolNlscTopicController::class)
-        ->middleware(['module:classes', 'secondary.school'])
+        ->middleware(['module:curriculum', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-topics', 'index')->name('nlsc-topics');
@@ -306,7 +306,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // A school's OWN copy of Projects (Project Work) — see
     // SchoolNlscProjectController.
     Route::controller(\App\Http\Controllers\SchoolNlscProjectController::class)
-        ->middleware(['module:classes', 'secondary.school'])
+        ->middleware(['module:curriculum', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-projects', 'index')->name('nlsc-projects');
@@ -325,7 +325,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // A school's OWN copy of Subject Achievement — see
     // SchoolNlscSubjectAchievementController.
     Route::controller(\App\Http\Controllers\SchoolNlscSubjectAchievementController::class)
-        ->middleware(['module:classes', 'secondary.school'])
+        ->middleware(['module:curriculum', 'secondary.school'])
         ->name('school.')
         ->group(function () {
             Route::get('/nlsc-subject-achievements', 'index')->name('nlsc-subject-achievements');
@@ -403,9 +403,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         });
 
-    // Routes with module:classes middleware
+    // Routes with module:teachers middleware
     Route::controller(TeacherController::class)
-        ->middleware(['module:classes'])
+        ->middleware(['module:teachers'])
         ->group(function () {
             Route::get('add-teachers', 'addTeachers')->name('school.add-teachers');
             Route::get('/teachers', 'allTeachers')->name('teachers.all');
@@ -436,7 +436,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/teacher/update-password', 'updatePassword')->name('teacher.update-password');
         });
 
-    Route::controller(\App\Http\Controllers\CustomSubjectController::class)->middleware(['module:classes'])->group(function () {
+    Route::controller(\App\Http\Controllers\CustomSubjectController::class)->middleware(['module:curriculum'])->group(function () {
         Route::get('/custom-subjects/switch', 'showSwitchPrompt')->name('school.custom-subjects.switch');
         Route::post('/custom-subjects/switch', 'confirmSwitch')->name('school.custom-subjects.confirm');
         Route::get('/custom-subjects/revert', 'showRevertPrompt')->name('school.custom-subjects.revert');
@@ -449,7 +449,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     // School Products merge/split (a school belonging to more than one
     // School Product category at once).
-    Route::controller(SchoolProductController::class)->middleware(['module:classes'])->group(function () {
+    Route::controller(SchoolProductController::class)->middleware(['module:curriculum'])->group(function () {
         Route::get('/school-products', 'manage')->name('school.products.manage');
         Route::post('/school-products/merge', 'merge')->name('school.products.merge');
         Route::post('/school-products/split/preview', 'previewSplit')->name('school.products.split.preview');
@@ -489,7 +489,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     // A-Level (Secondary) student subject combinations — separate from the
     // class-level subject pool above, since it's a per-student choice.
-    Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:classes', 'secondary.school'])->group(function () {
+    Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:curriculum', 'secondary.school'])->group(function () {
         Route::get('a-level-combinations', 'entry')->name('alevel.combinations.entry');
         Route::post('a-level-combinations/save', 'save')->name('alevel.combinations.save');
         Route::post('a-level-combinations/subjects', 'addSchoolSubject')->name('alevel.combinations.add-subject');
@@ -501,7 +501,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // compulsory pool, student picks their own extras on top" split as
     // A-Level combinations above, just capped at 2 electives instead of a
     // 3-principal/1-subsidiary combination.
-    Route::controller(\App\Http\Controllers\OLevelElectiveController::class)->middleware(['module:classes', 'secondary.school'])->group(function () {
+    Route::controller(\App\Http\Controllers\OLevelElectiveController::class)->middleware(['module:curriculum', 'secondary.school'])->group(function () {
         Route::get('o-level-electives', 'entry')->name('olevel.electives.entry');
         Route::post('o-level-electives/save', 'save')->name('olevel.electives.save');
         Route::post('o-level-electives/subjects', 'addSchoolSubject')->name('olevel.electives.add-subject');

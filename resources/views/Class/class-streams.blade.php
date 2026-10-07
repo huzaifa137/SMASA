@@ -107,7 +107,7 @@ $controller = new Controller();
                                                     </a>
                                                 @endif
 
-                                                @if(PermissionHelper::canFeature('manage_streams'))
+                                                @if(PermissionHelper::canFeature('delete_stream'))
                                                     <a href="#" class="btn btn-sm btn-danger btn-delete-stream mb-1"
                                                         data-stream-id="{{ $stream->id }}">
                                                         <i class="fas fa-trash-alt me-2"></i> Delete Stream

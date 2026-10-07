@@ -347,48 +347,6 @@ use App\Helpers\PermissionHelper;
             color: #fff;
         }
 
-        /* ── Pagination ── */
-        .pagination {
-            display: flex;
-            gap: .25rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .pagination .page-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 .5rem;
-            border-radius: 8px;
-            font-size: .8rem;
-            font-weight: 600;
-            color: var(--t2);
-            background: var(--surf);
-            border: 1px solid var(--brd);
-            text-decoration: none;
-            transition: all .15s;
-        }
-
-        .pagination .page-link:hover {
-            background: var(--bl);
-            color: var(--b);
-            border-color: rgba(47, 44, 203, .3);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--b);
-            color: #fff;
-            border-color: var(--b);
-        }
-
-        .pagination .page-item.disabled .page-link {
-            opacity: .4;
-            pointer-events: none;
-        }
-
         /* ── Empty state ── */
         .empty-state {
             text-align: center;
@@ -1119,12 +1077,12 @@ use App\Helpers\PermissionHelper;
                     onmouseout="this.style.background='rgba(255,255,255,.18)'">
                     <i class="fas fa-file-import"></i> Bulk Import
                 </a>
-                <a href="{{ route('students.bulk.photo.import.form') }}"
+                @if(PermissionHelper::canFeature('import_student_photos'))<a href="{{ route('students.bulk.photo.import.form') }}"
                     style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:9px;padding:8px 18px;font-weight:600;font-size:.85rem;text-decoration:none;backdrop-filter:blur(4px);transition:.2s;"
                     onmouseover="this.style.background='rgba(255,255,255,.3)'"
                     onmouseout="this.style.background='rgba(255,255,255,.18)'">
                     <i class="fas fa-portrait"></i> Bulk Photo Import
-                </a>
+                </a>@endif
             @endif
             @if(PermissionHelper::canFeature('add_student'))
                 <a href="{{ route('students.add.new.student') }}"
@@ -2133,7 +2091,7 @@ use App\Helpers\PermissionHelper;
             const wrap = document.getElementById(`pagination-${senior}-${stream}`);
             if (!wrap) return;
 
-            wrap.querySelectorAll('a.page-link').forEach(link => {
+            wrap.querySelectorAll('a.smasa-pager__link[href]').forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
                     const url = new URL(this.href);

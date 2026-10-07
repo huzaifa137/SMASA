@@ -242,13 +242,14 @@ class PermissionHelper
     private static function bootstrapFeatures(): array
     {
         return [
-            'view_dashboard',
+            'view_urp_dashboard',
             'view_roles',
             'create_role',
             'edit_role',
             'delete_role',
             'view_permissions',
             'assign_permissions',
+            'view_role_assignments',
             'assign_roles_to_users',
             'remove_roles_from_users',
         ];

@@ -412,19 +412,19 @@ $controller = new Controller();
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title text-primary">Teachers</h3>
                         <div class="d-flex gap-2 flex-wrap">
-                            @if(PermissionHelper::canFeature('add_teacher'))
+                            @if(PermissionHelper::canFeature('import_teachers'))
                                 <a href="{{ route('teachers.bulk.import.form') }}" class="btn btn-sm btn-success"
                                     style="color:#FFF;">
                                     <i class="fas fa-file-import me-1"></i> Bulk Import
                                 </a>
-                                <a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
+                                @if(PermissionHelper::canFeature('add_teacher'))<a href="{{ route('school.add-teachers') }}" class="btn btn-sm btn-primary" style="color:#FFF;">
                                     <span
                                         class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center me-1"
                                         style="width:20px; height:20px; color:#5351e4; font-size:16px; font-weight:600; line-height:20px;">
                                         +
                                     </span> &nbsp;
                                     Add Teacher
-                                </a>
+                                </a>@endif
 
                             @endif
                         </div>
@@ -605,7 +605,7 @@ $controller = new Controller();
                                             <td>{{ $teacher->phonenumber }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @if(PermissionHelper::canFeature('edit_teacher'))
+                                                    @if(PermissionHelper::canFeature('change_teacher_role'))
                                                         <select class="form-select form-control role-select text-white"
                                                             data-teacher-id="{{ $teacher->id }}"
                                                             style="width:220px; background:#5351e4; color:#FFF;">

@@ -31,6 +31,8 @@ class CustomSubjectController extends Controller
      */
     public function manage()
     {
+        PermissionHelper::denyUnlessFeature('view_custom_subjects');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {
@@ -82,6 +84,8 @@ class CustomSubjectController extends Controller
 
     public function store(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('add_custom_subject');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {
@@ -118,6 +122,8 @@ class CustomSubjectController extends Controller
 
     public function update(Request $request, CustomSubject $subject)
     {
+        PermissionHelper::denyUnlessFeature('edit_custom_subject');
+
         $this->authorizeSchoolOwnership($subject);
 
         $request->validate([
@@ -260,6 +266,8 @@ class CustomSubjectController extends Controller
 
     public function destroy(CustomSubject $subject)
     {
+        PermissionHelper::denyUnlessFeature('delete_custom_subject');
+
         $this->authorizeSchoolOwnership($subject);
 
         $inUse = ClassSubject::where('custom_subject_id', $subject->id)->exists();
@@ -287,6 +295,8 @@ class CustomSubjectController extends Controller
      */
     public function showSwitchPrompt()
     {
+        PermissionHelper::denyUnlessFeature('switch_subject_mode');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {
@@ -326,6 +336,8 @@ class CustomSubjectController extends Controller
      */
     public function confirmSwitch(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('switch_subject_mode');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {
@@ -492,6 +504,8 @@ class CustomSubjectController extends Controller
      */
     public function showRevertPrompt()
     {
+        PermissionHelper::denyUnlessFeature('switch_subject_mode');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {
@@ -543,6 +557,8 @@ class CustomSubjectController extends Controller
      */
     public function confirmRevert(Request $request)
     {
+        PermissionHelper::denyUnlessFeature('switch_subject_mode');
+
         $school = School::findOrFail(Helper::requireSchool());
 
         if (!$school->custom_subjects_enabled) {

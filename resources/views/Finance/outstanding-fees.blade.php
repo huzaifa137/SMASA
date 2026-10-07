@@ -546,17 +546,17 @@ use App\Helpers\PermissionHelper;
         <div class="fin-card-header">
             <h3><i class="fas fa-filter"></i> Filter Students</h3>
             <div class="export-bar">
-                <button onclick="recalculateBalances()" class="btn-fin btn-outline-fin" id="recalcBtn">
+                @if(PermissionHelper::canFeature('recalculate_balances'))<button onclick="recalculateBalances()" class="btn-fin btn-outline-fin" id="recalcBtn">
                     <i class="fas fa-sync-alt"></i> Recalculate Balances
-                </button>
-                <a href="{{ route('finance.outstanding-fees.pdf') }}?{{ http_build_query(request()->query()) }}"
+                </button>@endif
+                @if(PermissionHelper::canFeature('export_outstanding_fees'))<a href="{{ route('finance.outstanding-fees.pdf') }}?{{ http_build_query(request()->query()) }}"
                    target="_blank" class="btn-fin btn-outline-fin">
                     <i class="fas fa-file-pdf"></i> Export PDF
-                </a>
-                <a href="{{ route('finance.outstanding-fees.excel') }}?{{ http_build_query(request()->query()) }}"
+                </a>@endif
+                @if(PermissionHelper::canFeature('export_outstanding_fees'))<a href="{{ route('finance.outstanding-fees.excel') }}?{{ http_build_query(request()->query()) }}"
                    class="btn-fin btn-outline-fin">
                     <i class="fas fa-file-excel"></i> Export Excel
-                </a>
+                </a>@endif
                 <button onclick="window.print()" class="btn-fin btn-outline-fin">
                     <i class="fas fa-print"></i> Print
                 </button>

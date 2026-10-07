@@ -731,8 +731,8 @@
                             class="fas fa-graduation-cap me-1" style="color:var(--b)"></i> Importing O-Level students</div>
                     <p style="font-size:.85rem; color:#4b4880; margin-bottom:10px;">The template will include
                         <strong>elective_1</strong> and <strong>elective_2</strong> columns (up to 2 electives per student,
-                        on top of the class's compulsory subjects set on <a href="{{ route('school.create-class') }}"
-                            target="_blank">Create Class</a>). Fill in the exact elective name (see the "Valid Subjects" tab
+                        on top of the class's compulsory subjects set on @if(\App\Helpers\PermissionHelper::canFeature('add_class'))<a href="{{ route('school.create-class') }}"
+                            target="_blank">Create Class</a>@endif). Fill in the exact elective name (see the "Valid Subjects" tab
                         in the downloaded file) and each student's electives will be assigned automatically — no separate
                         trip to <a href="{{ route('olevel.electives.entry') }}" target="_blank">O-Level Electives</a>
                         needed. Leave blank if a student hasn't decided yet.
@@ -867,8 +867,8 @@
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
                 <a href="{{ route('students.all.students') }}" class="btn-outline" style="display: inline-flex;"><i
                         class="fas fa-arrow-left"></i> Back to Students</a>
-                <a href="{{ route('students.bulk.photo.import.form') }}" class="btn-outline"
-                    style="display: inline-flex;"><i class="fas fa-portrait"></i> Bulk Photo Import</a>
+                @if(\App\Helpers\PermissionHelper::canFeature('import_student_photos'))<a href="{{ route('students.bulk.photo.import.form') }}" class="btn-outline"
+                    style="display: inline-flex;"><i class="fas fa-portrait"></i> Bulk Photo Import</a>@endif
             </div>
         </div>
     </div>

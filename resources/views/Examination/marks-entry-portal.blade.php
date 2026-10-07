@@ -1767,10 +1767,10 @@ use App\Http\Controllers\Helper;
                                     </div>
 
                                     <div class="pending-footer">
-                                        <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
+                                        @if(\App\Helpers\PermissionHelper::canFeature('view_marks_entry'))<a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
                                             <i class="fas fa-pen-alt"></i>
                                             Continue Entering Marks
-                                        </a>
+                                        </a>@endif
                                     </div>
                                 </div>
                             @endforeach

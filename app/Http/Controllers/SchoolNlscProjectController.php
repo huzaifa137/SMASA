@@ -32,7 +32,7 @@ class SchoolNlscProjectController extends Controller
 {
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_projects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -165,7 +165,7 @@ class SchoolNlscProjectController extends Controller
 
     public function competencyAreas($id)
     {
-        PermissionHelper::denyUnlessFeature('view_classes');
+        PermissionHelper::denyUnlessFeature('view_nlsc_projects');
 
         $project = SchoolNlscProject::with(['competencyAreas', 'area'])
             ->whereHas('area', fn($q) => $q->where('school_id', Session('LoggedSchool')))
@@ -192,7 +192,7 @@ class SchoolNlscProjectController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('add_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -258,7 +258,7 @@ class SchoolNlscProjectController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -319,7 +319,7 @@ class SchoolNlscProjectController extends Controller
      */
     public function updateProjectArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -348,7 +348,7 @@ class SchoolNlscProjectController extends Controller
 
     public function destroy($id)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -377,7 +377,7 @@ class SchoolNlscProjectController extends Controller
      */
     public function destroyAllProjects(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -402,7 +402,7 @@ class SchoolNlscProjectController extends Controller
 
     public function storeCompetencyArea(Request $request, $projectId)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('add_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -426,7 +426,7 @@ class SchoolNlscProjectController extends Controller
 
     public function updateCompetencyArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_class')) {
+        if (!PermissionHelper::canFeature('edit_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -446,7 +446,7 @@ class SchoolNlscProjectController extends Controller
 
     public function destroyCompetencyArea($id)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -465,7 +465,7 @@ class SchoolNlscProjectController extends Controller
 
     public function destroyAllCompetencyAreas($projectId)
     {
-        if (!PermissionHelper::canFeature('delete_class')) {
+        if (!PermissionHelper::canFeature('delete_nlsc_project')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

@@ -448,14 +448,7 @@
                 <div style="font-size:.85rem;">No students have been consolidated yet.</div>
             </div>
 
-           @if($consolidated->total() > 10)
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;flex-wrap:wrap;gap:.5rem;">
-        <span style="font-size:.78rem;color:var(--t3);">
-            Showing {{ $consolidated->firstItem() }}–{{ $consolidated->lastItem() }} of {{ $consolidated->total() }}
-        </span>
-        {{ $consolidated->onEachSide(1)->links('pagination::bootstrap-5') }}
-    </div>
-@endif
+           {{ $consolidated->links() }}
         </div>
     </div>
     </div>

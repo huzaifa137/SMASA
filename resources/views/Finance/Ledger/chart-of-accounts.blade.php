@@ -234,7 +234,7 @@
                         <option value="3" @selected($term == '3')>Term III</option>
                     </select>
                 </form>
-                <button class="btn-fin btn-primary-fin btn-sm" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Account</button>
+                @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<button class="btn-fin btn-primary-fin btn-sm" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Account</button>@endif
             </div>
         </div>
 
@@ -242,10 +242,10 @@
             <div class="empty-state">
                 <i class="fas fa-book"></i>
                 <p>No accounts yet.</p>
-                <form method="POST" action="{{ route('finance.ledger.accounts.seed-defaults') }}">
+                @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<form method="POST" action="{{ route('finance.ledger.accounts.seed-defaults') }}">
                     @csrf
                     <button class="btn-fin btn-primary-fin"><i class="fas fa-magic"></i> Create Default Chart of Accounts</button>
-                </form>
+                </form>@endif
             </div>
         @else
             <div class="table-wrapper">
@@ -281,12 +281,12 @@
                                 </td>
                                 <td>
                                     <div class="action-icons">
-                                        <button class="icon-btn" title="Edit" onclick='openEditModal(@json($root))'><i class="fas fa-pen"></i></button>
+                                        @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<button class="icon-btn" title="Edit" onclick='openEditModal(@json($root))'><i class="fas fa-pen"></i></button>@endif
                                         @if(!$root->is_system)
-                                            <form method="POST" action="{{ route('finance.ledger.accounts.destroy', $root->id) }}" onsubmit="return confirm('Delete this account?');">
+                                            @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<form method="POST" action="{{ route('finance.ledger.accounts.destroy', $root->id) }}" onsubmit="return confirm('Delete this account?');">
                                                 @csrf @method('DELETE')
                                                 <button class="icon-btn danger" title="Delete"><i class="fas fa-trash"></i></button>
-                                            </form>
+                                            </form>@endif
                                         @endif
                                     </div>
                                 </td>
@@ -310,12 +310,12 @@
                                     </td>
                                     <td>
                                         <div class="action-icons">
-                                            <button class="icon-btn" title="Edit" onclick='openEditModal(@json($child))'><i class="fas fa-pen"></i></button>
+                                            @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<button class="icon-btn" title="Edit" onclick='openEditModal(@json($child))'><i class="fas fa-pen"></i></button>@endif
                                             @if(!$child->is_system)
-                                                <form method="POST" action="{{ route('finance.ledger.accounts.destroy', $child->id) }}" onsubmit="return confirm('Delete this account?');">
+                                                @if(\App\Helpers\PermissionHelper::canFeature('manage_chart_of_accounts'))<form method="POST" action="{{ route('finance.ledger.accounts.destroy', $child->id) }}" onsubmit="return confirm('Delete this account?');">
                                                     @csrf @method('DELETE')
                                                     <button class="icon-btn danger" title="Delete"><i class="fas fa-trash"></i></button>
-                                                </form>
+                                                </form>@endif
                                             @endif
                                         </div>
                                     </td>

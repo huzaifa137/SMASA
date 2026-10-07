@@ -35,7 +35,7 @@ class ALevelCombinationController extends Controller
      */
     public function entry(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('view_alevel_combinations');
 
         $schoolId = Session('LoggedSchool');
 
@@ -201,7 +201,7 @@ class ALevelCombinationController extends Controller
      */
     public function addSchoolSubject(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_alevel_subjects');
 
         $request->validate([
             'subject_group' => 'required|in:Principal - Arts,Principal - Sciences,Subsidiary',
@@ -244,7 +244,7 @@ class ALevelCombinationController extends Controller
      */
     public function updateSchoolSubject(Request $request, $id)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_alevel_subjects');
 
         $request->validate([
             'subject_group' => 'required|in:Principal - Arts,Principal - Sciences,Subsidiary',
@@ -293,7 +293,7 @@ class ALevelCombinationController extends Controller
      */
     public function deleteSchoolSubject($id)
     {
-        PermissionHelper::denyUnlessFeature('add_class');
+        PermissionHelper::denyUnlessFeature('manage_alevel_subjects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -329,7 +329,7 @@ class ALevelCombinationController extends Controller
      */
     public function save(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_class')) {
+        if (!PermissionHelper::canFeature('save_alevel_combinations')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

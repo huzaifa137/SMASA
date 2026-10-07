@@ -469,14 +469,14 @@ use App\Http\Controllers\Helper;
     <button onclick="window.print()" class="rpt-btn rpt-btn-outline">
         <i class="fas fa-print"></i> Print
     </button>
-    <a href="{{ route('examination.reports.cumulative-analysis.pdf', request()->query()) }}"
+    @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.cumulative-analysis.pdf', request()->query()) }}"
         class="rpt-btn rpt-btn-outline ml-2">
         <i class="fas fa-file-pdf"></i> Export PDF
-    </a>
-    <a href="{{ route('examination.reports.cumulative-analysis.excel', request()->query()) }}"
+    </a>@endif
+    @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.cumulative-analysis.excel', request()->query()) }}"
         class="rpt-btn rpt-btn-outline ml-2">
         <i class="fas fa-file-excel"></i> Export Excel
-    </a>
+    </a>@endif
 </div>
 
         {{-- ── Stat cards ─────────────────────────────────────────────────── --}}

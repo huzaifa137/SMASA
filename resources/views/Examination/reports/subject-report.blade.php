@@ -542,10 +542,10 @@ use App\Http\Controllers\Helper;
             @endphp
             <div class="d-flex justify-content-end gap-2 mb-3 no-print">
                 <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button>
-                <a href="{{ route('examination.reports.subject-report.pdf', array_merge(['examId' => $exam->id], $pdfQuery)) }}"
-                    class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>
-                <a href="{{ route('examination.reports.subject-report.excel', array_merge(['examId' => $exam->id], $pdfQuery)) }}"
-                    class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
+                @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.subject-report.pdf', array_merge(['examId' => $exam->id], $pdfQuery)) }}"
+                    class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>@endif
+                @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.subject-report.excel', array_merge(['examId' => $exam->id], $pdfQuery)) }}"
+                    class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>@endif
             </div>
         @endif
 

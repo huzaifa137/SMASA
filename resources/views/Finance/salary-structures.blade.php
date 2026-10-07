@@ -782,11 +782,11 @@
                                 @endif
                             </td>
                             <td>
-                                <button class="btn-fin btn-sm btn-primary-fin"
+                                @if(\App\Helpers\PermissionHelper::canFeature('manage_salary_structures'))<button class="btn-fin btn-sm btn-primary-fin"
                                     onclick="openEditModal({{ $teacher->id }}, {{ json_encode($structure ? $structure->toArray() : null) }})">
                                     <i class="fas fa-{{ $hasStructure ? 'edit' : 'plus' }}"></i>
                                     {{ $hasStructure ? 'Edit' : 'Set' }}
-                                </button>
+                                </button>@endif
                             </td>
                         </tr>
                     @endforeach

@@ -136,7 +136,7 @@ class AttendanceController extends Controller
 
     public function studentAttendancePortal()
     {
-    PermissionHelper::denyUnlessFeature('view_attendance');
+    PermissionHelper::denyUnlessFeature('view_student_attendance');
 
         $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
@@ -241,7 +241,7 @@ class AttendanceController extends Controller
 
     public function takeStudentAttendance(Request $request, $classId, $streamId)
     {
-            PermissionHelper::denyUnlessFeature('mark_attendance');
+            PermissionHelper::denyUnlessFeature('mark_student_attendance');
 
         $schoolId = session('LoggedSchool');
         $teacherId = session('LoggedTeacher');
@@ -344,7 +344,7 @@ class AttendanceController extends Controller
     public function saveStudentAttendance(Request $request)
     {
 
-    if (!PermissionHelper::canFeature('mark_attendance')) {
+    if (!PermissionHelper::canFeature('mark_student_attendance')) {
         return response()->json(['message' => 'Unauthorized. You do not have permission to mark attendance.'], 403);
     }
 
@@ -413,7 +413,7 @@ class AttendanceController extends Controller
 
     public function studentAttendanceReport(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('attendance_reports');
+        PermissionHelper::denyUnlessFeature('view_student_attendance_report');
 
         $schoolId = session('LoggedSchool');
         $classId = $request->class_id;
@@ -491,7 +491,7 @@ class AttendanceController extends Controller
 
     public function teacherAttendancePage(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_attendance');
+        PermissionHelper::denyUnlessFeature('view_teacher_attendance');
 
         $schoolId = session('LoggedSchool');
         $date = $request->get('date', Carbon::today()->toDateString());
@@ -529,7 +529,7 @@ class AttendanceController extends Controller
 
     public function saveTeacherAttendance(Request $request)
     {
-        if (!PermissionHelper::canFeature('mark_attendance')) {
+        if (!PermissionHelper::canFeature('mark_teacher_attendance')) {
         return response()->json(['message' => 'Unauthorized. You do not have permission to mark teacher attendance.'], 403);
     }
 
@@ -570,7 +570,7 @@ class AttendanceController extends Controller
 
     public function saveTeacherAttendanceBulk(Request $request)
     {
-         if (!PermissionHelper::canFeature('mark_attendance')) {
+         if (!PermissionHelper::canFeature('mark_teacher_attendance')) {
         return response()->json(['message' => 'Unauthorized. You do not have permission to mark attendance.'], 403);
     }
 
@@ -618,7 +618,7 @@ class AttendanceController extends Controller
 
     public function teacherAttendanceReport(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('attendance_reports');
+        PermissionHelper::denyUnlessFeature('view_teacher_attendance_report');
 
         $schoolId = session('LoggedSchool');
         $teacherId = $request->teacher_id;
@@ -697,7 +697,7 @@ class AttendanceController extends Controller
 
     public function classAttendanceSummary(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('attendance_reports');
+        PermissionHelper::denyUnlessFeature('view_class_attendance_summary');
         $schoolId = session('LoggedSchool');
         $stats = StudentAttendance::where('school_id', $schoolId)
             ->where('class_id', $request->class_id)

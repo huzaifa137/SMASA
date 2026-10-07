@@ -39,7 +39,7 @@ class ExaminationReportController extends Controller
 
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_exam_reports');
 
         $schoolId = Session('LoggedSchool');
 
@@ -84,7 +84,7 @@ class ExaminationReportController extends Controller
 
     public function classSummary(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -122,7 +122,7 @@ class ExaminationReportController extends Controller
 
     public function classSummaryPdf(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -152,7 +152,7 @@ class ExaminationReportController extends Controller
      */
     public function classSummaryExcel(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -350,7 +350,7 @@ class ExaminationReportController extends Controller
 
     public function subjectReport(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -407,7 +407,7 @@ class ExaminationReportController extends Controller
 
     public function subjectReportPdf(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -461,7 +461,7 @@ class ExaminationReportController extends Controller
      */
     public function subjectReportExcel(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -643,7 +643,7 @@ class ExaminationReportController extends Controller
 
     public function gradeAnalysis(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -667,7 +667,7 @@ class ExaminationReportController extends Controller
      */
     public function gradeAnalysisExcel(Request $request, $examId)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $exam = Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
@@ -917,7 +917,7 @@ class ExaminationReportController extends Controller
 
     public function cumulativeAnalysis(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('view_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $scope = $this->resolveCumulativeScope($request, $schoolId);
@@ -952,7 +952,7 @@ class ExaminationReportController extends Controller
 
     public function cumulativeAnalysisPdf(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $scope = $this->resolveCumulativeScope($request, $schoolId);
@@ -984,7 +984,7 @@ class ExaminationReportController extends Controller
 
     public function cumulativeAnalysisExcel(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('generate_reports');
+        PermissionHelper::denyUnlessFeature('export_exam_reports');
 
         $schoolId = Session('LoggedSchool');
         $scope = $this->resolveCumulativeScope($request, $schoolId);

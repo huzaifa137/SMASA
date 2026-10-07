@@ -21,7 +21,7 @@ class StudentPhotoImportController extends Controller
 {
     public function form()
     {
-        PermissionHelper::denyUnlessFeature('import_students');
+        PermissionHelper::denyUnlessFeature('import_student_photos');
 
         $schoolId = Helper::requireSchool();
         $school = School::findOrFail($schoolId);
@@ -32,7 +32,7 @@ class StudentPhotoImportController extends Controller
 
     public function process(Request $request, StudentPhotoImportService $service)
     {
-        if (!PermissionHelper::canFeature('import_students')) {
+        if (!PermissionHelper::canFeature('import_student_photos')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized. You do not have permission to import student photos.',

@@ -24,7 +24,7 @@ class ExaminationSubjectController extends Controller
 {
     public function edit($examId)
     {
-        PermissionHelper::denyUnlessFeature('edit_exam');
+        PermissionHelper::denyUnlessFeature('manage_exam_subjects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -101,7 +101,7 @@ class ExaminationSubjectController extends Controller
 
     public function save(Request $request, $examId)
     {
-        if (!PermissionHelper::canFeature('edit_exam')) {
+        if (!PermissionHelper::canFeature('manage_exam_subjects')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized. You do not have permission to change exam subjects.'], 403);
         }
 

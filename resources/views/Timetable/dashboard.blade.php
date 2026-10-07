@@ -966,15 +966,15 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-plus-circle"></i> New Timetable
                     </a>
                     @endif
-                    <a href="{{ route('timetable.periods.index') }}" class="rpt-hero-btn-secondary">
+                    @if(PermissionHelper::canFeature('view_periods'))<a href="{{ route('timetable.periods.index') }}" class="rpt-hero-btn-secondary">
                         <i class="fas fa-clock"></i> Periods
-                    </a>
-                    <a href="{{ route('timetable.master') }}" class="rpt-hero-btn-secondary">
+                    </a>@endif
+                    @if(PermissionHelper::canFeature('view_master_timetable'))<a href="{{ route('timetable.master') }}" class="rpt-hero-btn-secondary">
                         <i class="fas fa-th-large"></i> General
-                    </a>
-                    <a href="{{ route('timetable.teachers-summary') }}" class="rpt-hero-btn-secondary">
+                    </a>@endif
+                    @if(PermissionHelper::canFeature('view_teachers_summary'))<a href="{{ route('timetable.teachers-summary') }}" class="rpt-hero-btn-secondary">
                         <i class="fas fa-chalkboard-teacher"></i> Teachers
-                    </a>
+                    </a>@endif
                     @if(PermissionHelper::canFeature('view_teacher_schedule'))
                     <a href="{{ route('timetable.teacher') }}" class="rpt-hero-btn-secondary">
                         <i class="fas fa-chalkboard-user"></i> My Schedule
@@ -1175,9 +1175,9 @@ use App\Helpers\PermissionHelper;
                                 <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Active
                             </span>
                             <div class="tt-actions">
-                                <a href="{{ route('timetable.view', $tt->id) }}" class="btn-icon btn-icon-view" title="View">
+                                @if(PermissionHelper::canFeature('view_timetable'))<a href="{{ route('timetable.view', $tt->id) }}" class="btn-icon btn-icon-view" title="View">
                                     <i class="fas fa-eye"></i>
-                                </a>
+                                </a>@endif
                                 @if(PermissionHelper::canFeature('edit_timetable'))
                                 <a href="{{ route('timetable.edit', $tt->id) }}" class="btn-icon btn-icon-edit" title="Edit">
                                     <i class="fas fa-pencil-alt"></i>
@@ -1282,9 +1282,9 @@ use App\Helpers\PermissionHelper;
                         @endforelse
                     </div>
                     <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-light);">
-                        <a href="{{ route('timetable.teacher') }}" class="btn btn-sm w-100 btn-weekly-schedule">
+                        @if(PermissionHelper::canFeature('view_teacher_schedule'))<a href="{{ route('timetable.teacher') }}" class="btn btn-sm w-100 btn-weekly-schedule">
                             <i class="fas fa-calendar-week me-2"></i> View Full Weekly Schedule
-                        </a>
+                        </a>@endif
                     </div>
                 </div>
 
@@ -1295,9 +1295,9 @@ use App\Helpers\PermissionHelper;
         <i class="fas fa-hourglass-half" style="color: #ffffff;"></i>
         Period Definitions
     </div>
-    <a href="{{ route('timetable.periods.index') }}" class="btn btn-sm" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none;">
+    @if(PermissionHelper::canFeature('view_periods'))<a href="{{ route('timetable.periods.index') }}" class="btn btn-sm" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none;">
         <i class="fas fa-cog me-1"></i> Manage
-    </a>
+    </a>@endif
 </div>
                     <div>
                         @foreach($periods as $period)
@@ -1318,8 +1318,8 @@ use App\Helpers\PermissionHelper;
                         @if($periods->isEmpty())
                             <div class="empty-state">
                                 <i class="fas fa-clock"></i>
-                                <p>No periods defined. <a href="{{ route('timetable.periods.index') }}"
-                                        style="color: var(--brand); font-weight: 600;">Add periods</a> first.</p>
+                                <p>No periods defined. @if(PermissionHelper::canFeature('view_periods'))<a href="{{ route('timetable.periods.index') }}"
+                                        style="color: var(--brand); font-weight: 600;">Add periods</a>@endif first.</p>
                             </div>
                         @endif
                     </div>

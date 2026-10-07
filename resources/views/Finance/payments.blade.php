@@ -458,9 +458,9 @@
     <div class="fin-card">
         <div class="fin-card-header">
             <h3><i class="fas fa-search"></i> Search & Filter</h3>
-            <a href="{{ route('finance.payments.create') }}" class="btn-fin btn-primary-fin">
+            @if(\App\Helpers\PermissionHelper::canFeature('record_payment'))<a href="{{ route('finance.payments.create') }}" class="btn-fin btn-primary-fin">
                 <i class="fas fa-plus"></i> Record Payment
-            </a>
+            </a>@endif
         </div>
         <div class="filters">
             <div class="filter-group">
@@ -556,17 +556,17 @@
                                 @endif
                             </td>
                             <td class="action-icons">
-                                <a href="#" title="Print Receipt"
+                                @if(\App\Helpers\PermissionHelper::canFeature('print_receipt'))<a href="#" title="Print Receipt"
                                     onclick="openReceiptPicker('{{ route('finance.payments.receipt', $payment->id) }}', '{{ $payment->receipt_number }}'); return false;">
                                     <i class="fas fa-print" style="color:#2f2ccb;"></i>
-                                </a>
+                                </a>@endif
                                @if($payment->status == 'confirmed')
-    <form method="POST" action="{{ route('finance.payments.reverse', $payment->id) }}" class="reverse-form" data-student="{{ $payment->student->firstname ?? '' }} {{ $payment->student->lastname ?? '' }}" data-amount="{{ number_format($payment->amount_paid, 0) }}" data-receipt="{{ $payment->receipt_number }}" style="display:inline;">
+    @if(\App\Helpers\PermissionHelper::canFeature('reverse_payment'))<form method="POST" action="{{ route('finance.payments.reverse', $payment->id) }}" class="reverse-form" data-student="{{ $payment->student->firstname ?? '' }} {{ $payment->student->lastname ?? '' }}" data-amount="{{ number_format($payment->amount_paid, 0) }}" data-receipt="{{ $payment->receipt_number }}" style="display:inline;">
         @csrf
         <button type="button" class="reverse-btn" title="Reverse Payment" onclick="confirmReverse(this)">
             <i class="fas fa-undo-alt" style="color:#dc2626;"></i>
         </button>
-    </form>
+    </form>@endif
 @endif
                             </td>
                         </tr>
@@ -576,9 +576,9 @@
                                 <i class="fas fa-receipt"
                                     style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
                                 <p style="margin:0 0 1rem 0;">No payments recorded yet.</p>
-                                <a href="{{ route('finance.payments.create') }}" class="btn-fin btn-primary-fin">
+                                @if(\App\Helpers\PermissionHelper::canFeature('record_payment'))<a href="{{ route('finance.payments.create') }}" class="btn-fin btn-primary-fin">
                                     <i class="fas fa-plus"></i> Record First Payment
-                                </a>
+                                </a>@endif
                             </td>
                         </tr>
                     @endforelse

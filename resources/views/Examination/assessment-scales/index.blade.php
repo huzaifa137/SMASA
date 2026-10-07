@@ -1171,9 +1171,9 @@
                     </div>
                 </div>
                 <div class="as-topbar-actions">
-                    <a href="{{ route('examination.create') }}" class="btn-as-secondary">
+                    @if(\App\Helpers\PermissionHelper::canFeature('create_exam'))<a href="{{ route('examination.create') }}" class="btn-as-secondary">
                         <i class="fas fa-arrow-left"></i> <span>Back to Create Exam</span>
-                    </a>
+                    </a>@endif
                     <button type="button" id="btnNewScale" class="btn-as-primary">
                         <i class="fas fa-plus"></i> <span>New Assessment Scale</span>
                     </button>
@@ -1263,7 +1263,7 @@
                                         @endif
                                     </div>
                                     <div class="detail-actions">
-                                        <a href="{{ route('examination.assessment-scales.assign-page', $scale->id) }}"
+                                        @if(\App\Helpers\PermissionHelper::canFeature('assign_assessment_scales'))<a href="{{ route('examination.assessment-scales.assign-page', $scale->id) }}"
                                             class="btn btn-sm" style="
                                    text-decoration: none;
                                    display: inline-flex;
@@ -1282,7 +1282,7 @@
                                             onmouseout="this.style.background='#EEEDFC'; this.style.color='#2C29CA'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                             <i class="fas fa-sitemap"></i>
                                             <span>Assign to Classes &amp; Subjects</span>
-                                        </a>
+                                        </a>@endif
                                         <button type="button" class="icon-btn edit-scale" data-id="{{ $scale->id }}" title="Edit"><i
                                                 class="fas fa-edit"></i></button>
                                         <button type="button" class="icon-btn toggle-scale" data-id="{{ $scale->id }}"

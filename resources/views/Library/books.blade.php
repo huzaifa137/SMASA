@@ -632,14 +632,14 @@
                 <h3><i class="fas fa-list" style="color:var(--lib-blue);"></i> All Books</h3>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
                     {{-- Import --}}
-                    @if(PermissionHelper::canFeature('add_book'))
+                    @if(PermissionHelper::canFeature('import_books'))
                         <button onclick="document.getElementById('importModal').classList.add('active')"
                             class="btn-lib btn-violet-lib">
                             <i class="fas fa-file-import"></i> Import
                         </button>
                     @endif
                     {{-- Export --}}
-                    @if(PermissionHelper::canFeature('library_reports'))
+                    @if(PermissionHelper::canFeature('export_books'))
                     <a href="javascript:void();" class="btn-lib btn-amber-lib">
                         <!-- <a href="{{ route('library.books.export') }}" class="btn-lib btn-amber-lib"> -->
                             <i class="fas fa-file-export"></i> Export
@@ -738,7 +738,7 @@
                                                     <a href="{{ route('library.books.edit', $book->id) }}" class="btn-lib btn-outline-lib"
                                                         style="padding:.3rem .65rem;" title="Edit"><i class="fas fa-edit"></i></a>
                                                 @endif
-                                                @if($book->has_ebook && PermissionHelper::canFeature('library_reports'))
+                                                @if($book->has_ebook && PermissionHelper::canFeature('download_ebook'))
                                                     <a href="{{ route('library.books.ebook', $book->id) }}" class="btn-lib btn-violet-lib"
                                                         style="padding:.3rem .65rem;" title="Download eBook"><i
                                                             class="fas fa-download"></i></a>

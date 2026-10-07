@@ -31,7 +31,7 @@ class AggregateSubjectsController extends Controller
 {
     public function index()
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_aggregate_subjects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -61,7 +61,7 @@ class AggregateSubjectsController extends Controller
      */
     public function subjects($classId, $streamId)
     {
-        PermissionHelper::denyUnlessFeature('view_exams');
+        PermissionHelper::denyUnlessFeature('view_aggregate_subjects');
 
         $schoolId = Session('LoggedSchool');
 
@@ -92,7 +92,7 @@ class AggregateSubjectsController extends Controller
      */
     public function update(Request $request, $classId, $streamId)
     {
-        PermissionHelper::denyUnlessFeature('edit_class');
+        PermissionHelper::denyUnlessFeature('manage_aggregate_subjects');
 
         $schoolId = Session('LoggedSchool');
 

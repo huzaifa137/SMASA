@@ -1503,9 +1503,9 @@
     <div class="fin-card">
         <div class="fin-card-header">
             <h3><i class="fas fa-filter"></i> Filters & Bulk Allocation</h3>
-            <button class="btn-fin btn-primary-fin" onclick="openAllocateModal()">
+            @if(\App\Helpers\PermissionHelper::canFeature('allocate_fees'))<button class="btn-fin btn-primary-fin" onclick="openAllocateModal()">
                 <i class="fas fa-plus"></i> Bulk Allocate Fees
-            </button>
+            </button>@endif
         </div>
         <div class="filters">
             <div class="filter-group">
@@ -1617,12 +1617,12 @@
                             @endif
                             </div>
                         <td class="action-buttons">
-                            <button type="button" class="btn-icon btn-icon-edit" onclick="editAllocation({{ $alloc->id }})" title="Edit">
+                            @if(\App\Helpers\PermissionHelper::canFeature('edit_fee_allocation'))<button type="button" class="btn-icon btn-icon-edit" onclick="editAllocation({{ $alloc->id }})" title="Edit">
                                 <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn-icon btn-icon-delete" onclick="deleteAllocation({{ $alloc->id }})" title="Delete">
+                            </button>@endif
+                            @if(\App\Helpers\PermissionHelper::canFeature('delete_fee_allocation'))<button type="button" class="btn-icon btn-icon-delete" onclick="deleteAllocation({{ $alloc->id }})" title="Delete">
                                 <i class="fas fa-trash-alt"></i>
-                            </button>
+                            </button>@endif
                         </td>
                         </tr>
                     @empty
@@ -1630,9 +1630,9 @@
             <td colspan="8" style="text-align:center;padding:3rem;">
                 <i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
                 <p style="margin:0 0 1rem 0;">No fee allocations found.</p>
-                <button class="btn-fin btn-primary-fin" onclick="openAllocateModal()">
+                @if(\App\Helpers\PermissionHelper::canFeature('allocate_fees'))<button class="btn-fin btn-primary-fin" onclick="openAllocateModal()">
                     <i class="fas fa-plus"></i> Create First Allocation
-                </button>
+                </button>@endif
             </td>
         </tr>
     @endforelse
@@ -1648,14 +1648,7 @@
 
     @if($allocations->hasPages())
         <div class="pagination-wrapper">
-            <div class="pagination-info">
-                <i class="fas fa-table-list"></i>
-                Showing {{ $allocations->firstItem() ?? 0 }} to {{ $allocations->lastItem() ?? 0 }} of
-                {{ $allocations->total() }} records
-            </div>
-            <div>
-                {{ $allocations->appends(['year' => $year, 'term' => $term])->links('vendor.pagination.custom') }}
-            </div>
+            {{ $allocations->appends(['year' => $year, 'term' => $term])->links() }}
         </div>
     @endif
     </div>

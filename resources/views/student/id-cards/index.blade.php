@@ -876,22 +876,9 @@ use App\Helpers\PermissionHelper;
                     </table>
                 </div>
 
-                 @if($cards->total() > 30)
-                                <div
-                                    style="display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;flex-wrap:wrap;gap:.5rem;">
-                                    <span style="font-size:.78rem;color:var(--t3);">
-                                        Showing {{ $cards->firstItem() }}–{{ $cards->lastItem() }} of {{ $cards->total() }}
-                                    </span>
-                                    {{ $cards->onEachSide(1)->links('pagination::bootstrap-5') }}
-                                </div>
-                            @endif
-
                 {{-- Pagination --}}
-                @if($cards->total() > 20)
-                    <div
-                        style="padding:.85rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;border-top:1px solid var(--brd);">
-                        <span style="font-size:.78rem;color:var(--t3);">Showing {{ $cards->firstItem() }}–{{ $cards->lastItem() }}
-                            of {{ $cards->total() }}</span>
+                @if($cards->hasPages())
+                    <div style="padding:.85rem 1.4rem;border-top:1px solid var(--brd);">
                         {{ $cards->links() }}
                     </div>
                 @endif

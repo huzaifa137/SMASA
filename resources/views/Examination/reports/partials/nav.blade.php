@@ -1,18 +1,18 @@
 {{-- Shared tab-switcher between the three report types, for a given exam.
      Expects: $exam, $active ('class-summary' | 'subject-report' | 'grade-analysis') --}}
 <div class="rpt-tabs">
-    <a href="{{ route('examination.reports.class-summary', $exam->id) }}"
+    @if(\App\Helpers\PermissionHelper::canFeature('view_exam_reports'))<a href="{{ route('examination.reports.class-summary', $exam->id) }}"
         class="rpt-tab {{ $active === 'class-summary' ? 'active' : '' }}">
         <i class="fas fa-table-cells me-1"></i> Class Summary
-    </a>
-    <a href="{{ route('examination.reports.subject-report', $exam->id) }}"
+    </a>@endif
+    @if(\App\Helpers\PermissionHelper::canFeature('view_exam_reports'))<a href="{{ route('examination.reports.subject-report', $exam->id) }}"
         class="rpt-tab {{ $active === 'subject-report' ? 'active' : '' }}">
         <i class="fas fa-book me-1"></i> Subject Report
-    </a>
-    <a href="{{ route('examination.reports.grade-analysis', $exam->id) }}"
+    </a>@endif
+    @if(\App\Helpers\PermissionHelper::canFeature('view_exam_reports'))<a href="{{ route('examination.reports.grade-analysis', $exam->id) }}"
         class="rpt-tab {{ $active === 'grade-analysis' ? 'active' : '' }}">
         <i class="fas fa-chart-pie me-1"></i> Grade Analysis
-    </a>
+    </a>@endif
 </div>
 
 <style>

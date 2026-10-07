@@ -154,12 +154,12 @@
                             @endforeach
                         @endif
 
-                        <form id="confirmSwitchForm" action="{{ route('school.custom-subjects.confirm') }}" method="POST">
+                        @if(\App\Helpers\PermissionHelper::canFeature('switch_subject_mode'))<form id="confirmSwitchForm" action="{{ route('school.custom-subjects.confirm') }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-check"></i> Confirm &amp; Switch Now
                             </button>
-                            <a href="{{ route('school.create-class') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ route('school.create-class') }}" class="btn btn-outline-secondary">Cancel</a>@endif
                         </form>
 
                     </div>

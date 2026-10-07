@@ -1017,9 +1017,9 @@ input[type="radio"]:checked + .type-pill {
             <div class="lib-card">
                 <div class="lib-card-header">
                     <h3><i class="fas fa-id-card" style="color:var(--lib-teal);"></i> All Members</h3>
-                    <button onclick="openAddMemberModal()" class="btn-lib btn-primary-lib">
+                    @if(\App\Helpers\PermissionHelper::canFeature('add_member'))<button onclick="openAddMemberModal()" class="btn-lib btn-primary-lib">
                         <i class="fas fa-plus"></i> Add Member
-                    </button>
+                    </button>@endif
                 </div>
 
                 {{-- Filters --}}
@@ -1091,15 +1091,15 @@ input[type="radio"]:checked + .type-pill {
                                             <span class="badge badge-{{ $member->status }}">{{ ucfirst($member->status) }}</span>
                                         </td>
                                         <td>
-                                            <button
+                                            @if(\App\Helpers\PermissionHelper::canFeature('edit_member'))<button
                                                 onclick="openEditMember({{ $member->id }}, {{ $member->max_books_allowed }}, {{ $member->max_days_allowed }}, '{{ $member->status }}', '{{ $member->expiry_date }}', '{{ addslashes($member->suspension_reason) }}')"
                                                 class="btn-lib btn-outline-lib" style="padding:.35rem .75rem;">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="confirmDelete({{ $member->id }})" class="btn-lib btn-danger-lib"
+                                            </button>@endif
+                                            @if(\App\Helpers\PermissionHelper::canFeature('delete_member'))<button onclick="confirmDelete({{ $member->id }})" class="btn-lib btn-danger-lib"
                                                 style="padding:.35rem .75rem;">
                                                 <i class="fas fa-trash"></i>
-                                            </button>
+                                            </button>@endif
                                         </td>
                                     </tr>
                                 @endforeach

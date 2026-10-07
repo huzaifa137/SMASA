@@ -491,10 +491,10 @@ use App\Http\Controllers\Helper;
 
         <div class="rpt-export-actions d-flex justify-content-end gap-2 mb-3 no-print">
             <button onclick="window.print()" class="rpt-btn rpt-btn-outline"><i class="fas fa-print"></i> Print</button>
-            <a href="{{ route('examination.reports.class-summary.pdf', array_merge(['examId' => $exam->id], request()->query())) }}"
-                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>
-            <a href="{{ route('examination.reports.class-summary.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
-                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>
+            @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.class-summary.pdf', array_merge(['examId' => $exam->id], request()->query())) }}"
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</a>@endif
+            @if(\App\Helpers\PermissionHelper::canFeature('export_exam_reports'))<a href="{{ route('examination.reports.class-summary.excel', array_merge(['examId' => $exam->id], request()->query())) }}"
+                class="rpt-btn rpt-btn-outline"><i class="fas fa-file-excel"></i> Export Excel</a>@endif
         </div>
 
         {{-- ── Stat cards ─────────────────────────────────────────────────── --}}

@@ -53,7 +53,7 @@ $controller = new Controller();
                                             <td>0</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    @if(PermissionHelper::canFeature('assign_class_teacher'))
+                                                    @if(PermissionHelper::canFeature('assign_class_supervisor'))
                                                         <select name="teacher_id"
                                                             class="form-select form-select-sm assign-supervisor form-control"
                                                             data-class-id="{{ $class->id }}"

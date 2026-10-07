@@ -848,23 +848,23 @@ use App\Helpers\PermissionHelper;
 
             {{-- Type Toggle --}}
             <div class="type-tabs">
-                <a href="{{ route('card-scan.arrival', ['date' => $date, 'person_type' => 'student']) }}"
+                @if(PermissionHelper::canFeature('manage_arrival_attendance'))<a href="{{ route('card-scan.arrival', ['date' => $date, 'person_type' => 'student']) }}"
                     class="type-tab {{ $personType === 'student' ? 'active' : '' }}">
                     <i class="fas fa-user-graduate"></i> Students
-                </a>
-                <a href="{{ route('card-scan.arrival', ['date' => $date, 'person_type' => 'teacher']) }}"
+                </a>@endif
+                @if(PermissionHelper::canFeature('manage_arrival_attendance'))<a href="{{ route('card-scan.arrival', ['date' => $date, 'person_type' => 'teacher']) }}"
                     class="type-tab {{ $personType === 'teacher' ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher"></i> Teachers
-                </a>
+                </a>@endif
             </div>
 
             {{-- Date filter --}}
-            <form method="GET" action="{{ route('card-scan.arrival') }}" class="filter-bar">
+            @if(PermissionHelper::canFeature('manage_arrival_attendance'))<form method="GET" action="{{ route('card-scan.arrival') }}" class="filter-bar">
                 <input type="hidden" name="person_type" value="{{ $personType }}">
                 <input type="date" name="date" value="{{ $date }}">
                 <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Go</button>
                 <a href="{{ route('card-scan.arrival', ['person_type' => $personType]) }}"
-                    class="btn btn-outline btn-sm">Today</a>
+                    class="btn btn-outline btn-sm">Today</a>@endif
             </form>
 
             @if($records->isEmpty())

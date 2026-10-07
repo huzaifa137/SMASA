@@ -79,10 +79,10 @@ $controller = new Controller();
                                                 </div>
                                             </td>
                                             <td style="text-align: center;">
-                                                <a href="{{ route('manage.class.streams', ['id' => $class->class_name]) }}"
+                                                @if(\App\Helpers\PermissionHelper::canFeature('manage_streams'))<a href="{{ route('manage.class.streams', ['id' => $class->class_name]) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-link me-2"></i> Manage Streams
-                                                </a>
+                                                </a>@endif
 
                                                 @if (Helper::isTechSateAdminOrSchoolAdminsAlone())
                                                     <button class="btn btn-sm btn-danger btn-delete-class"

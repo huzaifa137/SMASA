@@ -506,7 +506,7 @@ class ClassandSubjectController extends Controller
      */
     public function teacherAssignments()
     {
-        if (!PermissionHelper::canFeature('assign_class_teacher') && !PermissionHelper::canFeature('assign_subject_teachers')) {
+        if (!PermissionHelper::canFeature('view_teacher_assignments')) {
             abort(403, 'Unauthorized Access. Contact School Admin to Assign Teachers.');
         }
 
@@ -567,7 +567,7 @@ class ClassandSubjectController extends Controller
 
     public function deleteStream(Stream $stream)
     {
-        PermissionHelper::denyUnlessFeature('manage_streams');
+        PermissionHelper::denyUnlessFeature('delete_stream');
 
         $class_id = $stream->class_id;
         $stream_id = $stream->stream_id;
@@ -587,7 +587,7 @@ class ClassandSubjectController extends Controller
 
     public function assignSupervisor(Request $request)
     {
-        if (!PermissionHelper::canFeature('assign_class_teacher')) {
+        if (!PermissionHelper::canFeature('assign_class_supervisor')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Assign Class Supervisor'
@@ -616,7 +616,7 @@ class ClassandSubjectController extends Controller
 
     public function removeSupervisor(Request $request)
     {
-        if (!PermissionHelper::canFeature('assign_class_teacher')) {
+        if (!PermissionHelper::canFeature('assign_class_supervisor')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized Access. Contact School Admin to Remove Class Supervisor'
@@ -1119,6 +1119,8 @@ class ClassandSubjectController extends Controller
 
     public function allMyClasses()
     {
+        PermissionHelper::denyUnlessFeature('view_classes');
+
         Helper::requireSchool();
 
         $teacherId = session('LoggedTeacher');

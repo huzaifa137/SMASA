@@ -440,7 +440,7 @@ use App\Helpers\PermissionHelper; ?>
                 </div>
             </div>
             <div class="rpt-hero-actions">
-                @if(PermissionHelper::canFeature('edit_timetable'))
+                @if(PermissionHelper::canFeature('manage_periods'))
                 <button onclick="openModal()" class="rpt-hero-btn-primary" style="
                     display: inline-flex;
                     align-items: center;
@@ -769,7 +769,7 @@ use App\Helpers\PermissionHelper; ?>
                     <p style="margin:0;font-size:0.8rem;color:var(--text-muted);">Drag rows to reorder. Changes are saved
                         per action.</p>
                 </div>
-                @if(PermissionHelper::canFeature('edit_timetable'))
+                @if(PermissionHelper::canFeature('manage_periods'))
                     <button class="btn-primary-sm" onclick="openModal()">
                         <i class="fas fa-plus"></i> Add New Period
                     </button>
@@ -781,7 +781,7 @@ use App\Helpers\PermissionHelper; ?>
                     <i class="fas fa-clock"></i>
                     <h5>No Periods Yet</h5>
                     <p>Add your school's daily periods to start building timetables.</p>
-                    @if(PermissionHelper::canFeature('edit_timetable'))
+                    @if(PermissionHelper::canFeature('manage_periods'))
                         <button class="btn-primary-sm" onclick="openModal()"><i class="fas fa-plus"></i> Add First Period</button>
                     @endif
                 </div>
@@ -840,13 +840,13 @@ use App\Helpers\PermissionHelper; ?>
                                     </td>
                                     <td>
                                         <div class="action-btns">
-                                            @if(PermissionHelper::canFeature('edit_timetable'))
+                                            @if(PermissionHelper::canFeature('manage_periods'))
                                                 <button class="btn-icon btn-edit-icon"
                                                     onclick="editPeriod({{ $period->id }}, '{{ addslashes($period->name) }}', '{{ $period->type }}', '{{ $period->start_time }}', '{{ $period->end_time }}', {{ $period->sort_order }}, {{ $period->is_active ? 1 : 0 }})">
                                                     <i class="fas fa-pen"></i>
                                                 </button>
                                             @endif
-                                            @if(PermissionHelper::canFeature('delete_timetable'))
+                                            @if(PermissionHelper::canFeature('manage_periods'))
                                                 <button class="btn-icon btn-del-icon"
                                                     onclick="deletePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')">
                                                     <i class="fas fa-trash"></i>
