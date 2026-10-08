@@ -866,6 +866,25 @@ $bandsJson = json_encode($bandsData);
                                 </div>
                             </div>
 
+                            {{-- Secondary O-Level (Senior 1-4) marks mode — only shown once such a class is ticked --}}
+                            <div id="oLevelModeBox" class="mb-3 p-3" style="display:none; border:1px solid #dbe3ff; border-radius:.75rem; background:#f5f7ff;">
+                                <div class="fw-bold mb-1" style="font-size:.85rem;">
+                                    <i class="fas fa-graduation-cap me-1 text-primary"></i> How are Senior 1–4 subjects marked in this examination?
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="o_level_mode" id="olm_assessments" value="assessments" checked>
+                                    <label class="form-check-label" for="olm_assessments" style="font-size:.82rem;">
+                                        <strong>Assessments (new curriculum)</strong> — teachers create assessments (Activities of Integration, Projects, Subject Achievement) and enter marks against them.
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" name="o_level_mode" id="olm_standard" value="standard">
+                                    <label class="form-check-label" for="olm_standard" style="font-size:.82rem;">
+                                        <strong>Standard examination</strong> — normal marks entry out of the exam's total marks, no assessment is created. Use it as the exam part of an O-Level Report Card.
+                                    </label>
+                                </div>
+                            </div>
+
                             {{-- Select All toggle --}}
                             <div class="d-flex justify-content-between align-items-center mb-3 text-white">
                                 <span id="selectedCount" class="badge bg-primary" style="font-size:.78rem;">0
@@ -879,6 +898,7 @@ $bandsJson = json_encode($bandsData);
                             <div class="class-stream-grid" id="classStreamGrid">
                                 @forelse ($classStreams as $cs)
                                     <div class="cs-item" data-value="{{ $cs->class_id }}_{{ $cs->stream_id }}"
+                                        data-olevel="{{ in_array((string) $cs->class_id, $oLevelClassIds ?? [], true) ? 1 : 0 }}"
                                         onclick="toggleClassStream(this)">
                                         <div class="cs-top">
                                             <div class="cs-icon">
@@ -1069,6 +1089,16 @@ $bandsJson = json_encode($bandsData);
         $('#gradingSchemeSelect').on('change', applySelectedScheme);
         $(document).ready(function () {
             if ($('#gradingSchemeSelect').val()) applySelectedScheme();
+        });
+
+        // Show the O-Level marking-mode choice only while a Senior 1-4 class is ticked
+        function refreshOLevelModeBox() {
+            const any = document.querySelectorAll('.cs-item[data-olevel="1"] .cs-checkbox:checked').length > 0;
+            document.getElementById('oLevelModeBox').style.display = any ? 'block' : 'none';
+            if (!any) { document.getElementById('olm_assessments').checked = true; }
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.cs-item') || e.target.closest('#toggleAllClasses')) { setTimeout(refreshOLevelModeBox, 0); }
         });
 
         // ── Form submit ────────────────────────────────────────────────────────

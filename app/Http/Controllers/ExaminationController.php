@@ -6,6 +6,7 @@ use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
 use App\Models\ExaminationSubjectSetting;
+use App\Models\NlscAssessment;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -97,7 +98,9 @@ class ExaminationController extends Controller
 
         $schoolClasses = count($classRecord);
 
-        return view('Examination.create', compact('examCode', 'classStreams', 'gradingSchemes', 'schoolExaminations', 'schoolClasses'));
+        $oLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->map(fn($id) => (string) $id)->all();
+
+        return view('Examination.create', compact('examCode', 'classStreams', 'gradingSchemes', 'schoolExaminations', 'schoolClasses', 'oLevelClassIds'));
     }
 
     // ── Store new examination ─────────────────────────────────────────────────
@@ -118,6 +121,9 @@ class ExaminationController extends Controller
             'pass_mark' => 'required|integer|min:1',
             'grading_scheme_id' => 'required|integer|exists:grading_schemes,id',
             'description' => 'nullable|string',
+            // How Secondary O-Level (Senior 1-4) subjects are marked in this exam:
+            // 'assessments' = NLSC Create Assessment (default), 'standard' = normal marks entry.
+            'o_level_mode' => 'nullable|in:assessments,standard',
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
             'class_grading_schemes' => 'nullable|array',
@@ -156,6 +162,7 @@ class ExaminationController extends Controller
                 'grading_scheme_id' => $validated['grading_scheme_id'],
                 'description' => $validated['description'] ?? null,
                 'status' => 'draft',
+                'o_level_mode' => $validated['o_level_mode'] ?? null,
                 'school_id' => $schoolId,
                 'created_by' => Session('LoggedTeacher'),
             ]);
@@ -286,6 +293,11 @@ class ExaminationController extends Controller
         // (marks-entry.blade.php's $markCounts[$key]->entered_count), so the
         // view itself needs no change.
         foreach ($assignedSubjects->where('subject_type', 'secondary_olevel') as $subject) {
+            // A 'standard' examination keeps O-Level marks in examination_marks like any other.
+            if (!$exam->usesNlscAssessments()) {
+                break;
+            }
+
             $key = $subject->subject_id . '_' . $subject->custom_subject_id . '_' . $subject->class_id . '_' . $subject->stream_id;
 
             $markCounts[$key] = (object) [
@@ -380,7 +392,7 @@ class ExaminationController extends Controller
         // entry proceeds as normal below.
         $secondaryOLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
 
-        if (in_array($classSubject->class_id, $secondaryOLevelClassIds, true)) {
+        if ($exam->usesNlscAssessments() && in_array($classSubject->class_id, $secondaryOLevelClassIds, true)) {
             $nlscAssessments = \App\Models\NlscAssessment::where('school_id', $schoolId)
                 ->where('examination_id', $examId)
                 ->where('class_id', $classSubject->class_id)
@@ -1169,7 +1181,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1250,7 +1262,7 @@ class ExaminationController extends Controller
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1310,7 +1322,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1392,7 +1404,7 @@ class ExaminationController extends Controller
         $schoolId = Session('LoggedSchool');
         $teacherId = Session('LoggedTeacher');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1511,7 +1523,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1661,7 +1673,7 @@ class ExaminationController extends Controller
         $classId = $request->class_id;
         $streamId = $request->stream_id;
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1806,7 +1818,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -1983,7 +1995,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -2023,17 +2035,19 @@ class ExaminationController extends Controller
                 ->where('senior', $ec->class_id)
                 ->where('stream', $ec->stream_id)
                 ->get()
-                ->map(function ($s) use ($ec, $examId, $schoolId) {
+                ->map(function ($s) use ($ec, $examId, $schoolId, $exam) {
                     $s->class_id = $ec->class_id;
                     $s->stream_id = $ec->stream_id;
 
                     // ✅ Add total marks for sorting
-                    $studentTotal = ExaminationMark::where('examination_id', $examId)
-                        ->where('student_id', $s->id)
-                        ->where('school_id', $schoolId)
-                        ->visibleOnReport()
-                        ->whereNotNull('marks_obtained')
-                        ->sum('marks_obtained');
+                    $studentTotal = $exam->isReportCard()
+                        ? app(\App\Services\OLevelReportCardService::class)->studentTotal($exam, $s->id, $schoolId)
+                        : ExaminationMark::where('examination_id', $examId)
+                            ->where('student_id', $s->id)
+                            ->where('school_id', $schoolId)
+                            ->visibleOnReport()
+                            ->whereNotNull('marks_obtained')
+                            ->sum('marks_obtained');
 
                     $s->total_obtained = $studentTotal;
                     return $s;
@@ -2082,7 +2096,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -2220,7 +2234,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -2486,7 +2500,7 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        $exam = Examination::where('id', $examId)
+        $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
 
@@ -2569,7 +2583,7 @@ class ExaminationController extends Controller
         $sourceClassId = (int) $request->input('source_class_id');
 
         // Make sure the exam belongs to this school.
-        Examination::where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
+        Examination::withReportCards()->where('id', $examId)->where('school_id', $schoolId)->firstOrFail();
 
         $source = DB::table('passslip_settings')
             ->where('school_id', $schoolId)
@@ -2715,12 +2729,18 @@ class ExaminationController extends Controller
 
     public function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
     {
-        // This student's marks
-        $marks = ExaminationMark::where('examination_id', $examId)
-            ->where('student_id', $studentId)
-            ->where('school_id', $schoolId)
-            ->visibleOnReport() // subjects hidden via Exam Subjects stay off the slip
-            ->get();
+        // This student's marks. An O-Level report card has no examination_marks
+        // of its own: its subject rows are computed from its components
+        // (selected assessments / standard exams, each rescaled to a weight).
+        if ($exam->isReportCard()) {
+            $marks = app(\App\Services\OLevelReportCardService::class)->studentMarks($exam, $studentId, $schoolId);
+        } else {
+            $marks = ExaminationMark::where('examination_id', $examId)
+                ->where('student_id', $studentId)
+                ->where('school_id', $schoolId)
+                ->visibleOnReport() // subjects hidden via Exam Subjects stay off the slip
+                ->get();
+        }
 
         // Subjects this student no longer takes (removed from their
         // combination / electives) stay off the slip too.
@@ -2855,6 +2875,9 @@ class ExaminationController extends Controller
                 'teacher_name' => Helper::teacherFullName($teacherId),
                 'teacher_initials' => Helper::teacherInitials($teacherId),
                 'teacher_comment' => $m->teacher_comment,
+                // Per-component breakdown (O-Level report cards only) — printed as
+                // extra columns by slip-secondary.blade.php when present.
+                'components' => $m->components ?? null,
             ];
         })->sortBy('subject_name');
 
@@ -2948,16 +2971,20 @@ class ExaminationController extends Controller
 
         // ── Class rank ────────────────────────────────────────────────────────
         // Aggregate every student's total in same class-stream
-        $classTotals = ExaminationMark::where('examination_id', $examId)
-            ->where('class_id', $classId)
-            ->where('stream_id', $streamId)
-            ->where('school_id', $schoolId)
-            ->visibleOnReport()
-            ->whereNotNull('marks_obtained')
-            ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
-            ->groupBy('student_id')
-            ->orderByDesc('grand_total')
-            ->get();
+        if ($exam->isReportCard()) {
+            $classTotals = app(\App\Services\OLevelReportCardService::class)->classTotals($exam, $classId, $streamId, $schoolId);
+        } else {
+            $classTotals = ExaminationMark::where('examination_id', $examId)
+                ->where('class_id', $classId)
+                ->where('stream_id', $streamId)
+                ->where('school_id', $schoolId)
+                ->visibleOnReport()
+                ->whereNotNull('marks_obtained')
+                ->selectRaw('student_id, SUM(marks_obtained) as grand_total')
+                ->groupBy('student_id')
+                ->orderByDesc('grand_total')
+                ->get();
+        }
 
         $classTotal = $classTotals->count();
         $rank = $classTotals->search(fn($r) => $r->student_id == $studentId);
@@ -3144,6 +3171,12 @@ class ExaminationController extends Controller
      */
     public function resolveExamSelection($baseExamId): array
     {
+        // An O-Level report card is already a composition of its own components;
+        // "Combine Examinations" does not apply to it.
+        if (Examination::withReportCards()->where('id', $baseExamId)->where('o_level_mode', Examination::MODE_REPORT_CARD)->exists()) {
+            return [[(int) $baseExamId], []];
+        }
+
         $extra = array_filter(explode(',', (string) request('exam_ids', '')), 'strlen');
         $avg = array_filter(explode(',', (string) request('avg_exam_ids', '')), 'strlen');
 
@@ -3807,7 +3840,7 @@ class ExaminationController extends Controller
                 // Helper::secondaryOLevelEnteredMarksCount()'s own
                 // docblock for why counting only examination_marks here
                 // left every O-Level subject stuck at 0 entered.
-                $enteredMarks = $subject->subject_type === 'secondary_olevel'
+                $enteredMarks = ($subject->subject_type === 'secondary_olevel' && $exam->usesNlscAssessments())
                     ? Helper::secondaryOLevelEnteredMarksCount($schoolId, $exam->id, $subject->class_id, $subject->stream_id, $subject->subject_id)
                     : ExaminationMark::where('examination_id', $exam->id)
                         ->where('class_id', $subject->class_id)
@@ -3944,7 +3977,7 @@ class ExaminationController extends Controller
                     // matter how many marks had actually been saved, which
                     // also meant "ready to release" could never trigger
                     // for one of these classes.
-                    $enteredMarks = $subject->subject_type === 'secondary_olevel'
+                    $enteredMarks = ($subject->subject_type === 'secondary_olevel' && $exam->usesNlscAssessments())
                         ? Helper::secondaryOLevelEnteredMarksCount($schoolId, $exam->id, $subject->class_id, $subject->stream_id, $subject->subject_id)
                         : ExaminationMark::where('examination_id', $exam->id)
                             ->where('class_id', $subject->class_id)
@@ -4379,6 +4412,8 @@ class ExaminationController extends Controller
             'selected_class_streams' => $selectedClassStreams,
             'class_grading_schemes' => $classGradingSchemes,
             'description' => $examination->description,
+            'o_level_mode' => $examination->o_level_mode ?? 'assessments',
+            'has_o_level_classes' => Helper::examHasSecondaryOLevelClasses($examination->id),
             'status' => $examination->status,
             'status_label' => ucfirst(str_replace('_', ' ', $examination->status)),
         ]);
@@ -4418,6 +4453,8 @@ class ExaminationController extends Controller
             'class_grading_schemes' => 'nullable|array',
             'class_grading_schemes.*' => 'nullable|integer|exists:grading_schemes,id',
 
+            'o_level_mode' => 'nullable|in:assessments,standard',
+
             // ✅ NEW: status validation (VERY IMPORTANT)
             'status' => 'required|in:draft,active,marks_entry,closed,results_released',
         ], [
@@ -4446,6 +4483,29 @@ class ExaminationController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Cannot release results for a draft examination.'
+                ], 422);
+            }
+        }
+
+        // Switching how Senior 1-4 subjects are marked is only safe while nothing has
+        // been captured the OTHER way, otherwise those marks would silently vanish
+        // from the report.
+        if (!empty($validated['o_level_mode']) && $validated['o_level_mode'] !== ($examination->o_level_mode ?? 'assessments')) {
+            $schoolIdForMode = Session('LoggedSchool');
+
+            if ($validated['o_level_mode'] === 'standard'
+                && NlscAssessment::where('school_id', $schoolIdForMode)->where('examination_id', $examination->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This examination already has NLSC assessments. Delete them first before switching it to a standard examination.',
+                ], 422);
+            }
+
+            if ($validated['o_level_mode'] === 'assessments'
+                && ExaminationMark::where('school_id', $schoolIdForMode)->where('examination_id', $examination->id)->whereNotNull('marks_obtained')->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Marks have already been entered for this examination the normal way, so it cannot be switched to assessments.',
                 ], 422);
             }
         }

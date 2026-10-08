@@ -2388,10 +2388,13 @@ class Helper extends Controller
             return collect();
         }
 
+        // A 'standard' examination marks O-Level subjects the normal way, so
+        // nothing there is ever waiting on "Create Assessment".
         $exams = Examination::where('school_id', $schoolId)
             ->when($examId, fn($q) => $q->where('id', $examId))
             ->whereIn('status', ['active', 'marks_entry'])
-            ->get();
+            ->get()
+            ->filter(fn($e) => $e->usesNlscAssessments());
 
         $pending = collect();
 
@@ -2546,6 +2549,12 @@ class Helper extends Controller
         $secondaryOLevelClassIds = self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
 
         if (empty($secondaryOLevelClassIds)) {
+            return false;
+        }
+
+        // A 'standard' examination has no Create Assessment stage at all.
+        $exam = Examination::find($examId);
+        if ($exam && !$exam->usesNlscAssessments()) {
             return false;
         }
 

@@ -10,6 +10,44 @@ class Examination extends Model
 {
     use HasFactory;
 
+    public const MODE_ASSESSMENTS = 'assessments';
+    public const MODE_STANDARD = 'standard';
+    public const MODE_REPORT_CARD = 'report_card';
+
+    /**
+     * Report-card definitions are hidden from every ordinary Examination query.
+     * See ExcludeReportCardsScope; opt back in with Examination::withReportCards().
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\ExcludeReportCardsScope());
+    }
+
+    public function scopeWithReportCards($query)
+    {
+        return $query->withoutGlobalScope(\App\Models\Scopes\ExcludeReportCardsScope::class);
+    }
+
+    public function isReportCard(): bool
+    {
+        return $this->o_level_mode === self::MODE_REPORT_CARD;
+    }
+
+    /**
+     * True when Secondary O-Level class-subjects of this exam are marked through
+     * NLSC "Create Assessment" (the legacy/default). False for a 'standard'
+     * examination, whose O-Level marks are entered the normal way.
+     */
+    public function usesNlscAssessments(): bool
+    {
+        return !in_array($this->o_level_mode, [self::MODE_STANDARD, self::MODE_REPORT_CARD], true);
+    }
+
+    public function reportCardComponents()
+    {
+        return $this->hasMany(OLevelReportCardComponent::class, 'examination_id')->orderBy('sort_order');
+    }
+
     protected $fillable = [
         'exam_code',
         'exam_name',
@@ -24,6 +62,7 @@ class Examination extends Model
         'pass_mark',
         'grading_scheme_id',
         'status',
+        'o_level_mode',
         'school_id',
         'created_by',
         'published_at',

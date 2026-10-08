@@ -473,6 +473,10 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "manage_report_card_settings", "name" => "Save / Copy / Delete Report Card Settings", "inherits" => ["generate_reports"]],
                     ["key" => "view_exam_reports", "name" => "View Examination Reports & Analysis", "inherits" => ["generate_reports"]],
                     ["key" => "export_exam_reports", "name" => "Export Examination Reports (PDF / Excel)", "inherits" => ["generate_reports"]],
+                    ["key" => "view_olevel_report_cards", "name" => "View O-Level Report Cards (Senior 1-4)", "inherits" => ["view_report_cards"]],
+                    ["key" => "create_olevel_report_card", "name" => "Create O-Level Report Card", "inherits" => ["customize_report_cards"]],
+                    ["key" => "edit_olevel_report_card", "name" => "Edit O-Level Report Card", "inherits" => ["customize_report_cards"]],
+                    ["key" => "delete_olevel_report_card", "name" => "Delete O-Level Report Card", "inherits" => ["manage_report_card_settings"]],
                 ],
             ],
 

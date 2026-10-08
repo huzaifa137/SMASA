@@ -297,6 +297,10 @@ Examinations, subjects, marks entry, grading setup, remarks, results and NLSC as
 | `manage_report_card_settings` | Save / Copy / Delete Report Card Settings |
 | `view_exam_reports` | View Examination Reports & Analysis |
 | `export_exam_reports` | Export Examination Reports (PDF / Excel) |
+| `view_olevel_report_cards` | View O-Level Report Cards (Senior 1-4) |
+| `create_olevel_report_card` | Create O-Level Report Card |
+| `edit_olevel_report_card` | Edit O-Level Report Card |
+| `delete_olevel_report_card` | Delete O-Level Report Card |
 
 ## Notifications  (`notifications`)
 
@@ -354,4 +358,4 @@ Roles, module/feature permissions and staff role assignment.
 | `assign_roles_to_users` | Assign Roles to Staff |
 | `remove_roles_from_users` | Remove Roles from Staff |
 
-**15 modules, 233 features.**
+**15 modules, 237 features.**

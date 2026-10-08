@@ -801,6 +801,9 @@
                 $slipCounter++;
                 $s = (object) $slipData['student'];
                 $subjMarks = collect($slipData['subjectMarks'])->values();
+                // O-Level report card breakdown (empty collection for an ordinary exam slip)
+                $fmtNum = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+                $compHeads = collect($subjMarks->first(fn($x) => !empty($x->components ?? null))->components ?? []);
                 $totObt = $slipData['totalObtained'];
                 $totMax = $slipData['totalMax'];
                 $pct = $slipData['percentage'];
@@ -1114,7 +1117,12 @@
                                 <thead>
                                     <tr>
                                         <th>Subjects</th>
-                                        <th class="c">Marks</th>
+                                        {{-- O-Level report card: one column per component (e.g. Assessment /20, Exam /80) + the total --}}
+                                        @foreach($compHeads as $ch)
+                                            <th class="c">{{ $ch['label'] }}<br><small style="font-weight:600;">/ {{ $fmtNum($ch['weight']) }}</small></th>
+                                        @endforeach
+                                        @if($compHeads->isNotEmpty())<th class="c">Total</th>@endif
+                                        <th class="c">{{ $compHeads->isNotEmpty() ? 'Marks %' : 'Marks' }}</th>
                                         @if($cfg['dev'])<th class="c">Dev.</th>@endif
                                         @if($cfg['col_grade'])<th class="c">Grade</th>@endif
                                         @if($cfg['comment_col'])<th>Comment</th>@endif
@@ -1126,6 +1134,13 @@
                                         @php $delta = $devFor($sm); @endphp
                                         <tr>
                                             <td>{{ $sm->subject_name }}</td>
+                                            @foreach($compHeads as $ci => $ch)
+                                                @php $cp = $sm->components[$ci]['points'] ?? null; @endphp
+                                                <td class="c">{{ $cp === null ? '—' : $fmtNum($cp) }}</td>
+                                            @endforeach
+                                            @if($compHeads->isNotEmpty())
+                                                <td class="c"><strong>{{ $fmtNum($sm->marks_obtained) }}</strong><small style="color:#7a7a9a;"> / {{ $fmtNum($sm->total_marks) }}</small></td>
+                                            @endif
                                             <td class="c">@whole($sm->percentage)%</td>
                                             @if($cfg['dev'])
                                                 <td class="c">

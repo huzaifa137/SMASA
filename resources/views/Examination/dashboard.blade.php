@@ -5412,6 +5412,19 @@ use App\Helpers\PermissionHelper;
     </div>
     </div>
     </div>
+    ${exam.has_o_level_classes ? `
+    <!-- Secondary O-Level marking mode -->
+    <div class="edit-section">
+    <div class="edit-section-title">
+    <i class="fas fa-graduation-cap"></i> Senior 1–4 Marking Mode
+    </div>
+    <div class="edit-form-group">
+    <select name="o_level_mode" class="edit-input">
+    <option value="assessments" ${exam.o_level_mode === 'assessments' ? 'selected' : ''}>Assessments (new curriculum — teachers create assessments)</option>
+    <option value="standard" ${exam.o_level_mode === 'standard' ? 'selected' : ''}>Standard examination (normal marks entry)</option>
+    </select>
+    </div>
+    </div>` : ''}
     <!-- Description Section -->
     <div class="edit-section">
     <div class="edit-section-title">

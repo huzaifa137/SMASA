@@ -420,6 +420,13 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if (PermissionHelper::canFeature('view_olevel_report_cards') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('olevel-report-cards.index') }}">
+                                        <i class="fas fa-file-alt mr-2"></i>O-Level Report Cards
+                                    </a>
+                                </li>
+                            @endif
                             @if (PermissionHelper::canFeature('view_marks_entry'))
                                 <li class="{{ $pendingMarksCount > 0 ? '' : 'smasa-hidden' }}" data-smasa-badge-item="marks">
                                     <a href="{{ route('examination.marks-entry-portal') }}">
@@ -980,6 +987,13 @@ use App\Helpers\PermissionHelper;
                                 <li>
                                     <a href="{{ route('nlsc-assessments.manage') }}">
                                         <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_olevel_report_cards') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('olevel-report-cards.index') }}">
+                                        <i class="fas fa-file-alt mr-2"></i>O-Level Report Cards
                                     </a>
                                 </li>
                             @endif

@@ -762,6 +762,27 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     });
 
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Secondary O-Level (Senior 1-4) report cards — compose a card from any
+    // assessments and/or a standard examination, each rescaled to a weight.
+    // Declared BEFORE the generic examinations group so its fixed segment is
+    // matched first. Only meaningful for secondary schools.
+    // ─────────────────────────────────────────────────────────────────────
+    Route::prefix('examinations/olevel-report-cards')
+        ->name('olevel-report-cards.')
+        ->controller(\App\Http\Controllers\OLevelReportCardController::class)
+        ->middleware(['module:examinations', 'secondary.school', 'SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/assessment-options', 'assessmentOptions')->name('assessment-options');
+            Route::get('/exam-options', 'examOptions')->name('exam-options');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
     Route::prefix('examinations')
         ->name('examination.')
         ->controller(ExaminationController::class)
