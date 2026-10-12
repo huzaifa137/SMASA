@@ -2338,34 +2338,54 @@ class Helper extends Controller
      * Design, Technical Drawing/Technology and Design) are the same
      * subject area but renamed between the two curricula in a way no
      * substring match would catch either — so this is an explicit,
-     * hand-built map (by SECONDARY_OLEVEL_SUBJECTS md_id) rather than
-     * name-matching. Returns null for a subject with no NLSC
+     * hand-built map (keyed by subject NAME, resolved to ids at runtime so
+     * it survives differing md_ids between databases) rather than
+     * generic name-matching. Returns null for a subject with no NLSC
      * equivalent (Commerce) or one not in this map yet.
      */
     public static function secondaryOlevelToNlscSubjectId(?int $secondaryOlevelSubjectId): ?int
     {
-        static $map = [
-            318 => 400, // English Language -> English
-            319 => 401, // Mathematics -> Mathematics
-            320 => 404, // Physics -> Physics
-            321 => 406, // Chemistry -> Chemistry
-            322 => 405, // Biology -> Biology
-            323 => 402, // History -> History and Political Education
-            324 => 403, // Geography -> Geography
-            325 => 409, // Christian Religious Education -> Christian Religious Education
-            326 => 410, // Islamic Religious Education -> Islamic Religious Education
-            327 => 420, // Literature in English -> Literature in English
-            328 => 413, // Agriculture -> Agriculture
-            // 329 Commerce -> no NLSC subject; not part of the NCDC NLSC menu
-            330 => 414, // Computer Studies -> ICT
-            331 => 412, // Kiswahili -> Kiswahili
-            332 => 421, // Fine Art -> Art and Design
-            333 => 408, // Physical Education -> Physical Education
-            334 => 423, // Technical Drawing -> Technology and Design
-            335 => 411, // Entrepreneurship Education -> Entrepreneurship
+        if ($secondaryOlevelSubjectId === null) {
+            return null;
+        }
+
+        // Matched by NAME, not by hard-coded md_id, so this still works on a
+        // database whose master_datas ids differ from the dev copy.
+        static $nameMap = [
+            'english' => 'english',
+            'english language' => 'english',
+            'mathematics' => 'mathematics',
+            'physics' => 'physics',
+            'chemistry' => 'chemistry',
+            'biology' => 'biology',
+            'history' => 'history and political education',
+            'geography' => 'geography',
+            'christian religious education' => 'christian religious education',
+            'islamic religious education' => 'islamic religious education',
+            'literature in english' => 'literature in english',
+            'agriculture' => 'agriculture',
+            // Commerce: no NLSC subject; not part of the NCDC NLSC menu
+            'computer studies' => 'ict',
+            'kiswahili' => 'kiswahili',
+            'fine art' => 'art and design',
+            'physical education' => 'physical education',
+            'technical drawing' => 'technology and design',
+            'entrepreneurship education' => 'entrepreneurship',
+            'french' => 'french',
+            'arabic' => 'arabic',
+            'luganda' => 'luganda',
         ];
 
-        return $secondaryOlevelSubjectId !== null ? ($map[$secondaryOlevelSubjectId] ?? null) : null;
+        static $olevel = null, $nlsc = null;
+
+        $olevel ??= self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_SUBJECTS'))
+            ->mapWithKeys(fn($m) => [(int) $m->md_id => strtolower(trim($m->md_name))])->all();
+        $nlsc ??= self::MasterRecords(config('constants.options.NLSC_SUBJECTS'))
+            ->mapWithKeys(fn($m) => [strtolower(trim($m->md_name)) => (int) $m->md_id])->all();
+
+        $target = $nameMap[$olevel[$secondaryOlevelSubjectId] ?? ''] ?? null;
+
+        return $target !== null ? ($nlsc[$target] ?? null) : null;
     }
 
     /**
