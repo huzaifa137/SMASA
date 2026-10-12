@@ -108,6 +108,14 @@ class TeacherDeletionService
         DB::table('examination_marks')->where('entered_by', $id)->update(['entered_by' => null]);
         DB::table('examination_marks')->where('verified_by', $id)->update(['verified_by' => null]);
 
+        // NLSC assessments / assessment marks this teacher created or entered.
+        DB::table('nlsc_assessments')->where('created_by', $id)->update(['created_by' => null]);
+        DB::table('nlsc_assessment_marks')->where('entered_by', $id)->update(['entered_by' => null]);
+
+        // Class teacher / class supervisor posts — vacate, keep the class.
+        DB::table('streams')->where('class_teacher', $id)->update(['class_teacher' => null]);
+        DB::table('classrooms')->where('class_supervisor', $id)->update(['class_supervisor' => null]);
+
         // Student attendance this teacher took.
         DB::table('student_attendances')->where('taken_by', $id)->update(['taken_by' => null]);
 

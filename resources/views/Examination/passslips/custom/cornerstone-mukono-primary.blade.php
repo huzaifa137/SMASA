@@ -75,14 +75,14 @@ show_next_term_starts_on
             background: linear-gradient(180deg, #f7faff 0%, #eef4fd 100%)
         }
 
-        .cs-frame {
-            height: 100%;
-            border: 2.2px solid var(--ac);
-            padding: 5mm 6mm 4mm;
-            display: flex;
-            flex-direction: column;
-            position: relative
-        }
+.cs-frame {
+    height: 100%;
+    border: 3px double var(--ac);
+    padding: 5mm 6mm 4mm;
+    display: flex;
+    flex-direction: column;
+    position: relative
+}
 
         /* watermark: school logo centred behind the content */
         .cs-wm {
@@ -586,7 +586,7 @@ show_next_term_starts_on
                                 <div>@if($r->on('show_term_ends_on'))<b>Term Ended on
                                 :</b>{{ $r->term_dates->ends_on ?? '—' }}@endif</div>
                                 <div>@if($r->on('show_next_term_starts_on'))<b>Next Term Begins
-                                :</b>{{ $r->term_dates->next_starts_on ?? '—' }}@endif</div>
+                                :</b>{{ $r->term_dates->next_starts_on ?? '02 Feb 2027' }}@endif</div>
                             </div>
                         @endif
                         <!-- <div class="cs-brand">{{ $footerText }}</div> -->

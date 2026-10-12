@@ -163,7 +163,6 @@ class OLevelReportCardController extends Controller
                             'type' => ucwords(str_replace('_', ' ', $a->assessment_type)),
                             'title' => $this->assessmentTitle($a),
                             'max_marks' => $a->max_marks,
-                            'in_report' => (bool) $a->include_in_report,
                         ])->values(),
                     ];
                 })->values(),

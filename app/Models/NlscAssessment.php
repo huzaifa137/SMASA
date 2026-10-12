@@ -21,15 +21,22 @@ class NlscAssessment extends Model
         'nlsc_subject_achievement_id',
         'academic_year',
         'term',
-        'include_in_report',
         'max_marks',
         'created_by',
     ];
 
     protected $casts = [
-        'include_in_report' => 'boolean',
         'max_marks' => 'float',
     ];
+
+    protected static function booted(): void
+    {
+        // An assessment's marks and its report-card picks have no foreign key,
+        // so they would outlive it. Clear them whenever it is deleted.
+        static::deleting(function (NlscAssessment $assessment) {
+            app(\App\Services\OrphanCleanupService::class)->purgeAssessments([(int) $assessment->id], false);
+        });
+    }
 
     public function marks()
     {

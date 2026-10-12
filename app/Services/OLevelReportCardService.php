@@ -173,8 +173,8 @@ class OLevelReportCardService
 
     /**
      * assessments component → [studentId][subjectKey] => ['meta' => ..., 'ratio' => avg/3]
-     * Assessments a teacher unticked "include in report" on stay out, exactly
-     * as they do on the ordinary NLSC reports.
+     * Teachers do not decide what reaches a report: whichever assessments the
+     * card's author ticked on the report-card form are used, nothing else.
      */
     private function assessmentComponent(OLevelReportCardComponent $component, array $studentIds, $schoolId): array
     {
@@ -186,7 +186,6 @@ class OLevelReportCardService
 
         $assessments = NlscAssessment::where('school_id', $schoolId)
             ->whereIn('id', $assessmentIds)
-            ->where('include_in_report', true)
             ->get()
             ->keyBy('id');
 

@@ -21,6 +21,14 @@ class Examination extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new \App\Models\Scopes\ExcludeReportCardsScope());
+
+        // Whatever path deletes an examination (draft delete, legacy delete,
+        // a report card, a school-product split ...), nothing it owns may be
+        // left behind: marks, NLSC assessments and their marks, remarks,
+        // discipline ratings, subject settings, report-card parts.
+        static::deleting(function (Examination $exam) {
+            app(\App\Services\OrphanCleanupService::class)->purgeExamination((int) $exam->id);
+        });
     }
 
     public function scopeWithReportCards($query)

@@ -545,17 +545,38 @@ class ClassandSubjectController extends Controller
         $class = Classroom::findOrFail($id);
         $class_id = $class->class_name;
 
-        $streams = Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->get();
+        $schoolId = Helper::requireSchool();
+        $cleanup = app(\App\Services\OrphanCleanupService::class);
+
+        $streams = Stream::where('class_id', $class_id)->where('school_id', $schoolId)->get();
+
+        // Students first, through the deletion service: a bare ->delete() here
+        // used to leave every one of their marks, attendance rows, fees, ID
+        // cards, assessment marks and remarks behind.
+        $studentIds = Student::where('senior', $class->class_name)
+            ->where('school_id', $schoolId)
+            ->whereIn('stream', $streams->pluck('stream_name')->all())
+            ->pluck('id')
+            ->all();
+
+        if (!empty($studentIds)) {
+            $result = app(\App\Services\StudentDeletionService::class)->deleteStudents($studentIds);
+
+            if ($result['failed'] > 0) {
+                return response()->json([
+                    'message' => 'Could not delete ' . $result['failed'] . ' student(s) of this class, so nothing else was removed: ' . implode('; ', array_slice($result['errors'], 0, 2)),
+                ], 500);
+            }
+        }
+
+        // Exam enrolment, marks, assessments, attendance, timetables, pass-slip
+        // settings of this class — before its class_subjects rows disappear.
+        $cleanup->purgeClassStream($schoolId, $class_id, null);
 
         foreach ($streams as $stream) {
-
-            ClassSubject::where('class_id', $class_id)->where('stream_id', $stream->stream_id)->where('school_id', Helper::requireSchool())->delete();
-
-            Student::where('senior', $class->class_name)
-                ->where('stream', $stream->stream_name)
-                ->where('school_id', Helper::requireSchool())
-                ->delete();
+            ClassSubject::where('class_id', $class_id)->where('stream_id', $stream->stream_id)->where('school_id', $schoolId)->delete();
         }
+        ClassSubject::where('class_id', $class_id)->where('school_id', $schoolId)->delete();
 
         Stream::where('class_id', $class_id)->where('school_id', Helper::requireSchool())->delete();
         ClassStreamAssignment::where('school_id', Helper::requireSchool())->where('class_id', $class_id)->delete();
@@ -571,6 +592,23 @@ class ClassandSubjectController extends Controller
 
         $class_id = $stream->class_id;
         $stream_id = $stream->stream_id;
+
+        // Students still sitting in this stream would be left pointing at a
+        // stream that no longer exists (invisible everywhere, yet still counted
+        // in marks / fees). Make the user move or remove them deliberately.
+        $studentsInStream = Student::where('school_id', Helper::requireSchool())
+            ->where('senior', $class_id)
+            ->where('stream', $stream->stream_name)
+            ->count();
+
+        if ($studentsInStream > 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "This stream still has {$studentsInStream} student(s). Move or delete them first, then delete the stream.",
+            ], 422);
+        }
+
+        app(\App\Services\OrphanCleanupService::class)->purgeClassStream(Helper::requireSchool(), $class_id, (string) $stream_id);
 
         Stream::where('class_id', $class_id)->where('stream_id', $stream_id)->where('school_id', Helper::requireSchool())->delete();
         ClassSubject::where('class_id', $class_id)->where('stream_id', $stream_id)->where('school_id', Helper::requireSchool())->delete();

@@ -206,10 +206,11 @@ class SchoolProductMergeService
                     ->delete();
 
                 if (!empty($orphanExamIds)) {
-                    foreach (['examination_marks', 'examination_subject_settings', 'report_card_remarks', 'student_discipline_ratings'] as $table) {
-                        DB::table($table)->whereIn('examination_id', $orphanExamIds)->delete();
+                    // Marks, NLSC assessments (+ their marks), remarks, ratings,
+                    // subject settings, report-card parts — all of it.
+                    foreach ($orphanExamIds as $orphanExamId) {
+                        app(OrphanCleanupService::class)->purgeExamination((int) $orphanExamId);
                     }
-                    DB::table('student_exam_summaries')->whereIn('exam_id', $orphanExamIds)->delete();
                     DB::table('examinations')->where('school_id', $school->id)->whereIn('id', $orphanExamIds)->delete();
                 }
             }
@@ -219,7 +220,15 @@ class SchoolProductMergeService
             // linked_student_id foreign value never dangles.
             if (!empty($studentIds)) {
                 Student::whereIn('linked_student_id', $studentIds)->update(['linked_student_id' => null]);
-                Student::whereIn('id', $studentIds)->delete();
+                // Through the deletion service so their marks, attendance, fees,
+                // ID cards, assessment marks and remarks go too.
+                app(StudentDeletionService::class)->deleteStudents($studentIds);
+            }
+
+            // Class-scoped rows (assessments, attendance, timetables, pass-slip
+            // settings, subject settings) before the class_subjects rows go.
+            foreach ($classIds as $doomedClassId) {
+                app(OrphanCleanupService::class)->purgeClassStream($school->id, $doomedClassId, null);
             }
 
             ClassSubject::where('school_id', $school->id)->whereIn('class_id', $classIds)->delete();

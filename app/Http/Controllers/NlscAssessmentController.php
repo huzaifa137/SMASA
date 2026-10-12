@@ -146,7 +146,6 @@ class NlscAssessmentController extends Controller
             'assessment_type' => $request->assessment_type,
             'academic_year' => $request->academic_year,
             'term' => $request->term,
-            'include_in_report' => $request->boolean('include_in_report', true),
             'created_by' => $teacherId ?? Session('LoggedAdmin'),
         ];
 
@@ -220,7 +219,6 @@ class NlscAssessmentController extends Controller
             'assessment_type' => $request->assessment_type,
             'academic_year' => $request->academic_year,
             'term' => $request->term,
-            'include_in_report' => $request->boolean('include_in_report', true),
             'nlsc_topic_id' => null,
             'nlsc_project_id' => null,
             'nlsc_competency_area_id' => null,

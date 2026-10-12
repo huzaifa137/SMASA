@@ -1466,9 +1466,8 @@ class ExaminationReportController extends Controller
      * fixed 0-3 competency scale via calculated_score = round((marks_obtained
      * / max_marks) * 3, 1) (see NlscAssessmentController::calculatedScore()).
      * A student's overall mark for the subject is the average
-     * calculated_score across every assessment they have a mark on --
-     * excluding any assessment a teacher explicitly unflagged with
-     * include_in_report -- expressed back out of 100 (avg / 3 * 100) so
+     * calculated_score across every assessment they have a mark on,
+     * expressed back out of 100 (avg / 3 * 100) so
      * every downstream percentage / grading-band / ranking calculation in
      * this controller keeps working completely unmodified against it.
      *
@@ -1485,7 +1484,6 @@ class ExaminationReportController extends Controller
             ->where('examination_id', $examId)
             ->where('class_id', $classId)
             ->whereIn('stream_id', $streamIds)
-            ->where('include_in_report', true)
             ->when($subjectId, fn($q) => $q->where('subject_id', $subjectId))
             ->get();
 

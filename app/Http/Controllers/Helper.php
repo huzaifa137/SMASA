@@ -2564,6 +2564,31 @@ class Helper extends Controller
             ->exists();
     }
 
+    /**
+     * True when the exam has at least one Senior 1-4 class attached, regardless
+     * of how those classes are marked. Unlike examHasSecondaryOLevelClasses()
+     * (which answers "is there a Create Assessment stage?" and is therefore
+     * false for a standard exam), this one only asks "does the exam involve
+     * O-Level at all?" — used to decide whether the marking-mode selector is
+     * offered when editing an examination, so a standard exam can be switched
+     * back to assessments just as an assessments exam can be switched to standard.
+     */
+    public static function examHasOLevelClassesAnyMode(int $examId): bool
+    {
+        $schoolId = Session('LoggedSchool');
+
+        $oLevelClassIds = self::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+
+        if (empty($oLevelClassIds)) {
+            return false;
+        }
+
+        return ExaminationClass::where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $oLevelClassIds)
+            ->exists();
+    }
+
     public static function schoolProduct(int $schoolId): ?string
     {
         return DB::table('schools')

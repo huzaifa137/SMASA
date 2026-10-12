@@ -103,6 +103,20 @@ class StudentDeletionService
         DB::table('examination_marks')->where('student_id', $id)->delete();
         DB::table('student_exam_summaries')->where('student_id', $id)->delete();
 
+        // New-curriculum (NLSC) assessment marks, report-card remarks and
+        // discipline ratings are all keyed by a raw student_id as well.
+        DB::table('nlsc_assessment_marks')->where('student_id', $id)->delete();
+        DB::table('report_card_remarks')->where('student_id', $id)->delete();
+        DB::table('student_discipline_ratings')->where('student_id', $id)->delete();
+
+        // Duplicate-detection bookkeeping, and consolidated rows that pointed
+        // at this student as their primary record.
+        DB::table('student_match_dismissals')
+            ->where('student_id_one', $id)
+            ->orWhere('student_id_two', $id)
+            ->delete();
+        DB::table('students')->where('linked_student_id', $id)->update(['linked_student_id' => null]);
+
         // Per-student subject choices (Secondary). These only store a raw
         // student_id, so without this they outlive the student and keep
         // inflating "entered / expected" counts on the marks screens.

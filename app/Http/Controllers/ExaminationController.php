@@ -751,6 +751,16 @@ class ExaminationController extends Controller
             ], 403);
         }
 
+        // An O-Level report card may use this exam as its "exam" part. Deleting
+        // the exam would silently break those cards, so make the user decide.
+        $usedBy = app(\App\Services\OrphanCleanupService::class)->reportCardsUsingExam((int) $exam->id);
+        if ($usedBy->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This examination is used by the O-Level report card(s): ' . $usedBy->implode(', ') . '. Remove it from those report cards (or delete them) first.',
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
 
@@ -4318,7 +4328,9 @@ class ExaminationController extends Controller
         }
 
 
-        $examination = Examination::findOrFail($id);
+        $examination = Examination::where('id', $id)
+            ->where('school_id', Session('LoggedSchool'))
+            ->firstOrFail();
 
         // Only allow deletion of draft examinations
         if ($examination->status !== 'draft') {
@@ -4328,6 +4340,15 @@ class ExaminationController extends Controller
             ], 403);
         }
 
+        $usedBy = app(\App\Services\OrphanCleanupService::class)->reportCardsUsingExam((int) $examination->id);
+        if ($usedBy->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This examination is used by the O-Level report card(s): ' . $usedBy->implode(', ') . '. Remove it from those report cards first.',
+            ], 422);
+        }
+
+        // Examination::deleting clears marks, assessments, remarks, ratings …
         $examination->delete();
 
         return response()->json([
@@ -4413,7 +4434,7 @@ class ExaminationController extends Controller
             'class_grading_schemes' => $classGradingSchemes,
             'description' => $examination->description,
             'o_level_mode' => $examination->o_level_mode ?? 'assessments',
-            'has_o_level_classes' => Helper::examHasSecondaryOLevelClasses($examination->id),
+            'has_o_level_classes' => Helper::examHasOLevelClassesAnyMode($examination->id),
             'status' => $examination->status,
             'status_label' => ucfirst(str_replace('_', ' ', $examination->status)),
         ]);
@@ -4501,11 +4522,19 @@ class ExaminationController extends Controller
                 ], 422);
             }
 
+            // Only Senior 1-4 marks matter here: a mixed exam (e.g. Senior 1 + Senior 6)
+            // keeps A-Level marks in examination_marks no matter which mode O-Level uses.
+            $oLevelClassIdsForMode = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->pluck('md_id')->all();
+
             if ($validated['o_level_mode'] === 'assessments'
-                && ExaminationMark::where('school_id', $schoolIdForMode)->where('examination_id', $examination->id)->whereNotNull('marks_obtained')->exists()) {
+                && ExaminationMark::where('school_id', $schoolIdForMode)
+                    ->where('examination_id', $examination->id)
+                    ->whereIn('class_id', $oLevelClassIdsForMode)
+                    ->whereNotNull('marks_obtained')
+                    ->exists()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Marks have already been entered for this examination the normal way, so it cannot be switched to assessments.',
+                    'message' => 'Senior 1-4 marks have already been entered for this examination the normal way, so it cannot be switched to assessments.',
                 ], 422);
             }
         }

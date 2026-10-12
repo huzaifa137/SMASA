@@ -57,7 +57,7 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Term <span class="text-danger">*</span></label>
-                        <select id="term" class="form-select">
+                        <select id="term" class="form-control">
                             @foreach(['Term 1' => 'Term I', 'Term 2' => 'Term II', 'Term 3' => 'Term III'] as $v => $l)
                                 <option value="{{ $v }}" {{ ($card->term ?? $activeTermText) === $v ? 'selected' : '' }}>{{ $l }}</option>
                             @endforeach
@@ -70,7 +70,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Grading scheme <span class="text-danger">*</span></label>
-                        <select id="gradingScheme" class="form-select">
+                        <select id="gradingScheme" class="form-control">
                             @foreach($gradingSchemes as $s)
                                 <option value="{{ $s->id }}"
                                     {{ ($card->grading_scheme_id ?? null) == $s->id || (!$isEdit && $s->is_default) ? 'selected' : '' }}>
@@ -132,7 +132,7 @@
             </button>
             <a href="{{ route('olevel-report-cards.index') }}" class="btn btn-light" style="border-radius:.7rem;">Cancel</a>
         </div>
-    </div>
+    </div></div></div></div>
 @endsection
 
 @section('js')
@@ -216,7 +216,7 @@
                 const empty = !examData.length ? `<div class="hint text-danger mt-1">No standard examination sits the ticked classes. Create one (Create Exam → “Standard examination”) first.</div>` : '';
                 return `<div class="comp is-exam">${head(c, i, 'exam')}
                     <label class="form-label fw-semibold mb-1" style="font-size:.78rem;">Examination</label>
-                    <select class="form-select form-select-sm" data-field="source_examination_id" data-i="${i}">
+                    <select class="form-select form-control" data-field="source_examination_id" data-i="${i}">
                         <option value="">-- Choose examination --</option>${opts}
                     </select>${empty}
                     <div class="hint mt-1">Each subject's mark is converted to the “Out of” value above.</div>
@@ -239,7 +239,7 @@
                             body += `<label class="pick-row">
                                 <input type="checkbox" data-act="pick" data-i="${i}" data-id="${a.id}" ${set.has(a.id) ? 'checked' : ''}>
                                 <span>${esc(a.type)} — ${esc(a.title)}
-                                    <span class="meta d-block">${esc(a.class)}${a.max_marks ? ' · out of ' + esc(a.max_marks) : ''}${a.in_report ? '' : ' · excluded from reports by teacher'}</span>
+                                    <span class="meta d-block">${esc(a.class)}${a.max_marks ? ' · out of ' + esc(a.max_marks) : ''}</span>
                                 </span>
                             </label>`;
                         });

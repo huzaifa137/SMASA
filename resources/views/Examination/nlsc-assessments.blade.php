@@ -249,8 +249,7 @@ use App\Http\Controllers\Helper;
                                     data-subject-matter-id="{{ $a->assessment_type === 'projects' ? $a->nlsc_project_id : $a->nlsc_topic_id }}"
                                     data-competency-area-id="{{ $a->nlsc_competency_area_id }}"
                                     data-subject-achievement-id="{{ $a->nlsc_subject_achievement_id }}"
-                                    data-term="{{ $a->term }}" data-academic-year="{{ $a->academic_year }}"
-                                    data-include-in-report="{{ $a->include_in_report ? 1 : 0 }}">
+                                    data-term="{{ $a->term }}" data-academic-year="{{ $a->academic_year }}">
                                     <td><span class="nt-type-badge">
                                         @if($a->assessment_type === 'activities_of_integration') Activities of Integration
                                         @elseif($a->assessment_type === 'projects') Projects
@@ -350,12 +349,6 @@ use App\Http\Controllers\Helper;
                         </select>
                     </div>
 
-                    <div class="col-12 mt-3">
-                        <label class="nt-check">
-                            <input type="checkbox" id="includeInReport" checked>
-                            Include in this term's report form
-                        </label>
-                    </div>
                 </div> 
 
 <div class="d-flex justify-content-end mt-4">
@@ -771,7 +764,6 @@ use App\Http\Controllers\Helper;
                     nlsc_subject_achievement_id: $assessmentType.value === 'subject_achievement' ? ($competencyArea.value || null) : null,
                     academic_year: document.getElementById('academicYear').value,
                     term: document.getElementById('term').value,
-                    include_in_report: document.getElementById('includeInReport').checked ? 1 : 0,
                 }),
             })
                 .then(r => r.json())
@@ -810,7 +802,6 @@ use App\Http\Controllers\Helper;
 
                 document.getElementById('academicYear').value = row.dataset.academicYear;
                 document.getElementById('term').value = row.dataset.term;
-                document.getElementById('includeInReport').checked = row.dataset.includeInReport === '1';
 
                 $assessmentType.value = row.dataset.assessmentType;
                 $assessmentType.dispatchEvent(new Event('change'));
