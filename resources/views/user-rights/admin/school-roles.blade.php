@@ -78,6 +78,35 @@
         .stat-pill.yellow { background: #fef3c7; color: #92400e; }
         .stat-pill.red { background: #fee2e2; color: #b91c1c; }
 
+        .cap-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #64748b;
+            border-radius: 10px;
+            padding: .8rem 1.1rem;
+            margin-bottom: 1rem;
+            color: #334155;
+            font-size: .85rem;
+        }
+
+        .cap-bar.open {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            border-left-color: #16a34a;
+            color: #166534;
+        }
+
+        .cap-bar .cap-bar-text {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+        }
+
         /* ── risk banner ── */
         .risk-banner {
             display: flex;
@@ -380,6 +409,33 @@
         <div class="stat-pill"><i class="fa fa-users"></i>{{ $teachers->count() }} Total Staff</div>
     </div>
 
+    {{-- STAFF CREATION SWITCH (per-school lift of the admin-side staff cap) --}}
+    <div class="cap-bar {{ $school->admin_staff_add_open ? 'open' : '' }}" id="staffCapBar">
+        <div class="cap-bar-text">
+            <i class="fa {{ $school->admin_staff_add_open ? 'fa-lock-open' : 'fa-lock' }} fa-lg mt-1"></i>
+            <div>
+                @if($school->admin_staff_add_open)
+                    <strong>Staff creation is OPEN for this school.</strong>
+                    There is no limit on the number of staff accounts you can add here. Close it when you're done
+                    to put the {{ $maxAdminCreatedTeachers }}-account limit back.
+                @else
+                    <strong>Staff creation is CLOSED ({{ min($teachers->count(), $maxAdminCreatedTeachers) }}/{{ $maxAdminCreatedTeachers }} used).</strong>
+                    This school is limited to {{ $maxAdminCreatedTeachers }} staff accounts created from here.
+                    Open it to add more.
+                @endif
+            </div>
+        </div>
+        @if($school->admin_staff_add_open)
+            <button type="button" id="btnToggleStaffCap" data-open="0" class="btn btn-sm btn-outline-secondary">
+                <i class="fa fa-lock mr-1"></i>Close staff creation
+            </button>
+        @else
+            <button type="button" id="btnToggleStaffCap" data-open="1" class="btn btn-sm btn-success">
+                <i class="fa fa-lock-open mr-1"></i>Open staff creation
+            </button>
+        @endif
+    </div>
+
     {{-- RISK BANNER --}}
     @if($roles->count() > 0 && count($roleIdsWithUrp) === 0)
         <div class="risk-banner">
@@ -403,13 +459,13 @@
                 to create one (you can assign a role to them in the same step).
             </div>
         </div>
-    @elseif($teachers->count() >= $maxAdminCreatedTeachers)
+    @elseif(!$school->admin_staff_add_open && $teachers->count() >= $maxAdminCreatedTeachers)
         <div class="risk-banner" style="background:#f8fafc;border-color:#e2e8f0;border-left-color:#64748b;color:#334155;">
             <i class="fa fa-user-lock fa-lg"></i>
             <div>
                 <strong>Teacher account limit reached ({{ $maxAdminCreatedTeachers }}/{{ $maxAdminCreatedTeachers }}).</strong>
-                Admin-side account creation is capped at {{ $maxAdminCreatedTeachers }} teachers per school for now.
-                Further staff can be added by the school itself once logged in.
+                Admin-side account creation is capped at {{ $maxAdminCreatedTeachers }} teachers per school.
+                Use <strong>Open staff creation</strong> above to add more, or let the school add staff itself once logged in.
             </div>
         </div>
     @endif
@@ -510,9 +566,9 @@
         placeholder="Search staff..."
         style="font-family:inherit;max-width:180px;">
 
-    @if($teachers->count() >= $maxAdminCreatedTeachers)
+    @if(!$school->admin_staff_add_open && $teachers->count() >= $maxAdminCreatedTeachers)
         <button type="button" id="btnOpenAddTeacher" class="btn btn-sm btn-secondary" disabled
-            title="This school already has the maximum of {{ $maxAdminCreatedTeachers }} teacher accounts allowed for now.">
+            title="This school already has the maximum of {{ $maxAdminCreatedTeachers }} teacher accounts. Open staff creation to add more.">
             <i class="fa fa-user-plus mr-1"></i>Add Staff ({{ $maxAdminCreatedTeachers }}/{{ $maxAdminCreatedTeachers }})
         </button>
     @else
@@ -782,6 +838,8 @@
 <script>
 const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const schoolId = {{ $school->id }};
+const staffCapMax = {{ (int) $maxAdminCreatedTeachers }};
+const staffCapOpen = {{ $school->admin_staff_add_open ? 'true' : 'false' }};
 
 function escHtml(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
@@ -1270,6 +1328,15 @@ document.getElementById('btnSaveTeacher').addEventListener('click', function () 
         list.insertAdjacentHTML('beforeend', buildTeacherCard(data.teacher));
         wireTeacherRoleSelect(data.teacher.id);
 
+        // Hit the cap without a reload: disable "Add Staff" like the server-rendered state.
+        if (!staffCapOpen && teacherCardCount >= staffCapMax) {
+            const addBtn = document.getElementById('btnOpenAddTeacher');
+            addBtn.disabled = true;
+            addBtn.className = 'btn btn-sm btn-secondary';
+            addBtn.title = `This school already has the maximum of ${staffCapMax} teacher accounts. Open staff creation to add more.`;
+            addBtn.innerHTML = `<i class="fa fa-user-plus mr-1"></i>Add Staff (${staffCapMax}/${staffCapMax})`;
+        }
+
         const zeroBanner = document.getElementById('zeroStaffBanner');
         if (zeroBanner) zeroBanner.remove();
 
@@ -1310,6 +1377,49 @@ document.getElementById('btnSaveTeacher').addEventListener('click', function () 
     .finally(() => {
         this.disabled = false;
         this.innerHTML = '<i class="fa fa-save mr-1"></i>Create Teacher';
+    });
+});
+
+// ════════════════════════════════════════════
+// OPEN / CLOSE STAFF CREATION FOR THIS SCHOOL
+// ════════════════════════════════════════════
+
+document.getElementById('btnToggleStaffCap').addEventListener('click', function () {
+    const btn = this;
+    const wantOpen = btn.dataset.open === '1';
+
+    Swal.fire({
+        icon: 'question',
+        title: wantOpen ? 'Open staff creation?' : 'Close staff creation?',
+        text: wantOpen
+            ? 'This school will be able to have more than ' + staffCapMax + ' staff accounts created from the admin side until you close it again.'
+            : 'The ' + staffCapMax + '-account limit will apply to this school again. Existing accounts are not affected.',
+        showCancelButton: true,
+        confirmButtonText: wantOpen ? 'Yes, open it' : 'Yes, close it',
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        btn.disabled = true;
+        fetch(`/user-rights/admin-schools/${schoolId}/staff-cap`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify({ open: wantOpen })
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || !data.success) {
+                Swal.fire('Error', (data && data.message) || 'Could not update this setting.', 'error');
+                btn.disabled = false;
+                return;
+            }
+            Swal.fire({ icon: 'success', text: data.message, timer: 1500, showConfirmButton: false })
+                .then(() => window.location.reload());
+            setTimeout(() => window.location.reload(), 1600);
+        })
+        .catch(() => {
+            Swal.fire('Error', 'Could not update this setting.', 'error');
+            btn.disabled = false;
+        });
     });
 });
 

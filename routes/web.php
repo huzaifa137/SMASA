@@ -1340,6 +1340,7 @@ Route::group([
     Route::get('/{school}', [UserRightsController::class, 'adminSchoolRoles'])->name('school.roles');
     Route::post('/{school}/roles', [UserRightsController::class, 'adminStoreRole'])->name('roles.store');
     Route::post('/{school}/teachers', [UserRightsController::class, 'adminCreateTeacher'])->name('teachers.store');
+    Route::post('/{school}/staff-cap', [UserRightsController::class, 'toggleAdminStaffAdd'])->name('staff-cap.toggle');
 });
 
 

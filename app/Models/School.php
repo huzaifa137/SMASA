@@ -22,11 +22,13 @@ class School extends Model
         'school_name_arabic',
         'custom_subjects_enabled',
         'custom_subjects_active',
+        'admin_staff_add_open',
     ];
 
     protected $casts = [
         'custom_subjects_enabled' => 'boolean',
         'custom_subjects_active' => 'boolean',
+        'admin_staff_add_open' => 'boolean',
     ];
 
     public function classrooms()

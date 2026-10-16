@@ -19,9 +19,11 @@ use Illuminate\Support\Str;
 class UserRightsController extends Controller
 {
     /**
-     * Temporary cap on how many teacher accounts a system admin can create
-     * for a single school via /user-rights/admin-schools. Remove/raise this
-     * once the school-side self-service flow is trusted to take over.
+     * Default cap on how many teacher accounts a system admin can create
+     * for a single school via /user-rights/admin-schools. A system admin can
+     * lift this cap for one school at a time (and put it back later) with the
+     * "Open / Close staff creation" switch — see toggleAdminStaffAdd() and
+     * schools.admin_staff_add_open.
      */
     private const MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL = 2;
 
@@ -531,14 +533,18 @@ class UserRightsController extends Controller
     {
         abort_unless(PermissionHelper::isSystemAdmin(), 403, 'System administrators only.');
 
-        // Temporary cap while this is being rolled out: each school may
-        // have at most 2 teacher accounts created from the admin side.
-        $existingTeacherCount = Teacher::where('school_id', $school->id)->count();
-        if ($existingTeacherCount >= self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'This school already has the maximum of ' . self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL . ' teacher accounts allowed for now.',
-            ], 422);
+        // Each school is capped at MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL
+        // teacher accounts from the admin side, unless a system admin has
+        // opened staff creation for this specific school.
+        if (!$school->admin_staff_add_open) {
+            $existingTeacherCount = Teacher::where('school_id', $school->id)->count();
+            if ($existingTeacherCount >= self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL) {
+                return response()->json([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => 'This school already has the maximum of ' . self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL . ' teacher accounts. Open staff creation for this school to add more.',
+                ], 422);
+            }
         }
 
         $validated = $request->validate([
@@ -598,6 +604,32 @@ class UserRightsController extends Controller
                 'role_name' => $role?->name,
             ],
             'temporary_password' => $passwordSupplied ? null : $plainPassword,
+        ]);
+    }
+
+    /**
+     * System admin only: open (or close again) admin-side staff creation for
+     * ONE school. While open, the per-school teacher cap is not enforced for
+     * that school; closing it puts the cap back (accounts already created are
+     * kept — the school simply can't get more until it's re-opened).
+     */
+    public function toggleAdminStaffAdd(Request $request, School $school)
+    {
+        abort_unless(PermissionHelper::isSystemAdmin(), 403, 'System administrators only.');
+
+        $request->validate([
+            'open' => 'required|boolean',
+        ]);
+
+        $school->admin_staff_add_open = $request->boolean('open');
+        $school->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $school->admin_staff_add_open
+                ? 'Staff creation is now OPEN for ' . $school->name . '. You can add as many staff as needed.'
+                : 'Staff creation is now CLOSED for ' . $school->name . '. The ' . self::MAX_ADMIN_CREATED_TEACHERS_PER_SCHOOL . '-account limit applies again.',
+            'admin_staff_add_open' => $school->admin_staff_add_open,
         ]);
     }
 

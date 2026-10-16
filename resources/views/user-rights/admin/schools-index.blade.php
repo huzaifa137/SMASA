@@ -310,6 +310,24 @@
             margin-top: 1.1rem;
         }
 
+        .staff-cap-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .72rem;
+            font-weight: 600;
+            padding: .28rem .7rem;
+            border-radius: 999px;
+            margin-bottom: .6rem;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .staff-cap-pill.open {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
         .btn-manage {
             display: flex;
             align-items: center;
@@ -480,6 +498,15 @@
                     </div>
 
                     <div class="school-card-footer">
+                        @if($school->admin_staff_add_open)
+                            <div class="staff-cap-pill open">
+                                <i class="fa fa-lock-open"></i> Staff creation open
+                            </div>
+                        @else
+                            <div class="staff-cap-pill">
+                                <i class="fa fa-lock"></i> Staff limit applies
+                            </div>
+                        @endif
                         <a href="{{ route('urp.admin.school.roles', $school->id) }}" class="btn-manage">
                             <i class="fa fa-user-shield"></i> Manage Roles
                         </a>

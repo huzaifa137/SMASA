@@ -465,7 +465,7 @@
                             <thead>
                                 <tr>
                                     <th style="width:40%">Item Name</th>
-                                    <th style="width:30%">Category</th>
+                                    <!-- <th style="width:30%">Category</th> -->
                                     <th style="width:25%">Budgeted Amount (UGX)</th>
                                     <th style="width:5%"></th>
                                 </tr>
@@ -476,14 +476,14 @@
                                 {{-- Hidden template row — NO required attributes --}}
                                 <tr id="incomeTemplate" style="display:none;" aria-hidden="true">
                                     <td><input type="text" name="items[income][0][item_name]" placeholder="e.g., School Fees"></td>
-                                    <td>
+                                    <!-- <td>
                                         <select name="items[income][0][category_id]">
                                             <option value="">-- Select --</option>
                                             @foreach($categories as $cat)
                                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                             @endforeach
                                         </select>
-                                    </td>
+                                    </td> -->
                                     <td><input type="text" name="items[income][0][budgeted_amount]" class="income-amount" placeholder="0"></td>
                                     <td class="item-actions">
                                         <button type="button" class="btn-fin btn-sm btn-danger-fin" onclick="removeItem(this)"><i class="fas fa-trash"></i></button>

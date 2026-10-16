@@ -47,14 +47,14 @@ class TeacherController extends Controller
             'firstname' => 'required|string|max:255',
             'othername' => 'nullable|string|max:255',
             'initials' => 'nullable|string|max:255',
-            'phonenumber' => 'required|string|max:20|unique:teachers',
+            'phonenumber' => 'required|string|max:20',
             'registration_number' => 'nullable|string|max:50',
             'gender' => 'nullable|in:male,female',
             'national_id' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
             'employee_number' => 'nullable|string|max:50',
             'group_teacher' => 'nullable|integer',
-            'email' => 'required|unique:teachers',
+            'email' => 'required',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 

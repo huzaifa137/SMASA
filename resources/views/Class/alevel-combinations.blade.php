@@ -1013,6 +1013,8 @@
             </div>
         </div>
     </div>
+    </div>
+    </div>
     <script>
         const PRINCIPAL_LIMIT = 3;
         const SELECTED_CLASS_ID = @json($selectedClassId);
