@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
-use App\Models\GradingScheme;
 use App\Models\NlscAssessment;
 use App\Models\OLevelReportCardComponent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 /**
  * Secondary O-Level (Senior 1-4, new NLSC curriculum) report cards.
@@ -90,14 +90,10 @@ class OLevelReportCardController extends Controller
             ->whereIn('class_id', $oLevelClassIds)
             ->get();
 
-        $gradingSchemes = GradingScheme::availableTo($schoolId)
-            ->orderByRaw('school_id IS NULL')
-            ->orderByDesc('is_default')
-            ->orderBy('name')
-            ->get();
-
         $selectedClassStreams = [];
         $components = [];
+
+        $baseExams = $this->baseExamCandidates($schoolId, $oLevelClassIds, $card?->base_examination_id);
 
         if ($card) {
             $selectedClassStreams = ExaminationClass::where('examination_id', $card->id)->get()
@@ -112,7 +108,69 @@ class OLevelReportCardController extends Controller
             ])->all();
         }
 
-        return compact('card', 'classStreams', 'gradingSchemes', 'selectedClassStreams', 'components');
+        return compact('card', 'classStreams', 'baseExams', 'selectedClassStreams', 'components');
+    }
+
+    /**
+     * Examinations a report card can be built from: O-Level (Senior 1-4)
+     * examinations that already have marks entered — either ordinary exam marks
+     * or NLSC assessment marks. The chosen one supplies the card's term, year
+     * and grading, so none of those are asked for again.
+     */
+    private function baseExamCandidates($schoolId, array $oLevelClassIds, $alwaysIncludeId = null): Collection
+    {
+        $withExamMarks = DB::table('examination_marks')
+            ->where('school_id', $schoolId)
+            ->whereNotNull('marks_obtained')
+            ->distinct()
+            ->pluck('examination_id')
+            ->all();
+
+        $withAssessmentMarks = DB::table('nlsc_assessment_marks as m')
+            ->join('nlsc_assessments as a', 'a.id', '=', 'm.nlsc_assessment_id')
+            ->where('a.school_id', $schoolId)
+            ->where(fn($q) => $q->whereNotNull('m.marks_obtained')->orWhereNotNull('m.calculated_score'))
+            ->distinct()
+            ->pluck('a.examination_id')
+            ->all();
+
+        $ids = collect(array_merge($withExamMarks, $withAssessmentMarks))->unique()->values();
+
+        if ($alwaysIncludeId) {
+            $ids->push((int) $alwaysIncludeId);
+        }
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return Examination::where('school_id', $schoolId)
+            ->whereIn('id', $ids->unique()->all())
+            ->with('examinationClasses')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($e) use ($oLevelClassIds) {
+                $classStreams = $e->examinationClasses
+                    ->filter(fn($ec) => in_array((string) $ec->class_id, $oLevelClassIds, true))
+                    ->map(fn($ec) => $ec->class_id . '_' . ($ec->stream_id ?? ''))
+                    ->unique()->values()->all();
+
+                if (empty($classStreams)) {
+                    return null;
+                }
+
+                return [
+                    'id' => $e->id,
+                    'name' => $e->exam_name,
+                    'term' => $e->term,
+                    'term_label' => \App\Support\Term::label($e->term),
+                    'year' => $e->academic_year,
+                    'mode' => $e->o_level_mode === Examination::MODE_STANDARD ? 'standard' : 'assessments',
+                    'class_streams' => $classStreams,
+                ];
+            })
+            ->filter()
+            ->values();
     }
 
     // ── AJAX: what can be put on a card for the ticked classes ───────────────
@@ -219,6 +277,7 @@ class OLevelReportCardController extends Controller
 
         $data = $this->validated($request);
         $schoolId = Session('LoggedSchool');
+        $base = $data['_base'];
 
         DB::beginTransaction();
         try {
@@ -226,15 +285,18 @@ class OLevelReportCardController extends Controller
                 'exam_code' => $this->nextCode(),
                 'exam_name' => $data['exam_name'],
                 'exam_type' => 'Report Card',
-                'term' => $data['term'],
-                'academic_year' => $data['academic_year'],
+                'term' => $base->term,
+                'academic_year' => $base->academic_year,
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->toDateString(),
                 'marks_entry_deadline' => now()->toDateString(),
                 'description' => $data['description'] ?? null,
                 'total_marks' => (int) round(collect($data['components'])->sum('weight')),
                 'pass_mark' => 50,
-                'grading_scheme_id' => $data['grading_scheme_id'],
+                // Grading is inherited from the examination the card is built
+                // on (exam-level scheme here, per-class schemes copied below).
+                'grading_scheme_id' => $base->grading_scheme_id,
+                'base_examination_id' => $base->id,
                 // 'closed' = pass slips open straight away (classIsReleased()) while
                 // staying out of anything that only looks at 'results_released'.
                 'status' => 'closed',
@@ -243,7 +305,7 @@ class OLevelReportCardController extends Controller
                 'created_by' => Session('LoggedTeacher'),
             ]);
 
-            $this->syncClassesAndComponents($card, $data, $schoolId);
+            $this->syncClassesAndComponents($card, $data, $schoolId, $base);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -263,21 +325,30 @@ class OLevelReportCardController extends Controller
         PermissionHelper::denyUnlessFeature('edit_olevel_report_card');
 
         $card = $this->findCard($id);
-        $data = $this->validated($request);
+        $data = $this->validated($request, $card);
         $schoolId = Session('LoggedSchool');
+        $base = $data['_base']; // null only for an older card that was never tied to an examination
 
         DB::beginTransaction();
         try {
-            $card->update([
+            $fields = [
                 'exam_name' => $data['exam_name'],
-                'term' => $data['term'],
-                'academic_year' => $data['academic_year'],
                 'description' => $data['description'] ?? null,
-                'grading_scheme_id' => $data['grading_scheme_id'],
                 'total_marks' => (int) round(collect($data['components'])->sum('weight')),
-            ]);
+            ];
 
-            $this->syncClassesAndComponents($card, $data, $schoolId);
+            if ($base) {
+                $fields += [
+                    'term' => $base->term,
+                    'academic_year' => $base->academic_year,
+                    'grading_scheme_id' => $base->grading_scheme_id,
+                    'base_examination_id' => $base->id,
+                ];
+            }
+
+            $card->update($fields);
+
+            $this->syncClassesAndComponents($card, $data, $schoolId, $base);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -311,13 +382,11 @@ class OLevelReportCardController extends Controller
 
     // ── Internals ───────────────────────────────────────────────────────────
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?Examination $card = null): array
     {
         $data = $request->validate([
             'exam_name' => 'required|string|max:255',
-            'term' => 'required|string|max:50',
-            'academic_year' => 'required|digits:4',
-            'grading_scheme_id' => 'required|integer|exists:grading_schemes,id',
+            'base_examination_id' => 'nullable|integer',
             'description' => 'nullable|string',
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
@@ -335,8 +404,26 @@ class OLevelReportCardController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
-        if (!GradingScheme::availableTo($schoolId)->where('id', $data['grading_scheme_id'])->exists()) {
-            abort(422, 'The selected grading scheme is not available to your school.');
+        // The examination the card is built on supplies term, year and grading.
+        // Only an older card that never had one may be saved without picking it.
+        $legacyWithoutBase = $card && !$card->base_examination_id;
+
+        $data['_base'] = null;
+
+        if (!empty($data['base_examination_id']) || !$legacyWithoutBase) {
+            $oLevelClassIds = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))
+                ->pluck('md_id')->map(fn($v) => (string) $v)->all();
+
+            $allowed = $this->baseExamCandidates($schoolId, $oLevelClassIds, $card?->base_examination_id)
+                ->pluck('id')->map(fn($v) => (int) $v)->all();
+
+            $baseId = (int) ($data['base_examination_id'] ?? 0);
+
+            if (!$baseId || !in_array($baseId, $allowed, true)) {
+                abort(422, 'Choose an examination that already has marks entered.');
+            }
+
+            $data['_base'] = Examination::where('school_id', $schoolId)->findOrFail($baseId);
         }
 
         foreach ($data['components'] as $i => $c) {
@@ -365,9 +452,15 @@ class OLevelReportCardController extends Controller
         return $data;
     }
 
-    private function syncClassesAndComponents(Examination $card, array $data, $schoolId): void
+    private function syncClassesAndComponents(Examination $card, array $data, $schoolId, ?Examination $base = null): void
     {
-        // Classes
+        // Classes — each inherits the grading scheme the base examination used
+        // for that same class/stream (null → the exam-level scheme).
+        $baseSchemes = $base
+            ? ExaminationClass::where('examination_id', $base->id)->get()
+                ->mapWithKeys(fn($ec) => [$ec->class_id . '_' . ($ec->stream_id ?? '') => $ec->grading_scheme_id])
+            : collect();
+
         ExaminationClass::where('examination_id', $card->id)->delete();
         foreach ($this->parseClassStreams($data['class_streams']) as [$classId, $streamId]) {
             ExaminationClass::create([
@@ -375,6 +468,7 @@ class OLevelReportCardController extends Controller
                 'class_id' => $classId,
                 'stream_id' => $streamId ?: null,
                 'school_id' => $schoolId,
+                'grading_scheme_id' => $baseSchemes->get($classId . '_' . ($streamId ?? '')),
             ]);
         }
 

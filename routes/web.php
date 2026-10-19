@@ -805,6 +805,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/{examId}/classes/{examClassId}/release', 'releaseClassResults')->name('classes.release');
 
             // Pass Slips
+            Route::get('/passslips', 'passslipIndex')->name('passslips.hub');
             Route::get('/{id}/passslips', 'passslipIndex')->name('passslips.index');
             Route::get('/{id}/passslips/class', 'passslipClass')->name('passslips.class');
             Route::get('/{id}/passslips/student/{studentId}', 'passslipStudent')->name('passslips.student');

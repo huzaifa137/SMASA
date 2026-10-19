@@ -1998,12 +1998,55 @@ class ExaminationController extends Controller
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
 
-    public function passslipIndex($examId)
+    /**
+     * Pass Slip Generator.
+     *
+     * Reached two ways: /examinations/{id}/passslips (exam preselected) and
+     * /examinations/passslips[?exam={id}] (no exam required — the page shows an
+     * examination picker and swaps the content in when one is chosen).
+     */
+    private function passslipExamOptions($schoolId): array
+    {
+        $releasedIds = DB::table('examination_classes')
+            ->where('school_id', $schoolId)
+            ->whereNotNull('results_released_at')
+            ->distinct()
+            ->pluck('examination_id')
+            ->all();
+
+        return Examination::withReportCards()
+            ->where('school_id', $schoolId)
+            ->where(fn($q) => $q->whereIn('status', ['closed', 'results_released'])->orWhereIn('id', $releasedIds))
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->id,
+                'label' => $e->exam_name . ' — ' . \App\Support\Term::label($e->term) . ' ' . $e->academic_year
+                    . ($e->isReportCard() ? ' (Report Card)' : ''),
+            ])
+            ->all();
+    }
+
+    public function passslipIndex($examId = null)
     {
 
         PermissionHelper::denyUnlessFeature('view_report_cards');
 
         $schoolId = Session('LoggedSchool');
+
+        $viaHub = $examId === null;
+        $examId = $examId ?? request('exam');
+        $examOptions = $this->passslipExamOptions($schoolId);
+
+        if (!$examId) {
+            return view('Examination.passslips.index', [
+                'exam' => null,
+                'examClasses' => collect(),
+                'allStudents' => collect(),
+                'siblingExams' => collect(),
+                'examOptions' => $examOptions,
+            ]);
+        }
 
         $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
@@ -2030,7 +2073,7 @@ class ExaminationController extends Controller
         // shows up alongside one that's ready.
         if (!$examFullyReleased) {
             if (!$anyClassReleased) {
-                return redirect()->route('examination.index')
+                return redirect()->route($viaHub ? 'examination.passslips.hub' : 'examination.index')
                     ->with('error', 'Pass slips will be available once the examination is closed, or as soon as a class\'s results are released individually.');
             }
 
@@ -2089,7 +2132,7 @@ class ExaminationController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents', 'siblingExams'));
+        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents', 'siblingExams', 'examOptions'));
     }
 
     /**

@@ -425,6 +425,13 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if (PermissionHelper::canFeature('view_report_cards'))
+                                <li>
+                                    <a href="{{ route('examination.passslips.hub') }}">
+                                        <i class="fas fa-id-card mr-2"></i>Pass Slip Generator
+                                    </a>
+                                </li>
+                            @endif
                             @if (PermissionHelper::canFeature('view_olevel_report_cards') && Helper::schoolHasSecondary())
                                 <li>
                                     <a href="{{ route('olevel-report-cards.index') }}">
@@ -1020,6 +1027,13 @@ use App\Helpers\PermissionHelper;
                                 </li>
                             @endif
 
+                            @if (PermissionHelper::canFeature('view_report_cards'))
+                                <li>
+                                    <a href="{{ route('examination.passslips.hub') }}">
+                                        <i class="fas fa-id-card mr-2"></i>Pass Slip Generator
+                                    </a>
+                                </li>
+                            @endif
                             @if (PermissionHelper::canFeature('view_olevel_report_cards') && Helper::schoolHasSecondary())
                                 <li>
                                     <a href="{{ route('olevel-report-cards.index') }}">

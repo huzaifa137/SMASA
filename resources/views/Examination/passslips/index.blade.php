@@ -83,6 +83,47 @@ use App\Http\Controllers\Helper;
             color: #fff;
         }
 
+        /* ── Examination picker ── */
+        .ps-picker {
+            background: #fff;
+            border: 1px solid rgba(44, 41, 202, .08);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            flex-wrap: wrap;
+        }
+
+        .ps-picker label {
+            font-size: .82rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--ink);
+        }
+
+        .ps-picker select {
+            flex: 1 1 320px;
+            max-width: 560px;
+        }
+
+        .ps-empty {
+            text-align: center;
+            color: var(--sub);
+            padding: 3rem 1rem;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+        }
+
+        .ps-empty i {
+            font-size: 2.2rem;
+            color: var(--brand-light);
+            margin-bottom: .6rem;
+        }
+
         /* ── Title + KPI strip ── */
         .ps-title-row {
             margin-bottom: 1.1rem;
@@ -668,6 +709,320 @@ use App\Http\Controllers\Helper;
             </div>
         </div>
 
+       {{-- ── Examination picker (no exam is required to open this page) ── --}}
+<div class="ps-picker">
+    <label for="psExamPicker" class="ps-picker-label">
+        <span class="ps-picker-icon"><i class="fas fa-file-signature"></i></span>
+        <span>Examination</span>
+    </label>
+
+    <div class="ps-picker-search">
+        <i class="fas fa-search ps-search-icon"></i>
+        <input type="text" id="psExamSearch" placeholder="Type to search examinations…"
+            autocomplete="off" oninput="filterExamOptions(this)" onkeydown="examSearchKey(event, this)">
+        <button type="button" class="ps-search-clear" onclick="clearExamSearch(this)" title="Clear">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="ps-search-empty">No examination matches your search.</div>
+    </div>
+
+    <div class="ps-input-wrap">
+        <i class="fas fa-file-signature ps-input-icon"></i>
+        <select id="psExamPicker" class="form-control" onchange="selectPassslipExam(this.value)">
+            <option value="">-- Select an examination --</option>
+            @foreach($examOptions as $opt)
+                <option value="{{ $opt['id'] }}" {{ $exam && $exam->id == $opt['id'] ? 'selected' : '' }}>{{ $opt['label'] }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
+<style>
+    /* ── Examination picker ── */
+.ps-picker {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    margin-bottom: 1rem;
+}
+.ps-picker-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #5a5a80;
+    margin: 0;
+}
+.ps-picker-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: .4rem;
+    background: #eef0ff;
+    color: var(--brand, #2C29CA);
+    font-size: .6rem;
+    flex-shrink: 0;
+}
+
+.ps-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.ps-input-icon {
+    position: absolute;
+    left: .7rem;
+    font-size: .78rem;
+    color: var(--brand, #2C29CA);
+    opacity: .7;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.ps-input-wrap .form-control {
+    padding-left: 2.1rem !important;
+    padding-right: 2.25rem !important;
+    padding-top: .55rem;
+    padding-bottom: .55rem;
+    border-radius: .55rem !important;
+    border: 1.5px solid #c9cdf0 !important;
+    background-color: #f3f4ff !important;
+    color: #1a1a3a;
+    font-size: .85rem;
+    font-weight: 600;
+    height: auto;
+    box-shadow: inset 0 1px 2px rgba(44, 41, 202, .05);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right .7rem center !important;
+    background-size: 12px !important;
+}
+.ps-input-wrap .form-control:hover {
+    border-color: #a8adde !important;
+    background-color: #eef0ff !important;
+}
+.ps-input-wrap .form-control:focus {
+    border-color: var(--brand, #2C29CA) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15);
+    outline: none;
+}
+</style>
+
+<style>
+/* ── Examination picker — full-width override + text fix ── */
+.ps-picker {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: .5rem !important;
+    width: 100% !important;
+    padding: 1rem 1.25rem !important;
+    background: #fff !important;
+    border: 1px solid rgba(44, 41, 202, .08) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 4px 24px rgba(44, 41, 202, .10) !important;
+    margin-bottom: 1.1rem !important;
+    flex-wrap: nowrap !important;
+}
+
+.ps-picker-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: .45rem !important;
+    font-size: .72rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .05em !important;
+    color: #5a5a80 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.ps-picker-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: .4rem !important;
+    background: #eef0ff !important;
+    color: var(--brand, #2C29CA) !important;
+    font-size: .62rem !important;
+    flex-shrink: 0 !important;
+}
+
+.ps-input-wrap {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.ps-input-icon {
+    position: absolute !important;
+    left: .8rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: .82rem !important;
+    color: var(--brand, #2C29CA) !important;
+    opacity: .7 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+/* Widen to full section + fix clipping */
+.ps-input-wrap .form-control {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 46px !important;
+    height: auto !important;
+    padding: .65rem 2.6rem .65rem 2.35rem !important;
+    line-height: 1.4 !important;
+    border-radius: .6rem !important;
+    border: 1.5px solid #c9cdf0 !important;
+    background-color: #f3f4ff !important;
+    color: #1a1a3a !important;
+    font-size: .9rem !important;
+    font-weight: 600 !important;
+    box-shadow: inset 0 1px 2px rgba(44, 41, 202, .05) !important;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right .9rem center !important;
+    background-size: 12px !important;
+    text-overflow: ellipsis !important;
+}
+
+.ps-input-wrap .form-control:hover {
+    border-color: #a8adde !important;
+    background-color: #eef0ff !important;
+}
+
+.ps-input-wrap .form-control:focus {
+    border-color: var(--brand, #2C29CA) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15) !important;
+    outline: none !important;
+}
+
+/* Ensure long option labels don't get clipped on some browsers */
+.ps-input-wrap select.form-control option {
+    padding: .4rem .6rem !important;
+    line-height: 1.4 !important;
+}
+
+/* Small screens: keep comfortable height, allow wrap-safe text */
+@media (max-width: 575.98px) {
+    .ps-picker { padding: .9rem 1rem !important; }
+    .ps-input-wrap .form-control {
+        font-size: .85rem !important;
+        padding: .6rem 2.4rem .6rem 2.2rem !important;
+    }
+}
+
+/* ── Inline search inside the exam picker ── */
+.ps-picker-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: .15rem;
+}
+.ps-picker-search .ps-search-icon {
+    position: absolute;
+    left: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: .8rem;
+    color: var(--brand, #2C29CA);
+    opacity: .7;
+    pointer-events: none;
+    z-index: 2;
+}
+.ps-picker-search input {
+    width: 100%;
+    padding: .55rem 2.4rem .55rem 2.35rem;
+    border-radius: .55rem;
+    border: 1.5px solid #dfe2f5;
+    background: #fbfbff;
+    color: #1a1a3a;
+    font-size: .84rem;
+    font-weight: 600;
+    height: auto;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.ps-picker-search input::placeholder {
+    color: #9496b8;
+    font-weight: 500;
+}
+.ps-picker-search input:hover {
+    border-color: #a8adde;
+    background: #f3f4ff;
+}
+.ps-picker-search input:focus {
+    border-color: var(--brand, #2C29CA);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15);
+    outline: none;
+}
+.ps-picker-search .ps-search-clear {
+    position: absolute;
+    right: .6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: #eef0ff;
+    color: #2C29CA;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: .65rem;
+    cursor: pointer;
+    transition: background .15s ease;
+    z-index: 2;
+}
+.ps-picker-search .ps-search-clear:hover {
+    background: #2C29CA;
+    color: #fff;
+}
+.ps-picker-search.has-value .ps-search-clear {
+    display: inline-flex;
+}
+.ps-picker-search .ps-search-empty {
+    position: absolute;
+    top: calc(100% + .4rem);
+    left: 0;
+    right: 0;
+    padding: .55rem .75rem;
+    font-size: .74rem;
+    color: #b45309;
+    background: #fff8ec;
+    border: 1px solid #fbd9a0;
+    border-radius: .5rem;
+    display: none;
+    z-index: 5;
+}
+.ps-picker-search.no-results .ps-search-empty {
+    display: block;
+}
+</style>
+        @if($exam)
         {{-- ── Title ── --}}
         <div class="ps-title-row">
             <h1>
@@ -712,6 +1067,184 @@ use App\Http\Controllers\Helper;
                 </div>
             </div>
         </div>
+
+        
+            {{-- ┌──────────────────────────────────┐
+            │ O Level Report Cards │
+            └──────────────────────────────────┘ --}}
+@if(Helper::schoolHasSecondary($exam->school_id) && \App\Helpers\PermissionHelper::canFeature('view_olevel_report_cards'))
+<style>
+    .rc-editorial {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1.3fr;
+        gap: 1rem;
+        padding: 1.6rem;
+        border-radius: 1.35rem;
+        background: #fff;
+        border: 1px solid rgba(44,41,202,.1);
+        box-shadow: 0 8px 30px rgba(44,41,202,.09);
+    }
+    @media (max-width: 820px) {
+        .rc-editorial { grid-template-columns: 1fr; }
+    }
+    .rc-editorial-intro {
+        display: flex; flex-direction: column;
+        justify-content: center;
+        padding: .5rem .25rem;
+    }
+    .rc-editorial-kicker {
+        display: inline-flex; align-items: center; gap: .4rem;
+        font-size: .6rem; font-weight: 800; letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #2C29CA;
+        margin-bottom: .65rem;
+    }
+    .rc-editorial-kicker::before {
+        content: "";
+        width: 22px; height: 2px; border-radius: 2px;
+        background: linear-gradient(90deg, #2C29CA, #7c7aec);
+    }
+    .rc-editorial-title {
+        font-size: 1.35rem; font-weight: 800;
+        color: #1e1b4b; line-height: 1.2;
+        margin: 0 0 .55rem;
+        letter-spacing: -.01em;
+    }
+    .rc-editorial-title span {
+        background: linear-gradient(120deg, #2C29CA, #7c7aec);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .rc-editorial-desc {
+        font-size: .82rem; color: #6b7280;
+        line-height: 1.55; margin: 0;
+    }
+    .rc-editorial-actions {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+    }
+    @media (max-width: 520px) {
+        .rc-editorial-actions { grid-template-columns: 1fr; }
+    }
+    .rc-editorial-card {
+        position: relative;
+        display: flex; flex-direction: column;
+        padding: 1.15rem 1.15rem 1.05rem;
+        border-radius: 1rem;
+        text-decoration: none;
+        color: inherit;
+        border: 1.5px solid #e4e6ff;
+        background: #fafbff;
+        transition: all .22s ease;
+        overflow: hidden;
+        min-height: 148px;
+    }
+    .rc-editorial-card:hover {
+        border-color: #2C29CA;
+        background: #fff;
+        color: inherit;
+        transform: translateY(-3px);
+        box-shadow: 0 14px 30px rgba(44,41,202,.15);
+    }
+    .rc-editorial-card.rc-create {
+        background: linear-gradient(145deg, #f0fdf7 0%, #fafbff 100%);
+        border-color: #b8efd6;
+    }
+    .rc-editorial-card.rc-create:hover {
+        border-color: #10b981;
+        box-shadow: 0 14px 30px rgba(16,185,129,.18);
+    }
+    .rc-editorial-card .rc-num {
+        position: absolute; top: .8rem; right: 1rem;
+        font-size: 2.4rem; font-weight: 800;
+        color: rgba(44,41,202,.08);
+        line-height: 1;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .rc-editorial-card.rc-create .rc-num { color: rgba(16,185,129,.1); }
+    .rc-editorial-card .rc-ic {
+        width: 38px; height: 38px;
+        border-radius: .65rem;
+        background: #2C29CA;
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .85rem;
+        margin-bottom: auto;
+        box-shadow: 0 4px 12px rgba(44,41,202,.3);
+    }
+    .rc-editorial-card.rc-create .rc-ic {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        box-shadow: 0 4px 12px rgba(16,185,129,.35);
+    }
+    .rc-editorial-card .rc-t {
+        font-weight: 800; font-size: .9rem;
+        color: #1e1b4b; margin: .85rem 0 .2rem;
+    }
+    .rc-editorial-card .rc-d {
+        font-size: .73rem; color: #6b7280; line-height: 1.4;
+    }
+    .rc-editorial-card .rc-go {
+        display: inline-flex; align-items: center; gap: .35rem;
+        font-size: .7rem; font-weight: 800;
+        color: #2C29CA; margin-top: .65rem;
+    }
+    .rc-editorial-card.rc-create .rc-go { color: #0d9668; }
+    .rc-editorial-card .rc-go i { transition: transform .22s ease; }
+    .rc-editorial-card:hover .rc-go i { transform: translateX(3px); }
+
+    /* Select becomes a visible list while searching */
+.ps-input-wrap select.form-control.is-listbox {
+    background-image: none !important;
+    padding-right: .8rem !important;
+    padding-left: .8rem !important;
+    overflow-y: auto !important;
+}
+.ps-input-wrap select.form-control.is-listbox + .ps-input-icon,
+.ps-input-wrap:has(select.is-listbox) .ps-input-icon {
+    display: none !important;
+}
+.ps-input-wrap select.form-control.is-listbox option {
+    padding: .5rem .6rem !important;
+    border-radius: .4rem;
+}
+.ps-input-wrap select.form-control.is-listbox option:checked {
+    background: var(--brand, #2C29CA) linear-gradient(0deg, var(--brand, #2C29CA), var(--brand, #2C29CA));
+    color: #fff;
+}
+.ps-picker-search { margin-bottom: .1rem; }
+</style>
+<div class="rc-editorial mb-4">
+    <div class="rc-editorial-intro">
+        <div class="rc-editorial-kicker">O Level · Senior 1–4</div>
+        <h3 class="rc-editorial-title">
+            Build <span>Report Cards</span><br>that combine everything.
+        </h3>
+        <p class="rc-editorial-desc">
+            Blend assessments and examinations into a single, professional O‑level report card — scaled exactly the way you want.
+        </p>
+    </div>
+    <div class="rc-editorial-actions">
+        <a href="{{ route('olevel-report-cards.index') }}" class="rc-editorial-card rc-view">
+            <span class="rc-num">01</span>
+            <div class="rc-ic"><i class="fas fa-folder-open"></i></div>
+            <div class="rc-t">View Report Cards</div>
+            <div class="rc-d">Browse, edit and print your saved cards</div>
+            <span class="rc-go">Open <i class="fas fa-arrow-right"></i></span>
+        </a>
+        @if(\App\Helpers\PermissionHelper::canFeature('create_olevel_report_card'))
+        <a href="{{ route('olevel-report-cards.create') }}" class="rc-editorial-card rc-create">
+            <span class="rc-num">02</span>
+            <div class="rc-ic"><i class="fas fa-plus"></i></div>
+            <div class="rc-t">New Report Card</div>
+            <div class="rc-d">Build one from an exam that already has marks</div>
+            <span class="rc-go">Create <i class="fas fa-arrow-right"></i></span>
+        </a>
+        @endif
+    </div>
+</div>
+@endif
+
 
         {{-- ── Bento grid ── --}}
         <div class="ps-bento">
@@ -951,6 +1484,15 @@ use App\Http\Controllers\Helper;
             </div>
 
         </div>{{-- /.ps-bento --}}
+        @else
+            <div class="ps-empty">
+                <div><i class="fas fa-id-card"></i></div>
+                <div class="fw-semibold">Select an examination above to generate pass slips.</div>
+                @if(empty($examOptions))
+                    <div class="mt-1" style="font-size:.82rem;">No examination has been closed or released yet.</div>
+                @endif
+            </div>
+        @endif
     </div>{{-- /.side-app --}}
     </div>
     </div>
@@ -966,6 +1508,100 @@ use App\Http\Controllers\Helper;
     machinery left to keep in sync.
     ═══════════════════════════════════════════════════════════ --}}
     <script>
+        const PS_HUB_URL = @json(route('examination.passslips.hub', [], false));
+
+        async function selectPassslipExam(id) {
+            const url = new URL(PS_HUB_URL, window.location.origin);
+            if (id) url.searchParams.set('exam', id);
+            const lang = new URLSearchParams(window.location.search).get('lang');
+            if (lang) url.searchParams.set('lang', lang);
+
+            showLoading('Loading pass slips…');
+            try {
+                const res = await fetch(url.toString(), { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+                const fresh = doc.getElementById('ps-bento-app');
+                if (!res.ok || !fresh) throw new Error('bad response');
+
+                document.getElementById('ps-bento-app').innerHTML = fresh.innerHTML;
+                activeClassFilter = 'all';
+                window.history.replaceState(null, '', url.toString());
+            } catch (e) {
+                window.location.href = url.toString(); // fall back to a normal page load
+            }
+            const ov = document.getElementById('loadingOverlay');
+            if (ov) ov.classList.remove('active');
+        }
+
+        function filterExamOptions(input) {
+    const select = document.getElementById('psExamPicker');
+    if (!select) return;
+    const wrap = input.closest('.ps-picker-search');
+
+    // Cache the full option list once per select element
+    if (!select._allOptions) {
+        select._allOptions = Array.from(select.options).map(o => ({
+            value: o.value,
+            label: o.text,
+            selected: o.defaultSelected
+        }));
+    }
+
+    const q = input.value.toLowerCase().trim();
+    const terms = q.split(/\s+/).filter(Boolean);
+    const current = select.value;
+
+    const list = q
+        ? select._allOptions.filter(o => o.value !== '' && terms.every(t => o.label.toLowerCase().includes(t)))
+        : select._allOptions;
+
+    select.innerHTML = '';
+    list.forEach(o => {
+        const opt = new Option(o.label, o.value, false, false);
+        if (!q && o.value === current) opt.selected = true;
+        select.add(opt);
+    });
+
+    if (q && list.length) {
+        select.size = Math.min(Math.max(list.length, 2), 7);
+        select.classList.add('is-listbox');
+        select.selectedIndex = -1;
+    } else {
+        select.size = 1;
+        select.classList.remove('is-listbox');
+        if (!q) select.value = current;
+    }
+
+    wrap.classList.toggle('has-value', !!q);
+    wrap.classList.toggle('no-results', !!q && list.length === 0);
+}
+
+function clearExamSearch(btn) {
+    const input = btn.closest('.ps-picker-search').querySelector('input');
+    input.value = '';
+    filterExamOptions(input);
+    input.focus();
+}
+
+function examSearchKey(e, input) {
+    const select = document.getElementById('psExamPicker');
+    if (e.key === 'Escape') {
+        input.value = '';
+        filterExamOptions(input);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const first = Array.from(select.options).find(o => o.value !== '');
+        if (first) {
+            select.value = first.value;
+            select.dispatchEvent(new Event('change'));
+        }
+    } else if (e.key === 'ArrowDown' && select.classList.contains('is-listbox')) {
+        e.preventDefault();
+        select.focus();
+        select.selectedIndex = 0;
+    }
+}
+
         function setLanguage(lang) {
             const url = new URL(window.location.href);
             url.searchParams.set('lang', lang);

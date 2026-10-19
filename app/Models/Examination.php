@@ -69,6 +69,7 @@ class Examination extends Model
         'total_marks',
         'pass_mark',
         'grading_scheme_id',
+        'base_examination_id',
         'status',
         'o_level_mode',
         'school_id',

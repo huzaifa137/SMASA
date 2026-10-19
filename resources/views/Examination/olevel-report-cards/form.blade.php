@@ -920,6 +920,117 @@
             background-color: #fff !important;
         }
 
+        /* ── Searchable examination dropdown (wraps the native select) ── */
+        .rc-panel.ss-open {
+            overflow: visible;
+            position: relative;
+            z-index: 30;
+        }
+
+        .ss {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ss-toggle.form-control {
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            padding-right: 2rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right .65rem center !important;
+            background-size: 12px !important;
+        }
+
+        .ss-toggle .ph {
+            color: #9496b8;
+            font-weight: 500;
+        }
+
+        .ss.open .ss-toggle.form-control {
+            border-color: #2C29CA !important;
+            background-color: #fff !important;
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .15);
+        }
+
+        .ss-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: #fff;
+            border: 1.5px solid #c9cdf0;
+            border-radius: .7rem;
+            box-shadow: 0 12px 32px rgba(44, 41, 202, .18);
+            padding: .5rem;
+        }
+
+        .ss.open .ss-menu {
+            display: block;
+        }
+
+        .ss-search {
+            width: 100%;
+            border: 1.5px solid #c9cdf0;
+            background: #f3f4ff;
+            border-radius: .5rem;
+            padding: .5rem .7rem;
+            font-size: .85rem;
+            font-weight: 600;
+            color: #1a1a3a;
+            outline: none;
+        }
+
+        .ss-search:focus {
+            border-color: #2C29CA;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(44, 41, 202, .12);
+        }
+
+        .ss-list {
+            list-style: none;
+            margin: .4rem 0 0;
+            padding: 0;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .ss-list li {
+            padding: .5rem .7rem;
+            border-radius: .5rem;
+            font-size: .83rem;
+            font-weight: 600;
+            color: #2a2a4a;
+            cursor: pointer;
+        }
+
+        .ss-list li[hidden] {
+            display: none;
+        }
+
+        .ss-list li.act {
+            background: #eef0ff;
+        }
+
+        .ss-list li.sel {
+            color: #2C29CA;
+            font-weight: 800;
+        }
+
+        .ss-empty {
+            display: none;
+            padding: .6rem .7rem;
+            font-size: .8rem;
+            color: #7a7a9a;
+        }
+
         /* ── Footer action buttons (Save / Cancel) ── */
         .rc-footer-actions {
             display: flex;
@@ -1096,13 +1207,94 @@
                 margin-top: .75rem;
             }
         }
+
+        /* ── Fix: searchable examination dropdown sizing ── */
+.rc-input-wrap .ss {
+    position: relative;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+}
+
+.rc-input-wrap .ss .ss-toggle.form-control {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: .55rem 2rem .55rem 2.1rem !important;
+    box-sizing: border-box !important;
+    font-size: .85rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    text-indent: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rc-input-wrap .ss .ss-label {
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rc-input-wrap .ss .ss-menu {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: .5rem !important;
+    box-sizing: border-box !important;
+}
+
+.rc-input-wrap .ss .ss-search {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: .5rem .7rem !important;
+    box-sizing: border-box !important;
+    font-size: .85rem !important;
+    line-height: 1.3 !important;
+    border: 1.5px solid #c9cdf0 !important;
+    border-radius: .5rem !important;
+    background: #f3f4ff !important;
+    box-shadow: none !important;
+}
+
+.rc-input-wrap .ss .ss-search:focus {
+    border-color: #2C29CA !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(44, 41, 202, .12) !important;
+}
+
+.rc-input-wrap .ss .ss-list {
+    margin: .4rem 0 0 !important;
+    padding: 0 !important;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.rc-input-wrap .ss .ss-list li {
+    margin: 0 !important;
+    padding: .5rem .7rem !important;
+    line-height: 1.35 !important;
+}
     </style>
 @endsection
 
 @section('content')
     @php
         $isEdit = (bool) $card;
-        $activeTermText = \App\Support\Term::activeText();
+        $hasBase = $isEdit && $card->base_examination_id;
     @endphp
     <div class="container-fluid py-3">
         <div class="rc-hero">
@@ -1110,7 +1302,7 @@
 
             <div class="hero-content">
                 <div class="hero-main">
-                    <div class="hero-title">{{ $isEdit ? 'Edit' : 'New' }} O-Level Report Card</div>
+                    <div class="hero-title">{{ $isEdit ? 'Edit' : 'New' }} O Level Report Card</div>
                     <div class="hero-subtitle">
                         Add one or more parts to the card. <strong>Assessments</strong> are averaged on the 0–3 competency
                         scale and
@@ -1136,8 +1328,28 @@
                 <div class="row g-3">
                     <div class="col-md-5">
                         <label class="form-label fw-semibold rc-label">
+                            <span class="rc-label-icon"><i class="fas fa-file-signature"></i></span>
+                            Examination <span class="text-danger">*</span>
+                        </label>
+                        <div class="rc-input-wrap">
+                            <i class="fas fa-list rc-input-icon"></i>
+                            <select id="baseExam" class="form-control">
+                                <option value="">-- Select an examination with marks entered --</option>
+                                @foreach($baseExams as $b)
+                                    <option value="{{ $b['id'] }}" {{ ($card->base_examination_id ?? null) == $b['id'] ? 'selected' : '' }}>
+                                        {{ $b['name'] }} — {{ $b['term_label'] }} {{ $b['year'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @if(!count($baseExams))
+                            <div class="hint text-danger mt-1">No Senior 1–4 examination has marks entered yet.</div>
+                        @endif
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold rc-label">
                             <span class="rc-label-icon"><i class="fas fa-tag"></i></span>
-                            Name <span class="text-danger">*</span>
+                            Report card name <span class="text-danger">*</span>
                         </label>
                         <div class="rc-input-wrap">
                             <i class="fas fa-pen rc-input-icon"></i>
@@ -1148,44 +1360,23 @@
                     <div class="col-md-2">
                         <label class="form-label fw-semibold rc-label">
                             <span class="rc-label-icon"><i class="fas fa-calendar-alt"></i></span>
-                            Term <span class="text-danger">*</span>
+                            Term
                         </label>
                         <div class="rc-input-wrap">
                             <i class="fas fa-list-ol rc-input-icon"></i>
-                            <select id="term" class="form-control">
-                                @foreach(['Term 1' => 'Term I', 'Term 2' => 'Term II', 'Term 3' => 'Term III'] as $v => $l)
-                                    <option value="{{ $v }}" {{ ($card->term ?? $activeTermText) === $v ? 'selected' : '' }}>
-                                        {{ $l }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" id="term" class="form-control" readonly placeholder="Auto"
+                                value="{{ $isEdit ? \App\Support\Term::label($card->term) : '' }}">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold rc-label">
                             <span class="rc-label-icon"><i class="fas fa-calendar-check"></i></span>
-                            Year <span class="text-danger">*</span>
+                            Year
                         </label>
                         <div class="rc-input-wrap">
                             <i class="fas fa-hashtag rc-input-icon"></i>
-                            <input type="number" id="academicYear" class="form-control" min="2000" max="2099"
-                                value="{{ $card->academic_year ?? Helper::active_year() }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold rc-label">
-                            <span class="rc-label-icon"><i class="fas fa-award"></i></span>
-                            Grading scheme <span class="text-danger">*</span>
-                        </label>
-                        <div class="rc-input-wrap">
-                            <i class="fas fa-medal rc-input-icon"></i>
-                            <select id="gradingScheme" class="form-control">
-                                @foreach($gradingSchemes as $s)
-                                    <option value="{{ $s->id }}" {{ ($card->grading_scheme_id ?? null) == $s->id || (!$isEdit && $s->is_default) ? 'selected' : '' }}>
-                                        {{ $s->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" id="academicYear" class="form-control" readonly placeholder="Auto"
+                                value="{{ $card->academic_year ?? '' }}">
                         </div>
                     </div>
 
@@ -1270,6 +1461,8 @@
     <script>
         (function () {
             const IS_EDIT = @json($isEdit);
+            const HAS_BASE = @json((bool) $hasBase);
+            const BASE_EXAMS = @json($baseExams);   // [{id,name,term,term_label,year,mode,class_streams[]}]
             const SAVE_URL = @json($isEdit ? route('olevel-report-cards.update', $card->id) : route('olevel-report-cards.store'));
             const ASSESS_URL = @json(route('olevel-report-cards.assessment-options'));
             const EXAM_URL = @json(route('olevel-report-cards.exam-options'));
@@ -1278,6 +1471,10 @@
             let components = @json($components);   // [{type,label,weight,source_examination_id,assessment_ids}]
             let assessData = [];                    // [{exam_id, exam_name, term, year, subjects:[{subject, assessments:[...]}]}]
             let examData = [];                      // [{id, name, total_marks}]
+
+            let autoAdded = false;                  // components were auto-created from the chosen examination
+            let pendingBase = null;                 // base exam waiting for assessment/exam options to load
+            let lastAutoName = '';
 
             // open/closed state per component's exam groups: { "compIndex:examId": true }
             const openGroups = {};
@@ -1311,6 +1508,7 @@
                         // drop ticks that no longer apply to the chosen classes
                         const valid = new Set(assessData.flatMap(x => x.subjects.flatMap(s => s.assessments.map(z => z.id))));
                         components.forEach(c => { if (c.type === 'assessments') c.assessment_ids = c.assessment_ids.filter(id => valid.has(id)); });
+                        if (pendingBase) { applyDefaultComponent(pendingBase); pendingBase = null; }
                         render();
                     } catch (err) { alertBox('Could not load assessments / examinations.'); }
                 }, 250);
@@ -1460,16 +1658,153 @@
                 pill.title = Math.abs(t - 100) > 0.001 ? 'Not 100 — fine if you want the card out of a different total.' : '';
             }
 
+            // ── base examination: auto-fill term / year / name / classes / part ──
+            function applyDefaultComponent(ex) {
+                if (components.length) return;
+                if (ex.mode === 'standard' && examData.some(e => e.id === ex.id)) {
+                    components.push({ type: 'exam', label: 'Examination', weight: 100, source_examination_id: ex.id, assessment_ids: [] });
+                    autoAdded = true;
+                    return;
+                }
+                const grp = assessData.find(x => x.exam_id === ex.id);
+                if (grp) {
+                    const ids = grp.subjects.flatMap(s => s.assessments.map(a => a.id));
+                    components.push({ type: 'assessments', label: 'Continuous Assessment', weight: 100, source_examination_id: null, assessment_ids: ids });
+                    autoAdded = true;
+                }
+            }
+
+            $('baseExam').addEventListener('change', e => {
+                const ex = BASE_EXAMS.find(x => String(x.id) === e.target.value);
+                if (!ex) { $('term').value = ''; $('academicYear').value = ''; return; }
+
+                $('term').value = ex.term_label;
+                $('academicYear').value = ex.year;
+
+                const nameEl = $('examName');
+                if (!nameEl.value.trim() || nameEl.value === lastAutoName) {
+                    lastAutoName = ex.name + ' Report Card';
+                    nameEl.value = lastAutoName;
+                }
+
+                // tick exactly the classes this examination covers
+                document.querySelectorAll('.cs-chip').forEach(chip =>
+                    chip.classList.toggle('on', ex.class_streams.includes(chip.dataset.value)));
+
+                if (autoAdded) { components = []; autoAdded = false; }
+                pendingBase = ex;
+                loadOptions();
+            });
+
+            // ── searchable examination dropdown (wraps the native #baseExam select) ──
+            (function () {
+                const sel = $('baseExam');
+                if (!sel) return;
+                const wrap = sel.closest('.rc-input-wrap');
+                const panel = sel.closest('.rc-panel');
+                sel.style.display = 'none';
+
+                const box = document.createElement('div');
+                box.className = 'ss';
+                box.innerHTML = `
+                    <button type="button" class="form-control ss-toggle"><span class="ss-label"></span></button>
+                    <div class="ss-menu">
+                        <input type="text" class="ss-search" placeholder="Search examinations…" autocomplete="off">
+                        <ul class="ss-list"></ul>
+                        <div class="ss-empty">No examination matches your search.</div>
+                    </div>`;
+                wrap.appendChild(box);
+
+                const toggle = box.querySelector('.ss-toggle');
+                const label = box.querySelector('.ss-label');
+                const search = box.querySelector('.ss-search');
+                const list = box.querySelector('.ss-list');
+                const empty = box.querySelector('.ss-empty');
+
+                list.innerHTML = [...sel.options].filter(o => o.value !== '')
+                    .map(o => `<li data-v="${esc(o.value)}">${esc(o.textContent.trim())}</li>`).join('');
+                const items = [...list.children];
+                let active = -1;
+
+                const visible = () => items.filter(li => !li.hidden);
+
+                function syncLabel() {
+                    const o = sel.options[sel.selectedIndex];
+                    const has = o && o.value !== '';
+                    label.textContent = (has ? o : sel.options[0]).textContent.trim();
+                    label.classList.toggle('ph', !has);
+                    items.forEach(li => li.classList.toggle('sel', li.dataset.v === sel.value));
+                }
+
+                function setActive(i) {
+                    const v = visible();
+                    items.forEach(li => li.classList.remove('act'));
+                    if (!v.length) { active = -1; return; }
+                    active = (i + v.length) % v.length;
+                    v[active].classList.add('act');
+                    v[active].scrollIntoView({ block: 'nearest' });
+                }
+
+                function filter() {
+                    const terms = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+                    items.forEach(li => {
+                        const t = li.textContent.toLowerCase();
+                        li.hidden = !terms.every(w => t.includes(w));
+                    });
+                    empty.style.display = visible().length ? 'none' : 'block';
+                    const selIdx = visible().findIndex(li => li.dataset.v === sel.value);
+                    setActive(selIdx >= 0 ? selIdx : 0);
+                }
+
+                function openMenu() {
+                    box.classList.add('open');
+                    if (panel) panel.classList.add('ss-open');
+                    search.value = '';
+                    filter();
+                    search.focus();
+                }
+
+                function closeMenu() {
+                    box.classList.remove('open');
+                    if (panel) panel.classList.remove('ss-open');
+                }
+
+                function choose(li) {
+                    sel.value = li.dataset.v;
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncLabel();
+                    closeMenu();
+                    toggle.focus();
+                }
+
+                toggle.addEventListener('click', () => box.classList.contains('open') ? closeMenu() : openMenu());
+                toggle.addEventListener('keydown', e => {
+                    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMenu(); }
+                });
+                search.addEventListener('input', filter);
+                search.addEventListener('keydown', e => {
+                    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+                    else if (e.key === 'Enter') { e.preventDefault(); const v = visible(); if (v[active]) choose(v[active]); }
+                    else if (e.key === 'Escape') { e.preventDefault(); closeMenu(); toggle.focus(); }
+                });
+                list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) choose(li); });
+                document.addEventListener('click', e => { if (!box.contains(e.target)) closeMenu(); });
+
+                syncLabel();
+            })();
+
             // ── events ──────────────────────────────────────────────────────
             $('csChips').addEventListener('click', e => {
                 const chip = e.target.closest('.cs-chip'); if (!chip) return;
                 chip.classList.toggle('on'); loadOptions();
             });
-            $('addAssess').onclick = () => { components.push({ type: 'assessments', label: 'Assessment', weight: 20, source_examination_id: null, assessment_ids: [] }); render(); };
-            $('addExam').onclick = () => { components.push({ type: 'exam', label: 'Examination', weight: 80, source_examination_id: null, assessment_ids: [] }); render(); };
+            $('addAssess').onclick = () => { autoAdded = false; components.push({ type: 'assessments', label: 'Assessment', weight: 20, source_examination_id: null, assessment_ids: [] }); render(); };
+            $('addExam').onclick = () => { autoAdded = false; components.push({ type: 'exam', label: 'Examination', weight: 80, source_examination_id: null, assessment_ids: [] }); render(); };
 
             $('components').addEventListener('input', e => {
                 const f = e.target.dataset.field; if (!f) return;
+                autoAdded = false;
                 const c = components[+e.target.dataset.i];
                 c[f] = f === 'source_examination_id' ? (e.target.value || null) : e.target.value;
                 if (f === 'weight') updateTotal();
@@ -1512,9 +1847,7 @@
                 alertBox('');
                 const body = {
                     exam_name: $('examName').value.trim(),
-                    term: $('term').value,
-                    academic_year: $('academicYear').value,
-                    grading_scheme_id: $('gradingScheme').value,
+                    base_examination_id: $('baseExam').value || null,
                     description: $('description').value.trim() || null,
                     class_streams: selectedClasses(),
                     components: components.map(c => ({
@@ -1523,6 +1856,7 @@
                         assessment_ids: c.type === 'assessments' ? c.assessment_ids : [],
                     })),
                 };
+                if (!body.base_examination_id && (!IS_EDIT || HAS_BASE)) return alertBox('Select the examination this report card is built on.');
                 if (!body.exam_name) return alertBox('Give the report card a name.');
                 if (!body.class_streams.length) return alertBox('Tick at least one class.');
                 if (!body.components.length) return alertBox('Add at least one part (assessments or an examination).');
