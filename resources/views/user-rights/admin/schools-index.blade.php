@@ -373,6 +373,10 @@
             color: var(--indigo);
         }
 
+        #urp-results { transition: opacity .15s; }
+        #urp-results.is-loading { opacity: .55; }
+        #urp-results.is-live .school-card { animation: none; }
+
         @media (max-width: 1100px) {
             .school-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -411,11 +415,14 @@
                     without touching the database — the supported fix if a teacher (or you) gets locked out.
                 </div>
             </div>
-            <form method="GET" action="{{ route('urp.admin.index') }}" class="urp-search">
-                <input type="text" name="q" value="{{ $search }}" placeholder="Search school name or code...">
+            <form method="GET" action="{{ route('urp.admin.index') }}" class="urp-search" id="urpSearchForm">
+                <input type="text" name="q" id="urpSearchInput" value="{{ $search }}" placeholder="Search school name or code..." autocomplete="off">
                 <button type="submit"><i class="fa fa-search mr-1"></i>Search</button>
             </form>
         </div>
+
+        {{-- Live-search region: replaced in place as the user types --}}
+        <div id="urp-results">
 
         {{-- ── Metrics ── --}}
         <div class="urp-metric-strip">
@@ -523,8 +530,75 @@
                 <p style="font-size:.85rem;">Try a different search term.</p>
             </div>
         @endforelse
+
+        </div>{{-- /#urp-results --}}
     </div>
     </div>
                 </div>
             </div>
+@endsection
+
+@section('js')
+<script>
+(function () {
+    var form    = document.getElementById('urpSearchForm');
+    var input   = document.getElementById('urpSearchInput');
+    var results = document.getElementById('urp-results');
+    if (!form || !input || !results) return;
+
+    var timer = null;
+    var controller = null;
+    var lastQuery = input.value.trim();
+
+    function run(force) {
+        var q = input.value.trim();
+        if (!force && q === lastQuery) return;
+        lastQuery = q;
+
+        if (controller) controller.abort();
+        controller = new AbortController();
+
+        var url = new URL(form.action, window.location.origin);
+        if (q) url.searchParams.set('q', q);
+
+        results.classList.add('is-loading');
+
+        fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+            credentials: 'same-origin',
+            signal: controller.signal
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+        })
+        .then(function (html) {
+            var doc  = new DOMParser().parseFromString(html, 'text/html');
+            var next = doc.getElementById('urp-results');
+            if (!next) throw new Error('results region missing');
+            results.innerHTML = next.innerHTML;
+            results.classList.add('is-live');
+            results.classList.remove('is-loading');
+            history.replaceState(null, '', q ? url.pathname + '?q=' + encodeURIComponent(q) : url.pathname);
+        })
+        .catch(function (err) {
+            if (err.name === 'AbortError') return;   // superseded by a newer keystroke
+            results.classList.remove('is-loading');
+            form.submit();                            // fall back to the normal full-page search
+        });
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { run(false); }, 250);
+    });
+
+    // Enter / Search button still work, instantly
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(timer);
+        run(true);
+    });
+})();
+</script>
 @endsection
