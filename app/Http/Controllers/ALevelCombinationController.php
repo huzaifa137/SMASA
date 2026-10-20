@@ -404,87 +404,9 @@ class ALevelCombinationController extends Controller
      */
     private function syncClassSubjectsFromCombinations($schoolId, $classId, $streamId): void
     {
-        $studentIds = DB::table('students')
-            ->where('school_id', $schoolId)
-            ->where('senior', $classId)
-            ->where('stream', $streamId)
-            ->pluck('id');
-
-        $combinations = StudentALevelCombination::where('school_id', $schoolId)
-            ->whereIn('student_id', $studentIds)
-            ->get();
-
-        $subjectIdsInUse = collect();
-        foreach ($combinations as $combination) {
-            $subjectIdsInUse = $subjectIdsInUse->merge($combination->principal_subject_ids ?? []);
-            if ($combination->subsidiary_subject_id) {
-                $subjectIdsInUse->push($combination->subsidiary_subject_id);
-            }
-        }
-        $subjectIdsInUse = $subjectIdsInUse->filter()->unique()->values();
-
-        $existingAutoSynced = ClassSubject::where('school_id', $schoolId)
-            ->where('class_id', $classId)
-            ->where('stream_id', $streamId)
-            ->where('subject_type', 'secondary_alevel')
-            ->where('is_auto_synced', true)
-            ->get();
-
-        // When every subject already on this class-stream is taught by one
-        // and the same teacher (a small school where one person takes it
-        // all), a newly added subject starts with that teacher instead of
-        // none. A subject with no teacher is invisible on every marks
-        // entry screen, which is exactly how a new subsidiary such as
-        // Sub-Mathematics used to "go missing". With two or more different
-        // teachers on the class there is no safe guess, so it stays
-        // unassigned and is picked on the Assign Teachers screen.
-        $assignedTeachers = ClassSubject::where('school_id', $schoolId)
-            ->where('class_id', $classId)
-            ->where('stream_id', $streamId)
-            ->whereNotNull('subject_teacher_1')
-            ->pluck('subject_teacher_1')
-            ->unique();
-        $soleTeacherId = $assignedTeachers->count() === 1 ? $assignedTeachers->first() : null;
-
-        // Add newly-introduced subjects
-        foreach ($subjectIdsInUse as $subjectId) {
-            if ($existingAutoSynced->contains('subject_id', $subjectId)) {
-                continue;
-            }
-
-            // Already on the class (e.g. ticked manually at class creation)?
-            $alreadyOnClass = ClassSubject::where('school_id', $schoolId)
-                ->where('class_id', $classId)
-                ->where('stream_id', $streamId)
-                ->where('subject_id', $subjectId)
-                ->exists();
-            if ($alreadyOnClass) {
-                continue;
-            }
-
-            $isSchoolSubject = SchoolALevelSubject::isSyntheticId($subjectId);
-
-            ClassSubject::create([
-                'school_id' => $schoolId,
-                'class_id' => $classId,
-                'stream_id' => $streamId,
-                'subject_id' => $subjectId,
-                'subject_source' => $isSchoolSubject ? 'school_alevel' : 'master',
-                'subject_type' => 'secondary_alevel',
-                'is_auto_synced' => true,
-                'subject_teacher_1' => $soleTeacherId,
-            ]);
-        }
-
-        // Subjects nobody in this class/stream takes any more are
-        // deliberately NOT deleted. The row carries the subject's teacher
-        // assignment (and marks entry only lists subjects assigned to the
-        // logged-in teacher), so deleting it and re-creating it when a
-        // student takes the subject again produced a row with no teacher —
-        // the subject then looked "gone" from the marks screens even
-        // though the student had it. A subject with no students is simply
-        // hidden from marks entry (Helper::choiceSubjectHasNoStudents),
-        // shows 0 students on the class-subjects screen, and keeps its
-        // teacher and its saved marks for when a student takes it again.
+        // The logic lives in StudentSubjectChoiceSyncService so O-Level
+        // electives, bulk import and student moves share the exact same
+        // rules (add-only, never delete, keep teacher assignments).
+        app(\App\Services\StudentSubjectChoiceSyncService::class)->syncALevel($schoolId, $classId, $streamId);
     }
 }

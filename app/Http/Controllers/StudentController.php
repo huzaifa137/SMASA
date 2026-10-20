@@ -816,6 +816,14 @@ class StudentController extends Controller
             'student_photo' => $photoPath ?? $student->student_photo, // 👈 keep old if not updated
         ]));
 
+        // A student moved to another class/stream takes their saved electives /
+        // combination with them — make sure the new class-stream has a
+        // class_subjects row for each of those subjects.
+        if (!empty($classStreamUpdate)) {
+            app(\App\Services\StudentSubjectChoiceSyncService::class)
+                ->syncForStudents($student->school_id, [$student->id]);
+        }
+
         // Only touch these when the form actually sent them, so a form that
         // doesn't have the fields can never blank a saved value.
         $optional = [];
@@ -1354,6 +1362,14 @@ class StudentController extends Controller
                 'senior' => $validated['new_senior'],
                 'stream' => $validated['new_stream'],
             ]);
+
+            // Their saved electives / combinations move with them, so the
+            // destination class-stream needs matching class_subjects rows.
+            app(\App\Services\StudentSubjectChoiceSyncService::class)
+                ->syncForStudents(
+                    Student::whereIn('id', $validated['student_ids'])->value('school_id'),
+                    $validated['student_ids']
+                );
 
             DB::commit();
 

@@ -623,6 +623,16 @@ class ClassandSubjectController extends Controller
 
         $schoolId = Helper::requireSchool();
 
+        // Self-heal: electives (O-Level) and combinations (A-Level) are saved
+        // per student, so make sure every subject a student actually takes
+        // has a class_subjects row here — otherwise it can never be given a
+        // teacher. Add-only and idempotent; a failure must not block the page.
+        try {
+            app(\App\Services\StudentSubjectChoiceSyncService::class)->syncSchool($schoolId);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $classRecord = Classroom::where('school_id', $schoolId)->orderBy('class_name', 'Asc')->get();
         $Teachers = Teacher::where('school_id', $schoolId)->orderBy('surname', 'Asc')->get();
 

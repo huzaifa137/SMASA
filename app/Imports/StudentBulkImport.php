@@ -125,6 +125,19 @@ class StudentBulkImport implements ToCollection, WithHeadingRow
         } else {
             $this->runCreate($rows);
         }
+
+        // Electives / combinations were saved per student above; make sure
+        // the class-stream actually has a class_subjects row for each one,
+        // otherwise those subjects never reach Assign Teachers, marks entry
+        // or report cards.
+        if (in_array($this->level, ['olevel', 'alevel'], true)) {
+            try {
+                app(\App\Services\StudentSubjectChoiceSyncService::class)
+                    ->syncClassStream($this->schoolId, $this->classId, $this->streamId);
+            } catch (\Throwable $e) {
+                $this->errors[] = 'Students were imported, but their subjects could not be synced to the class: ' . $e->getMessage();
+            }
+        }
     }
 
     /**

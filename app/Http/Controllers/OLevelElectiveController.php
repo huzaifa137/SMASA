@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\SchoolOLevelElective;
 use App\Models\StudentOLevelElective;
+use App\Services\StudentSubjectChoiceSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Session;
@@ -56,6 +57,16 @@ class OLevelElectiveController extends Controller
 
         $selectedClassId = $request->get('class_id', $classOptions->first()->class_id ?? null);
         $selectedStreamId = $request->get('stream_id', $classOptions->first()->stream_id ?? null);
+
+        // Backfill/self-heal: keeps class_subjects in sync with the electives
+        // already saved for this class/stream every time the page is opened,
+        // so a class whose electives were saved before this sync existed
+        // (or were imported / moved in) gets its elective subjects — and
+        // therefore teacher-assignability — restored just by visiting here.
+        if ($selectedClassId !== null && $selectedStreamId !== null) {
+            app(StudentSubjectChoiceSyncService::class)
+                ->syncOLevel($schoolId, $selectedClassId, $selectedStreamId);
+        }
 
         $students = collect();
         $electives = collect();
@@ -279,6 +290,13 @@ class OLevelElectiveController extends Controller
                     ]
                 );
             }
+
+            // An elective a student picked must exist as a class_subjects row,
+            // otherwise it never shows on Assign Teachers, marks entry or
+            // report cards. Done inside the transaction so a failure here
+            // rolls the saved electives back too instead of half-saving.
+            app(StudentSubjectChoiceSyncService::class)
+                ->syncForStudents($schoolId, collect($request->electives)->pluck('student_id'));
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Electives saved.']);
