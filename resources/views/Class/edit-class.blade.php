@@ -522,6 +522,21 @@
                                                 </div>
                                             </div>
                                         @endforeach
+
+                                        {{-- This school's own electives (added on the O-Level Electives page) --}}
+                                        @foreach (($schoolOLevelElectives ?? collect()) as $schoolElective)
+                                            <div class="col-lg-4 col-md-6 col-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input secondary-olevel-subject" type="checkbox"
+                                                        id="secondary-olevel-school-{{ $schoolElective->id }}"
+                                                        name="subjects[]"
+                                                        value="{{ $schoolElective->syntheticId() }}"
+                                                        {{ in_array($schoolElective->syntheticId(), $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="secondary-olevel-school-{{ $schoolElective->id }}">{{ $schoolElective->subject_name }}</label>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
@@ -689,6 +704,7 @@
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        const sendUpdate = function (confirmRemove) {
                         // Disable submit button
                         $submitBtn.prop('disabled', true);
                         const originalBtnHtml = $submitBtn.html();
@@ -699,6 +715,7 @@
                             class_id: $('input[name="class_id"]').val(),
                             stream_id: $('input[name="stream_id"]').val(),
                             subjects: selectedSubjects,
+                            confirm_remove: confirmRemove ? 1 : 0,
                             _token: '{{ csrf_token() }}',
                             _method: 'PUT'
                         };
@@ -713,7 +730,22 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (response) {
-                                if (response.fail) {
+                                if (response.requires_confirmation) {
+                                    // Un-ticking a subject deletes its marks etc. — ask first.
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Remove subject from this class?',
+                                        text: response.message,
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#d33',
+                                        confirmButtonText: 'Yes, remove it and delete its data',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((confirm) => {
+                                        if (confirm.isConfirmed) {
+                                            sendUpdate(true);
+                                        }
+                                    });
+                                } else if (response.fail || response.success === false) {
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
@@ -746,6 +778,9 @@
                                 $submitBtn.prop('disabled', false).html(originalBtnHtml);
                             }
                         });
+                        };
+
+                        sendUpdate(false);
                     }
                 });
             });

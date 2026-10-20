@@ -262,17 +262,39 @@ use App\Http\Controllers\Helper;
 
                     $submitBtn.prop('disabled', true);
 
+                    const sendUpdate = function (confirmRemove) {
                     $.ajax({
                         url: '{{ route("assign.subjects.update", $assignment->id) }}',
                         method: 'PUT',
                         data: {
                             subjects: selectedSubjects,
+                            confirm_remove: confirmRemove ? 1 : 0,
                             _token: '{{ csrf_token() }}'
                         },
                         success: function (response) {
                             // Close the loading spinner
                             Swal.close();
-                            
+
+                            // Un-ticking a subject deletes its marks etc. — ask first.
+                            if (response.requires_confirmation) {
+                                $submitBtn.prop('disabled', false);
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Remove subject from this class?',
+                                    text: response.message,
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    confirmButtonText: 'Yes, remove it and delete its data',
+                                    cancelButtonText: 'Cancel'
+                                }).then((confirm) => {
+                                    if (confirm.isConfirmed) {
+                                        $submitBtn.prop('disabled', true);
+                                        sendUpdate(true);
+                                    }
+                                });
+                                return;
+                            }
+
                             // Show success message with auto-close option
                             Swal.fire({
                                 icon: 'success',
@@ -311,6 +333,9 @@ use App\Http\Controllers\Helper;
                             $submitBtn.prop('disabled', false);
                         }
                     });
+                    };
+
+                    sendUpdate(false);
                 }
             });
         });

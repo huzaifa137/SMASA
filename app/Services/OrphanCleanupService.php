@@ -166,6 +166,161 @@ class OrphanCleanupService
         }
     }
 
+    /**
+     * Everything that would be lost if these class_subjects rows were removed
+     * (the admin un-ticked the subject on the class). Used to ask for
+     * confirmation first. $rows: ClassSubject models / stdClass rows.
+     *
+     * @return array{marks:int,assessments:int,timetable:int,attendance:int,electives:int,names:array,total:int}
+     */
+    public function classSubjectImpact($schoolId, Collection $rows): array
+    {
+        $impact = ['marks' => 0, 'assessments' => 0, 'timetable' => 0, 'attendance' => 0, 'electives' => 0, 'names' => []];
+
+        foreach ($rows as $row) {
+            if (empty($row->subject_id) && empty($row->custom_subject_id)) {
+                continue;
+            }
+
+            $name = $row->display_name ?? \App\Http\Controllers\Helper::classSubjectName($row);
+            $before = array_sum(array_intersect_key($impact, array_flip(['marks', 'assessments', 'timetable', 'attendance', 'electives'])));
+
+            if (Schema::hasTable('examination_marks')) {
+                $impact['marks'] += $this->subjectScope(DB::table('examination_marks'), $schoolId, $row)->count();
+            }
+
+            if (Schema::hasTable('nlsc_assessments') && !empty($row->subject_id)) {
+                $impact['assessments'] += $this->assessmentIdsFor($schoolId, $row)->count();
+            }
+
+            if (Schema::hasTable('timetable_slots')) {
+                $impact['timetable'] += DB::table('timetable_slots')->where('class_subject_id', $row->id)->count();
+            }
+
+            if (Schema::hasTable('student_attendances') && Schema::hasColumn('student_attendances', 'class_subject_id')) {
+                $impact['attendance'] += DB::table('student_attendances')->where('class_subject_id', $row->id)->count();
+            }
+
+            $impact['electives'] += $this->electivesHolding($schoolId, $row)->count();
+
+            $after = array_sum(array_intersect_key($impact, array_flip(['marks', 'assessments', 'timetable', 'attendance', 'electives'])));
+            if ($after > $before && $name) {
+                $impact['names'][] = $name;
+            }
+        }
+
+        $impact['total'] = $impact['marks'] + $impact['assessments'] + $impact['timetable'] + $impact['attendance'] + $impact['electives'];
+
+        return $impact;
+    }
+
+    /**
+     * Remove class_subjects rows AND everything that hangs off them, so an
+     * un-ticked subject is gone from marks entry, report cards, exam settings,
+     * NLSC assessments, timetables, attendance and students' saved electives.
+     * Must run before the rows themselves are deleted (this does that last).
+     */
+    public function removeClassSubjects($schoolId, Collection $rows): void
+    {
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        foreach ($rows as $row) {
+            if (!empty($row->subject_id) || !empty($row->custom_subject_id)) {
+                if (Schema::hasTable('examination_marks')) {
+                    $this->subjectScope(DB::table('examination_marks'), $schoolId, $row)->delete();
+                }
+
+                if (Schema::hasTable('examination_subject_settings')) {
+                    $this->subjectScope(DB::table('examination_subject_settings'), $schoolId, $row)->delete();
+                }
+
+                if (Schema::hasTable('nlsc_assessments') && !empty($row->subject_id)) {
+                    $this->purgeAssessments($this->assessmentIdsFor($schoolId, $row)->all());
+                }
+
+                // Take the subject off the students' saved electives, otherwise
+                // the electives screen still shows it ticked and the sync
+                // would simply put the subject back on the class.
+                foreach ($this->electivesHolding($schoolId, $row) as $elective) {
+                    $remaining = array_values(array_filter(
+                        (array) $elective->elective_subject_ids,
+                        fn($id) => (int) $id !== (int) $row->subject_id
+                    ));
+
+                    if (empty($remaining)) {
+                        $elective->delete();
+                    } else {
+                        $elective->elective_subject_ids = $remaining;
+                        $elective->save();
+                    }
+                }
+            }
+
+            if (Schema::hasTable('timetable_slots')) {
+                $this->deleteWhere('timetable_slots', 'class_subject_id', $row->id);
+            }
+
+            if (Schema::hasTable('student_attendances')) {
+                $this->deleteWhere('student_attendances', 'class_subject_id', $row->id);
+            }
+        }
+
+        DB::table('class_subjects')->whereIn('id', $rows->pluck('id')->all())->delete();
+    }
+
+    /** Rows of a table (marks / settings) belonging to one class-stream + subject. */
+    protected function subjectScope($query, $schoolId, $row)
+    {
+        $query->where('school_id', $schoolId)
+            ->where('class_id', $row->class_id)
+            ->where('stream_id', $row->stream_id);
+
+        // Same identity rule as Helper's mark-name resolver: when
+        // subject_id is present it is the identity, even if custom_subject_id
+        // is also set.
+        if (!empty($row->subject_id)) {
+            return $query->where('subject_id', $row->subject_id);
+        }
+
+        return $query->whereNull('subject_id')->where('custom_subject_id', $row->custom_subject_id);
+    }
+
+    protected function assessmentIdsFor($schoolId, $row)
+    {
+        return DB::table('nlsc_assessments')
+            ->where('school_id', $schoolId)
+            ->where('class_id', $row->class_id)
+            ->where('stream_id', $row->stream_id)
+            ->where('subject_id', $row->subject_id)
+            ->pluck('id');
+    }
+
+    /** Saved O-Level electives of this class-stream's students that include this subject. */
+    protected function electivesHolding($schoolId, $row)
+    {
+        if (($row->subject_type ?? null) !== 'secondary_olevel' || empty($row->subject_id)) {
+            return collect();
+        }
+
+        $studentIds = DB::table('students')
+            ->where('school_id', $schoolId)
+            ->where('senior', $row->class_id)
+            ->where('stream', $row->stream_id)
+            ->pluck('id');
+
+        if ($studentIds->isEmpty()) {
+            return collect();
+        }
+
+        return \App\Models\StudentOLevelElective::where('school_id', $schoolId)
+            ->whereIn('student_id', $studentIds)
+            ->get()
+            ->filter(fn($e) => in_array((int) $row->subject_id, array_map('intval', (array) $e->elective_subject_ids), true))
+            ->values();
+    }
+
     // ═════════════════════════════════════════════════════════════════════
     //  CURE — rows that are already orphaned
     // ═════════════════════════════════════════════════════════════════════

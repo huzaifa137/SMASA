@@ -6,6 +6,7 @@ use App\Helpers\PermissionHelper;
 use App\Models\Classroom;
 use App\Models\ClassStreamAssignment;
 use App\Models\ClassSubject;
+use App\Models\SchoolOLevelElective;
 use App\Models\CustomSubject;
 use App\Models\School;
 use App\Models\Student;
@@ -416,7 +417,19 @@ class ClassandSubjectController extends Controller
      */
     private function isLockedClassSubjectRow(ClassSubject $row, array $customNamesLower, bool $customMode): bool
     {
-        if ($row->is_auto_synced || $row->subject_source === 'school_alevel') {
+        // A-Level combination subjects can't be shown on this screen at all
+        // (they belong to the students' combinations), so they are never
+        // removed by an edit.
+        if ($row->subject_source === 'school_alevel'
+            || ($row->is_auto_synced && $row->subject_type !== 'secondary_olevel')) {
+            return true;
+        }
+
+        // O-Level electives that came from students' saved electives CAN be
+        // shown (and un-ticked) on the default-list screen, so they are not
+        // locked there. The custom-subjects screen has no checkbox for a
+        // school's own elective, so there they stay locked.
+        if ($row->subject_source === 'school_olevel' && $customMode) {
             return true;
         }
 
@@ -475,7 +488,15 @@ class ClassandSubjectController extends Controller
         if ($usesCustomSubjects) {
             $validCount = CustomSubject::where('school_id', $schoolId)->whereIn('id', $submitted)->count();
         } else {
-            $validCount = DB::table('master_datas')->whereIn('md_id', $submitted)->count();
+            // A school's own O-Level electives are listed on this screen with a
+            // synthetic id (offset + row id); every other id is a master subject.
+            $syntheticSubmitted = $submitted->filter(fn($v) => SchoolOLevelElective::isSyntheticId($v))->values();
+            $masterSubmitted = $submitted->reject(fn($v) => SchoolOLevelElective::isSyntheticId($v))->values();
+
+            $validCount = DB::table('master_datas')->whereIn('md_id', $masterSubmitted)->count()
+                + SchoolOLevelElective::forSchool($schoolId)
+                    ->whereIn('id', $syntheticSubmitted->map(fn($v) => SchoolOLevelElective::realIdFromSynthetic($v)))
+                    ->count();
         }
 
         if ($validCount !== $submitted->count()) {
@@ -491,7 +512,10 @@ class ClassandSubjectController extends Controller
         // assessment_scale_id, counts_towards_aggregate and — crucially — the
         // original subject_id that exam marks are linked to survive an edit
         // (see CustomSubjectController::confirmSwitch / confirmRevert).
-        DB::transaction(function () use ($submitted, $assignment, $schoolId, $usesCustomSubjects, $subjectType) {
+        $confirmRemove = $request->boolean('confirm_remove');
+
+        try {
+        DB::transaction(function () use ($submitted, $assignment, $schoolId, $usesCustomSubjects, $subjectType, $confirmRemove) {
             $existingRows = ClassSubject::where('class_id', $assignment->class_id)
                 ->where('stream_id', $assignment->stream_id)
                 ->where('school_id', $schoolId)
@@ -561,7 +585,7 @@ class ClassandSubjectController extends Controller
                         'class_id' => $assignment->class_id,
                         'stream_id' => $assignment->stream_id,
                         'subject_id' => $subjectId,
-                        'subject_source' => 'master',
+                        'subject_source' => SchoolOLevelElective::isSyntheticId($subjectId) ? 'school_olevel' : 'master',
                         'subject_type' => $subjectType,
                         'school_id' => $schoolId,
                     ]);
@@ -575,12 +599,40 @@ class ClassandSubjectController extends Controller
                 ->pluck('id')
                 ->all();
 
-            ClassSubject::where('class_id', $assignment->class_id)
+            // Subjects the admin un-ticked. Deleting just the class_subjects
+            // row is not enough: report cards, marks lists, NLSC assessments,
+            // exam settings, timetables and the students' own saved electives
+            // all hang off the subject, so those go with it — and, because
+            // that is permanent, the admin has to confirm it first.
+            $removeRows = ClassSubject::where('class_id', $assignment->class_id)
                 ->where('stream_id', $assignment->stream_id)
                 ->where('school_id', $schoolId)
                 ->whereNotIn('id', array_merge($keepIds, $protectedIds))
-                ->delete();
+                ->get();
+
+            if ($removeRows->isNotEmpty()) {
+                $cleanup = app(\App\Services\OrphanCleanupService::class);
+
+                if (!$confirmRemove) {
+                    $impact = $cleanup->classSubjectImpact($schoolId, $removeRows);
+
+                    if ($impact['total'] > 0) {
+                        // Rolls back everything above: nothing has changed yet.
+                        throw new \App\Exceptions\SubjectRemovalNeedsConfirmation($impact);
+                    }
+                }
+
+                $cleanup->removeClassSubjects($schoolId, $removeRows);
+            }
         });
+        } catch (\App\Exceptions\SubjectRemovalNeedsConfirmation $e) {
+            return response()->json([
+                'success' => false,
+                'requires_confirmation' => true,
+                'message' => $e->getMessage(),
+                'impact' => $e->impact,
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -1175,9 +1227,27 @@ class ClassandSubjectController extends Controller
             config('constants.options.UPPER_PRIMARY_P4_P7') => Helper::MasterRecords(config('constants.options.UPPER_PRIMARY_P4_P7')),
         ];
 
+        // This school's own O-Level electives, listed after the master subjects so
+        // they can be ticked/un-ticked on the class like any other subject (active
+        // ones, plus any already on this class even if since deactivated).
+        $schoolOLevelElectives = collect();
+        if ($classType === 'Secondary O-Level') {
+            $schoolOLevelElectives = SchoolOLevelElective::forSchool(session('LoggedSchool'))
+                ->where(function ($q) use ($assignedSubjects) {
+                    $q->where('is_active', true)
+                        ->orWhereIn('id', collect($assignedSubjects)
+                            ->filter(fn($v) => SchoolOLevelElective::isSyntheticId($v))
+                            ->map(fn($v) => SchoolOLevelElective::realIdFromSynthetic($v))
+                            ->all());
+                })
+                ->orderBy('subject_name')
+                ->get();
+        }
+
         return view('Class.edit-class', compact(
             'assignment',
             'assignedSubjects',
+            'schoolOLevelElectives',
             'SecondaryClasses',
             'PrimaryClasses',
             'PrimarySecularClasses',

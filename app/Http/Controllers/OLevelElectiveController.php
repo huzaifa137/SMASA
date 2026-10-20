@@ -231,6 +231,15 @@ class OLevelElectiveController extends Controller
             ], 422);
         }
 
+        // No student has it, but it may still sit on classes as a subject
+        // (added by the elective sync or ticked on the class). Take it — and
+        // anything hanging off it — off those classes too, so a deleted
+        // elective isn't left behind as an "Unknown subject" row.
+        $classRows = \App\Models\ClassSubject::where('school_id', $schoolId)
+            ->where('subject_id', $syntheticId)
+            ->get();
+        app(\App\Services\OrphanCleanupService::class)->removeClassSubjects($schoolId, $classRows);
+
         $subject->delete();
 
         return response()->json(['success' => true]);
