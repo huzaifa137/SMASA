@@ -475,6 +475,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('/assign-class-teacher', 'assignClassTeacher')->name('class.assignClassTeacher');
 
         Route::delete('/streams/{stream}', 'deleteStream')->name('streams.delete');
+        Route::get('/streams/{stream}/rename-preview', 'previewStreamRename')->name('streams.rename.preview');
+        Route::put('/streams/{stream}/rename', 'renameStream')->name('streams.rename');
         Route::delete('/classes/{id}', 'destroyClass')->name('classes.destroy');
 
         Route::put('/assign-subjects/{assignmentId}', 'updateClassSubjects')->name('assign.subjects.update');

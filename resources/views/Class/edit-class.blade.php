@@ -93,7 +93,7 @@
                                         <label class="form-label">Senior</label>
                                         <select class="form-control select2" id="class_id" name="class_id" disabled>
                                             <option value="">-- Select --</option>
-                                            @if($classType === 'O-Level' || $classType === 'A-Level')
+                                            @if(in_array($classType, ['O-Level', 'A-Level', 'Secondary O-Level', 'Secondary A-Level'], true))
                                                 @foreach ($SecondaryClasses as $class)
                                                     <option value="{{ $class->md_id }}" {{ $assignment->class_id == $class->md_id ? 'selected' : '' }}>
                                                         {{ $class->md_name }}
@@ -486,6 +486,95 @@
                                                 </div>
                                             @endforeach
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- SECONDARY O-LEVEL -->
+                            @if($classType == 'Secondary O-Level')
+                            <div id="secondary-olevel-subjects">
+                                <div class="subject-section-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="section-title mb-0">O - LEVEL SUBJECTS (SECONDARY)</h5>
+                                        <div class="subject-control-buttons">
+                                            <button type="button" class="btn btn-sm btn-check-all"
+                                                onclick="$('.secondary-olevel-subject').prop('checked', true);">
+                                                <i class="fas fa-check-double"></i> Check All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-uncheck-all"
+                                                onclick="$('.secondary-olevel-subject').prop('checked', false);">
+                                                <i class="fas fa-times-circle"></i> Uncheck All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        @foreach ($SECONDARY_OLEVEL_SUBJECTS as $subject)
+                                            <div class="col-lg-4 col-md-6 col-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input secondary-olevel-subject" type="checkbox"
+                                                        id="secondary-olevel-{{ $loop->index }}"
+                                                        name="subjects[]"
+                                                        value="{{ $subject->md_id }}"
+                                                        {{ in_array($subject->md_id, $assignedSubjects) ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="secondary-olevel-{{ $loop->index }}">{{ $subject->md_name }}</label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- SECONDARY A-LEVEL: General Paper is compulsory; each student's own
+                                 principals/subsidiary live on the A-Level Combinations page. -->
+                            @if($classType == 'Secondary A-Level')
+                            @php
+                                $generalPaper = $SECONDARY_ALEVEL_SUBJECTS->firstWhere('md_misc1', 'General');
+                                $autoSyncedRows = $assignment->classSubjects->filter(fn($r) => $r->is_auto_synced);
+                                $autoSyncedIds = $autoSyncedRows->pluck('subject_id')->all();
+                                // Subjects ticked by hand on this class that aren't coming from a
+                                // student's combination: still editable here.
+                                $manualAlevel = $SECONDARY_ALEVEL_SUBJECTS->filter(function ($s) use ($assignedSubjects, $autoSyncedIds, $generalPaper) {
+                                    return in_array($s->md_id, $assignedSubjects)
+                                        && !in_array($s->md_id, $autoSyncedIds)
+                                        && (!$generalPaper || $s->md_id != $generalPaper->md_id);
+                                });
+                            @endphp
+                            <div id="secondary-alevel-subjects">
+                                <div class="subject-section-card">
+                                    <h5 class="section-title mb-3">A - LEVEL SUBJECTS (SECONDARY)</h5>
+
+                                    @if ($generalPaper)
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input secondary-alevel-subject" type="checkbox"
+                                                id="secondary-alevel-{{ $generalPaper->md_id }}"
+                                                name="subjects[]" value="{{ $generalPaper->md_id }}" checked disabled>
+                                            <label class="form-check-label" for="secondary-alevel-{{ $generalPaper->md_id }}">
+                                                <strong>{{ $generalPaper->md_name }} (compulsory)</strong>
+                                            </label>
+                                        </div>
+                                    @endif
+
+                                    @foreach ($manualAlevel as $subject)
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input secondary-alevel-subject" type="checkbox"
+                                                id="secondary-alevel-{{ $subject->md_id }}"
+                                                name="subjects[]" value="{{ $subject->md_id }}" checked>
+                                            <label class="form-check-label" for="secondary-alevel-{{ $subject->md_id }}">{{ $subject->md_name }}</label>
+                                        </div>
+                                    @endforeach
+
+                                    @if ($autoSyncedRows->isNotEmpty())
+                                        <p class="mb-1 mt-3"><strong>Taken by students (from their combinations):</strong></p>
+                                        <p class="text-muted">{{ $autoSyncedRows->map(fn($r) => $r->display_name)->filter()->implode(', ') }}</p>
+                                    @endif
+
+                                    <div class="alert alert-secondary py-2 px-3 mb-0" style="font-size:0.9rem;">
+                                        Each student's principal subjects (up to 3) and optional subsidiary are set on the
+                                        <a href="{{ route('alevel.combinations.entry') }}">A-Level Combinations</a> page.
+                                        Subjects taken by students are kept automatically.
                                     </div>
                                 </div>
                             </div>

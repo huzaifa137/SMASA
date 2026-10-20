@@ -2438,7 +2438,7 @@
                         <div class="rc-lh-name">{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
-                            <div class="rc-lh-arabic" style="font-size: 1rem;">{{ $schoolNameArabic }}</div>
+                            <div class="rc-lh-arabic">{{ $schoolNameArabic }}</div>
                         @endif
 
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))

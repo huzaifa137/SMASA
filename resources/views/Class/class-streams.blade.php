@@ -58,7 +58,9 @@ $controller = new Controller();
                                         <tr data-id="{{ $stream->id }}">
                                             <td class="text-center" style="width:1px;">{{ $key + 1 }}</td>
                                             <td class="text-center">{{ Helper::recordMdname($stream->class_id) }}</td>
-                                            <td class="text-center">{{ $stream->stream_id }}</td>
+                                            <td class="text-center stream-name-cell">
+                                                {{ $stream->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'No Stream' : $stream->stream_id }}
+                                            </td>
                                             <td class="text-center">{{  $maleClassStreamStudents }}</td>
                                             <td class="text-center">{{ $femaleClassStreamStudents }}</td>
                                             <td class="text-center">{{ $totalClassStreamStudent }}</td>
@@ -104,6 +106,16 @@ $controller = new Controller();
                                                         class="btn btn-sm btn-info btn-edit-stream mb-1"
                                                         data-stream-id="{{ $stream->id }}">
                                                         <i class="fas fa-pen-to-square me-2"></i> Edit Subjects
+                                                    </a>
+                                                @endif
+
+                                                @if(PermissionHelper::canFeature('edit_class'))
+                                                    <a href="#" class="btn btn-sm btn-warning btn-rename-stream mb-1"
+                                                        data-stream-id="{{ $stream->id }}"
+                                                        data-stream-name="{{ $stream->stream_id }}"
+                                                        data-only-stream="{{ $Streams->count() === 1 ? 1 : 0 }}">
+                                                        <i class="fas fa-i-cursor me-2"></i>
+                                                        {{ $stream->stream_id === \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL ? 'Name This Stream' : 'Rename Stream' }}
                                                     </a>
                                                 @endif
 
@@ -232,6 +244,77 @@ $controller = new Controller();
 
     <script>
         $(document).ready(function() {
+
+            const NO_STREAM = '{{ \App\Http\Controllers\ClassandSubjectController::NO_STREAM_SENTINEL }}';
+
+            // Rename a stream (or give a "No Stream" class its first stream name).
+            // Everything attached to the stream moves with it.
+            $(document).on('click', '.btn-rename-stream', function(e) {
+                e.preventDefault();
+
+                const $btn = $(this);
+                const streamId = $btn.data('stream-id');
+                const current = String($btn.data('stream-name'));
+                const onlyStream = Number($btn.data('only-stream')) === 1;
+                const isNoStream = current === NO_STREAM;
+
+                $.get("{{ route('streams.rename.preview', ':id') }}".replace(':id', streamId))
+                    .done(function(preview) {
+                        const labels = {
+                            students: 'students', class_subjects: 'class subjects',
+                            examination_marks: 'exam marks', examination_classes: 'exam enrolments',
+                            student_attendances: 'attendance records', timetables: 'timetables'
+                        };
+                        const parts = Object.keys(preview.affected || {}).map(function(k) {
+                            return preview.affected[k] + ' ' + (labels[k] || k.replace(/_/g, ' '));
+                        });
+
+                        Swal.fire({
+                            title: isNoStream ? 'Name this stream' : 'Rename stream',
+                            html: '<p class="mb-2">' + (parts.length
+                                    ? 'These move to the new name automatically: <b>' + parts.join(', ') + '</b>.'
+                                    : 'Nothing is attached to this stream yet.') +
+                                  '</p><small class="text-muted">Teachers, marks and subject settings are kept.</small>',
+                            input: 'text',
+                            inputValue: isNoStream ? '' : current,
+                            inputPlaceholder: 'e.g. A, East, Blue',
+                            inputAttributes: { maxlength: 45 },
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            showDenyButton: onlyStream && !isNoStream,
+                            denyButtonText: 'Make this a class with no streams',
+                            preConfirm: function(value) {
+                                value = (value || '').trim();
+                                if (!value) { Swal.showValidationMessage('Please enter a stream name.'); return false; }
+                                return value;
+                            }
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                sendRename(streamId, { stream_name: result.value });
+                            } else if (result.isDenied) {
+                                sendRename(streamId, { no_stream: 1 });
+                            }
+                        });
+                    })
+                    .fail(function(xhr) {
+                        Swal.fire('Oops', (xhr.responseJSON && xhr.responseJSON.message) || 'Could not load this stream.', 'error');
+                    });
+            });
+
+            function sendRename(streamId, data) {
+                $.ajax({
+                    url: "{{ route('streams.rename', ':id') }}".replace(':id', streamId),
+                    type: 'POST',
+                    data: Object.assign({ _token: "{{ csrf_token() }}", _method: 'PUT' }, data),
+                    success: function(response) {
+                        Swal.fire({ icon: 'success', title: 'Renamed', text: response.message, timer: 1500, showConfirmButton: false })
+                            .then(function() { window.location.reload(); });
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Not renamed', (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong.', 'error');
+                    }
+                });
+            }
 
             $(document).on('click', '.btn-delete-stream', function(e) {
                 e.preventDefault(); // Prevent the default link behavior

@@ -160,6 +160,9 @@ use App\Http\Controllers\Helper;
                                                         {{ in_array($subject->id, $assignedSubjectIds) ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="edit-custom-subject-{{ $subject->id }}">
                                                         {{ $subject->subject_name }}
+                                                        @if (!$subject->is_active)
+                                                            <small class="text-muted">(inactive &mdash; still attached to this class)</small>
+                                                        @endif
                                                     </label>
                                                 </div>
                                             </div>
@@ -167,6 +170,15 @@ use App\Http\Controllers\Helper;
                                     </div>
                                 @endif
                             </div>
+
+                            @if (!empty($lockedSubjectNames))
+                                <div class="subject-section-card">
+                                    <h6 class="mb-2">Also on this class (managed elsewhere, kept when you save)</h6>
+                                    <p class="text-muted mb-0">
+                                        {{ implode(', ', $lockedSubjectNames) }}
+                                    </p>
+                                </div>
+                            @endif
 
                             <div class="row">
                                 <div class="mt-4 text-left">

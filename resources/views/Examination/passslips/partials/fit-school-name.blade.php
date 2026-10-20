@@ -23,6 +23,57 @@
     (function () {
         var MIN_PX = 10;     // smallest single-line size
         var WRAP_PX = 15;    // size used if it has to wrap onto 2 lines
+var MIN_AR_PX = 10;  // smallest Arabic-name size
+var AR_MAX_RATIO = 1.2; // Arabic may grow to at most this x the English name's font size
+var AR_WIDTH_FRACTION = 0.75; // Arabic text spans this share of the English name's width (1 = full width)
+
+        // Width of the rendered text itself (not the block it sits in).
+        function textWidth(el) {
+            var r = document.createRange();
+            r.selectNodeContents(el);
+            return r.getBoundingClientRect().width;
+        }
+
+        // Make the Arabic school name span the same width as the English one:
+        // scale its font so its text is as wide as the English text, then give
+        // it a block exactly that wide, aligned the same way as the English name.
+        function fitArabicNames() {
+            document.querySelectorAll('.rc-lh-arabic, .sch-arabic-name').forEach(function (ar) {
+                var parent = ar.parentElement;
+                if (!parent) return;
+                var en = parent.querySelector('.rc-lh-name, .sch-name');
+                if (!en) return;
+
+                // reset, then measure the Arabic text on one line at its stylesheet size
+                ar.style.fontSize = '';
+                ar.style.width = '';
+                ar.style.marginLeft = '';
+                ar.style.marginRight = '';
+                ar.style.display = 'inline-block';
+                ar.style.whiteSpace = 'nowrap';
+
+                var arW = ar.getBoundingClientRect().width;
+                var enW = textWidth(en);
+                if (!arW || !enW) return;
+
+                var size = parseFloat(window.getComputedStyle(ar).fontSize);
+                var enSize = parseFloat(window.getComputedStyle(en).fontSize);
+                var target = Math.max(MIN_AR_PX, Math.min(size * (enW * AR_WIDTH_FRACTION) / arW, enSize * AR_MAX_RATIO));
+                ar.style.fontSize = target + 'px';
+
+                // convert the English text width to CSS px (page scaling / zoom safe)
+                var k = en.offsetWidth ? en.getBoundingClientRect().width / en.offsetWidth : 1;
+                var w = Math.min(enW / (k || 1), parent.clientWidth);
+
+                ar.style.display = 'block';
+                ar.style.width = w + 'px';
+                ar.style.textAlign = 'center';
+                if (window.getComputedStyle(parent).textAlign === 'center') {
+                    ar.style.marginLeft = 'auto';
+                    ar.style.marginRight = 'auto';
+                }
+            });
+        }
 
         function fitSchoolNames() {
             document.querySelectorAll('.rc-lh-name, .sch-name').forEach(function (el) {
@@ -48,6 +99,9 @@
                     el.style.fontSize = WRAP_PX + 'px';
                 }
             });
+
+            // the Arabic name follows the English name's final size/width
+            fitArabicNames();
         }
         window.fitSchoolNames = fitSchoolNames;
 

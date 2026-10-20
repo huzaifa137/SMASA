@@ -277,74 +277,32 @@ class SchoolController extends Controller
             'school_name_arabic' => 'nullable|string|max:255',
         ]);
 
-        // Update the school
-        $school->update($validated);
+        // The registration code is the link to houses.Number and
+        // school_passwords, and the form shows it read-only: never let a
+        // crafted request change it.
+        $validated['registration_code'] = $school->registration_code;
 
-        // Refresh the school model to get updated values
-        $school->refresh();
-
-        // IMPORTANT: Log what we're trying to update
-        \Log::info('Updating house for school:', [
-            'school_id' => $school->id,
-            'registration_code' => $school->registration_code,
-            'school_name_arabic' => $validated['school_name_arabic'] ?? '',
-            'school_name' => $validated['name'],
-        ]);
-
-        // Update the corresponding house - use the registration_code from validated data
+        // schools, houses (login dropdown) and school_profiles (reports,
+        // profile page) all hold the name: write them together or not at all.
+        // This used to swallow a failing houses update (it referenced
+        // columns houses doesn't have) and still report success.
         try {
-            // First, find the house by Number
-            $house = DB::table('houses')
-                ->where('Number', $school->registration_code)
-                ->first();
+            DB::transaction(function () use ($school, $validated) {
+                $school->update($validated);
 
-            if ($house) {
-                // Update existing house
-                $houseUpdated = DB::table('houses')
-                    ->where('Number', $school->registration_code)
-                    ->update([
-                        'House' => $validated['name'],
-                        'House_AR' => $validated['school_name_arabic'] ?? '', // Use validated data
-                        'Phone' => $validated['phone'],
-                        'Email' => $validated['email'],
-                        'Location' => $validated['regional_level'] ?? 'Kampala',
-                        'updated_at' => now(),
-                    ]);
+                app(\App\Services\SchoolIdentityService::class)->syncName(
+                    $school->fresh(),
+                    $validated['name'],
+                    $validated['school_name_arabic'] ?? ''
+                );
+            });
+        } catch (\Throwable $e) {
+            report($e);
 
-                \Log::info('House updated successfully:', [
-                    'house_id' => $house->ID,
-                    'House_AR' => $validated['school_name_arabic'] ?? '',
-                    'rows_affected' => $houseUpdated,
-                ]);
-            } else {
-                // No house found - create a new one
-                \Log::warning('No house found for registration_code: ' . $school->registration_code);
-
-                DB::table('houses')->insert([
-                    'House' => $validated['name'],
-                    'House_AR' => $validated['school_name_arabic'] ?? '',
-                    'Number' => $school->registration_code,
-                    'Location' => $validated['regional_level'] ?? 'Kampala',
-                    'RegistrationDate' => now(),
-                    'Head' => 0,
-                    'ContactPerson' => 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                \Log::info('New house created for school:', [
-                    'registration_code' => $school->registration_code,
-                    'House_AR' => $validated['school_name_arabic'] ?? '',
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Log the error but don't stop the process
-            \Log::error('Failed to update house for school: ' . $school->id, [
-                'error' => $e->getMessage(),
-                'school_id' => $school->id,
-                'registration_code' => $school->registration_code,
-                'validated_data' => $validated,
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'The school could not be updated, nothing was changed: ' . $e->getMessage(),
+            ], 500);
         }
 
         // Track the update
@@ -464,6 +422,11 @@ class SchoolController extends Controller
             'head_teacher_signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
 
+        // A school user may only edit their own school's profile.
+        if (Session::has('LoggedSchool') && (int) Session::get('LoggedSchool') !== (int) $validated['school_id']) {
+            abort(403, 'You can only edit your own school profile.');
+        }
+
         $profile = SchoolProfile::where('school_id', $validated['school_id'])->first();
 
         if ($request->hasFile('logo')) {
@@ -504,14 +467,25 @@ class SchoolController extends Controller
 
         $validated['updated_at'] = now();
 
-        if ($profile) {
-            $profile->update($validated);
-            $message = 'School profile updated successfully.';
-        } else {
-            $validated['created_at'] = now();
-            SchoolProfile::create($validated);
-            $message = 'School profile created successfully.';
-        }
+        DB::transaction(function () use (&$profile, $validated, &$message) {
+            if ($profile) {
+                $profile->update($validated);
+                $message = 'School profile updated successfully.';
+            } else {
+                $validated['created_at'] = now();
+                SchoolProfile::create($validated);
+                $message = 'School profile created successfully.';
+            }
+
+            // The name is also what the login dropdown (houses.House), receipts,
+            // ID cards and finance PDFs (schools.name) show — keep them in step.
+            if (!empty($validated['name'])) {
+                app(\App\Services\SchoolIdentityService::class)->syncName(
+                    School::findOrFail($validated['school_id']),
+                    $validated['name']
+                );
+            }
+        });
 
         return response()->json([
             'success' => true,

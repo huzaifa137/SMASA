@@ -276,6 +276,25 @@ class ClassandSubjectController extends Controller
             $class->save();
         }
 
+        // A class is either stream-less or streamed, never both: students of a
+        // "No Stream" class would otherwise be split from a named stream's
+        // roster with no way to tell which they belong to. The way from one
+        // to the other is Manage Streams -> Rename Stream (it moves students,
+        // marks, attendance, timetables and teachers along with it).
+        if ($StreamRecord === null) {
+            $otherStreams = Stream::where('class_id', $request->class_id)
+                ->where('school_id', Session('LoggedSchool'))
+                ->pluck('stream_id');
+
+            if ($streamId === self::NO_STREAM_SENTINEL && $otherStreams->isNotEmpty()) {
+                return response()->json(['fail' => true, 'message' => 'This class already has named streams, so it cannot also be created with no stream.']);
+            }
+
+            if ($streamId !== self::NO_STREAM_SENTINEL && $otherStreams->contains(self::NO_STREAM_SENTINEL)) {
+                return response()->json(['fail' => true, 'message' => 'This class currently has no streams. Open Manage Streams for this class and use "Rename Stream" to give it its first stream name, then add further streams.']);
+            }
+        }
+
         if ($StreamRecord === null) {
             $stream = new Stream;
             $stream->school_id = Session('LoggedSchool');
@@ -337,61 +356,142 @@ class ClassandSubjectController extends Controller
             return response()->json(['fail' => true, 'message' => 'Stream already exists for this class.']);
         }
     }
+    /**
+     * Single source of truth for "which subject_type does this class use?".
+     *
+     * storeClass() writes all SIX types (idaad, thanawi, primary_theology,
+     * primary_secular, secondary_olevel, secondary_alevel) but the edit and
+     * update paths below used to know only four and silently treated every
+     * Secondary class as 'thanawi'. For a custom-subjects school that meant
+     * the edit page listed the wrong category (Thanawi subjects instead of
+     * the Secondary ones) so nothing was ticked, and saving rewrote the
+     * class's subject_type to 'thanawi'.
+     */
+    private function resolveSubjectType($classId, $schoolId = null, $streamId = null): string
+    {
+        $map = [
+            'O_LEVEL'                  => 'idaad',
+            'A_LEVEL'                  => 'thanawi',
+            'PRIMARY_THEOLOGY_CLASSES' => 'primary_theology',
+            'PRIMARY_SECULAR_CLASSES'  => 'primary_secular',
+            'SECONDARY_OLEVEL_CLASSES' => 'secondary_olevel',
+            'SECONDARY_ALEVEL_CLASSES' => 'secondary_alevel',
+        ];
+
+        foreach ($map as $option => $type) {
+            $ids = Helper::MasterRecords(config('constants.options.' . $option))->pluck('md_id')->toArray();
+            if (in_array($classId, $ids)) {
+                return $type;
+            }
+        }
+
+        // Class isn't in any known list: trust what its rows already say.
+        if ($schoolId) {
+            $existing = ClassSubject::where('school_id', $schoolId)
+                ->where('class_id', $classId)
+                ->when($streamId !== null, fn($q) => $q->where('stream_id', $streamId))
+                ->whereNotNull('subject_type')
+                ->where('subject_type', '!=', '')
+                ->value('subject_type');
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        return 'thanawi';
+    }
+
+    /**
+     * A class_subjects row the edit-subjects screen must never delete,
+     * because it cannot be shown as a tickable item (so the admin could
+     * never have "deselected" it on purpose):
+     *   - rows auto-created from students' A-Level combinations
+     *     (is_auto_synced / subject_source = school_alevel) — they carry
+     *     teacher assignments and marks and are owned by the combinations;
+     *   - a legacy default-list row with no custom_subject_id whose name
+     *     matches none of the school's custom subjects.
+     *
+     * @param array $customNamesLower  [lowercased custom subject name => true]
+     */
+    private function isLockedClassSubjectRow(ClassSubject $row, array $customNamesLower, bool $customMode): bool
+    {
+        if ($row->is_auto_synced || $row->subject_source === 'school_alevel') {
+            return true;
+        }
+
+        if (!$customMode) {
+            return false;
+        }
+
+        if ($row->custom_subject_id) {
+            return false;
+        }
+
+        $name = mb_strtolower(trim((string) Helper::recordMdname($row->subject_id)));
+
+        return $name === '' || !isset($customNamesLower[$name]);
+    }
+
     public function updateClassSubjects(Request $request, $id)
     {
         PermissionHelper::denyUnlessFeature('edit_class');
 
-        $assignment = ClassStreamAssignment::findOrFail($id);
+        $schoolId = Helper::requireSchool();
 
-        // Validate request
+        // Scoped to the logged-in school: class/stream ids are shared master
+        // data, so an unscoped lookup could touch another school's row.
+        $assignment = ClassStreamAssignment::where('school_id', $schoolId)->findOrFail($id);
+
         $request->validate([
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'required'
         ]);
 
-        $schoolId = session('LoggedSchool');
         $school = School::find($schoolId);
         $usesCustomSubjects = $school && $school->usesCustomSubjects();
 
-        // Determine subject type based on class level
-        $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
-        $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
-        $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+        $submitted = collect($request->subjects)->map(fn($v) => (string) $v)->unique()->values();
 
-        if (in_array($assignment->class_id, $oLevelIds)) {
-            $subjectType = 'idaad';
-        } elseif (in_array($assignment->class_id, $primaryTheologyIds)) {
-            $subjectType = 'primary_theology';
-        } elseif (in_array($assignment->class_id, $primarySecularIds)) {
-            $subjectType = 'primary_secular';
-        } else {
-            $subjectType = 'thanawi';
+        // Secondary A-Level (default list): General Paper is compulsory for every
+        // student, so it can never be removed from the pool (same rule storeClass() applies).
+        if (!$usesCustomSubjects
+            && $this->resolveSubjectType($assignment->class_id, $schoolId, $assignment->stream_id) === 'secondary_alevel') {
+            $generalPaperId = DB::table('master_datas')
+                ->where('md_master_code_id', config('constants.options.SECONDARY_ALEVEL_SUBJECTS'))
+                ->where('md_misc1', 'General')
+                ->value('md_id');
+
+            if ($generalPaperId && !$submitted->contains((string) $generalPaperId)) {
+                $submitted->push((string) $generalPaperId);
+            }
         }
 
-        // 🔥 FIX: this used to unconditionally delete every class_subjects
-        // row for this class/stream and recreate them from scratch on every
-        // save — even for subjects that were already attached and
-        // untouched. That wiped subject_teacher_1/2, assessment_scale_id
-        // and counts_towards_aggregate on every edit, and — worse — for a
-        // school that had already switched to custom subjects
-        // (CustomSubjectController::confirmSwitch, which deliberately
-        // keeps the original subject_id on carried-over rows so their
-        // exam marks stay linked) it threw that preserved subject_id away
-        // the moment the subjects list was touched again, orphaning every
-        // mark already entered under it: the recreated row got a fresh
-        // custom_subject_id with subject_id = null, a different identity
-        // to marks entry / passlips than the one the marks were saved
-        // under, and the "new" subject showed up as blank/unnamed on
-        // report cards while the old marks appeared under no subject at
-        // all in marks entry.
-        //
-        // This now syncs instead of nuking: rows for subjects that are
-        // still selected are left alone (or, for a not-yet-converted
-        // master row whose name matches a newly-selected custom subject,
-        // upgraded in place — exactly what confirmSwitch would have done),
-        // only genuinely removed subjects are deleted, and only genuinely
-        // new subjects are created.
-        DB::transaction(function () use ($request, $assignment, $schoolId, $usesCustomSubjects, $subjectType) {
+        // The page may have been opened before the school switched between
+        // the default and custom lists (or in another tab). Make sure every
+        // submitted id belongs to the list that is active NOW, otherwise we
+        // would attach another school's subject or a default-list id to a
+        // custom-mode class (and the reverse).
+        if ($usesCustomSubjects) {
+            $validCount = CustomSubject::where('school_id', $schoolId)->whereIn('id', $submitted)->count();
+        } else {
+            $validCount = DB::table('master_datas')->whereIn('md_id', $submitted)->count();
+        }
+
+        if ($validCount !== $submitted->count()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your subject list has changed since this page was opened (the school may have switched between default and custom subjects). Please reload the page and try again.',
+            ], 422);
+        }
+
+        $subjectType = $this->resolveSubjectType($assignment->class_id, $schoolId, $assignment->stream_id);
+
+        // This SYNCS instead of delete-and-recreate so subject_teacher_1/2,
+        // assessment_scale_id, counts_towards_aggregate and — crucially — the
+        // original subject_id that exam marks are linked to survive an edit
+        // (see CustomSubjectController::confirmSwitch / confirmRevert).
+        DB::transaction(function () use ($submitted, $assignment, $schoolId, $usesCustomSubjects, $subjectType) {
             $existingRows = ClassSubject::where('class_id', $assignment->class_id)
                 ->where('stream_id', $assignment->stream_id)
                 ->where('school_id', $schoolId)
@@ -399,23 +499,30 @@ class ClassandSubjectController extends Controller
 
             $keepIds = [];
 
+            // Names of every custom subject this school owns (lower-cased).
+            $customNamesLower = $usesCustomSubjects
+                ? CustomSubject::forSchool($schoolId)->pluck('subject_name')
+                    ->mapWithKeys(fn($n) => [mb_strtolower(trim($n)) => true])->all()
+                : [];
+
             if ($usesCustomSubjects) {
                 $existingByCustomId = $existingRows->whereNotNull('custom_subject_id')->keyBy('custom_subject_id');
 
-                // Not-yet-converted master rows, indexed by their resolved
-                // name, so a master subject that's simply being re-selected
-                // under its new custom_subject_id (same name) gets upgraded
-                // in place instead of losing its subject_id.
+                // Not-yet-converted default-list rows by resolved name, so
+                // re-selecting a custom subject with the same name upgrades
+                // the row in place (keeps subject_id => marks stay linked).
                 $existingMasterByName = $existingRows
                     ->whereNull('custom_subject_id')
-                    ->keyBy(fn($row) => Helper::recordMdname($row->subject_id));
+                    ->whereNotNull('subject_id')
+                    ->reject(fn($row) => $row->is_auto_synced || $row->subject_source === 'school_alevel')
+                    ->keyBy(fn($row) => mb_strtolower(trim((string) Helper::recordMdname($row->subject_id))));
 
-                foreach ($request->subjects as $customSubjectId) {
+                foreach ($submitted as $customSubjectId) {
                     $existing = $existingByCustomId->get($customSubjectId);
 
                     if (!$existing) {
                         $customName = CustomSubject::where('id', $customSubjectId)->value('subject_name');
-                        $existing = $customName ? $existingMasterByName->get($customName) : null;
+                        $existing = $customName ? $existingMasterByName->get(mb_strtolower(trim($customName))) : null;
                     }
 
                     if ($existing) {
@@ -440,7 +547,7 @@ class ClassandSubjectController extends Controller
             } else {
                 $existingBySubjectId = $existingRows->whereNotNull('subject_id')->keyBy('subject_id');
 
-                foreach ($request->subjects as $subjectId) {
+                foreach ($submitted as $subjectId) {
                     $existing = $existingBySubjectId->get($subjectId);
 
                     if ($existing) {
@@ -462,12 +569,16 @@ class ClassandSubjectController extends Controller
                 }
             }
 
-            // Only now remove whatever was deselected — never a row that
-            // just got matched/kept above.
+            // Rows the screen can't represent are never removed by an edit.
+            $protectedIds = $existingRows
+                ->filter(fn($row) => $this->isLockedClassSubjectRow($row, $customNamesLower, $usesCustomSubjects))
+                ->pluck('id')
+                ->all();
+
             ClassSubject::where('class_id', $assignment->class_id)
                 ->where('stream_id', $assignment->stream_id)
                 ->where('school_id', $schoolId)
-                ->whereNotIn('id', $keepIds)
+                ->whereNotIn('id', array_merge($keepIds, $protectedIds))
                 ->delete();
         });
 
@@ -598,7 +709,13 @@ class ClassandSubjectController extends Controller
         // in marks / fees). Make the user move or remove them deliberately.
         $studentsInStream = Student::where('school_id', Helper::requireSchool())
             ->where('senior', $class_id)
-            ->where('stream', $stream->stream_name)
+            ->where(function ($q) use ($stream) {
+                $q->where('stream', $stream->stream_id);
+
+                if ($stream->stream_id === self::NO_STREAM_SENTINEL) {
+                    $q->orWhereNull('stream')->orWhere('stream', '');
+                }
+            })
             ->count();
 
         if ($studentsInStream > 0) {
@@ -621,6 +738,68 @@ class ClassandSubjectController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Failed to delete stream: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * What renaming this stream would touch (shown in the confirm dialog).
+     */
+    public function previewStreamRename(Stream $stream)
+    {
+        PermissionHelper::denyUnlessFeature('edit_class');
+
+        abort_unless((int) $stream->school_id === (int) Helper::requireSchool(), 403);
+
+        return response()->json([
+            'status' => 'success',
+            'current' => $stream->stream_id,
+            'is_no_stream' => $stream->stream_id === self::NO_STREAM_SENTINEL,
+            'affected' => app(\App\Services\StreamRenameService::class)->preview($stream),
+        ]);
+    }
+
+    /**
+     * Rename a stream (A -> B, "No Stream" -> A, or the only stream -> "No Stream")
+     * and carry everything attached to it along.
+     */
+    public function renameStream(Request $request, Stream $stream)
+    {
+        PermissionHelper::denyUnlessFeature('edit_class');
+
+        abort_unless((int) $stream->school_id === (int) Helper::requireSchool(), 403);
+
+        $request->validate([
+            'stream_name' => 'nullable|string|max:45',
+            'no_stream' => 'nullable|boolean',
+        ]);
+
+        $service = app(\App\Services\StreamRenameService::class);
+        $makeNoStream = $request->boolean('no_stream');
+
+        $error = $service->validate($stream, $request->stream_name, $makeNoStream);
+
+        if ($error) {
+            return response()->json(['status' => 'error', 'message' => $error], 422);
+        }
+
+        $newName = $makeNoStream ? self::NO_STREAM_SENTINEL : trim($request->stream_name);
+
+        try {
+            $updated = $service->rename($stream, $newName);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Could not rename the stream, nothing was changed: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Stream renamed.',
+            'stream_name' => $newName,
+            'updated' => $updated,
+        ]);
     }
 
     public function assignSupervisor(Request $request)
@@ -904,6 +1083,7 @@ class ClassandSubjectController extends Controller
                     ->where('school_id', session('LoggedSchool'));
             }
         ])
+            ->where('school_id', session('LoggedSchool'))
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->first();
@@ -912,11 +1092,11 @@ class ClassandSubjectController extends Controller
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
-        // Get assigned subjects
-        $assignedSubjects = [];
-        foreach ($assignment->classSubjects as $classSubject) {
-            $assignedSubjects[] = $classSubject->subject_id;
-        }
+        // Get assigned subjects (default list: matched on subject_id)
+        $assignedSubjects = $assignment->classSubjects
+            ->whereNotNull('subject_id')
+            ->pluck('subject_id')
+            ->all();
 
         // Get class type (O-Level, A-Level, Primary Theology, Primary Secular,
         // Secondary O-Level, or Secondary A-Level)
@@ -1014,14 +1194,7 @@ class ClassandSubjectController extends Controller
      */
     private function editClassSubjectsCustom(School $school, $classId, $streamId)
     {
-       
-        $assignment = ClassStreamAssignment::with([
-            'classSubjects' => function ($query) use ($classId, $streamId,$school) {
-                $query->where('stream_id', $streamId)
-                    ->where('class_id', $classId)
-                    ->where('school_id', $school->id);
-            }
-        ])
+        $assignment = ClassStreamAssignment::where('school_id', $school->id)
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
             ->first();
@@ -1030,35 +1203,71 @@ class ClassandSubjectController extends Controller
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');
         }
 
-        $assignedSubjectIds = $assignment->classSubjects
-            ->where('subject_source', 'custom')
+        $classType = $this->resolveSubjectType($classId, $school->id, $streamId);
+
+        $rows = ClassSubject::where('school_id', $school->id)
+            ->where('class_id', $classId)
+            ->where('stream_id', $streamId)
+            ->get();
+
+        $allCustom = CustomSubject::forSchool($school->id)->get();
+
+        // 1) Rows that already point at a custom subject — whatever their
+        //    subject_source says (a row switched back to the default list and
+        //    then to custom again keeps its custom_subject_id).
+        $assignedSubjectIds = $rows->whereNotNull('custom_subject_id')
             ->pluck('custom_subject_id')
-            ->toArray();
+            ->map(fn($v) => (int) $v)
+            ->all();
 
-        $oLevelIds = Helper::MasterRecords(config('constants.options.O_LEVEL'))->pluck('md_id')->toArray();
-        $primaryTheologyIds = Helper::MasterRecords(config('constants.options.PRIMARY_THEOLOGY_CLASSES'))->pluck('md_id')->toArray();
-        $primarySecularIds = Helper::MasterRecords(config('constants.options.PRIMARY_SECULAR_CLASSES'))->pluck('md_id')->toArray();
+        // 2) Legacy default-list rows with no custom link yet: tick the
+        //    same-named custom subject of this category (updateClassSubjects
+        //    upgrades them in place on save using the same rule).
+        $byName = $allCustom->where('class_type', $classType)
+            ->keyBy(fn($c) => mb_strtolower(trim($c->subject_name)));
 
-        if (in_array($classId, $oLevelIds)) {
-            $classType = 'idaad';
-        } elseif (in_array($classId, $primaryTheologyIds)) {
-            $classType = 'primary_theology';
-        } elseif (in_array($classId, $primarySecularIds)) {
-            $classType = 'primary_secular';
-        } else {
-            $classType = 'thanawi';
+        foreach ($rows->whereNull('custom_subject_id')->whereNotNull('subject_id') as $row) {
+            if ($row->is_auto_synced || $row->subject_source === 'school_alevel') {
+                continue;
+            }
+            $name = mb_strtolower(trim((string) Helper::recordMdname($row->subject_id)));
+            if ($name !== '' && $byName->has($name)) {
+                $assignedSubjectIds[] = (int) $byName[$name]->id;
+            }
         }
 
+        $assignedSubjectIds = array_values(array_unique($assignedSubjectIds));
+
+        // Active subjects of this category, PLUS anything already attached to
+        // the class even if it has since been deactivated (the delete button
+        // on Manage Subjects deactivates in-use subjects). Without this the
+        // attached-but-inactive subject was invisible here and the next save
+        // silently removed it from the class.
         $customSubjects = CustomSubject::forSchool($school->id)
-            ->ofType($classType)
-            ->active()
+            ->where(function ($q) use ($classType, $assignedSubjectIds) {
+                $q->where(function ($q2) use ($classType) {
+                    $q2->where('class_type', $classType)->where('is_active', true);
+                })->orWhereIn('id', $assignedSubjectIds);
+            })
             ->orderBy('subject_name')
             ->get();
+
+        // Rows this screen can't edit (A-Level combination subjects etc.),
+        // shown read-only so the admin knows they exist and are kept.
+        $customNamesLower = $allCustom->mapWithKeys(fn($c) => [mb_strtolower(trim($c->subject_name)) => true])->all();
+        $lockedSubjectNames = $rows
+            ->filter(fn($row) => $this->isLockedClassSubjectRow($row, $customNamesLower, true))
+            ->map(fn($row) => $row->display_name)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
         return view('Class.edit-class-custom', compact(
             'assignment',
             'assignedSubjectIds',
             'customSubjects',
+            'lockedSubjectNames',
             'classType',
             'classId',
             'streamId'

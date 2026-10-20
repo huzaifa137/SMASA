@@ -60,8 +60,8 @@ return [
     'toggles' => [
         'show_border' => ['label' => 'Decorative border & corners', 'icon' => 'fa-border-all', 'group' => 'Appearance'],
         'show_watermark' => ['label' => 'Watermark (logo / school name)', 'icon' => 'fa-stamp', 'group' => 'Appearance'],
-        // Secondary only: the coloured cap on the left strip + the band across the top.
-        'show_top_band' => ['label' => 'Top colour band (left cap + top edge)', 'icon' => 'fa-grip-lines', 'group' => 'Appearance'],
+        // Secondary only: the coloured frame — caps on the left/right strips + the bands across the top and bottom.
+        'show_top_band' => ['label' => 'Colour frame (left/right strips + top/bottom bands)', 'icon' => 'fa-grip-lines', 'group' => 'Appearance'],
 
         // ── Whole-section master switches ───────────────────────────
         // Turn an entire boxed section off in one click. Independent of

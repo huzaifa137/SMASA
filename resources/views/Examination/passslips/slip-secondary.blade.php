@@ -201,9 +201,46 @@
             z-index: 1;
         }
 
+        /* Right colour strip: accent with a blue cap at the BOTTOM (mirrors the left strip) */
+        .side-strip-right {
+            position: absolute;
+            right: 0;
+            /* start BELOW the top band so the band runs unbroken into the top-right corner,
+               exactly like the bottom band runs into the bottom-right cap */
+            top: var(--cap-size, 28px);
+            bottom: 0;
+            width: var(--cap-size, 28px);
+            background: var(--accent);
+            z-index: 1;
+        }
+
+        .side-strip-right::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: calc(var(--cap-size, 28px) + 34px);
+            background: var(--blue);
+        }
+
+        /* Horizontal band along the bottom edge, mirroring the top band */
+        .cap-bar-bottom {
+            position: absolute;
+            left: 0;
+            right: var(--cap-size, 28px);
+            bottom: 0;
+            height: var(--cap-size, 28px);
+            background: var(--blue);
+            z-index: 1;
+        }
+
         .slip.has-top-band .slip-body {
             /* clear the top band (the letterhead already has ~14px of its own padding) */
             margin-top: max(0px, calc(var(--cap-size, 28px) - 14px));
+            /* clear the right strip and the bottom band */
+            margin-right: var(--cap-size, 28px);
+            margin-bottom: max(0px, calc(var(--cap-size, 28px) - 4px));
         }
 
         .slip-body {
@@ -650,7 +687,10 @@
         .slip,
         .side-strip,
         .side-strip::before,
+        .side-strip-right,
+        .side-strip-right::before,
         .cap-bar,
+        .cap-bar-bottom,
         .title-band,
         .sum-bar,
         .watermark img {
@@ -951,6 +991,8 @@
                 <div class="side-strip {{ $cfg['top_band'] ? 'has-cap' : '' }}"></div>
                 @if($cfg['top_band'])
                     <div class="cap-bar"></div>
+                    <div class="side-strip-right"></div>
+                    <div class="cap-bar-bottom"></div>
                 @endif
 
                 @if($cfg['watermark'])

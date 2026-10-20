@@ -790,15 +790,15 @@ selected classes" is clicked. --}}
                 </div>
 
                 {{-- Top band colour — Secondary design only (its toggle is
-                "Top colour band" under Appearance below). --}}
+                "Colour frame" under Appearance below). --}}
                 @if($template === 'secondary-classic')
                     <div class="cz-color-row">
-                        <label for="czCapColor">Top band colour</label>
+                        <label for="czCapColor">Band colour</label>
                         <div class="cz-color-swatch">
                             <input type="color" id="czCapColor" value="#1e88e5">
                         </div>
                     </div>
-                    {{-- One thickness for BOTH the left strip width and the top band height --}}
+                    {{-- One thickness for BOTH the strip width and the band height --}}
                     <div class="cz-size-row">
                         <label for="czCapSizeNum">Band thickness</label>
                         <input type="range" id="czCapSizeRange" min="12" max="60" step="1" value="28" data-default="28">
@@ -809,7 +809,7 @@ selected classes" is clicked. --}}
                             <i class="fas fa-rotate-left"></i>
                         </button>
                     </div>
-                    <p class="cz-hint">Sets the left strip width and the top band height together. Default 28px.</p>
+                    <p class="cz-hint">Sets the left/right strip width and the top/bottom band height together. Default 28px.</p>
                 @endif
 
                 {{-- Page Size & Text Scale — same as Accent Colour above:
