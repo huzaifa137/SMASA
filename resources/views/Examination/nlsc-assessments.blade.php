@@ -291,6 +291,8 @@ use App\Http\Controllers\Helper;
                     </div>
                     <div class="col-md-6">
                         <label class="nt-form-label" id="subjectMatterLabel">Topics <span class="nt-required">*</span></label>
+                        <a id="catalogueLink" href="#" target="_blank" rel="noopener"
+                            style="display:none; float:right; font-size:.75rem; font-weight:600;"></a>
 
                         {{-- Searchable Topics --}}
                         <div class="nt-searchable" id="subjectMatterSearchable">
@@ -408,6 +410,7 @@ use App\Http\Controllers\Helper;
         const SUBJECT_MATTER_OPTIONS_URL = "{{ route('nlsc-assessments.subject-matter-options', $classSubject->id) }}";
         const COMPETENCY_AREA_OPTIONS_URL = "{{ route('nlsc-assessments.competency-area-options') }}";
         const STORE_URL = "{{ route('nlsc-assessments.store', ['examId' => $exam->id, 'classSubjectId' => $classSubject->id]) }}";
+        const CATALOGUE_URLS = @json($catalogueUrls);
         const ASSESSMENT_BASE_URL = STORE_URL; // update/destroy share the same base path, just with /{id} appended
 
         // Edit-mode state — set by an "Edit" click, consumed once the
@@ -677,6 +680,16 @@ use App\Http\Controllers\Helper;
             subjectMatterSearchable.disable('Loading...');
             competencyAreaSearchable.disable('Select a topic/project first...');
             refreshCreateButtonState();
+
+            const $catalogueLink = document.getElementById('catalogueLink');
+            const catalogueUrl = type === 'projects' ? CATALOGUE_URLS.projects : CATALOGUE_URLS.topics;
+            if (type && catalogueUrl) {
+                $catalogueLink.href = catalogueUrl;
+                $catalogueLink.textContent = 'Manage ' + (type === 'projects' ? 'projects' : 'topics') + ' for this subject';
+                $catalogueLink.style.display = '';
+            } else {
+                $catalogueLink.style.display = 'none';
+            }
 
             if (!type) {
                 subjectMatterSearchable.disable('Select assessment type first...');

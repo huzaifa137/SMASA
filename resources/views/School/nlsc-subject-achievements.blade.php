@@ -335,6 +335,22 @@
         .nt-select-tick { opacity: 0; font-size: .72rem; }
         .nt-select-option.is-selected .nt-select-tick { opacity: 1; }
 
+        .nt-select-own {
+            display: inline-block;
+            margin-left: .4rem;
+            padding: .05rem .45rem;
+            border-radius: 999px;
+            background: #e0f2f1;
+            color: #0f766e;
+            font-size: .62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            vertical-align: middle;
+        }
+
+        .nt-select-option.is-selected .nt-select-own { background: rgba(255, 255, 255, .25); color: #fff; }
+
         .nt-select-option mark {
             background: rgba(255, 214, 0, .45);
             color: inherit;
@@ -433,9 +449,17 @@
                         {{-- Real <select> is hidden but still submitted with the form,
                              so the backend and onchange-submit behaviour are unchanged. --}}
                         <select name="subject" id="subjectNativeSelect" class="d-none" tabindex="-1" aria-hidden="true">
-                            @foreach ($subjectOptions as $opt)
+                            @foreach ($subjectOptions->filter(fn($o) => empty($o->is_school_subject)) as $opt)
                                 <option value="{{ $opt->md_id }}" @if((int) $opt->md_id === (int) $selectedSubject) selected @endif>{{ $opt->md_name }}</option>
                             @endforeach
+                            @php $schoolSubjectOptions = $subjectOptions->filter(fn($o) => !empty($o->is_school_subject)); @endphp
+                            @if ($schoolSubjectOptions->isNotEmpty())
+                                <optgroup label="Added by your school">
+                                    @foreach ($schoolSubjectOptions as $opt)
+                                        <option value="{{ $opt->md_id }}" @if((int) $opt->md_id === (int) $selectedSubject) selected @endif>{{ $opt->md_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
                         </select>
 
                         {{-- Searchable Subject dropdown --}}
@@ -606,6 +630,8 @@
                 value: o.value,
                 label: o.textContent.trim(),
                 selected: o.selected,
+                // Subjects the school created itself sit in an <optgroup>.
+                own: o.parentElement.tagName === 'OPTGROUP',
             }));
 
             let activeIndex = options.findIndex(o => o.selected);
@@ -633,7 +659,7 @@
                     return `<li class="nt-select-option${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}"
                                 role="option" data-value="${escapeHtml(opt.value)}" data-index="${i}"
                                 aria-selected="${isSelected}">
-                                <span>${highlight(opt.label, query)}</span>
+                                <span>${highlight(opt.label, query)}${opt.own ? ' <small class="nt-select-own">Your school</small>' : ''}</span>
                                 <i class="fas fa-check nt-select-tick"></i>
                             </li>`;
                 }).join('');

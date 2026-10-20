@@ -305,10 +305,7 @@ class ALevelCombinationController extends Controller
         $syntheticId = $subject->syntheticId();
 
         $inUse = StudentALevelCombination::where('school_id', $schoolId)
-            ->where(function ($q) use ($syntheticId) {
-                $q->whereJsonContains('principal_subject_ids', $syntheticId)
-                    ->orWhere('subsidiary_subject_id', $syntheticId);
-            })
+            ->holdingSubject($syntheticId)
             ->exists();
 
         if ($inUse) {

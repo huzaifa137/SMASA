@@ -37,7 +37,7 @@ class SchoolNlscProjectController extends Controller
         $schoolId = Session('LoggedSchool');
 
         $seniorOptions = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->sortBy('md_id')->values();
-        $subjectOptions = Helper::MasterRecords(config('constants.options.NLSC_SUBJECTS'))->sortBy('md_id')->values();
+        $subjectOptions = Helper::nlscSubjectOptionsForSchool($schoolId);
 
         $selectedSenior = (int) $request->get('senior', $seniorOptions->first()->md_id ?? 0);
         $selectedSubject = (int) $request->get('subject', $subjectOptions->first()->md_id ?? 0);

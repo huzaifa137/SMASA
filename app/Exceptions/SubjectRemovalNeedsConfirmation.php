@@ -17,7 +17,8 @@ class SubjectRemovalNeedsConfirmation extends RuntimeException
         parent::__construct(self::describe($impact));
     }
 
-    public static function describe(array $impact): string
+    /** "12 entered marks, 3 timetable slots" — only the non-zero parts. */
+    protected static function parts(array $impact): array
     {
         $parts = [];
 
@@ -31,6 +32,25 @@ class SubjectRemovalNeedsConfirmation extends RuntimeException
         $add($impact['assessments'] ?? 0, 'NLSC assessment (with its marks)', 'NLSC assessments (with their marks)');
         $add($impact['timetable'] ?? 0, 'timetable slot', 'timetable slots');
         $add($impact['attendance'] ?? 0, 'subject attendance record', 'subject attendance records');
+
+        return $parts;
+    }
+
+    /**
+     * Wording for deleting a school's own elective (as opposed to un-ticking
+     * a subject on one class): the elective goes from every class at once.
+     */
+    public static function describeDeletion(string $subjectName, array $impact): string
+    {
+        $parts = self::parts($impact);
+
+        return 'Deleting "' . $subjectName . '" will remove it from every class and permanently delete: '
+            . ($parts ? implode(', ', $parts) : 'its class records') . '. This cannot be undone.';
+    }
+
+    public static function describe(array $impact): string
+    {
+        $parts = self::parts($impact);
 
         $names = implode(', ', $impact['names'] ?? []);
         $text = 'Removing ' . ($names !== '' ? $names : 'this subject') . ' from the class will permanently delete: '

@@ -930,39 +930,17 @@
             });
 
             row.querySelector('.my-subject-delete')?.addEventListener('click', () => {
-                Swal.fire({
-                    title: 'Delete this elective?',
-                    text: 'This cannot be undone. It can only be deleted while no student currently has it selected.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Delete',
-                    confirmButtonColor: '#dc3545',
-                    allowOutsideClick: () => !Swal.isLoading(),
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        return fetch(`{{ url('o-level-electives/subjects') }}/${row.dataset.id}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                        })
-                            .then(r => r.json())
-                            .then(res => {
-                                if (!res.success) {
-                                    Swal.showValidationMessage(res.message || 'Failed to delete elective.');
-                                    return false;
-                                }
-                                return true;
-                            })
-                            .catch(() => {
-                                Swal.showValidationMessage('Failed to delete — check your connection.');
-                                return false;
-                            });
-                    },
-                }).then(result => {
-                    if (!result.isConfirmed || !result.value) return;
+                const deleteUrl = `{{ url('o-level-electives/subjects') }}/${row.dataset.id}`;
 
+                const sendDelete = (confirmRemove) => fetch(deleteUrl + (confirmRemove ? '?confirm_remove=1' : ''), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                }).then(r => r.json());
+
+                const removeFromScreen = () => {
                     const removedName = row.querySelector('.my-subject-name')?.textContent.trim();
                     delete subjectNameMap[mdId];
 
@@ -979,6 +957,71 @@
 
                     row.remove();
                     Toast.fire({ icon: 'success', title: `"${removedName}" deleted` });
+                };
+
+                Swal.fire({
+                    title: 'Delete this elective?',
+                    text: 'This cannot be undone. It can only be deleted while no student currently has it selected.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Delete',
+                    confirmButtonColor: '#dc3545',
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return sendDelete(false)
+                            .then(res => {
+                                if (res.requires_confirmation) {
+                                    // Marks / assessments exist — hand the warning to the next dialog.
+                                    return { needsConfirm: true, message: res.message };
+                                }
+                                if (!res.success) {
+                                    Swal.showValidationMessage(res.message || 'Failed to delete elective.');
+                                    return false;
+                                }
+                                return { deleted: true };
+                            })
+                            .catch(() => {
+                                Swal.showValidationMessage('Failed to delete — check your connection.');
+                                return false;
+                            });
+                    },
+                }).then(result => {
+                    if (!result.isConfirmed || !result.value) return;
+
+                    if (result.value.deleted) {
+                        removeFromScreen();
+                        return;
+                    }
+
+                    // Same confirmation the class edit screen shows before it deletes marks.
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Delete this elective and its data?',
+                        text: result.value.message,
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it and its data',
+                        cancelButtonText: 'Cancel',
+                        allowOutsideClick: () => !Swal.isLoading(),
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return sendDelete(true)
+                                .then(res => {
+                                    if (!res.success) {
+                                        Swal.showValidationMessage(res.message || 'Failed to delete elective.');
+                                        return false;
+                                    }
+                                    return true;
+                                })
+                                .catch(() => {
+                                    Swal.showValidationMessage('Failed to delete — check your connection.');
+                                    return false;
+                                });
+                        },
+                    }).then(second => {
+                        if (second.isConfirmed && second.value) removeFromScreen();
+                    });
                 });
             });
         }

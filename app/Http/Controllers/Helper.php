@@ -2349,6 +2349,16 @@ class Helper extends Controller
             return null;
         }
 
+        // A school's OWN elective (school_olevel_electives, synthetic id) has
+        // no NCDC equivalent to translate to — it IS its own NLSC subject.
+        // The school's Topics/Projects/Subject Achievement catalogue is
+        // keyed by that same synthetic id (school-scoped tables, so ids
+        // never clash between schools), which is how the school adds its
+        // own content for it from the normal NLSC screens.
+        if (\App\Models\SchoolOLevelElective::isSyntheticId($secondaryOlevelSubjectId)) {
+            return $secondaryOlevelSubjectId;
+        }
+
         // Matched by NAME, not by hard-coded md_id, so this still works on a
         // database whose master_datas ids differ from the dev copy.
         static $nameMap = [
@@ -2386,6 +2396,32 @@ class Helper extends Controller
         $target = $nameMap[$olevel[$secondaryOlevelSubjectId] ?? ''] ?? null;
 
         return $target !== null ? ($nlsc[$target] ?? null) : null;
+    }
+
+    /**
+     * The Subject dropdown for the school-facing NLSC catalogue screens
+     * (Topics / Projects / Subject Achievement): NCDC's standard subjects
+     * first, then this school's own active electives — so a school can set
+     * up Activities of Integration, Projects and Subject Achievements for
+     * an elective it created, exactly as it does for a standard subject.
+     * School electives carry is_school_subject = true (the views group them
+     * under their own heading) and their synthetic id as md_id.
+     */
+    public static function nlscSubjectOptionsForSchool($schoolId)
+    {
+        $standard = self::MasterRecords(config('constants.options.NLSC_SUBJECTS'))->sortBy('md_id')->values();
+
+        $own = \App\Models\SchoolOLevelElective::forSchool($schoolId)
+            ->active()
+            ->orderBy('subject_name')
+            ->get()
+            ->map(fn($e) => (object) [
+                'md_id' => $e->syntheticId(),
+                'md_name' => $e->subject_name,
+                'is_school_subject' => true,
+            ]);
+
+        return $standard->concat($own)->values();
     }
 
     /**

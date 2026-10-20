@@ -821,7 +821,10 @@ public function dropDown($links)
         // anywhere to say why.
         $inUseByCombination = DB::table('student_alevel_combinations')
             ->where(function ($q) use ($md_id) {
+                // ids are stored as strings or numbers — JSON_CONTAINS is
+                // type-strict, so check both (same as the O-Level guard).
                 $q->whereJsonContains('principal_subject_ids', (int) $md_id)
+                    ->orWhereJsonContains('principal_subject_ids', (string) $md_id)
                     ->orWhere('subsidiary_subject_id', $md_id);
             })
             ->exists();

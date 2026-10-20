@@ -93,11 +93,30 @@ class NlscAssessmentController extends Controller
         $seniorOptions = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->sortBy('md_id')->values();
         $className = Helper::recordMdname($classSubject->class_id);
 
+        // Shortcuts to this subject's own catalogue (Topics / Projects) so
+        // an empty dropdown is one click from being fixed — works for a
+        // standard subject and for a school-created elective alike.
+        $catalogueUrls = [];
+        $nlscSubjectId = Helper::secondaryOlevelToNlscSubjectId($classSubject->subject_id);
+
+        if ($nlscSubjectId) {
+            $query = ['senior' => $classSubject->class_id, 'subject' => $nlscSubjectId];
+
+            if (PermissionHelper::canFeature('view_nlsc_topics')) {
+                $catalogueUrls['topics'] = route('school.nlsc-topics', $query);
+            }
+
+            if (PermissionHelper::canFeature('view_nlsc_projects')) {
+                $catalogueUrls['projects'] = route('school.nlsc-projects', $query);
+            }
+        }
+
         return view('Examination.nlsc-assessments', compact(
             'exam',
             'classSubject',
             'className',
-            'assessments'
+            'assessments',
+            'catalogueUrls'
         ));
     }
 

@@ -207,7 +207,7 @@ class OLevelElectiveController extends Controller
      * ALevelCombinationController::deleteSchoolSubject() uses, so deleting
      * an elective never silently corrupts an already-saved selection.
      */
-    public function deleteSchoolSubject($id)
+    public function deleteSchoolSubject(Request $request, $id)
     {
         PermissionHelper::denyUnlessFeature('manage_olevel_subjects');
 
@@ -220,27 +220,58 @@ class OLevelElectiveController extends Controller
 
         $syntheticId = $subject->syntheticId();
 
-        $inUse = StudentOLevelElective::where('school_id', $schoolId)
-            ->whereJsonContains('elective_subject_ids', $syntheticId)
-            ->exists();
+        // Saved electives hold ids as strings OR numbers; the scope checks
+        // both (a plain whereJsonContains(int) never matches "9500000001").
+        $students = StudentOLevelElective::where('school_id', $schoolId)
+            ->holdingSubject($syntheticId)
+            ->count();
 
-        if ($inUse) {
+        if ($students > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'This elective is already part of one or more students\' selections, so it cannot be deleted. Remove it from their electives first.',
+                'message' => 'This elective is currently selected by ' . $students . ' student' . ($students === 1 ? '' : 's')
+                    . ', so it cannot be deleted. Remove it from their electives first.',
             ], 422);
         }
 
         // No student has it, but it may still sit on classes as a subject
-        // (added by the elective sync or ticked on the class). Take it — and
-        // anything hanging off it — off those classes too, so a deleted
-        // elective isn't left behind as an "Unknown subject" row.
+        // (added by the elective sync or ticked on the class) with marks,
+        // NLSC assessments, timetable slots or attendance hanging off it.
+        // Deleting wipes all of that permanently, so — like un-ticking a
+        // subject on the class edit screen — ask first.
         $classRows = \App\Models\ClassSubject::where('school_id', $schoolId)
             ->where('subject_id', $syntheticId)
             ->get();
-        app(\App\Services\OrphanCleanupService::class)->removeClassSubjects($schoolId, $classRows);
 
-        $subject->delete();
+        $cleanup = app(\App\Services\OrphanCleanupService::class);
+
+        if ($classRows->isNotEmpty() && !$request->boolean('confirm_remove')) {
+            $impact = $cleanup->classSubjectImpact($schoolId, $classRows);
+
+            if ($impact['total'] > 0) {
+                return response()->json([
+                    'success' => false,
+                    'requires_confirmation' => true,
+                    'message' => \App\Exceptions\SubjectRemovalNeedsConfirmation::describeDeletion($subject->subject_name, $impact),
+                    'impact' => $impact,
+                ]);
+            }
+        }
+
+        // All or nothing: never leave the elective half-removed.
+        DB::transaction(function () use ($cleanup, $schoolId, $classRows, $subject, $syntheticId) {
+            $cleanup->removeClassSubjects($schoolId, $classRows);
+
+            // The elective's own NLSC catalogue (Topics + competency areas +
+            // subject achievements, Projects + their competency areas) was
+            // set up by the school for this subject alone — it goes with it
+            // (child rows cascade), rather than lingering under an id that
+            // no longer resolves to a subject name.
+            \App\Models\SchoolNlscTopic::where('school_id', $schoolId)->where('subject_id', $syntheticId)->delete();
+            \App\Models\SchoolNlscProjectArea::where('school_id', $schoolId)->where('subject_id', $syntheticId)->delete();
+
+            $subject->delete();
+        });
 
         return response()->json(['success' => true]);
     }
