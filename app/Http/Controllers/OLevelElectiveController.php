@@ -234,9 +234,11 @@ class OLevelElectiveController extends Controller
             ], 422);
         }
 
-        // No student has it, but it may still sit on classes as a subject
-        // (added by the elective sync or ticked on the class) with marks,
-        // NLSC assessments, timetable slots or attendance hanging off it.
+        // No student has it, but the elective can still own a lot: class
+        // subject rows (added by the elective sync or ticked on a class)
+        // with marks, timetable slots and attendance, plus its own NLSC
+        // catalogue (Topics / Activities of Integration, Subject
+        // Achievements, Projects) and the assessments made against it.
         // Deleting wipes all of that permanently, so — like un-ticking a
         // subject on the class edit screen — ask first.
         $classRows = \App\Models\ClassSubject::where('school_id', $schoolId)
@@ -245,8 +247,8 @@ class OLevelElectiveController extends Controller
 
         $cleanup = app(\App\Services\OrphanCleanupService::class);
 
-        if ($classRows->isNotEmpty() && !$request->boolean('confirm_remove')) {
-            $impact = $cleanup->classSubjectImpact($schoolId, $classRows);
+        if (!$request->boolean('confirm_remove')) {
+            $impact = $cleanup->schoolSubjectImpact($schoolId, $syntheticId, $classRows);
 
             if ($impact['total'] > 0) {
                 return response()->json([
@@ -260,15 +262,14 @@ class OLevelElectiveController extends Controller
 
         // All or nothing: never leave the elective half-removed.
         DB::transaction(function () use ($cleanup, $schoolId, $classRows, $subject, $syntheticId) {
+            // Class subject rows first — timetable slots / attendance point
+            // at class_subjects.id, so those go with them.
             $cleanup->removeClassSubjects($schoolId, $classRows);
 
-            // The elective's own NLSC catalogue (Topics + competency areas +
-            // subject achievements, Projects + their competency areas) was
-            // set up by the school for this subject alone — it goes with it
-            // (child rows cascade), rather than lingering under an id that
-            // no longer resolves to a subject name.
-            \App\Models\SchoolNlscTopic::where('school_id', $schoolId)->where('subject_id', $syntheticId)->delete();
-            \App\Models\SchoolNlscProjectArea::where('school_id', $schoolId)->where('subject_id', $syntheticId)->delete();
+            // Then everything else that belongs to the elective itself:
+            // NLSC topics, competency areas, subject achievements,
+            // projects, their assessments + marks, marks and settings.
+            $cleanup->purgeSchoolSubject($schoolId, $syntheticId);
 
             $subject->delete();
         });

@@ -32,6 +32,9 @@ class SubjectRemovalNeedsConfirmation extends RuntimeException
         $add($impact['assessments'] ?? 0, 'NLSC assessment (with its marks)', 'NLSC assessments (with their marks)');
         $add($impact['timetable'] ?? 0, 'timetable slot', 'timetable slots');
         $add($impact['attendance'] ?? 0, 'subject attendance record', 'subject attendance records');
+        $add($impact['topics'] ?? 0, 'NLSC topic (with its competency areas)', 'NLSC topics (with their competency areas)');
+        $add($impact['achievements'] ?? 0, 'subject achievement statement', 'subject achievement statements');
+        $add($impact['projects'] ?? 0, 'project (with its competency areas)', 'projects (with their competency areas)');
 
         return $parts;
     }

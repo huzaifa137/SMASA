@@ -270,6 +270,164 @@ class OrphanCleanupService
         DB::table('class_subjects')->whereIn('id', $rows->pluck('id')->all())->delete();
     }
 
+    /**
+     * Everything that hangs off ONE school-added O-Level elective (a
+     * school_olevel_electives row, identified by its synthetic id), whichever
+     * class it was ever used in:
+     *
+     *   - the elective's own NLSC catalogue: Topics (Activities of
+     *     Integration) + their Competency Areas + Subject Achievements, and
+     *     Project Areas + Projects + their Competency Areas
+     *   - every NLSC assessment created against that subject, topic,
+     *     project or achievement, with its marks and report-card picks
+     *   - the "already cloned" log rows, so a later elective can never
+     *     inherit them
+     *   - entered marks, per-exam subject settings and timetable slots
+     *
+     * Deleted explicitly, children first, rather than leaning on the FK
+     * cascades — those only exist where the migrations ran cleanly.
+     * class_subjects rows (and the attendance / timetable rows that point at
+     * them) are handled by removeClassSubjects(), which the caller runs first.
+     */
+    public function purgeSchoolSubject($schoolId, int $subjectId): void
+    {
+        [$topicIds, $areaIds, $projectIds, $achievementIds] = $this->schoolSubjectCatalogueIds($schoolId, $subjectId);
+
+        $this->purgeAssessments(
+            $this->schoolSubjectAssessmentIds($schoolId, $subjectId, $topicIds, $projectIds, $achievementIds)
+        );
+
+        // Catalogue, children first.
+        $this->deleteWhereIn('school_nlsc_project_competency_areas', 'school_nlsc_project_id', $projectIds);
+        $this->deleteWhereIn('school_nlsc_projects', 'id', $projectIds);
+        $this->deleteWhereIn('school_nlsc_project_areas', 'id', $areaIds);
+        $this->deleteWhereIn('school_nlsc_subject_achievements', 'id', $achievementIds);
+        $this->deleteWhereIn('school_nlsc_competency_areas', 'school_nlsc_topic_id', $topicIds);
+        $this->deleteWhereIn('school_nlsc_topics', 'id', $topicIds);
+
+        // Without these, a re-created elective that happened to reuse the id
+        // would be treated as "already cloned" and open empty.
+        foreach (['school_nlsc_clone_log', 'school_nlsc_project_clone_log'] as $table) {
+            if (Schema::hasTable($table)) {
+                DB::table($table)->where('school_id', $schoolId)->where('subject_id', $subjectId)->delete();
+            }
+        }
+
+        // Marks / exam settings entered against the subject, including any
+        // left on a class that no longer has a class_subjects row for it.
+        foreach (['examination_marks', 'examination_subject_settings'] as $table) {
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'school_id') && Schema::hasColumn($table, 'subject_id')) {
+                DB::table($table)->where('school_id', $schoolId)->where('subject_id', $subjectId)->delete();
+            }
+        }
+
+        // timetable_slots has no school_id — go through this school's timetables.
+        if (Schema::hasTable('timetable_slots') && Schema::hasColumn('timetable_slots', 'subject_id') && Schema::hasTable('timetables')) {
+            $timetableIds = DB::table('timetables')->where('school_id', $schoolId)->pluck('id')->all();
+
+            foreach (array_chunk($timetableIds, 500) as $chunk) {
+                DB::table('timetable_slots')
+                    ->whereIn('timetable_id', $chunk)
+                    ->where('subject_id', (string) $subjectId)
+                    ->delete();
+            }
+        }
+    }
+
+    /**
+     * What purgeSchoolSubject() would remove, for the confirmation dialog.
+     * Starts from classSubjectImpact() (timetable, attendance, names) and
+     * replaces its marks / assessments with the full, class-independent
+     * counts, then adds the elective's own NLSC catalogue.
+     *
+     * @return array{marks:int,assessments:int,timetable:int,attendance:int,electives:int,topics:int,achievements:int,projects:int,names:array,total:int}
+     */
+    public function schoolSubjectImpact($schoolId, int $subjectId, Collection $classRows): array
+    {
+        $impact = $this->classSubjectImpact($schoolId, $classRows);
+
+        [$topicIds, , $projectIds, $achievementIds] = $this->schoolSubjectCatalogueIds($schoolId, $subjectId);
+
+        $impact['topics'] = count($topicIds);
+        $impact['achievements'] = count($achievementIds);
+        $impact['projects'] = count($projectIds);
+
+        $impact['assessments'] = count(
+            $this->schoolSubjectAssessmentIds($schoolId, $subjectId, $topicIds, $projectIds, $achievementIds)
+        );
+
+        if (Schema::hasTable('examination_marks') && Schema::hasColumn('examination_marks', 'subject_id')) {
+            $impact['marks'] = DB::table('examination_marks')
+                ->where('school_id', $schoolId)
+                ->where('subject_id', $subjectId)
+                ->count();
+        }
+
+        $impact['total'] = $impact['marks'] + $impact['assessments'] + $impact['timetable'] + $impact['attendance']
+            + $impact['electives'] + $impact['topics'] + $impact['achievements'] + $impact['projects'];
+
+        return $impact;
+    }
+
+    /** @return array{0:array,1:array,2:array,3:array} topic, project-area, project, achievement ids */
+    protected function schoolSubjectCatalogueIds($schoolId, int $subjectId): array
+    {
+        $ids = function (string $table, array $where, ?string $inColumn = null, array $in = []) {
+            if (!Schema::hasTable($table) || ($inColumn !== null && empty($in))) {
+                return [];
+            }
+
+            $query = DB::table($table)->where($where);
+
+            if ($inColumn !== null) {
+                $query->whereIn($inColumn, $in);
+            }
+
+            return $query->pluck('id')->all();
+        };
+
+        $scope = ['school_id' => $schoolId, 'subject_id' => $subjectId];
+
+        $topicIds = $ids('school_nlsc_topics', $scope);
+        $areaIds = $ids('school_nlsc_project_areas', $scope);
+        $projectIds = $ids('school_nlsc_projects', [], 'school_nlsc_project_area_id', $areaIds);
+        $achievementIds = $ids('school_nlsc_subject_achievements', [], 'school_nlsc_topic_id', $topicIds);
+
+        return [$topicIds, $areaIds, $projectIds, $achievementIds];
+    }
+
+    /**
+     * Every NLSC assessment belonging to the elective: by subject, or by
+     * pointing at one of its topics / projects / achievement statements
+     * (covers assessments whose class no longer has the subject).
+     */
+    protected function schoolSubjectAssessmentIds($schoolId, int $subjectId, array $topicIds, array $projectIds, array $achievementIds): array
+    {
+        if (!Schema::hasTable('nlsc_assessments')) {
+            return [];
+        }
+
+        return DB::table('nlsc_assessments')
+            ->where('school_id', $schoolId)
+            ->where(function ($q) use ($subjectId, $topicIds, $projectIds, $achievementIds) {
+                $q->where('subject_id', $subjectId);
+
+                if (!empty($topicIds)) {
+                    $q->orWhereIn('nlsc_topic_id', $topicIds);
+                }
+
+                if (!empty($projectIds)) {
+                    $q->orWhereIn('nlsc_project_id', $projectIds);
+                }
+
+                if (!empty($achievementIds) && Schema::hasColumn('nlsc_assessments', 'nlsc_subject_achievement_id')) {
+                    $q->orWhereIn('nlsc_subject_achievement_id', $achievementIds);
+                }
+            })
+            ->pluck('id')
+            ->all();
+    }
+
     /** Rows of a table (marks / settings) belonging to one class-stream + subject. */
     protected function subjectScope($query, $schoolId, $row)
     {

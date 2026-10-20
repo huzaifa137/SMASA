@@ -45,6 +45,35 @@
         .nt-form-label { font-weight: 600; font-size: .85rem; color: #1e1b4b; margin-bottom: .35rem; display: block; }
         .nt-required { color: #dc3545; }
 
+        /* Label + right-side action link on one row */
+        .nt-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            margin-bottom: .35rem;
+        }
+
+        .nt-label-row .nt-form-label {
+            margin-bottom: 0;
+            flex: 0 1 auto;
+            min-width: 0;
+        }
+
+        .nt-catalogue-link {
+            font-size: .75rem;
+            font-weight: 600;
+            color: #2C29CA;
+            text-decoration: none;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .nt-catalogue-link:hover {
+            color: #211ea3;
+            text-decoration: underline;
+        }
+
         .nt-form-control {
             width: 100%;
             border: 1.5px solid #e4e2ff;
@@ -290,9 +319,11 @@ use App\Http\Controllers\Helper;
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="nt-form-label" id="subjectMatterLabel">Topics <span class="nt-required">*</span></label>
-                        <a id="catalogueLink" href="#" target="_blank" rel="noopener"
-                            style="display:none; float:right; font-size:.75rem; font-weight:600;"></a>
+                        <div class="nt-label-row">
+                            <label class="nt-form-label" id="subjectMatterLabel">Topics <span class="nt-required">*</span></label>
+                            <a id="catalogueLink" href="#" target="_blank" rel="noopener"
+                                class="nt-catalogue-link" style="display:none;">Manage topics</a>
+                        </div>
 
                         {{-- Searchable Topics --}}
                         <div class="nt-searchable" id="subjectMatterSearchable">
@@ -686,7 +717,7 @@ use App\Http\Controllers\Helper;
             if (type && catalogueUrl) {
                 $catalogueLink.href = catalogueUrl;
                 $catalogueLink.textContent = 'Manage ' + (type === 'projects' ? 'projects' : 'topics') + ' for this subject';
-                $catalogueLink.style.display = '';
+                $catalogueLink.style.display = 'inline';
             } else {
                 $catalogueLink.style.display = 'none';
             }
