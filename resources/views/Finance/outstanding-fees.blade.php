@@ -1,5 +1,6 @@
 {{-- resources/views/Finance/outstanding-fees.blade.php --}}
 @extends('layouts-side-bar.master')
+@section('export_title', \App\Support\ExportName::title(['Outstanding Fees', $year ?? '', !empty($term) ? \App\Support\Term::label($term) : 'All Terms', !empty($class_id) ? \App\Http\Controllers\Helper::recordMdname($class_id) : '']))
 <?php
 use App\Http\Controllers\Helper;
 use App\Helpers\PermissionHelper;

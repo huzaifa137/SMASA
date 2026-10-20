@@ -1,7 +1,7 @@
 <!-- Smart loader: instant feedback for clicks, forms, downloads -->
 <script src="{{ asset('js/smart-loader.js') }}?v={{ @filemtime(public_path('js/smart-loader.js')) }}"></script>
 <!-- Title -->
-<title>SMASA</title>
+<title>@yield('export_title', 'SMASA')</title>
 <!--Favicon -->
 <link rel="manifest" href="{{ URL::asset('manifest.json') }}">
 <meta name="theme-color" content="#0d6efd">

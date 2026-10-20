@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Exports\StudentsExamExport;
 use App\Imports\StudentExamImport;
 use App\Models\Classroom;
@@ -961,10 +962,13 @@ class StudentController extends Controller
             )->get();
         }
 
-        $cleanSchoolName = str_replace(' ', '_', $school->name);
-        $cleanYear = str_replace(' ', '_', $activeYear);
-
-        $fileName = $type . '_exams_' . $cleanYear . '_' . $cleanSchoolName . '.xlsx';
+        // "Thanawi-Exam-Marks_Al-Noor-Primary_2026_45-Students.xlsx"
+        $fileName = ExportName::file([
+            ucfirst($type) . ' Exam Marks',
+            $school->name,
+            $activeYear,
+            $students->count() . ' Students',
+        ], 'xlsx');
 
         return Excel::download(
             new StudentsExamExport($students, $subjects, $activeYear),
@@ -1584,12 +1588,12 @@ class StudentController extends Controller
             })->all();
         }
 
-        $filenamePrefix = $mode === 'update' ? 'students_update_' : 'students_import_';
-        $filename =
-            $filenamePrefix .
-            preg_replace('/\\s+/', '_', $className) . '_' .
-            preg_replace('/\\s+/', '_', $streamName) . '_' .
-            $year . '.xlsx';
+        // "Students-Update-Sheet_P5-Blue_2026.xlsx" / "Students-Import-Template_P5-Blue_2026.xlsx"
+        $filename = ExportName::file([
+            $mode === 'update' ? 'Students Update Sheet' : 'Students Import Template',
+            ExportName::classStream($className, $streamName),
+            $year,
+        ], 'xlsx');
 
         return Excel::download(
             new StudentBulkTemplate(

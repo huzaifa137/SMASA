@@ -3,6 +3,7 @@ use App\Http\Controllers\Helper;
 ?>
 @extends('layouts-side-bar.master')
 
+@section('export_title', \App\Support\ExportName::title(array_merge(['Grade Analysis', request('class_id') ? \App\Support\ExportName::classStream(\App\Http\Controllers\Helper::recordMdname(request('class_id')), request('stream_id') ? \App\Http\Controllers\Helper::recordMdname(request('stream_id')) : '') : 'All Classes'], \App\Support\ExportName::examScope($exam ?? null))))
 @section('css')
     @include('Examination.reports.partials.styles')
 @endsection

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Kindergarten Learning Journey — Preview</title>
+    <title>{{ \App\Support\ExportName::reportCardTitle($exam ?? null, $mode ?? 'single', $student ?? null, $slips ?? []) }}</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap"
         rel="stylesheet">

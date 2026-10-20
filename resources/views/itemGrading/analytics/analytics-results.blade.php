@@ -1,6 +1,7 @@
 {{-- resources/views/itemGrading/analytics-results.blade.php --}}
 @extends('layouts-side-bar.master')
 
+@section('export_title', \App\Support\ExportName::title(['Grading Analytics Results']))
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">

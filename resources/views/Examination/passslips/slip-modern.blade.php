@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Card (Modern) — {{ $exam->exam_name }}</title>
+    <title>{{ \App\Support\ExportName::reportCardTitle($exam ?? null, $mode ?? 'single', $student ?? null, $slips ?? []) }}</title>
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
@@ -1515,6 +1515,7 @@
                     'minichart' => $on('show_minichart', true, $savedCfg),
                     'qr' => $on('show_qr', true, $savedCfg),
                     'rank' => $on('show_rank', true, $savedCfg),
+                    'decimals' => \App\Helpers\NumberHelper::useDecimals($on('show_decimals', false, $savedCfg)),
                     'dev' => $on('show_dev', true, $savedCfg),
                     // Grade and Grade Point are independent columns now. 'grade_pill'
                     // keeps its old name but means the "Grade column"; falls back to the
@@ -2007,7 +2008,7 @@
                         @if($cfg['sum_attendance'] && $attPct !== null)
                             <div class="sum-cell">
                                 <div class="sum-lbl">Attendance</div>
-                                <div class="sum-val">{{ $attPct }}%</div>
+                                <div class="sum-val">{{ \App\Helpers\NumberHelper::num($attPct) }}%</div>
                             </div>
                         @endif
                     </div>
@@ -2107,7 +2108,7 @@
                                                     $examPctCnt = $subjMarks->filter(fn($sm) => ($sm->exams[$ex->id]['percentage'] ?? null) !== null)->count();
                                                     $examAvgPct = $examPctCnt > 0 ? round($examPctSum / $examPctCnt, 1) : null;
                                                 @endphp
-                                                <td class="score-td" colspan="2">{{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}</td>
+                                                <td class="score-td" colspan="2">{{ $examAvgPct !== null ? \App\Helpers\NumberHelper::num($examAvgPct) . '%' : '—' }}</td>
                                             @endif
                                         @endforeach
                                         @if($cfg['grade_pill'])
@@ -2210,8 +2211,8 @@
                                                 @if($cfg['dev'])
                                                     <td class="num-td">
                                                         @if($delta !== null)
-                                                            @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                            @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                            @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                            @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                             @else <span class="dev-eq">—</span>
                                                             @endif
                                                         @else <span class="dev-eq">—</span>
@@ -2264,8 +2265,8 @@
                                             @if($cfg['dev'])
                                                 <td class="num-td">
                                                     @if($delta !== null)
-                                                        @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                        @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                        @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                        @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                         @else <span class="dev-eq">—</span>
                                                         @endif
                                                     @else <span class="dev-eq">—</span>
@@ -2314,8 +2315,8 @@
                                         @if($cfg['dev'])
                                             <td class="num-td">
                                                 @if($termDelta !== null)
-                                                    @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
-                                                    @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
+                                                    @if($termDelta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($termDelta) }} ↑</span>
+                                                    @elseif($termDelta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($termDelta) }} ↓</span>
                                                     @else <span class="dev-eq">—</span>
                                                     @endif
                                                 @else <span class="dev-eq">—</span>

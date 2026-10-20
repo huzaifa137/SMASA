@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\ClassStudentsExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -117,7 +118,12 @@ class ExamController extends Controller
 
         return Excel::download(
             new ClassStudentsExport($classId),
-            Helper::item_md_name($classId) . '_Class_List.xlsx'
+            ExportName::file([
+                'Class-List',
+                Helper::item_md_name($classId),
+                $exam->ce_exam_name ?? '',
+                $exam->ce_exam_year ?? '',
+            ], 'xlsx')
         );
     }
 
@@ -273,7 +279,7 @@ class ExamController extends Controller
 
         $pdf = PDF::loadView('Exam.ranked-results-pdf', compact('rankedStudents', 'className', 'examName', 'year'));
 
-        return $pdf->download("class_ranking_{$className}_{$examName}.pdf");
+        return $pdf->download(ExportName::file(['Class-Ranking', $className, $examName, $year], 'pdf'));
     }
 
     // Report Generation / English Versions
@@ -323,6 +329,13 @@ class ExamController extends Controller
         $examName = Helper::db_item_from_column('created_exams', $examId, 'ce_exam_name');
         $schoolName = Helper::current_logged_school(Session('LoggedSchool'));
 
+        // Name the download after what it contains: one student's card
+        // carries the student's name, a whole class is "Report-Cards_<class>".
+        $examYear = Helper::db_item_from_column('created_exams', $examId, 'ce_exam_year');
+        $filename = $students->count() === 1
+            ? ExportName::file(['Report-Card', Helper::school_student_fullName($students->keys()->first()), $className, $examName, $examYear], 'pdf')
+            : ExportName::file(['Report-Cards', $className, $examName, $examYear], 'pdf');
+
         $html = view('Exam.arabic-report-card-template', compact(
             'students',
             'className',
@@ -340,9 +353,9 @@ class ExamController extends Controller
         // $mpdf->SetDirectionality('rtl'); // CRITICAL
         $mpdf->WriteHTML($html);
 
-        return response($mpdf->Output("ReportCard_{$className}_{$examName}.pdf", 'S'))
+        return response($mpdf->Output($filename, 'S'))
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="ReportCard.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
     /**

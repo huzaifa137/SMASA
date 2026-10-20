@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كشف النتائج — {{ $exam->exam_name }}</title>
+    <title>{{ \App\Support\ExportName::reportCardTitle($exam ?? null, $mode ?? 'single', $student ?? null, $slips ?? []) }}</title>
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     {{-- Arabic-optimised typefaces: Noto Naskh Arabic (body) + Amiri (display headings) --}}
     <link
@@ -49,6 +49,7 @@
             'minichart' => $on('show_minichart'),
             'qr' => $on('show_qr'),
             'rank' => $on('show_rank'),
+            'decimals' => \App\Helpers\NumberHelper::useDecimals($on('show_decimals', false)),
             'dev' => $on('show_dev'),
             'grade_pill' => $on('show_grade_pill'),
             'teacher_col' => $on('show_teacher_col'),
@@ -1457,8 +1458,8 @@
                         </div>
                         @if($termDelta !== null)
                             <div class="sum-sub">
-                                @if($termDelta > 0) <span class="delta-inline di-up">{{ $termDelta }} ↑</span>
-                                @elseif($termDelta < 0) <span class="delta-inline di-dn">{{ abs($termDelta) }} ↓</span>
+                                @if($termDelta > 0) <span class="delta-inline di-up">{{ \App\Helpers\NumberHelper::num($termDelta) }} ↑</span>
+                                @elseif($termDelta < 0) <span class="delta-inline di-dn">{{ \App\Helpers\NumberHelper::num(abs($termDelta)) }} ↓</span>
                                 @else <span style="font-size:.68rem;color:#aaa">—</span>
                                 @endif
                             </div>
@@ -1519,8 +1520,8 @@
                                             @if($cfg['dev'])
                                                 <td class="num-td">
                                                     @if($delta !== null)
-                                                        @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                        @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                        @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                        @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                         @else <span class="dev-eq">—</span>
                                                         @endif
                                                     @else <span class="dev-eq">—</span>
@@ -1556,8 +1557,8 @@
                                         @if($cfg['dev'])
                                             <td class="num-td">
                                                 @if($delta !== null)
-                                                    @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                    @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                    @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                    @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                     @else <span class="dev-eq">—</span>
                                                     @endif
                                                 @else <span class="dev-eq">—</span>
@@ -1587,8 +1588,8 @@
                                     @if($cfg['dev'])
                                         <td class="num-td">
                                             @if($termDelta !== null)
-                                                @if($termDelta > 0) <span class="dev-up">+{{ $termDelta }} ↑</span>
-                                                @elseif($termDelta < 0) <span class="dev-down">{{ $termDelta }} ↓</span>
+                                                @if($termDelta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($termDelta) }} ↑</span>
+                                                @elseif($termDelta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($termDelta) }} ↓</span>
                                                 @else <span class="dev-eq">—</span>
                                                 @endif
                                             @else <span class="dev-eq">—</span>

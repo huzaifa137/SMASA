@@ -55,7 +55,13 @@ show_next_term_starts_on
 
 <head>
     <meta charset="utf-8">
-    <title>{{ $exam->exam_name }} — Cornerstone Report Cards</title>
+    <title>{{ \App\Support\ExportName::reportCardTitleFrom(
+        $exam,
+        $mode ?? 'single',
+        $reports[0]->student->full_name ?? '',
+        ($mode ?? 'single') === 'all' ? 'All Classes' : trim(($reports[0]->student->class_name ?? '') . ' ' . ($reports[0]->student->stream ?? '')),
+        count($reports ?? [])
+    ) }}</title>
     @include('Examination.passslips.custom._base-css')
     <style>
         .crc-sheet {

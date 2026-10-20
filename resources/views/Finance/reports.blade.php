@@ -1,5 +1,6 @@
 {{-- resources/views/Finance/reports.blade.php --}}
 @extends('layouts-side-bar.master')
+@section('export_title', \App\Support\ExportName::title(['Finance', ucfirst($filters['report_type'] ?? 'overview') . ' Report', $year ?? '', !empty($term) ? \App\Support\Term::label($term) : 'All Terms']))
 <?php
 use App\Http\Controllers\Helper;
 ?>

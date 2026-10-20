@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Card (Secondary) — {{ $exam->exam_name }}</title>
+    <title>{{ \App\Support\ExportName::reportCardTitle($exam ?? null, $mode ?? 'single', $student ?? null, $slips ?? []) }}</title>
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -882,7 +882,7 @@
                 $s = (object) $slipData['student'];
                 $subjMarks = collect($slipData['subjectMarks'])->values();
                 // O-Level report card breakdown (empty collection for an ordinary exam slip)
-                $fmtNum = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+                $fmtNum = fn($n) => \App\Helpers\NumberHelper::num($n, 2);
                 $compHeads = collect($subjMarks->first(fn($x) => !empty($x->components ?? null))->components ?? []);
                 $totObt = $slipData['totalObtained'];
                 $totMax = $slipData['totalMax'];
@@ -903,6 +903,7 @@
                     'photo' => $on('show_photo', true, $savedCfg),
                     'minichart' => $on('show_minichart', true, $savedCfg),
                     'qr' => $on('show_qr', true, $savedCfg),
+                    'decimals' => \App\Helpers\NumberHelper::useDecimals($on('show_decimals', false, $savedCfg)),
                     'dev' => $on('show_dev', true, $savedCfg),
                     'col_grade' => $on('show_col_grade', true, $savedCfg),
                     'comment_col' => $on('show_comment_col', true, $savedCfg),
@@ -1162,7 +1163,7 @@
                                         <div class="sum-val">@whole($totObt)/@whole($totMax)</div>
                                         @if($totalDelta !== null)
                                             <div class="sum-delta {{ $totalDelta >= 0 ? 'dev-up' : 'dev-down' }}">
-                                                {{ $totalDelta > 0 ? '+' : '' }}{{ $totalDelta }}
+                                                {{ $totalDelta > 0 ? '+' : '' }}{{ \App\Helpers\NumberHelper::num($totalDelta) }}
                                                 {{ $totalDelta >= 0 ? '↑' : '↓' }}
                                             </div>
                                         @endif
@@ -1173,10 +1174,10 @@
                                 <div class="sum-cell">
                                     <div class="sum-lbl">Average Score</div>
                                     <div class="sum-main">
-                                        <div class="sum-val">{{ round($pct) }}%</div>
+                                        <div class="sum-val">@whole($pct)%</div>
                                         @if($avgDelta !== null)
                                             <div class="sum-delta {{ $avgDelta >= 0 ? 'dev-up' : 'dev-down' }}">
-                                                {{ $avgDelta > 0 ? '+' : '' }}{{ $avgDelta }}
+                                                {{ $avgDelta > 0 ? '+' : '' }}{{ \App\Helpers\NumberHelper::num($avgDelta) }}
                                                 {{ $avgDelta >= 0 ? '↑' : '↓' }}
                                             </div>
                                         @endif
@@ -1201,8 +1202,11 @@
                                         <th>Subjects</th>
                                         {{-- O-Level report card: one column per component (e.g. Assessment /20, Exam /80) + the total --}}
                                         @foreach($compHeads as $ch)
-                                            <th class="c">{{ $ch['label'] }}<br><small style="font-weight:600;">/ {{ $fmtNum($ch['weight']) }}</small></th>
-                                        @endforeach
+    @php $shortLabel = mb_strlen(trim($ch['label'])) <= 8; @endphp
+    <th class="c">
+        {{ $ch['label'] }}@if($shortLabel) @else<br>@endif<small style="font-weight:600;white-space:nowrap;">/ {{ $fmtNum($ch['weight']) }}</small>
+    </th>
+@endforeach
                                         @if($compHeads->isNotEmpty())<th class="c">Total</th>@endif
                                         <th class="c">{{ $compHeads->isNotEmpty() ? 'Marks %' : 'Marks' }}</th>
                                         @if($cfg['dev'])<th class="c">Dev.</th>@endif
@@ -1229,9 +1233,9 @@
                                                     @if($delta === null || $delta == 0)
                                                         <span class="dev-eq">—</span>
                                                     @elseif($delta > 0)
-                                                        <span class="dev-up">+{{ $delta }} ↑</span>
+                                                        <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
                                                     @else
-                                                        <span class="dev-down">{{ $delta }} ↓</span>
+                                                        <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                     @endif
                                                 </td>
                                             @endif

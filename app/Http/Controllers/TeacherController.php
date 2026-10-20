@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\Teacher;
@@ -441,7 +442,7 @@ class TeacherController extends Controller
     Helper::requireSchool();
         $schoolId = Helper::requireSchool();
         $schoolName = DB::table('schools')->where('id', $schoolId)->value('name') ?? 'School';
-        $filename = 'teachers_import_' . preg_replace('/\s+/', '_', $schoolName) . '.xlsx';
+        $filename = ExportName::file(['Teachers Import Template', $schoolName], 'xlsx');
 
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\TeacherBulkTemplate($schoolName),

@@ -721,6 +721,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Used as the print window's <title> = default "Save as PDF" name.
+                    window.currentPayslipTitle = ['Payslip', data.teacher_name, data.period_name, data.payslip_number]
+                        .filter(Boolean).join(' - ').replace(/[\\/:*?"<>|]+/g, ' ');
                     content.innerHTML = `
                     <div style="margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);">
                         <div class="detail-row">
@@ -826,7 +829,7 @@
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Payslip</title>
+                <title>${window.currentPayslipTitle || 'Payslip'}</title>
                 <style>
                     body{font-family:'DM Sans',sans-serif;padding:20px;max-width:600px;margin:0 auto;}
                     .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;}

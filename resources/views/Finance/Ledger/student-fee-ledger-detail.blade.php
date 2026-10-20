@@ -1,4 +1,5 @@
 @extends('layouts-side-bar.master')
+@section('export_title', \App\Support\ExportName::title(['Fee Statement', \App\Support\ExportName::personName($student ?? []), $year ?? '']))
 @section('css')
 <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"

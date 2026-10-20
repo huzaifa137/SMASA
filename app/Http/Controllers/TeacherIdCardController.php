@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Helpers\PermissionHelper;
 use App\Models\School;
 use App\Models\SchoolProfile;
@@ -228,7 +229,11 @@ class TeacherIdCardController extends Controller
             ->setPaper([0, 0, 241.89, 153.07])
             ->setOption('dpi', 150);
 
-        return $pdf->download("Teacher_ID_{$teacher->firstname}_{$teacher->surname}.pdf");
+        return $pdf->download(ExportName::file([
+            'Teacher-ID-Card',
+            ExportName::personName($teacher, 'firstname', 'surname'),
+            $card->academic_year ?? '',
+        ], 'pdf'));
     }
 
     // ──────────────────────────────────────────────
@@ -267,7 +272,13 @@ class TeacherIdCardController extends Controller
         $pdf = Pdf::loadView('teacher.id-cards.pdf-bulk', compact('cardsData', 'school', 'profile', 'logoUrl'))
             ->setPaper('a4');
 
-        return $pdf->download("Teacher_ID_Cards_Bulk_{$activeYear}.pdf");
+        $teacherCount = $cardsData->count();
+
+        return $pdf->download(ExportName::file([
+            'Teacher-ID-Cards',
+            $teacherCount . ' ' . ($teacherCount === 1 ? 'Teacher' : 'Teachers'),
+            $activeYear,
+        ], 'pdf'));
     }
 
     // ──────────────────────────────────────────────

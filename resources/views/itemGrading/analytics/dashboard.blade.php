@@ -1,6 +1,7 @@
 {{-- resources/views/itemGrading/analytics/dashboard.blade.php --}}
 @extends('layouts-side-bar.master')
 
+@section('export_title', \App\Support\ExportName::title(['Grading Analytics']))
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">

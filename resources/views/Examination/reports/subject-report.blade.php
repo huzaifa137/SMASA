@@ -3,6 +3,7 @@ use App\Http\Controllers\Helper;
 ?>
 @extends('layouts-side-bar.master')
 
+@section('export_title', \App\Support\ExportName::title(array_merge(['Subject Report', optional($selectedSubject ?? null)->report_name, \App\Support\ExportName::classStream($className ?? '', $streamLabel ?? '')], \App\Support\ExportName::examScope($exam ?? null))))
 @section('css')
     @include('Examination.reports.partials.styles')
 @endsection

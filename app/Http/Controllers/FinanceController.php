@@ -28,6 +28,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\PermissionHelper;
 use App\Exports\FinanceReportExport;
 use App\Exports\OutstandingFeesExport;
+use App\Support\ExportName;
+use App\Support\Term;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FinanceController extends Controller
@@ -913,7 +915,12 @@ class FinanceController extends Controller
             ->findOrFail($id);
 
         $school = \App\Models\School::find($schoolId);
-        $fileName = "Receipt-{$payment->receipt_number}.pdf";
+        // "Receipt_RCP-000123_Amara-Nakato.pdf" - receipt number AND who paid.
+        $fileName = ExportName::file([
+            'Receipt',
+            $payment->receipt_number,
+            ExportName::personName($payment->student),
+        ], 'pdf');
 
         switch (request('format', 'slip')) {
             case 'full':
@@ -1940,7 +1947,7 @@ class FinanceController extends Controller
         $type = in_array($filters['report_type'], ['payments', 'expenses', 'payroll'], true)
             ? $filters['report_type'] : 'payments';
 
-        $filename = "Finance-" . ucfirst($type) . "-Report-" . now()->format('Y-m-d') . '.csv';
+        $filename = $this->financeReportFilename($type, $filters, 'csv');
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -2039,7 +2046,7 @@ class FinanceController extends Controller
                 ->setPaper('a4', 'landscape');
         }
 
-        return $pdf->stream("Finance-" . ucfirst($type) . "-Report-" . now()->format('Y-m-d') . '.pdf');
+        return $pdf->stream($this->financeReportFilename($type, $filters, 'pdf'));
     }
 
     /**
@@ -2069,7 +2076,7 @@ class FinanceController extends Controller
             $total = $rows->sum('net_pay');
         }
 
-        $filename = 'Finance-' . ucfirst($type) . '-Report-' . now()->format('Y-m-d') . '.xlsx';
+        $filename = $this->financeReportFilename($type, $filters, 'xlsx');
 
         return Excel::download(
             new FinanceReportExport(
@@ -2082,6 +2089,64 @@ class FinanceController extends Controller
             ),
             $filename
         );
+    }
+
+    /**
+     * "Finance_Payments-Report_2026_Term-II_P5_2026-03-01_to_2026-03-31.pdf"
+     * Names the financial report after what it actually covers (type, year,
+     * term, class, date window / payroll period) instead of only today's date.
+     */
+    private function financeReportFilename(string $type, array $filters, string $ext): string
+    {
+        $window = '';
+        if (!empty($filters['resolved_from']) && !empty($filters['resolved_to'])) {
+            $window = $filters['resolved_from']->format('Y-m-d') . ' to ' . $filters['resolved_to']->format('Y-m-d');
+        } elseif (!empty($filters['resolved_from'])) {
+            $window = 'From ' . $filters['resolved_from']->format('Y-m-d');
+        }
+
+        $payrollPeriod = '';
+        if ($type === 'payroll' && !empty($filters['payroll_period_id'])) {
+            $payrollPeriod = optional(PayrollPeriod::where('school_id', session('LoggedSchool'))->find($filters['payroll_period_id']))->period_name ?? '';
+        }
+
+        $class = '';
+        if ($type === 'payments' && !empty($filters['class_id'])) {
+            $class = ExportName::classStream(
+                Helper::recordMdname($filters['class_id']),
+                !empty($filters['stream_id']) ? Helper::recordMdname($filters['stream_id']) : ''
+            );
+        }
+
+        return ExportName::file([
+            'Finance',
+            ucfirst($type) . ' Report',
+            $filters['year'] ?? '',
+            !empty($filters['term']) ? Term::label($filters['term']) : 'All Terms',
+            $class,
+            $payrollPeriod,
+            $window,
+        ], $ext);
+    }
+
+    /** "Outstanding-Fees_2026_Term-II_P5-Blue.pdf" (+ status when it isn't the default defaulters list). */
+    private function outstandingFeesFilename(array $filters, string $ext): string
+    {
+        $class = '';
+        if (!empty($filters['class_id'])) {
+            $class = ExportName::classStream(
+                Helper::recordMdname($filters['class_id']),
+                !empty($filters['stream_id']) ? Helper::recordMdname($filters['stream_id']) : ''
+            );
+        }
+
+        return ExportName::file([
+            'Outstanding-Fees',
+            $filters['year'] ?? '',
+            !empty($filters['term']) ? Term::label($filters['term']) : 'All Terms',
+            $class,
+            $filters['status'] ?? '',
+        ], $ext);
     }
 
     /** Plain-text version of the PDF report's "filters-bar" line, shared
@@ -2177,7 +2242,7 @@ class FinanceController extends Controller
         $pdf = Pdf::loadView('Finance.pdf.outstanding-fees', compact('allocations', 'totalOutstanding', 'filters', 'school'))
             ->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Outstanding-Fees-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->stream($this->outstandingFeesFilename($filters, 'pdf'));
     }
 
     /**
@@ -2208,7 +2273,7 @@ class FinanceController extends Controller
                 $school->name ?? 'SMASA SCHOOL',
                 now()->format('d M Y, H:i')
             ),
-            'Outstanding-Fees-' . now()->format('Y-m-d') . '.xlsx'
+            $this->outstandingFeesFilename($filters, 'xlsx')
         );
     }
 

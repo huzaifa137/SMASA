@@ -164,6 +164,10 @@ return [
         'show_initials_col' => ['label' => 'Teacher initials column', 'icon' => 'fa-user-tag', 'group' => 'Marks Table'],
         'show_teacher_col' => ['label' => 'Teacher name column', 'icon' => 'fa-chalkboard-teacher', 'group' => 'Marks Table'],
         'show_totals_row' => ['label' => 'Totals / average row', 'icon' => 'fa-sigma', 'group' => 'Marks Table'],
+        // Primary + Secondary report cards: show marks, percentages, averages
+        // and DEV arrows with decimals (93.5) or rounded to whole numbers (94).
+        // OFF by default - see App\Helpers\NumberHelper.
+        'show_decimals' => ['label' => 'Show decimals (marks, averages, %)', 'icon' => 'fa-calculator', 'group' => 'Marks Table'],
 
         'show_perf_chart' => ['label' => 'Performance-over-time chart', 'icon' => 'fa-chart-bar', 'group' => 'Bottom Section'],
         'show_remarks' => ['label' => 'Remarks section', 'icon' => 'fa-comment-alt', 'group' => 'Bottom Section'],
@@ -205,6 +209,7 @@ return [
             // for Classic — see the NOTE above).
             'show_col_full_marks', 'show_col_marks_obtained', 'show_col_percentage',
             'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_decimals',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             // Granular term-dates split (superseded 'show_term_dates').
             'show_term_ends_on', 'show_next_term_starts_on',
@@ -232,6 +237,7 @@ return [
             // column (no Full Marks / Marks Obtained split), so it keeps
             // using 'show_score_col' as-is — no granularity problem here.
             'show_score_col', 'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_decimals',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
@@ -262,6 +268,7 @@ return [
             // Minimal's marks table only ever had ONE combined score
             // column too, same as Modern — keeps 'show_score_col' as-is.
             'show_score_col', 'show_dev', 'show_col_grade', 'show_col_grade_point', 'show_comment_col', 'show_initials_col', 'show_teacher_col', 'show_totals_row',
+            'show_decimals',
             'show_perf_chart', 'show_remarks', 'show_discipline', 'show_signatures',
             'show_term_ends_on', 'show_next_term_starts_on',
             'show_footer_timestamp', 'show_confidential',
@@ -298,6 +305,7 @@ return [
             'show_logo', 'show_contact',
             'show_photo', 'show_minichart', 'show_qr',
             'show_dev', 'show_col_grade', 'show_comment_col', 'show_teacher_col',
+            'show_decimals',
             'show_perf_chart', 'show_remarks', 'show_signatures',
             'show_footer_timestamp', 'show_confidential',
 

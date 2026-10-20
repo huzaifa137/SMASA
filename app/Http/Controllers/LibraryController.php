@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Models\LibraryBook;
 use App\Models\LibraryAuthor;
 use App\Models\LibraryCategory;
@@ -508,8 +509,14 @@ public function exportBooks()
         $schoolId = session('LoggedSchool');
         $books = LibraryBook::forSchool($schoolId)->with('author', 'category', 'subject')->get();
 
-        $filename = "library_books_" . date('Y_m_d') . ".csv";
-        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename={$filename}"];
+        // "Library-Books_Al-Noor-Primary_120-Books_2026-10-20.csv"
+        $filename = ExportName::file([
+            'Library Books',
+            Helper::schoolNameBySchoolID($schoolId),
+            $books->count() . ' Books',
+            date('Y-m-d'),
+        ], 'csv');
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"{$filename}\""];
 
         $callback = function () use ($books) {
             $f = fopen('php://output', 'w');

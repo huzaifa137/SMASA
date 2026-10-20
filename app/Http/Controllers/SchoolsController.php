@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Models\Mark;
 use Illuminate\Http\Request;
 use App\Models\ClassAllocation;
@@ -572,7 +573,9 @@ class SchoolsController extends Controller
             $pdf->setPaper('A4', 'landscape');
 
             // Generate filename
-            $filename = "Grading_Results_{$schoolName}_{$category}_{$year}_" . now()->format('Y-m-d') . ".pdf";
+            // "Grading-Results_Al-Noor-Primary_Thanawi-A-Level_M_2026.pdf"
+            $levelLabel = $level === 'O' ? 'Idaad (O) Level' : ($level === 'A' ? 'Thanawi (A) Level' : $level);
+            $filename = ExportName::file(['Grading-Results', $schoolName, $levelLabel, $category, $year], 'pdf');
 
             // Download the PDF
             return $pdf->download($filename);
@@ -696,7 +699,7 @@ class SchoolsController extends Controller
                 'isJavascriptEnabled' => false
             ]);
 
-            $filename = 'school_passwords_' . date('Y-m-d_His') . '.pdf';
+            $filename = ExportName::file(['School-Passwords', $passwords->count() . ' Schools', date('Y-m-d')], 'pdf');
 
             // Return with proper headers
             return response($pdf->output(), 200, [

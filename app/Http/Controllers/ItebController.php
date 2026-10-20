@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Models\Mark;
 use App\Models\House;
 use App\Models\MasterData;
@@ -780,7 +781,12 @@ class ItebController extends Controller
     public function downloadReport($format)
     {
         $data = session('report_data');
-        $filename = session('filename') . '.' . ($format == 'excel' ? 'xlsx' : $format);
+        // session('filename') is never populated anywhere, which used to
+        // produce a file literally called ".xlsx" - fall back to a real name.
+        $filename = ExportName::file(
+            [session('filename') ?: 'ITEB Report', now()->format('Y-m-d')],
+            $format == 'excel' ? 'xlsx' : $format
+        );
 
         if (!$data) {
             return redirect()->back()->with('error', 'No report data found');
@@ -1628,7 +1634,7 @@ class ItebController extends Controller
         $bestSubjects,
         $worstSubjects
     ) {
-        $filename = "exam_statistics_{$year}_{$category}_{$levelName}.csv";
+        $filename = ExportName::file(['Exam-Statistics', $levelName, $category, $year], 'csv');
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -1786,7 +1792,7 @@ class ItebController extends Controller
     public function downloadExamStatisticsExcel(Request $request)
     {
         $data = $this->prepareStatisticsData($request);
-        $filename = "exam_statistics_{$data['year']}_{$data['category']}_{$data['levelName']}.xlsx";
+        $filename = ExportName::file(['Exam-Statistics', $data['levelName'], $data['category'], $data['year']], 'xlsx');
 
         return Excel::download(new ExamStatisticsExport($data), $filename);
     }
@@ -1848,7 +1854,7 @@ class ItebController extends Controller
             $mpdf->WriteHTML($html);
 
             // Generate filename
-            $filename = "exam_statistics_{$data['year']}_{$data['category']}_{$data['level']}.pdf";
+            $filename = ExportName::file(['Exam-Statistics', $data['levelName'], $data['category'], $data['year']], 'pdf');
 
             // Output PDF
             return $mpdf->Output($filename, 'D');
@@ -2226,7 +2232,12 @@ class ItebController extends Controller
             $this->mergePdfFile($finalPdf, $footerPath);
 
             // Save final PDF
-            $filename = 'students_full_report_' . $request->year . '_' . $request->category . '.pdf';
+            $filename = ExportName::file([
+                'Students-Full-Report',
+                ($request->level ?? 'A') == 'A' ? 'Thanawi (A) Level' : 'Idaad (O) Level',
+                $request->category,
+                $request->year,
+            ], 'pdf');
             $finalPath = $tempDir . '/' . $filename;
 
             // Output the PDF to file
@@ -2442,7 +2453,12 @@ class ItebController extends Controller
         // Generate PDF with ALL schools
         $pdf = PDF::loadView('itemGrading.pdf.schools-report', $data);
 
-        $filename = 'schools_full_report_' . $request->year . '_' . $request->category . '.pdf';
+        $filename = ExportName::file([
+            'Schools-Full-Report',
+            ($request->level ?? 'A') == 'A' ? 'Thanawi (A) Level' : 'Idaad (O) Level',
+            $request->category,
+            $request->year,
+        ], 'pdf');
         return $pdf->download($filename);
     }
 

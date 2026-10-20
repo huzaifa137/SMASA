@@ -12,6 +12,7 @@ use App\Exports\CumulativeAnalysisExport;
 use App\Exports\ClassSummaryReportExport;
 use App\Exports\SubjectReportExport;
 use App\Exports\GradeAnalysisExport;
+use App\Support\ExportName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -120,6 +121,64 @@ class ExaminationReportController extends Controller
         ]));
     }
 
+    // ─── Export file names ─────────────────────────────────────────────────────
+    // Every name says WHAT was exported (class + stream, subject, exam, term,
+    // year) so two different exports never download under the same name.
+
+    /** Class-Summary_P5-Blue_End-of-Term-Exam_Term-II-2026.pdf */
+    private function classSummaryFilename(array $data, Examination $exam, string $ext): string
+    {
+        return ExportName::file(array_merge(
+            ['Class-Summary', ExportName::classStream($data['className'] ?? '', $data['streamLabel'] ?? '')],
+            ExportName::examScope($exam)
+        ), $ext);
+    }
+
+    /** Subject-Report_Mathematics_P5-Blue_End-of-Term-Exam_Term-II-2026.xlsx */
+    private function subjectReportFilename(array $data, Examination $exam, $subjectRow, string $ext): string
+    {
+        return ExportName::file(array_merge(
+            [
+                'Subject-Report',
+                $subjectRow->report_name ?? '',
+                ExportName::classStream($data['className'] ?? '', $data['streamLabel'] ?? ''),
+            ],
+            ExportName::examScope($exam)
+        ), $ext);
+    }
+
+    /** Grade-Analysis_P5-Blue_...  or  Grade-Analysis_All-Classes_... when no class is picked. */
+    private function gradeAnalysisFilename(array $data, Examination $exam, Request $request, $examClasses, string $ext): string
+    {
+        $classId = $request->input('class_id');
+        $streamId = $request->input('stream_id');
+
+        $scope = 'All Classes';
+        if ($classId) {
+            $scope = ExportName::classStream(
+                Helper::recordMdname($classId),
+                $streamId ? Helper::recordMdname($streamId) : ''
+            );
+        }
+
+        return ExportName::file(array_merge(['Grade-Analysis', $scope], ExportName::examScope($exam)), $ext);
+    }
+
+    /** Cumulative-Analysis_P5-Blue_Mathematics_3-Exams_2026.pdf */
+    private function cumulativeFilename(array $data, array $scope, string $ext): string
+    {
+        $examCount = isset($scope['selectedExams']) ? $scope['selectedExams']->count() : 0;
+        $subject = $scope['selectedSubject'] ?? null;
+
+        return ExportName::file([
+            'Cumulative-Analysis',
+            ExportName::classStream($data['className'] ?? '', $data['streamLabel'] ?? ''),
+            is_object($subject) ? ($subject->report_name ?? '') : '',
+            $examCount > 0 ? $examCount . ' Exams' : '',
+            $scope['academicYear'] ?? '',
+        ], $ext);
+    }
+
     public function classSummaryPdf(Request $request, $examId)
     {
         PermissionHelper::denyUnlessFeature('export_exam_reports');
@@ -141,7 +200,7 @@ class ExaminationReportController extends Controller
         ]));
         $pdf->setPaper('A4', 'landscape');
 
-        $filename = 'Class-Summary-' . str_replace(' ', '-', $data['className']) . '-' . $exam->exam_code . '.pdf';
+        $filename = $this->classSummaryFilename($data, $exam, 'pdf');
 
         return $pdf->download($filename);
     }
@@ -164,7 +223,7 @@ class ExaminationReportController extends Controller
 
         $data = $this->buildClassSummary($exam, $schoolId, $classId, $streamId, $streamOptions, $request);
 
-        $filename = 'Class-Summary-' . str_replace(' ', '-', $data['className']) . '-' . $exam->exam_code . '.xlsx';
+        $filename = $this->classSummaryFilename($data, $exam, 'xlsx');
 
         return Excel::download(
             new ClassSummaryReportExport($data, $exam, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
@@ -450,7 +509,7 @@ class ExaminationReportController extends Controller
         ]));
         $pdf->setPaper('A4', 'portrait');
 
-        $filename = 'Subject-Report-' . str_replace(' ', '-', $subjectRow->report_name) . '-' . $exam->exam_code . '.pdf';
+        $filename = $this->subjectReportFilename($data, $exam, $subjectRow, 'pdf');
 
         return $pdf->download($filename);
     }
@@ -495,7 +554,7 @@ class ExaminationReportController extends Controller
 
         $data = $this->buildSubjectReport($exam, $schoolId, $classId, $streamIdsToUse, $subjectRow, $request);
 
-        $filename = 'Subject-Report-' . str_replace(' ', '-', $subjectRow->report_name) . '-' . $exam->exam_code . '.xlsx';
+        $filename = $this->subjectReportFilename($data, $exam, $subjectRow, 'xlsx');
 
         return Excel::download(
             new SubjectReportExport($data, $exam, $subjectRow, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
@@ -681,7 +740,7 @@ class ExaminationReportController extends Controller
 
         $data = $this->buildGradeAnalysis($exam, $schoolId, $examClasses, $request);
 
-        $filename = 'Grade-Analysis-' . $exam->exam_code . '.xlsx';
+        $filename = $this->gradeAnalysisFilename($data, $exam, $request, $examClasses, 'xlsx');
 
         return Excel::download(
             new GradeAnalysisExport($data, $exam, Helper::schoolNameBySchoolID($schoolId), now()->format('d M Y, H:i')),
@@ -977,7 +1036,7 @@ class ExaminationReportController extends Controller
         ]));
         $pdf->setPaper('A4', 'landscape');
 
-        $filename = 'Cumulative-Analysis-' . str_replace(' ', '-', $data['className']) . '-' . $scope['academicYear'] . '.pdf';
+        $filename = $this->cumulativeFilename($data, $scope, 'pdf');
 
         return $pdf->download($filename);
     }
@@ -1002,7 +1061,7 @@ class ExaminationReportController extends Controller
             $request
         );
 
-        $filename = 'Cumulative-Analysis-' . str_replace(' ', '-', $data['className']) . '-' . $scope['academicYear'] . '.xlsx';
+        $filename = $this->cumulativeFilename($data, $scope, 'xlsx');
 
         return Excel::download(
             new CumulativeAnalysisExport(

@@ -1,6 +1,7 @@
 {{-- resources/views/itemGrading/grading-results.blade.php --}}
 @extends('layouts-side-bar.master')
 
+@section('export_title', \App\Support\ExportName::title(['Grading Results', $schoolName ?? '', ($level ?? '') === 'O' ? 'Idaad (O) Level' : (($level ?? '') === 'A' ? 'Thanawi (A) Level' : ($level ?? '')), $category ?? '', $year ?? '']))
 {{-- Move all CSS to the top --}}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">

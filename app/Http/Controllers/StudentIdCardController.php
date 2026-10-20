@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ExportName;
 use App\Helpers\PermissionHelper;
 use App\Models\School;
 use App\Models\SchoolProfile;
@@ -273,7 +274,12 @@ class StudentIdCardController extends Controller
             ->setOption('isRemoteEnabled', true)
             ->setOption('isHtml5ParserEnabled', true);
 
-        return $pdf->download("ID_Card_{$student->firstname}_{$student->lastname}.pdf");
+        return $pdf->download(ExportName::file([
+            'ID-Card',
+            ExportName::personName($student),
+            ExportName::classStream($className, $streamName),
+            $card->academic_year ?? '',
+        ], 'pdf'));
     }
 
     // ──────────────────────────────────────────────
@@ -336,7 +342,17 @@ class StudentIdCardController extends Controller
             ->setOption('isRemoteEnabled', true)
             ->setOption('isHtml5ParserEnabled', true);
 
-        return $pdf->download("ID_Cards_Bulk_{$activeYear}.pdf");
+        // "ID-Cards_P5-Blue_12-Students_2026.pdf" - which class, how many, which year.
+        $firstStudent = $cardItems->first()['student'] ?? null;
+        $bulkClass = $firstStudent ? Helper::recordMdname($firstStudent->senior) : '';
+        $bulkStream = ($request->stream && $firstStudent) ? Helper::recordMdname($firstStudent->stream) : 'All Streams';
+
+        return $pdf->download(ExportName::file([
+            'ID-Cards',
+            ExportName::classStream($bulkClass, $bulkStream),
+            $cardCount . ' ' . ($cardCount === 1 ? 'Student' : 'Students'),
+            $activeYear,
+        ], 'pdf'));
     }
 
     // ──────────────────────────────────────────────

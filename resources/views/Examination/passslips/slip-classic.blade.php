@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Card (Classic) — {{ $exam->exam_name }}</title>
+    <title>{{ \App\Support\ExportName::reportCardTitle($exam ?? null, $mode ?? 'single', $student ?? null, $slips ?? []) }}</title>
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
@@ -2095,6 +2095,7 @@
                     'minichart' => $on('show_minichart', true, $savedCfg),
                     'qr' => $on('show_qr', true, $savedCfg),
                     'rank' => $on('show_rank', true, $savedCfg),
+                    'decimals' => \App\Helpers\NumberHelper::useDecimals($on('show_decimals', false, $savedCfg)),
                     'dev' => $on('show_dev', true, $savedCfg),
                     // Grade and Grade Point used to share ONE switch ('show_grade_pill').
                     // They are now independent columns: 'show_col_grade' and
@@ -2658,7 +2659,7 @@
                                 <i class="fas fa-chart-column"></i>
                                 <div class="rc-summary-lbl">Average Mark</div>
                                 <div class="rc-summary-val">
-                                    {{ $isEarlyYears ? $earlyYearsAvg . '/' . $earlyYearsMax : $pct . '%' }}
+                                    {{ $isEarlyYears ? \App\Helpers\NumberHelper::whole($earlyYearsAvg) . '/' . \App\Helpers\NumberHelper::whole($earlyYearsMax) : \App\Helpers\NumberHelper::whole($pct) . '%' }}
                                 </div>
                             </div>
                         @endif
@@ -2666,7 +2667,7 @@
                             <div class="rc-summary-cell">
                                 <i class="fas fa-percent"></i>
                                 <div class="rc-summary-lbl">Average %</div>
-                                <div class="rc-summary-val">{{ $isEarlyYears ? '—' : $pct . '%' }}</div>
+                                <div class="rc-summary-val">{{ $isEarlyYears ? '—' : \App\Helpers\NumberHelper::whole($pct) . '%' }}</div>
                             </div>
                         @endif
                         @if($cfg['sum_grade'] && !$isEarlyYears)
@@ -2718,7 +2719,7 @@
                             <div class="rc-summary-cell">
                                 <i class="fas fa-calendar-check"></i>
                                 <div class="rc-summary-lbl">Attendance</div>
-                                <div class="rc-summary-val">{{ $attPct }}%</div>
+                                <div class="rc-summary-val">{{ \App\Helpers\NumberHelper::num($attPct) }}%</div>
                             </div>
                         @endif
                     </div>
@@ -2822,7 +2823,7 @@
                                                         $examAvgPct = $examPctCnt > 0 ? round($examPctSum / $examPctCnt, 1) : null;
                                                     @endphp
                                                     <td class="score-td" colspan="2" style="font-size: var(--val-size, 1.05rem);">
-                                                        {{ $examAvgPct !== null ? $examAvgPct . '%' : '—' }}
+                                                        {{ $examAvgPct !== null ? \App\Helpers\NumberHelper::num($examAvgPct) . '%' : '—' }}
                                                     </td>
                                                 @endif
                                             @endforeach
@@ -2934,8 +2935,8 @@
                                                     @if($cfg['dev'])
                                                         <td class="num-td" style="font-size: 0.80;">
                                                             @if($delta !== null)
-                                                                @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                                @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                                @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                                @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                                 @else <span class="dev-eq">—</span>
                                                                 @endif
                                                             @else <span class="dev-eq">—</span>
@@ -2993,8 +2994,8 @@
                                                 @if($cfg['dev'])
                                                     <td class="num-td" style="font-size: 0.80rem;">
                                                         @if($delta !== null)
-                                                            @if($delta > 0) <span class="dev-up">+{{ $delta }} ↑</span>
-                                                            @elseif($delta < 0) <span class="dev-down">{{ $delta }} ↓</span>
+                                                            @if($delta > 0) <span class="dev-up">+{{ \App\Helpers\NumberHelper::num($delta) }} ↑</span>
+                                                            @elseif($delta < 0) <span class="dev-down">{{ \App\Helpers\NumberHelper::num($delta) }} ↓</span>
                                                             @else <span class="dev-eq">—</span>
                                                             @endif
                                                         @else <span class="dev-eq">—</span>
