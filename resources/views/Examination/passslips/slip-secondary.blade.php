@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <script>
+        // Draw charts at 2x so they stay crisp when the browser scales the canvas to the page (print / PDF).
+        if (window.Chart) { Chart.defaults.devicePixelRatio = Math.max(2, window.devicePixelRatio || 1); }
+    </script>
 
     <?php use App\Http\Controllers\Helper; ?>
 
@@ -73,6 +77,12 @@
             --blue: {{ $capColor }};
             --strip: #e1f3fa;
             --page-scale: {{ $pageScale }};
+            /* ONE page size for the on-screen preview AND the print, so what you see is what prints.
+               (The preview used to be a fixed 820px while print is the paper width minus margins,
+               ~745px on A4 - print was narrower, text wrapped, the card grew taller than the page
+               and the bottom was clipped.) */
+            --slip-w: calc(({{ $pageW }} - 1.3cm) / var(--page-scale, 1));
+            --slip-h: calc(({{ $pageH }} - 1.1cm) / var(--page-scale, 1));
         }
 
         * {
@@ -143,7 +153,8 @@
         }
 
         .page-wrap {
-            max-width: calc(820px / var(--page-scale, 1));
+            width: 100%;
+            max-width: var(--slip-w);
             margin: 1.5rem auto;
         }
 
@@ -155,13 +166,15 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 6px 28px rgba(0, 0, 0, .12);
-            min-height: 1040px;
+            min-height: var(--slip-h);
             display: flex;
             flex-direction: column;
         }
 
-        .slip:last-child {
+        /* each slip is followed by its own <script>, so :last-child never matched - use :last-of-type */
+        .slip:last-of-type {
             page-break-after: avoid;
+            break-after: auto;
             margin-bottom: 0;
         }
 
@@ -250,6 +263,13 @@
             display: flex;
             flex-direction: column;
             flex: 1;
+        }
+
+        /* Safety net: if a card's content is taller than the page (long subject names,
+           many subjects, long remarks) fitSlips() sets --fit < 1 and every section shrinks
+           together instead of the bottom being clipped. 1 = no change. */
+        .slip-body>* {
+            zoom: var(--fit, 1);
         }
 
         .watermark {
@@ -418,6 +438,19 @@
             position: relative;
             flex: 1;
             min-height: 120px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* The canvas always fills exactly its box. Chart.js sizes the canvas in pixels from the
+           on-screen layout; without this a chart drawn at preview width kept that width when
+           printed and ran off the right-hand edge of the card. */
+        .chart-box canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
         }
 
         .status-pill {
@@ -523,6 +556,10 @@
 
         .marks-tbl .c {
             text-align: center;
+        }
+
+        .marks-tbl tbody td.c {
+            white-space: nowrap;
         }
 
         .marks-tbl th.col-teacher,
@@ -707,7 +744,6 @@
 
             body {
                 background: #fff;
-                font-size: 11px;
             }
 
             .toolbar {
@@ -724,14 +760,18 @@
                 margin: 0;
                 box-shadow: none;
                 page-break-after: always;
+                break-after: page;
                 page-break-inside: avoid;
+                break-inside: avoid;
                 width: 100%;
-                min-height: calc(({{ $pageH }} - 1.1cm) / var(--page-scale, 1));
-                max-height: calc(({{ $pageH }} - 1.1cm) / var(--page-scale, 1));
+                height: var(--slip-h);
+                min-height: var(--slip-h);
+                max-height: var(--slip-h);
             }
 
-            .slip:last-child {
+            .slip:last-of-type {
                 page-break-after: avoid;
+                break-after: auto;
             }
         }
     </style>
@@ -1352,14 +1392,82 @@
 
     @include('Examination.passslips.partials.fit-school-name')
     <script>
-        @if($mode === 'class' || $mode === 'all')
+        (function () {
+            /* Shrink any card whose content is taller than the page (see .slip-body>*). */
+            function fitSlips() {
+                var probe = document.createElement('div');
+                probe.style.cssText = 'position:absolute;left:-9999px;top:0;width:10px;height:var(--slip-h);visibility:hidden';
+                document.body.appendChild(probe);
+                var target = probe.offsetHeight;
+                document.body.removeChild(probe);
+                if (!target) return;
+
+                document.querySelectorAll('.slip').forEach(function (slip) {
+                    slip.style.removeProperty('--fit');
+                    var fit = 1;
+                    for (var i = 0; i < 6; i++) {
+                        var h = Math.max(slip.offsetHeight, slip.scrollHeight);
+                        if (h <= target + 1) break;
+                        fit = Math.max(0.5, fit * (target / h) * 0.995);
+                        slip.style.setProperty('--fit', fit.toFixed(4));
+                    }
+                });
+            }
+
+            /* Redraw every chart at its box's current size. */
+            function redrawCharts() {
+                if (!window.Chart || !Chart.instances) return;
+                Object.keys(Chart.instances).forEach(function (k) {
+                    try { Chart.instances[k].resize(); } catch (e) { }
+                });
+            }
+
+            function prepareReportCards() {
+                if (window.fitSchoolNames) fitSchoolNames();
+                fitSlips();
+                redrawCharts();
+            }
+            window.prepareReportCards = prepareReportCards;
+
+            window.addEventListener('beforeprint', prepareReportCards);
+            if (window.matchMedia) {
+                var mq = window.matchMedia('print');
+                if (mq.addEventListener) mq.addEventListener('change', prepareReportCards);
+                else if (mq.addListener) mq.addListener(prepareReportCards);
+            }
+
+            /* Fonts + every image (logos, photos, signatures, watermarks) loaded, but never wait forever. */
+            function assetsReady() {
+                var waits = [];
+                if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready);
+                Array.prototype.forEach.call(document.images, function (img) {
+                    if (!img.complete) {
+                        waits.push(new Promise(function (done) {
+                            img.addEventListener('load', done);
+                            img.addEventListener('error', done);
+                        }));
+                    }
+                });
+                return Promise.race([
+                    Promise.all(waits),
+                    new Promise(function (done) { setTimeout(done, 8000); })
+                ]);
+            }
+
             window.addEventListener('load', function () {
-                setTimeout(function () {
-                    fitSchoolNames();
-                    window.print();
-                }, 900);
+                assetsReady().then(function () {
+                    prepareReportCards();
+                    @if($mode === 'class' || $mode === 'all')
+                        // Whole-class / all-classes: open the print dialog straight away, but only once
+                        // the layout is final (it used to fire 900ms after load, before fonts, images and
+                        // charts had settled, which is what scrambled the cards in the PDF).
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () { setTimeout(function () { window.print(); }, 300); });
+                        });
+                    @endif
+                });
             });
-        @endif
+        })();
     </script>
 </body>
 
