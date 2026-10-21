@@ -838,6 +838,10 @@
 
         $slipCounter = 0;
 
+        // "Combine Examinations": 2+ sittings are shown side by side.
+        $multiExam = $multiExam ?? false;
+        $examsList = $examsList ?? collect([$exam]);
+
         // School identity (same for every slip — one school per exam)
         $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
         $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
@@ -891,6 +895,7 @@
                 $prevSubj = collect($slipData['previousSubjectMarks'] ?? []);
                 $examSummarySlip = collect($slipData['examSummary'] ?? []);
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
+                $useAvgSlip = $slipData['useAvg'] ?? ($useAvg ?? false);
 
                 /* ── Customisation (per class saved profile, query wins) ── */
                 $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
@@ -922,18 +927,12 @@
                     'stu_admission' => $on('show_stu_admission', true, $savedCfg),
                     'stu_class' => $on('show_stu_class', true, $savedCfg),
                     'stu_stream' => $on('show_stu_stream', true, $savedCfg),
-                    'stu_exam' => $on('show_stu_exam', false, $savedCfg),
                     'stu_status' => $on('show_stu_status', true, $savedCfg),
 
                     // Same Student Information fields (and keys) as the Primary Classic slip
                     'stu_paycode' => $on('show_stu_paycode', true, $savedCfg),
                     'stu_dob' => $on('show_stu_dob', true, $savedCfg),
                     'stu_report_date' => $on('show_stu_report_date', true, $savedCfg),
-                    'stu_academic_year' => $on('show_stu_academic_year', false, $savedCfg),
-                    'stu_term' => $on('show_stu_term', false, $savedCfg),
-                    'stu_gender' => $on('show_stu_gender', false, $savedCfg),
-                    'stu_class_teacher' => $on('show_stu_class_teacher', false, $savedCfg),
-                    'stu_house' => $on('show_stu_house', false, $savedCfg),
 
                     'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
@@ -950,7 +949,6 @@
                 $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
                 $className = Helper::recordMdname($s->senior);
                 $dobFormatted = !empty($s->date_of_birth) ? date('d M Y', strtotime($s->date_of_birth)) : '—';
-                $infoClassTeacher = $subjMarks->first()?->class_teacher ?? ($s->class_teacher ?? '—');
                 $fullName = trim(($s->firstname ?? '') . ' ' . ($s->lastname ?? '') . ' ' . ($s->other_names ?? ''));
 
                 /* Student photo */
@@ -999,7 +997,7 @@
                 $miniLabels = $subjMarks->map(fn($sm) => strtoupper(substr($sm->subject_name, 0, 4)))->values()->toArray();
                 $miniStudent = $subjMarks->pluck('percentage')->values()->toArray();
                 $hasClassAvg = $subjMarks->filter(fn($sm) => ($sm->class_average ?? null) !== null)->isNotEmpty();
-                $miniClass = $subjMarks->map(fn($sm) => $sm->class_average !== null ? (float) $sm->class_average : null)->values()->toArray();
+                $miniClass = $subjMarks->map(fn($sm) => ($sm->class_average ?? null) !== null ? (float) $sm->class_average : null)->values()->toArray();
                 $growthLabels = $growth->pluck('label')->toArray();
                 $growthValues = $growth->pluck('percentage')->toArray();
 
@@ -1112,26 +1110,8 @@
                                             @if($cfg['stu_stream']) {{ $s->stream ?? '—' }} @endif
                                         </div>
                                     @endif
-                                    @if($cfg['stu_academic_year'])
-                                        <div><span class="k">ACADEMIC YEAR:</span> {{ $exam->academic_year }}</div>
-                                    @endif
-                                    @if($cfg['stu_term'])
-                                        <div><span class="k">TERM:</span> {{ \App\Support\Term::label($exam->term) }}</div>
-                                    @endif
-                                    @if($cfg['stu_exam'])
-                                        <div><span class="k">EXAM:</span> {{ $exam->exam_name }}</div>
-                                    @endif
                                     @if($cfg['stu_dob'])
                                         <div><span class="k">DATE OF BIRTH:</span> {{ $dobFormatted }}</div>
-                                    @endif
-                                    @if($cfg['stu_gender'])
-                                        <div><span class="k">GENDER:</span> {{ $s->gender ?? '—' }}</div>
-                                    @endif
-                                    @if($cfg['stu_class_teacher'])
-                                        <div><span class="k">CLASS TEACHER:</span> {{ $infoClassTeacher }}</div>
-                                    @endif
-                                    @if($cfg['stu_house'])
-                                        <div><span class="k">HOUSE / TEAM:</span> {{ $s->house ?? '—' }}</div>
                                     @endif
                                     @if($cfg['stu_report_date'])
                                         <div><span class="k">DATE OF REPORT:</span> {{ now()->format('d M Y') }}</div>
@@ -1196,6 +1176,48 @@
                     {{-- ══ MARKS TABLE ══ --}}
                     @if($cfg['section_marks_table'])
                         <div class="tbl-wrap">
+                            @if($multiExam)
+                                {{-- ── COMBINED EXAMS: one Marks % (and Grade) column per sitting ── --}}
+                                <table class="marks-tbl">
+                                    <thead>
+                                        <tr>
+                                            <th>Subjects</th>
+                                            @foreach($examsList as $ex)
+                                                <th class="c">{{ $ex->exam_name }}</th>
+                                                @if($cfg['col_grade'])<th class="c">Grade</th>@endif
+                                            @endforeach
+                                            @if($useAvgSlip)<th class="c">Average %</th>@endif
+                                            @if($cfg['col_grade'])<th class="c">{{ $useAvgSlip ? 'Final Grade' : 'Grade' }}</th>@endif
+                                            @if($cfg['comment_col'])<th>Comment</th>@endif
+                                            @if($cfg['teacher_col'])<th class="col-teacher">Teacher</th>@endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($subjMarks as $sm)
+                                            @php
+                                                $lastSat = collect($sm->exams ?? [])->filter(fn($e) => ($e['percentage'] ?? null) !== null)->last();
+                                                $cmbComment = $useAvgSlip ? ($sm->avgRemark ?? null) : ($lastSat['remark'] ?? null);
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $sm->subject_name }}</td>
+                                                @foreach($examsList as $ex)
+                                                    @php $ed = $sm->exams[$ex->id] ?? null; @endphp
+                                                    <td class="c">{{ ($ed['percentage'] ?? null) !== null ? \App\Helpers\NumberHelper::num($ed['percentage']) . '%' : '—' }}</td>
+                                                    @if($cfg['col_grade'])
+                                                        <td class="c">{{ ($ed['percentage'] ?? null) !== null ? ($ed['grade'] ?? '—') : '—' }}</td>
+                                                    @endif
+                                                @endforeach
+                                                @if($useAvgSlip)
+                                                    <td class="c"><strong>{{ ($sm->avgPercentage ?? null) !== null ? \App\Helpers\NumberHelper::num($sm->avgPercentage) . '%' : '—' }}</strong></td>
+                                                @endif
+                                                @if($cfg['col_grade'])<td class="c">{{ $sm->grade ?? '—' }}</td>@endif
+                                                @if($cfg['comment_col'])<td>{{ $cmbComment ?: '—' }}</td>@endif
+                                                @if($cfg['teacher_col'])<td class="col-teacher">{{ $sm->teacher_name ?? '—' }}</td>@endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
                             <table class="marks-tbl">
                                 <thead>
                                     <tr>
@@ -1252,6 +1274,7 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            @endif
                         </div>
                     @endif
 

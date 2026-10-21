@@ -1204,18 +1204,37 @@ class ExaminationController extends Controller
 
         // Classes that actually have marks recorded for this exam, same
         // source the pass-slip "class" picker already relies on.
-        $classOptions = ExaminationMark::where('examination_id', $examId)
+        // Classes come from BOTH sources: classes that already have marks
+        // (ordinary exams) and the exam's own class list (examination_classes).
+        // A Secondary O-Level report card never has examination_marks - its
+        // subject rows are computed from components - so the marks table alone
+        // left the class picker empty for Secondary classes.
+        $fromMarks = ExaminationMark::where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->select('class_id', 'stream_id')
             ->distinct()
             ->get()
+            ->map(fn($row) => (object) ['class_id' => $row->class_id, 'stream_id' => $row->stream_id])
+            ->values();
+
+        $fromExamClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->select('class_id', 'stream_id')
+            ->get()
+            ->map(fn($row) => (object) ['class_id' => $row->class_id, 'stream_id' => $row->stream_id])
+            ->values();
+
+        $classOptions = $fromMarks
+            ->concat($fromExamClasses)
+            ->unique(fn($row) => $row->class_id . '|' . $row->stream_id)
             ->map(fn($row) => (object) [
                 'class_id' => $row->class_id,
                 'stream_id' => $row->stream_id,
                 'class_name' => Helper::recordMdname($row->class_id),
                 'stream_name' => $row->stream_id,
             ])
-            ->sortBy('class_name')
+            ->sortBy(fn($row) => $row->class_name . '|' . $row->stream_id)
             ->values();
 
         $classId = $request->get('class_id', $classOptions->first()->class_id ?? null);
@@ -1338,18 +1357,36 @@ class ExaminationController extends Controller
 
         // Same class picker source as Discipline Ratings, so the two
         // entry screens always offer the same class/stream list.
-        $classOptions = ExaminationMark::where('examination_id', $examId)
+        // Classes come from BOTH sources: classes that already have marks
+        // (ordinary exams) and the exam's own class list (examination_classes).
+        // A Secondary O-Level report card has no examination_marks of its own,
+        // so the marks table alone left this list empty for it.
+        $fromMarks = ExaminationMark::where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->select('class_id', 'stream_id')
             ->distinct()
             ->get()
+            ->map(fn($row) => (object) ['class_id' => $row->class_id, 'stream_id' => $row->stream_id])
+            ->values();
+
+        $fromExamClasses = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->select('class_id', 'stream_id')
+            ->get()
+            ->map(fn($row) => (object) ['class_id' => $row->class_id, 'stream_id' => $row->stream_id])
+            ->values();
+
+        $classOptions = $fromMarks
+            ->concat($fromExamClasses)
+            ->unique(fn($row) => $row->class_id . '|' . $row->stream_id)
             ->map(fn($row) => (object) [
                 'class_id' => $row->class_id,
                 'stream_id' => $row->stream_id,
                 'class_name' => Helper::recordMdname($row->class_id),
                 'stream_name' => $row->stream_id,
             ])
-            ->sortBy('class_name')
+            ->sortBy(fn($row) => $row->class_name . '|' . $row->stream_id)
             ->values();
 
         $classId = $request->get('class_id', $classOptions->first()->class_id ?? null);
@@ -1363,7 +1400,13 @@ class ExaminationController extends Controller
             $students = DB::table('students')
                 ->where('school_id', $schoolId)
                 ->where('senior', $classId)
-                ->where('stream', $streamId)
+                ->where(function ($q) use ($streamId) {
+                    if ($streamId === null || $streamId === '') {
+                        $q->whereNull('stream')->orWhere('stream', '');
+                    } else {
+                        $q->where('stream', $streamId);
+                    }
+                })
                 ->orderBy('firstname')
                 ->get();
 

@@ -311,9 +311,9 @@ return [
 
             'show_section_student_info', 'show_section_summary', 'show_section_marks_table',
 
+            // Only the Student Information lines the Secondary card actually prints.
             'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_stream',
-            'show_stu_academic_year', 'show_stu_term', 'show_stu_exam', 'show_stu_dob', 'show_stu_gender',
-            'show_stu_class_teacher', 'show_stu_house', 'show_stu_report_date', 'show_stu_status',
+            'show_stu_dob', 'show_stu_report_date', 'show_stu_status',
 
             'show_sum_total_marks', 'show_sum_average_pct', 'show_sum_division',
         ],

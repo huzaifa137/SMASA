@@ -882,7 +882,7 @@ selected classes" is clicked. --}}
                         'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point', 'show_decimals'],
                         'classic' => ['show_signatures', 'show_teacher_col', 'show_decimals'],
                         'modern' => ['show_teacher_col', 'show_col_grade_point', 'show_decimals'],
-                        'secondary-classic' => ['show_decimals', 'show_stu_exam', 'show_stu_academic_year', 'show_stu_term', 'show_stu_gender', 'show_stu_class_teacher', 'show_stu_house'],
+                        'secondary-classic' => ['show_decimals'],
                         default => [],
                     };
                 @endphp
@@ -933,7 +933,8 @@ selected classes" is clicked. --}}
                     </div>
                 @endforeach
 
-                @if (isset($siblingExams) && $siblingExams->count() > 0)
+                {{-- An O-Level report card already combines its own components, so "Combine Examinations" doesn't apply to it. --}}
+                @if (isset($siblingExams) && $siblingExams->count() > 0 && !$exam->isReportCard())
                     <div class="cz-group-label"><i class="fas fa-layer-group"></i> Combine Examinations</div>
                     @foreach ($siblingExams as $se)
                         <div class="cz-check-row">
@@ -960,6 +961,8 @@ selected classes" is clicked. --}}
                      every sitting recorded for this class in the current
                      term & year is pulled in automatically. Checking one
                      or more switches this to "only these, in this order". --}}
+                {{-- Progressive Assessment Record only exists on the Primary designs; the Secondary card doesn't print it. --}}
+                @unless($isSecondaryTemplate ?? false)
                 <div class="cz-group-label"><i class="fas fa-table-list"></i> Progressive Assessment Record — Sittings</div>
                 <div class="small text-muted mb-2" style="font-size:.72rem;">
                     Pick which sittings should appear as rows in the Progressive
@@ -984,6 +987,7 @@ selected classes" is clicked. --}}
                         </div>
                     @endforeach
                 @endif
+                @endunless
 
                 <div class="cz-group-label"><i class="fas fa-save"></i> Apply &amp; Save</div>
                 <div class="small text-muted mb-2" style="font-size:.72rem;">
