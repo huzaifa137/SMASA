@@ -1395,6 +1395,7 @@ Route::controller(StudentConsolidationController::class)
             Route::get('/', 'index')->name('students.consolidation');
             Route::get('/search', 'search')->name('students.consolidation.search');
             Route::post('/link', 'link')->name('students.consolidation.link');
+            Route::post('/link-all', 'linkAll')->name('students.consolidation.link-all');
             Route::post('/unlink', 'unlink')->name('students.consolidation.unlink');
             Route::post('/dismiss', 'dismiss')->name('students.consolidation.dismiss');
             Route::post('/delete-duplicates', 'deleteDuplicates')->name('students.consolidation.delete');

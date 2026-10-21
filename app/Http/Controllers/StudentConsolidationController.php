@@ -163,6 +163,100 @@ class StudentConsolidationController extends Controller
     }
 
     /**
+     * Bulk-link every remaining "multi_program" suggestion (same child in
+     * different classes, e.g. Theology + Secular) in one confirmed action.
+     *
+     * The suggestion list is rebuilt on the server using the same class /
+     * stream filters the user is looking at, so only what is on screen is
+     * linked and nothing is trusted from the browser except the scope and
+     * any primary-record choices the user changed by hand.
+     *
+     * "duplicate" groups (same class + same stream) are deliberately NOT
+     * touched here — those should be deleted or reviewed, not linked.
+     *
+     * Body:
+     *   scope      'high' (name + DOB + gender only) | 'all' (also name + guardian phone)
+     *   class      optional class filter currently applied on the page
+     *   stream     optional stream filter currently applied on the page
+     *   overrides  optional array of student ids the user picked as primary
+     */
+    public function linkAll(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('manage_student_consolidation');
+
+        $request->validate([
+            'scope' => 'required|in:high,all',
+            'class' => 'nullable|string',
+            'stream' => 'nullable|string',
+            'overrides' => 'nullable|array',
+            'overrides.*' => 'integer',
+        ]);
+
+        $schoolId = Helper::requireSchool();
+
+        $groups = $this->service
+            ->findSuggestions($schoolId, $request->input('class') ?: null, $request->input('stream') ?: null)
+            ->where('type', 'multi_program');
+
+        if ($request->input('scope') === 'high') {
+            $groups = $groups->where('confidence', 'high');
+        }
+
+        $overrideIds = collect($request->input('overrides', []))->map(fn ($id) => (int) $id)->all();
+
+        $linkedGroups = 0;
+        $linkedRecords = 0;
+
+        DB::transaction(function () use ($groups, $overrideIds, &$linkedGroups, &$linkedRecords) {
+            foreach ($groups as $group) {
+                $students = $group['students'];
+
+                // Default primary = oldest record (same as the pre-selected radio on the page),
+                // unless the user picked a different one inside this group.
+                $primaryId = (int) $students->first()->id;
+                foreach ($students as $s) {
+                    if (in_array((int) $s->id, $overrideIds, true)) {
+                        $primaryId = (int) $s->id;
+                        break;
+                    }
+                }
+
+                $duplicateIds = $students->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->reject(fn ($id) => $id === $primaryId)
+                    ->values()
+                    ->all();
+
+                if (empty($duplicateIds)) {
+                    continue;
+                }
+
+                // Same rules as link(): re-point any children, then fold the duplicates in.
+                Student::whereIn('linked_student_id', $duplicateIds)->update(['linked_student_id' => $primaryId]);
+                Student::whereIn('id', $duplicateIds)->update(['linked_student_id' => $primaryId]);
+
+                $linkedGroups++;
+                $linkedRecords += count($duplicateIds);
+            }
+        });
+
+        $skipped = $this->service
+            ->findSuggestions($schoolId, $request->input('class') ?: null, $request->input('stream') ?: null)
+            ->where('type', 'duplicate')
+            ->count();
+
+        return response()->json([
+            'status' => true,
+            'linked_groups' => $linkedGroups,
+            'linked_records' => $linkedRecords,
+            'skipped_duplicates' => $skipped,
+            'message' => $linkedGroups > 0
+                ? "Linked {$linkedGroups} student(s) across {$linkedRecords} extra enrollment record(s). School totals will now count them once."
+                : 'There was nothing to link.',
+        ]);
+    }
+
+    /**
      * Delete exact duplicate enrollment row(s) — same child, same class,
      * same stream — keeping exactly one. Refuses to delete any row that
      * already has academic/financial history attached, since that would

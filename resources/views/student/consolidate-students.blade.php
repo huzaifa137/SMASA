@@ -106,6 +106,7 @@
             font-weight: 600; font-size: .82rem;
         }
         .btn-dismiss:hover { background: #f8fafc; }
+        .card-hd { gap: 12px; flex-wrap: wrap; }
 
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--t2); }
         .empty-state i { font-size: 2.2rem; color: var(--g); margin-bottom: .6rem; }
@@ -329,10 +330,13 @@
                 <h5><i class="fas fa-wand-magic-sparkles me-1" style="color:var(--b);"></i> Suggested Matches</h5>
                 <p>Records that are very likely the same child, found automatically by name, date of birth, gender and guardian contact.</p>
             </div>
+            <button type="button" class="btn-link-primary" id="btnLinkAll">
+                <i class="fas fa-link me-1"></i> Link All Remaining as Same Students
+            </button>
         </div>
         <div class="card-bd" id="suggestionsContainer">
             @forelse($suggestions as $group)
-                <div class="suggestion confidence-{{ $group['confidence'] }}" data-group="{{ $group['key'] }}">
+                <div class="suggestion confidence-{{ $group['confidence'] }}" data-group="{{ $group['key'] }}" data-type="{{ $group['type'] }}">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                         <span class="badge-conf {{ $group['confidence'] }}">{{ $group['confidence'] }} confidence</span>
                         <span style="font-size:.78rem;color:var(--t2);">{{ $group['reason'] }}</span>
@@ -464,6 +468,9 @@
     const LINK_URL = '{{ route('students.consolidation.link') }}';
     const UNLINK_URL = '{{ route('students.consolidation.unlink') }}';
     const DISMISS_URL = '{{ route('students.consolidation.dismiss') }}';
+    const LINK_ALL_URL = '{{ route('students.consolidation.link-all') }}';
+    const CLASS_FILTER = @json($classFilter);
+    const STREAM_FILTER = @json($streamFilter);
 
     // ── SweetAlert2 toast (top-right, auto-dismiss) ──
 const ToastMixin = Swal.mixin({
@@ -637,7 +644,7 @@ function toast(msg, type = 'success') {
             this.classList.add('btn-loading');
             card.querySelector('.btn-confirm-link')?.setAttribute('disabled', 'disabled');
 
-            const r = await postJson(DISMISS_URL, { student_id_one: ids[0], student_id_two: ids[1] });
+            const r = await postJson(DISMISS_URL, { student_ids: ids });
             if (!r.status) {
                 toast(r.message || 'Could not dismiss this suggestion.', 'error');
                 this.classList.remove('btn-loading');
@@ -649,6 +656,99 @@ function toast(msg, type = 'success') {
             toast(r.message || 'Got it — won\'t suggest that match again.');
             collapseAndRemove(card, () => toggleEmptyState('#suggestionsContainer .suggestion', 'suggestionsEmptyState'));
         });
+    });
+
+    // ── Suggested groups: bulk link everything that is left ──
+    document.getElementById('btnLinkAll')?.addEventListener('click', async function () {
+        const linkable = [...document.querySelectorAll('#suggestionsContainer .suggestion[data-type="multi_program"]')];
+        const highCount = linkable.filter(c => c.classList.contains('confidence-high')).length;
+        const mediumCount = linkable.length - highCount;
+        const duplicateCount = document.querySelectorAll('#suggestionsContainer .suggestion[data-type="duplicate"]').length;
+
+        if (!linkable.length) {
+            toast('There are no matches left to link.', 'error');
+            return;
+        }
+
+        const filterNote = (CLASS_FILTER || STREAM_FILTER)
+            ? '<div style="margin-bottom:10px;color:#475569;">Only the matches for the current class / stream filter will be linked.</div>'
+            : '';
+
+        const choice = await Swal.fire({
+            icon: 'question',
+            title: 'Link all remaining matches?',
+            html: `
+                <div style="text-align:left;font-size:.9rem;line-height:1.5;">
+                    ${filterNote}
+                    <div style="margin-bottom:10px;">
+                        <strong>${linkable.length}</strong> student(s) shown below will be linked as the
+                        <strong>same student</strong> across their classes
+                        (${highCount} high confidence, ${mediumCount} medium confidence).
+                        ${duplicateCount ? `<br><span style="color:#94a3b8;">${duplicateCount} same-class duplicate(s) will be left alone for you to review.</span>` : ''}
+                    </div>
+                    <label style="display:block;font-weight:600;margin-bottom:4px;">Which matches should be linked?</label>
+                    <select id="linkAllScope" class="swal2-select" style="margin:0 0 12px;width:100%;">
+                        <option value="high">High confidence only (same name, date of birth and gender)</option>
+                        <option value="all">All shown (includes medium confidence)</option>
+                    </select>
+                    <label style="display:flex;gap:8px;align-items:flex-start;font-size:.85rem;">
+                        <input type="checkbox" id="linkAllConfirm" style="margin-top:3px;">
+                        <span>I have marked every "Not a Match" and I am sure the rest are the same students.</span>
+                    </label>
+                </div>`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes, link them',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#2f2ccb',
+            reverseButtons: true,
+            focusCancel: true,
+            preConfirm: () => {
+                if (!document.getElementById('linkAllConfirm').checked) {
+                    Swal.showValidationMessage('Please tick the box to confirm you have reviewed the list.');
+                    return false;
+                }
+                return { scope: document.getElementById('linkAllScope').value };
+            }
+        });
+        if (!choice.isConfirmed) return;
+
+        // Keep any primary record the user changed by hand inside a group.
+        const overrides = [];
+        linkable.forEach(card => {
+            const radios = [...card.querySelectorAll('input[type=radio]')];
+            const checked = radios.find(r => r.checked);
+            if (checked && radios.length && checked !== radios[0]) overrides.push(parseInt(checked.value, 10));
+        });
+
+        this.classList.add('btn-loading');
+        Swal.fire({ title: 'Linking students…', text: 'Please wait, this can take a moment for large schools.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        let r;
+        try {
+            r = await postJson(LINK_ALL_URL, {
+                scope: choice.value.scope,
+                class: CLASS_FILTER,
+                stream: STREAM_FILTER,
+                overrides: overrides
+            });
+        } catch (e) {
+            r = { status: false, message: 'Something went wrong while linking. Please try again.' };
+        }
+
+        if (!r.status) {
+            Swal.close();
+            this.classList.remove('btn-loading');
+            toast(r.message || 'Could not link the records.', 'error');
+            return;
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Done',
+            text: r.message + (r.skipped_duplicates ? ` ${r.skipped_duplicates} same-class duplicate(s) still need your review.` : ''),
+            confirmButtonColor: '#2f2ccb'
+        });
+        window.location.reload();
     });
 
     // ── Unlink from consolidated list ──
