@@ -29,7 +29,8 @@ use RuntimeException;
  *     notifications, roles, ...), found from the live schema so tables added
  *     later are covered automatically
  *  4. uploaded files that belong to the school (logo, head teacher and
- *     teacher signatures, library covers and e-books)
+ *     teacher signatures, library covers and e-books, expense receipts,
+ *     report card backgrounds)
  *  5. the school's house/registration record, profile, login password and
  *     the school itself
  *
@@ -97,7 +98,10 @@ class SchoolDeletionService
         }
 
         // 3-5. Everything else, atomically.
-        DB::transaction(function () use ($school, $schoolId) {
+        DB::transaction(function () use ($school, $schoolId, $studentIds, $teacherIds) {
+            // Must run before the school's own notification rows are swept.
+            $orphanCandidates = $this->deleteNotificationRecipients($schoolId, $studentIds, $teacherIds);
+
             $this->deleteChildRowsWithoutSchoolId($schoolId);
 
             // The rows below are removed explicitly, so foreign key checks
@@ -112,6 +116,9 @@ class SchoolDeletionService
                 $this->deleteHouseRecords($school);
 
                 DB::table('schools')->where('id', $schoolId)->delete();
+
+                $this->deleteEmptyNotifications($orphanCandidates);
+                $this->deleteTrackerRows($schoolId);
             } finally {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1');
             }
@@ -159,6 +166,13 @@ class SchoolDeletionService
             ['role_feature_access', 'school_role_id', 'school_roles'],
             ['role_module_access', 'school_role_id', 'school_roles'],
             ['timetable_slots', 'timetable_id', 'timetables'],
+            // School NLSC copies and O-Level report card components. The NLSC
+            // children cascade from their parent, and the component tables
+            // have no foreign key at all, so none of them follow the school.
+            ['school_nlsc_competency_areas', 'school_nlsc_topic_id', 'school_nlsc_topics'],
+            ['school_nlsc_subject_achievements', 'school_nlsc_topic_id', 'school_nlsc_topics'],
+            ['olevel_report_card_component_assessments', 'component_id', 'olevel_report_card_components'],
+            ['olevel_report_card_component_open_assessments', 'component_id', 'olevel_report_card_components'],
         ];
 
         foreach ($children as [$child, $fk, $parent]) {
@@ -171,10 +185,104 @@ class SchoolDeletionService
                 ->delete();
         }
 
+        // School NLSC projects sit two levels below school_nlsc_project_areas
+        // (area -> project -> competency area), so they need a nested lookup.
+        if (Schema::hasTable('school_nlsc_project_areas') && Schema::hasTable('school_nlsc_projects')) {
+            $areaIds = DB::table('school_nlsc_project_areas')->where('school_id', $schoolId)->select('id');
+            $projectIds = DB::table('school_nlsc_projects')
+                ->whereIn('school_nlsc_project_area_id', $areaIds)
+                ->pluck('id')->all();
+
+            foreach (array_chunk($projectIds, 500) as $chunk) {
+                if (Schema::hasTable('school_nlsc_project_competency_areas')) {
+                    DB::table('school_nlsc_project_competency_areas')->whereIn('school_nlsc_project_id', $chunk)->delete();
+                }
+                DB::table('school_nlsc_projects')->whereIn('id', $chunk)->delete();
+            }
+        }
+
         // Support messages sent by this school's students.
         if (Schema::hasTable('contact_us') && Schema::hasTable('students')) {
             DB::table('contact_us')
                 ->whereIn('student_id', DB::table('students')->where('school_id', $schoolId)->select('id'))
+                ->delete();
+        }
+    }
+
+    /**
+     * Notification recipients that belong to this school: rows stamped with
+     * its school_id, rows pointing at its students/teachers (system-wide
+     * notifications carry a null school_id), and every recipient of one of
+     * its own notifications. Cascades do not fire while foreign key checks
+     * are off, so none of these would go otherwise.
+     *
+     * @return int[] ids of notifications that lost recipients here; once the
+     *               school's own notifications are gone, any of these left
+     *               with no recipients at all is deleted too.
+     */
+    protected function deleteNotificationRecipients(int $schoolId, array $studentIds, array $teacherIds): array
+    {
+        if (!Schema::hasTable('smasa_notification_recipients')) {
+            return [];
+        }
+
+        $affected = [];
+
+        $collect = function ($query) use (&$affected) {
+            foreach ($query->pluck('notification_id')->unique()->all() as $nid) {
+                $affected[$nid] = $nid;
+            }
+            $query->delete();
+        };
+
+        $collect(DB::table('smasa_notification_recipients')->where('school_id', $schoolId));
+
+        foreach (['student' => $studentIds, 'teacher' => $teacherIds] as $type => $ids) {
+            foreach (array_chunk($ids, 500) as $chunk) {
+                $collect(
+                    DB::table('smasa_notification_recipients')
+                        ->where('recipient_type', $type)
+                        ->whereIn('recipient_id', $chunk)
+                );
+            }
+        }
+
+        if (Schema::hasTable('smasa_notifications')) {
+            $collect(
+                DB::table('smasa_notification_recipients')
+                    ->whereIn('notification_id', DB::table('smasa_notifications')->where('school_id', $schoolId)->select('id'))
+            );
+        }
+
+        return array_values($affected);
+    }
+
+    /** System-wide notifications whose only recipients were this school's people. */
+    protected function deleteEmptyNotifications(array $notificationIds): void
+    {
+        if (empty($notificationIds) || !Schema::hasTable('smasa_notifications')) {
+            return;
+        }
+
+        foreach (array_chunk($notificationIds, 500) as $chunk) {
+            DB::table('smasa_notifications')
+                ->whereIn('id', $chunk)
+                ->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('smasa_notification_recipients')
+                        ->whereColumn('smasa_notification_recipients.notification_id', 'smasa_notifications.id');
+                })
+                ->delete();
+        }
+    }
+
+    /** "School Information Updated" audit rows store the school id in item_id. */
+    protected function deleteTrackerRows(int $schoolId): void
+    {
+        if (Schema::hasTable('update_trackers')) {
+            DB::table('update_trackers')
+                ->where('item_category', 'School Information Updated')
+                ->where('item_id', $schoolId)
                 ->delete();
         }
     }
@@ -193,7 +301,7 @@ class SchoolDeletionService
         DB::table('houses')->where('Number', $school->registration_code)->delete();
     }
 
-    /** @return array{public_paths:string[], storage_paths:string[]} */
+    /** @return array{public_paths:string[], storage_paths:string[], school_id:int} */
     protected function collectFiles(int $schoolId): array
     {
         $public = [];
@@ -229,7 +337,22 @@ class SchoolDeletionService
             }
         }
 
-        return ['public_paths' => $public, 'storage_paths' => $storage];
+        // Expense receipts and report card backgrounds. Stored either under
+        // public/ or on the public disk depending on the upload path, so
+        // both locations are tried; inline data URIs and URLs are skipped.
+        foreach ([['expenses', 'receipt_attachment'], ['report_card_templates', 'background']] as [$table, $col]) {
+            if (!Schema::hasTable($table) || !Schema::hasColumn($table, $col)) {
+                continue;
+            }
+            foreach (DB::table($table)->where('school_id', $schoolId)->whereNotNull($col)->pluck($col) as $path) {
+                if (is_string($path) && $path !== '' && !preg_match('#^(data:|https?:)#i', $path)) {
+                    $public[] = ltrim($path, '/');
+                    $storage[] = ltrim($path, '/');
+                }
+            }
+        }
+
+        return ['public_paths' => $public, 'storage_paths' => $storage, 'school_id' => $schoolId];
     }
 
     protected function deleteFiles(array $files): void
@@ -242,6 +365,15 @@ class SchoolDeletionService
             } catch (\Throwable $e) {
                 Log::warning('School file cleanup failed', ['path' => $path, 'error' => $e->getMessage()]);
             }
+        }
+
+        // Library uploads live in one folder per school.
+        try {
+            if ($files['school_id'] ?? null) {
+                Storage::disk('public')->deleteDirectory('library/' . $files['school_id']);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('School library folder cleanup failed', ['error' => $e->getMessage()]);
         }
 
         foreach (array_unique($files['storage_paths']) as $path) {

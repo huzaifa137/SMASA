@@ -344,8 +344,9 @@ use App\Http\Controllers\Helper;
                             row.remove().draw();
                             Swal.fire('Deleted!', 'School has been deleted.', 'success');
                         },
-                        error: function () {
-                            Swal.fire('Error!', 'Something went wrong deleting the school.', 'error');
+                        error: function (xhr) {
+                            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Something went wrong deleting the school.';
+                            Swal.fire('Error!', msg, 'error');
                         }
                     });
                 }
