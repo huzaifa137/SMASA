@@ -112,6 +112,12 @@
                                             <tr>
                                                 <td class="fw-bold">
                                                     {{ $a->title }} @if($a->category)<span class="oa-pill">{{ $a->category }}</span>@endif
+                                                    @if(!empty($a->nlsc))
+                                                        <div class="oa-detail">
+                                                            <b>{{ $a->nlsc['matter_label'] }}:</b> {{ $a->nlsc['matter'] ?? '—' }}<br>
+                                                            <b>{{ $a->nlsc['competency_label'] }}:</b> {{ $a->nlsc['competency'] ?? '—' }}
+                                                        </div>
+                                                    @endif
                                                     <div class="oa-sub">by {{ $a->created_by }} · {{ $a->created_at }}</div>
                                                 </td>
                                                 <td>{{ $a->term }}</td>

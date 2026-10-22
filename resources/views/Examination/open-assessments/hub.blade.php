@@ -26,17 +26,60 @@
             <div class="oa-card-head"><span id="formTitle"><i class="fas fa-plus-circle me-2"></i> New assessment</span></div>
             <div class="oa-card-body">
                 <div class="oa-grid">
-                    <div style="grid-column: span 2;">
-                        <label class="oa-label">Title *</label>
-                        <input type="text" id="fTitle" class="oa-input" maxlength="150" placeholder="e.g. Quiz 1, Mid-term test, Group project">
-                    </div>
                     <div>
-                        <label class="oa-label">Type</label>
-                        <select id="fCategory" class="oa-input">
-                            <option value="">— Optional —</option>
-                            @foreach($categories as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
+                        <label class="oa-label">Assessment type</label>
+                        <select id="fType" class="oa-input">
+                            <option value="">General (no type)</option>
+                            <optgroup label="Curriculum (NLSC)">
+                                @foreach($nlscTypes as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                            </optgroup>
+                            <optgroup label="Other types">
+                                @foreach($categories as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
+                            </optgroup>
                         </select>
                     </div>
+                    <div style="grid-column: span 2;">
+                        <label class="oa-label" id="titleLabel">Title *</label>
+                        <input type="text" id="fTitle" class="oa-input" maxlength="150" placeholder="e.g. Quiz 1, Mid-term test, Group project">
+                    </div>
+                </div>
+
+                {{-- Curriculum types only: Topic / Project → Competency Area / Achievement Statement --}}
+                <div class="oa-grid mt-3" id="nlscBlock" style="display:none;">
+                    <div style="grid-column: span 2;">
+                        <div class="oa-label-row">
+                            <label class="oa-label" id="matterLabel">Topics *</label>
+                            <a id="catalogueLink" href="#" target="_blank" rel="noopener" class="oa-link" style="display:none;">Manage topics</a>
+                        </div>
+                        <div class="oa-searchable" id="matterSearchable">
+                            <button type="button" class="oa-search-input" id="matterTrigger" disabled>
+                                <span class="oa-selected-text placeholder" id="matterText">Select assessment type first...</span>
+                                <i class="fas fa-chevron-down oa-caret"></i>
+                            </button>
+                            <div class="oa-search-panel">
+                                <div class="oa-search-box"><input type="text" id="matterSearch" placeholder="Search..." autocomplete="off"></div>
+                                <div class="oa-options-list" id="matterOptions"><div class="oa-no-results">No options</div></div>
+                            </div>
+                            <input type="hidden" id="matterValue" value="">
+                        </div>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label class="oa-label" id="secondLabel">Competency Areas *</label>
+                        <div class="oa-searchable" id="secondSearchable">
+                            <button type="button" class="oa-search-input" id="secondTrigger" disabled>
+                                <span class="oa-selected-text placeholder" id="secondText">Select a topic/project first...</span>
+                                <i class="fas fa-chevron-down oa-caret"></i>
+                            </button>
+                            <div class="oa-search-panel">
+                                <div class="oa-search-box"><input type="text" id="secondSearch" placeholder="Search..." autocomplete="off"></div>
+                                <div class="oa-options-list" id="secondOptions"><div class="oa-no-results">No options</div></div>
+                            </div>
+                            <input type="hidden" id="secondValue" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="oa-grid mt-3">
                     <div>
                         <label class="oa-label">Marked out of *</label>
                         <input type="number" id="fMax" class="oa-input" min="0.01" max="1000" step="0.5" placeholder="e.g. 20">
@@ -93,13 +136,28 @@
                 </thead>
                 <tbody>
                     @forelse($assessments as $a)
-                        @php $pct = $studentCount > 0 ? min(100, round(($a->entered_count / $studentCount) * 100)) : 0; @endphp
+                        @php
+                            $pct = $studentCount > 0 ? min(100, round(($a->entered_count / $studentCount) * 100)) : 0;
+                            $isNlsc = !empty($a->assessment_type);
+                            $matterId = $a->assessment_type === 'projects' ? $a->nlsc_project_id : $a->nlsc_topic_id;
+                            $secondId = $a->assessment_type === 'subject_achievement' ? $a->nlsc_subject_achievement_id : $a->nlsc_competency_area_id;
+                        @endphp
                         <tr data-id="{{ $a->id }}"
-                            data-title="{{ $a->title }}" data-category="{{ $a->category }}" data-max="{{ $a->max_marks }}"
+                            data-title="{{ $a->title }}" data-type="{{ $isNlsc ? $a->assessment_type : $a->category }}" data-max="{{ $a->max_marks }}"
                             data-term="{{ $a->term }}" data-year="{{ $a->academic_year }}"
+                            data-matter-id="{{ $matterId }}" data-second-id="{{ $secondId }}"
                             data-date="{{ optional($a->assessment_date)->format('Y-m-d') }}" data-desc="{{ $a->description }}">
-                            <td class="fw-bold">{{ $a->title }}@if($a->description)<div class="oa-sub">{{ \Illuminate\Support\Str::limit($a->description, 70) }}</div>@endif</td>
-                            <td>@if($a->category)<span class="oa-pill">{{ $a->category }}</span>@else<span class="oa-sub">—</span>@endif</td>
+                            <td class="fw-bold">
+                                {{ $a->title }}
+                                @if($a->nlsc)
+                                    <div class="oa-detail">
+                                        <b>{{ $a->nlsc['matter_label'] }}:</b> {{ $a->nlsc['matter'] ?? '—' }}<br>
+                                        <b>{{ $a->nlsc['competency_label'] }}:</b> {{ $a->nlsc['competency'] ?? '—' }}
+                                    </div>
+                                @endif
+                                @if($a->description)<div class="oa-sub">{{ \Illuminate\Support\Str::limit($a->description, 70) }}</div>@endif
+                            </td>
+                            <td>@if($a->type_label)<span class="oa-pill">{{ $a->type_label }}</span>@else<span class="oa-sub">—</span>@endif</td>
                             <td>{{ \App\Support\Term::label($a->term) }} {{ $a->academic_year }}</td>
                             <td>{{ optional($a->assessment_date)->format('d M Y') ?? '—' }}</td>
                             <td>{{ rtrim(rtrim(number_format($a->max_marks, 2), '0'), '.') }}</td>
@@ -139,20 +197,143 @@
         (function () {
             const CSRF = @json(csrf_token());
             const BASE = @json($baseUrl);
+            const MATTER_URL = @json(route('open-assessments.subject-matter-options', $classSubject->id));
+            const SECOND_URL = @json(route('open-assessments.competency-area-options'));
+            const CATALOGUE = @json($catalogueUrls);
+            const NLSC_TYPES = @json(array_keys($nlscTypes));
+
             let editingId = null;
+            let pendingMatterId = null;
+            let pendingSecondId = null;
 
             const $ = id => document.getElementById(id);
-            const fields = () => ({
-                title: $('fTitle')?.value.trim(), category: $('fCategory')?.value || null,
-                max_marks: $('fMax')?.value, assessment_date: $('fDate')?.value || null,
-                term: $('fTerm')?.value, academic_year: $('fYear')?.value,
-                description: $('fDesc')?.value.trim() || null,
-            });
+            const isNlsc = () => NLSC_TYPES.includes($('fType')?.value);
 
+            /* ---------- searchable dropdown (same behaviour as "Create Assessment") ---------- */
+            function createSearchable(ids) {
+                const root = $(ids.root), trigger = $(ids.trigger), textEl = $(ids.text),
+                      searchInput = $(ids.search), list = $(ids.options), hidden = $(ids.hidden);
+                let options = [], filtered = [], selected = '', placeholder = textEl.textContent, open = false;
+
+                const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                const render = () => {
+                    list.innerHTML = filtered.length
+                        ? filtered.map(o => `<div class="oa-option${String(o.id) === String(selected) ? ' selected' : ''}" data-value="${o.id}">${esc(o.label)}</div>`).join('')
+                        : '<div class="oa-no-results">No results found</div>';
+                };
+                const filter = q => {
+                    q = (q || '').trim().toLowerCase();
+                    filtered = q ? options.filter(o => String(o.label).toLowerCase().includes(q)) : options.slice();
+                    render();
+                };
+                const closePanel = () => { open = false; root.classList.remove('open'); };
+                const showPlaceholder = () => { textEl.textContent = placeholder; textEl.classList.add('placeholder'); };
+
+                trigger.addEventListener('click', e => {
+                    e.preventDefault();
+                    if (trigger.disabled) return;
+                    if (open) return closePanel();
+                    document.querySelectorAll('.oa-searchable.open').forEach(el => { if (el !== root) el.classList.remove('open'); });
+                    open = true; root.classList.add('open'); searchInput.value = ''; filter('');
+                    setTimeout(() => searchInput.focus(), 30);
+                });
+                searchInput.addEventListener('input', () => filter(searchInput.value));
+                searchInput.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+                list.addEventListener('click', e => {
+                    const el = e.target.closest('.oa-option');
+                    if (!el) return;
+                    const opt = options.find(o => String(o.id) === String(el.dataset.value));
+                    if (opt) api.setValue(opt.id, opt.label);
+                    closePanel();
+                });
+                document.addEventListener('click', e => { if (!root.contains(e.target)) closePanel(); });
+
+                const api = {
+                    setOptions(opts, ph) {
+                        options = Array.isArray(opts) ? opts : []; filtered = options.slice();
+                        if (typeof ph === 'string') placeholder = ph;
+                        selected = ''; hidden.value = ''; showPlaceholder(); render();
+                    },
+                    enable() { trigger.disabled = false; },
+                    disable(ph) {
+                        trigger.disabled = true;
+                        if (typeof ph === 'string') placeholder = ph;
+                        selected = ''; hidden.value = ''; options = []; filtered = [];
+                        showPlaceholder(); render(); closePanel();
+                    },
+                    setValue(val, label) {
+                        selected = val ? String(val) : ''; hidden.value = selected;
+                        if (selected) { textEl.textContent = label || selected; textEl.classList.remove('placeholder'); } else { showPlaceholder(); }
+                        render(); hidden.dispatchEvent(new Event('change'));
+                    },
+                    clear() { selected = ''; hidden.value = ''; showPlaceholder(); render(); hidden.dispatchEvent(new Event('change')); },
+                };
+                return api;
+            }
+
+            if ($('matterSearchable')) {
+                const matter = createSearchable({ root: 'matterSearchable', trigger: 'matterTrigger', text: 'matterText', search: 'matterSearch', options: 'matterOptions', hidden: 'matterValue' });
+                const second = createSearchable({ root: 'secondSearchable', trigger: 'secondTrigger', text: 'secondText', search: 'secondSearch', options: 'secondOptions', hidden: 'secondValue' });
+
+                const loadJson = url => fetch(url, { headers: { 'Accept': 'application/json' } }).then(r => r.json());
+
+                // Choosing the assessment type filters the Topics / Projects, exactly like "Create Assessment".
+                $('fType').addEventListener('change', function () {
+                    const type = this.value;
+                    const nlsc = NLSC_TYPES.includes(type);
+
+                    $('nlscBlock').style.display = nlsc ? '' : 'none';
+                    $('titleLabel').textContent = nlsc ? 'Title (optional — built from your selection if left blank)' : 'Title *';
+                    matter.disable(nlsc ? 'Loading...' : 'Select assessment type first...');
+                    second.disable('Select a topic/project first...');
+
+                    const link = $('catalogueLink');
+                    const url = type === 'projects' ? CATALOGUE.projects : CATALOGUE.topics;
+                    if (nlsc && url) {
+                        link.href = url; link.textContent = 'Manage ' + (type === 'projects' ? 'projects' : 'topics') + ' for this subject'; link.style.display = 'inline';
+                    } else { link.style.display = 'none'; }
+
+                    if (!nlsc) return;
+
+                    $('matterLabel').textContent = (type === 'projects' ? 'Project' : 'Topics') + ' *';
+                    $('secondLabel').textContent = (type === 'subject_achievement' ? 'Achievement Statement' : 'Competency Areas') + ' *';
+
+                    loadJson(`${MATTER_URL}?assessment_type=${type}`).then(res => {
+                        if (!res.success || !res.options.length) return matter.disable('None set up yet — add one from the catalogue first');
+                        matter.setOptions(res.options, 'Select...'); matter.enable();
+                        if (pendingMatterId) {
+                            const m = res.options.find(o => String(o.id) === String(pendingMatterId));
+                            pendingMatterId = null;
+                            if (m) matter.setValue(m.id, m.label);
+                        }
+                    }).catch(() => matter.disable('Failed to load — try again'));
+                });
+
+                // Choosing a Topic / Project loads its Competency Areas (or the topic's Achievement Statements).
+                $('matterValue').addEventListener('change', function () {
+                    if (!this.value) return second.disable('Select a topic/project first...');
+                    second.disable('Loading...');
+
+                    loadJson(`${SECOND_URL}?assessment_type=${$('fType').value}&subject_matter_id=${this.value}`).then(res => {
+                        if (!res.success || !res.options.length) return second.disable('None set up yet — add one from the catalogue first');
+                        second.setOptions(res.options, 'Select...'); second.enable();
+                        if (pendingSecondId) {
+                            const m = res.options.find(o => String(o.id) === String(pendingSecondId));
+                            pendingSecondId = null;
+                            if (m) second.setValue(m.id, m.label);
+                        }
+                    }).catch(() => second.disable('Failed to load — try again'));
+                });
+
+                window.__oaResetNlsc = () => { matter.clear(); matter.disable('Select assessment type first...'); second.clear(); second.disable('Select a topic/project first...'); };
+            }
+
+            /* ---------- form ---------- */
             function resetForm() {
-                editingId = null;
+                editingId = null; pendingMatterId = null; pendingSecondId = null;
                 ['fTitle', 'fMax', 'fDate', 'fDesc'].forEach(i => { if ($(i)) $(i).value = ''; });
-                if ($('fCategory')) $('fCategory').value = '';
+                if ($('fType')) { $('fType').value = ''; $('fType').dispatchEvent(new Event('change')); }
+                if (window.__oaResetNlsc) window.__oaResetNlsc();
                 if ($('saveLabel')) $('saveLabel').textContent = 'Create assessment';
                 if ($('formTitle')) $('formTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i> New assessment';
                 if ($('cancelEditBtn')) $('cancelEditBtn').style.display = 'none';
@@ -173,14 +354,34 @@
             }
 
             $('saveBtn')?.addEventListener('click', async function () {
-                const f = fields();
-                if (!f.title) return Swal.fire('Title needed', 'Give the assessment a title.', 'warning');
-                if (!f.term) return Swal.fire('Term needed', 'Choose the term this assessment belongs to.', 'warning');
-                if (!f.max_marks || parseFloat(f.max_marks) <= 0) return Swal.fire('Marked out of', 'Enter the maximum marks (greater than 0).', 'warning');
+                const type = $('fType').value;
+                const nlsc = NLSC_TYPES.includes(type);
+                const title = $('fTitle').value.trim();
+
+                if (nlsc) {
+                    if (!$('matterValue').value) return Swal.fire('Choose a ' + (type === 'projects' ? 'project' : 'topic'), 'Pick what this assessment is set against.', 'warning');
+                    if (!$('secondValue').value) return Swal.fire('Almost there', 'Choose the ' + (type === 'subject_achievement' ? 'achievement statement' : 'competency area') + '.', 'warning');
+                } else if (!title) {
+                    return Swal.fire('Title needed', 'Give the assessment a title.', 'warning');
+                }
+                if (!$('fTerm').value) return Swal.fire('Term needed', 'Choose the term this assessment belongs to.', 'warning');
+                if (!$('fMax').value || parseFloat($('fMax').value) <= 0) return Swal.fire('Marked out of', 'Enter the maximum marks (greater than 0).', 'warning');
+
+                const body = {
+                    title: title || null,
+                    assessment_type: nlsc ? type : null,
+                    category: nlsc ? null : (type || null),
+                    subject_matter_id: nlsc ? $('matterValue').value : null,
+                    nlsc_competency_area_id: nlsc && type !== 'subject_achievement' ? $('secondValue').value : null,
+                    nlsc_subject_achievement_id: nlsc && type === 'subject_achievement' ? $('secondValue').value : null,
+                    max_marks: $('fMax').value, assessment_date: $('fDate').value || null,
+                    term: $('fTerm').value, academic_year: $('fYear').value,
+                    description: $('fDesc').value.trim() || null,
+                };
 
                 this.disabled = true;
                 try {
-                    await send(editingId ? BASE + '/' + editingId : BASE, editingId ? 'PUT' : 'POST', f);
+                    await send(editingId ? BASE + '/' + editingId : BASE, editingId ? 'PUT' : 'POST', body);
                     window.location.reload();
                 } catch (e) {
                     Swal.fire('Could not save', e.message, 'error');
@@ -193,9 +394,16 @@
             document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', function () {
                 const d = this.closest('tr').dataset;
                 editingId = d.id;
-                $('fTitle').value = d.title; $('fCategory').value = d.category || '';
+                $('fTitle').value = d.title;
                 $('fTerm').value = d.term || ''; $('fYear').value = d.year || $('fYear').value;
                 $('fMax').value = d.max; $('fDate').value = d.date || ''; $('fDesc').value = d.desc || '';
+
+                // Re-select the saved Topic/Project and Competency/Achievement once their options load.
+                pendingMatterId = d.matterId || null;
+                pendingSecondId = d.secondId || null;
+                $('fType').value = d.type || '';
+                $('fType').dispatchEvent(new Event('change'));
+
                 $('saveLabel').textContent = 'Save changes';
                 $('formTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit assessment';
                 $('cancelEditBtn').style.display = 'inline-flex';
@@ -211,7 +419,7 @@
                     icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Delete',
                 }).then(async r => {
                     if (!r.isConfirmed) return;
-                    try { await send(BASE + '/' + row.dataset.id, 'DELETE'); row.remove(); window.location.reload(); }
+                    try { await send(BASE + '/' + row.dataset.id, 'DELETE'); window.location.reload(); }
                     catch (e) { Swal.fire('Could not delete', e.message, 'error'); }
                 });
             }));

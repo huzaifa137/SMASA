@@ -15,6 +15,14 @@
             {{ $subjectName }} — {{ $className }}@if($streamLabel) · {{ $streamLabel }}@endif · {{ $termLabel }}
             · by {{ $creator }} · marked out of <strong style="color:#fff;">{{ rtrim(rtrim(number_format($max, 2), '0'), '.') }}</strong>
         </div>
+        @if(!empty($nlsc))
+            <div class="hero-subtitle mt-1">
+                @if($typeLabel)<strong style="color:#fff;">{{ $typeLabel }}</strong> · @endif
+                {{ $nlsc['matter_label'] }}: {{ $nlsc['matter'] ?? '—' }} · {{ $nlsc['competency_label'] }}: {{ $nlsc['competency'] ?? '—' }}
+            </div>
+        @elseif(!empty($typeLabel))
+            <div class="hero-subtitle mt-1"><strong style="color:#fff;">{{ $typeLabel }}</strong></div>
+        @endif
         <div class="hero-links mt-2">
             <a href="{{ route('open-assessments.overview') }}"><i class="fas fa-arrow-left me-1"></i> Back to assessments by teacher</a>
         </div>
@@ -55,5 +63,7 @@
                 </tbody>
             </table>
         </div>
+    </div>
+      </div>
     </div>
 @endsection

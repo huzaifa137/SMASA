@@ -259,7 +259,7 @@ class OLevelReportCardController extends Controller
                             'assessments' => $rows->map(fn($a) => [
                                 'id' => -1 * (int) $a->id,   // open assessments are ticked by NEGATIVE id
                                 'class' => Helper::recordMdname($a->class_id) . ' · ' . $a->stream_id,
-                                'type' => 'Open assessment' . ($a->category ? ' (' . $a->category . ')' : ''),
+                                'type' => 'Open · ' . ($a->typeLabel() ?: 'Assessment'),
                                 'title' => $a->title,
                                 'max_marks' => $a->max_marks,
                                 'teacher' => $a->teacher ? trim($a->teacher->surname . ' ' . $a->teacher->firstname) : null,

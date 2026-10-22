@@ -67,5 +67,31 @@
     .oa-teacher[open] .chev { transform: rotate(90deg); }
     .oa-subject { padding: 0 1.5rem 1.1rem; }
     .oa-subject h6 { font-size: .86rem; font-weight: 800; color: #1e1b4b; margin: 1rem 0 .5rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+    /* Searchable dropdown (same behaviour as the NLSC "Create Assessment" form) */
+    .oa-label-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .25rem; }
+    .oa-label-row .oa-label { margin-bottom: 0; }
+    .oa-link { font-size: .74rem; font-weight: 700; color: #2C29CA; text-decoration: none; white-space: nowrap; }
+    .oa-link:hover { text-decoration: underline; color: #211ea3; }
+    .oa-searchable { position: relative; width: 100%; }
+    .oa-searchable .oa-search-input { width: 100%; border: 1.5px solid #dcdaf5; background: #fff; border-radius: .65rem; padding: .5rem .75rem; font-size: .86rem; color: #1e1b4b; display: flex; align-items: center; justify-content: space-between; gap: .5rem; cursor: pointer; text-align: left; }
+    .oa-searchable .oa-search-input:focus { outline: none; border-color: #2C29CA; box-shadow: 0 0 0 3px rgba(44,41,202,.13); }
+    .oa-searchable .oa-search-input:disabled { background: #f1f0f6; color: #a3a0c9; cursor: not-allowed; }
+    .oa-searchable .oa-selected-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .oa-searchable .oa-selected-text.placeholder { color: #a3a0c9; }
+    .oa-searchable .oa-caret { color: #a3a0c9; font-size: .7rem; transition: transform .15s ease; }
+    .oa-searchable.open .oa-caret { transform: rotate(180deg); }
+    .oa-searchable .oa-search-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1050; background: #fff; border: 1.5px solid #e4e2ff; border-radius: .65rem; box-shadow: 0 10px 30px rgba(44,41,202,.16); overflow: hidden; display: none; }
+    .oa-searchable.open .oa-search-panel { display: block; }
+    .oa-searchable .oa-search-box { padding: .5rem .6rem; border-bottom: 1px solid #f0eeff; background: #faf9ff; }
+    .oa-searchable .oa-search-box input { width: 100%; border: 1.5px solid #e4e2ff; background: #fff; border-radius: .5rem; padding: .45rem .7rem; font-size: .85rem; color: #1e1b4b; }
+    .oa-searchable .oa-search-box input:focus { outline: none; border-color: #2C29CA; box-shadow: 0 0 0 3px rgba(44,41,202,.12); }
+    .oa-searchable .oa-options-list { max-height: 240px; overflow-y: auto; padding: .3rem; }
+    .oa-searchable .oa-option { padding: .5rem .7rem; border-radius: .45rem; font-size: .85rem; color: #1e1b4b; cursor: pointer; }
+    .oa-searchable .oa-option:hover { background: #eef0ff; color: #2C29CA; }
+    .oa-searchable .oa-option.selected { background: #2C29CA; color: #fff; }
+    .oa-searchable .oa-no-results { padding: .7rem; text-align: center; font-size: .82rem; color: #a3a0c9; }
+    .oa-detail { font-size: .74rem; color: #6a67a8; margin-top: .2rem; line-height: 1.35; }
+    .oa-detail b { color: #3a37b8; font-weight: 700; }
     @media (max-width: 767px) { .oa-hero { padding: 1.25rem; } .oa-fab { right: 1rem; bottom: 1rem; } }
 </style>

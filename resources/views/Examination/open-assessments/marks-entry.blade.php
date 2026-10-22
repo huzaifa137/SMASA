@@ -18,6 +18,14 @@
             {{ $subjectName }} — {{ $className }}@if($streamLabel) · {{ $streamLabel }}@endif · {{ \App\Support\Term::label($assessment->term) }} {{ $assessment->academic_year }}
             · marked out of <strong style="color:#fff;">{{ rtrim(rtrim(number_format($max, 2), '0'), '.') }}</strong>
         </div>
+        @if(!empty($nlsc))
+            <div class="hero-subtitle mt-1">
+                @if($typeLabel)<strong style="color:#fff;">{{ $typeLabel }}</strong> · @endif
+                {{ $nlsc['matter_label'] }}: {{ $nlsc['matter'] ?? '—' }} · {{ $nlsc['competency_label'] }}: {{ $nlsc['competency'] ?? '—' }}
+            </div>
+        @elseif(!empty($typeLabel))
+            <div class="hero-subtitle mt-1"><strong style="color:#fff;">{{ $typeLabel }}</strong></div>
+        @endif
         <div class="hero-links mt-2">
             <a href="{{ route('open-assessments.hub', $classSubject->id) }}"><i class="fas fa-arrow-left me-1"></i> All assessments for this subject</a>
         </div>

@@ -5,10 +5,18 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\OpenAssessment;
 use App\Models\OpenAssessmentMark;
+use App\Models\SchoolNlscCompetencyArea;
+use App\Models\SchoolNlscProject;
+use App\Models\SchoolNlscProjectArea;
+use App\Models\SchoolNlscProjectCompetencyArea;
+use App\Models\SchoolNlscSubjectAchievement;
+use App\Models\SchoolNlscTopic;
 use App\Support\Term;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * "Open assessments" — free-form assessments a subject teacher creates on their
@@ -109,6 +117,25 @@ class OpenAssessmentController extends Controller
             $a->setAttribute('card_names', $onCards[$a->id] ?? []);
         });
 
+        $details = OpenAssessment::nlscDetails($assessments);
+        $assessments->each(function ($a) use ($details) {
+            $a->setAttribute('type_label', $a->typeLabel());
+            $a->setAttribute('nlsc', $details[$a->id] ?? null);
+        });
+
+        // Shortcuts to this subject's own catalogue (Topics / Projects), same as "Create Assessment".
+        $catalogueUrls = [];
+        $nlscSubjectId = Helper::secondaryOlevelToNlscSubjectId($classSubject->subject_id ? (int) $classSubject->subject_id : null);
+        if ($nlscSubjectId) {
+            $query = ['senior' => $classSubject->class_id, 'subject' => $nlscSubjectId];
+            if (PermissionHelper::canFeature('view_nlsc_topics')) {
+                $catalogueUrls['topics'] = route('school.nlsc-topics', $query);
+            }
+            if (PermissionHelper::canFeature('view_nlsc_projects')) {
+                $catalogueUrls['projects'] = route('school.nlsc-projects', $query);
+            }
+        }
+
         [$year, $term] = $this->defaultYearTerm();
 
         return view('Examination.open-assessments.hub', [
@@ -119,6 +146,8 @@ class OpenAssessmentController extends Controller
             'assessments' => $assessments,
             'studentCount' => $eligibleIds->count(),
             'categories' => OpenAssessment::CATEGORIES,
+            'nlscTypes' => OpenAssessment::NLSC_TYPES,
+            'catalogueUrls' => $catalogueUrls,
             'years' => $this->yearOptions($assessments->pluck('academic_year')->all()),
             'terms' => self::TERMS,
             'defaultYear' => $year,
@@ -135,7 +164,7 @@ class OpenAssessmentController extends Controller
         $teacherId = session('LoggedTeacher');
         $classSubject = $this->context($classSubjectId);
 
-        $data = $this->validated($request);
+        $data = $this->validated($request, $classSubject);
 
         $assessment = OpenAssessment::create($data + [
             'school_id' => session('LoggedSchool'),
@@ -159,7 +188,7 @@ class OpenAssessmentController extends Controller
         $classSubject = $this->context($classSubjectId);
         $assessment = $this->findInSubject($id, session('LoggedSchool'), $classSubject);
 
-        $data = $this->validated($request);
+        $data = $this->validated($request, $classSubject);
 
         // Never leave an already-entered mark above the new maximum.
         $highest = OpenAssessmentMark::where('open_assessment_id', $assessment->id)->max('marks_obtained');
@@ -231,6 +260,8 @@ class OpenAssessmentController extends Controller
             'siblings' => $siblings,
             'students' => $students,
             'existingMarks' => OpenAssessmentMark::where('open_assessment_id', $assessment->id)->get()->keyBy('student_id'),
+            'typeLabel' => $assessment->typeLabel(),
+            'nlsc' => OpenAssessment::nlscDetails([$assessment])[$assessment->id] ?? null,
             'className' => Helper::recordMdname($classSubject->class_id),
             'streamLabel' => $this->streamLabel($classSubject->stream_id),
             'subjectName' => Helper::classSubjectName($classSubject),
@@ -365,17 +396,20 @@ class OpenAssessmentController extends Controller
             ->merge($allAssessments->pluck('teacher_id'))->filter()->unique()->values()->all();
         $teacherNames = $this->teacherNames($teacherIds);
 
+        $nlscDetails = OpenAssessment::nlscDetails($assessments);
+
         $bySubject = $assessments->groupBy(fn($a) => $this->subjectKey($a->class_id, $a->stream_id, $a->subject_id, $a->custom_subject_id));
         $shown = [];
         $groups = [];
 
-        $describe = function (OpenAssessment $a, $expected) use ($stats, $usage, $teacherNames) {
+        $describe = function (OpenAssessment $a, $expected) use ($stats, $usage, $teacherNames, $nlscDetails) {
             $s = $stats[$a->id] ?? null;
 
             return (object) [
                 'id' => $a->id,
                 'title' => $a->title,
-                'category' => $a->category,
+                'category' => $a->typeLabel(),
+                'nlsc' => $nlscDetails[$a->id] ?? null,
                 'term' => Term::label($a->term) . ' ' . $a->academic_year,
                 'date' => optional($a->assessment_date)->format('d M Y'),
                 'max_marks' => $a->max_marks,
@@ -525,6 +559,8 @@ class OpenAssessmentController extends Controller
                 'lowest' => $entered->isNotEmpty() ? $entered->min('marks') : null,
             ],
             'cards' => $this->cardsFor([$assessment->id])[$assessment->id] ?? [],
+            'typeLabel' => $assessment->typeLabel(),
+            'nlsc' => OpenAssessment::nlscDetails([$assessment])[$assessment->id] ?? null,
         ]);
     }
 
@@ -532,10 +568,27 @@ class OpenAssessmentController extends Controller
     //  Internals
     // ═════════════════════════════════════════════════════════════════════
 
-    private function validated(Request $request): array
+    /**
+     * Validated columns for create / update.
+     *
+     * Two kinds of assessment:
+     *   • General (Quiz, Test, Assignment ...)  – needs a title; `category` holds the type.
+     *   • Curriculum (Activities of Integration / Projects / Subject Achievement) – set against
+     *     the school's NLSC catalogue exactly like "Create Assessment": a Topic or Project plus
+     *     one Competency Area / Achievement Statement. The title is optional and, when left
+     *     blank, is built from that selection.
+     */
+    private function validated(Request $request, $classSubject): array
     {
+        $nlscType = $request->input('assessment_type');
+        $isNlsc = !empty($nlscType);
+
         $data = $request->validate([
-            'title' => 'required|string|max:150',
+            'assessment_type' => 'nullable|string|in:' . implode(',', array_keys(OpenAssessment::NLSC_TYPES)),
+            'subject_matter_id' => $isNlsc ? 'required|integer' : 'nullable',
+            'nlsc_competency_area_id' => 'nullable|integer',
+            'nlsc_subject_achievement_id' => 'nullable|integer',
+            'title' => ($isNlsc ? 'nullable' : 'required') . '|string|max:150',
             'category' => 'nullable|string|in:' . implode(',', OpenAssessment::CATEGORIES),
             'description' => 'nullable|string|max:1000',
             'assessment_date' => 'nullable|date',
@@ -544,15 +597,192 @@ class OpenAssessmentController extends Controller
             'term' => 'required|string|in:' . implode(',', self::TERMS),
         ], [
             'title.required' => 'Give the assessment a title, e.g. “Quiz 1”.',
+            'subject_matter_id.required' => 'Choose the topic or project this assessment is set against.',
             'max_marks.required' => 'Enter the maximum marks this assessment is marked out of.',
             'max_marks.min' => 'Maximum marks must be greater than 0.',
             'term.required' => 'Choose the term this assessment belongs to.',
             'term.in' => 'Choose Term 1, Term 2 or Term 3.',
         ]);
 
-        $data['title'] = trim($data['title']);
+        $columns = [
+            'title' => trim((string) ($data['title'] ?? '')),
+            'category' => $isNlsc ? null : ($data['category'] ?? null),
+            'description' => $data['description'] ?? null,
+            'assessment_date' => $data['assessment_date'] ?? null,
+            'max_marks' => $data['max_marks'],
+            'academic_year' => $data['academic_year'],
+            'term' => $data['term'],
+            'assessment_type' => null,
+            'nlsc_topic_id' => null,
+            'nlsc_project_id' => null,
+            'nlsc_competency_area_id' => null,
+            'nlsc_subject_achievement_id' => null,
+        ];
 
-        return $data;
+        if ($isNlsc) {
+            [$links, $label] = $this->resolveNlscSelection($nlscType, $data, $classSubject);
+            $columns = array_merge($columns, $links);
+
+            if ($columns['title'] === '') {
+                $columns['title'] = Str::limit($label, 150, '…');
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Confirms the chosen Topic / Project and Competency Area / Achievement really belong to THIS
+     * school's catalogue for THIS class-subject (the ids come from the browser), and builds the
+     * column values plus a readable label.
+     *
+     * @return array{0: array<string, int|string|null>, 1: string}
+     */
+    private function resolveNlscSelection(string $type, array $data, $classSubject): array
+    {
+        $schoolId = session('LoggedSchool');
+        $nlscSubjectId = Helper::secondaryOlevelToNlscSubjectId($classSubject->subject_id ? (int) $classSubject->subject_id : null);
+        $fail = fn(string $field, string $message) => throw ValidationException::withMessages([$field => $message]);
+
+        $matterId = (int) $data['subject_matter_id'];
+        $links = ['assessment_type' => $type];
+
+        if ($type === 'projects') {
+            $project = SchoolNlscProject::find($matterId);
+            $area = $project ? SchoolNlscProjectArea::find($project->school_nlsc_project_area_id) : null;
+
+            if (!$project || !$area || (int) $area->school_id !== (int) $schoolId
+                || (int) $area->senior_class_id !== (int) $classSubject->class_id
+                || ($nlscSubjectId && (int) $area->subject_id !== (int) $nlscSubjectId)) {
+                $fail('subject_matter_id', 'That project is not in this subject\'s catalogue.');
+            }
+
+            $competencyId = (int) ($data['nlsc_competency_area_id'] ?? 0);
+            $competency = $competencyId ? SchoolNlscProjectCompetencyArea::where('id', $competencyId)->where('school_nlsc_project_id', $project->id)->first() : null;
+            if (!$competency) {
+                $fail('nlsc_competency_area_id', 'Choose one of this project\'s competency areas.');
+            }
+
+            $links += ['nlsc_project_id' => $project->id, 'nlsc_competency_area_id' => $competency->id];
+
+            return [$links, trim($project->project_name . ' — ' . $competency->description)];
+        }
+
+        $topic = SchoolNlscTopic::where('id', $matterId)
+            ->where('school_id', $schoolId)
+            ->where('senior_class_id', $classSubject->class_id)
+            ->when($nlscSubjectId, fn($q) => $q->where('subject_id', $nlscSubjectId))
+            ->first();
+
+        if (!$topic) {
+            $fail('subject_matter_id', 'That topic is not in this subject\'s catalogue.');
+        }
+
+        if ($type === 'activities_of_integration') {
+            $competencyId = (int) ($data['nlsc_competency_area_id'] ?? 0);
+            $competency = $competencyId ? SchoolNlscCompetencyArea::where('id', $competencyId)->where('school_nlsc_topic_id', $topic->id)->first() : null;
+            if (!$competency) {
+                $fail('nlsc_competency_area_id', 'Choose one of this topic\'s competency areas.');
+            }
+
+            $links += ['nlsc_topic_id' => $topic->id, 'nlsc_competency_area_id' => $competency->id];
+
+            return [$links, trim($topic->topic_name . ' — ' . $competency->description)];
+        }
+
+        // subject_achievement
+        $achievementId = (int) ($data['nlsc_subject_achievement_id'] ?? 0);
+        $achievement = $achievementId ? SchoolNlscSubjectAchievement::where('id', $achievementId)->where('school_nlsc_topic_id', $topic->id)->first() : null;
+        if (!$achievement) {
+            $fail('nlsc_subject_achievement_id', 'Choose one of this topic\'s achievement statements.');
+        }
+
+        $links += ['nlsc_topic_id' => $topic->id, 'nlsc_subject_achievement_id' => $achievement->id];
+
+        return [$links, trim($topic->topic_name . ' — ' . $achievement->achievement_text)];
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+    //  AJAX: the cascading dropdowns of the create form (same behaviour as "Create Assessment")
+    // ═════════════════════════════════════════════════════════════════════
+
+    /** First dropdown: Topics (Activities of Integration / Subject Achievement) or Projects. */
+    public function subjectMatterOptions(Request $request, $classSubjectId)
+    {
+        PermissionHelper::denyUnlessFeature('view_open_assessments');
+
+        $request->validate(['assessment_type' => 'required|in:' . implode(',', array_keys(OpenAssessment::NLSC_TYPES))]);
+
+        $schoolId = session('LoggedSchool');
+        $classSubject = $this->context($classSubjectId, true);
+
+        $seniorId = $classSubject->class_id;
+        $nlscSubjectId = Helper::secondaryOlevelToNlscSubjectId($classSubject->subject_id ? (int) $classSubject->subject_id : null);
+
+        if (!$nlscSubjectId) {
+            // A custom subject, or a standard subject with no NLSC catalogue — nothing to list.
+            return response()->json(['success' => true, 'options' => []]);
+        }
+
+        if ($request->assessment_type === 'projects') {
+            app(SchoolNlscProjectController::class)->cloneFromAdminIfNeeded($schoolId, $seniorId, $nlscSubjectId);
+
+            $options = SchoolNlscProjectArea::with('projects')
+                ->where('school_id', $schoolId)
+                ->where('senior_class_id', $seniorId)
+                ->where('subject_id', $nlscSubjectId)
+                ->orderBy('sort_order')
+                ->get()
+                ->flatMap(fn($area) => $area->projects->map(fn($p) => [
+                    'id' => $p->id,
+                    'label' => $area->area_name . ' — ' . $p->project_name,
+                ]));
+        } else {
+            app(SchoolNlscTopicController::class)->cloneFromAdminIfNeeded($schoolId, $seniorId, $nlscSubjectId);
+
+            $options = SchoolNlscTopic::where('school_id', $schoolId)
+                ->where('senior_class_id', $seniorId)
+                ->where('subject_id', $nlscSubjectId)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn($t) => ['id' => $t->id, 'label' => $t->topic_name]);
+        }
+
+        return response()->json(['success' => true, 'options' => $options->values()]);
+    }
+
+    /** Second dropdown, once a Topic / Project is chosen: Competency Areas, or the topic's Achievement Statements. */
+    public function competencyAreaOptions(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('view_open_assessments');
+
+        $request->validate([
+            'assessment_type' => 'required|in:' . implode(',', array_keys(OpenAssessment::NLSC_TYPES)),
+            'subject_matter_id' => 'required|integer',
+        ]);
+
+        $schoolId = session('LoggedSchool');
+
+        if ($request->assessment_type === 'projects') {
+            $project = SchoolNlscProject::find($request->subject_matter_id);
+            $area = $project ? SchoolNlscProjectArea::find($project->school_nlsc_project_area_id) : null;
+
+            $options = ($project && $area && (int) $area->school_id === (int) $schoolId)
+                ? $project->competencyAreas->map(fn($c) => ['id' => $c->id, 'label' => $c->description])
+                : collect();
+        } else {
+            $topic = SchoolNlscTopic::where('school_id', $schoolId)->where('id', $request->subject_matter_id)->first();
+
+            if (!$topic) {
+                $options = collect();
+            } elseif ($request->assessment_type === 'activities_of_integration') {
+                $options = $topic->competencyAreas->map(fn($c) => ['id' => $c->id, 'label' => $c->description]);
+            } else {
+                $options = $topic->subjectAchievements->map(fn($a) => ['id' => $a->id, 'label' => $a->achievement_text]);
+            }
+        }
+
+        return response()->json(['success' => true, 'options' => $options->values()]);
     }
 
     /**

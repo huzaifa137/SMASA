@@ -800,6 +800,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/overview', 'overview')->name('overview');
             Route::get('/results/{assessmentId}', 'results')->name('results');
             Route::post('/marks/{assessmentId}/save', 'saveMarks')->name('marks.save');
+            Route::get('/subjects/{classSubjectId}/subject-matter-options', 'subjectMatterOptions')->name('subject-matter-options');
+            Route::get('/competency-area-options', 'competencyAreaOptions')->name('competency-area-options');
             Route::get('/subjects/{classSubjectId}', 'hub')->name('hub');
             Route::post('/subjects/{classSubjectId}', 'store')->name('store');
             Route::put('/subjects/{classSubjectId}/{id}', 'update')->name('update');
