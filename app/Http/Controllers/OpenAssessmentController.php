@@ -590,6 +590,7 @@ class OpenAssessmentController extends Controller
             'nlsc_subject_achievement_id' => 'nullable|integer',
             'title' => ($isNlsc ? 'nullable' : 'required') . '|string|max:150',
             'category' => 'nullable|string|in:' . implode(',', OpenAssessment::CATEGORIES),
+            'custom_category' => 'nullable|string|max:40',
             'description' => 'nullable|string|max:1000',
             'assessment_date' => 'nullable|date',
             'max_marks' => 'required|numeric|min:0.01|max:1000',
@@ -597,6 +598,7 @@ class OpenAssessmentController extends Controller
             'term' => 'required|string|in:' . implode(',', self::TERMS),
         ], [
             'title.required' => 'Give the assessment a title, e.g. “Quiz 1”.',
+            'custom_category.max' => 'The type name can be at most 40 characters.',
             'subject_matter_id.required' => 'Choose the topic or project this assessment is set against.',
             'max_marks.required' => 'Enter the maximum marks this assessment is marked out of.',
             'max_marks.min' => 'Maximum marks must be greater than 0.',
@@ -606,7 +608,7 @@ class OpenAssessmentController extends Controller
 
         $columns = [
             'title' => trim((string) ($data['title'] ?? '')),
-            'category' => $isNlsc ? null : ($data['category'] ?? null),
+            'category' => $isNlsc ? null : $this->categoryFrom($data),
             'description' => $data['description'] ?? null,
             'assessment_date' => $data['assessment_date'] ?? null,
             'max_marks' => $data['max_marks'],
@@ -629,6 +631,22 @@ class OpenAssessmentController extends Controller
         }
 
         return $columns;
+    }
+
+    /**
+     * The general type to store. Choosing "Other" lets the teacher give it their own name
+     * (kept in the same `category` column, so it shows everywhere the type does); left
+     * blank, it stays plain "Other".
+     */
+    private function categoryFrom(array $data): ?string
+    {
+        $category = $data['category'] ?? null;
+
+        if ($category === 'Other' && filled($data['custom_category'] ?? null)) {
+            return Str::limit(trim($data['custom_category']), 40, '');
+        }
+
+        return $category;
     }
 
     /**

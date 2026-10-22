@@ -38,6 +38,10 @@
                             </optgroup>
                         </select>
                     </div>
+                    <div id="customTypeWrap" style="display:none;">
+                        <label class="oa-label">Name this type <span class="oa-sub">(optional)</span></label>
+                        <input type="text" id="fCustom" class="oa-input" maxlength="40" placeholder="e.g. Lab report, Oral test">
+                    </div>
                     <div style="grid-column: span 2;">
                         <label class="oa-label" id="titleLabel">Title *</label>
                         <input type="text" id="fTitle" class="oa-input" maxlength="150" placeholder="e.g. Quiz 1, Mid-term test, Group project">
@@ -201,6 +205,7 @@
             const SECOND_URL = @json(route('open-assessments.competency-area-options'));
             const CATALOGUE = @json($catalogueUrls);
             const NLSC_TYPES = @json(array_keys($nlscTypes));
+            const GENERAL_TYPES = @json($categories);
 
             let editingId = null;
             let pendingMatterId = null;
@@ -328,6 +333,14 @@
                 window.__oaResetNlsc = () => { matter.clear(); matter.disable('Select assessment type first...'); second.clear(); second.disable('Select a topic/project first...'); };
             }
 
+            // "Other" lets the teacher give the assessment type their own name.
+            $('fType')?.addEventListener('change', function () {
+                const other = this.value === 'Other';
+                $('customTypeWrap').style.display = other ? '' : 'none';
+                if (!other) $('fCustom').value = '';
+                else setTimeout(() => $('fCustom').focus(), 30);
+            });
+
             /* ---------- form ---------- */
             function resetForm() {
                 editingId = null; pendingMatterId = null; pendingSecondId = null;
@@ -371,6 +384,7 @@
                     title: title || null,
                     assessment_type: nlsc ? type : null,
                     category: nlsc ? null : (type || null),
+                    custom_category: type === 'Other' ? ($('fCustom').value.trim() || null) : null,
                     subject_matter_id: nlsc ? $('matterValue').value : null,
                     nlsc_competency_area_id: nlsc && type !== 'subject_achievement' ? $('secondValue').value : null,
                     nlsc_subject_achievement_id: nlsc && type === 'subject_achievement' ? $('secondValue').value : null,
@@ -401,8 +415,11 @@
                 // Re-select the saved Topic/Project and Competency/Achievement once their options load.
                 pendingMatterId = d.matterId || null;
                 pendingSecondId = d.secondId || null;
-                $('fType').value = d.type || '';
+                let type = d.type || '', custom = '';
+                if (type && !NLSC_TYPES.includes(type) && !GENERAL_TYPES.includes(type)) { custom = type; type = 'Other'; }
+                $('fType').value = type;
                 $('fType').dispatchEvent(new Event('change'));
+                $('fCustom').value = custom;
 
                 $('saveLabel').textContent = 'Save changes';
                 $('formTitle').innerHTML = '<i class="fas fa-pen me-2"></i> Edit assessment';
