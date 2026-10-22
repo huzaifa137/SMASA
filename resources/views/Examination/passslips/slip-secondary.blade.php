@@ -897,6 +897,8 @@
                 $avgSummarySlip = $slipData['avgSummary'] ?? null;
                 $useAvgSlip = $slipData['useAvg'] ?? ($useAvg ?? false);
 
+                $isSenior4 = strtolower(trim((string) Helper::recordMdname($s->senior ?? null))) === 'senior 4';
+
                 /* ── Customisation (per class saved profile, query wins) ── */
                 $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
                 $cfg = [
@@ -936,8 +938,43 @@
 
                     'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
-                    'sum_division' => $on('show_sum_division', true, $savedCfg),
+                    // Result (UNEB new-curriculum UCE: Result 1 / 2 / 3). Defaults ON for
+                    // Senior 4 (the UCE class) and OFF for Senior 1-3, where the label
+                    // is a certificate-eligibility notion, not a termly measure.
+                    'sum_result' => $on('show_sum_result', $isSenior4, $savedCfg),
                 ];
+
+
+                /* ── UCE "Result" (new lower-secondary curriculum) ──────────────
+                   Result 3: only grade E in every subject taken.
+                   Result 2 (Senior 4 only): award conditions not met — here, fewer
+                            than 8 subjects with marks. Compulsory-subject and
+                            project/CA presence are NOT checked yet.
+                   Result 1: otherwise, with at least one subject at D or better.
+                   Level comes from the scheme's letter (A-E); if the scheme uses
+                   other grade names, fall back to the UNEB bands on the percentage. */
+                $levelOf = function ($sm) use ($useAvgSlip) {
+                    $g = strtoupper(trim((string) ($sm->grade ?? '')));
+                    if (in_array($g, ['A', 'B', 'C', 'D', 'E'], true)) {
+                        return $g;
+                    }
+                    $p = $useAvgSlip ? ($sm->avgPercentage ?? $sm->percentage ?? null) : ($sm->percentage ?? $sm->avgPercentage ?? null);
+                    if ($p === null) {
+                        return null;
+                    }
+                    return $p >= 80 ? 'A' : ($p >= 70 ? 'B' : ($p >= 60 ? 'C' : ($p >= 50 ? 'D' : 'E')));
+                };
+                $levels = $subjMarks->map($levelOf)->filter()->values();
+                $resultLabel = null;
+                if ($levels->isNotEmpty()) {
+                    if ($isSenior4 && $levels->count() < 8) {
+                        $resultLabel = 'Result 2';
+                    } elseif ($levels->every(fn($l) => $l === 'E')) {
+                        $resultLabel = 'Result 3';
+                    } else {
+                        $resultLabel = 'Result 1';
+                    }
+                }
 
                 $passed = $pct >= $exam->pass_mark;
                 $statusLabel = $s->status ?? ($passed ? 'Promoted' : 'Repeat');
@@ -1020,7 +1057,7 @@
                     'Term: ' . \App\Support\Term::label($exam->term),
                     'Year: ' . $exam->academic_year,
                     'Average: ' . $pct . '%',
-                    'Result: ' . ($passed ? 'PASS' : 'FAIL'),
+                    'Result: ' . ($resultLabel ?? ($passed ? 'PASS' : 'FAIL')),
                     'School: ' . $schoolName,
                 ]));
             @endphp
@@ -1164,10 +1201,10 @@
                                     </div>
                                 </div>
                             @endif
-                            @if($cfg['sum_division'])
+                            @if($cfg['sum_result'])
                                 <div class="sum-cell">
                                     <div class="sum-lbl">Result</div>
-                                    <div class="sum-val">{{ $divisionLabel ? strtoupper($divisionLabel) : ($passed ? 'PASS' : 'FAIL') }}</div>
+                                    <div class="sum-val">{{ $resultLabel ?? '—' }}</div>
                                 </div>
                             @endif
                         </div>

@@ -3,15 +3,75 @@ use App\Http\Controllers\Helper;
 use App\Helpers\PermissionHelper;
 ?>
 
+<style>
+    /* Sidebar logo — kept ahead of the markup so it is styled on first paint.
+       The ring (border, shadow, white padding, circular clip) lives on a wrapper;
+       the <img> just fills it. Clipping an <img> with its own border-radius +
+       border + padding + `transition: all` + hover transform is what let the
+       square image escape the circle intermittently. */
+    .app-sidebar__logo {
+        padding: 20px 0 30px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 14px;
+        transition: padding .3s;
+    }
+
+    .app-sidebar__logo.scrolled {
+        padding: 10px 0 14px;
+    }
+
+    .sidebar-logo-ring {
+        display: block;
+        box-sizing: border-box;
+        width: 130px;
+        height: 130px;
+        margin: 0 auto;
+        border: 4px solid #4f46e5;
+        padding: 4px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        overflow: hidden;
+        isolation: isolate;
+        transition: width .3s, height .3s, border-width .3s, transform .3s;
+    }
+
+    .sidebar-logo-ring .sidebar-logo {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .app-sidebar__logo.scrolled .sidebar-logo-ring {
+        width: 62px;
+        height: 62px;
+        border-width: 2px;
+    }
+
+    .sidenav-toggled .sidebar-logo-ring {
+        width: 40px !important;
+        height: 40px !important;
+        border-width: 2px !important;
+    }
+
+    .sidebar-logo-ring:hover {
+        transform: scale(1.04);
+    }
+</style>
+
 <div class="app-sidebar app-sidebar2">
     <div class="app-sidebar__logo text-center">
         @if (Session('LoggedAdmin'))
             <a class="header-brand" data-no-loader href="{{ url('/admin/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
+                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
         @elseif(Session('LoggedSchool'))
             <a class="header-brand" data-no-loader href="{{ url('/school/dashboard') }}">
-                <img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo">
+                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
         @endif
     </div>
@@ -1335,49 +1395,6 @@ use App\Helpers\PermissionHelper;
         }
     }
 
-    /* Logo */
-    .app-sidebar__logo {
-        padding: 20px 0 30px;
-        text-align: center;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 14px;
-        transition: padding .3s;
-    }
-
-    .app-sidebar__logo.scrolled {
-        padding: 10px 0 14px;
-    }
-
-    .sidebar-logo {
-        width: 130px;
-        height: 130px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 4px solid #4f46e5;
-        padding: 4px;
-        background: #fff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
-        transition: all .3s;
-        display: block;
-        margin: 0 auto;
-    }
-
-    .app-sidebar__logo.scrolled .sidebar-logo {
-        width: 62px;
-        height: 62px;
-        border-width: 2px;
-    }
-
-    .sidenav-toggled .sidebar-logo {
-        width: 40px !important;
-        height: 40px !important;
-        border-width: 2px !important;
-    }
-
-    .sidebar-logo:hover {
-        transform: scale(1.04);
-    }
-
     @media(max-width:768px) {
         div.app-sidebar.app-sidebar2 {
             position: fixed !important;
@@ -1403,10 +1420,9 @@ use App\Helpers\PermissionHelper;
             padding: 12px 0 14px !important;
         }
 
-        div.app-sidebar.app-sidebar2 .sidebar-logo {
+        div.app-sidebar.app-sidebar2 .sidebar-logo-ring {
             width: 70px !important;
             height: 70px !important;
-            display: block !important;
             margin: 0 auto !important;
         }
     }

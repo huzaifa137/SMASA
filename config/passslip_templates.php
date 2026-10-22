@@ -106,6 +106,7 @@ return [
         'show_sum_grade_point' => ['label' => 'Grade Point', 'icon' => 'fa-star', 'group' => 'Summary Bar Fields'],
         'show_sum_aggregate' => ['label' => 'Aggregate (PLE-style)', 'icon' => 'fa-calculator', 'group' => 'Summary Bar Fields'],
         'show_sum_division' => ['label' => 'Division', 'icon' => 'fa-trophy', 'group' => 'Summary Bar Fields'],
+        'show_sum_result' => ['label' => 'Result (UCE: 1 / 2 / 3)', 'icon' => 'fa-trophy', 'group' => 'Summary Bar Fields'],
         'show_sum_position' => ['label' => 'Position / Rank', 'icon' => 'fa-ranking-star', 'group' => 'Summary Bar Fields'],
         'show_sum_subjects' => ['label' => 'No. of Subjects', 'icon' => 'fa-book', 'group' => 'Summary Bar Fields'],
         'show_sum_attendance' => ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'group' => 'Summary Bar Fields'],
@@ -315,7 +316,7 @@ return [
             'show_stu_name', 'show_stu_admission', 'show_stu_paycode', 'show_stu_class', 'show_stu_stream',
             'show_stu_dob', 'show_stu_report_date', 'show_stu_status',
 
-            'show_sum_total_marks', 'show_sum_average_pct', 'show_sum_division',
+            'show_sum_total_marks', 'show_sum_average_pct', 'show_sum_result',
         ],
 
         // ── Nursery Design Templates ─────────────────────────────────
