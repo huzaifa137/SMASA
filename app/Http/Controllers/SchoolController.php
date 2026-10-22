@@ -321,6 +321,49 @@ class SchoolController extends Controller
         ]);
     }
 
+    /**
+     * Counts of everything that will be permanently removed if this school
+     * is deleted. Shown in the confirmation dialog before the delete runs.
+     */
+    public function deletionSummary(School $schoolId)
+    {
+        $id = $schoolId->id;
+
+        // [label, table, column to count by]. Tables/columns that do not
+        // exist in this install are skipped instead of erroring.
+        $items = [
+            ['Students', 'students', 'school_id'],
+            ['Teachers', 'teachers', 'school_id'],
+            ['Classes', 'classes', 'school_id'],
+            ['Streams', 'streams', 'school_id'],
+            ['Examinations', 'examinations', 'school_id'],
+            ['Exam marks', 'examination_marks', 'school_id'],
+            ['Attendance records', 'student_attendances', 'school_id'],
+            ['Fee payments', 'fee_payments', 'school_id'],
+            ['Expenses', 'expenses', 'school_id'],
+            ['Library books', 'library_books', 'school_id'],
+        ];
+
+        $summary = [];
+
+        foreach ($items as [$label, $table, $column]) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable($table)
+                || !\Illuminate\Support\Facades\Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            $summary[] = [
+                'label' => $label,
+                'count' => DB::table($table)->where($column, $id)->count(),
+            ];
+        }
+
+        return response()->json([
+            'school' => $schoolId->name,
+            'items' => $summary,
+        ]);
+    }
+
     public function deleteSchool(School $schoolId)
     {
         try {

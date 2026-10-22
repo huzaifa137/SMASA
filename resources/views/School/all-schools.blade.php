@@ -148,8 +148,9 @@ use App\Http\Controllers\Helper;
 @endif
 
                                             <a href="javascript:void(0);"
-                                                class="btn btn-sm btn-outline-danger btn-delete disabled"
-                                                data-id="{{ $schoolID }}" title="Delete">
+                                                class="btn btn-sm btn-outline-danger btn-delete {{ $schoolID ? '' : 'disabled' }}"
+                                                data-id="{{ $schoolID }}" data-name="{{ $school->House }}"
+                                                title="{{ $schoolID ? 'Delete' : 'Cannot delete: no matching school record' }}">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
 
@@ -322,35 +323,87 @@ use App\Http\Controllers\Helper;
         // which DataTables page the row currently lives on.
 
         // Delete functionality
+        // Step 1: fetch what the school holds and show it in the warning.
+        // Step 2: the user must type the school name before the delete runs.
         $(document).on('click', '#schoolsTable .btn-delete', function () {
-            var schoolId = $(this).data('id');
-            var row = table.row($(this).closest('tr'));
+            var $btn = $(this);
+            var schoolId = $btn.data('id');
+            var schoolName = String($btn.data('name') || '').trim();
+            var row = table.row($btn.closest('tr'));
+
+            if (!schoolId) {
+                return;
+            }
+
+            function esc(v) {
+                return $('<div>').text(v).html();
+            }
 
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/school/' + schoolId,
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function () {
-                            row.remove().draw();
-                            Swal.fire('Deleted!', 'School has been deleted.', 'success');
-                        },
-                        error: function (xhr) {
-                            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Something went wrong deleting the school.';
-                            Swal.fire('Error!', msg, 'error');
-                        }
-                    });
-                }
+                title: 'Checking school data...',
+                allowOutsideClick: false,
+                didOpen: function () { Swal.showLoading(); }
             });
+
+            $.get('/school/' + schoolId + '/deletion-summary')
+                .done(function (data) {
+                    var rows = (data.items || []).map(function (i) {
+                        return '<tr><td style="text-align:left;padding:2px 10px;">' + esc(i.label) +
+                            '</td><td style="text-align:right;padding:2px 10px;"><strong>' +
+                            Number(i.count).toLocaleString() + '</strong></td></tr>';
+                    }).join('');
+
+                    Swal.fire({
+                        title: 'Delete ' + esc(schoolName) + '?',
+                        icon: 'warning',
+                        html:
+                            '<p class="text-danger mb-2"><strong>This permanently deletes the school and ALL of its data. It cannot be undone.</strong></p>' +
+                            '<table style="margin:0 auto 12px;font-size:14px;">' + rows + '</table>' +
+                            '<p class="mb-1">Also removed: subjects, marks, finance, uploaded files, the school profile and login.</p>' +
+                            '<p class="mb-1">Type <strong>' + esc(schoolName) + '</strong> to confirm:</p>',
+                        input: 'text',
+                        inputPlaceholder: schoolName,
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, delete everything',
+                        preConfirm: function (value) {
+                            if (String(value || '').trim().toLowerCase() !== schoolName.toLowerCase()) {
+                                Swal.showValidationMessage('The name does not match.');
+                                return false;
+                            }
+                            return true;
+                        }
+                    }).then(function (result) {
+                        if (!result.isConfirmed) {
+                            return;
+                        }
+
+                        Swal.fire({
+                            title: 'Deleting school...',
+                            text: 'This can take a while for large schools. Please do not close this page.',
+                            allowOutsideClick: false,
+                            didOpen: function () { Swal.showLoading(); }
+                        });
+
+                        $.ajax({
+                            url: '/school/' + schoolId,
+                            type: 'DELETE',
+                            data: { _token: '{{ csrf_token() }}' },
+                            success: function () {
+                                row.remove().draw();
+                                Swal.fire('Deleted!', 'School has been deleted.', 'success');
+                            },
+                            error: function (xhr) {
+                                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Something went wrong deleting the school.';
+                                Swal.fire('Error!', msg, 'error');
+                            }
+                        });
+                    });
+                })
+                .fail(function () {
+                    Swal.fire('Error!', 'Could not load the school data summary. Nothing was deleted.', 'error');
+                });
         });
 
         // Edit functionality

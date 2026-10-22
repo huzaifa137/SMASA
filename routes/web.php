@@ -374,6 +374,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/school-individual-profile/{id}', 'schoolIndividualProfile')->name('profile.individual.school');
             Route::get('/school-options/{id}/', 'schoolOptions')->name('school.options');
 
+            Route::get('/school/{schoolId}/deletion-summary', 'deletionSummary')->name('school.deletion-summary');
             Route::delete('/school/{schoolId}', 'deleteSchool')->name('school.delete');
 
             Route::post('/create/new/schools/', 'createNewSchool')->name('create.new-school');
