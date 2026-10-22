@@ -1626,7 +1626,7 @@
                                 body += `<label class="toggle-row">
                                                         <div class="toggle-info">
                                                             <div class="toggle-title">${esc(a.type)} — ${esc(a.title)}</div>
-                                                            <div class="toggle-meta">${esc(a.class)}${a.max_marks ? ' · out of ' + esc(a.max_marks) : ''}</div>
+                                                            <div class="toggle-meta">${esc(a.class)}${a.max_marks ? ' · out of ' + esc(a.max_marks) : ''}${a.teacher ? ' · by ' + esc(a.teacher) : ''}</div>
                                                         </div>
                                                         <span class="toggle-switch">
                                                             <input type="checkbox" data-act="pick" data-i="${i}" data-id="${a.id}" ${set.has(a.id) ? 'checked' : ''}>
@@ -1646,7 +1646,7 @@
                                             <button type="button" class="btn btn-sm btn-link p-0" data-act="clear" data-i="${i}">Clear all</button>
                                         </div>
                                         <div class="pick-box">${body}</div>
-                                        <div class="hint mt-1">Scores (0–3) are averaged per subject and shown out of the “Out of” value above.</div>
+                                        <div class="hint mt-1">Every ticked assessment counts equally: marks are averaged per subject and shown out of the “Out of” value above.</div>
                                     </div>`;
             }
 

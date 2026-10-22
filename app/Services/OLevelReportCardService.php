@@ -7,6 +7,8 @@ use App\Models\ExaminationMark;
 use App\Models\NlscAssessment;
 use App\Models\NlscAssessmentMark;
 use App\Models\OLevelReportCardComponent;
+use App\Models\OpenAssessment;
+use App\Models\OpenAssessmentMark;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -15,9 +17,9 @@ use Illuminate\Support\Facades\DB;
  *
  * A report card is a list of COMPONENTS, each rescaled to its own weight:
  *
- *   assessments  The student's average NLSC competency score (calculated_score,
- *                the fixed 0-3 scale) across the selected assessments of that
- *                subject, shown as  avg / 3 * weight.   e.g. weight 20.
+ *   assessments  The student's average over the selected assessments of that subject —
+ *                NLSC assessments as calculated_score / 3 (the fixed 0-3 scale), open
+ *                assessments as marks / max marks — shown as  avg * weight.  e.g. weight 20.
  *   exam         A standard examination's mark for that subject, shown as
  *                marks_obtained / total_marks * weight.   e.g. weight 80.
  *
@@ -42,7 +44,7 @@ class OLevelReportCardService
 
     public function components(Examination $exam): Collection
     {
-        return $this->componentMemo[$exam->id] ??= OLevelReportCardComponent::with('assessments:id')
+        return $this->componentMemo[$exam->id] ??= OLevelReportCardComponent::with(['assessments:id', 'openAssessments:id'])
             ->where('examination_id', $exam->id)
             ->orderBy('sort_order')
             ->get();
@@ -172,53 +174,91 @@ class OLevelReportCardService
     }
 
     /**
-     * assessments component → [studentId][subjectKey] => ['meta' => ..., 'ratio' => avg/3]
+     * assessments component → [studentId][subjectKey] => ['meta' => ..., 'ratio' => 0..1]
      * Teachers do not decide what reaches a report: whichever assessments the
      * card's author ticked on the report-card form are used, nothing else.
+     *
+     * Two kinds of assessment may be ticked and they count equally:
+     *   • NLSC assessments      – calculated_score on the fixed 0-3 scale  (score / 3)
+     *   • open assessments      – marks_obtained / max_marks               (a plain fraction)
+     * A student's ratio for a subject is the average over the assessments they have a mark on.
      */
     private function assessmentComponent(OLevelReportCardComponent $component, array $studentIds, $schoolId): array
     {
         $assessmentIds = $component->assessments->pluck('id')->all();
+        $openIds = $component->relationLoaded('openAssessments') ? $component->openAssessments->pluck('id')->all() : [];
 
-        if (empty($assessmentIds)) {
+        if (empty($assessmentIds) && empty($openIds)) {
             return [];
         }
 
-        $assessments = NlscAssessment::where('school_id', $schoolId)
-            ->whereIn('id', $assessmentIds)
-            ->get()
-            ->keyBy('id');
+        // [student][subjectKey] => ['sum' => Σ fractions, 'n' => count, 'meta' => [...]]
+        $acc = [];
 
-        if ($assessments->isEmpty()) {
-            return [];
+        $add = function (int $studentId, string $subjectKey, float $fraction, $subjectId, $customSubjectId) use (&$acc) {
+            $acc[$studentId][$subjectKey]['sum'] = ($acc[$studentId][$subjectKey]['sum'] ?? 0.0) + $fraction;
+            $acc[$studentId][$subjectKey]['n'] = ($acc[$studentId][$subjectKey]['n'] ?? 0) + 1;
+            $acc[$studentId][$subjectKey]['meta'] ??= ['subject_id' => $subjectId, 'custom_subject_id' => $customSubjectId];
+        };
+
+        if (!empty($assessmentIds)) {
+            $assessments = NlscAssessment::where('school_id', $schoolId)
+                ->whereIn('id', $assessmentIds)
+                ->get()
+                ->keyBy('id');
+
+            if ($assessments->isNotEmpty()) {
+                $marks = NlscAssessmentMark::whereIn('nlsc_assessment_id', $assessments->keys())
+                    ->whereIn('student_id', $studentIds)
+                    ->whereNotNull('marks_obtained')
+                    ->get();
+
+                foreach ($marks as $mark) {
+                    $assessment = $assessments[$mark->nlsc_assessment_id];
+                    $max = (float) $assessment->max_marks;
+                    $score = $mark->calculated_score !== null
+                        ? (float) $mark->calculated_score
+                        : ($max > 0 ? round(((float) $mark->marks_obtained / $max) * 3, 1) : 0.0);
+
+                    $add((int) $mark->student_id, 's' . $assessment->subject_id, $score / 3, $assessment->subject_id, null);
+                }
+            }
         }
 
-        $marks = NlscAssessmentMark::whereIn('nlsc_assessment_id', $assessments->keys())
-            ->whereIn('student_id', $studentIds)
-            ->whereNotNull('marks_obtained')
-            ->get();
+        if (!empty($openIds)) {
+            $openAssessments = OpenAssessment::where('school_id', $schoolId)
+                ->whereIn('id', $openIds)
+                ->get()
+                ->keyBy('id');
 
-        $scores = []; // [student][subject] => [calculated scores]
+            if ($openAssessments->isNotEmpty()) {
+                $openMarks = OpenAssessmentMark::whereIn('open_assessment_id', $openAssessments->keys())
+                    ->whereIn('student_id', $studentIds)
+                    ->whereNotNull('marks_obtained')
+                    ->get();
 
-        foreach ($marks as $mark) {
-            $assessment = $assessments[$mark->nlsc_assessment_id];
-            $max = (float) $assessment->max_marks;
-            $score = $mark->calculated_score !== null
-                ? (float) $mark->calculated_score
-                : ($max > 0 ? round(((float) $mark->marks_obtained / $max) * 3, 1) : 0.0);
+                foreach ($openMarks as $mark) {
+                    $assessment = $openAssessments[$mark->open_assessment_id];
+                    $max = (float) $assessment->max_marks;
 
-            $scores[(int) $mark->student_id]['s' . $assessment->subject_id][] = [$assessment->subject_id, $score];
+                    if ($max <= 0) {
+                        continue;
+                    }
+
+                    $key = $assessment->subject_id ? 's' . $assessment->subject_id : 'c' . $assessment->custom_subject_id;
+
+                    $add((int) $mark->student_id, $key, (float) $mark->marks_obtained / $max, $assessment->subject_id, $assessment->subject_id ? null : $assessment->custom_subject_id);
+                }
+            }
         }
 
         $out = [];
 
-        foreach ($scores as $studentId => $bySubject) {
-            foreach ($bySubject as $subjectKey => $list) {
-                $avg = array_sum(array_column($list, 1)) / count($list);
-
+        foreach ($acc as $studentId => $bySubject) {
+            foreach ($bySubject as $subjectKey => $cell) {
                 $out[$studentId][$subjectKey] = [
-                    'meta' => ['subject_id' => $list[0][0], 'custom_subject_id' => null],
-                    'ratio' => max(0.0, min(1.0, $avg / 3)),
+                    'meta' => $cell['meta'],
+                    'ratio' => max(0.0, min(1.0, $cell['sum'] / $cell['n'])),
                 ];
             }
         }

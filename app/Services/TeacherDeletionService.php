@@ -112,6 +112,13 @@ class TeacherDeletionService
         DB::table('nlsc_assessments')->where('created_by', $id)->update(['created_by' => null]);
         DB::table('nlsc_assessment_marks')->where('entered_by', $id)->update(['entered_by' => null]);
 
+        // Open (free-form) assessments / marks this teacher created or entered.
+        if (\Illuminate\Support\Facades\Schema::hasTable('open_assessments')) {
+            DB::table('open_assessments')->where('teacher_id', $id)->update(['teacher_id' => null]);
+            DB::table('open_assessments')->where('created_by', $id)->update(['created_by' => null]);
+            DB::table('open_assessment_marks')->where('entered_by', $id)->update(['entered_by' => null]);
+        }
+
         // Class teacher / class supervisor posts — vacate, keep the class.
         DB::table('streams')->where('class_teacher', $id)->update(['class_teacher' => null]);
         DB::table('classrooms')->where('class_supervisor', $id)->update(['class_supervisor' => null]);

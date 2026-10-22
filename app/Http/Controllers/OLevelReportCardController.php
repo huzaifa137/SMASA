@@ -6,9 +6,11 @@ use App\Helpers\PermissionHelper;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\NlscAssessment;
+use App\Models\OpenAssessment;
 use App\Models\OLevelReportCardComponent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,6 +21,8 @@ use Illuminate\Support\Collection;
  *   • assessments component  – any number of NLSC assessments (one, a few, or
  *     all of them), their 0-3 competency scores rescaled to a weight
  *     (e.g. "Assessments /20");
+ *   • (an assessments component may also hold the administrator's picks of free-form
+ *     "open" assessments; the picker sends those as NEGATIVE ids, see splitAssessmentIds())
  *   • exam component         – one standard examination (Create Exam → "Standard
  *     examination"), its marks rescaled to a weight (e.g. "Exam /80").
  *
@@ -99,12 +103,15 @@ class OLevelReportCardController extends Controller
             $selectedClassStreams = ExaminationClass::where('examination_id', $card->id)->get()
                 ->map(fn($ec) => $ec->class_id . '_' . ($ec->stream_id ?? ''))->all();
 
-            $components = $card->reportCardComponents()->with('assessments:id')->get()->map(fn($c) => [
+            $components = $card->reportCardComponents()->with(['assessments:id', 'openAssessments:id'])->get()->map(fn($c) => [
                 'type' => $c->type,
                 'label' => $c->label,
                 'weight' => (float) $c->weight,
                 'source_examination_id' => $c->source_examination_id,
-                'assessment_ids' => $c->assessments->pluck('id')->all(),
+                // open assessments are represented by their NEGATIVE id (see splitAssessmentIds())
+                'assessment_ids' => $c->assessments->pluck('id')
+                    ->merge($c->openAssessments->pluck('id')->map(fn($id) => -1 * (int) $id))
+                    ->values()->all(),
             ])->all();
         }
 
@@ -204,30 +211,80 @@ class OLevelReportCardController extends Controller
             ->get()
             ->filter(fn($a) => $a->exam); // exam row may be a (hidden) report card or deleted
 
-        $exams = $assessments->groupBy('examination_id')->map(function ($group) {
-            $exam = $group->first()->exam;
+        // One flat list of pickable rows: NLSC assessments (positive id) and the teachers'
+        // free-form open assessments (NEGATIVE id, so the form's numeric ticks stay unambiguous).
+        $items = $assessments->map(fn($a) => [
+            'exam' => $a->exam,
+            'subject_key' => 's' . $a->subject_id,
+            'subject' => Helper::examSubjectName($a->subject_id, null),
+            'row' => [
+                'id' => $a->id,
+                'class' => Helper::recordMdname($a->class_id) . ' · ' . $a->stream_id,
+                'type' => ucwords(str_replace('_', ' ', $a->assessment_type)),
+                'title' => $this->assessmentTitle($a),
+                'max_marks' => $a->max_marks,
+                'teacher' => null,
+            ],
+        ]);
+
+        // Open assessments belong to a term + year, not to an examination, so they are offered as
+        // their own groups ("Open assessments · Term 2 2026"), each with a NEGATIVE pseudo exam id.
+        $openGroups = collect();
+
+        if (Schema::hasTable('open_assessments')) {
+            $open = OpenAssessment::with('teacher')
+                ->where('school_id', $schoolId)
+                ->where(function ($q) use ($pairs) {
+                    foreach ($pairs as [$classId, $streamId]) {
+                        $q->orWhere(fn($w) => $w->where('class_id', $classId)->where('stream_id', (string) $streamId));
+                    }
+                })
+                ->orderByDesc('academic_year')
+                ->orderBy('term')
+                ->orderBy('id')
+                ->get();
+
+            $n = 0;
+            $openGroups = $open->groupBy(fn($a) => $a->academic_year . '|' . $a->term)->map(function ($group) use (&$n) {
+                $first = $group->first();
+
+                return [
+                    'exam_id' => -1 * (++$n),
+                    'exam_name' => 'Open assessments',
+                    'term' => \App\Support\Term::label($first->term),
+                    'year' => $first->academic_year,
+                    'subjects' => $group->groupBy(fn($a) => $a->subject_id ? 's' . $a->subject_id : 'c' . $a->custom_subject_id)
+                        ->map(fn($rows) => [
+                            'subject' => Helper::examSubjectName($rows->first()->subject_id, $rows->first()->custom_subject_id),
+                            'assessments' => $rows->map(fn($a) => [
+                                'id' => -1 * (int) $a->id,   // open assessments are ticked by NEGATIVE id
+                                'class' => Helper::recordMdname($a->class_id) . ' · ' . $a->stream_id,
+                                'type' => 'Open assessment' . ($a->category ? ' (' . $a->category . ')' : ''),
+                                'title' => $a->title,
+                                'max_marks' => $a->max_marks,
+                                'teacher' => $a->teacher ? trim($a->teacher->surname . ' ' . $a->teacher->firstname) : null,
+                            ])->values(),
+                        ])->values(),
+                ];
+            })->values();
+        }
+
+        $exams = $items->groupBy(fn($i) => $i['exam']->id)->map(function ($group) {
+            $exam = $group->first()['exam'];
 
             return [
                 'exam_id' => $exam->id,
                 'exam_name' => $exam->exam_name,
                 'term' => \App\Support\Term::label($exam->term),
                 'year' => $exam->academic_year,
-                'subjects' => $group->groupBy('subject_id')->map(function ($rows, $subjectId) {
-                    return [
-                        'subject' => Helper::examSubjectName($subjectId, null),
-                        'assessments' => $rows->map(fn($a) => [
-                            'id' => $a->id,
-                            'class' => Helper::recordMdname($a->class_id) . ' · ' . $a->stream_id,
-                            'type' => ucwords(str_replace('_', ' ', $a->assessment_type)),
-                            'title' => $this->assessmentTitle($a),
-                            'max_marks' => $a->max_marks,
-                        ])->values(),
-                    ];
-                })->values(),
+                'subjects' => $group->groupBy('subject_key')->map(fn($rows) => [
+                    'subject' => $rows->first()['subject'],
+                    'assessments' => $rows->pluck('row')->values(),
+                ])->values(),
             ];
         })->values();
 
-        return response()->json(['exams' => $exams]);
+        return response()->json(['exams' => $exams->concat($openGroups)->values()]);
     }
 
     /**
@@ -372,6 +429,7 @@ class OLevelReportCardController extends Controller
         DB::transaction(function () use ($card) {
             $componentIds = OLevelReportCardComponent::where('examination_id', $card->id)->pluck('id');
             DB::table('olevel_report_card_component_assessments')->whereIn('component_id', $componentIds)->delete();
+            DB::table('olevel_report_card_component_open_assessments')->whereIn('component_id', $componentIds)->delete();
             OLevelReportCardComponent::where('examination_id', $card->id)->delete();
             ExaminationClass::where('examination_id', $card->id)->delete();
             $card->delete();
@@ -441,7 +499,10 @@ class OLevelReportCardController extends Controller
                 }
             } else {
                 $ids = array_values(array_unique($c['assessment_ids'] ?? []));
-                $valid = NlscAssessment::where('school_id', $schoolId)->whereIn('id', $ids)->count();
+                [$nlscIds, $openIds] = $this->splitAssessmentIds($ids);
+
+                $valid = NlscAssessment::where('school_id', $schoolId)->whereIn('id', $nlscIds)->count()
+                    + (empty($openIds) ? 0 : OpenAssessment::where('school_id', $schoolId)->whereIn('id', $openIds)->count());
 
                 if (empty($ids) || $valid !== count($ids)) {
                     abort(422, "Component {$n}: tick at least one assessment.");
@@ -475,6 +536,7 @@ class OLevelReportCardController extends Controller
         // Components (replaced wholesale — a card is small)
         $oldIds = OLevelReportCardComponent::where('examination_id', $card->id)->pluck('id');
         DB::table('olevel_report_card_component_assessments')->whereIn('component_id', $oldIds)->delete();
+        DB::table('olevel_report_card_component_open_assessments')->whereIn('component_id', $oldIds)->delete();
         OLevelReportCardComponent::where('examination_id', $card->id)->delete();
 
         foreach (array_values($data['components']) as $i => $c) {
@@ -489,7 +551,9 @@ class OLevelReportCardController extends Controller
             ]);
 
             if ($c['type'] === 'assessments') {
-                $component->assessments()->sync(array_values(array_unique($c['assessment_ids'])));
+                [$nlscIds, $openIds] = $this->splitAssessmentIds(array_values(array_unique($c['assessment_ids'])));
+                $component->assessments()->sync($nlscIds);
+                $component->openAssessments()->sync($openIds);
             }
         }
     }
@@ -524,6 +588,22 @@ class OLevelReportCardController extends Controller
         $n = $last && preg_match('/(\d+)$/', $last, $m) ? ((int) $m[1] + 1) : 1;
 
         return 'RCARD-' . $year . '-' . str_pad($n, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * The picker identifies an NLSC assessment by its id (positive) and an open
+     * assessment by its NEGATIVE id, so one numeric list can hold both.
+     *
+     * @return array{0:int[],1:int[]} [nlsc ids, open assessment ids]
+     */
+    private function splitAssessmentIds(array $ids): array
+    {
+        $ids = array_map('intval', $ids);
+
+        return [
+            array_values(array_filter($ids, fn($i) => $i > 0)),
+            array_values(array_map(fn($i) => -$i, array_filter($ids, fn($i) => $i < 0))),
+        ];
     }
 
     private function assessmentTitle(NlscAssessment $a): string

@@ -39,6 +39,7 @@ class StreamRenameService
         'student_discipline_ratings',
         'student_exam_summaries',
         'nlsc_assessments',
+        'open_assessments',
         'timetables',
     ];
 

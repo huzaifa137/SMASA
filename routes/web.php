@@ -785,6 +785,28 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Open assessments — free-form assessments a teacher creates (as many as
+    // they like) for their Senior 1-4 subjects, with no examination needed,
+    // plus the administrator's per-teacher overview. Declared BEFORE the
+    // generic examinations group so its fixed segment is matched first.
+    // ─────────────────────────────────────────────────────────────────────
+    Route::prefix('examinations/open-assessments')
+        ->name('open-assessments.')
+        ->controller(\App\Http\Controllers\OpenAssessmentController::class)
+        ->middleware(['module:examinations', 'secondary.school', 'SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/overview', 'overview')->name('overview');
+            Route::get('/results/{assessmentId}', 'results')->name('results');
+            Route::post('/marks/{assessmentId}/save', 'saveMarks')->name('marks.save');
+            Route::get('/subjects/{classSubjectId}', 'hub')->name('hub');
+            Route::post('/subjects/{classSubjectId}', 'store')->name('store');
+            Route::put('/subjects/{classSubjectId}/{id}', 'update')->name('update');
+            Route::delete('/subjects/{classSubjectId}/{id}', 'destroy')->name('destroy');
+            Route::get('/subjects/{classSubjectId}/{assessmentId}/marks', 'marksEntry')->name('marks-entry');
+        });
+
     Route::prefix('examinations')
         ->name('examination.')
         ->controller(ExaminationController::class)

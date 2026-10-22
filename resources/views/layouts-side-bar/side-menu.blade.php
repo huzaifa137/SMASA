@@ -485,6 +485,20 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if (PermissionHelper::canFeature('view_open_assessments') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.index') }}">
+                                        <i class="fas fa-list-check mr-2"></i>Open Assessments
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_open_assessments_overview') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.overview') }}">
+                                        <i class="fas fa-user-check mr-2"></i>Assessments by Teacher
+                                    </a>
+                                </li>
+                            @endif
                             @if (PermissionHelper::canFeature('view_report_cards'))
                                 <li>
                                     <a href="{{ route('examination.passslips.hub') }}">
@@ -1067,6 +1081,20 @@ use App\Helpers\PermissionHelper;
                                 <li>
                                     <a href="{{ route('nlsc-assessments.manage') }}">
                                         <i class="fas fa-clipboard-check mr-2"></i>Manage Assessments
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_open_assessments') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.index') }}">
+                                        <i class="fas fa-list-check mr-2"></i>Open Assessments
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_open_assessments_overview') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.overview') }}">
+                                        <i class="fas fa-user-check mr-2"></i>Assessments by Teacher
                                     </a>
                                 </li>
                             @endif

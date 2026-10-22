@@ -84,6 +84,24 @@ class OrphanCleanupService
         }
     }
 
+    /** Open (free-form) assessments + their marks + report-card picks. */
+    public function purgeOpenAssessments(array $assessmentIds, bool $deleteAssessments = true): void
+    {
+        $assessmentIds = array_values(array_filter($assessmentIds));
+
+        if (empty($assessmentIds) || !Schema::hasTable('open_assessments')) {
+            return;
+        }
+
+        foreach (array_chunk($assessmentIds, 500) as $chunk) {
+            $this->deleteWhereIn('open_assessment_marks', 'open_assessment_id', $chunk);
+            $this->deleteWhereIn('olevel_report_card_component_open_assessments', 'open_assessment_id', $chunk);
+            if ($deleteAssessments) {
+                $this->deleteWhereIn('open_assessments', 'id', $chunk);
+            }
+        }
+    }
+
     /** O-Level report-card components + their assessment picks. */
     public function purgeComponents(array $componentIds): void
     {
@@ -94,6 +112,9 @@ class OrphanCleanupService
         }
 
         $this->deleteWhereIn('olevel_report_card_component_assessments', 'component_id', $componentIds);
+        if (Schema::hasTable('olevel_report_card_component_open_assessments')) {
+            $this->deleteWhereIn('olevel_report_card_component_open_assessments', 'component_id', $componentIds);
+        }
         $this->deleteWhereIn('olevel_report_card_components', 'id', $componentIds);
     }
 
@@ -528,6 +549,14 @@ class OrphanCleanupService
             ['streams', 'class_teacher'], ['classrooms', 'class_supervisor'],
         ] as [$t, $c]) {
             $rules[] = [$t, $c, 'teachers', 'id', 'null', 'deleted teacher (unassigned)'];
+        }
+
+        // Open (free-form) assessments — only once their migration has run.
+        if (Schema::hasTable('open_assessments')) {
+            $rules[] = ['open_assessment_marks', 'open_assessment_id', 'open_assessments', 'id', 'delete', 'deleted assessment'];
+            $rules[] = ['open_assessment_marks', 'student_id', 'students', 'id', 'delete', 'deleted student'];
+            $rules[] = ['olevel_report_card_component_open_assessments', 'open_assessment_id', 'open_assessments', 'id', 'delete', 'deleted assessment'];
+            $rules[] = ['olevel_report_card_component_open_assessments', 'component_id', 'olevel_report_card_components', 'id', 'delete', 'deleted report-card part'];
         }
 
         return $rules;

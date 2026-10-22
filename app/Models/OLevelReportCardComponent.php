@@ -25,4 +25,15 @@ class OLevelReportCardComponent extends Model
             'nlsc_assessment_id'
         )->withTimestamps();
     }
+
+    // The administrator's picks of free-form "open" assessments for this component.
+    public function openAssessments()
+    {
+        return $this->belongsToMany(
+            OpenAssessment::class,
+            'olevel_report_card_component_open_assessments',
+            'component_id',
+            'open_assessment_id'
+        )->withTimestamps();
+    }
 }
