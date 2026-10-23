@@ -17,15 +17,17 @@ use Illuminate\Validation\Rule;
  *   - Assignments  : give a school its own design per level (Nursery/Primary/Secondary)
  *   - Studio       : preview any design with a chosen school's REAL exams & students
  *
- * Only platform administrators may use these (Helper::isPlatformAdmin()).
+ * Guarded by the custom_report_cards.* Admin Rights permissions.
  */
 class CustomReportCardController extends Controller
 {
-    private function authorizeAdmin(): void
+    /**
+     * Route middleware (admin.can / admin.module) is the first gate; this keeps
+     * a defence-in-depth check on every action.
+     */
+    private function authorizeAdmin(string $permission = 'custom_report_cards.view'): void
     {
-        if (!Helper::isPlatformAdmin()) {
-            abort(403, 'Only a platform administrator can manage custom report cards.');
-        }
+        \App\Support\AdminAccess::denyUnless($permission);
     }
 
     private function adminId(): ?int

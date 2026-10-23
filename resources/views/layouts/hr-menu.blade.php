@@ -14,8 +14,9 @@
                         Users <i class="fa fa-angle-down horizontal-icon"></i>
                     </a>
                     <ul class="sub-menu">
-                        <li><a href="{{ url('/users/users-register') }}">Register new User</a></li>
-                        <li><a href="{{ url('/users/users-information') }}">View users information</a></li>
+                        @if (\App\Support\AdminAccess::can('admin_rights.view_users'))
+                            <li><a href="{{ url('/admin-rights/users') }}">Admin users</a></li>
+                        @endif
                     </ul>
                 </li>
 

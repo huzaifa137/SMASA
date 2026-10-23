@@ -460,7 +460,7 @@
                     : null;
             @endphp
 
-            @if (session('LoggedAdmin'))
+            @if (session('LoggedAdmin') && \App\Support\AdminAccess::can('schools.enter'))
                 <div class="admin-school-dropdown mt-3">
                     <div class="dropdown">
                         <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
@@ -920,10 +920,12 @@
                                 <div class="mt-1">User Profile</div>
                             </a>
                         @else
-                            <a class="dropdown-item d-flex" href="{{ url('/add-academic-year') }}">
-                                <i class="fas fa-clock fa-2x mr-3"></i>
-                                <div class="mt-1">Active Year</div>
-                            </a>
+                            @if (\App\Support\AdminAccess::can('academic_calendar.view'))
+                                <a class="dropdown-item d-flex" href="{{ url('/add-academic-year') }}">
+                                    <i class="fas fa-clock fa-2x mr-3"></i>
+                                    <div class="mt-1">Active Year</div>
+                                </a>
+                            @endif
 
                             <a class="dropdown-item d-flex"
                                 href="{{ url('/update-teacher-profile', Session('LoggedAdmin')) }}">

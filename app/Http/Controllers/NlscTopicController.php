@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AdminAccess;
 use App\Helpers\PermissionHelper;
 use App\Models\NlscCompetencyArea;
 use App\Models\NlscTopic;
@@ -31,7 +32,7 @@ class NlscTopicController extends Controller
      */
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_nlsc_master');
+        AdminAccess::denyUnless('nlsc_curriculum.view');
 
         $seniorOptions = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->sortBy('md_id')->values();
         $subjectOptions = Helper::MasterRecords(config('constants.options.NLSC_SUBJECTS'))->sortBy('md_id')->values();
@@ -63,7 +64,7 @@ class NlscTopicController extends Controller
      */
     public function competencyAreas($id)
     {
-        PermissionHelper::denyUnlessFeature('view_nlsc_master');
+        AdminAccess::denyUnless('nlsc_curriculum.view');
 
         $topic = NlscTopic::with('competencyAreas')->find($id);
         if (!$topic) {
@@ -85,7 +86,7 @@ class NlscTopicController extends Controller
 
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.add')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -121,7 +122,7 @@ class NlscTopicController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.edit')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -156,7 +157,7 @@ class NlscTopicController extends Controller
 
     public function bulkImport(Request $request)
     {
-        if (!PermissionHelper::canFeature('import_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.import')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -181,7 +182,7 @@ class NlscTopicController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -211,7 +212,7 @@ class NlscTopicController extends Controller
      */
     public function destroyAllTopics(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -240,7 +241,7 @@ class NlscTopicController extends Controller
 
     public function storeCompetencyArea(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('add_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.add')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -273,7 +274,7 @@ class NlscTopicController extends Controller
 
     public function updateCompetencyArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.edit')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -297,7 +298,7 @@ class NlscTopicController extends Controller
 
     public function destroyCompetencyArea(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -319,7 +320,7 @@ class NlscTopicController extends Controller
      */
     public function destroyAllCompetencyAreas(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

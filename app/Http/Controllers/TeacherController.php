@@ -536,4 +536,107 @@ class TeacherController extends Controller
             'status_changed_at' => $teacher->status_changed_at,
         ]);
     }
+
+    /**
+     * Teacher/staff profile save (profile photo, signature, details, password).
+     * Relocated from the removed UserRightsAndPreviledges controller — it was
+     * never a rights feature, the profile screens simply posted to it.
+     */
+    public function updateUserInformation(Request $request)
+    {
+        $teacherFields = [
+            'school_id',
+            'staff_number',
+            'surname',
+            'firstname',
+            'email',
+            'othername',
+            'initials',
+            'phonenumber',
+            'registration_number',
+            'gender',
+            'national_id',
+            'address',
+            'employee_number',
+            'group_teacher',
+            'teacher_profile',
+            'signature',
+        ];
+
+        // Get only the fields you want
+        $data = $request->only($teacherFields);
+
+        // Validation rules
+        $validated = $request->validate([
+            'surname' => 'nullable|string|max:255',
+            'firstname' => 'nullable|string|max:255',
+            'othername' => 'nullable|string|max:255',
+            'initials' => 'nullable|string|max:255',
+            'gender' => 'nullable|in:male,female',
+            'phonenumber' => 'nullable|string|max:20',
+            'registration_number' => 'nullable|string|max:50',
+            'national_id' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
+            'employee_number' => 'nullable|string|max:50',
+            'group_teacher' => 'nullable|integer|between:1,5',
+            'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'school_id' => 'required|exists:schools,id',
+            'staff_number' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'password' => 'nullable|string|min:4|confirmed', // Add password validation
+        ]);
+
+        $teacher = Teacher::findOrFail($request->teacher_id);
+
+        // Handle profile image upload
+        if ($request->hasFile('teacher_profile')) {
+            if ($teacher->teacher_profile && file_exists(public_path($teacher->teacher_profile))) {
+                unlink(public_path($teacher->teacher_profile));
+            }
+
+            $file = $request->file('teacher_profile');
+            $destinationPath = public_path('uploads/teacherProfiles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move($destinationPath, $filename);
+
+            $data['teacher_profile'] = 'uploads/teacherProfiles/' . $filename;
+        }
+
+        // Handle signature upload — stored once here, then reused
+        // automatically on every report card this teacher is the Class
+        // Teacher for (see Helper::classTeacherFor() / attachRemarksAndSignatures()).
+        if ($request->hasFile('signature')) {
+            if ($teacher->signature && file_exists(public_path($teacher->signature))) {
+                unlink(public_path($teacher->signature));
+            }
+
+            $sigFile = $request->file('signature');
+            $sigDestinationPath = public_path('uploads/teacherSignatures');
+            if (!file_exists($sigDestinationPath)) {
+                mkdir($sigDestinationPath, 0755, true);
+            }
+            $sigFilename = time() . '_' . $sigFile->getClientOriginalName();
+            $sigFile->move($sigDestinationPath, $sigFilename);
+
+            $data['signature'] = 'uploads/teacherSignatures/' . $sigFilename;
+        }
+
+        // Handle password update if provided
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+            // Optionally set must_change_password flag
+            // $data['must_change_password'] = 1; // Uncomment if you want to force password change on next login
+        }
+
+        // Update teacher record
+        $teacher->update($data);
+
+        return response()->json([
+            'message' => 'Teacher information updated successfully!',
+        ]);
+    }
 }

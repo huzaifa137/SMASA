@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Support\AdminAccess;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use App\Models\DynamicFormValue;
@@ -45,7 +46,7 @@ class MasterDataController extends Controller
 
     public function supplierPrequalificationEvaluationCriteria()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
@@ -61,7 +62,7 @@ class MasterDataController extends Controller
 
     public function storePrequalificationCriteria(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!AdminAccess::can('master_data.create_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
             return back();
         }
@@ -89,7 +90,7 @@ class MasterDataController extends Controller
 
     public function requisitionDocuments()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
@@ -104,7 +105,7 @@ class MasterDataController extends Controller
 
     public function documentsToLoadRequisition(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $category = $request->Category;
 
@@ -148,7 +149,7 @@ class MasterDataController extends Controller
 
     public function master_table()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $mc_code = DB::table('master_datas')
             ->join('master_codes', 'md_master_code_id', '=', 'master_codes.id')
@@ -163,7 +164,7 @@ class MasterDataController extends Controller
 
     public function master_code()
     {
-        PermissionHelper::denyUnlessFeature('view_master_codes');
+        AdminAccess::denyUnless('master_data.view_codes');
 
         $all_data = DB::table('master_codes')->orderBy('mc_name', 'ASC')->get();
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
@@ -173,7 +174,7 @@ class MasterDataController extends Controller
 
     public function masterCodeToData()
     {
-        PermissionHelper::denyUnlessFeature('view_master_codes');
+        AdminAccess::denyUnless('master_data.view_codes');
 
         $all_data = DB::table('master_codes')
             ->orderBy('mc_name', 'ASC')
@@ -188,7 +189,7 @@ class MasterDataController extends Controller
 
     public function travelRequisitionDocuments()
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $documents = DB::table("master_datas")
             ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
@@ -204,7 +205,7 @@ class MasterDataController extends Controller
 
     public function editRecord($md_id)
     {
-        PermissionHelper::denyUnlessFeature('edit_master_data');
+        AdminAccess::denyUnless('master_data.edit_data');
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
@@ -255,7 +256,7 @@ class MasterDataController extends Controller
 
     public function addRecord(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('create_master_data');
+        AdminAccess::denyUnless('master_data.create_data');
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
         $selected = DB::select('select id, mc_name from master_codes');
@@ -265,7 +266,7 @@ class MasterDataController extends Controller
 
     public function addMasterCode()
     {
-        PermissionHelper::denyUnlessFeature('create_master_codes');
+        AdminAccess::denyUnless('master_data.create_codes');
 
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
         return view('master-logic.add-code', $data);
@@ -273,7 +274,7 @@ class MasterDataController extends Controller
 
     public function editMasterCode($id)
     {
-        PermissionHelper::denyUnlessFeature('edit_master_codes');
+        AdminAccess::denyUnless('master_data.edit_codes');
 
         $record_code = DB::table('master_codes')
             ->where('id', $id)
@@ -288,7 +289,7 @@ class MasterDataController extends Controller
 
     public function masterCodeList(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_master_data');
+        AdminAccess::denyUnless('master_data.view_data');
 
         $id = $request->id;
 
@@ -328,10 +329,10 @@ class MasterDataController extends Controller
             return DataTables::of($mc_code)
                 ->addColumn('action', function ($item) {
                     $links = [];
-                    if (PermissionHelper::canFeature('edit_master_data')) {
+                    if (AdminAccess::can('master_data.edit_data')) {
                         $links[] = '<a class="dropdown-item" href="' . url('master-data/edit-record/' . $item->md_id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
                     }
-                    if (PermissionHelper::canFeature('delete_master_data')) {
+                    if (AdminAccess::can('master_data.delete_data')) {
                         $links[] = '<a onclick="return confirm(\'Are sure you want to delete ' . $item->md_name . '?\'); " class="dropdown-item" href="' . url('delete-record/' . $item->md_id) . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
                     }
 
@@ -365,7 +366,7 @@ public function dropDown($links)
 
     public function editSupplierDocument($id)
     {
-        PermissionHelper::denyUnlessFeature('edit_master_data');
+        AdminAccess::denyUnless('master_data.edit_data');
 
         $user_data = DB::table('master_datas')
             ->where('md_id', '=', $id)
@@ -378,7 +379,7 @@ public function dropDown($links)
 
     public function addNewRecord(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!AdminAccess::can('master_data.create_data')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. You do not have permission to create master data.'
@@ -478,7 +479,7 @@ public function dropDown($links)
 
     public function deleteRecord($md_id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!AdminAccess::can('master_data.delete_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
             return back();
         }
@@ -499,7 +500,7 @@ public function dropDown($links)
 
     public function updateMasterrecord(Request $request)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!AdminAccess::can('master_data.edit_data')) {
             return redirect()->back()->with('error', 'Unauthorized. You do not have permission to edit master data.');
         }
 
@@ -523,7 +524,7 @@ public function dropDown($links)
 
     public function sendMasterCode(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_codes')) {
+        if (!AdminAccess::can('master_data.create_codes')) {
             return redirect()->back()->with('error', 'Unauthorized. You do not have permission to create master codes.');
         }
 
@@ -540,7 +541,7 @@ public function dropDown($links)
 
     public function deleteCode($mc_id)
     {
-        if (!PermissionHelper::canFeature('delete_master_codes')) {
+        if (!AdminAccess::can('master_data.delete_codes')) {
             return redirect()->back()->with('error', 'Unauthorized. You do not have permission to delete master codes.');
         }
 
@@ -553,7 +554,7 @@ public function dropDown($links)
 
     public function updateMasterCode(Request $request)
     {
-        if (!PermissionHelper::canFeature('edit_master_codes')) {
+        if (!AdminAccess::can('master_data.edit_codes')) {
             return redirect()->back()->with('error', 'Unauthorized. You do not have permission to edit master codes.');
         }
 
@@ -572,7 +573,7 @@ public function dropDown($links)
 
     public function storeRequisitionDocument(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!AdminAccess::can('master_data.create_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
             return back();
         }
@@ -600,7 +601,7 @@ public function dropDown($links)
 
     public function deleteSupplierDocument($id)
     {
-        if (!PermissionHelper::canFeature('delete_master_data')) {
+        if (!AdminAccess::can('master_data.delete_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
             return back();
         }
@@ -615,7 +616,7 @@ public function dropDown($links)
 
     public function updateSupplierDocument(Request $request)
     {
-        if (!PermissionHelper::canFeature('edit_master_data')) {
+        if (!AdminAccess::can('master_data.edit_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to edit master data.');
             return back();
         }
@@ -641,7 +642,7 @@ public function dropDown($links)
 
     public function storeTravelRequisitionDocument(Request $request)
     {
-        if (!PermissionHelper::canFeature('create_master_data')) {
+        if (!AdminAccess::can('master_data.create_data')) {
             Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
             return back();
         }
@@ -694,7 +695,7 @@ public function dropDown($links)
 
     public function secondaryALevelSubjectsIndex()
     {
-        PermissionHelper::denyUnlessFeature('view_secondary_subjects');
+        AdminAccess::denyUnless('secondary_subjects.view');
 
         $masterCodeId = config('constants.options.SECONDARY_ALEVEL_SUBJECTS');
 
@@ -717,7 +718,7 @@ public function dropDown($links)
 
     public function storeSecondaryALevelSubject(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.add')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -756,7 +757,7 @@ public function dropDown($links)
 
     public function updateSecondaryALevelSubject(Request $request, $md_id)
     {
-        if (!PermissionHelper::canFeature('edit_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.edit')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -786,7 +787,7 @@ public function dropDown($links)
 
     public function deleteSecondaryALevelSubject($md_id)
     {
-        if (!PermissionHelper::canFeature('delete_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -863,7 +864,7 @@ public function dropDown($links)
 
     public function secondaryOLevelSubjectsIndex()
     {
-        PermissionHelper::denyUnlessFeature('view_secondary_subjects');
+        AdminAccess::denyUnless('secondary_subjects.view');
 
         $subjects = DB::table('master_datas')
             ->where('md_master_code_id', config('constants.options.SECONDARY_OLEVEL_SUBJECTS'))
@@ -881,7 +882,7 @@ public function dropDown($links)
 
     public function storeSecondaryOLevelSubject(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.add')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -922,7 +923,7 @@ public function dropDown($links)
 
     public function updateSecondaryOLevelSubject(Request $request, $md_id)
     {
-        if (!PermissionHelper::canFeature('edit_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.edit')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -964,7 +965,7 @@ public function dropDown($links)
 
     public function deleteSecondaryOLevelSubject($md_id)
     {
-        if (!PermissionHelper::canFeature('delete_secondary_subject')) {
+        if (!AdminAccess::can('secondary_subjects.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

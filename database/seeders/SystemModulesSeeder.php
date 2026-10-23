@@ -505,35 +505,6 @@ class SystemModulesSeeder extends Seeder
                 ],
             ],
 
-            // ── Master Data ───────────────────────────────────────────────
-            [
-                "key" => "master_data",
-                "name" => "Master Data",
-                "icon" => "fa fa-database",
-                "route" => "master-code-to-data",
-                "description" => "System master data, master codes, NLSC curriculum master and secondary subject lists",
-                "sort_order" => 130,
-                "features" => [
-                    ["key" => "view_master_data", "name" => "View Master Data"],
-                    ["key" => "create_master_data", "name" => "Create Master Data"],
-                    ["key" => "edit_master_data", "name" => "Edit Master Data"],
-                    ["key" => "delete_master_data", "name" => "Delete Master Data"],
-                    ["key" => "view_master_codes", "name" => "View Master Codes"],
-                    ["key" => "create_master_codes", "name" => "Create Master Codes"],
-                    ["key" => "edit_master_codes", "name" => "Edit Master Codes"],
-                    ["key" => "delete_master_codes", "name" => "Delete Master Codes"],
-                    ["key" => "view_nlsc_master", "name" => "View NLSC Master Curriculum", "inherits" => ["view_master_data"]],
-                    ["key" => "add_nlsc_master", "name" => "Add NLSC Master Records", "inherits" => ["create_master_data"]],
-                    ["key" => "import_nlsc_master", "name" => "Bulk Import NLSC Master Records", "inherits" => ["create_master_data"]],
-                    ["key" => "edit_nlsc_master", "name" => "Edit NLSC Master Records", "inherits" => ["edit_master_data"]],
-                    ["key" => "delete_nlsc_master", "name" => "Delete NLSC Master Records", "inherits" => ["delete_master_data"]],
-                    ["key" => "view_secondary_subjects", "name" => "View Secondary A/O-Level Subject Lists", "inherits" => ["view_master_data"]],
-                    ["key" => "add_secondary_subject", "name" => "Add Secondary Subject", "inherits" => ["create_master_data"]],
-                    ["key" => "edit_secondary_subject", "name" => "Edit Secondary Subject", "inherits" => ["edit_master_data"]],
-                    ["key" => "delete_secondary_subject", "name" => "Delete Secondary Subject", "inherits" => ["delete_master_data"]],
-                ],
-            ],
-
             // ── User Rights & Permissions ─────────────────────────────────
             [
                 "key" => "user_rights",

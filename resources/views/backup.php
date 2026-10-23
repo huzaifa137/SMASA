@@ -9,6 +9,15 @@ php artisan migrate
 php artisan smasa:sync-school-names
 php artisan smasa:sync-school-names --apply
 
+php artisan db:seed --class=SystemModulesSeeder
+php artisan admin:create-super-admin        # only needed on a fresh install
+php artisan db:seed --class=AdminRolesSeeder   # optional starter roles
+php artisan optimize:clear
+php artisan test --filter=AdminPermissionCatalogueTest
+
+
+
+
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;
 $teacher->save(); -->

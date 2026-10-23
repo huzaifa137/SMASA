@@ -1,8 +1,6 @@
 <?php
 namespace App\Models;
 
-use App\Models\Role;
-use App\Models\School;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;  // ← ADD THIS
@@ -39,35 +37,23 @@ class User extends Authenticatable
         'country',
         'is_active',
         'attached_company_role',
+        'admin_role_id',
     ];
 
     protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = ['email_verified_at' => 'datetime'];
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_super_admin' => 'boolean',
+    ];
 
-    public function roles()
+    public function adminRole()
     {
-        return $this->belongsToMany(Role::class, 'role_user_school')
-            ->withPivot('school_id')->withTimestamps();
+        return $this->belongsTo(AdminRole::class, 'admin_role_id');
     }
 
-    public function schools()
+    public function isSuperAdmin(): bool
     {
-        return $this->belongsToMany(School::class, 'role_user_school')
-            ->withPivot('role_id')->withTimestamps();
-    }
-
-    public function getRolesForSchool($schoolId)
-    {
-        return $this->roles()->wherePivot('school_id', $schoolId)->get();
-    }
-
-    public function hasPermission($permissionName, $schoolId)
-    {
-        return $this->roles()
-            ->wherePivot('school_id', $schoolId)
-            ->whereHas('permissions', function ($query) use ($permissionName) {
-                $query->where('name', $permissionName);
-            })->exists();
+        return (bool) $this->is_super_admin;
     }
 }

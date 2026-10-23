@@ -58,6 +58,14 @@ class AdminAuth
             return redirect()->route('parents.dashboard');
         }
 
+        // A deactivated / deleted / non-admin account must lose its session
+        // immediately, not at the next login.
+        if (session()->has('LoggedAdmin') && !\App\Support\AdminAccess::isAdminSession()) {
+            session()->flush();
+
+            return redirect('/users/login')->with('fail', 'Your administrator account is no longer active.');
+        }
+
         $response = $next($request);
 
         $response->headers->set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');

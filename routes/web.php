@@ -5,6 +5,7 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\GradingController;
 use App\Http\Controllers\ItebController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\AdminRightsController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolProductController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\ExaminationReportController;
 use App\Http\Controllers\GradingSchemeController;
 use App\Http\Controllers\AggregateSubjectsController;
 use App\Http\Controllers\AssessmentScaleController;
-use App\Http\Controllers\UserRightsAndPreviledges;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\AttendanceController;
@@ -61,27 +61,21 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/login', 'login')->name('users.login');
                 Route::post('auth-user-check', 'checkUser')->name('auth-user-check');
                 Route::get('/users-profile', 'userProfile')->name('users-profile');
-                Route::get('/users-register', 'userRegister');
-                Route::get('/users-information', 'userInformation')->name('users.user-information');
-                Route::get('user-account-information/{id}', [UserController::class, 'userAccountInformation'])->name('users.account-information');
+                Route::get('user-account-information/{id}', [UserController::class, 'userAccountInformation'])->name('users.account-information')
+                    ->middleware('admin.can:admin_rights.view_users');
                 Route::get('/home-page', 'homePage')->name('home.page');
                 Route::get('/privacy-policy', 'privacyPolicy')->name('privacy-policy');
                 Route::get('/public-portal', 'publicPortal')->name('public.portal');
                 Route::get('/register', 'register')->name('users.register');
                 Route::get('/edit-user-information', 'editUserInformation');
-                Route::get('/edit-specific-user/{userid}', 'editSpecificUser')->name('users.edit-specific-user');
                 Route::get('/terms-and-conditions', 'user_terms_and_conditions')->name('users.terms-and-conditions');
-                Route::get('/users/delete-user/{id}', 'deleteUserAccount')->name('users.delete-user');
             });
 
             Route::get('/teacher-password-reset-form', [TeacherPasswordResetController::class, 'showResetPasswordForm'])->name('teacher.password.reset.form');
             Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link');
             Route::post('/teacher-password-reset', [TeacherPasswordResetController::class, 'resetPassword'])->name('teacher.password.reset');
             Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school');
-            Route::post('store-internal-user', 'storeInternalUser')->name('store-internal-user');
             Route::post('update-internal-user', 'storeUpdatedInternalUser')->name('update.internal-user');
-            Route::post('save-role', 'saveUserRole')->name('save-role');
-            Route::post('store-role-update', 'storeRoleUpdate')->name('store-role-update');
             Route::post('store-updated-information', 'storeUpdatedInformation')->name('store-updated-information');
         });
 
@@ -97,8 +91,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     });
 
     Route::controller(MasterDataController::class)
-        ->middleware(['module:master_data'])
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:master_data'])
         ->group(function () {
             Route::group(['prefix' => 'master-data'], function () {
                 Route::get('master-code-to-data', 'masterCodeToData')->name('master-code-to-data');
@@ -175,7 +168,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // can already add for itself on /a-level-combinations. See
     // MasterDataController::secondaryALevelSubjectsIndex().
     Route::controller(MasterDataController::class)
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:secondary_subjects'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {
@@ -196,24 +189,31 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // controller via Helper::isPlatformAdmin(), since AdminAuth also admits
     // school sessions).
     Route::controller(\App\Http\Controllers\CustomReportCardController::class)
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:custom_report_cards'])
         ->prefix('admin/custom-report-cards')
         ->name('admin.custom-report-cards.')
         ->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::post('/sync', 'sync')->name('sync');
-            Route::put('/templates/{id}', 'updateTemplate')->name('templates.update');
-            Route::delete('/templates/{id}', 'destroyTemplate')->name('templates.delete');
+            Route::get('/', 'index')->name('index')->middleware('admin.can:custom_report_cards.view');
+            Route::post('/sync', 'sync')->name('sync')->middleware('admin.can:custom_report_cards.sync');
 
-            Route::get('/assignments', 'assignments')->name('assignments');
-            Route::post('/assignments', 'assign')->name('assign');
-            Route::put('/assignments/{id}', 'updateAssignment')->name('assignments.update');
-            Route::delete('/assignments/{id}', 'unassign')->name('assignments.delete');
+            Route::middleware('admin.can:custom_report_cards.manage_templates')->group(function () {
+                Route::put('/templates/{id}', 'updateTemplate')->name('templates.update');
+                Route::delete('/templates/{id}', 'destroyTemplate')->name('templates.delete');
+            });
 
-            Route::get('/studio', 'studio')->name('studio');
-            Route::get('/studio/exams', 'studioExams')->name('studio.exams');
-            Route::get('/studio/students', 'studioStudents')->name('studio.students');
-            Route::get('/studio/preview', 'preview')->name('studio.preview');
+            Route::middleware('admin.can:custom_report_cards.manage_assignments')->group(function () {
+                Route::get('/assignments', 'assignments')->name('assignments');
+                Route::post('/assignments', 'assign')->name('assign');
+                Route::put('/assignments/{id}', 'updateAssignment')->name('assignments.update');
+                Route::delete('/assignments/{id}', 'unassign')->name('assignments.delete');
+            });
+
+            Route::middleware('admin.can:custom_report_cards.use_studio')->group(function () {
+                Route::get('/studio', 'studio')->name('studio');
+                Route::get('/studio/exams', 'studioExams')->name('studio.exams');
+                Route::get('/studio/students', 'studioStudents')->name('studio.students');
+                Route::get('/studio/preview', 'preview')->name('studio.preview');
+            });
         });
 
     // NLSC (New Lower Secondary Curriculum, Senior 1-4) Topic catalogue —
@@ -224,7 +224,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // an admin to type NCDC's syllabus content into themselves rather than
     // something this migration pre-seeds.
     Route::controller(\App\Http\Controllers\NlscTopicController::class)
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:nlsc_curriculum'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {
@@ -247,7 +247,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // Area -> Project -> Competency Areas). See NlscProjectController's
     // own docblock.
     Route::controller(\App\Http\Controllers\NlscProjectController::class)
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:nlsc_curriculum'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {
@@ -270,7 +270,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // own docblock for why it reuses NlscTopicController's Topics rather
     // than managing its own topic list.
     Route::controller(\App\Http\Controllers\NlscSubjectAchievementController::class)
-        ->middleware(['AdminAuth'])
+        ->middleware(['AdminAuth', 'admin.module:nlsc_curriculum'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {
@@ -363,46 +363,83 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             });
         });
 
+    // ═══════════════════════════════════════════════════════════════════
+    // SCHOOLS (Admin Portal) — every route requires a login (AdminAuth) and
+    // an Admin Rights permission. Routes shared with the school portal use
+    // `admin.guard`, which constrains ADMIN sessions only; school/teacher
+    // sessions fall through to the controller's own role checks.
+    // ═══════════════════════════════════════════════════════════════════
     Route::controller(SchoolController::class)
-        // ->middleware(['module:school_management'])
+        ->middleware(['AdminAuth'])
         ->group(function () {
-            Route::get('create-school', 'createSchool')->name('school.create-school');
-            Route::get('term-dates/{schoolId}', 'termDates')->name('school.term-dates');
-            Route::get('all-schools', 'allSchools')->name('school.allSchools');
-            Route::get('/edit-school/{id}/', 'editSchool')->name('edit.school');
-            Route::get('/school-profile', 'schoolProfile')->name('profile.school');
-            Route::get('/school-individual-profile/{id}', 'schoolIndividualProfile')->name('profile.individual.school');
-            Route::get('/school-options/{id}/', 'schoolOptions')->name('school.options');
 
-            Route::get('/school/{schoolId}/deletion-summary', 'deletionSummary')->name('school.deletion-summary');
-            Route::delete('/school/{schoolId}', 'deleteSchool')->name('school.delete');
+            // Admin portal only (strict)
+            Route::middleware('admin.can:schools.view')->group(function () {
+                Route::get('all-schools', 'allSchools')->name('school.allSchools');
+                Route::get('/school-options/{id}/', 'schoolOptions')->name('school.options');
+            });
 
-            Route::post('/create/new/schools/', 'createNewSchool')->name('create.new-school');
-            Route::post('/update-school', 'updateSchool')->name('update.school');
-            Route::post('/store-school-profile', 'storeSchoolProfile')->name('schools.store.profile');
-            Route::post('/school/configure', 'configureSchoolOptions')->name('school.configure');
-            Route::post('/schools/{id}/change-status', 'changeStatus');
-            Route::post('/schools/{id}/toggle-custom-subjects', 'toggleCustomSubjects')->name('school.toggle-custom-subjects');
+            Route::middleware('admin.can:schools.create')->group(function () {
+                Route::get('create-school', 'createSchool')->name('school.create-school');
+                Route::post('/create/new/schools/', 'createNewSchool')->name('create.new-school');
+            });
 
-            Route::get('admin-user', 'adminUser')->name('admin.user');
-            Route::get('student-user', 'studentUser')->name('student.user');
+            Route::middleware('admin.can:schools.edit')->group(function () {
+                Route::get('/edit-school/{id}/', 'editSchool')->name('edit.school');
+                Route::post('/update-school', 'updateSchool')->name('update.school');
+                Route::post('/school/configure', 'configureSchoolOptions')->name('school.configure');
+            });
 
-            Route::get('/add-academic-year', 'addAcademicYear')->name('add-academic-year');
-            Route::post('/academic-years', 'storeYear')->name('academic-years.store');
+            Route::post('/schools/{id}/change-status', 'changeStatus')
+                ->middleware('admin.can:schools.change_status');
 
-            Route::patch('/academic-years/{id}/activate', 'activate')->name('academic-years.activate');
-            Route::patch('/academic-years/{id}/deactivate', 'deactivate')->name('academic-years.deactivate');
+            Route::post('/schools/{id}/toggle-custom-subjects', 'toggleCustomSubjects')
+                ->middleware('admin.can:schools.toggle_custom_subjects')
+                ->name('school.toggle-custom-subjects');
 
-            Route::delete('/academic-years/{id}', 'destroy')->name('academic-years.destroy');
-            Route::put('/academic-years/{id}', 'updateYear')->name('academic-years.update');
+            Route::middleware('admin.can:schools.delete')->group(function () {
+                Route::get('/school/{schoolId}/deletion-summary', 'deletionSummary')->name('school.deletion-summary');
+                Route::delete('/school/{schoolId}', 'deleteSchool')->name('school.delete');
+            });
 
-            Route::delete('/academic-years-terms/{id}', 'destroyTerm')->name('academic-years.term.destroy');
-            Route::post('/store-term-dates', 'storeTermDate')->name('term-dates.store');
-            Route::post('/select-school', 'selectSchool')->name('school.select');
+            Route::post('/select-school', 'selectSchool')->name('school.select')
+                ->middleware('admin.can:schools.enter');
+
+            // Leaving a school must always be possible, even if the right was revoked meanwhile.
             Route::post('/school/clear', 'clearSchool')->name('school.clear');
-            Route::post('/term-dates/toggle-active', 'toggleActive')->name('term-dates.toggle-active');
 
+            // Shared with the school portal (admins need the permission)
+            Route::get('/school-profile', 'schoolProfile')->name('profile.school')
+                ->middleware('admin.guard:schools.view');
+            Route::get('/school-individual-profile/{id}', 'schoolIndividualProfile')->name('profile.individual.school')
+                ->middleware('admin.guard:schools.view');
+            Route::post('/store-school-profile', 'storeSchoolProfile')->name('schools.store.profile')
+                ->middleware('admin.guard:schools.edit');
+
+            Route::get('term-dates/{schoolId}', 'termDates')->name('school.term-dates')
+                ->middleware('admin.guard:academic_calendar.view');
+            Route::get('/add-academic-year', 'addAcademicYear')->name('add-academic-year')
+                ->middleware('admin.guard:academic_calendar.view');
+
+            Route::middleware('admin.guard:academic_calendar.manage')->group(function () {
+                Route::post('/academic-years', 'storeYear')->name('academic-years.store');
+                Route::patch('/academic-years/{id}/activate', 'activate')->name('academic-years.activate');
+                Route::patch('/academic-years/{id}/deactivate', 'deactivate')->name('academic-years.deactivate');
+                Route::delete('/academic-years/{id}', 'destroy')->name('academic-years.destroy');
+                Route::put('/academic-years/{id}', 'updateYear')->name('academic-years.update');
+                Route::delete('/academic-years-terms/{id}', 'destroyTerm')->name('academic-years.term.destroy');
+                Route::post('/store-term-dates', 'storeTermDate')->name('term-dates.store');
+                Route::post('/term-dates/toggle-active', 'toggleActive')->name('term-dates.toggle-active');
+            });
         });
+
+    // ── Developer shortcuts (SECURITY): these log the visitor straight in with
+    // a hard-coded account and no credentials. They exist ONLY when APP_ENV=local
+    // and are additionally guarded inside the controller methods.
+    if (app()->environment('local')) {
+        Route::get('admin-user', [SchoolController::class, 'adminUser'])->name('admin.user');
+        Route::get('student-user', [SchoolController::class, 'studentUser'])->name('student.user');
+    }
 
     // Routes with module:teachers middleware
     Route::controller(TeacherController::class)
@@ -512,96 +549,60 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::delete('o-level-electives/subjects/{id}', 'deleteSchoolSubject')->name('olevel.electives.delete-subject');
     });
 
-    Route::controller(UserRightsAndPreviledges::class)
+    // Teacher / staff profile save (used by the profile + update-info screens).
+    Route::post('/update-user-information', [TeacherController::class, 'updateUserInformation'])
+        ->middleware(['AdminAuth'])
+        ->name('users.update.information');
+
+    Route::controller(StudentController::class)
+        ->prefix('students')
+        ->middleware(['module:students'])
         ->group(function () {
-            Route::post('/update-user-information', 'updateUserInformation')->name('users.update.information');
             Route::group(['middleware' => ['AdminAuth']], function () {
-                Route::group(['prefix' => '/user-rights-and-previledges'], function () {
-                    Route::get('/setup', 'setup')->name('all.roles.setup');
-                    Route::get('/all-roles', 'allRoles')->name('all.users.roles');
-                    Route::get('/all-permissions', 'allPermissions')->name('all.users.permissions');
-                    Route::get('/assign-permissions', 'assignPermissions')->name('assign.users.permissions');
+                Route::get('students-dashboard', 'studentPortal')->name('all.students.dashboard');
+                Route::get('update-profile', action: 'updateProfiles')->name('students.update.profile');
+                Route::get('/search', 'searchStudent')->name('students.individual.search');
+                Route::get('/all-students', 'allStudents')->name('students.all.students');
+                Route::get('/search/ajax', 'searchAjax')->name('students.search.ajax');
 
-                    Route::get('add-users', 'addUsers')->name('add-users');
-                });
+                Route::get('/export/{schoolId}/{type}', 'exportStudents')->name('students.export');
 
-                // routes/web.php
-    
-                Route::post('/roles/add-user', 'addUserToRole')->name('roles.add-user');
-                Route::post('/roles/remove-user', 'deleteUserFromRole')->name('roles.removeUser');
+                Route::get('/students/{student}/edit', 'edit')->name('students.edit');
 
-                Route::get('/users/{id}/details', 'getUserDetails');
-                Route::get('/roles/{id}', 'editRole');
-                Route::put('/roles/{id}', 'updateRole');
+                Route::get('/Information/{id}', 'showStudentInformation');
 
-                Route::post('/store-role', 'storeRole')->name('store.role');
-                Route::post('/store-permission-role', 'storePermissionRole')->name('store.permission.role');
-                Route::post('/permissions/store-multiple', 'storeMultiplePermissions')->name('store.multiple.permissions');
+                Route::get('/add-new-student', 'addNewStudent')->name('students.add.new.student');
 
-                Route::delete('/roles/{id}', 'deleteRole');
-                Route::delete('/permissions/delete', 'destroyGroup')->name('permissions.delete');
-                Route::delete('/user/{userId}', 'deleteUser')->name('user.delete');
+                Route::post('/students/store', 'storeStudent')->name('students.store');
 
-                Route::post('/assign-permissions/{roleId}', 'storeRolePermissions')->name('storeRolePermissions');
-                Route::post('/remove-permissions/{roleId}/remove', 'removePermission');
-                Route::post('/assign-user-to-role', 'assignUserToRole')->name('assignUserToRole');
-                Route::post('/remove-user-from-role', 'removeUserFromRole')->name('removeUserFromRole');
+                Route::get('/transfer-form', 'moveStudentForm')->name('students.transfer');
 
-                Route::post('/store-new-user', 'storeNewUser')->name('users.store.new.user');
+                Route::get('/streams/by-class', 'getStreamsByClass')->name('streams.by.class');
+                Route::get('/students/search', 'searchStudentsByClassStream')->name('students.search');
+                Route::get('/students/search', 'searchStudentInformation')->name('students.search');
+                Route::post('/students/move', 'moveStudent')->name('students.move');
 
-                Route::post('/users/{id}/change-status', 'changeStatus');
+                Route::get('students/generate-id', 'generateStudentID')->name('students.generate-id');
+                Route::get('/view/{id}', 'viewStudent')->name('students.view');
+                Route::post('/update/{id}', 'updateStudent');
+
+                Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
+                Route::post('/bulk-delete', 'bulkDestroyStudents')->name('students.bulk.destroy');
+
+                // Student Bulk Import
+                Route::get('/bulk-import', 'bulkImportStudentForm')->name('students.bulk.import.form');
+                Route::post('/bulk-import', 'bulkImportStudents')->name('students.bulk.import');
+                Route::get('/download-template', 'downloadStudentTemplate')->name('students.download.template');
+
             });
 
-            Route::controller(StudentController::class)
-                ->prefix('students')
-                ->middleware(['module:students'])
-                ->group(function () {
-                    Route::group(['middleware' => ['AdminAuth']], function () {
-                        Route::get('students-dashboard', 'studentPortal')->name('all.students.dashboard');
-                        Route::get('update-profile', action: 'updateProfiles')->name('students.update.profile');
-                        Route::get('/search', 'searchStudent')->name('students.individual.search');
-                        Route::get('/all-students', 'allStudents')->name('students.all.students');
-                        Route::get('/search/ajax', 'searchAjax')->name('students.search.ajax');
-
-                        Route::get('/export/{schoolId}/{type}', 'exportStudents')->name('students.export');
-
-                        Route::get('/students/{student}/edit', 'edit')->name('students.edit');
-
-                        Route::get('/Information/{id}', 'showStudentInformation');
-
-                        Route::get('/add-new-student', 'addNewStudent')->name('students.add.new.student');
-
-                        Route::post('/students/store', 'storeStudent')->name('students.store');
-
-                        Route::get('/transfer-form', 'moveStudentForm')->name('students.transfer');
-
-                        Route::get('/streams/by-class', 'getStreamsByClass')->name('streams.by.class');
-                        Route::get('/students/search', 'searchStudentsByClassStream')->name('students.search');
-                        Route::get('/students/search', 'searchStudentInformation')->name('students.search');
-                        Route::post('/students/move', 'moveStudent')->name('students.move');
-
-                        Route::get('students/generate-id', 'generateStudentID')->name('students.generate-id');
-                        Route::get('/view/{id}', 'viewStudent')->name('students.view');
-                        Route::post('/update/{id}', 'updateStudent');
-
-                        Route::delete('/delete/{student}', 'destroyStudent')->name('students.destroy');
-                        Route::post('/bulk-delete', 'bulkDestroyStudents')->name('students.bulk.destroy');
-
-                        // Student Bulk Import
-                        Route::get('/bulk-import', 'bulkImportStudentForm')->name('students.bulk.import.form');
-                        Route::post('/bulk-import', 'bulkImportStudents')->name('students.bulk.import');
-                        Route::get('/download-template', 'downloadStudentTemplate')->name('students.download.template');
-
-                    });
-
-                    // Student Bulk Photo Import
-                    Route::group(['middleware' => ['AdminAuth']], function () {
-                        Route::get('/bulk-photo-import', [StudentPhotoImportController::class, 'form'])
-                            ->name('students.bulk.photo.import.form');
-                        Route::post('/bulk-photo-import', [StudentPhotoImportController::class, 'process'])
-                            ->name('students.bulk.photo.import');
-                    });
-                });
+            // Student Bulk Photo Import
+            Route::group(['middleware' => ['AdminAuth']], function () {
+                Route::get('/bulk-photo-import', [StudentPhotoImportController::class, 'form'])
+                    ->name('students.bulk.photo.import.form');
+                Route::post('/bulk-photo-import', [StudentPhotoImportController::class, 'process'])
+                    ->name('students.bulk.photo.import');
+            });
         });
 
     // ── Student ID Cards ──────────────────────────────────────────────────
@@ -1355,20 +1356,89 @@ Route::group([
     'as' => 'urp.admin.',
 ], function () {
 
-    Route::get('/', [UserRightsController::class, 'adminSchoolsIndex'])->name('index');
+    Route::get('/', [UserRightsController::class, 'adminSchoolsIndex'])->name('index')
+        ->middleware('admin.can:school_rights.view');
 
-    Route::put('/roles/{id}', [UserRightsController::class, 'adminUpdateRole'])->name('roles.update');
-    Route::delete('/roles/{id}', [UserRightsController::class, 'adminDeleteRole'])->name('roles.delete');
-    Route::get('/roles/{id}/permissions', [UserRightsController::class, 'adminGetRolePermissions'])->name('roles.permissions.get');
-    Route::post('/roles/{id}/permissions', [UserRightsController::class, 'adminSaveRolePermissions'])->name('roles.permissions.save');
+    Route::put('/roles/{id}', [UserRightsController::class, 'adminUpdateRole'])->name('roles.update')
+        ->middleware('admin.can:school_rights.manage_roles');
+    Route::delete('/roles/{id}', [UserRightsController::class, 'adminDeleteRole'])->name('roles.delete')
+        ->middleware('admin.can:school_rights.manage_roles');
+    Route::get('/roles/{id}/permissions', [UserRightsController::class, 'adminGetRolePermissions'])->name('roles.permissions.get')
+        ->middleware('admin.can:school_rights.view');
+    Route::post('/roles/{id}/permissions', [UserRightsController::class, 'adminSaveRolePermissions'])->name('roles.permissions.save')
+        ->middleware('admin.can:school_rights.manage_roles');
 
-    Route::post('/teachers/assign-role', [UserRightsController::class, 'adminAssignTeacherRole'])->name('teachers.assign-role');
+    Route::post('/teachers/assign-role', [UserRightsController::class, 'adminAssignTeacherRole'])->name('teachers.assign-role')
+        ->middleware('admin.can:school_rights.assign_roles');
 
     // Wildcard school routes LAST
-    Route::get('/{school}', [UserRightsController::class, 'adminSchoolRoles'])->name('school.roles');
-    Route::post('/{school}/roles', [UserRightsController::class, 'adminStoreRole'])->name('roles.store');
-    Route::post('/{school}/teachers', [UserRightsController::class, 'adminCreateTeacher'])->name('teachers.store');
-    Route::post('/{school}/staff-cap', [UserRightsController::class, 'toggleAdminStaffAdd'])->name('staff-cap.toggle');
+    Route::get('/{school}', [UserRightsController::class, 'adminSchoolRoles'])->name('school.roles')
+        ->middleware('admin.can:school_rights.view');
+    Route::post('/{school}/roles', [UserRightsController::class, 'adminStoreRole'])->name('roles.store')
+        ->middleware('admin.can:school_rights.manage_roles');
+    Route::post('/{school}/teachers', [UserRightsController::class, 'adminCreateTeacher'])->name('teachers.store')
+        ->middleware('admin.can:school_rights.create_staff');
+    Route::post('/{school}/staff-cap', [UserRightsController::class, 'toggleAdminStaffAdd'])->name('staff-cap.toggle')
+        ->middleware('admin.can:school_rights.toggle_staff_cap');
+});
+
+
+// ═══════════════════════════════════════════════════════════
+//  ADMIN RIGHTS & PRIVILEGES  (Admin Portal)
+//  Roles, the permission matrix, admin users and the audit log.
+//  Catalogue of permissions: config/admin_permissions.php
+//  Bootstrap the first Super Administrator with:
+//      php artisan admin:create-super-admin
+// ═══════════════════════════════════════════════════════════
+
+Route::group([
+    'prefix' => 'admin-rights',
+    'middleware' => ['AdminAuth', 'localized'],
+    'as' => 'arp.',
+], function () {
+
+    Route::get('/', [AdminRightsController::class, 'dashboard'])->name('dashboard')
+        ->middleware('admin.can:admin_rights.view_overview');
+
+    // Roles
+    Route::get('/roles', [AdminRightsController::class, 'rolesIndex'])->name('roles.index')
+        ->middleware('admin.can:admin_rights.view_roles');
+    Route::post('/roles', [AdminRightsController::class, 'storeRole'])->name('roles.store')
+        ->middleware('admin.can:admin_rights.create_role');
+    Route::put('/roles/{id}', [AdminRightsController::class, 'updateRole'])->name('roles.update')
+        ->middleware('admin.can:admin_rights.edit_role');
+    Route::delete('/roles/{id}', [AdminRightsController::class, 'deleteRole'])->name('roles.delete')
+        ->middleware('admin.can:admin_rights.delete_role');
+
+    // Permission matrix
+    Route::get('/permissions', [AdminRightsController::class, 'permissionsIndex'])->name('permissions.index')
+        ->middleware('admin.can:admin_rights.view_permissions');
+    Route::get('/permissions/{id}', [AdminRightsController::class, 'getRolePermissions'])->name('permissions.get')
+        ->middleware('admin.can:admin_rights.view_permissions');
+    Route::post('/permissions/{id}', [AdminRightsController::class, 'saveRolePermissions'])->name('permissions.save')
+        ->middleware('admin.can:admin_rights.assign_permissions');
+
+    // Admin users
+    Route::get('/users', [AdminRightsController::class, 'usersIndex'])->name('users.index')
+        ->middleware('admin.can:admin_rights.view_users');
+    Route::post('/users', [AdminRightsController::class, 'storeUser'])->name('users.store')
+        ->middleware('admin.can:admin_rights.create_user');
+    Route::put('/users/{id}', [AdminRightsController::class, 'updateUser'])->name('users.update')
+        ->middleware('admin.can:admin_rights.edit_user');
+    Route::post('/users/{id}/role', [AdminRightsController::class, 'assignRole'])->name('users.role')
+        ->middleware('admin.can:admin_rights.assign_role');
+    Route::post('/users/{id}/status', [AdminRightsController::class, 'toggleStatus'])->name('users.status')
+        ->middleware('admin.can:admin_rights.toggle_status');
+    Route::post('/users/{id}/password', [AdminRightsController::class, 'resetPassword'])->name('users.password')
+        ->middleware('admin.can:admin_rights.reset_password');
+    Route::post('/users/{id}/super-admin', [AdminRightsController::class, 'toggleSuperAdmin'])->name('users.super')
+        ->middleware('admin.super');
+    Route::delete('/users/{id}', [AdminRightsController::class, 'deleteUser'])->name('users.delete')
+        ->middleware('admin.can:admin_rights.delete_user');
+
+    // Audit trail
+    Route::get('/audit', [AdminRightsController::class, 'auditIndex'])->name('audit.index')
+        ->middleware('admin.can:admin_rights.view_audit');
 });
 
 

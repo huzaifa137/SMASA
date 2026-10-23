@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AdminAccess;
 use App\Helpers\PermissionHelper;
 use App\Models\NlscSubjectAchievement;
 use App\Models\NlscTopic;
@@ -31,7 +32,7 @@ class NlscSubjectAchievementController extends Controller
 {
     public function index(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('view_nlsc_master');
+        AdminAccess::denyUnless('nlsc_curriculum.view');
 
         $seniorOptions = Helper::MasterRecords(config('constants.options.SECONDARY_OLEVEL_CLASSES'))->sortBy('md_id')->values();
         $subjectOptions = Helper::MasterRecords(config('constants.options.NLSC_SUBJECTS'))->sortBy('md_id')->values();
@@ -64,7 +65,7 @@ class NlscSubjectAchievementController extends Controller
      */
     public function forTopic($topicId)
     {
-        PermissionHelper::denyUnlessFeature('view_nlsc_master');
+        AdminAccess::denyUnless('nlsc_curriculum.view');
 
         $topic = NlscTopic::with('subjectAchievements')->find($topicId);
         if (!$topic) {
@@ -88,7 +89,7 @@ class NlscSubjectAchievementController extends Controller
      */
     public function store(Request $request)
     {
-        if (!PermissionHelper::canFeature('add_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.add')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -118,7 +119,7 @@ class NlscSubjectAchievementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('edit_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.edit')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -140,7 +141,7 @@ class NlscSubjectAchievementController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -163,7 +164,7 @@ class NlscSubjectAchievementController extends Controller
      */
     public function destroyAllForTopic(Request $request, $topicId)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -193,7 +194,7 @@ class NlscSubjectAchievementController extends Controller
      */
     public function destroyAll(Request $request)
     {
-        if (!PermissionHelper::canFeature('delete_nlsc_master')) {
+        if (!AdminAccess::can('nlsc_curriculum.delete')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 

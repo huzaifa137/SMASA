@@ -10,16 +10,4 @@ class Role extends Model
         'name',
         'scope',
     ];
-
-    public function permissions()
-    {
-        return $this->belongsToMany(Permission::class)->withTimestamps();
-    }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'role_user_school')
-            ->withPivot('school_id')
-            ->withTimestamps();
-    }
 }

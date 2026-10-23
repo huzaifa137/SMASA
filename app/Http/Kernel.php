@@ -71,6 +71,10 @@ class Kernel extends HttpKernel
         'localized' => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
         'module'    => \App\Http\Middleware\CheckModuleAccess::class,
         'feature'   => \App\Http\Middleware\CheckFeatureAccess::class,
+        'admin.can'    => \App\Http\Middleware\CheckAdminPermission::class,
+        'admin.guard'  => \App\Http\Middleware\CheckAdminGuard::class,
+        'admin.module' => \App\Http\Middleware\CheckAdminModule::class,
+        'admin.super'  => \App\Http\Middleware\EnsureSuperAdmin::class,
         'secondary.school' => \App\Http\Middleware\EnsureSecondarySchool::class,
     ];
 }

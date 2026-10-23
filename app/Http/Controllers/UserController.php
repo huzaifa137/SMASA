@@ -519,16 +519,6 @@ class UserController extends Controller
         return view('users.user-profile', compact(['user']));
     }
 
-    public function userRegister()
-    {
-
-        $user_supervisors = DB::table('users')
-            ->select('firstname', 'lastname')
-            ->get();
-
-        return view('users.user-register', compact(['user_supervisors']));
-    }
-
     public function privacyPolicy()
     {
         return view('privacy-policy');
@@ -547,69 +537,6 @@ class UserController extends Controller
         $info = DB::table('users')->where('id', Session('LoggedAdmin'))->first();
 
         return view('users.edit-user-information', compact(['info']));
-    }
-
-    public function editSpecificUser($userId)
-    {
-
-        $info = DB::table('users')->where('id', $userId)->first();
-
-        return view('users.edit-user-information', compact(['info']));
-    }
-
-    public function userInformation(Request $request)
-    {
-        $users = User::all();
-        $mc_code = DB::table('master_datas')
-            ->join('master_codes', 'md_master_code_id', '=', 'master_codes.id')
-            ->get();
-
-        if ($request->ajax()) {
-            return datatables()->of($users)
-                ->addColumn('username', function ($user) {
-
-                    if ($user->user_role == 5) {
-                        return Helper::get_teacher_name($user->username);
-                    }
-
-                    return $user->username;
-                })
-                ->addColumn('user_role', function ($user) {
-                    switch ($user->user_role) {
-                        case 0:
-                            return 'School Admin';
-                        case 1:
-                            return 'System Administrator';
-                        case 5:
-                            return 'Teacher';
-                        default:
-                            return 'Unknown';
-                    }
-                })
-                ->addColumn('action', function ($user) {
-                    $links = [];
-                    $links[] = '<a class="dropdown-item" href="' . route('users.account-information', $user->id) . '"><i class="fa fa-fw fa-eye"></i> View</a>';
-                    $links[] = '<a class="dropdown-item" href="' . route('users.edit-specific-user', $user->id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
-                    $links[] = '<a class="dropdown-item delete-user" href="' . route('users.delete-user', $user->id) . '" data-name="' . $user->firstname . ' ' . $user->lastname . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
-
-                    return '<div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton' . $user->id . '" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $user->id . '">
-                                    ' . implode('', $links) . '
-                                </ul>
-                            </div>';
-                })
-
-                ->make(true);
-        }
-
-        return view('users.user-information', [
-            'mc_code' => $mc_code,
-            'users' => $users,
-            'LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first(),
-        ]);
     }
 
     public function userAccountInformation($id)
@@ -765,55 +692,27 @@ class UserController extends Controller
         }
     }
 
-    public function storeInternalUser(Request $request)
-    {
-
-        // ACCOUNT STATUSES
-        // --------------------------------------
-        // 1.Banned     ====> 0
-        // 2.Locked     ====> 8
-        // 3.Suspended  ====> 9
-        // 4.Active     ====> 10
-
-        $request->validate([
-            'username' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => [
-                'required',
-                'string',
-            ],
-        ], [
-            'password.required' => 'The password field is required.',
-            'password.string' => 'The password must be a string.',
-            'password.min' => 'The password must be at least 6 characters.',
-            'password.regex' => 'The password must include at least one uppercase letter, one lowercase letter, one digit, and one special character.',
-        ]);
-
-        $user = new User;
-
-        $user->username = $request->username;
-        $user->phonenumber = $request->phonenumber;
-        $user->firstname = $request->firstname;
-        $user->lastname = $request->lastname;
-        $user->gender = $request->gender;
-        $user->email = $request->email;
-        $user->country = $request->country;
-        $user->user_role = 1;
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        $data = [
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => $request->password,
-            'title' => 'UgandanProgrammer - User Account has been created successfully.',
-        ];
-
-        return back()->with('success', 'User account has been created successfully');
-    }
-
     public function storeUpdatedInternalUser(Request $request)
     {
+        // SECURITY: this used to updateOrCreate() ANY user id from the request body, so
+        // any logged-in user could overwrite another account (including its password).
+        // Now: you may edit your own account; editing someone else's needs the
+        // Admin Rights permission, and only a Super Administrator may touch a super admin.
+        $targetId = (int) $request->input('user_id');
+        $selfId = (int) session('LoggedAdmin');
+
+        $target = $targetId ? User::find($targetId) : null;
+        abort_unless($target, 404, 'User not found.');
+
+        if ($targetId !== $selfId) {
+            \App\Support\AdminAccess::denyUnless('admin_rights.edit_user');
+        }
+
+        abort_if(
+            $target->is_super_admin && $targetId !== $selfId && !\App\Support\AdminAccess::isSuperAdmin(),
+            403,
+            'Only a Super Administrator can modify a Super Administrator.'
+        );
 
         // ACCOUNT STATUSES
         // --------------------------------------
@@ -854,7 +753,7 @@ class UserController extends Controller
         if ($request->password != null) {
 
             User::updateOrCreate(
-                ['id' => $request->user_id],
+                ['id' => $targetId],
                 [
                     'username' => $request->username,
                     'email' => $request->email,
@@ -871,7 +770,7 @@ class UserController extends Controller
         } else {
 
             User::updateOrCreate(
-                ['id' => $request->user_id],
+                ['id' => $targetId],
                 [
                     'username' => $request->username,
                     'email' => $request->email,
@@ -885,19 +784,6 @@ class UserController extends Controller
 
             return back()->with('success', 'User account has been updated successfully');
         }
-    }
-
-    public function deleteUserAccount($id)
-    {
-        $user = User::find($id);
-
-        if ($user) {
-            $user->delete();
-
-            return redirect()->back()->with('success', 'user ' . $user->username . ' has been deleted successfully');
-        }
-
-        return redirect()->back()->with('fail', 'User not found.');
     }
 
     public function publicPortal()

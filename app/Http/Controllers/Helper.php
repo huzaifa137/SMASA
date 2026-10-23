@@ -25,18 +25,9 @@ class Helper extends Controller
     {
         // Helper::isAdminAllowed()
         // if (!Helper::isAdminAllowed())
+        // Platform administrators = Super Administrators (Admin Rights system).
 
-        $adminId = session('LoggedAdmin');
-
-        $admin = null;
-
-        if ($adminId) {
-            $admin = User::find($adminId);
-        }
-
-        return (
-            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
-        );
+        return \App\Support\AdminAccess::isSuperAdmin();
     }
 
     public static function isLoggedAdmin()
@@ -54,22 +45,11 @@ class Helper extends Controller
         // if (!Helper::isTechSateAdminOrSchoolAdminsAlone())
 
         $teacherId = session('LoggedTeacher');
-        $adminId = session('LoggedAdmin');
-
-        $teacher = null;
-        $admin = null;
-
-        if ($teacherId) {
-            $teacher = Teacher::find($teacherId);
-        }
-
-        if ($adminId) {
-            $admin = User::find($adminId);
-        }
+        $teacher = $teacherId ? Teacher::find($teacherId) : null;
 
         return (
             data_get($teacher, 'teacher_role') == self::getcschoolAdministratorsId() ||
-            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
+            \App\Support\AdminAccess::isSuperAdmin()
         );
     }
 
@@ -78,50 +58,24 @@ class Helper extends Controller
     // platform-wide screens (e.g. Custom Report Cards) must check this as well.
     public static function isPlatformAdmin(): bool
     {
-        // Helper::isPlatformAdmin()
+        // Helper::isPlatformAdmin()  — Super Administrators only.
 
-        $adminId = session('LoggedAdmin');
-        if (!$adminId) {
-            return false;
-        }
-
-        $roleId = self::getcompanyAdministratorsId();
-        if (!$roleId) {
-            return false;
-        }
-
-        $admin = User::find($adminId);
-
-        return $admin && data_get($admin, 'attached_company_role') == $roleId;
+        return \App\Support\AdminAccess::isSuperAdmin();
     }
 
     // TechSateAdmins and School Admins and Sales Representatives Teacher access ability (URPF)
     public static function isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
     {
         // Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives()
-        // if (!Helper::isTechSateAdminOrSchoolAdminsOrTechSateSalesRepresentatives())
-        //  abort(
-        //         403,
-        //         'Unauthorized Access. Contact TechSate Software Company Limited.'
-        //     );
+        // School administrators (teacher_role) OR any admin who may view schools
+        // (super admins and roles such as Sales Representative).
 
         $teacherId = session('LoggedTeacher');
-        $adminId = session('LoggedAdmin');
-
-        $teacher = null;
-        $admin = null;
-
-        if ($teacherId) {
-            $teacher = Teacher::find($teacherId);
-        }
-
-        if ($adminId) {
-            $admin = User::find($adminId);
-        }
+        $teacher = $teacherId ? Teacher::find($teacherId) : null;
 
         return (
-            data_get($teacher, 'teacher_role') == self::getcschoolAdministratorsId() || data_get($admin, 'attached_company_role') == self::getcompanySalesRepresentativesId() ||
-            data_get($admin, 'attached_company_role') == self::getcompanyAdministratorsId()
+            data_get($teacher, 'teacher_role') == self::getcschoolAdministratorsId() ||
+            \App\Support\AdminAccess::can('schools.view')
         );
     }
 

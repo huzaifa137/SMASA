@@ -594,29 +594,62 @@ use App\Helpers\PermissionHelper;
             SECTION B: SYSTEM ADMIN ONLY (no school selected)
             ════════════════════════════════════════════════════ --}}
         @elseif(Session('LoggedAdmin'))
+            @php
+                // Admin Rights: every item below is shown only when the admin holds the permission.
+                $__A = \App\Support\AdminAccess::class;
+            @endphp
 
+            {{-- Dashboard: landing page of every admin login (not permission-gated) --}}
             <li class="slide">
                 <a class="side-menu__item" href="{{ url('/admin/dashboard') }}">
                     <i class="fa fa-home fa-2x mr-3"></i>Dashboard
                 </a>
             </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('school.allSchools') }}">
-                    <i class="fa fa-school fa-2x mr-3"></i>Schools
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ url('/user-rights-and-previledges/setup') }}">
-                    <i class="fas fa-user-shield fa-2x mr-3"></i>Rights &amp; Privileges
-                </a>
-            </li>
-            <li class="slide">
-                <a class="side-menu__item" href="{{ route('urp.admin.index') }}">
-                    <i class="fas fa-sitemap fa-2x mr-3"></i>Schools &amp; Roles
-                </a>
-            </li>
 
-            @if(\App\Http\Controllers\Helper::isPlatformAdmin())
+            @if($__A::can('schools.view'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('school.allSchools') }}">
+                        <i class="fa fa-school fa-2x mr-3"></i>Schools
+                    </a>
+                </li>
+            @endif
+
+            @if($__A::canAny(['admin_rights.view_overview', 'admin_rights.view_roles', 'admin_rights.view_permissions', 'admin_rights.view_users', 'admin_rights.view_audit']))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-user-shield fa-2x mr-3"></i>
+                        <span>Admin Rights</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if($__A::can('admin_rights.view_overview'))
+                            <li><a href="{{ route('arp.dashboard') }}"><i class="fas fa-th-large mr-2"></i>Overview</a></li>
+                        @endif
+                        @if($__A::can('admin_rights.view_roles'))
+                            <li><a href="{{ route('arp.roles.index') }}"><i class="fas fa-id-badge mr-2"></i>Roles</a></li>
+                        @endif
+                        @if($__A::can('admin_rights.view_permissions'))
+                            <li><a href="{{ route('arp.permissions.index') }}"><i class="fas fa-key mr-2"></i>Permission Matrix</a></li>
+                        @endif
+                        @if($__A::can('admin_rights.view_users'))
+                            <li><a href="{{ route('arp.users.index') }}"><i class="fas fa-users-cog mr-2"></i>Admin Users</a></li>
+                        @endif
+                        @if($__A::can('admin_rights.view_audit'))
+                            <li><a href="{{ route('arp.audit.index') }}"><i class="fas fa-history mr-2"></i>Audit Log</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            @if($__A::can('school_rights.view'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('urp.admin.index') }}">
+                        <i class="fas fa-sitemap fa-2x mr-3"></i>Schools &amp; Roles
+                    </a>
+                </li>
+            @endif
+
+            @if($__A::can('custom_report_cards.view'))
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('admin.custom-report-cards.index') }}">
                         <i class="fas fa-chart-bar fa-2x mr-3"></i>Custom Report Cards
@@ -624,39 +657,32 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
-            <li class="slide has-sub">
-                <a class="side-menu__item" href="#" data-toggle="submenu">
-                    <i class="fas fa-database fa-2x mr-3"></i>
-                    <span>Master Data</span>
-                    <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                </a>
-                <ul class="sub-menu">
-                    @if(PermissionHelper::canFeature('view_master_codes'))
-                        <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
-                    @endif
-                    @if(PermissionHelper::canFeature('view_master_codes'))
-                        <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
-                    @endif
-                    @if(PermissionHelper::canFeature('view_secondary_subjects'))
-                        <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
-                                    class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
-                    @endif
-                    @if(PermissionHelper::canFeature('view_secondary_subjects'))
-                        <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
-                                    class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
-                    @endif
-                    @if(PermissionHelper::canFeature('view_nlsc_master'))
-                        <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
-                                Competency Areas</a></li>
-                        <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
-                                Projects
-                                (Project Work)</a></li>
-                        <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC
-                                Subject
-                                Achievement</a></li>
-                    @endif
-                </ul>
-            </li>
+            @if($__A::canAny(['master_data.view_data', 'master_data.view_codes', 'secondary_subjects.view', 'nlsc_curriculum.view']))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-database fa-2x mr-3"></i>
+                        <span>Master Data</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if($__A::can('master_data.view_data'))
+                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
+                        @endif
+                        @if($__A::can('master_data.view_codes'))
+                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
+                        @endif
+                        @if($__A::can('secondary_subjects.view'))
+                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
+                        @endif
+                        @if($__A::can('nlsc_curriculum.view'))
+                            <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp; Competency Areas</a></li>
+                            <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects (Project Work)</a></li>
+                            <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject Achievement</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
 
             {{-- ═══════════════════════════════════════════════════
             SECTION C: SCHOOL (TEACHER) LOGIN

@@ -741,20 +741,6 @@ class SystemModulesSeeder extends Seeder
                 ]
             ],
             [
-                "key" => "master_data",
-                "name" => "Master Data",
-                "icon" => "fa fa-database",
-                "route" => "master-code-to-data",
-                "description" => "Manage system master data and codes",
-                "sort_order" => 3,
-                "features" => [
-                    ["key" => "view_master_data", "name" => "View Master Data", "sort_order" => 1],
-                    ["key" => "create_master_data", "name" => "Create Master Data", "sort_order" => 2],
-                    ["key" => "edit_master_data", "name" => "Edit Master Data", "sort_order" => 3],
-                    ["key" => "delete_master_data", "name" => "Delete Master Data", "sort_order" => 4],
-                ]
-            ],
-            [
                 "key" => "timetable",
                 "name" => "Timetable",
                 "icon" => "fa fa-clock",
@@ -830,24 +816,6 @@ class SystemModulesSeeder extends Seeder
                 ["key" => "revoke_teacher_cards", "name" => "Revoke Teacher ID Cards", "sort_order" => 4],
                 ["key" => "verify_teacher_cards", "name" => "Verify Teacher ID Cards", "sort_order" => 5],
                 ["key" => "reactivate_teacher_cards", "name" => "Reactivate Teacher ID Cards", "sort_order" => 6],
-            ]
-        ],
-        [
-            "key" => "master_data",
-            "name" => "Master Data",
-            "icon" => "fa fa-database",
-            "route" => "master-code-to-data",
-            "description" => "Manage system master data and codes",
-            "sort_order" => 3,
-            "features" => [
-                ["key" => "view_master_data", "name" => "View Master Data", "sort_order" => 1],
-                ["key" => "create_master_data", "name" => "Create Master Data", "sort_order" => 2],
-                ["key" => "edit_master_data", "name" => "Edit Master Data", "sort_order" => 3],
-                ["key" => "delete_master_data", "name" => "Delete Master Data", "sort_order" => 4],
-                ["key" => "view_master_codes", "name" => "View Master Codes", "sort_order" => 5],
-                ["key" => "create_master_codes", "name" => "Create Master Codes", "sort_order" => 6],
-                ["key" => "edit_master_codes", "name" => "Edit Master Codes", "sort_order" => 7],
-                ["key" => "delete_master_codes", "name" => "Delete Master Codes", "sort_order" => 8],
             ]
         ],
         [

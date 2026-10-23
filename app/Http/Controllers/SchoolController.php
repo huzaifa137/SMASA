@@ -18,8 +18,14 @@ use Session;
 
 class SchoolController extends Controller
 {
+    /**
+     * DEVELOPER SHORTCUT — logs in as admin #1 without credentials.
+     * Routes only exist when APP_ENV=local; this guard is defence in depth.
+     */
     public function adminUser(Request $request)
     {
+        abort_unless(app()->environment('local'), 404);
+
         session()->flush();
         $request->session()->put('LoggedAdmin', 1);
 
@@ -28,8 +34,11 @@ class SchoolController extends Controller
         return view('dashboard');
     }
 
+    /** DEVELOPER SHORTCUT — local environment only (see adminUser). */
     public function studentUser(Request $request)
     {
+        abort_unless(app()->environment('local'), 404);
+
         session()->flush();
         $request->session()->put('LoggedStudent', 1);
         $request->session()->put('LoggedAdmin', 1);

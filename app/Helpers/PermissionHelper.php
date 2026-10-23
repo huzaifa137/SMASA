@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\SchoolRole;
+use App\Support\AdminAccess;
 use App\Models\TeacherSchoolRole;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -114,8 +115,10 @@ class PermissionHelper
      */
     public static function canModule(string $moduleKey): bool
     {
+        // Admin Portal session: governed by Admin Rights (super admins pass,
+        // restricted admins only via the legacy bridge in config/admin_permissions.php).
         if (self::isSystemAdmin()) {
-            return true;
+            return AdminAccess::legacyModule($moduleKey);
         }
 
         $role = self::getCurrentSchoolRole();
@@ -136,7 +139,7 @@ class PermissionHelper
     public static function canFeature(string $featureKey): bool
     {
         if (self::isSystemAdmin()) {
-            return true;
+            return AdminAccess::legacyFeature($featureKey);
         }
 
         $role = self::getCurrentSchoolRole();
@@ -154,7 +157,9 @@ class PermissionHelper
     public static function accessibleModuleKeys(): array
     {
         if (self::isSystemAdmin()) {
-            return DB::table('system_modules')->where('is_active', true)->pluck('key')->toArray();
+            return AdminAccess::isSuperAdmin()
+                ? DB::table('system_modules')->where('is_active', true)->pluck('key')->toArray()
+                : [];
         }
 
         $role = self::getCurrentSchoolRole();
@@ -259,8 +264,10 @@ class PermissionHelper
      */
     public static function accessibleFeatureKeys(): array
     {
-        if (session()->has('LoggedAdmin') && !session()->has('LoggedSchool')) {
-            return DB::table('module_features')->pluck('key')->toArray();
+        if (self::isSystemAdmin()) {
+            return AdminAccess::isSuperAdmin()
+                ? DB::table('module_features')->pluck('key')->toArray()
+                : [];
         }
 
         $role = self::getCurrentSchoolRole();
@@ -318,66 +325,10 @@ class PermissionHelper
      */
     public static function currentRoleName(): string
     {
-        if (self::isSystemAdmin()) return 'System Administrator';
+        if (self::isSystemAdmin()) return AdminAccess::roleName() === 'Super Administrator' ? 'System Administrator' : AdminAccess::roleName();
 
         $role = self::getCurrentSchoolRole();
         return $role ? $role->name : 'No Role Assigned';
-    }
-
-    /**
-     * Old backward-compatible check (from original PermissionHelper)
-     */
-    public static function userHasSpecificPermission($userId, $permissionFeature, $permissionName, $permissionScope): bool
-    {
-        $userRoles = DB::table('role_user_school')
-            ->where('user_id', $userId)
-            ->pluck('role_id')
-            ->toArray();
-
-        if (empty($userRoles)) return false;
-
-        return DB::table('permissions')
-            ->whereIn('role_id', $userRoles)
-            ->where('feature', $permissionFeature)
-            ->where('name', $permissionName)
-            ->where('scope', $permissionScope)
-            ->where('is_marked', 1)
-            ->exists();
-    }
-
-    public static function userHasAllPermissions($userId, $permissionName, $permissionScope): bool
-    {
-        $userRoles = DB::table('role_user_school')
-            ->where('user_id', $userId)
-            ->pluck('role_id')
-            ->toArray();
-
-        if (empty($userRoles)) return false;
-
-        $results = DB::table('permissions')
-            ->whereIn('role_id', $userRoles)
-            ->where('name', $permissionName)
-            ->where('scope', $permissionScope)
-            ->select('role_id', 'is_marked')
-            ->get();
-
-        $groupedByRole = $results->groupBy('role_id');
-
-        foreach ($groupedByRole as $roleId => $permissions) {
-            if ($permissions->every(fn($p) => $p->is_marked == 1)) return true;
-        }
-        return false;
-    }
-
-    public static function userPermissionSectionAccess($userId, $permissionName, $permissionScope): bool
-    {
-        return DB::table('role_user_school')
-            ->join('permission_role', 'role_user_school.role_id', '=', 'permission_role.role_id')
-            ->join('permissions', 'permission_role.permission_id', '=', 'permissions.name')
-            ->where('role_user_school.user_id', $userId)
-            ->where('permissions.name', $permissionName)
-            ->where('permissions.scope', $permissionScope)
-            ->exists();
     }
 }
 
