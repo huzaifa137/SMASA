@@ -432,7 +432,10 @@
             </div>
         @endif
     @endif
+    </div></div></div>
+
 @endsection
+
 
 @section('js')
     @include('admin-rights._scripts')

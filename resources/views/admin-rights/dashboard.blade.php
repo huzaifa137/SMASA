@@ -15,9 +15,21 @@
     /* ============================ STATS ============================ */
     .arp-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 14px;
         margin-bottom: 22px;
+    }
+
+    @media (max-width: 992px) {
+        .arp-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .arp-stats {
+            grid-template-columns: 1fr;
+        }
     }
 
     .arp-stat {
@@ -477,61 +489,85 @@
             transition: none !important;
         }
     }
+
+    /* ============================ STATS ============================ */
+.arp-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 22px !important;
+    width: 100% !important;
+}
+
+@media (max-width: 992px) {
+    .arp-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .arp-stats {
+        grid-template-columns: 1fr !important;
+    }
+}
 </style>
 
 @section('content')
     @include('admin-rights._nav', ['arpActive' => 'dashboard'])
 
-    {{-- ============================ STATS ============================ --}}
-    <div class="arp-stats">
-        <div class="arp-stat" data-tone="purple">
-            <div class="arp-stat-icon"><i class="fa fa-crown"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['super_admins'] }}</b>
-                <span>Super Administrators</span>
-            </div>
-        </div>
+  {{-- ============================ STATS ============================ --}}
+<div class="arp-stats"
+     style="display:grid !important; gap:14px !important; margin-bottom:22px !important; width:100% !important;">
 
-        <div class="arp-stat" data-tone="indigo">
-            <div class="arp-stat-icon"><i class="fa fa-user-shield"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['admins'] }}</b>
-                <span>Admin users</span>
-            </div>
-        </div>
-
-        <div class="arp-stat" data-tone="violet">
-            <div class="arp-stat-icon"><i class="fa fa-users-cog"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['roles'] }}</b>
-                <span>Admin roles</span>
-            </div>
-        </div>
-
-        <div class="arp-stat" data-tone="blue">
-            <div class="arp-stat-icon"><i class="fa fa-key"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['permissions'] }}</b>
-                <span>Permissions in catalogue</span>
-            </div>
-        </div>
-
-        <div class="arp-stat {{ $stats['no_role'] ? 'warn' : '' }}" data-tone="amber">
-            <div class="arp-stat-icon"><i class="fa fa-exclamation-triangle"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['no_role'] }}</b>
-                <span>Admins with no role (dashboard only)</span>
-            </div>
-        </div>
-
-        <div class="arp-stat {{ $stats['inactive'] ? 'warn' : '' }}" data-tone="rose">
-            <div class="arp-stat-icon"><i class="fa fa-user-slash"></i></div>
-            <div class="arp-stat-body">
-                <b>{{ $stats['inactive'] }}</b>
-                <span>Deactivated admins</span>
-            </div>
+    <div class="arp-stat" data-tone="purple" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-crown"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['super_admins'] }}</b>
+            <span>Super Administrators</span>
         </div>
     </div>
+
+    <div class="arp-stat" data-tone="indigo" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-user-shield"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['admins'] }}</b>
+            <span>Admin users</span>
+        </div>
+    </div>
+
+    <div class="arp-stat" data-tone="violet" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-users-cog"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['roles'] }}</b>
+            <span>Admin roles</span>
+        </div>
+    </div>
+
+    <div class="arp-stat" data-tone="blue" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-key"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['permissions'] }}</b>
+            <span>Permissions in catalogue</span>
+        </div>
+    </div>
+
+    <div class="arp-stat {{ $stats['no_role'] ? 'warn' : '' }}" data-tone="amber" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-exclamation-triangle"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['no_role'] }}</b>
+            <span>Admins with no role (dashboard only)</span>
+        </div>
+    </div>
+
+    <div class="arp-stat {{ $stats['inactive'] ? 'warn' : '' }}" data-tone="rose" style="width:auto !important; max-width:none !important; float:none !important;">
+        <div class="arp-stat-icon"><i class="fa fa-user-slash"></i></div>
+        <div class="arp-stat-body">
+            <b>{{ $stats['inactive'] }}</b>
+            <span>Deactivated admins</span>
+        </div>
+    </div>
+
+</div>
 
     {{-- ============================ ROLES + ACTIVITY ============================ --}}
     <div class="row">

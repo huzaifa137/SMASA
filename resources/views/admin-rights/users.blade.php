@@ -456,7 +456,7 @@
         </div>
 
         {{-- Stats strip --}}
-        <div class="arp-stats-strip">
+        <div class="arp-stats-strip mb-3">
             <div class="arp-stat">
                 <span class="arp-stat-icon"><i class="fa fa-users"></i></span>
                 <div>
@@ -589,7 +589,7 @@
             <i class="fa fa-shield-alt"></i>
             {{ $activeSupers }} active Super Administrator(s). The last one can never be demoted, deactivated or deleted.
         </p>
-    </div>
+    </div></div></div></div>
 @endsection
 
 @section('js')

@@ -74,6 +74,7 @@
     gap: 10px;
     flex-wrap: wrap;
     margin: 14px 0 6px;
+    margin-bottom: 1rem;
 }
 .arp-stat {
     display: flex;
@@ -464,5 +465,5 @@
         @if ($logs->hasPages())
             <div class="mt-3">{{ $logs->links('pagination::bootstrap-4') }}</div>
         @endif
-    </div>
+    </div></div></div>
 @endsection
