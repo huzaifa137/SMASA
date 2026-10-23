@@ -376,6 +376,15 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
+                {{-- Billing (SMASA subscription invoices) --}}
+                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canModule('finance'))
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ route('school.billing.index') }}">
+                            <i class="fas fa-file-invoice-dollar fa-2x mr-3"></i>Billing &amp; Invoices
+                        </a>
+                    </li>
+                @endif
+
                 {{-- Attendance --}}
                 @if(PermissionHelper::canModule('attendance'))
                     <li class="slide has-sub">
@@ -636,6 +645,33 @@ use App\Helpers\PermissionHelper;
                         @endif
                         @if($__A::can('admin_rights.view_audit'))
                             <li><a href="{{ route('arp.audit.index') }}"><i class="fas fa-history mr-2"></i>Audit Log</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            @if($__A::canModule('billing'))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-file-invoice-dollar fa-2x mr-3"></i>
+                        <span>Billing</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if($__A::can('billing.view'))
+                            <li><a href="{{ route('billing.dashboard') }}"><i class="fas fa-chart-pie mr-2"></i>Billing Dashboard</a></li>
+                            <li><a href="{{ route('billing.terms') }}"><i class="fas fa-calendar-days mr-2"></i>Billing Terms</a></li>
+                            <li><a href="{{ route('billing.invoices') }}"><i class="fas fa-file-invoice mr-2"></i>Invoices</a></li>
+                            <li><a href="{{ route('billing.payments') }}"><i class="fas fa-hand-holding-dollar mr-2"></i>Payments</a></li>
+                        @endif
+                        @if($__A::can('billing.manage_pricing'))
+                            <li><a href="{{ route('billing.pricing') }}"><i class="fas fa-tags mr-2"></i>School Pricing</a></li>
+                        @endif
+                        @if($__A::can('billing.view_reports'))
+                            <li><a href="{{ route('billing.reports') }}"><i class="fas fa-chart-column mr-2"></i>Reports</a></li>
+                        @endif
+                        @if($__A::can('billing.manage_settings'))
+                            <li><a href="{{ route('billing.settings') }}"><i class="fas fa-gear mr-2"></i>Settings</a></li>
                         @endif
                     </ul>
                 </li>
@@ -980,6 +1016,15 @@ use App\Helpers\PermissionHelper;
                                                                                                     Balance</a></li>
                                                                                         @endif -->
                         </ul>
+                    </li>
+                @endif
+
+                {{-- Billing (SMASA subscription invoices) --}}
+                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canModule('finance'))
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ route('school.billing.index') }}">
+                            <i class="fas fa-file-invoice-dollar fa-2x mr-3"></i>Billing &amp; Invoices
+                        </a>
                     </li>
                 @endif
 

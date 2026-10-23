@@ -1610,3 +1610,6 @@ Route::get('/dev/passslip-preview/kindergarten2', function () {
         'academic_year' => '2026 – 2027',
     ]);
 });
+
+// ─── SaaS BILLING MODULE (platform invoices to schools) ─────────────────────
+require __DIR__ . '/billing.php';

@@ -99,6 +99,22 @@ return [
             ],
         ],
 
+        'billing' => [
+            'name' => 'Billing',
+            'icon' => 'fa fa-file-invoice-dollar',
+            'description' => 'SaaS billing: termly invoices, payments and pricing for schools',
+            'permissions' => [
+                'view' => 'View billing dashboard, invoices, payments and receipts',
+                'manage_terms' => 'Create, edit, close and set the current billing term',
+                'generate_invoices' => 'Generate and issue invoices for a term',
+                'edit_invoices' => 'Edit invoices (rate, discount, adjustments, recount, cancel, write off)',
+                'record_payments' => 'Record and reverse school payments',
+                'manage_pricing' => 'Set per-school rates, discounts and exemptions',
+                'view_reports' => 'View billing reports and export CSV',
+                'manage_settings' => 'Change billing settings (default rate, tax, invoice details)',
+            ],
+        ],
+
         'custom_report_cards' => [
             'name' => 'Custom Report Cards',
             'icon' => 'fa fa-chart-bar',
