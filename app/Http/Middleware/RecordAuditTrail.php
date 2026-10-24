@@ -147,6 +147,12 @@ class RecordAuditTrail
         $isRead = in_array($method, ['GET', 'HEAD', 'OPTIONS'], true);
         $target = array_filter([$path, $routeName]);
 
+        // Routine background traffic (e.g. push-subscription refresh) is only
+        // worth a line when it FAILS.
+        if ($status < 400 && $this->matchesAny($target, (array) ($cfg['quiet_when_ok'] ?? []))) {
+            return;
+        }
+
         $sensitiveRead = $isRead
             && ($cfg['log_sensitive_reads'] ?? true)
             && $this->matchesAny($target, (array) ($cfg['sensitive_read_patterns'] ?? []));

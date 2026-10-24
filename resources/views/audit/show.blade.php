@@ -76,7 +76,7 @@
         </div>
     @endif
 
-    @if(!empty($meta))
+    @if($showContext && !empty($meta))
         <div class="au-card">
             <h6 class="mb-2"><i class="fas fa-database mr-1"></i> Request context</h6>
             @if(!empty($meta['db_writes']))

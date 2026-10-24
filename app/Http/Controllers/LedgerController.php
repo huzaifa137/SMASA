@@ -48,7 +48,7 @@ class LedgerController extends Controller
 
         $rootAccounts = $accounts->whereNull('parent_id')->values();
 
-        $year = request('year', date('Y'));
+        $year = request('year', \App\Support\ActiveYear::calendarYear());
         $term = request('term', '');
 
         $balances = [];
@@ -154,7 +154,7 @@ class LedgerController extends Controller
         $schoolId = session('LoggedSchool');
         ChartOfAccount::seedDefaults($schoolId, session('LoggedUser'));
 
-        $year = $request->get('year', date('Y'));
+        $year = $request->get('year', \App\Support\ActiveYear::calendarYear());
         $term = $request->get('term', '');
         $accountId = $request->get('account_id');
 
@@ -228,7 +228,7 @@ class LedgerController extends Controller
         $schoolId = session('LoggedSchool');
         $student = Student::where('school_id', $schoolId)->findOrFail($studentId);
 
-        $year = $request->get('year', date('Y'));
+        $year = $request->get('year', \App\Support\ActiveYear::calendarYear());
 
         // Every fee allocation (charge) raised for the student, each with its
         // linked payments, ordered chronologically by term.
@@ -305,7 +305,7 @@ class LedgerController extends Controller
         $schoolId = session('LoggedSchool');
         ChartOfAccount::seedDefaults($schoolId, session('LoggedUser'));
 
-        $year = $request->get('year', date('Y'));
+        $year = $request->get('year', \App\Support\ActiveYear::calendarYear());
         $term = $request->get('term', '');
 
         // Only leaf-level (posting) accounts appear on the Trial Balance —

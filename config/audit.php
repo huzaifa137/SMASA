@@ -174,6 +174,14 @@ return [
             '*passslip*', '*report-card*', '*receipt*',
         ],
 
+        // Background chatter: NOT logged while it succeeds (status < 400),
+        // still logged the moment it fails (denied, validation error, 5xx).
+        // Matched against the URL path and route name.
+        'quiet_when_ok' => [
+            '*notifications/push/*', '*push.subscribe', '*push.unsubscribe',
+            '*heartbeat*', '*keepalive*', '*session-ping*',
+        ],
+
         // Never logged (path patterns).
         'excluded_paths' => [
             'captcha*', 'language/*', 'broadcasting/*', 'push/*',
@@ -214,7 +222,7 @@ return [
     'tally_ignored_tables' => [
         'audit_logs', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches',
         'failed_jobs', 'migrations', 'password_reset_tokens', 'password_resets',
-        'personal_access_tokens',
+        'personal_access_tokens', 'push_subscriptions',
     ],
 
     /*

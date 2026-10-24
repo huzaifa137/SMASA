@@ -49,7 +49,12 @@ class AdminRightsController extends Controller
         $roles = AdminRole::withCount('users')->orderByDesc('users_count')->limit(6)->get()
             ->each(fn ($r) => $r->permission_count = DB::table('admin_role_permissions')->where('admin_role_id', $r->id)->count());
 
-        $recent = AdminAuditLog::with('actor')->latest('created_at')->limit(8)->get();
+        // 8 per page keeps the card the same height as the roles card beside it.
+        $recent = AdminAuditLog::with('actor')
+            ->latest('created_at')
+            ->latest('id')
+            ->paginate(8, ['*'], 'activity_page')
+            ->fragment('recent-activity');
 
         return view('admin-rights.dashboard', [
             'stats' => $stats,

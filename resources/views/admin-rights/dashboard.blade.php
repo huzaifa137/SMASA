@@ -199,6 +199,62 @@
     }
 
 
+    /* ======================= RECENT ACTIVITY PAGER ======================= */
+    .arp-pager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f0eefb;
+    }
+
+    .arp-pager-info {
+        font-size: 12px;
+        color: #7a7899;
+    }
+
+    .arp-pager-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .arp-pager-page {
+        min-width: 44px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: #2C29CA;
+    }
+
+    .arp-pager-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        font-size: 11px;
+        color: #5D42E8;
+        background: #eeecfd;
+        border: 1px solid #d7d2fb;
+        transition: background .2s ease, color .2s ease, transform .2s ease;
+        text-decoration: none;
+    }
+
+    a.arp-pager-btn:hover {
+        background: #5D42E8;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .arp-pager-btn.is-disabled {
+        opacity: .4;
+        cursor: not-allowed;
+    }
+
     /* ============================ ROLE LIST ============================ */
     .arp-list-row {
         display: flex;
@@ -596,10 +652,10 @@
         </div>
 
         <div class="col-lg-6">
-            <div class="arp-card arp-card-accent">
+            <div class="arp-card arp-card-accent" id="recent-activity">
                 <div class="arp-card-head">
                     <h5><i class="fa fa-stream"></i> Recent activity</h5>
-                    <span class="arp-card-chip">{{ $recent->count() }} events</span>
+                    <span class="arp-card-chip">{{ number_format($recent->total()) }} {{ \Illuminate\Support\Str::plural('event', $recent->total()) }}</span>
                 </div>
 
                 @forelse ($recent as $log)
@@ -616,6 +672,25 @@
                 @empty
                     <p class="arp-muted mb-0">Nothing recorded yet.</p>
                 @endforelse
+
+                @if ($recent->hasPages())
+                    <div class="arp-pager">
+                        <span class="arp-pager-info">{{ $recent->firstItem() }}–{{ $recent->lastItem() }} of {{ number_format($recent->total()) }}</span>
+                        <div class="arp-pager-nav">
+                            @if ($recent->onFirstPage())
+                                <span class="arp-pager-btn is-disabled" aria-disabled="true"><i class="fa fa-chevron-left"></i></span>
+                            @else
+                                <a class="arp-pager-btn" href="{{ $recent->previousPageUrl() }}" title="Newer" aria-label="Newer activity"><i class="fa fa-chevron-left"></i></a>
+                            @endif
+                            <span class="arp-pager-page">{{ $recent->currentPage() }} / {{ $recent->lastPage() }}</span>
+                            @if ($recent->hasMorePages())
+                                <a class="arp-pager-btn" href="{{ $recent->nextPageUrl() }}" title="Older" aria-label="Older activity"><i class="fa fa-chevron-right"></i></a>
+                            @else
+                                <span class="arp-pager-btn is-disabled" aria-disabled="true"><i class="fa fa-chevron-right"></i></span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

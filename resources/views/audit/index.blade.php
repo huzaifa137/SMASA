@@ -2,6 +2,266 @@
 
 @section('css')
     @include('audit.partials.styles')
+    <style>
+        /* Enhanced Filter Card */
+        .au-filters.enhanced {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #eef0f3;
+        }
+
+        .au-filters.enhanced .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.85rem 1rem;
+            align-items: end;
+        }
+
+        .au-filters.enhanced .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .au-filters.enhanced .filter-group label {
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #8896ab;
+            margin-bottom: .3rem;
+        }
+
+        .au-filters.enhanced .filter-group .form-control-sm,
+        .au-filters.enhanced .filter-group select.form-control-sm {
+            border-radius: 8px;
+            border: 1px solid #dfe4ea;
+            background: #f8fafc;
+            font-size: .82rem;
+            padding: .45rem .65rem;
+            height: auto;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .au-filters.enhanced .filter-group .form-control-sm:focus,
+        .au-filters.enhanced .filter-group select.form-control-sm:focus {
+            border-color: #4f7cff;
+            box-shadow: 0 0 0 3px rgba(79,124,255,.12);
+            background: #fff;
+            outline: none;
+        }
+
+        /* Custom Searchable Select */
+        .ss-wrapper {
+            position: relative;
+        }
+
+        .ss-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #dfe4ea;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: .45rem .65rem;
+            font-size: .82rem;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s;
+            min-height: 36px;
+            color: #2d3748;
+        }
+
+        .ss-trigger:hover {
+            border-color: #c3cbd6;
+        }
+
+        .ss-wrapper.open .ss-trigger {
+            border-color: #4f7cff;
+            box-shadow: 0 0 0 3px rgba(79,124,255,.12);
+            background: #fff;
+        }
+
+        .ss-trigger .ss-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .ss-trigger .ss-value.placeholder {
+            color: #a0aec0;
+        }
+
+        .ss-trigger .ss-arrow {
+            font-size: .6rem;
+            color: #a0aec0;
+            margin-left: .4rem;
+            transition: transform .2s;
+        }
+
+        .ss-wrapper.open .ss-trigger .ss-arrow {
+            transform: rotate(180deg);
+        }
+
+        .ss-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: #fff;
+            border: 1px solid #dfe4ea;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.12);
+            overflow: hidden;
+            animation: ssFadeIn .15s ease;
+        }
+
+        .ss-wrapper.open .ss-dropdown {
+            display: block;
+        }
+
+        @keyframes ssFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .ss-search {
+            padding: .45rem .55rem;
+            border-bottom: 1px solid #eef0f3;
+        }
+
+        .ss-search input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: .35rem .55rem;
+            font-size: .78rem;
+            outline: none;
+            background: #f8fafc;
+            transition: border-color .2s;
+        }
+
+        .ss-search input:focus {
+            border-color: #4f7cff;
+            background: #fff;
+        }
+
+        .ss-options {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: .25rem 0;
+        }
+
+        .ss-option {
+            padding: .45rem .75rem;
+            font-size: .82rem;
+            cursor: pointer;
+            color: #2d3748;
+            transition: background .12s;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .ss-option:hover {
+            background: #f1f5ff;
+        }
+
+        .ss-option.selected {
+            background: #eef2ff;
+            font-weight: 600;
+            color: #3b5bdb;
+        }
+
+        .ss-option .check-icon {
+            visibility: hidden;
+            color: #4f7cff;
+            font-size: .7rem;
+        }
+
+        .ss-option.selected .check-icon {
+            visibility: visible;
+        }
+
+        .ss-no-results {
+            padding: .75rem;
+            text-align: center;
+            font-size: .8rem;
+            color: #a0aec0;
+        }
+
+        /* Action buttons row */
+        .au-filters.enhanced .filter-actions {
+            display: flex;
+            gap: .5rem;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eef0f3;
+        }
+
+        .au-filters.enhanced .filter-actions .btn {
+            border-radius: 8px;
+            font-size: .82rem;
+            padding: .45rem 1rem;
+            font-weight: 500;
+        }
+
+        .au-filters.enhanced .filter-actions .btn-primary {
+            background: linear-gradient(135deg, #4f7cff, #3b5bdb);
+            border: none;
+            box-shadow: 0 2px 8px rgba(79,124,255,.3);
+        }
+
+        .au-filters.enhanced .filter-actions .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(79,124,255,.4);
+            transform: translateY(-1px);
+        }
+
+        .au-filters.enhanced .filter-actions .btn-outline-secondary {
+            border-color: #dfe4ea;
+            color: #64748b;
+        }
+
+        .au-filters.enhanced .filter-actions .btn-outline-secondary:hover {
+            background: #f8fafc;
+            border-color: #c3cbd6;
+        }
+
+        /* Active filter chips */
+        .au-filters.enhanced .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            margin-top: .75rem;
+            align-items: center;
+        }
+
+        .au-filters.enhanced .active-filters .label-sm {
+            font-size: .7rem;
+            color: #a0aec0;
+            margin-right: .2rem;
+        }
+
+        /* Scrollbar for options */
+        .ss-options::-webkit-scrollbar {
+            width: 6px;
+        }
+        .ss-options::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .ss-options::-webkit-scrollbar-thumb {
+            background: #d0d7e2;
+            border-radius: 3px;
+        }
+        .ss-options::-webkit-scrollbar-thumb:hover {
+            background: #b0bac9;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -62,56 +322,218 @@
         <div class="au-bars-l">@foreach($stats['daily'] as $d)<span>{{ $loop->index % 2 === 0 ? $d['date'] : '' }}</span>@endforeach</div>
     </div>
 
-    <div class="au-card au-filters">
-        <form method="GET" action="{{ route('audit.index') }}">
-            <div class="form-row">
-                <div class="form-group col-md-3"><label>Search</label>
-                    <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="form-control form-control-sm" placeholder="Name, record, IP, reference…"></div>
-                <div class="form-group col-md-2"><label>Category</label>
-                    <select name="category" class="form-control form-control-sm"><option value="">All</option>
-                        @foreach($categories as $k => $v)<option value="{{ $k }}" @selected(($filters['category'] ?? '') === $k)>{{ $v }}</option>@endforeach</select></div>
-                <div class="form-group col-md-2"><label>Event</label>
-                    <select name="event" class="form-control form-control-sm"><option value="">All</option>
-                        @foreach($eventLabels as $k => $v)<option value="{{ $k }}" @selected(($filters['event'] ?? '') === $k)>{{ $v }}</option>@endforeach</select></div>
-                <div class="form-group col-md-2"><label>Severity</label>
-                    <select name="severity" class="form-control form-control-sm"><option value="">All</option>
-                        @foreach($severities as $v)<option value="{{ $v }}" @selected(($filters['severity'] ?? '') === $v)>{{ ucfirst($v) }}</option>@endforeach</select></div>
-                <div class="form-group col-md-1"><label>Outcome</label>
-                    <select name="outcome" class="form-control form-control-sm"><option value="">All</option>
-                        <option value="success" @selected(($filters['outcome'] ?? '') === 'success')>OK</option>
-                        <option value="failure" @selected(($filters['outcome'] ?? '') === 'failure')>Failed</option></select></div>
-                <div class="form-group col-md-2"><label>User type</label>
-                    <select name="actor_type" class="form-control form-control-sm"><option value="">All</option>
-                        @foreach($actorTypes as $k => $v)<option value="{{ $k }}" @selected(($filters['actor_type'] ?? '') === $k)>{{ $v }}</option>@endforeach</select></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-2"><label>From</label><input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm"></div>
-                <div class="form-group col-md-2"><label>To</label><input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm"></div>
-                <div class="form-group col-md-2"><label>IP address</label><input type="text" name="ip" value="{{ $filters['ip'] ?? '' }}" class="form-control form-control-sm"></div>
-                @if($isPlatform)
-                    <div class="form-group col-md-3"><label>School</label>
-                        <select name="school_id" class="form-control form-control-sm"><option value="">All schools</option>
-                            @foreach($schools as $s)<option value="{{ $s->id }}" @selected(($filters['school_id'] ?? '') == $s->id)>{{ $s->name }}</option>@endforeach</select></div>
-                @endif
-                <div class="form-group col-md-1"><label>Rows</label>
-                    <select name="per_page" class="form-control form-control-sm">
-                        @foreach([25, 50, 100] as $n)<option value="{{ $n }}" @selected(($filters['per_page'] ?? 25) == $n)>{{ $n }}</option>@endforeach</select></div>
-                <div class="form-group col-md-2 d-flex align-items-end">
-                    <button class="btn btn-sm btn-primary mr-2"><i class="fas fa-filter mr-1"></i>Filter</button>
-                    <a href="{{ route('audit.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+    {{-- Enhanced Filters --}}
+    <div class="au-card au-filters enhanced">
+        <form method="GET" action="{{ route('audit.index') }}" id="auditFilterForm">
+            <div class="filter-grid">
+
+                {{-- Search --}}
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="form-control form-control-sm" placeholder="Name, record, IP, reference…">
                 </div>
+
+                {{-- Category (searchable) --}}
+                <div class="filter-group">
+                    <label>Category</label>
+                    <div class="ss-wrapper" data-name="category" data-placeholder="All categories">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">All categories</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                <div class="ss-option" data-value="">All categories <i class="fas fa-check check-icon ml-auto"></i></div>
+                                @foreach($categories as $k => $v)
+                                    <div class="ss-option" data-value="{{ $k }}" @if(($filters['category'] ?? '') === $k) data-selected="true" @endif>
+                                        {{ $v }} <i class="fas fa-check check-icon ml-auto"></i>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="category" value="{{ $filters['category'] ?? '' }}">
+                    </div>
+                </div>
+
+                {{-- Event (searchable) --}}
+                <div class="filter-group">
+                    <label>Event</label>
+                    <div class="ss-wrapper" data-name="event" data-placeholder="All events">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">All events</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                <div class="ss-option" data-value="">All events <i class="fas fa-check check-icon ml-auto"></i></div>
+                                @foreach($eventLabels as $k => $v)
+                                    <div class="ss-option" data-value="{{ $k }}" @if(($filters['event'] ?? '') === $k) data-selected="true" @endif>
+                                        {{ $v }} <i class="fas fa-check check-icon ml-auto"></i>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="event" value="{{ $filters['event'] ?? '' }}">
+                    </div>
+                </div>
+
+                {{-- Severity (searchable) --}}
+                <div class="filter-group">
+                    <label>Severity</label>
+                    <div class="ss-wrapper" data-name="severity" data-placeholder="All severities">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">All severities</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                <div class="ss-option" data-value="">All severities <i class="fas fa-check check-icon ml-auto"></i></div>
+                                @foreach($severities as $v)
+                                    <div class="ss-option" data-value="{{ $v }}" @if(($filters['severity'] ?? '') === $v) data-selected="true" @endif>
+                                        {{ ucfirst($v) }} <i class="fas fa-check check-icon ml-auto"></i>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="severity" value="{{ $filters['severity'] ?? '' }}">
+                    </div>
+                </div>
+
+                {{-- Outcome (searchable) --}}
+                <div class="filter-group">
+                    <label>Outcome</label>
+                    <div class="ss-wrapper" data-name="outcome" data-placeholder="All outcomes">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">All outcomes</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                <div class="ss-option" data-value="">All outcomes <i class="fas fa-check check-icon ml-auto"></i></div>
+                                <div class="ss-option" data-value="success" @if(($filters['outcome'] ?? '') === 'success') data-selected="true" @endif>OK <i class="fas fa-check check-icon ml-auto"></i></div>
+                                <div class="ss-option" data-value="failure" @if(($filters['outcome'] ?? '') === 'failure') data-selected="true" @endif>Failed <i class="fas fa-check check-icon ml-auto"></i></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="outcome" value="{{ $filters['outcome'] ?? '' }}">
+                    </div>
+                </div>
+
+                {{-- User Type (searchable) --}}
+                <div class="filter-group">
+                    <label>User type</label>
+                    <div class="ss-wrapper" data-name="actor_type" data-placeholder="All types">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">All types</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                <div class="ss-option" data-value="">All types <i class="fas fa-check check-icon ml-auto"></i></div>
+                                @foreach($actorTypes as $k => $v)
+                                    <div class="ss-option" data-value="{{ $k }}" @if(($filters['actor_type'] ?? '') === $k) data-selected="true" @endif>
+                                        {{ $v }} <i class="fas fa-check check-icon ml-auto"></i>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="actor_type" value="{{ $filters['actor_type'] ?? '' }}">
+                    </div>
+                </div>
+
+                {{-- From --}}
+                <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm">
+                </div>
+
+                {{-- To --}}
+                <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm">
+                </div>
+
+                {{-- IP --}}
+                <div class="filter-group">
+                    <label>IP address</label>
+                    <input type="text" name="ip" value="{{ $filters['ip'] ?? '' }}" class="form-control form-control-sm" placeholder="e.g. 192.168.1.1">
+                </div>
+
+                {{-- School (platform only) --}}
+                @if($isPlatform)
+                    <div class="filter-group">
+                        <label>School</label>
+                        <div class="ss-wrapper" data-name="school_id" data-placeholder="All schools">
+                            <div class="ss-trigger" tabindex="0">
+                                <span class="ss-value placeholder">All schools</span>
+                                <i class="fas fa-chevron-down ss-arrow"></i>
+                            </div>
+                            <div class="ss-dropdown">
+                                <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                                <div class="ss-options">
+                                    <div class="ss-option" data-value="">All schools <i class="fas fa-check check-icon ml-auto"></i></div>
+                                    @foreach($schools as $s)
+                                        <div class="ss-option" data-value="{{ $s->id }}" @if(($filters['school_id'] ?? '') == $s->id) data-selected="true" @endif>
+                                            {{ $s->name }} <i class="fas fa-check check-icon ml-auto"></i>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <input type="hidden" name="school_id" value="{{ $filters['school_id'] ?? '' }}">
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Rows per page --}}
+                <div class="filter-group">
+                    <label>Rows</label>
+                    <div class="ss-wrapper" data-name="per_page" data-placeholder="25">
+                        <div class="ss-trigger" tabindex="0">
+                            <span class="ss-value placeholder">25</span>
+                            <i class="fas fa-chevron-down ss-arrow"></i>
+                        </div>
+                        <div class="ss-dropdown">
+                            <div class="ss-search"><input type="text" placeholder="Type to search…"></div>
+                            <div class="ss-options">
+                                @foreach([25, 50, 100] as $n)
+                                    <div class="ss-option" data-value="{{ $n }}" @if(($filters['per_page'] ?? 25) == $n) data-selected="true" @endif>
+                                        {{ $n }} <i class="fas fa-check check-icon ml-auto"></i>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="per_page" value="{{ $filters['per_page'] ?? 25 }}">
+                    </div>
+                </div>
+
             </div>
+
+            {{-- Hidden filters --}}
             @foreach(['actor_id', 'entity_type', 'entity_id', 'request_id'] as $hidden)
                 @if(isset($filters[$hidden]))<input type="hidden" name="{{ $hidden }}" value="{{ $filters[$hidden] }}">@endif
             @endforeach
-        </form>
-        @if(isset($filters['actor_id']) || isset($filters['entity_type']) || isset($filters['request_id']))
-            <div class="small mt-1"><span class="text-muted">Also filtered by:</span>
-                @isset($filters['actor_id']) <span class="au-badge au-c-request">user #{{ $filters['actor_id'] }}</span> @endisset
-                @isset($filters['entity_type']) <span class="au-badge au-c-data">{{ $filters['entity_type'] }}{{ isset($filters['entity_id']) ? ' #' . $filters['entity_id'] : '' }}</span> @endisset
-                @isset($filters['request_id']) <span class="au-badge au-c-system">request {{ \Illuminate\Support\Str::limit($filters['request_id'], 8, '…') }}</span> @endisset
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter mr-1"></i>Apply Filters</button>
+                <a href="{{ route('audit.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-undo mr-1"></i>Reset</a>
+                <span class="ml-auto" style="font-size:.72rem;color:#a0aec0;" id="filterResultCount">
+                    {{ $logs->total() }} {{ Str::plural('entry', $logs->total()) }} found
+                </span>
             </div>
-        @endif
+
+            @if(isset($filters['actor_id']) || isset($filters['entity_type']) || isset($filters['request_id']))
+                <div class="active-filters">
+                    <span class="label-sm">Also filtered by:</span>
+                    @isset($filters['actor_id']) <span class="au-badge au-c-request">user #{{ $filters['actor_id'] }}</span> @endisset
+                    @isset($filters['entity_type']) <span class="au-badge au-c-data">{{ $filters['entity_type'] }}{{ isset($filters['entity_id']) ? ' #' . $filters['entity_id'] : '' }}</span> @endisset
+                    @isset($filters['request_id']) <span class="au-badge au-c-system">request {{ \Illuminate\Support\Str::limit($filters['request_id'], 8, '…') }}</span> @endisset
+                </div>
+            @endif
+        </form>
     </div>
 
     <div class="au-card p-0">
@@ -157,6 +579,122 @@
         </div>
         <div class="p-3">{{ $logs->links() }}</div>
     </div>
-</div> </div>
 </div>
-@endsection
+
+{{-- Searchable Select JS --}}
+
+<script>
+(function() {
+    'use strict';
+
+    const wrappers = document.querySelectorAll('.ss-wrapper');
+
+    function initSearchableSelect(wrapper) {
+        const trigger    = wrapper.querySelector('.ss-trigger');
+        const dropdown   = wrapper.querySelector('.ss-dropdown');
+        const searchInput= wrapper.querySelector('.ss-search input');
+        const optionsBox = wrapper.querySelector('.ss-options');
+        const options    = Array.from(optionsBox.querySelectorAll('.ss-option'));
+        const hiddenInput= wrapper.querySelector('input[type="hidden"]');
+        const valueSpan  = trigger.querySelector('.ss-value');
+        const placeholder= wrapper.dataset.placeholder || 'Select…';
+
+        // Set initial display
+        let selectedOption = options.find(o => o.dataset.selected === 'true') || options[0];
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+            hiddenInput.value = selectedOption.dataset.value;
+            const text = selectedOption.textContent.replace(/\s+/g, ' ').trim();
+            valueSpan.textContent = text;
+            valueSpan.classList.toggle('placeholder', selectedOption.dataset.value === '');
+        } else {
+            valueSpan.textContent = placeholder;
+            valueSpan.classList.add('placeholder');
+        }
+
+        // Toggle open/close
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isOpen = wrapper.classList.contains('open');
+            closeAll();
+            if (!isOpen) {
+                wrapper.classList.add('open');
+                searchInput.value = '';
+                filterOptions('');
+                searchInput.focus();
+            }
+        });
+
+        // Search filtering
+        searchInput.addEventListener('input', function() {
+            filterOptions(this.value);
+        });
+
+        // Stop propagation on search click
+        searchInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        function filterOptions(query) {
+            const q = query.toLowerCase().trim();
+            let visibleCount = 0;
+            options.forEach(opt => {
+                const text = opt.textContent.toLowerCase();
+                const match = text.includes(q);
+                opt.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+
+            // Remove old no-results
+            const oldNo = optionsBox.querySelector('.ss-no-results');
+            if (oldNo) oldNo.remove();
+
+            if (visibleCount === 0) {
+                const noDiv = document.createElement('div');
+                noDiv.className = 'ss-no-results';
+                noDiv.textContent = 'No matches found';
+                optionsBox.appendChild(noDiv);
+            }
+        }
+
+        // Select option
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectOption(this);
+            });
+        });
+
+        function selectOption(opt) {
+            options.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            hiddenInput.value = opt.dataset.value;
+            const text = opt.textContent.replace(/\s+/g, ' ').trim();
+            valueSpan.textContent = text;
+            valueSpan.classList.toggle('placeholder', opt.dataset.value === '');
+            wrapper.classList.remove('open');
+        }
+
+        // Close on outside click
+        document.addEventListener('click', function() {
+            wrapper.classList.remove('open');
+        });
+
+        // Keyboard nav
+        trigger.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                trigger.click();
+            }
+        });
+    }
+
+    function closeAll() {
+        wrappers.forEach(w => w.classList.remove('open'));
+    }
+
+    wrappers.forEach(initSearchableSelect);
+})();
+</script>
+
+@endsection 

@@ -299,6 +299,12 @@ use App\Http\Controllers\Helper;
                 years.forEach(year => {
                     yearSelect.append(`<option value="${year}">${year}</option>`);
                 });
+
+                // Default to the active academic year (and load its exams).
+                const activeYear = @json(\App\Support\ActiveYear::name());
+                if (activeYear && years.map(String).includes(String(activeYear))) {
+                    yearSelect.val(String(activeYear)).trigger('change');
+                }
             });
 
             // When a year is selected

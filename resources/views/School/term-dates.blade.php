@@ -316,7 +316,7 @@ $controller = new Controller();
                                         <option value="" disabled selected>Not set — contact SMASA Admins</option>
                                     @else
                                         @foreach ($academicYears as $year)
-                                            <option value="{{ $year->id }}">{{ $year->name }}</option>
+                                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', \App\Support\ActiveYear::id()) === (string) $year->id)>{{ $year->name }}</option>
                                         @endforeach
                                     @endif
                                 </select>

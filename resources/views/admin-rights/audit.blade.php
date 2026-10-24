@@ -336,28 +336,28 @@
                 <span class="arp-stat-icon"><i class="fa fa-history"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ number_format($logs->total()) }}</div>
-                    <div class="arp-stat-label">Total entries</div>
+                    <div class="arp-stat-label text-dark">Total entries</div>
                 </div>
             </div>
             <div class="arp-stat">
                 <span class="arp-stat-icon green"><i class="fa fa-user-check"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $uniqueActors }}</div>
-                    <div class="arp-stat-label">Actors on page</div>
+                    <div class="arp-stat-label text-dark">Actors on page</div>
                 </div>
             </div>
             <div class="arp-stat">
                 <span class="arp-stat-icon amber"><i class="fa fa-plus-circle"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $addedCount }}</div>
-                    <div class="arp-stat-label">Rights added</div>
+                    <div class="arp-stat-label text-dark">Rights added</div>
                 </div>
             </div>
             <div class="arp-stat">
                 <span class="arp-stat-icon red"><i class="fa fa-minus-circle"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $removedCount }}</div>
-                    <div class="arp-stat-label">Rights removed</div>
+                    <div class="arp-stat-label text-dark">Rights removed</div>
                 </div>
             </div>
         </div>

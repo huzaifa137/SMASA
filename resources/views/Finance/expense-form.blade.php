@@ -318,9 +318,9 @@ body{background:var(--bg);}
                 <div class="form-group">
                     <label>Academic Year <span class="required">*</span></label>
                     <select name="academic_year" id="academic_year" required>
-                        <option value="{{ date('Y') }}" {{ (old('academic_year', $expense->academic_year ?? date('Y')) == date('Y')) ? 'selected' : '' }}>{{ date('Y') }}</option>
-                        <option value="{{ date('Y')-1 }}" {{ (old('academic_year', $expense->academic_year ?? '') == date('Y')-1) ? 'selected' : '' }}>{{ date('Y')-1 }}</option>
-                        <option value="{{ date('Y')-2 }}" {{ (old('academic_year', $expense->academic_year ?? '') == date('Y')-2) ? 'selected' : '' }}>{{ date('Y')-2 }}</option>
+                        @foreach ([date('Y'), date('Y') - 1, date('Y') - 2] as $yy)
+                            <option value="{{ $yy }}" @selected((string) old('academic_year', $expense->academic_year ?? \App\Support\ActiveYear::calendarYear()) === (string) $yy)>{{ $yy }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="form-group">

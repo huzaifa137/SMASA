@@ -98,6 +98,8 @@ class AuditTrailController extends Controller
         }
 
         return view('audit.show', [
+            // Technical request context is for platform administrators only.
+            'showContext' => AuditAccess::isPlatformAdmin(),
             'log' => $log,
             'related' => $related,
             'history' => $history,

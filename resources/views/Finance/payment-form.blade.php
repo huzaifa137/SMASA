@@ -825,9 +825,9 @@
                     <div class="form-group">
                         <label>Academic Year <span class="req">*</span></label>
                         <select name="academic_year" id="academic_year" class="form-control-fin" required>
-                            <option value="{{ date('Y') }}">{{ date('Y') }}</option>
-                            <option value="{{ date('Y') - 1 }}">{{ date('Y') - 1 }}</option>
-                            <option value="{{ date('Y') - 2 }}">{{ date('Y') - 2 }}</option>
+                            @foreach ([date('Y'), date('Y') - 1, date('Y') - 2] as $yy)
+                                <option value="{{ $yy }}" @selected((string) old('academic_year', \App\Support\ActiveYear::calendarYear()) === (string) $yy)>{{ $yy }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group">

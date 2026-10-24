@@ -461,21 +461,21 @@
                 <span class="arp-stat-icon"><i class="fa fa-users"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $users->count() }}</div>
-                    <div class="arp-stat-label">Total users</div>
+                    <div class="arp-stat-label text-dark">Total users</div>
                 </div>
             </div>
             <div class="arp-stat">
                 <span class="arp-stat-icon super"><i class="fa fa-crown"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $activeSupers }}</div>
-                    <div class="arp-stat-label">Super admins</div>
+                    <div class="arp-stat-label text-dark">Super admins</div>
                 </div>
             </div>
             <div class="arp-stat">
                 <span class="arp-stat-icon on"><i class="fa fa-check-circle"></i></span>
                 <div>
                     <div class="arp-stat-value">{{ $users->where('is_active', 1)->count() }}</div>
-                    <div class="arp-stat-label">Active</div>
+                    <div class="arp-stat-label text-dark">Active</div>
                 </div>
             </div>
         </div>

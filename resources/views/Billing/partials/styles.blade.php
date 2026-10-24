@@ -2,6 +2,13 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
+    /* Modal headers carry the platform's blue gradient: keep their text readable. */
+    .modal.bl .modal-header .modal-title,
+    .modal.bl .modal-header h5,
+    .modal.bl .modal-header h6 { color: #fff; font-weight: 600; }
+    .modal.bl .modal-header .close { color: #fff; opacity: .85; text-shadow: none; }
+    .modal.bl .modal-header .close:hover { opacity: 1; }
+
     :root {
         --bl-blue: #2f2ccb; --bl-blue-d: #14136e; --bl-blue-l: rgba(47,44,203,.09);
         --bl-green: #059669; --bl-green-l: rgba(5,150,105,.11);

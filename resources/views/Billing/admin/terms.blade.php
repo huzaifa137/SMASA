@@ -92,7 +92,7 @@
                         <div class="form-group col-md-7"><label>Academic year</label>
                             <select name="academic_year_id" class="form-control w-100" required>
                                 <option value="">— Select —</option>
-                                @foreach ($years as $y)<option value="{{ $y->id }}" @selected(old('academic_year_id') == $y->id)>{{ $y->name }}</option>@endforeach
+                                @foreach ($years as $y)<option value="{{ $y->id }}" @selected((string) old('academic_year_id', \App\Support\ActiveYear::id()) === (string) $y->id)>{{ $y->name }}{{ \App\Support\ActiveYear::matches($y) ? ' (active)' : '' }}</option>@endforeach
                             </select></div>
                         <div class="form-group col-md-5"><label>Term</label>
                             <select name="term" class="form-control w-100" required>

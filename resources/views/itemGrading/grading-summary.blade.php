@@ -484,7 +484,7 @@
                                     <select name="year" class="form-select select2" required style="height: 38px;">
                                         <option value="">--{{ trans('common.select_year') }} --</option>
                                         @foreach ($years as $year)
-                                            <option value="{{ $year }}">{{ $year }}</option>
+                                            <option value="{{ $year }}" @selected(\App\Support\ActiveYear::matches($year))>{{ $year }}</option>
                                         @endforeach
                                     </select>
                                 </div>

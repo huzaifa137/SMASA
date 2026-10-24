@@ -40,7 +40,7 @@ class FinanceController extends Controller
         PermissionHelper::denyUnlessFeature('view_finance');
 
         $schoolId = session('LoggedSchool');
-        $year = date('Y');
+        $year = \App\Support\ActiveYear::calendarYear();
 
         // ── Income (fee payments confirmed this year) ─────────────────────
         $totalIncome = FeePayment::where('school_id', $schoolId)
@@ -497,7 +497,7 @@ class FinanceController extends Controller
     {
         PermissionHelper::denyUnlessFeature('view_fee_allocations');
         $schoolId = session('LoggedSchool');
-        $year = request('year', date('Y'));
+        $year = request('year', \App\Support\ActiveYear::calendarYear());
         $term = request('term', '');
 
         $query = StudentFeeAllocation::where('school_id', $schoolId)
@@ -624,7 +624,7 @@ class FinanceController extends Controller
         PermissionHelper::denyUnlessFeature('view_payments');
 
         $schoolId = session('LoggedSchool');
-        $year = request('year', date('Y'));
+        $year = request('year', \App\Support\ActiveYear::calendarYear());
         $term = request('term', '');
         $search = request('search', '');
 
@@ -688,7 +688,7 @@ class FinanceController extends Controller
 
         $allocations = StudentFeeAllocation::where('student_id', $student->id)
             ->where('school_id', $schoolId)
-            ->where('academic_year', $request->year ?? date('Y'))
+            ->where('academic_year', $request->year ?? \App\Support\ActiveYear::calendarYear())
             ->with('feeStructure')
             ->get()
             ->map(fn($a) => [
@@ -1086,7 +1086,7 @@ class FinanceController extends Controller
         PermissionHelper::denyUnlessFeature('view_expenses');
 
         $schoolId = session('LoggedSchool');
-        $year = request('year', date('Y'));
+        $year = request('year', \App\Support\ActiveYear::calendarYear());
         $categoryId = request('category_id', '');
         $search = request('search', '');
 
@@ -1699,7 +1699,7 @@ class FinanceController extends Controller
     {
         $filters = [
             'report_type' => $request->query('report_type', 'overview'), // overview|payments|expenses|payroll
-            'year' => $request->query('year', date('Y')),
+            'year' => $request->query('year', \App\Support\ActiveYear::calendarYear()),
             'term' => $request->query('term', ''),
             'period' => $request->query('period', ''), // '' | today | this_week | this_month | this_year
             'date_from' => $request->query('date_from', ''),
@@ -2316,7 +2316,7 @@ class FinanceController extends Controller
     private function outstandingFeesFilters(Request $request): array
     {
         return [
-            'year' => $request->query('year', date('Y')),
+            'year' => $request->query('year', \App\Support\ActiveYear::calendarYear()),
             'term' => $request->query('term', ''),
             'status' => $request->query('status', ''), // '' = unpaid+partial (defaulters), or unpaid|partial|paid|overpaid
             'min_balance' => $request->query('min_balance', ''),
