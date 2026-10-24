@@ -332,6 +332,16 @@ class GradingController extends Controller
         }
 
 
+        // The national ranking is computed over everyone first (so ranks stay correct), then shown 10 per page.
+        $page = max(1, (int) request()->query('page', 1));
+        $results = new \Illuminate\Pagination\LengthAwarePaginator(
+            $results->forPage($page, 10)->values(),
+            $results->count(),
+            10,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
         // Subject statistics
         $subjectStats = null;
         if ($examType && $academicYear) {

@@ -34,6 +34,11 @@ use App\Helpers\PermissionHelper;
                     </div>
 
                     <div class="card-body p-3">
+                        <form method="GET" class="d-flex mb-3" style="gap:.5rem;">
+                            <input type="text" name="q" value="{{ $search }}" class="form-control" style="flex:1 1 auto;" placeholder="Search students by name or admission number...">
+                            <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Search</button>
+                            @if ($search !== '')<a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset</a>@endif
+                        </form>
                         <div class="table-responsive">
                             <table id="schoolsTable" class="table table-striped table-bordered  align-middle">
                                 <thead class="table-light">
@@ -53,7 +58,7 @@ use App\Helpers\PermissionHelper;
                                 <tbody>
                                     @forelse ($students as $index => $student)
                                         <tr>
-                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $students->firstItem() + $index }}</td>
                                             <td>{{ $student->firstname }} {{ $student->lastname }}</td>
                                             <td>{{ $student->gender }}</td>
                                             <td>{{ $student->admission_number }}</td>
@@ -76,6 +81,7 @@ use App\Helpers\PermissionHelper;
                                 </tbody>
                             </table>
                         </div>
+                        <div class="mt-3">{{ $students->links() }}</div>
                     </div>
                     <!-- Edit Student Modal -->
                     <div class="modal fade" id="editStudentModal" tabindex="-1" role="dialog"
@@ -428,31 +434,6 @@ use App\Helpers\PermissionHelper;
         });
     </script>
 
-    <script>
-        $(document).ready(function() {
-            var table = $('#schoolsTable').DataTable({
-                responsive: false,
-                pageLength: 10,
-                order: [
-                    [0, 'asc']
-                ],
-                dom: 'frtip',
-                columnDefs: [{
-                        orderable: false,
-                        targets: [1, 4, 5]
-                    },
-                    {
-                        className: 'text-center',
-                        targets: '_all'
-                    }
-                ],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search Students..."
-                }
-            });
-        });
-    </script>
 @endsection
 
 @section('js')

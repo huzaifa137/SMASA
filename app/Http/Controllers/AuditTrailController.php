@@ -23,6 +23,7 @@ class AuditTrailController extends Controller
 {
     public const CATEGORIES = [
         'data' => 'Data changes',
+        'billing' => 'Billing & invoices',
         'auth' => 'Authentication',
         'request' => 'Requests',
         'security' => 'Security',
@@ -81,21 +82,24 @@ class AuditTrailController extends Controller
         $log = AuditLog::findOrFail($id);
         $this->authorizeRow($log);
 
+        // Both side panels are paged 10 at a time (a busy record or a bulk request can have thousands).
         $related = AuditLog::where('request_id', $log->request_id)
             ->where('id', '!=', $log->id)
             ->orderBy('id')
-            ->limit(200)
-            ->get();
+            ->paginate(10, ['*'], 'related_page')
+            ->withQueryString()
+            ->fragment('related');
 
-        $history = collect();
+        $history = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1, ['pageName' => 'history_page']);
         if ($log->entity_type && $log->entity_id !== null) {
             $history = $this->scoped(AuditLog::query())
                 ->where('entity_type', $log->entity_type)
                 ->where('entity_id', $log->entity_id)
                 ->where('id', '!=', $log->id)
                 ->orderByDesc('id')
-                ->limit(25)
-                ->get();
+                ->paginate(10, ['*'], 'history_page')
+                ->withQueryString()
+                ->fragment('history');
         }
 
         return view('audit.show', [

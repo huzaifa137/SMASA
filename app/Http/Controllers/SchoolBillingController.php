@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Audit\Audit;
 use App\Helpers\PermissionHelper;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
@@ -122,7 +123,13 @@ class SchoolBillingController extends Controller
             return $r;
         }
 
-        return view('Billing.school.show', $this->data($this->ownInvoice($id)));
+        $invoice = $this->ownInvoice($id);
+
+        Audit::log('billing_invoice_viewed', "School opened invoice {$invoice->invoice_number}", [
+            'category' => 'billing', 'subject' => $invoice,
+        ]);
+
+        return view('Billing.school.show', $this->data($invoice));
     }
 
     public function pdf(int $id)

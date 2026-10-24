@@ -132,6 +132,17 @@ return [
             'must_change_password',
         ],
 
+        // Billing module records are filed under the "billing" category (not plain
+        // "data") so the whole module can be filtered in one click on the Audit Trail.
+        'billing_models' => [
+            \App\Models\BillingInvoice::class,
+            \App\Models\BillingInvoiceItem::class,
+            \App\Models\BillingPayment::class,
+            \App\Models\BillingSchoolRate::class,
+            \App\Models\BillingSetting::class,
+            \App\Models\BillingTerm::class,
+        ],
+
         // Money: always at least "notice" severity so they stand out.
         'notice_models' => [
             \App\Models\BillingInvoice::class,
@@ -173,12 +184,18 @@ return [
             '*delete*', '*destroy*', '*remove*', '*export*', '*download*',
             '*print*', '*pdf*', '*excel*', '*csv*', '*passslip*',
             '*report-card*', '*receipt*', '*impersonate*', '*admin-user*', '*reset*',
+            '*attachment*', '*proof*', // billing: proof-of-payment files
         ],
 
         // Subset of the above that is an *export / document access*.
         'export_patterns' => [
             '*export*', '*download*', '*print*', '*pdf*', '*excel*', '*csv*',
-            '*passslip*', '*report-card*', '*receipt*',
+            '*passslip*', '*report-card*', '*receipt*', '*attachment*', '*proof*',
+        ],
+
+        // Requests on these routes/paths are filed under the "billing" category.
+        'billing_patterns' => [
+            'billing.*', 'school.billing.*', 'admin/billing*', 'school/billing*',
         ],
 
         // Background chatter: NOT logged while it succeeds (status < 400),
@@ -265,6 +282,18 @@ return [
         'access_denied' => 'Access denied',
         'server_error' => 'Server error',
         'export' => 'Export / document',
+        'billing_invoice_viewed' => 'Invoice viewed',
+        'billing_generate' => 'Invoice generated',
+        'billing_issue' => 'Invoice issued',
+        'billing_recount' => 'Students recounted',
+        'billing_edit' => 'Invoice edited',
+        'billing_adjust' => 'Charge / credit changed',
+        'billing_due_date' => 'Due date changed',
+        'billing_cancel' => 'Invoice cancelled',
+        'billing_writeoff' => 'Balance written off',
+        'billing_restore' => 'Invoice restored',
+        'billing_payment' => 'Payment recorded',
+        'billing_reverse' => 'Payment reversed',
         'console_command' => 'Console command',
         'school_deleted' => 'School deleted',
         'audit_exported' => 'Audit log exported',

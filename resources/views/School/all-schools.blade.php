@@ -43,6 +43,11 @@ use App\Http\Controllers\Helper;
             </div>
 
             <div class="card-body p-3">
+                <form method="GET" class="d-flex mb-3" style="gap:.5rem;">
+                    <input type="text" name="q" value="{{ $search }}" class="form-control" style="flex:1 1 auto;" placeholder="Search schools by name or number...">
+                    <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Search</button>
+                    @if ($search !== '')<a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset</a>@endif
+                </form>
                 <div class="table-responsive">
                     <table id="schoolsTable" class="table table-striped table-bordered align-middle">
                         <thead class="custom-header">
@@ -90,7 +95,7 @@ use App\Http\Controllers\Helper;
                                 @endphp
 
                                 <tr>
-                                    <td class="fw-bold" style="width: 1px;">{{ $key + 1 }}</td>
+                                    <td class="fw-bold" style="width: 1px;">{{ $schools->firstItem() + $key }}</td>
                                     <td class="fw-bold" style="text-align: left;">{{ $school->House }}</td>
                                     <td class="fw-bold" style="text-align: left;">{{ $schoolNameArabic }}</td>
                                     <td class="fw-bold" style="text-align: left;">{{ $school->Number }}</td>
@@ -168,6 +173,7 @@ use App\Http\Controllers\Helper;
 
                         </tbody>
                     </table>
+                    <div class="mt-3">{{ $schools->links() }}</div>
 
                     <!-- Change School Status Modal -->
                     <div class="modal fade" id="changeSchoolStatusModal" tabindex="-1" aria-hidden="true">
@@ -281,13 +287,11 @@ use App\Http\Controllers\Helper;
     $(document).ready(function () {
         var table = $('#schoolsTable').DataTable({
             responsive: false,
-            pageLength: 10,
-            stateSave: true,
-            stateDuration: -1,
-            order: [
-                [0, 'asc']
-            ],
-            dom: 'frtip',
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            dom: 't',
             columnDefs: [{
                 orderable: false,
                 targets: [1, 4, 5]
@@ -303,18 +307,8 @@ use App\Http\Controllers\Helper;
             }
         });
 
-        // ── Explicit page-memory ──────────────────────────────────────
-        // Guarantees we land back on the same DataTables page after a full
-        // page reload (e.g. after a status/custom-subjects update),
-        // instead of relying only on DataTables' own stateSave restore.
-        var savedPage = sessionStorage.getItem('schoolsTable_page');
-        if (savedPage !== null) {
-            table.page(parseInt(savedPage, 10)).draw('page');
-            sessionStorage.removeItem('schoolsTable_page');
-        }
-
         function reloadKeepingPage() {
-            sessionStorage.setItem('schoolsTable_page', table.page());
+            // the server-side page lives in the URL (?page=N), so a plain reload stays on it
             SMASA.reload();
         }
 

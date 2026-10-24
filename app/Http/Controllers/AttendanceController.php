@@ -429,7 +429,8 @@ class AttendanceController extends Controller
             ? Stream::where('school_id', $schoolId)->where('class_id', $classId)->get()
             : collect();
 
-        $records = collect();
+        $records = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        $statusTotals = [];
         $studentSummary = collect();
 
         if ($classId && $streamId) {
@@ -441,7 +442,9 @@ class AttendanceController extends Controller
             if ($status)
                 $query->where('status', $status);
 
-            $records = $query->orderBy('attendance_date', 'desc')->get();
+            // Totals for the summary cards come from the database, the table below is paged 10 at a time.
+            $statusTotals = (clone $query)->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status')->all();
+            $records = $query->orderBy('attendance_date', 'desc')->paginate(10)->withQueryString()->fragment('records');
 
             // Per-student summary
             $studentSummary = StudentAttendance::where('school_id', $schoolId)
@@ -475,6 +478,7 @@ class AttendanceController extends Controller
             'classrooms',
             'streams',
             'records',
+            'statusTotals',
             'studentSummary',
             'classId',
             'streamId',
@@ -637,7 +641,9 @@ class AttendanceController extends Controller
         if ($status)
             $query->where('status', $status);
 
-        $records = $query->with('teacher')->orderBy('attendance_date', 'desc')->get();
+        // Totals for the summary cards come from the database, the table below is paged 10 at a time.
+        $statusTotals = (clone $query)->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status')->all();
+        $records = $query->with('teacher')->orderBy('attendance_date', 'desc')->paginate(10)->withQueryString()->fragment('records');
 
         // Per-teacher summary
         $teacherSummary = TeacherAttendance::where('school_id', $schoolId)
@@ -666,6 +672,7 @@ class AttendanceController extends Controller
         return view('Attendance.teacher-report', compact(
             'teachers',
             'records',
+            'statusTotals',
             'teacherSummary',
             'teacherId',
             'from',

@@ -773,11 +773,11 @@ use App\Http\Controllers\Helper;
 
     {{-- Summary Cards --}}
     @php
-        $totPresent = $records->where('status','present')->count();
-        $totAbsent  = $records->where('status','absent')->count();
-        $totLate    = $records->where('status','late')->count();
-        $totLeave   = $records->where('status','on_leave')->count();
-        $totHalfDay = $records->where('status','half_day')->count();
+        $totPresent = ($statusTotals['present'] ?? 0);
+        $totAbsent  = ($statusTotals['absent'] ?? 0);
+        $totLate    = ($statusTotals['late'] ?? 0);
+        $totLeave   = ($statusTotals['on_leave'] ?? 0);
+        $totHalfDay = ($statusTotals['half_day'] ?? 0);
         $avgRate    = $teacherSummary->avg('attendance_rate');
     @endphp
 
@@ -883,12 +883,12 @@ use App\Http\Controllers\Helper;
 
     {{-- Detailed Records --}}
     @if($records->isNotEmpty())
-    <div class="data-card">
+    <div class="data-card" id="records">
         <div class="card-header-modern">
             <div class="card-title">
                 <i class="fas fa-list-ul" style="color: var(--brand);"></i>
                 Detailed Attendance Records
-                <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-muted);">({{ $records->count() }} entries)</span>
+                <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-muted);">({{ $records->total() }} entries)</span>
             </div>
         </div>
         <div class="table-responsive-custom" style="max-height: 500px; overflow-y: auto;">
@@ -982,6 +982,7 @@ use App\Http\Controllers\Helper;
                 </tbody>
             </table>
         </div>
+        <div class="p-3">{{ $records->links() }}</div>
     </div>
     @endif
 

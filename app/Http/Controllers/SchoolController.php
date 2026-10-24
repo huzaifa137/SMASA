@@ -159,9 +159,18 @@ class SchoolController extends Controller
 
     public function allSchools()
     {
-        $schools = House::orderBy('id', 'Desc')->get();
+        // Paged 10 at a time with a search (the page runs several lookups per school row).
+        $search = trim((string) request('q', ''));
+        $schools = House::when($search !== '', function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('House', 'like', "%{$search}%")->orWhere('Number', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('id', 'Desc')
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('School.all-schools', compact('schools'));
+        return view('School.all-schools', compact('schools', 'search'));
     }
 
     public function changeStatus(Request $request, $id)

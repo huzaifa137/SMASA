@@ -1095,7 +1095,20 @@ class StudentController extends Controller
 
     public function updateProfiles()
     {
-        $students = Student::forCurrentSchool()->orderBy('created_at', 'desc')->get();
+        // Server-side paging (10 a page) + search; the page used to ship every student of the school to the browser.
+        $search = trim((string) request('q', ''));
+        $students = Student::forCurrentSchool()
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('firstname', 'like', "%{$search}%")
+                        ->orWhere('lastname', 'like', "%{$search}%")
+                        ->orWhere('admission_number', 'like', "%{$search}%")
+                        ->orWhereRaw("CONCAT(firstname, ' ', lastname) like ?", ["%{$search}%"]);
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         $classRecord = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
@@ -1104,7 +1117,7 @@ class StudentController extends Controller
 
         $StreamRecord = Stream::where('school_id', Session('LoggedSchool'))->get();
 
-        return view('student.student-information', compact(['students', 'classRecord', 'StreamRecord']));
+        return view('student.student-information', compact(['students', 'classRecord', 'StreamRecord', 'search']));
     }
 
     public function update(Request $request, Student $student)

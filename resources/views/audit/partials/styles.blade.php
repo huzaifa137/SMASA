@@ -39,7 +39,7 @@
     .au-av.guest{background:#f3f4f6;color:#6b7280}.au-av.system{background:#e5e7eb;color:#374151}
     .au-badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-size:.7rem;font-weight:600;white-space:nowrap}
     .au-c-data{background:#e0f2fe;color:#075985}.au-c-auth{background:#ede9fe;color:#5b21b6}.au-c-request{background:#f3f4f6;color:#374151}
-    .au-c-security{background:#fee2e2;color:#991b1b}.au-c-export{background:#fef3c7;color:#92400e}.au-c-system{background:#e5e7eb;color:#374151}
+    .au-c-security{background:#fee2e2;color:#991b1b}.au-c-export{background:#fef3c7;color:#92400e}.au-c-system{background:#e5e7eb;color:#374151}.au-c-billing{background:#dcfce7;color:#166534}
     .au-s-info{color:#6b7280}.au-s-notice{color:#2563eb}.au-s-warning{color:#d97706}.au-s-error,.au-s-critical{color:#dc2626}
     .au-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;background:currentColor}
     .au-fail{color:#dc2626;font-weight:600}

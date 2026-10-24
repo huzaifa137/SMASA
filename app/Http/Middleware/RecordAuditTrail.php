@@ -199,6 +199,12 @@ class RecordAuditTrail
             $summary = $label;
         }
 
+        // Everything done in the Billing module (admin side and the school portal) is filed under
+        // "billing"; denied access and server errors keep their security / system category.
+        if (in_array($category, ['request', 'export'], true) && $this->matchesAny($target, (array) ($cfg['billing_patterns'] ?? []))) {
+            $category = 'billing';
+        }
+
         $entry = [
             'event' => $event,
             'category' => $category,

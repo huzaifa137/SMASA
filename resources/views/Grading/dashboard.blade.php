@@ -120,6 +120,7 @@ use App\Http\Controllers\Helper;
 
                                 </table>
                             </div>
+                            <div class="mt-3">{{ $results->links() }}</div>
                         @endif
                     </div>
                 </div>

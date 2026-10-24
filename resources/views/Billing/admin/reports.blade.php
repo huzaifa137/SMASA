@@ -16,7 +16,7 @@
                 <p>{{ $term->name ?? 'No term' }}</p>
             </div>
             <div class="bl-hero-actions">
-                <form method="GET"><select name="term" class="bl-input"
+                <form method="GET">@if ($search !== '')<input type="hidden" name="q" value="{{ $search }}">@endif<select name="term" class="bl-input"
                         onchange="this.form.submit()">@foreach ($terms as $t)
                             <option value="{{ $t->id }}" @selected($term && $t->id === $term->id)>{{ $t->name }}</option>
                         @endforeach
@@ -113,8 +113,14 @@
             <div class="bl-card-h">
                 <h3>School-by-school — {{ $term->name ?? '' }}</h3><small>Largest balance first</small>
             </div>
+            <form class="bl-filters" method="GET">
+                <input type="hidden" name="term" value="{{ $term->id ?? '' }}">
+                <div style="flex:1 1 360px;min-width:260px;"><label>Search</label><input class="bl-input w-100" style="width:100%;" name="q" value="{{ $search }}" placeholder="School name, registration code or invoice no."></div>
+                <button class="bl-btn primary"><i class="fas fa-magnifying-glass"></i> Search</button>
+                <a class="bl-btn ghost" href="{{ route('billing.reports', ['term' => $term->id ?? null]) }}">Reset</a>
+            </form>
             @if ($schools->isEmpty())
-            <div class="bl-empty">No invoices for this term.</div>@else
+            <div class="bl-empty">{{ $search !== '' ? 'No schools match "' . $search . '" in this term.' : 'No invoices for this term.' }}</div>@else
                 <div class="bl-table-wrap">
                     <table class="bl-table">
                         <thead>

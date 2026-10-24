@@ -135,7 +135,7 @@ class ModelEventSubscriber
 
         $entry = [
             'event' => $event,
-            'category' => $isSecurity ? 'security' : 'data',
+            'category' => $isSecurity ? 'security' : ($this->isInList($model, 'billing_models') ? 'billing' : 'data'),
             'severity' => $isNotice ? 'notice' : 'info',
             'entity_type' => $entity,
             'entity_id' => $model->getKey(),

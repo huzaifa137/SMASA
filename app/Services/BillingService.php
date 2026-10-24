@@ -8,6 +8,7 @@ use App\Models\BillingLog;
 use App\Models\BillingPayment;
 use App\Models\BillingSchoolRate;
 use App\Models\BillingSetting;
+use App\Audit\Audit;
 use App\Models\AcademicTerm;
 use App\Models\BillingTerm;
 use App\Models\School;
@@ -60,6 +61,24 @@ class BillingService
             'school_id'       => $ctx['school_id'] ?? null,
             'user_id'         => session('LoggedAdmin') ?: null,
         ]);
+
+        // Mirror into the Audit Trail with the same plain-English sentence, filed under "billing" and
+        // tied to the school so that school administrators can see what happened to their invoices.
+        try {
+            $options = [
+                'category' => 'billing',
+                'severity' => in_array($action, ['cancel', 'writeoff', 'reverse'], true) ? 'warning' : 'notice',
+                'school_id' => $ctx['school_id'] ?? null,
+                'metadata' => array_filter(['term_id' => $ctx['term_id'] ?? null, 'invoice_id' => $ctx['invoice_id'] ?? null]),
+            ];
+            if (!empty($ctx['invoice_id'])) {
+                $options['entity_type'] = 'BillingInvoice';
+                $options['entity_id'] = $ctx['invoice_id'];
+            }
+            Audit::log('billing_' . $action, mb_substr($description, 0, 500), $options);
+        } catch (\Throwable) {
+            // auditing must never block a billing action
+        }
     }
 
     /** 1250000 -> "One million two hundred fifty thousand" (whole numbers only). */

@@ -108,23 +108,25 @@
 
     <div class="row">
         <div class="col-lg-6">
-            <div class="au-card">
-                <h6 class="mb-3"><i class="fas fa-link mr-1"></i> Same request ({{ $related->count() }})</h6>
+            <div class="au-card" id="related">
+                <h6 class="mb-3"><i class="fas fa-link mr-1"></i> Same request ({{ $related->total() }})</h6>
                 @if($related->isEmpty())<div class="text-muted small">No other entries were produced by this request.</div>@endif
                 <ul class="au-tl pl-3 mb-0">@foreach($related as $r)
                     <li><a href="{{ route('audit.show', $r->id) }}"><strong>{{ $r->event_label }}</strong></a>
                         <div class="small text-muted">{{ \Illuminate\Support\Str::limit($r->description, 110) }}</div></li>
                 @endforeach</ul>
+                <div class="mt-3">{{ $related->links() }}</div>
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="au-card">
-                <h6 class="mb-3"><i class="fas fa-history mr-1"></i> History of this record</h6>
+            <div class="au-card" id="history">
+                <h6 class="mb-3"><i class="fas fa-history mr-1"></i> History of this record @if($history->total())({{ $history->total() }})@endif</h6>
                 @if($history->isEmpty())<div class="text-muted small">No other entries for this record.</div>@endif
                 <ul class="au-tl pl-3 mb-0">@foreach($history as $h)
                     <li><a href="{{ route('audit.show', $h->id) }}"><strong>{{ $h->event_label }}</strong></a>
                         <small class="text-muted"> · {{ $h->occurred_local->format('d M Y H:i') }} · {{ $h->actor_name }}</small></li>
                 @endforeach</ul>
+                <div class="mt-3">{{ $history->links() }}</div>
             </div>
         </div>
     </div>

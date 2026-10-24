@@ -14,6 +14,7 @@ use App\Models\BillingTerm;
 use App\Models\School;
 use App\Services\BillingService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Audit\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -313,6 +314,10 @@ class BillingAdminController extends Controller
     public function showInvoice(BillingInvoice $invoice)
     {
         $invoice->load(['school', 'term', 'items', 'payments.invoice']);
+
+        Audit::log('billing_invoice_viewed', "Opened invoice {$invoice->invoice_number} ({$invoice->school->name})", [
+            'category' => 'billing', 'subject' => $invoice,
+        ]);
 
         // History: 10 entries a page, newest first; "Older" walks back through the earlier records.
         $logs = $invoice->logs()->paginate(10, ['*'], 'history_page')->withQueryString()->fragment('history');
@@ -742,10 +747,19 @@ class BillingAdminController extends Controller
         $term = $this->selectedTerm($request);
         $terms = $this->allTerms();
 
+        $search = trim((string) $request->input('q', ''));
+
         $schools = collect();
         if ($term) {
             $schools = BillingInvoice::with('school:id,name,registration_code')
-                ->where('billing_term_id', $term->id)->billable()->get()
+                ->where('billing_term_id', $term->id)->billable()
+                ->when($search !== '', function ($q) use ($search) {
+                    $q->where(function ($q) use ($search) {
+                        $q->where('invoice_number', 'like', "%{$search}%")
+                            ->orWhereHas('school', fn($s) => $s->where('name', 'like', "%{$search}%")->orWhere('registration_code', 'like', "%{$search}%"));
+                    });
+                })
+                ->get()
                 ->map(fn($i) => [
                     'invoice' => $i,
                     'name'    => $i->school->name ?? '—',
@@ -762,6 +776,7 @@ class BillingAdminController extends Controller
             'terms'    => $terms,
             'term'     => $term,
             'schools'  => $schools,
+            'search'   => $search,
             'termRows' => $termRows,
             'aging'    => $this->billing->aging($term?->id),
             'agingAll' => $this->billing->aging(),

@@ -63,6 +63,12 @@
     .inv-pay th { background: #f8fafc; font-size: 8.5px; color: #64748b; text-transform: uppercase; letter-spacing: .8px; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     .inv-pay td { padding: 6px 8px; font-size: 10px; border-bottom: 1px solid #f1f5f9; }
     .inv-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; color: #334155; line-height: 1.5; }
+    .inv-kv { width: 100%; border-collapse: collapse; }
+    .inv-kv td { padding: 4px 0; font-size: 10px; color: #334155; vertical-align: bottom; }
+    .inv-kv td.k { width: 118px; white-space: nowrap; font-weight: bold; }
+    .inv-kv td.c { width: 14px; text-align: center; }
+    .inv-kv td.v { border-bottom: 1px solid #94a3b8; height: 15px; }
+    .inv-kv td.t { padding: 3px 0; }
     .inv-foot td { padding: 8px 28px 10px 28px; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
     .inv-paidmark { font-size: 9px; color: #047857; font-weight: bold; }
 
@@ -251,8 +257,32 @@
         {{-- ── How to pay ────────────────────────────────────────── --}}
         @if ($settings->payment_instructions && !in_array($invoice->status, ['paid', 'cancelled', 'waived'], true))
             <div class="inv-h2">How to pay</div>
-            <div class="inv-box">{!! nl2br(e($settings->payment_instructions)) !!}
-                <br><strong>Reference: {{ $invoice->invoice_number }}</strong></div>
+            @php
+                // "Label: value" lines become aligned rows (label | colon | value); a value that is blank or only
+                // underscores is drawn as a fill-in line that runs to the right edge of the box.
+                $payLines = preg_split('/\r\n|\r|\n/', (string) $settings->payment_instructions);
+            @endphp
+            <div class="inv-box">
+                <table class="inv-kv">
+                    @foreach ($payLines as $line)
+                        @if (trim($line) === '') @continue @endif
+                        @if (preg_match('/^\s*([^:]{1,40}?)\s*:\s*(.*)$/u', $line, $m))
+                            <tr>
+                                <td class="k">{{ $m[1] }}</td>
+                                <td class="c">:</td>
+                                <td class="v">{{ preg_match('/^[\s_.\-]*$/', $m[2]) ? '' : trim($m[2]) }}</td>
+                            </tr>
+                        @else
+                            <tr><td class="t" colspan="3">{{ trim($line) }}</td></tr>
+                        @endif
+                    @endforeach
+                    <tr>
+                        <td class="k">Reference</td>
+                        <td class="c">:</td>
+                        <td class="v"><strong>{{ $invoice->invoice_number }}</strong></td>
+                    </tr>
+                </table>
+            </div>
         @endif
 
         @if ($settings->invoice_notes)
