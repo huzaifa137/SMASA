@@ -279,6 +279,9 @@
             @if($canExport)
                 <a href="{{ route('audit.export', $filters) }}" class="btn btn-sm btn-light"><i class="fas fa-file-csv mr-1"></i>Export CSV</a>
             @endif
+            @if($canPurge ?? false)
+                <button type="button" id="auPurgeOpen" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#auPurgeModal"><i class="fas fa-trash-alt mr-1"></i>Purge old entries</button>
+            @endif
             @if($canVerify)
                 <form method="POST" action="{{ route('audit.verify') }}" class="d-inline">
                     @csrf
@@ -287,6 +290,8 @@
             @endif
         </div>
     </div>
+
+    @includeWhen($canPurge ?? false, 'audit.partials.purge-modal')
 
     @if($verifyResult)
         <div class="alert {{ count($verifyResult['tampered']) ? 'alert-danger' : 'alert-success' }}">

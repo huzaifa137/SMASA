@@ -123,6 +123,7 @@ return [
                 'view' => 'View the audit trail (all schools)',
                 'export' => 'Export the audit trail to CSV',
                 'verify' => 'Run the audit trail integrity check',
+                'purge' => 'Permanently purge old audit entries (export required first)',
             ],
         ],
 

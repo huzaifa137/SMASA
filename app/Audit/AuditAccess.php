@@ -52,6 +52,11 @@ class AuditAccess
         return self::isPlatformAdmin() && AdminAccess::can('audit_trail.verify');
     }
 
+    public static function canPurge(): bool
+    {
+        return self::isPlatformAdmin() && AdminAccess::can('audit_trail.purge');
+    }
+
     /** School id the viewer is limited to, or null when unrestricted. */
     public static function schoolScope(): ?int
     {
@@ -71,6 +76,11 @@ class AuditAccess
     public static function authorizeVerify(): void
     {
         abort_unless(self::canVerify(), 403, 'You do not have permission to run the integrity check.');
+    }
+
+    public static function authorizePurge(): void
+    {
+        abort_unless(self::canPurge(), 403, 'You do not have permission to purge the audit trail.');
     }
 
     public static function forgetMemo(): void

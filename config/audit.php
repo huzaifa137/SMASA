@@ -37,6 +37,13 @@ return [
     'retention_days' => (int) env('AUDIT_RETENTION_DAYS', 730),
 
     /*
+    | Manual purge (Audit Trail page > "Purge old entries"). Entries newer
+    | than this many days can never be purged by hand, whatever the admin
+    | types. Purge records themselves are never purged.
+    */
+    'purge_min_days' => (int) env('AUDIT_PURGE_MIN_DAYS', 90),
+
+    /*
     | Key used to sign every row (HMAC-SHA256) so edits made directly in the
     | database are detectable (`audit:verify`). Defaults to the app key.
     | Do NOT change it after go-live or old rows will fail verification.
@@ -263,5 +270,7 @@ return [
         'audit_exported' => 'Audit log exported',
         'audit_verified' => 'Integrity check run',
         'audit_pruned' => 'Audit log pruned',
+        'audit_purged' => 'Audit log purged',
+        'audit_purge_denied' => 'Audit purge denied',
     ],
 ];

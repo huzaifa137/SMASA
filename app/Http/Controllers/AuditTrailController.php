@@ -69,6 +69,7 @@ class AuditTrailController extends Controller
             'isPlatform' => AuditAccess::isPlatformAdmin(),
             'canExport' => AuditAccess::canExport(),
             'canVerify' => AuditAccess::canVerify(),
+            'canPurge' => AuditAccess::canPurge(),
             'verifyResult' => session('audit_verify'),
         ]);
     }
