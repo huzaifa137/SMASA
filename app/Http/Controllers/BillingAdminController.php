@@ -268,7 +268,7 @@ class BillingAdminController extends Controller
         $status = $request->input('status', 'all');
         $search = trim((string) $request->input('q', ''));
 
-        $q = BillingInvoice::with('school:id,name,registration_code')
+        $q = BillingInvoice::with(['school:id,name,registration_code', 'term:id,start_date'])
             ->when($request->input('term') !== 'all' && $term, fn($q) => $q->where('billing_term_id', $term->id))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
@@ -312,9 +312,12 @@ class BillingAdminController extends Controller
 
     public function showInvoice(BillingInvoice $invoice)
     {
-        $invoice->load(['school', 'term', 'items', 'payments.invoice', 'logs']);
+        $invoice->load(['school', 'term', 'items', 'payments.invoice']);
 
-        return view('Billing.admin.invoice-show', $this->invoiceViewData($invoice));
+        // History: 10 entries a page, newest first; "Older" walks back through the earlier records.
+        $logs = $invoice->logs()->paginate(10, ['*'], 'history_page')->withQueryString()->fragment('history');
+
+        return view('Billing.admin.invoice-show', $this->invoiceViewData($invoice) + ['logs' => $logs]);
     }
 
     private function invoiceViewData(BillingInvoice $invoice): array
@@ -327,6 +330,7 @@ class BillingAdminController extends Controller
             'profile'  => $profile,
             'settings' => $this->billing->settings(),
             'methods'  => BillingPayment::METHODS,
+            'dueMin'   => $this->billing->dueDateFloor($invoice)?->format('Y-m-d'),
         ];
     }
 

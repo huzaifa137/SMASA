@@ -14,7 +14,7 @@
     <div class="bl">
         <div class="bl-hero">
             <div style="position:relative;z-index:1;">
-                <span class="bl-badge"><i class="fas fa-file-invoice-dollar"></i> Platform billing</span>
+                <span class="bl-badge"><i class="fas fa-wallet fa-lg"></i> Platform billing</span>
                 <h1>Billing Dashboard</h1>
                 <p>
                     @if ($term)

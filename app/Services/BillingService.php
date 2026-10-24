@@ -8,6 +8,7 @@ use App\Models\BillingLog;
 use App\Models\BillingPayment;
 use App\Models\BillingSchoolRate;
 use App\Models\BillingSetting;
+use App\Models\AcademicTerm;
 use App\Models\BillingTerm;
 use App\Models\School;
 use App\Models\Student;
@@ -565,6 +566,13 @@ class BillingService
             throw new InvalidArgumentException('A cancelled or written-off invoice cannot be edited.');
         }
 
+        if (!empty($data['due_date'])) {
+            $newDue = \Illuminate\Support\Carbon::parse($data['due_date'])->startOfDay();
+            if (!$invoice->due_date || !$invoice->due_date->isSameDay($newDue)) {
+                $this->assertDueDateAllowed($invoice, $newDue); // untouched dates are never re-checked
+            }
+        }
+
         DB::transaction(function () use ($invoice, $data) {
             if (isset($data['rate_per_student'])) {
                 $invoice->rate_per_student = (float) $data['rate_per_student'];
@@ -681,6 +689,31 @@ class BillingService
 
     /** Write off whatever is still unpaid (kept for the record, no longer "outstanding"). */
     /**
+     * The earliest due date an admin may give an invoice: the start of the ACTIVE term set by the
+     * administrators (back-dating is allowed down to that day). If no term is active we fall back to
+     * the start of the invoice's own billing term; null means "no lower limit".
+     */
+    public function dueDateFloor(BillingInvoice $invoice): ?\Illuminate\Support\Carbon
+    {
+        static $active = false; // memoised per request: the invoice list asks once per row
+        if ($active === false) {
+            $active = AcademicTerm::active();
+        }
+
+        $start = $active?->start_date ?? $invoice->term?->start_date;
+
+        return $start ? $start->copy()->startOfDay() : null;
+    }
+
+    private function assertDueDateAllowed(BillingInvoice $invoice, \Illuminate\Support\Carbon $date): void
+    {
+        $floor = $this->dueDateFloor($invoice);
+        if ($floor && $date->lt($floor)) {
+            throw new InvalidArgumentException('The due date cannot be before the start of the active term (' . $floor->format('j M Y') . ').');
+        }
+    }
+
+    /**
      * Move (extend or bring forward) the due date of ONE invoice. Only for invoices that are still
      * live — draft, unpaid or partially paid; a paid / cancelled / written-off invoice has nothing to chase.
      * Every change is written to the invoice history with who/why.
@@ -692,9 +725,7 @@ class BillingService
         }
 
         $new = \Illuminate\Support\Carbon::parse($date)->startOfDay();
-        if ($invoice->issue_date && $new->lt($invoice->issue_date->copy()->startOfDay())) {
-            throw new InvalidArgumentException('The due date cannot be before the invoice date (' . $invoice->issue_date->format('j M Y') . ').');
-        }
+        $this->assertDueDateAllowed($invoice, $new);
 
         $old = $invoice->due_date;
         if ($old && $old->isSameDay($new)) {

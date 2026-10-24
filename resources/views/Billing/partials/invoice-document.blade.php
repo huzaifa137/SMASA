@@ -77,6 +77,17 @@
     border-top: 1px solid #cbd5e1;
     border-bottom: 1px solid #cbd5e1;
 }
+
+.inv-pay th {
+    background: #2C29CA !important;
+    color: #ffffff !important;
+    font-size: 8.5px;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #cbd5e1;
+}
 </style>
 
 <div class="inv-sheet">

@@ -23,6 +23,33 @@
     background-color: #2C29CA !important;
     color: #FFFFFF !important;
 }
+
+/* Filters bar: make the search input clearly visible */
+.bl-filters .bl-input{
+    background:#fff;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    padding:.5rem .75rem;
+    color:#0f172a;
+    box-shadow:0 1px 2px rgba(15,23,42,.05);
+    transition:border-color .15s ease, box-shadow .15s ease;
+}
+.bl-filters .bl-input::placeholder{
+    color:#94a3b8;
+    opacity:1;
+}
+.bl-filters .bl-input:focus{
+    outline:none;
+    border-color:#2C29CA;
+    box-shadow:0 0 0 3px rgba(44,41,202,.18);
+}
+/* Give the search field a subtle emphasis vs. the selects */
+.bl-filters input.bl-input[name="q"]{
+    background:#f8fafc;
+}
+.bl-filters input.bl-input[name="q"]:focus{
+    background:#fff;
+}
 </style>
 @php $canEditDue = \App\Support\AdminAccess::can('billing.edit_invoices'); @endphp
 <div class="bl">
@@ -36,7 +63,7 @@
             <div><label>Status</label><select name="status" class="bl-input">
                 @foreach (['all' => 'All', 'draft' => 'Draft', 'unpaid' => 'Unpaid', 'partial' => 'Partially paid', 'overdue' => 'Overdue', 'paid' => 'Paid', 'waived' => 'Written off', 'cancelled' => 'Cancelled'] as $k => $v)
                     <option value="{{ $k }}" @selected($status === $k)>{{ $v }}</option>@endforeach</select></div>
-            <div><label>Search</label><input class="bl-input" name="q" value="{{ $search }}" placeholder="School or invoice no."></div>
+            <div style="flex:1 1 360px;min-width:260px;"><label>Search</label><input class="bl-input w-100" style="width:100%;" name="q" value="{{ $search }}" placeholder="School name, registration code or invoice no."></div>
             <button class="bl-btn primary"><i class="fas fa-filter"></i> Filter</button>
             <a class="bl-btn ghost" href="{{ route('billing.invoices') }}">Reset</a>
         </form>
@@ -63,7 +90,7 @@
                             <button type="button" class="bl-btn sm ghost due-btn" title="Extend or change the due date"
                                 data-url="{{ route('billing.invoices.due-date', $i) }}" data-number="{{ $i->invoice_number }}"
                                 data-school="{{ $i->school->name ?? '' }}" data-due="{{ optional($i->due_date)->format('Y-m-d') }}"
-                                data-issue="{{ optional($i->issue_date)->format('Y-m-d') }}" style="padding:.2rem .45rem;margin-left:.25rem;"><i class="fas fa-calendar-plus"></i></button>
+                                data-min="{{ optional(app(\App\Services\BillingService::class)->dueDateFloor($i))->format('Y-m-d') }}" style="padding:.2rem .45rem;margin-left:.25rem;"><i class="fas fa-calendar-plus"></i></button>
                         @endif
                     </td>
                     <td><span class="bl-pill status-pill {{ $i->display_status }}">{{ $i->status_label }}</span><div class="bl-muted late-note">@if ($i->isOverdue()){{ $i->daysOverdue() }}d late @endif</div></td>

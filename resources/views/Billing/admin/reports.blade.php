@@ -35,7 +35,7 @@
 
         <div class="bl-card">
             <div class="bl-card-h">
-                <h3>Term-by-term summary</h3><a class="bl-btn sm ghost"
+                <h3>Term-by-term summary</h3><a class="btn btn-primary btn-sm"
                     href="{{ route('billing.export', ['type' => 'invoices', 'term' => 'all']) }}"><i
                         class="fas fa-file-csv"></i> All invoices CSV</a>
             </div>

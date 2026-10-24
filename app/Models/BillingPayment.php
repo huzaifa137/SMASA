@@ -7,22 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 class BillingPayment extends Model
 {
     public const METHODS = [
-        'bank'         => 'Bank transfer / deposit',
+        'cash' => 'Cash',
+        'bank' => 'Bank transfer / deposit',
         'mobile_money' => 'Mobile Money',
-        'cash'         => 'Cash',
-        'cheque'       => 'Cheque',
-        'other'        => 'Other',
+        'cheque' => 'Cheque',
+        'other' => 'Other',
     ];
 
     protected $fillable = [
-        'receipt_number', 'invoice_id', 'billing_term_id', 'school_id', 'amount', 'method',
-        'reference', 'paid_on', 'notes', 'status', 'reversed_at', 'reversed_reason', 'recorded_by',
-        'attachment_path', 'attachment_name', 'attachment_mime', 'attachment_size',
+        'receipt_number',
+        'invoice_id',
+        'billing_term_id',
+        'school_id',
+        'amount',
+        'method',
+        'reference',
+        'paid_on',
+        'notes',
+        'status',
+        'reversed_at',
+        'reversed_reason',
+        'recorded_by',
+        'attachment_path',
+        'attachment_name',
+        'attachment_mime',
+        'attachment_size',
     ];
 
     protected $casts = [
-        'amount'      => 'float',
-        'paid_on'     => 'date',
+        'amount' => 'float',
+        'paid_on' => 'date',
         'reversed_at' => 'datetime',
     ];
 

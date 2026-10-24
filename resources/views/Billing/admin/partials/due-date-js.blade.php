@@ -1,5 +1,5 @@
 {{-- Script for due-date-modal. Goes in @section('js') (needs jQuery).
-     A .due-btn needs: data-url, data-number, data-school, data-due (Y-m-d or empty), data-issue (Y-m-d or empty).
+     A .due-btn needs: data-url, data-number, data-school, data-due (Y-m-d or empty), data-min (earliest allowed date, Y-m-d or empty).
      Add data-reload="1" to reload the page after saving; otherwise the table row is updated in place
      (cells .due-label, .late-note and .status-pill inside the same <tr>). --}}
 <script>
@@ -28,10 +28,10 @@
             $('#dueInv').text(d.number);
             $('#dueSchool').text(d.school || '');
             $('#dueCurrent').text(nice(d.due));
-            $('#dueDate').val(d.due || today).attr('min', d.issue || '');
+            $('#dueDate').val(d.due || today).attr('min', d.min || '');
             $('#dueReason').val('');
             $('#dueError').hide().text('');
-            $('#dueHelp').text(d.issue ? 'Cannot be earlier than the invoice date (' + nice(d.issue) + ').' : '');
+            $('#dueHelp').text(d.min ? 'Back-dating is allowed up to the start of the active term (' + nice(d.min) + ').' : '');
             $m.modal('show');
         });
 
