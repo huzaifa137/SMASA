@@ -71,7 +71,7 @@ use App\Helpers\PermissionHelper;
                         alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
         @elseif(Session('LoggedSchool'))
-            <a class="header-brand" data-no-loader href="{{ url('/school/dashboard') }}">
+            <a class="header-brand" data-no-loader href="{{ url('/school/home') }}">
                 <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}"
                         alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
@@ -138,12 +138,14 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
-                {{-- Dashboard — always visible --}}
-                <li class="slide">
-                    <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
-                        <i class="fa fa-home fa-2x mr-3"></i>Dashboard
-                    </a>
-                </li>
+                {{-- Dashboard — only for roles holding the Dashboard right --}}
+                @if(PermissionHelper::canDashboard())
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
+                            <i class="fa fa-home fa-2x mr-3"></i>Dashboard
+                        </a>
+                    </li>
+                @endif
 
                 {{-- Teachers --}}
                 @if(PermissionHelper::canModule('teachers'))
@@ -789,12 +791,14 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
-                {{-- Dashboard — always visible --}}
-                <li class="slide">
-                    <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
-                        <i class="fa fa-home fa-2x mr-3"></i>Dashboard
-                    </a>
-                </li>
+                {{-- Dashboard — only for roles holding the Dashboard right --}}
+                @if(PermissionHelper::canDashboard())
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ url('/school/dashboard') }}">
+                            <i class="fa fa-home fa-2x mr-3"></i>Dashboard
+                        </a>
+                    </li>
+                @endif
 
                 {{-- Teachers --}}
                 @if(PermissionHelper::canModule('teachers'))

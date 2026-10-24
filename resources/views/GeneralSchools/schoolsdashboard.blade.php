@@ -15,6 +15,7 @@
         use App\Models\School;
         use App\Models\SchoolProfile;
         use App\Http\Controllers\Helper;
+        use App\Helpers\PermissionHelper;
         use App\Services\StudentConsolidationService;
         use Illuminate\Support\Facades\DB;
 
@@ -29,26 +30,58 @@
         $academicYear = Helper::schoolActiveYearName() ?: Helper::active_year() ?: date('Y');
         $currentTerm = Helper::schoolActiveTermName() ?: '—';
 
+        // ── Dashboard rights: what this user may see (see SystemModulesSeeder "dashboard") ──
+        // Data for a widget is only queried when the user holds its right, so nothing
+        // is computed or rendered for people who are not entitled to it.
+        $canSchoolInfo   = PermissionHelper::canDashboardWidget('view_dashboard_school_info');
+        $canStudents     = PermissionHelper::canDashboardWidget('view_dashboard_students');
+        $canTeachers     = PermissionHelper::canDashboardWidget('view_dashboard_teachers');
+        $canAttendance   = PermissionHelper::canDashboardWidget('view_dashboard_attendance');
+        $canExams        = PermissionHelper::canDashboardWidget('view_dashboard_exams');
+        $canPerformance  = PermissionHelper::canDashboardWidget('view_dashboard_performance');
+        $canActivity     = PermissionHelper::canDashboardWidget('view_dashboard_activity');
+
+        // Safe defaults so hidden widgets never hit an undefined variable
+        $currentDate = now();
+        $last30 = now()->subDays(30)->toDateString();
+        $thisMonth = now()->startOfMonth()->toDateString();
+        $totalStudents = 0; $multiProgramStudents = 0; $pendingConsolidationReview = 0;
+        $maleStudents = 0; $femaleStudents = 0; $totalClasses = 0; $newStudentsThisMonth = 0;
+        $totalTeachers = 0; $teacherAttendanceRate = 0; $teacherOfMonth = null;
+        $avgAttendance = 0;
+        $recentExaminations = collect(); $recentExams = collect(); $upcomingExams = collect();
+        $overallPassRate = 0; $averageScore = 0; $averageGrade = '—'; $daysUntilExams = null;
+        $topPerformerName = '—'; $topPerformerScore = 0; $topPerformerClass = '—';
+        $studentLeaderboard = collect(); $classPerformance = collect(); $subjectPerformance = collect();
+        $schoolActivities = collect();
+
         // ── Core counts ──────────────────────────────────────────────────────────
         // A student who is enrolled in BOTH a Theology class and a Secular class
         // has two rows in `students` (one per class enrollment). School-wide
         // totals must count that child once, so we only count rows that are the
         // consolidated PRIMARY record (linked_student_id is null). Per-class
         // rosters elsewhere are unaffected and still count every enrollment row.
+        if ($canStudents) {
         $consolidation = new StudentConsolidationService();
         $studentStats = $consolidation->stats($schoolId);
 
         $totalStudents = $studentStats['unique_students'];
         $multiProgramStudents = $studentStats['multi_program_students'];
         $pendingConsolidationReview = $studentStats['pending_review'];
+        }
 
+        if ($canTeachers) {
         $totalTeachers = Teacher::where('school_id', $schoolId)->count();
+        }
+        if ($canStudents) {
         $totalClasses = Classroom::where('school_id', $schoolId)->count();
 
         $maleStudents = Student::where('school_id', $schoolId)->whereRaw("LOWER(TRIM(gender)) IN ('male','m','boy','b')")->whereNull('linked_student_id')->count();
         $femaleStudents = Student::where('school_id', $schoolId)->whereRaw("LOWER(TRIM(gender)) IN ('female','f','girl','g')")->whereNull('linked_student_id')->count();
+        }
 
         // ── Attendance Rate (student) – last 30 days ─────────────────────────────
+        if ($canAttendance) {
         $last30 = now()->subDays(30)->toDateString();
 
         $totalAttendanceRecords = StudentAttendance::where('school_id', $schoolId)
@@ -63,8 +96,10 @@
         $avgAttendance = $totalAttendanceRecords > 0
             ? round(($presentRecords / $totalAttendanceRecords) * 100, 1)
             : 0;
+        }
 
         // ── Teacher Attendance Rate – this month ─────────────────────────────────
+        if ($canTeachers) {
         $thisMonth = now()->startOfMonth()->toDateString();
 
         $teacherTotalRecords = TeacherAttendance::where('school_id', $schoolId)
@@ -76,8 +111,10 @@
         $teacherAttendanceRate = $teacherTotalRecords > 0
             ? round(($teacherPresentRecords / $teacherTotalRecords) * 100, 1)
             : 0;
+        }
 
         // ── Examinations ─────────────────────────────────────────────────────────
+        if ($canExams) {
         $recentExaminations = Examination::where('school_id', $schoolId)
             ->orderBy('created_at', 'desc')
             ->limit(6)
@@ -129,8 +166,10 @@
             $averageGrade = 'C';
         elseif ($averageScore > 0)
             $averageGrade = 'D';
+        }
 
         // ── Top Performer (student with highest average exam mark) ───────────────
+        if ($canPerformance) {
         $topPerformerData = ExaminationMark::where('school_id', $schoolId)
             ->whereNotNull('marks_obtained')
             ->selectRaw('student_id, AVG(marks_obtained) as avg_score')
@@ -228,11 +267,15 @@
                     'students' => $row->total_marks,
                 ];
             });
+        }
 
         // ── Recent Exams for table (formatted) ───────────────────────────────────
+        if ($canExams) {
         $recentExams = $recentExaminations;
+        }
 
         // ── Recent Enrollments (activity feed) ───────────────────────────────────
+        if ($canActivity) {
         $recentStudents = Student::where('school_id', $schoolId)
             ->orderBy('created_at', 'desc')
             ->limit(3)
@@ -280,8 +323,10 @@
                 'time' => \Carbon\Carbon::parse($latestPublished->published_at)->diffForHumans(),
             ]);
         }
+        }
 
         // ── Teacher of the Month (highest attendance rate this month) ─────────────
+        if ($canTeachers) {
         $teacherOfMonth = null;
         $bestTeacher = TeacherAttendance::where('school_id', $schoolId)
             ->where('attendance_date', '>=', $thisMonth)
@@ -304,18 +349,22 @@
                 ];
             }
         }
+        }
 
         // ── Upcoming exams (active or marks_entry status) ─────────────────────────
+        if ($canExams) {
         $upcomingExams = Examination::where('school_id', $schoolId)
             ->whereIn('status', ['draft', 'active', 'marks_entry'])
             ->orderBy('start_date')
             ->limit(5)
             ->get();
+        }
 
         // ── Current date info ─────────────────────────────────────────────────────
         $currentDate = now();
 
         // Days until next upcoming exam
+        if ($canExams) {
         $nextExam = Examination::where('school_id', $schoolId)
             ->where('start_date', '>', now()->toDateString())
             ->orderBy('start_date')
@@ -323,11 +372,14 @@
         $daysUntilExams = $nextExam
             ? (int) now()->diffInDays(\Carbon\Carbon::parse($nextExam->start_date))
             : null;
+        }
 
         // Students added this month
+        if ($canStudents) {
         $newStudentsThisMonth = Student::where('school_id', $schoolId)
             ->where('created_at', '>=', $thisMonth)
             ->count();
+        }
 
     @endphp
 
@@ -596,7 +648,7 @@
         /* ── KPI Grid ── */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -765,14 +817,14 @@
         /* ── Grids ── */
         .grid-2 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 20px;
             margin-bottom: 24px;
         }
 
         .grid-3 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 20px;
             margin-bottom: 24px;
         }
@@ -1163,7 +1215,7 @@
                     <div class="school-meta">
                         <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;align-items:center;margin-top:1em;width:100%;"
                             class="school-meta-items">
-                            @if($schoolCategory !== '—')
+                            @if($canSchoolInfo && $schoolCategory !== '—')
                                 <span style="white-space:nowrap;"><i class="fas fa-layer-group"></i>
                                     {{ $schoolCategory }}</span>
                             @endif
@@ -1217,16 +1269,24 @@
                 <div class="welcome-text">
                     <h3>Welcome, {{ $schoolName }}!</h3>
                     <p class="mt-3">
-                        <i class="fas fa-users me-1"></i> {{ number_format($totalStudents) }} students
-                        &nbsp;·&nbsp;
-                        <i class="fas fa-chalkboard-user me-1"></i> {{ number_format($totalTeachers) }} teachers
-                        @if($overallPassRate > 0)
+                        @if($canStudents)
+                            <i class="fas fa-users me-1"></i> {{ number_format($totalStudents) }} students
+                        @endif
+                        @if($canStudents && $canTeachers)
                             &nbsp;·&nbsp;
+                        @endif
+                        @if($canTeachers)
+                            <i class="fas fa-chalkboard-user me-1"></i> {{ number_format($totalTeachers) }} teachers
+                        @endif
+                        @if($canExams && $overallPassRate > 0)
+                            @if($canStudents || $canTeachers)
+                                &nbsp;·&nbsp;
+                            @endif
                             <i class="fas fa-chart-line me-1"></i> {{ $overallPassRate }}% overall pass rate
                         @endif
                     </p>
                 </div>
-                @if($daysUntilExams !== null)
+                @if($canExams && $daysUntilExams !== null)
                     <div class="countdown-badge">
                         <div class="countdown-number">{{ $daysUntilExams }}</div>
                         <div class="countdown-label">Days until<br>next exam</div>
@@ -1242,6 +1302,7 @@
             {{-- ── KPI Cards ── --}}
             <div class="kpi-grid">
 
+                @if($canStudents)
                 {{-- Total Students --}}
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: var(--brand-muted); color: var(--brand);">
@@ -1273,7 +1334,9 @@
                         <span class="kpi-trend trend-neutral"><i class="fas fa-info-circle"></i> No students yet</span>
                     @endif
                 </div>
+                @endif
 
+                @if($canTeachers)
                 {{-- Total Teachers --}}
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: var(--info-muted); color: var(--info);">
@@ -1285,13 +1348,15 @@
                         <span class="kpi-trend trend-up">
                             <i class="fas fa-arrow-up"></i> +{{ $newStudentsThisMonth }} students this month
                         </span>
-                    @else
+                    @elseif($canStudents)
                         <span class="kpi-trend trend-neutral">
                             <i class="fas fa-building"></i> {{ $totalClasses }} class{{ $totalClasses !== 1 ? 'es' : '' }}
                         </span>
                     @endif
                 </div>
+                @endif
 
+                @if($canExams)
                 {{-- Pass Rate --}}
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: var(--accent-muted); color: #b07d00;">
@@ -1309,7 +1374,9 @@
                         <span class="kpi-trend trend-neutral"><i class="fas fa-info-circle"></i> No exam data yet</span>
                     @endif
                 </div>
+                @endif
 
+                @if($canAttendance)
                 {{-- Attendance Rate --}}
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: var(--purple-muted); color: var(--purple);">
@@ -1328,12 +1395,14 @@
                         <span class="kpi-trend trend-neutral"><i class="fas fa-info-circle"></i> No records yet</span>
                     @endif
                 </div>
+                @endif
 
             </div>
 
             {{-- ── Secondary Row: Top Performer, Average Grade, Teacher Attendance ── --}}
             <div class="grid-3">
 
+                @if($canPerformance)
                 {{-- Top Performer --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1365,7 +1434,9 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
+                @if($canExams)
                 {{-- Average Grade --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1385,7 +1456,9 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
+                @if($canTeachers)
                 {{-- Teacher Attendance --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1422,9 +1495,11 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
             </div>
 
+            @if($canPerformance)
             {{-- ── Class Performance + Student Leaderboard ── --}}
             <div class="grid-2">
 
@@ -1515,6 +1590,7 @@
                 </div>
 
             </div>
+            @endif
 
             {{-- ── Subject Performance ── --}}
             @if($subjectPerformance->count() > 0)
@@ -1548,6 +1624,7 @@
                 </div>
             @endif
 
+            @if($canExams)
             {{-- ── Recent Examinations + Upcoming Exams ── --}}
             <div class="grid-2">
 
@@ -1651,10 +1728,12 @@
                 </div>
 
             </div>
+            @endif
 
             {{-- ── Teacher Spotlight + Recent Activity ── --}}
             <div class="grid-2">
 
+                @if($canTeachers)
                 {{-- Teacher of the Month --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1692,7 +1771,9 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
+                @if($canActivity)
                 {{-- Recent Activity --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1726,12 +1807,14 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
             </div>
 
             {{-- ── Quick Stats Row ── --}}
             <div class="grid-3">
 
+                @if($canStudents)
                 {{-- Classes Summary --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1749,7 +1832,9 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
+                @if($canStudents)
                 {{-- Gender Split --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1782,7 +1867,9 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
+                @if($canSchoolInfo)
                 {{-- School Info Summary --}}
                 <div class="card-school">
                     <div class="card-header-custom">
@@ -1819,6 +1906,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
             </div>
 

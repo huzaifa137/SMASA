@@ -36,7 +36,7 @@ class SchoolBillingController extends Controller
     private function guard(string $feature = 'view_billing')
     {
         if (!$this->canView($feature)) {
-            return redirect()->route('school.dashboard')
+            return redirect()->route('school.home')
                 ->with('error', 'Access denied: you do not have permission to view billing.');
         }
 

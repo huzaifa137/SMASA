@@ -81,7 +81,11 @@ class SystemModulesSeeder extends Seeder
                 $keepModules[] = $module->key;
 
                 if ($module->wasRecentlyCreated && $inheritsModule) {
-                    foreach ($moduleRoles[$inheritsModule] ?? [] as $roleId) {
+                    $inheritedRoleIds = [];
+                    foreach ((array) $inheritsModule as $src) {
+                        $inheritedRoleIds = array_merge($inheritedRoleIds, $moduleRoles[$src] ?? []);
+                    }
+                    foreach (array_unique($inheritedRoleIds) as $roleId) {
                         DB::table('role_module_access')->insertOrIgnore([
                             'school_role_id' => $roleId, 'module_id' => $module->id,
                             'can_access' => true, 'created_at' => $now, 'updated_at' => $now,
@@ -131,6 +135,34 @@ class SystemModulesSeeder extends Seeder
     private function catalog(): array
     {
         return [
+
+            // ── Dashboard ─────────────────────────────────────────────────
+            // The School Dashboard is itself a module. Users without it are sent
+            // straight to the first page their role can open (see
+            // PermissionHelper::landingRouteName()). Each widget on the page has
+            // its own feature so a role can see e.g. only attendance figures.
+            // Existing roles keep what they could effectively see before: anyone
+            // holding at least one operational module gets the dashboard, and each
+            // widget is inherited from the module whose data it shows.
+            [
+                "key" => "dashboard",
+                "name" => "Dashboard",
+                "icon" => "fa fa-home",
+                "route" => "school.dashboard",
+                "description" => "School dashboard and which of its widgets a role can see",
+                "sort_order" => 5,
+                "inherits_module" => ["classes", "curriculum", "teachers", "students", "card_scan", "student_id_cards", "teacher_id_cards", "library", "finance", "billing", "attendance", "timetable", "examinations"],
+                "features" => [
+                    ["key" => "view_dashboard", "name" => "View Dashboard", "inherits" => ["module:classes", "module:curriculum", "module:teachers", "module:students", "module:card_scan", "module:student_id_cards", "module:teacher_id_cards", "module:library", "module:finance", "module:billing", "module:attendance", "module:timetable", "module:examinations"]],
+                    ["key" => "view_dashboard_school_info", "name" => "Dashboard: School Info & Header Details", "inherits" => ["module:classes", "module:curriculum", "module:teachers", "module:students", "module:card_scan", "module:student_id_cards", "module:teacher_id_cards", "module:library", "module:finance", "module:billing", "module:attendance", "module:timetable", "module:examinations"]],
+                    ["key" => "view_dashboard_students", "name" => "Dashboard: Student Figures (totals, gender, classes)", "inherits" => ["module:students", "module:classes"]],
+                    ["key" => "view_dashboard_teachers", "name" => "Dashboard: Teacher Figures & Teacher Attendance", "inherits" => ["module:teachers"]],
+                    ["key" => "view_dashboard_attendance", "name" => "Dashboard: Student Attendance Rate", "inherits" => ["module:attendance"]],
+                    ["key" => "view_dashboard_exams", "name" => "Dashboard: Examination Results & Upcoming Exams", "inherits" => ["module:examinations"]],
+                    ["key" => "view_dashboard_performance", "name" => "Dashboard: Performance (top students, classes, subjects)", "inherits" => ["module:examinations"]],
+                    ["key" => "view_dashboard_activity", "name" => "Dashboard: Recent Activity Feed", "inherits" => ["module:students", "module:teachers"]],
+                ],
+            ],
 
             // ── Classes & Streams ─────────────────────────────────────────
             [

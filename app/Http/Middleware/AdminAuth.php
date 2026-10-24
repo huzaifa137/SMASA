@@ -52,7 +52,7 @@ class AdminAuth
             }
 
             if (session()->has('LoggedSchool')) {
-                return redirect('/school/dashboard');
+                return redirect('/school/home');
             }
 
             return redirect()->route('parents.dashboard');

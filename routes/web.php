@@ -712,6 +712,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::group(['prefix' => '/school'], function () {
 
                 Route::get('/dashboard', 'schoolDashboard')->name('school.dashboard');
+                Route::get('/home', 'schoolHome')->name('school.home');
+                Route::get('/no-access', 'noAccess')->name('school.no-access');
                 // Removed (ITEB leftovers, unused): /school/grading-summary, /school/process-grading,
                 // iteb/grading/results/pdf and the UNAUTHENTICATED /school-passwords/export-all-pdf.
             });

@@ -418,7 +418,7 @@ class UserController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'School login successful',
-            'redirect' => '/school/dashboard',
+            'redirect' => '/school/home',
         ]);
     }
 

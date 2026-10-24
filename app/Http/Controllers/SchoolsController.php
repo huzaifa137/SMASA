@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Support\ExportName;
 use App\Models\Mark;
 use Illuminate\Http\Request;
@@ -21,7 +22,51 @@ class SchoolsController extends Controller
 
     public function schoolDashboard()
     {
+        // No dashboard right → send them to the first page they CAN use.
+        if (!PermissionHelper::canDashboard()) {
+            session()->reflash();
+            return redirect()->route('school.home');
+        }
+
         return view('GeneralSchools.schoolsdashboard');
+    }
+
+    /**
+     * Default landing page for a logged-in school user. Sends them to the
+     * dashboard when their role allows it, otherwise to the first module
+     * they have access to. Used after login and whenever access is denied.
+     */
+    public function schoolHome(Request $request)
+    {
+        // Safety net against redirect loops: three hits within 3 seconds
+        // means the chosen page keeps bouncing back here.
+        $now = now()->timestamp;
+        $hits = array_values(array_filter(
+            (array) session('landing_hits', []),
+            fn ($t) => $now - $t < 3
+        ));
+        $hits[] = $now;
+        session()->put('landing_hits', $hits);
+
+        $target = PermissionHelper::landingRouteName();
+
+        if (!$target || count($hits) >= 3) {
+            session()->forget('landing_hits');
+            session()->reflash();
+            return redirect()->route('school.no-access');
+        }
+
+        // Keep an "Access Denied" flash alive across this hop.
+        session()->reflash();
+
+        return redirect()->route($target);
+    }
+
+    public function noAccess()
+    {
+        return view('GeneralSchools.no-access', [
+            'roleName' => PermissionHelper::currentRoleName(),
+        ]);
     }
 
 

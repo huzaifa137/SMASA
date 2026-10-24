@@ -28,7 +28,7 @@ class EnsureSecondarySchool
                 ], 403);
             }
 
-            return redirect()->route('school.dashboard')
+            return redirect()->route('school.home')
                 ->with('error', 'This feature is only available to schools registered as Secondary (or merged with Secondary under School Products).');
         }
 

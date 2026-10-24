@@ -25,7 +25,7 @@ public function handle(Request $request, Closure $next): Response
 
     if (session()->has('LoggedSchool') && ($request->is('users/login') || $request->is('users/register') ||
          $request->is('users/home-page') || $request->routeIs('auth-user-check'))) {
-         return redirect('/school/dashboard');
+         return redirect('/school/home');
         }
 
     $response = $next($request);

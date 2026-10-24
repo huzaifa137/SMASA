@@ -25,7 +25,7 @@ class CheckModuleAccess
                 ], 403);
             }
 
-            return redirect()->route('school.dashboard')
+            return redirect()->route('school.home')
                 ->with('error', 'Access Denied: You do not have permission to access that module.');
         }
 

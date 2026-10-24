@@ -7,6 +7,8 @@ use App\Support\AdminAccess;
 use App\Models\TeacherSchoolRole;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use App\Models\SystemModule;
 
 /**
  * PermissionHelper - Central authority for all access checks in SMASA
@@ -306,6 +308,83 @@ class PermissionHelper
         if (!self::canFeature($featureKey)) {
             abort(403, 'You do not have permission to perform this action.');
         }
+    }
+
+
+    // ─────────────────────────────────────────────────────────────────
+    // Dashboard access + default landing page
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Platform super admins viewing a school (LoggedAdmin + LoggedSchool)
+     * are not governed by school roles, so they see the whole dashboard.
+     */
+    private static function isSuperAdminInSchool(): bool
+    {
+        return session()->has('LoggedAdmin') && AdminAccess::isSuperAdmin();
+    }
+
+    /**
+     * Can the current user open the School Dashboard page at all?
+     * Needs the 'dashboard' module AND the 'view_dashboard' feature.
+     */
+    public static function canDashboard(): bool
+    {
+        if (self::isSuperAdminInSchool()) {
+            return true;
+        }
+
+        return self::canModule('dashboard') && self::canFeature('view_dashboard');
+    }
+
+    /**
+     * Can the current user see one widget of the dashboard?
+     * e.g. canDashboardWidget('view_dashboard_students')
+     */
+    public static function canDashboardWidget(string $featureKey): bool
+    {
+        if (self::isSuperAdminInSchool()) {
+            return true;
+        }
+
+        return self::canDashboard() && self::canFeature($featureKey);
+    }
+
+    /**
+     * Route name of the page this user should land on after login (or after
+     * being denied somewhere): the dashboard when allowed, otherwise the first
+     * module (in catalogue order) whose landing page the role can really open.
+     * A module only counts if its first feature (its "view" screen) is granted
+     * too, so we never send someone to a page that would bounce them back.
+     * Returns null when the user can open nothing at all.
+     */
+    public static function landingRouteName(): ?string
+    {
+        if (self::canDashboard()) {
+            return 'school.dashboard';
+        }
+
+        $modules = SystemModule::active()
+            ->where('key', '!=', 'dashboard')
+            ->whereNotNull('route')
+            ->orderBy('sort_order')
+            ->with('features')
+            ->get();
+
+        foreach ($modules as $module) {
+            if (!self::canModule($module->key) || !Route::has($module->route)) {
+                continue;
+            }
+
+            $landingFeature = $module->features->first();
+            if ($landingFeature && !self::canFeature($landingFeature->key)) {
+                continue;
+            }
+
+            return $module->route;
+        }
+
+        return null;
     }
 
     // ─────────────────────────────────────────────────────────────────
