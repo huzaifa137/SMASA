@@ -15,6 +15,7 @@ use App\Models\School;
 use App\Services\BillingService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -456,20 +457,90 @@ class BillingAdminController extends Controller
     public function recordPayment(Request $request, BillingInvoice $invoice)
     {
         $data = $request->validate([
-            'amount'    => 'required|numeric|min:1|max:1000000000',
-            'method'    => ['required', Rule::in(array_keys(BillingPayment::METHODS))],
-            'reference' => 'nullable|string|max:120',
-            'paid_on'   => 'required|date|before_or_equal:today',
-            'notes'     => 'nullable|string|max:1000',
+            'amount'     => 'required|numeric|min:1|max:1000000000',
+            'method'     => ['required', Rule::in(array_keys(BillingPayment::METHODS))],
+            'reference'  => 'nullable|string|max:120',
+            'paid_on'    => 'required|date|before_or_equal:today',
+            'notes'      => 'nullable|string|max:1000',
+            // proof of payment: bank slip, mobile-money screenshot, scanned receipt
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
+        ], [
+            'attachment.mimes' => 'The proof of payment must be a PDF or an image (JPG, PNG, WEBP).',
+            'attachment.max'   => 'The proof of payment must be 5 MB or smaller.',
         ]);
+
+        $stored = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $stored = $file->store('billing/receipts', 'local');
+            $data['attachment_path'] = $stored;
+            $data['attachment_name'] = mb_substr($file->getClientOriginalName(), 0, 190);
+            $data['attachment_mime'] = $file->getMimeType();
+            $data['attachment_size'] = $file->getSize();
+        }
+        unset($data['attachment']);
 
         try {
             $payment = $this->billing->recordPayment($invoice, $data);
         } catch (\Throwable $e) {
+            if ($stored) {
+                Storage::disk('local')->delete($stored); // nothing was saved: do not leave an orphan file behind
+            }
+
             return $this->fail($e);
         }
 
-        return back()->with('success', 'Payment of ' . BillingService::fmt($payment->amount) . " recorded ({$payment->receipt_number}).");
+        return back()->with('success', 'Payment of ' . BillingService::fmt($payment->amount) . " recorded ({$payment->receipt_number})."
+            . ($payment->hasAttachment() ? ' Proof of payment attached.' : ''));
+    }
+
+    /** Open the proof of payment that was uploaded with a payment (private disk, admin only). */
+    public function paymentAttachment(BillingPayment $payment)
+    {
+        abort_unless($payment->hasAttachment() && Storage::disk('local')->exists($payment->attachment_path), 404);
+
+        return Storage::disk('local')->response(
+            $payment->attachment_path,
+            $payment->attachment_name ?: basename($payment->attachment_path),
+            ['Content-Type' => $payment->attachment_mime ?: 'application/octet-stream', 'X-Content-Type-Options' => 'nosniff']
+        );
+    }
+
+    /** Extend (or bring forward) the due date of one invoice. Answers JSON for the inline editor. */
+    public function changeDueDate(Request $request, BillingInvoice $invoice)
+    {
+        $data = $request->validate([
+            'due_date' => 'required|date',
+            'reason'   => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $this->billing->changeDueDate($invoice, $data['due_date'], $data['reason'] ?? null);
+        } catch (\Throwable $e) {
+            $msg = $e instanceof InvalidArgumentException ? $e->getMessage() : 'Something went wrong: ' . $e->getMessage();
+
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $invoice->refresh();
+        $message = "Due date of {$invoice->invoice_number} is now " . $invoice->due_date->format('j M Y') . '.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok'           => true,
+                'message'      => $message,
+                'due_iso'      => $invoice->due_date->format('Y-m-d'),
+                'due_label'    => $invoice->due_date->format('j M Y'),
+                'status'       => $invoice->display_status,
+                'status_label' => $invoice->status_label,
+                'overdue'      => $invoice->isOverdue(),
+                'days_late'    => $invoice->daysOverdue(),
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function payments(Request $request)

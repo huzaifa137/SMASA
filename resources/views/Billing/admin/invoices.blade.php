@@ -24,6 +24,7 @@
     color: #FFFFFF !important;
 }
 </style>
+@php $canEditDue = \App\Support\AdminAccess::can('billing.edit_invoices'); @endphp
 <div class="bl">
     @include('Billing.partials.flash')
     @include('Billing.partials.admin-nav')
@@ -43,7 +44,7 @@
             <div class="bl-empty"><i class="fas fa-file-circle-question"></i>No invoices match these filters.</div>
         @else
         <div class="bl-table-wrap"><table class="bl-table">
-            <thead><tr><th>Invoice</th><th>School</th><th class="num">Students</th><th class="num">Rate</th><th class="num">Discount</th><th class="num">Tax</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Invoice</th><th>School</th><th class="num">Students</th><th class="num">Rate</th><th class="num">Discount</th><th class="num">Tax</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Due</th><th>Status</th><th></th></tr></thead>
             <tbody>
             @foreach ($invoices as $i)
                 <tr>
@@ -56,19 +57,29 @@
                     <td class="num"><strong>{{ number_format($i->total, 0) }}</strong></td>
                     <td class="num" style="color:var(--bl-green)">{{ number_format($i->amount_paid, 0) }}</td>
                     <td class="num"><strong>{{ in_array($i->status, ['issued', 'partial']) ? number_format($i->balance, 0) : '—' }}</strong></td>
-                    <td><span class="bl-pill {{ $i->display_status }}">{{ $i->status_label }}</span>@if ($i->isOverdue())<div class="bl-muted">{{ $i->daysOverdue() }}d late</div>@endif</td>
+                    <td class="due-cell" style="white-space:nowrap;transition:background .6s;">
+                        <span class="due-label">{{ optional($i->due_date)->format('j M Y') ?? '—' }}</span>
+                        @if ($canEditDue && in_array($i->status, ['draft', 'issued', 'partial'], true))
+                            <button type="button" class="bl-btn sm ghost due-btn" title="Extend or change the due date"
+                                data-url="{{ route('billing.invoices.due-date', $i) }}" data-number="{{ $i->invoice_number }}"
+                                data-school="{{ $i->school->name ?? '' }}" data-due="{{ optional($i->due_date)->format('Y-m-d') }}"
+                                data-issue="{{ optional($i->issue_date)->format('Y-m-d') }}" style="padding:.2rem .45rem;margin-left:.25rem;"><i class="fas fa-calendar-plus"></i></button>
+                        @endif
+                    </td>
+                    <td><span class="bl-pill status-pill {{ $i->display_status }}">{{ $i->status_label }}</span><div class="bl-muted late-note">@if ($i->isOverdue()){{ $i->daysOverdue() }}d late @endif</div></td>
                     <td style="white-space:nowrap;"><a class="bl-btn sm primary" href="{{ route('billing.invoices.show', $i) }}">Open</a>
                         <a class="bl-btn sm ghost" target="_blank" href="{{ route('billing.invoices.pdf', $i) }}"><i class="fas fa-file-pdf"></i></a></td>
                 </tr>
             @endforeach
             </tbody>
-            <tfoot><tr><td colspan="6">{{ $totals->c }} invoice(s) matching</td><td class="num">{{ number_format($totals->t, 0) }}</td><td class="num">{{ number_format($totals->p, 0) }}</td><td class="num">{{ number_format($totals->b, 0) }}</td><td colspan="2"></td></tr></tfoot>
+            <tfoot><tr><td colspan="6">{{ $totals->c }} invoice(s) matching</td><td class="num">{{ number_format($totals->t, 0) }}</td><td class="num">{{ number_format($totals->p, 0) }}</td><td class="num">{{ number_format($totals->b, 0) }}</td><td colspan="3"></td></tr></tfoot>
         </table></div>
         <div class="p-3">{{ $invoices->links() }}</div>
         @endif
     </div>
+    @if ($canEditDue) @include('Billing.admin.partials.due-date-modal') @endif
 </div>
  </div>
 </div>
 @endsection
-@section('js') @include('Billing.partials.reason-modal') @endsection
+@section('js') @include('Billing.partials.reason-modal') @if ($canEditDue) @include('Billing.admin.partials.due-date-js') @endif @endsection

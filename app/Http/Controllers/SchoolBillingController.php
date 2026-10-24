@@ -9,6 +9,7 @@ use App\Models\BillingTerm;
 use App\Models\SchoolProfile;
 use App\Services\BillingService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * School-facing billing: a school sees ONLY its own, issued invoices and the
@@ -153,5 +154,22 @@ class SchoolBillingController extends Controller
             'profile'  => SchoolProfile::where('school_id', $payment->school_id)->first(),
             'settings' => $this->billing->settings(),
         ])->setPaper('a5', 'portrait')->stream($payment->receipt_number . '.pdf');
+    }
+
+    /** The proof of payment (bank slip etc.) attached to one of the school's own payments. */
+    public function proof(int $id)
+    {
+        if ($r = $this->guard('download_receipt_pdf')) {
+            return $r;
+        }
+
+        $payment = BillingPayment::where('school_id', (int) session('LoggedSchool'))->valid()->findOrFail($id);
+        abort_unless($payment->hasAttachment() && Storage::disk('local')->exists($payment->attachment_path), 404);
+
+        return Storage::disk('local')->response(
+            $payment->attachment_path,
+            $payment->attachment_name ?: basename($payment->attachment_path),
+            ['Content-Type' => $payment->attachment_mime ?: 'application/octet-stream', 'X-Content-Type-Options' => 'nosniff']
+        );
     }
 }

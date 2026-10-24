@@ -17,6 +17,7 @@ class BillingPayment extends Model
     protected $fillable = [
         'receipt_number', 'invoice_id', 'billing_term_id', 'school_id', 'amount', 'method',
         'reference', 'paid_on', 'notes', 'status', 'reversed_at', 'reversed_reason', 'recorded_by',
+        'attachment_path', 'attachment_name', 'attachment_mime', 'attachment_size',
     ];
 
     protected $casts = [
@@ -43,6 +44,12 @@ class BillingPayment extends Model
     public function scopeValid($q)
     {
         return $q->where('status', 'valid');
+    }
+
+    /** Proof of payment (bank slip, mobile-money screenshot…) uploaded when the payment was recorded. */
+    public function hasAttachment(): bool
+    {
+        return !empty($this->attachment_path);
     }
 
     public function getMethodLabelAttribute(): string

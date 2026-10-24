@@ -62,6 +62,7 @@
 			<div class="app-content main-content">
 				<div class="side-app">
 					@include('layouts-side-bar.header')
+					@include('Billing.partials.school-notice')
 					@yield('page-header')
 					@yield('content')
 					@include('layouts-side-bar.footer')

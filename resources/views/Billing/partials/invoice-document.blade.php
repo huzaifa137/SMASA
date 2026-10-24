@@ -21,8 +21,8 @@
     ];
     [$stFg, $stBg] = $palette[$status] ?? $palette['draft'];
     $validPayments = $invoice->payments->where('status', 'valid');
-    $companyLogo   = is_file(public_path('assets/images/brand/logo.png'))
-        ? 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('assets/images/brand/logo.png'))) : null;
+    // Round logo with the same indigo ring as the sidebar (dompdf cannot clip an <img>, so it is baked into a PNG).
+    $companyLogo   = \App\Support\BrandLogo::circleDataUri(180);
     $schoolLogo    = $profile ? $profile->logoDataUri() : null;
     $term          = $invoice->term;
     $period        = $term ? $term->name : '';
@@ -86,7 +86,7 @@
             <td style="width:58%;">
                 <table style="width:auto;"><tr>
                     @if ($companyLogo)
-                        <td style="background:#ffffff; padding:5px; border-radius:8px; width:46px;"><img src="{{ $companyLogo }}" style="height:38px;" alt=""></td>
+                        <td style="background:transparent; padding:0; width:60px;"><img src="{{ $companyLogo }}" style="width:56px; height:56px;" alt=""></td>
                         <td style="background:transparent; padding:0 0 0 12px;">
                     @else
                         <td style="background:transparent; padding:0;">
@@ -254,4 +254,3 @@
         <td>This is a computer-generated invoice and is valid without a signature. &nbsp;·&nbsp; {{ $settings->company_name }} &nbsp;·&nbsp; Generated {{ now()->format('j M Y, H:i') }}</td>
     </tr></table>
 </div>
-</div></div></div>

@@ -680,6 +680,72 @@ class BillingService
     }
 
     /** Write off whatever is still unpaid (kept for the record, no longer "outstanding"). */
+    /**
+     * Move (extend or bring forward) the due date of ONE invoice. Only for invoices that are still
+     * live — draft, unpaid or partially paid; a paid / cancelled / written-off invoice has nothing to chase.
+     * Every change is written to the invoice history with who/why.
+     */
+    public function changeDueDate(BillingInvoice $invoice, string $date, ?string $reason = null): BillingInvoice
+    {
+        if (!in_array($invoice->status, ['draft', 'issued', 'partial'], true)) {
+            throw new InvalidArgumentException('The due date can only be changed on a draft, unpaid or partially paid invoice (this one is ' . strtolower($invoice->status_label) . ').');
+        }
+
+        $new = \Illuminate\Support\Carbon::parse($date)->startOfDay();
+        if ($invoice->issue_date && $new->lt($invoice->issue_date->copy()->startOfDay())) {
+            throw new InvalidArgumentException('The due date cannot be before the invoice date (' . $invoice->issue_date->format('j M Y') . ').');
+        }
+
+        $old = $invoice->due_date;
+        if ($old && $old->isSameDay($new)) {
+            throw new InvalidArgumentException('That is already the due date.');
+        }
+
+        $invoice->due_date = $new->toDateString();
+        $invoice->save();
+
+        $this->log('due_date',
+            "Due date of {$invoice->invoice_number} " . ($old ? 'moved from ' . $old->format('j M Y') . ' to ' : 'set to ') . $new->format('j M Y')
+            . ($reason ? " — {$reason}" : '.'),
+            ['term_id' => $invoice->billing_term_id, 'invoice_id' => $invoice->id, 'school_id' => $invoice->school_id]
+        );
+
+        return $invoice;
+    }
+
+    /** How many days before the due date a school starts seeing the "payment due soon" warning. */
+    public const NOTICE_WINDOW_DAYS = 10;
+
+    /**
+     * Warnings a school should see on every page: invoices that are overdue, or fall due within
+     * NOTICE_WINDOW_DAYS. Most urgent first (longest overdue, then soonest due).
+     *
+     * @return Collection<int,array{invoice:BillingInvoice,overdue:bool,days:int,amount:float,term:string,due:\Illuminate\Support\Carbon}>
+     */
+    public function schoolNotices(int $schoolId, int $window = self::NOTICE_WINDOW_DAYS): Collection
+    {
+        return BillingInvoice::with('term')
+            ->where('school_id', $schoolId)
+            ->whereIn('status', ['issued', 'partial'])
+            ->where('balance', '>', 0)
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<=', today()->addDays($window))
+            ->orderBy('due_date')
+            ->get()
+            ->map(function (BillingInvoice $i) {
+                $overdue = $i->isOverdue();
+
+                return [
+                    'invoice' => $i,
+                    'overdue' => $overdue,
+                    'days'    => $overdue ? $i->daysOverdue() : (int) today()->diffInDays($i->due_date),
+                    'amount'  => (float) $i->balance,
+                    'term'    => $i->term->name ?? 'Subscription',
+                    'due'     => $i->due_date,
+                ];
+            })->values();
+    }
+
     public function writeOff(BillingInvoice $invoice, string $reason): BillingInvoice
     {
         if (!$invoice->isCollectable()) {
@@ -744,7 +810,7 @@ class BillingService
                 throw new InvalidArgumentException('Amount is more than the outstanding balance of ' . self::fmt($invoice->balance) . '.');
             }
 
-            $payment = BillingPayment::create([
+            $row = [
                 'receipt_number'  => $this->nextReceiptNumber(),
                 'invoice_id'      => $invoice->id,
                 'billing_term_id' => $invoice->billing_term_id,
@@ -756,11 +822,24 @@ class BillingService
                 'notes'           => $data['notes'] ?? null,
                 'status'          => 'valid',
                 'recorded_by'     => session('LoggedAdmin') ?: null,
-            ]);
+            ];
+
+            // Only touch the attachment columns when a file came with the payment, so recording a
+            // plain payment keeps working even before the attachment migration has been run.
+            if (!empty($data['attachment_path'])) {
+                $row += [
+                    'attachment_path' => $data['attachment_path'],
+                    'attachment_name' => $data['attachment_name'] ?? null,
+                    'attachment_mime' => $data['attachment_mime'] ?? null,
+                    'attachment_size' => $data['attachment_size'] ?? null,
+                ];
+            }
+
+            $payment = BillingPayment::create($row);
 
             $this->recalculate($invoice);
 
-            $this->log('payment', 'Recorded ' . self::fmt($amount) . " ({$payment->method_label}) on {$invoice->invoice_number} — {$payment->receipt_number}.", [
+            $this->log('payment', 'Recorded ' . self::fmt($amount) . " ({$payment->method_label}) on {$invoice->invoice_number} — {$payment->receipt_number}" . ($payment->attachment_path ? ' with proof attached.' : '.'), [
                 'term_id' => $invoice->billing_term_id, 'invoice_id' => $invoice->id, 'school_id' => $invoice->school_id,
             ]);
 

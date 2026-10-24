@@ -8,4 +8,5 @@
 @endsection
 @section('content')
 <div class="bl">@include('Billing.partials.flash')<div class="inv-wrap">@include('Billing.partials.invoice-document')</div></div>
+</div></div></div>
 @endsection

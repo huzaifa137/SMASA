@@ -654,6 +654,38 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
+                                    @if($__A::canAny(['master_data.view_data', 'master_data.view_codes', 'secondary_subjects.view', 'nlsc_curriculum.view']))
+                <li class="slide has-sub">
+                    <a class="side-menu__item" href="#" data-toggle="submenu">
+                        <i class="fas fa-database fa-2x mr-3"></i>
+                        <span>Master Data</span>
+                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
+                    </a>
+                    <ul class="sub-menu">
+                        @if($__A::can('master_data.view_data'))
+                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
+                        @endif
+                        @if($__A::can('master_data.view_codes'))
+                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
+                        @endif
+                        @if($__A::can('secondary_subjects.view'))
+                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
+                                        class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
+                                        class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
+                        @endif
+                        @if($__A::can('nlsc_curriculum.view'))
+                            <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
+                                    Competency Areas</a></li>
+                            <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
+                                    Projects (Project Work)</a></li>
+                            <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC
+                                    Subject Achievement</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
             @if($__A::canModule('billing'))
                 <li class="slide has-sub">
                     <a class="side-menu__item" href="#" data-toggle="submenu">
@@ -684,6 +716,9 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
+                        @include('audit.partials.menu-item')
+
+                        
             @if($__A::can('school_rights.view'))
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('urp.admin.index') }}">
@@ -692,45 +727,11 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
-            @include('audit.partials.menu-item')
-
             @if($__A::can('custom_report_cards.view'))
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('admin.custom-report-cards.index') }}">
                         <i class="fas fa-chart-bar fa-2x mr-3"></i>Custom Report Cards
                     </a>
-                </li>
-            @endif
-
-            @if($__A::canAny(['master_data.view_data', 'master_data.view_codes', 'secondary_subjects.view', 'nlsc_curriculum.view']))
-                <li class="slide has-sub">
-                    <a class="side-menu__item" href="#" data-toggle="submenu">
-                        <i class="fas fa-database fa-2x mr-3"></i>
-                        <span>Master Data</span>
-                        <i class="fas fa-chevron-down dropdown-icon ml-auto"></i>
-                    </a>
-                    <ul class="sub-menu">
-                        @if($__A::can('master_data.view_data'))
-                            <li><a href="{{ route('master-code') }}"><i class="fas fa-code mr-2"></i>Master Data</a></li>
-                        @endif
-                        @if($__A::can('master_data.view_codes'))
-                            <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
-                        @endif
-                        @if($__A::can('secondary_subjects.view'))
-                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
-                                        class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
-                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
-                                        class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
-                        @endif
-                        @if($__A::can('nlsc_curriculum.view'))
-                            <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
-                                    Competency Areas</a></li>
-                            <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
-                                    Projects (Project Work)</a></li>
-                            <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC
-                                    Subject Achievement</a></li>
-                        @endif
-                    </ul>
                 </li>
             @endif
 

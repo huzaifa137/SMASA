@@ -2,7 +2,15 @@
 @section('export_title', $invoice->invoice_number)
 @section('css')
     @include('Billing.partials.styles')
-    <style>.inv-wrap{background:#fff;border:1px solid var(--bl-border);border-radius:16px;box-shadow:var(--bl-shadow);overflow:hidden;max-width:820px}</style>
+    <style>
+        .inv-wrap{background:#fff;border:1px solid var(--bl-border);border-radius:16px;box-shadow:var(--bl-shadow);overflow:hidden;max-width:820px}
+        /* invoice on the left, Actions / Payments / History on the right; one column on tablets and phones */
+        .bl-inv-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:1.2rem;align-items:start}
+        .bl-inv-grid > div{min-width:0}
+        @media (max-width:1100px){.bl-inv-grid{grid-template-columns:minmax(0,1fr)}.inv-wrap{max-width:none}}
+        .bl-attach{display:inline-flex;align-items:center;gap:.3rem;font-size:.76rem;font-weight:600;color:var(--bl-blue);text-decoration:none!important}
+        .bl-attach:hover{text-decoration:underline!important}
+    </style>
 @endsection
 @section('page-header')
     <div class="bl"><div class="bl-hero">
@@ -20,7 +28,7 @@
 <div class="bl">
     @include('Billing.partials.flash')
     @include('Billing.partials.admin-nav')
-    <div class="bl-grid3" style="grid-template-columns: minmax(0,1.6fr) minmax(0,1fr);">
+    <div class="bl-inv-grid">
         <div>
             <div class="inv-wrap">@include('Billing.partials.invoice-document')</div>
         </div>
@@ -35,6 +43,7 @@
                 @if ($live && $can('edit_invoices'))
                     <form method="POST" action="{{ route('billing.invoices.recount', $invoice) }}" data-confirm="Re-count students?" data-confirm-text="Currently {{ $invoice->student_count }}. The invoice will use today's number of enrolled students.">@csrf<button class="bl-btn ghost"><i class="fas fa-rotate"></i> Recount students</button></form>
                     <button class="bl-btn ghost" data-toggle="modal" data-target="#editModal"><i class="fas fa-pen"></i> Edit price / discount</button>
+                    <button type="button" class="bl-btn ghost due-btn" data-url="{{ route('billing.invoices.due-date', $invoice) }}" data-number="{{ $invoice->invoice_number }}" data-school="{{ $school->name }}" data-due="{{ optional($invoice->due_date)->format('Y-m-d') }}" data-issue="{{ optional($invoice->issue_date)->format('Y-m-d') }}" data-reload="1"><i class="fas fa-calendar-plus"></i> Change due date</button>
                     <button class="bl-btn ghost" data-toggle="modal" data-target="#adjModal"><i class="fas fa-plus-minus"></i> Add charge / credit</button>
                 @endif
                 @if ($invoice->isCollectable() && $can('edit_invoices'))
@@ -64,7 +73,8 @@
                     @foreach ($invoice->payments as $p)
                         <tr style="{{ $p->status === 'reversed' ? 'opacity:.55' : '' }}">
                             <td><strong>{{ $f($p->amount) }}</strong> <span class="bl-pill {{ $p->status }}">{{ $p->status }}</span>
-                                <div class="bl-muted">{{ $p->paid_on->format('j M Y') }} · {{ $p->method_label }}{{ $p->reference ? ' · ' . $p->reference : '' }}<br>{{ $p->receipt_number }}</div></td>
+                                <div class="bl-muted">{{ $p->paid_on->format('j M Y') }} · {{ $p->method_label }}{{ $p->reference ? ' · ' . $p->reference : '' }}<br>{{ $p->receipt_number }}</div>
+                                @if ($p->hasAttachment())<a class="bl-attach" target="_blank" href="{{ route('billing.payments.attachment', $p) }}" title="{{ $p->attachment_name }}"><i class="fas fa-paperclip"></i> Proof of payment</a>@endif</td>
                             <td class="num">
                                 <a class="bl-btn sm ghost" target="_blank" href="{{ route('billing.payments.receipt', $p) }}"><i class="fas fa-receipt"></i></a>
                                 @if ($p->status === 'valid' && $can('record_payments'))<button class="bl-btn sm ghost-danger" data-reason-url="{{ route('billing.payments.reverse', $p) }}" data-reason-title="Reverse {{ $p->receipt_number }}" data-reason-text="Use this for bounced or wrongly recorded payments." data-reason-btn="Reverse payment"><i class="fas fa-rotate-left"></i></button>@endif
@@ -79,15 +89,20 @@
     </div>
 
     {{-- Record payment --}}
-    <div class="modal fade bl" id="payModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form class="modal-content" method="POST" action="{{ route('billing.invoices.payments.store', $invoice) }}" style="border-radius:16px;">@csrf
+    <div class="modal fade bl" id="payModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form class="modal-content" method="POST" action="{{ route('billing.invoices.payments.store', $invoice) }}" enctype="multipart/form-data" style="border-radius:16px;">@csrf
         <div class="modal-header"><h5 class="modal-title">Record payment</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
         <div class="modal-body"><div class="row">
             <div class="form-group col-md-6"><label>Amount ({{ $settings->currency }})</label><input type="number" name="amount" min="1" max="{{ (int) $invoice->balance }}" value="{{ (int) $invoice->balance }}" class="form-control w-100" required><div class="bl-hint">Balance: {{ $f($invoice->balance) }}</div></div>
             <div class="form-group col-md-6"><label>Date received</label><input type="date" name="paid_on" value="{{ today()->format('Y-m-d') }}" max="{{ today()->format('Y-m-d') }}" class="form-control w-100" required></div>
             <div class="form-group col-md-6"><label>Method</label><select name="method" class="form-control w-100">@foreach ($methods as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select></div>
             <div class="form-group col-md-6"><label>Reference / txn ID</label><input name="reference" maxlength="120" class="form-control w-100"></div>
-            <div class="form-group col-12 mb-0"><label>Notes</label><input name="notes" maxlength="1000" class="form-control w-100"></div></div></div>
+            <div class="form-group col-12"><label>Notes</label><input name="notes" maxlength="1000" class="form-control w-100"></div>
+            <div class="form-group col-12 mb-0"><label>Proof of payment <span class="bl-muted">(optional)</span></label>
+                <input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" class="form-control w-100" style="padding:.4rem .6rem;">
+                <div class="bl-hint">Bank slip, mobile-money screenshot or scanned receipt · PDF, JPG, PNG or WEBP · up to 5 MB. Visible to this school next to the payment.</div></div></div></div>
         <div class="modal-footer"><button type="button" class="bl-btn ghost" data-dismiss="modal">Cancel</button><button class="bl-btn success">Save payment</button></div></form></div></div>
+
+    @include('Billing.admin.partials.due-date-modal')
 
     {{-- Edit --}}
     <div class="modal fade bl" id="editModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form class="modal-content" method="POST" action="{{ route('billing.invoices.update', $invoice) }}" style="border-radius:16px;">@csrf @method('PUT')
@@ -112,4 +127,4 @@
         <div class="modal-footer"><button type="button" class="bl-btn ghost" data-dismiss="modal">Cancel</button><button class="bl-btn primary">Add line</button></div></form></div></div>
 </div></div></div></div>
 @endsection
-@section('js') @include('Billing.partials.reason-modal') @endsection
+@section('js') @include('Billing.partials.reason-modal') @include('Billing.admin.partials.due-date-js') @endsection

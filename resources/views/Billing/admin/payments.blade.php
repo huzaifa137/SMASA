@@ -75,7 +75,9 @@
                                     <td class="num"><strong>{{ number_format($p->amount, 0) }}</strong></td>
                                     <td><span class="bl-pill {{ $p->status }}">{{ $p->status }}</span></td>
                                     <td style="white-space:nowrap"><a class="bl-btn sm ghost" target="_blank"
-                                            href="{{ route('billing.payments.receipt', $p) }}"><i class="fas fa-receipt"></i></a>
+                                            href="{{ route('billing.payments.receipt', $p) }}" title="Receipt"><i class="fas fa-receipt"></i></a>
+                                        @if ($p->hasAttachment())<a class="bl-btn sm ghost" target="_blank" title="Proof of payment: {{ $p->attachment_name }}"
+                                            href="{{ route('billing.payments.attachment', $p) }}"><i class="fas fa-paperclip"></i></a>@endif
                                         @if ($p->status === 'valid' && \App\Support\AdminAccess::can('billing.record_payments'))<button
                                             class="bl-btn sm ghost-danger"
                                             data-reason-url="{{ route('billing.payments.reverse', $p) }}"

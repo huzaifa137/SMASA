@@ -38,7 +38,7 @@
                 <div style="padding:.9rem 1rem;border-bottom:1px solid var(--bl-border);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
                     <div style="position:relative;flex:1;min-width:240px;max-width:460px;">
                         <i class="fas fa-magnifying-glass" style="position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--bl-t3,#94a3b8);"></i>
-                        <input type="search" id="schoolSearch" class="bl-input" style="width:100%;padding-left:2.2rem;"
+                        <input type="search" id="pricingSearch" class="bl-input" style="width:100%;padding-left:2.2rem;"
                             placeholder="Search school name or code…" value="{{ $search }}" autocomplete="off">
                     </div>
                     <span id="searchSpin" class="bl-muted" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Searching…</span>
@@ -133,16 +133,16 @@
                 $('#searchSpin').show();
                 req = $.ajax({
                     url: url, dataType: 'json',
-                    data: { q: $('#schoolSearch').val(), term: termId, page: page }
+                    data: { q: $('#pricingSearch').val(), term: termId, page: page }
                 }).done(function (r) {
                     $('#pricingRows').html(r.rows); $('#pricingPager').html(r.pager);
                     var u = new URL(window.location.href);
-                    $('#schoolSearch').val() ? u.searchParams.set('q', $('#schoolSearch').val()) : u.searchParams.delete('q');
+                    $('#pricingSearch').val() ? u.searchParams.set('q', $('#pricingSearch').val()) : u.searchParams.delete('q');
                     page > 1 ? u.searchParams.set('page', page) : u.searchParams.delete('page');
                     history.replaceState(null, '', u);
                 }).always(function () { $('#searchSpin').hide(); });
             }
-            $('#schoolSearch').on('input', function () { clearTimeout(timer); page = 1; timer = setTimeout(load, 250); });
+            $('#pricingSearch').on('input', function () { clearTimeout(timer); page = 1; timer = setTimeout(load, 250); });
             $(document).on('click', '.pg-btn', function () { if (this.disabled) return; page = parseInt(this.dataset.page, 10); load(); });
         })();
     </script>

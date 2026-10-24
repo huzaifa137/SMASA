@@ -169,9 +169,12 @@
                                     <td>{{ $p->invoice->invoice_number ?? '' }}</td>
                                     <td>{{ $p->method_label }}</td>
                                     <td class="num"><strong>{{ $f($p->amount) }}</strong></td>
-                                    <td><a class="bl-btn sm ghost" target="_blank"
+                                    <td style="white-space:nowrap"><a class="bl-btn sm ghost" target="_blank"
                                             href="{{ route('school.billing.receipt', $p->id) }}"><i class="fas fa-receipt"></i>
-                                            Receipt</a></td>
+                                            Receipt</a>
+                                        @if ($p->hasAttachment())<a class="bl-btn sm ghost" target="_blank"
+                                            title="{{ $p->attachment_name }}" href="{{ route('school.billing.proof', $p->id) }}"><i class="fas fa-paperclip"></i>
+                                            Proof</a>@endif</td>
                             </tr>@endforeach
                         </tbody>
                     </table>

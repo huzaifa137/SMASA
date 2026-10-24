@@ -45,6 +45,7 @@ Route::prefix('admin/billing')
         Route::post('/invoices/{invoice}/issue', 'issueInvoice')->name('invoices.issue')->middleware('admin.can:billing.generate_invoices');
         Route::post('/invoices/{invoice}/recount', 'recountInvoice')->name('invoices.recount')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/cancel', 'cancelInvoice')->name('invoices.cancel')->middleware('admin.can:billing.edit_invoices');
+        Route::post('/invoices/{invoice}/due-date', 'changeDueDate')->name('invoices.due-date')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/write-off', 'writeOffInvoice')->name('invoices.write-off')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/restore', 'restoreInvoice')->name('invoices.restore')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/adjustments', 'addAdjustment')->name('invoices.adjustments.add')->middleware('admin.can:billing.edit_invoices');
@@ -54,6 +55,7 @@ Route::prefix('admin/billing')
         // Payments
         Route::get('/payments', 'payments')->name('payments')->middleware('admin.can:billing.view');
         Route::post('/payments/{payment}/reverse', 'reversePayment')->name('payments.reverse')->middleware('admin.can:billing.record_payments');
+        Route::get('/payments/{payment}/attachment', 'paymentAttachment')->name('payments.attachment')->middleware('admin.can:billing.view');
         Route::get('/payments/{payment}/receipt', 'receiptPdf')->name('payments.receipt')->middleware('admin.can:billing.view');
 
         // Per-school pricing (custom rate / discount / exemption)
@@ -89,4 +91,5 @@ Route::prefix('school/billing')
         Route::get('/invoices/{id}', 'show')->name('show');
         Route::get('/invoices/{id}/pdf', 'pdf')->name('pdf');
         Route::get('/receipts/{id}', 'receipt')->name('receipt');
+        Route::get('/receipts/{id}/proof', 'proof')->name('proof');
     });
