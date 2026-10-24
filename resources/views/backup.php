@@ -43,6 +43,12 @@ echo "alias storage:relink='rm public/storage && ln -s /home/u453625278/domains/
 storage:relink
 <!-- Note: The alias only works when you're inside your public_html directory since the rm public/storage path is relative. -->
 
+th table stylings #
+
+.bl-table thead th {
+    background-color: #2C29CA !important;
+    color: #FFFFFF !important;
+}
 
 /* ── Pagination ── */
         .pagination {

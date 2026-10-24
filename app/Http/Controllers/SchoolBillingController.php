@@ -60,10 +60,37 @@ class SchoolBillingController extends Controller
             ->where('school_id', $schoolId)->valid()
             ->orderByDesc('paid_on')->orderByDesc('id')->limit(15)->get();
 
+        // Why is there no invoice for the current term? (pricing is only a rule — an invoice
+        // exists once the administrator generates it, and drafts are hidden from the school)
+        $currentState = null;
+        $estimate = null;
+        if ($current && !$currentInvoice) {
+            $draft = BillingInvoice::where('school_id', $schoolId)->where('billing_term_id', $current->id)->where('status', 'draft')->exists();
+            $pricing = $this->billing->resolvePricing($schoolId, $current);
+            $students = $this->billing->countStudents($schoolId);
+
+            if ($pricing['exempt']) {
+                $currentState = 'exempt';
+            } elseif ($draft) {
+                $currentState = 'draft';
+            } elseif ($students === 0) {
+                $currentState = 'no_students';
+            } else {
+                $currentState = 'not_generated';
+                $gross = $students * $pricing['rate'];
+                $net = $pricing['discount_type'] === 'percent' ? $gross * (1 - $pricing['discount_value'] / 100)
+                    : ($pricing['discount_type'] === 'fixed' ? max($gross - $pricing['discount_value'], 0) : $gross);
+                $estimate = ['students' => $students, 'rate' => $pricing['rate'], 'net' => $net, 'discount_type' => $pricing['discount_type'], 'discount_value' => $pricing['discount_value']];
+            }
+        }
+
         return view('Billing.school.index', [
             'invoices'       => $invoices,
             'current'        => $current,
             'currentInvoice' => $currentInvoice,
+            'currentState'   => $currentState,
+            'estimate'       => $estimate,
+            'arrears'        => $this->billing->arrears($schoolId, $current),
             'payments'       => $payments,
             'position'       => $this->billing->schoolPosition($schoolId),
             'settings'       => $this->billing->settings(),

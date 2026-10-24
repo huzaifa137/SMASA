@@ -10,7 +10,7 @@
                     · set a custom rate, discount or exemption per school</p>
             </div>
             <div class="bl-hero-actions">
-                <form method="GET"><select name="term" class="bl-input"
+                <form method="GET"><input type="hidden" name="q" value="{{ $search }}"><select name="term" class="bl-input"
                         onchange="this.form.submit()">@foreach ($terms as $t)
                             <option value="{{ $t->id }}" @selected($term && $t->id === $term->id)>{{ $t->name }}</option>
                         @endforeach
@@ -35,6 +35,14 @@
                     generated from now on. A term-specific override beats an "all terms" one.</div>
             </div>
             <div class="bl-card">
+                <div style="padding:.9rem 1rem;border-bottom:1px solid var(--bl-border);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                    <div style="position:relative;flex:1;min-width:240px;max-width:460px;">
+                        <i class="fas fa-magnifying-glass" style="position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--bl-t3,#94a3b8);"></i>
+                        <input type="search" id="schoolSearch" class="bl-input" style="width:100%;padding-left:2.2rem;"
+                            placeholder="Search school name or code…" value="{{ $search }}" autocomplete="off">
+                    </div>
+                    <span id="searchSpin" class="bl-muted" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Searching…</span>
+                </div>
                 <div class="bl-table-wrap">
                     <table class="bl-table">
                         <thead>
@@ -45,49 +53,16 @@
                                 <th>Discount</th>
                                 <th>Source</th>
                                 <th class="num">Est. before tax</th>
+                                <th class="num" title="Unpaid invoices from any term">Unpaid</th>
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach ($rows as $r)
-                                @php $p = $r['pricing'];
-                                    $disc = $p['discount_type'] === 'percent' ? rtrim(rtrim(number_format($p['discount_value'], 2), '0'), '.') . '%' : ($p['discount_type'] === 'fixed' ? 'UGX ' . number_format($p['discount_value'], 0) : '—');
-                                    $gross = $r['students'] * $p['rate'];
-                                $net = $p['discount_type'] === 'percent' ? $gross * (1 - $p['discount_value'] / 100) : ($p['discount_type'] === 'fixed' ? max($gross - $p['discount_value'], 0) : $gross); @endphp
-                                <tr>
-                                    <td><strong>{{ $r['school']->name }}</strong>
-                                        <div class="bl-muted">{{ $r['school']->registration_code }}</div>
-                                    </td>
-                                    <td class="num">{{ number_format($r['students']) }}</td>
-                                    <td class="num">{{ number_format($p['rate'], 0) }}</td>
-                                    <td>{{ $disc }} @if ($p['reason'])
-                                    <div class="bl-muted">{{ $p['reason'] }}</div>@endif
-                                    </td>
-                                    <td>@if ($p['exempt'])<span
-                                    class="bl-pill waived">Exempt</span>@elseif ($p['source'] === 'term')<span
-                                            class="bl-muted">Term rate</span>@else<span
-                                            class="bl-pill partial">{{ $p['source'] === 'school' ? 'All terms' : 'This term' }}</span>@endif
-                                    </td>
-                                    <td class="num">{{ $p['exempt'] ? '—' : number_format($net, 0) }}</td>
-                                    <td style="white-space:nowrap"><button class="bl-btn sm primary price-btn"
-                                            data-school="{{ $r['school']->id }}" data-name="{{ $r['school']->name }}"
-                                            data-term="{{ $term->id }}" data-termname="{{ $term->name }}"
-                                            data-rate="{{ $p['source'] === 'term' ? '' : (float) $p['rate'] }}"
-                                            data-dtype="{{ $p['discount_type'] }}" data-dval="{{ (float) $p['discount_value'] }}"
-                                            data-exempt="{{ $p['exempt'] ? 1 : 0 }}" data-reason="{{ $p['reason'] }}"><i
-                                                class="fas fa-pen"></i> Set</button>
-                                        @foreach ($r['rates'] as $rate)
-                                            <form method="POST" action="{{ route('billing.pricing.delete', $rate) }}" class="d-inline"
-                                                data-confirm="Remove this override?">@csrf @method('DELETE')<button
-                                                    class="bl-btn sm ghost-danger"
-                                                    title="Remove {{ $rate->billing_term_id ? 'term' : 'all-terms' }} override"><i
-                                        class="fas fa-xmark"></i></button></form>@endforeach
-                                    </td>
-                                </tr>
-                            @endforeach
+                        <tbody id="pricingRows">
+                            @include('Billing.admin.partials.pricing-rows')
                         </tbody>
                     </table>
                 </div>
+                <div id="pricingPager">@include('Billing.admin.partials.pricing-pager')</div>
             </div>
 
             <div class="modal fade bl" id="priceModal" tabindex="-1">
@@ -145,6 +120,31 @@
             $('#pm_rate').val(d.rate); $('#pm_dtype').val(d.dtype); $('#pm_dval').val(d.dval); $('#pm_reason').val(d.reason);
             $('#pm_exempt').prop('checked', d.exempt === '1'); $('#priceModal').modal('show');
         });
+
+        // ── Live school search ────────────────────────────────────────────
+        // Only #pricingRows / #pricingPager are replaced. Every button inside uses a handler bound to
+        // `document` (above) or a normal <form>, so they keep working on whatever rows are showing.
+        (function () {
+            var url = @json(route('billing.pricing')), termId = @json($term ? $term->id : null);
+            var timer = null, req = null, page = {{ $page->currentPage() }};
+
+            function load() {
+                if (req) req.abort();
+                $('#searchSpin').show();
+                req = $.ajax({
+                    url: url, dataType: 'json',
+                    data: { q: $('#schoolSearch').val(), term: termId, page: page }
+                }).done(function (r) {
+                    $('#pricingRows').html(r.rows); $('#pricingPager').html(r.pager);
+                    var u = new URL(window.location.href);
+                    $('#schoolSearch').val() ? u.searchParams.set('q', $('#schoolSearch').val()) : u.searchParams.delete('q');
+                    page > 1 ? u.searchParams.set('page', page) : u.searchParams.delete('page');
+                    history.replaceState(null, '', u);
+                }).always(function () { $('#searchSpin').hide(); });
+            }
+            $('#schoolSearch').on('input', function () { clearTimeout(timer); page = 1; timer = setTimeout(load, 250); });
+            $(document).on('click', '.pg-btn', function () { if (this.disabled) return; page = parseInt(this.dataset.page, 10); load(); });
+        })();
     </script>
     @include('Billing.partials.reason-modal')
 @endsection

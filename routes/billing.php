@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicTermController;
 use App\Http\Controllers\BillingAdminController;
 use App\Http\Controllers\SchoolBillingController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,8 @@ Route::prefix('admin/billing')
         Route::get('/terms/{term}/preview', 'previewGenerate')->name('terms.preview')->middleware('admin.can:billing.generate_invoices');
         Route::post('/terms/{term}/generate', 'generate')->name('terms.generate')->middleware('admin.can:billing.generate_invoices');
         Route::post('/terms/{term}/issue-all', 'issueAll')->name('terms.issue-all')->middleware('admin.can:billing.generate_invoices');
+        // Invoice ONE school for a term (button on School Pricing)
+        Route::post('/terms/{term}/schools/{school}/invoice', 'generateSchoolInvoice')->name('terms.school-invoice')->middleware('admin.can:billing.generate_invoices');
 
         // Invoices
         Route::get('/invoices', 'invoices')->name('invoices')->middleware('admin.can:billing.view');
@@ -63,6 +66,17 @@ Route::prefix('admin/billing')
         Route::post('/settings', 'saveSettings')->name('settings.save')->middleware('admin.can:billing.manage_settings');
         Route::get('/reports', 'reports')->name('reports')->middleware('admin.can:billing.view_reports');
         Route::get('/export/{type}', 'export')->name('export')->middleware('admin.can:billing.view_reports');
+    });
+
+// ─── Platform terms (Term I/II/III + the active term), managed from /add-academic-year ──
+Route::middleware(['AdminAuth', 'admin.can:academic_calendar.manage'])
+    ->controller(AcademicTermController::class)
+    ->group(function () {
+        Route::post('/academic-terms', 'store')->name('academic-terms.store');
+        Route::put('/academic-terms/{id}', 'update')->name('academic-terms.update');
+        Route::patch('/academic-terms/{id}/activate', 'activate')->name('academic-terms.activate');
+        Route::patch('/academic-terms/{id}/deactivate', 'deactivate')->name('academic-terms.deactivate');
+        Route::delete('/academic-terms/{id}', 'destroy')->name('academic-terms.destroy');
     });
 
 // ─── School portal (read-only) ──────────────────────────────────────────────

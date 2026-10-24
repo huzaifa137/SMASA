@@ -13,6 +13,12 @@
     </div>
 @endsection
 @section('content')
+<style>
+    .bl-table thead th {
+    background-color: #2C29CA !important;
+    color: #FFFFFF !important;
+}
+</style>
     @php $f = fn($v) => number_format($v, 0);
     $cur = $settings->currency; @endphp
     <div class="bl">
@@ -32,6 +38,47 @@
                 <div>{{ $current->name }} is fully paid. Thank you!</div>
             </div>
         @endif
+        {{-- Unpaid from EARLIER terms (a school that did not pay a term keeps owing it) --}}
+        @if ($arrears['count'] > 0)
+            <div class="bl-alert error"><i class="fas fa-triangle-exclamation mt-1"></i>
+                <div><strong>{{ $cur }} {{ $f($arrears['amount']) }} is still unpaid from
+                        {{ $current ? 'earlier' : 'previous' }} term(s).</strong>
+                    @foreach ($arrears['invoices'] as $ai)
+                        <div><a href="{{ route('school.billing.show', $ai->id) }}">{{ $ai->term->name ?? 'Earlier term' }}</a>
+                            — {{ $ai->invoice_number }}: {{ $cur }} {{ $f($ai->balance) }}
+                            @if ($ai->due_date) (due {{ $ai->due_date->format('j M Y') }})@endif</div>
+                    @endforeach
+                    <div class="bl-muted">Please settle this balance; it stays on your account until it is paid.</div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Current term, but no invoice yet: say exactly why --}}
+        @if ($current && !$currentInvoice)
+            @if ($currentState === 'not_generated')
+                <div class="bl-alert info"><i class="fas fa-circle-info mt-1"></i>
+                    <div><strong>{{ $current->name }} — invoice not issued yet.</strong>
+                        Your school is expected to be billed about <strong>{{ $cur }} {{ $f($estimate['net']) }}</strong>
+                        before tax ({{ number_format($estimate['students']) }} students × {{ $cur }} {{ $f($estimate['rate']) }}
+                        @if ($estimate['discount_type'] === 'percent'), {{ rtrim(rtrim(number_format($estimate['discount_value'], 2), '0'), '.') }}% discount
+                        @elseif ($estimate['discount_type'] === 'fixed'), {{ $cur }} {{ $f($estimate['discount_value']) }} discount @endif).
+                        The invoice appears here as soon as the SMASA team issues it.</div>
+                </div>
+            @elseif ($currentState === 'draft')
+                <div class="bl-alert info"><i class="fas fa-circle-info mt-1"></i>
+                    <div><strong>{{ $current->name }} — your invoice is being prepared.</strong> It will appear here once it is issued.</div>
+                </div>
+            @elseif ($currentState === 'exempt')
+                <div class="bl-alert success"><i class="fas fa-circle-check mt-1"></i>
+                    <div><strong>{{ $current->name }}:</strong> your school is exempt from billing for this term.</div>
+                </div>
+            @elseif ($currentState === 'no_students')
+                <div class="bl-alert info"><i class="fas fa-circle-info mt-1"></i>
+                    <div><strong>{{ $current->name }}:</strong> no invoice yet — your school has no enrolled students to bill for.</div>
+                </div>
+            @endif
+        @endif
+
         <div class="bl-kpis">
             <div class="bl-kpi blue"><span class="ico"><i class="fas fa-file-invoice"></i></span>
                 <div class="lbl">Total billed</div>
@@ -57,7 +104,7 @@
             </div>
             @if ($invoices->isEmpty())
                 <div class="bl-empty"><i class="fas fa-file-circle-question"></i>No invoices have been issued to your school
-                    yet.</div>
+                    yet.@if ($current) See the note above for {{ $current->name }}.@endif</div>
             @else<div class="bl-table-wrap">
                 <table class="bl-table">
                     <thead>

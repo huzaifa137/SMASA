@@ -199,6 +199,175 @@ class BillingService
 
     // ─── invoices ──────────────────────────────────────────────────────────
 
+    /**
+     * Build one school's invoice (lines, totals, optional issue). Shared by the
+     * bulk "Generate" and the single-school "Invoice" button so both produce
+     * exactly the same document.
+     */
+    private function createInvoice(BillingTerm $term, int $schoolId, array $pricing, int $count, int $sequence, bool $issueNow, \App\Models\BillingSetting $settings): BillingInvoice
+    {
+        $invoice = BillingInvoice::create([
+            'invoice_number'   => $this->nextNumber($term, $sequence),
+            'billing_term_id'  => $term->id,
+            'school_id'        => $schoolId,
+            'sequence'         => $sequence,
+            'student_count'    => $count,
+            'rate_per_student' => $pricing['rate'],
+            'discount_type'    => $pricing['discount_type'],
+            'discount_value'   => $pricing['discount_value'],
+            'discount_reason'  => $pricing['reason'],
+            'tax_name'         => $settings->tax_enabled ? $settings->tax_name : null,
+            'tax_rate'         => $settings->tax_enabled ? $settings->tax_rate : 0,
+            'status'           => 'draft',
+            'due_date'         => $term->due_date,
+            'counted_at'       => now(),
+            'notes'            => $this->arrearsNote($schoolId, $term),
+            'created_by'       => session('LoggedAdmin') ?: null,
+        ]);
+
+        BillingInvoiceItem::create([
+            'invoice_id'  => $invoice->id,
+            'type'        => 'students',
+            'description' => 'SMASA platform subscription — ' . $term->name . ' (per enrolled student)',
+            'quantity'    => $count,
+            'unit_price'  => $pricing['rate'],
+            'amount'      => self::money($count * $pricing['rate']),
+            'sort_order'  => 0,
+        ]);
+
+        $this->recalculate($invoice);
+        if ($issueNow) {
+            $this->issue($invoice, false);
+        }
+
+        return $invoice->fresh();
+    }
+
+    /**
+     * Invoice ONE school for a term (the "Invoice" button on School Pricing).
+     * Same rules as the bulk generate; every refusal is an InvalidArgumentException
+     * with a message that can be shown to the administrator as is.
+     */
+    public function generateForSchool(BillingTerm $term, int $schoolId, bool $issueNow = true): BillingInvoice
+    {
+        if (!$term->isOpen()) {
+            throw new InvalidArgumentException('This term is closed. Reopen it to generate invoices.');
+        }
+
+        $school = $this->activeSchools([$schoolId])->first();
+        if (!$school) {
+            throw new InvalidArgumentException('Only active schools can be invoiced.');
+        }
+
+        return DB::transaction(function () use ($term, $school, $issueNow) {
+            BillingTerm::where('id', $term->id)->lockForUpdate()->first();
+
+            if (BillingInvoice::where('billing_term_id', $term->id)->where('school_id', $school->id)->exists()) {
+                throw new InvalidArgumentException($school->name . ' already has an invoice for ' . $term->name . '.');
+            }
+
+            $pricing = $this->resolvePricing($school->id, $term);
+            if ($pricing['exempt']) {
+                throw new InvalidArgumentException($school->name . ' is exempt from billing for ' . $term->name . '.');
+            }
+
+            $count = $this->countStudents($school->id);
+            if ($count === 0) {
+                throw new InvalidArgumentException($school->name . ' has no students yet, so there is nothing to invoice.');
+            }
+
+            $sequence = (int) BillingInvoice::where('billing_term_id', $term->id)->max('sequence') + 1;
+            $invoice = $this->createInvoice($term, (int) $school->id, $pricing, $count, $sequence, $issueNow, $this->settings());
+
+            if (!$term->invoices_generated_at) {
+                $term->invoices_generated_at = now();
+                $term->save();
+            }
+
+            $this->log('generate', 'Invoiced ' . $school->name . ' for ' . $term->name . ($issueNow ? ' and issued it' : ' as a draft') . '.', [
+                'term_id' => $term->id, 'school_id' => $school->id, 'invoice_id' => $invoice->id,
+            ]);
+
+            return $invoice;
+        });
+    }
+
+    // ─── unpaid terms (arrears) ─────────────────────────────────────────────
+
+    /** Unpaid invoices of a school from terms BEFORE $before (or all terms when null). */
+    private function arrearsQuery(int $schoolId, ?BillingTerm $before = null)
+    {
+        $q = BillingInvoice::where('billing_invoices.school_id', $schoolId)
+            ->whereIn('billing_invoices.status', ['issued', 'partial'])
+            ->where('billing_invoices.balance', '>', 0);
+
+        if ($before) {
+            $q->join('billing_terms as bt', 'bt.id', '=', 'billing_invoices.billing_term_id')
+                ->where(function ($w) use ($before) {
+                    $w->where('bt.year_label', '<', $before->year_label)
+                        ->orWhere(function ($w2) use ($before) {
+                            $w2->where('bt.year_label', $before->year_label)->where('bt.term', '<', $before->term);
+                        });
+                })
+                ->select('billing_invoices.*');
+        }
+
+        return $q;
+    }
+
+    /** @return array{amount:float,count:int,invoices:Collection} */
+    public function arrears(int $schoolId, ?BillingTerm $before = null): array
+    {
+        $rows = $this->arrearsQuery($schoolId, $before)->with('term')->get();
+
+        return [
+            'amount'   => (float) $rows->sum('balance'),
+            'count'    => $rows->count(),
+            'invoices' => $rows,
+        ];
+    }
+
+    /** Printed on the new invoice so the school sees what it still owes from earlier terms. */
+    private function arrearsNote(int $schoolId, BillingTerm $term): ?string
+    {
+        $a = $this->arrears($schoolId, $term);
+        if ($a['count'] === 0) {
+            return null;
+        }
+
+        $list = $a['invoices']->map(fn($i) => ($i->term->name ?? 'earlier term') . ' (' . $i->invoice_number . ')')->implode(', ');
+
+        return 'Previous balance brought forward: ' . $this->settings()->currency . ' ' . number_format($a['amount'], 0)
+            . ' still unpaid from ' . $list . '. It is not included in this invoice total.';
+    }
+
+    /** school_id => ['amount' => float, 'count' => int] for every school with unpaid invoices. */
+    public function arrearsMap(array $schoolIds): array
+    {
+        if (!$schoolIds) {
+            return [];
+        }
+
+        return BillingInvoice::whereIn('school_id', $schoolIds)
+            ->whereIn('status', ['issued', 'partial'])->where('balance', '>', 0)
+            ->selectRaw('school_id, SUM(balance) as amount, COUNT(*) as n')
+            ->groupBy('school_id')->get()
+            ->mapWithKeys(fn($r) => [(int) $r->school_id => ['amount' => (float) $r->amount, 'count' => (int) $r->n]])
+            ->all();
+    }
+
+    /** school_id => unique students, in one query (the pricing screen lists many schools). */
+    public function studentCounts(array $schoolIds): array
+    {
+        if (!$schoolIds) {
+            return [];
+        }
+
+        return Student::whereIn('school_id', $schoolIds)->whereNull('linked_student_id')
+            ->selectRaw('school_id, COUNT(*) as n')->groupBy('school_id')
+            ->pluck('n', 'school_id')->map(fn($n) => (int) $n)->all();
+    }
+
     private function nextNumber(BillingTerm $term, int $sequence): string
     {
         $s = $this->settings();
@@ -250,38 +419,7 @@ class BillingService
                 }
 
                 $sequence++;
-                $invoice = BillingInvoice::create([
-                    'invoice_number'  => $this->nextNumber($term, $sequence),
-                    'billing_term_id' => $term->id,
-                    'school_id'       => $school->id,
-                    'sequence'        => $sequence,
-                    'student_count'   => $count,
-                    'rate_per_student' => $pricing['rate'],
-                    'discount_type'   => $pricing['discount_type'],
-                    'discount_value'  => $pricing['discount_value'],
-                    'discount_reason' => $pricing['reason'],
-                    'tax_name'        => $settings->tax_enabled ? $settings->tax_name : null,
-                    'tax_rate'        => $settings->tax_enabled ? $settings->tax_rate : 0,
-                    'status'          => 'draft',
-                    'due_date'        => $term->due_date,
-                    'counted_at'      => now(),
-                    'created_by'      => session('LoggedAdmin') ?: null,
-                ]);
-
-                BillingInvoiceItem::create([
-                    'invoice_id'  => $invoice->id,
-                    'type'        => 'students',
-                    'description' => 'SMASA platform subscription — ' . $term->name . ' (per enrolled student)',
-                    'quantity'    => $count,
-                    'unit_price'  => $pricing['rate'],
-                    'amount'      => self::money($count * $pricing['rate']),
-                    'sort_order'  => 0,
-                ]);
-
-                $this->recalculate($invoice);
-                if ($issueNow) {
-                    $this->issue($invoice, false);
-                }
+                $invoice = $this->createInvoice($term, (int) $school->id, $pricing, $count, $sequence, $issueNow, $settings);
 
                 $result['created']++;
                 $result['total_expected'] += $invoice->fresh()->total;

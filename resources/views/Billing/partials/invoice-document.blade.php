@@ -65,6 +65,18 @@
     .inv-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; color: #334155; line-height: 1.5; }
     .inv-foot td { padding: 8px 28px 10px 28px; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
     .inv-paidmark { font-size: 9px; color: #047857; font-weight: bold; }
+
+    .inv-items th {
+    background: #2C29CA;
+    color: #ffffff;
+    font-size: 8.5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 10px;
+    text-align: left;
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+}
 </style>
 
 <div class="inv-sheet">
@@ -242,3 +254,4 @@
         <td>This is a computer-generated invoice and is valid without a signature. &nbsp;·&nbsp; {{ $settings->company_name }} &nbsp;·&nbsp; Generated {{ now()->format('j M Y, H:i') }}</td>
     </tr></table>
 </div>
+</div></div></div>

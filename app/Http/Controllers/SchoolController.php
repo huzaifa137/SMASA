@@ -571,8 +571,10 @@ class SchoolController extends Controller
     {
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $academicTerms = \App\Models\AcademicTerm::with('year')->orderByDesc('academic_year_id')->orderBy('term')->get();
+        $canManageTerms = session()->has('LoggedAdmin') && \App\Support\AdminAccess::can('academic_calendar.manage');
 
-        return view('AcademicYear.add-year', compact(['academicYears']));
+        return view('AcademicYear.add-year', compact(['academicYears', 'academicTerms', 'canManageTerms']));
     }
 
     // public function storeYear(Request $request)
@@ -656,6 +658,7 @@ class SchoolController extends Controller
         if ($validated['is_active'] == 1) {
             // Deactivate all other academic years
             AcademicYear::where('is_active', 1)->update(['is_active' => 0]);
+            \App\Models\AcademicTerm::where('is_active', true)->update(['is_active' => false]);
         }
 
         $academicYear = AcademicYear::create($validated);
@@ -674,6 +677,9 @@ class SchoolController extends Controller
         $year = AcademicYear::findOrFail($id);
         $year->update(['is_active' => true]);
 
+        // The active term must belong to the active year.
+        \App\Models\AcademicTerm::where('academic_year_id', '!=', $year->id)->update(['is_active' => false]);
+
         return response()->json(['message' => 'Academic year activated.']);
     }
 
@@ -683,6 +689,7 @@ class SchoolController extends Controller
 
         $year = AcademicYear::findOrFail($id);
         $year->update(['is_active' => false]);
+        \App\Models\AcademicTerm::where('academic_year_id', $year->id)->update(['is_active' => false]);
 
         return response()->json(['message' => 'Academic year deactivated.']);
     }
@@ -698,6 +705,7 @@ class SchoolController extends Controller
         }
 
         $academicYear->delete();
+        \App\Models\AcademicTerm::where('academic_year_id', $id)->delete();
 
         return response()->json(['message' => 'Academic year deleted successfully.']);
     }
@@ -720,6 +728,13 @@ class SchoolController extends Controller
         }
 
         $academicYear->update($validated);
+
+        // The active term must belong to the active year.
+        if ($academicYear->fresh()->is_active) {
+            \App\Models\AcademicTerm::where('academic_year_id', '!=', $academicYear->id)->update(['is_active' => false]);
+        } else {
+            \App\Models\AcademicTerm::where('academic_year_id', $academicYear->id)->update(['is_active' => false]);
+        }
 
         return response()->json([
             'message' => 'Academic Year updated successfully.',

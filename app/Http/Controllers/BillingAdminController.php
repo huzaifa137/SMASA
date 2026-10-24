@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicTerm;
 use App\Models\AcademicYear;
 use App\Models\BillingInvoice;
 use App\Models\BillingInvoiceItem;
@@ -99,6 +100,9 @@ class BillingAdminController extends Controller
             'sums'     => $sums,
             'years'    => AcademicYear::orderByDesc('start_date')->get(),
             'settings' => $this->billing->settings(),
+            // Terms + dates the administrators set on /add-academic-year
+            'calendarTerms' => AcademicTerm::with('year')->orderByDesc('academic_year_id')->orderBy('term')->get(),
+            'billedKeys'    => $terms->map(fn($t) => $t->academic_year_id . '-' . $t->term)->flip(),
         ]);
     }
 
@@ -124,17 +128,26 @@ class BillingAdminController extends Controller
             return back()->withInput()->with('error', 'That term already exists for ' . $year->name . '.');
         }
 
+        // Dates left empty are taken from the term the administrators set on /add-academic-year.
+        $calendar = AcademicTerm::where('academic_year_id', $year->id)->where('term', $data['term'])->first();
+
+        // The first billing term becomes current; so does the one matching the platform's active term.
+        $makeCurrent = !BillingTerm::where('is_current', true)->exists() || ($calendar && $calendar->is_active);
+        if ($makeCurrent) {
+            BillingTerm::where('is_current', true)->update(['is_current' => false]);
+        }
+
         $term = BillingTerm::create([
             'academic_year_id' => $year->id,
             'year_label'       => $year->name,
             'term'             => $data['term'],
-            'start_date'       => $data['start_date'] ?? null,
-            'end_date'         => $data['end_date'] ?? null,
+            'start_date'       => $data['start_date'] ?? optional($calendar)->start_date,
+            'end_date'         => $data['end_date'] ?? optional($calendar)->end_date,
             'due_date'         => $data['due_date'] ?? null,
             'rate_per_student' => $data['rate_per_student'],
             'notes'            => $data['notes'] ?? null,
             'status'           => 'open',
-            'is_current'       => !BillingTerm::where('is_current', true)->exists(), // first term becomes current
+            'is_current'       => $makeCurrent,
             'created_by'       => session('LoggedAdmin'),
         ]);
 
@@ -226,6 +239,17 @@ class BillingAdminController extends Controller
         if ($r['no_students']) $msg .= ", {$r['no_students']} skipped (no students)";
 
         return redirect()->route('billing.dashboard', ['term' => $term->id])->with('success', $msg . '.');
+    }
+
+    public function generateSchoolInvoice(Request $request, BillingTerm $term, int $school)
+    {
+        try {
+            $invoice = $this->billing->generateForSchool($term, $school, $request->boolean('issue_now', true));
+        } catch (\Throwable $e) {
+            return $this->fail($e);
+        }
+
+        return back()->with('success', "Invoice {$invoice->invoice_number} created for {$term->name} (" . BillingService::fmt($invoice->total) . ').');
     }
 
     public function issueAll(BillingTerm $term)
@@ -509,22 +533,51 @@ class BillingAdminController extends Controller
     public function pricing(Request $request)
     {
         $term = $this->selectedTerm($request);
-        $schools = $this->billing->activeSchools();
-        $rates = BillingSchoolRate::all()->groupBy('school_id');
+        $search = trim((string) $request->input('q', ''));
 
-        $rows = $schools->map(function ($s) use ($term, $rates) {
-            $pricing = $term ? $this->billing->resolvePricing($s->id, $term) : null;
+        $q = School::where('school_status', BillingService::ACTIVE_SCHOOL_STATUS)->orderBy('name');
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '\\%_') . '%';
+            $q->where(function ($w) use ($like) {
+                $w->where('name', 'like', $like)->orWhere('registration_code', 'like', $like);
+            });
+        }
 
+        $total = School::where('school_status', BillingService::ACTIVE_SCHOOL_STATUS)->count();
+        $page = $q->paginate(25)->withQueryString();
+        $ids = $page->pluck('id')->all();
+
+        $students = $this->billing->studentCounts($ids);
+        $arrears = $this->billing->arrearsMap($ids);
+        $rates = BillingSchoolRate::whereIn('school_id', $ids)->get()->groupBy('school_id');
+        $invoiced = $term
+            ? BillingInvoice::where('billing_term_id', $term->id)->whereIn('school_id', $ids)->pluck('id', 'school_id')
+            : collect();
+
+        // Without a billing term there is nothing to price (the page shows "create a term first").
+        $rows = (!$term ? collect() : $page->getCollection())->map(function ($s) use ($term, $rates, $students, $arrears, $invoiced) {
             return [
                 'school'   => $s,
-                'students' => $this->billing->countStudents($s->id),
-                'pricing'  => $pricing,
+                'students' => $students[$s->id] ?? 0,
+                'pricing'  => $term ? $this->billing->resolvePricing($s->id, $term) : null,
                 'rates'    => $rates->get($s->id, collect()),
+                'arrears'  => $arrears[$s->id] ?? null,
+                'invoice'  => $invoiced[$s->id] ?? null,
             ];
         });
 
-        return view('Billing.admin.pricing', [
-            'terms' => $this->allTerms(), 'term' => $term, 'rows' => $rows, 'settings' => $this->billing->settings(),
+        $data = ['term' => $term, 'rows' => $rows, 'page' => $page, 'search' => $search, 'schoolsTotal' => $total];
+
+        // Live search / paging: only the table body and the pager are re-drawn.
+        if ($request->ajax()) {
+            return response()->json([
+                'rows'  => view('Billing.admin.partials.pricing-rows', $data)->render(),
+                'pager' => view('Billing.admin.partials.pricing-pager', $data)->render(),
+            ]);
+        }
+
+        return view('Billing.admin.pricing', $data + [
+            'terms' => $this->allTerms(), 'settings' => $this->billing->settings(),
         ]);
     }
 

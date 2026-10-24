@@ -210,6 +210,138 @@ $controller = new Controller();
                     </div>
                 </div>
             </div>
+
+            {{-- ═════ Terms of the academic years (platform-wide, set by administrators) ═════ --}}
+            <div class="col-lg-12 col-xl-12 col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">Terms &amp; active term</h3>
+                        <small class="text-muted">One term is active for the whole platform. Billing uses it to pick the current billing term.</small>
+                    </div>
+
+                    @if ($canManageTerms)
+                        <div class="card-body bg-light border-bottom">
+                            <form id="createTermForm">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-group mb-2">
+                                            <label class="form-label">Academic year</label>
+                                            <select name="academic_year_id" class="form-control" required>
+                                                <option value="">— Select —</option>
+                                                @foreach ($academicYears as $y)
+                                                    <option value="{{ $y->id }}" @selected($y->is_active)>{{ $y->name }}{{ $y->is_active ? ' (active)' : '' }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-2 col-md-6">
+                                        <div class="form-group mb-2">
+                                            <label class="form-label">Term</label>
+                                            <select name="term" class="form-control" required>
+                                                @foreach (\App\Support\Term::options() as $n => $label)
+                                                    <option value="{{ $n }}">{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-group mb-2">
+                                            <label class="form-label">Term starts</label>
+                                            <input type="date" name="start_date" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-group mb-2">
+                                            <label class="form-label">Term ends</label>
+                                            <input type="date" name="end_date" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-1 col-md-12 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary mb-2 w-100" title="Save term"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped card-table table-vcenter text-nowrap mb-0" id="academicTermsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Term</th>
+                                        <th>Starts</th>
+                                        <th>Ends</th>
+                                        <th>Status</th>
+                                        @if ($canManageTerms)<th style="text-align:center">Action</th>@endif
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($academicTerms as $t)
+                                        <tr data-id="{{ $t->id }}">
+                                            <td>{{ $t->year->name ?? '—' }}</td>
+                                            <td><strong>{{ $t->term_label }}</strong></td>
+                                            <td>{{ $t->start_date->format('j M Y') }}</td>
+                                            <td>{{ $t->end_date->format('j M Y') }}</td>
+                                            <td>
+                                                <span class="badge {{ $t->is_active ? 'badge-success' : 'badge-secondary' }}">
+                                                    {{ $t->is_active ? 'Active term' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            @if ($canManageTerms)
+                                                <td style="text-align:center">
+                                                    @if (!$t->is_active)
+                                                        <button class="btn btn-sm btn-success term-activate"><i class="fas fa-play-circle text-white me-1"></i> Activate</button>
+                                                    @else
+                                                        <button class="btn btn-sm btn-warning term-deactivate"><i class="fas fa-pause-circle text-dark me-1"></i> Deactivate</button>
+                                                    @endif
+                                                    <button class="btn btn-sm btn-outline-info term-edit" data-name="{{ $t->name }}"
+                                                        data-start="{{ $t->start_date->format('Y-m-d') }}" data-end="{{ $t->end_date->format('Y-m-d') }}"><i class="fas fa-edit"></i></button>
+                                                    <button class="btn btn-sm btn-outline-danger term-delete"><i class="fas fa-trash-alt"></i></button>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="{{ $canManageTerms ? 6 : 5 }}" class="text-center">No terms yet. Add Term I, II and III for an academic year above.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if ($canManageTerms)
+                <div class="modal fade" id="editTermModal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <form id="editTermForm">
+                            @csrf
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-white" id="editTermTitle">Edit term</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="edit_term_id">
+                                    <div class="form-group">
+                                        <label>Term starts</label>
+                                        <input type="date" name="start_date" id="edit_term_start" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Term ends</label>
+                                        <input type="date" name="end_date" id="edit_term_end" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
         </div>
 
     </div>
@@ -436,6 +568,68 @@ $('body').html(data.responseText);
             });
         });
     </script>
+
+    @if ($canManageTerms)
+    <script>
+        // Platform terms (create / edit dates / activate / delete)
+        $(function () {
+            var csrf = '{{ csrf_token() }}';
+            var base = '{{ url('/academic-terms') }}';
+
+            function fail(xhr) {
+                var msg = (xhr.responseJSON && (xhr.responseJSON.message ||
+                    (xhr.responseJSON.errors && Object.values(xhr.responseJSON.errors)[0][0]))) || 'Something went wrong!';
+                Swal.fire('Error', msg, 'error');
+            }
+
+            $('#createTermForm').on('submit', function (e) {
+                e.preventDefault();
+                var $f = $(this);
+                $.ajax({ url: base, type: 'POST', data: $f.serialize(), headers: { 'X-CSRF-TOKEN': csrf } })
+                    .done(function (r) { SMASA.reload('Saved', r.message); })
+                    .fail(fail);
+            });
+
+            function confirmThen(title, text, run) {
+                Swal.fire({ title: title, text: text || '', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes' })
+                    .then(function (r) { if (r.isConfirmed) run(); });
+            }
+            function call(id, suffix, type) {
+                return $.ajax({ url: base + '/' + id + (suffix || ''), type: type, data: { _token: csrf }, headers: { 'X-CSRF-TOKEN': csrf } });
+            }
+
+            $('#academicTermsTable').on('click', '.term-activate', function () {
+                var id = $(this).closest('tr').data('id');
+                confirmThen('Make this the active term?', 'Its academic year becomes the active year, and the matching billing term becomes the current billing term.',
+                    function () { call(id, '/activate', 'PATCH').done(function (r) { SMASA.reload('Active term set', r.message); }).fail(fail); });
+            });
+            $('#academicTermsTable').on('click', '.term-deactivate', function () {
+                var id = $(this).closest('tr').data('id');
+                confirmThen('Deactivate this term?', 'No term will be active until you activate one.',
+                    function () { call(id, '/deactivate', 'PATCH').done(function (r) { SMASA.reload('Done', r.message); }).fail(fail); });
+            });
+            $('#academicTermsTable').on('click', '.term-delete', function () {
+                var id = $(this).closest('tr').data('id');
+                confirmThen('Delete this term?', '', function () {
+                    call(id, '', 'DELETE').done(function (r) { SMASA.reload('Deleted', r.message); }).fail(fail);
+                });
+            });
+            $('#academicTermsTable').on('click', '.term-edit', function () {
+                $('#edit_term_id').val($(this).closest('tr').data('id'));
+                $('#editTermTitle').text('Edit ' + $(this).data('name'));
+                $('#edit_term_start').val($(this).data('start'));
+                $('#edit_term_end').val($(this).data('end'));
+                $('#editTermModal').modal('show');
+            });
+            $('#editTermForm').on('submit', function (e) {
+                e.preventDefault();
+                $.ajax({ url: base + '/' + $('#edit_term_id').val(), type: 'POST', data: $(this).serialize() + '&_method=PUT', headers: { 'X-CSRF-TOKEN': csrf } })
+                    .done(function (r) { $('#editTermModal').modal('hide'); SMASA.reload('Updated', r.message); })
+                    .fail(fail);
+            });
+        });
+    </script>
+    @endif
 @endsection
 @section('js')
     <!-- c3.js Charts js-->

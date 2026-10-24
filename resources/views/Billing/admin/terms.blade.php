@@ -16,7 +16,7 @@
             <div style="position:relative;z-index:1;">
                 <span class="bl-badge"><i class="fas fa-calendar-days"></i> Billing terms</span>
                 <h1>Billing Terms</h1>
-                <p>Choose the term schools are billed for and the price per student. One term is "current" at a time.</p>
+                <p>Choose the term schools are billed for and the price per student. One term is "current" at a time — setting the active term under Academic years makes its billing term current.</p>
             </div>
             <div class="bl-hero-actions">
                 @if (\App\Support\AdminAccess::can('billing.manage_terms'))<button class="bl-btn light" data-toggle="modal" data-target="#termModal"><i class="fas fa-plus"></i> New billing term</button>@endif
@@ -29,6 +29,40 @@
 <div class="bl">
     @include('Billing.partials.flash')
     @include('Billing.partials.admin-nav')
+
+    {{-- Terms + dates the administrators set on /add-academic-year --}}
+    @php $activeCal = $calendarTerms->firstWhere('is_active', true); @endphp
+    <div class="bl-card">
+        <div class="bl-card-h" style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;">
+            <h3 style="margin:0;">Term calendar <span class="bl-muted" style="font-weight:400;font-size:.8rem;">· set by administrators</span></h3>
+            @if (Route::has('add-academic-year'))<a class="bl-btn sm ghost" href="{{ route('add-academic-year') }}"><i class="fas fa-calendar-plus"></i> Manage years &amp; terms</a>@endif
+        </div>
+        @if ($calendarTerms->isEmpty())
+            <div class="bl-empty" style="padding:1.2rem;"><i class="fas fa-calendar-days"></i>
+                No terms have been set yet. Add Term I / II / III with their dates under <a href="{{ route('add-academic-year') }}">Academic years</a>.</div>
+        @else
+            <div class="bl-table-wrap"><table class="bl-table">
+                <thead><tr><th>Term</th><th>Starts</th><th>Ends</th><th>Platform</th><th>Billing term</th><th style="width:1%;"></th></tr></thead>
+                <tbody>
+                @foreach ($calendarTerms as $ct)
+                    @php $hasBilling = $billedKeys->has($ct->academic_year_id . '-' . $ct->term); @endphp
+                    <tr>
+                        <td><strong>{{ $ct->term_label }}</strong> <span class="bl-muted">· {{ $ct->year->name ?? '' }}</span></td>
+                        <td>{{ $ct->start_date->format('j M Y') }}</td>
+                        <td>{{ $ct->end_date->format('j M Y') }}</td>
+                        <td>@if ($ct->is_active)<span class="bl-pill current">ACTIVE TERM</span>@else<span class="bl-muted">—</span>@endif</td>
+                        <td>@if ($hasBilling)<span class="bl-pill paid">Created</span>@else<span class="bl-muted">Not created</span>@endif</td>
+                        <td style="white-space:nowrap;">
+                            @if (!$hasBilling && \App\Support\AdminAccess::can('billing.manage_terms'))
+                                <button class="bl-btn sm primary from-calendar" data-year="{{ $ct->academic_year_id }}" data-term="{{ $ct->term }}"><i class="fas fa-plus"></i> Create billing term</button>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table></div>
+        @endif
+    </div>
 
     <div class="bl-card">
         @if ($terms->isEmpty())
@@ -96,16 +130,16 @@
                     @endif
                     <div class="row">
                         <div class="form-group col-md-7"><label>Academic year</label>
-                            <select name="academic_year_id" class="form-control w-100" required>
+                            <select name="academic_year_id" id="nt_year" class="form-control w-100" required>
                                 <option value="">— Select —</option>
                                 @foreach ($years as $y)<option value="{{ $y->id }}" @selected((string) old('academic_year_id', \App\Support\ActiveYear::id()) === (string) $y->id)>{{ $y->name }}{{ \App\Support\ActiveYear::matches($y) ? ' (active)' : '' }}</option>@endforeach
                             </select></div>
                         <div class="form-group col-md-5"><label>Term</label>
-                            <select name="term" class="form-control w-100" required>
+                            <select name="term" id="nt_term" class="form-control w-100" required>
                                 @foreach (\App\Support\Term::options() as $n => $label)<option value="{{ $n }}" @selected(old('term') == $n)>{{ $label }}</option>@endforeach
                             </select></div>
-                        <div class="form-group col-md-6"><label>Term starts</label><input type="date" name="start_date" class="form-control w-100" value="{{ old('start_date') }}"></div>
-                        <div class="form-group col-md-6"><label>Term ends</label><input type="date" name="end_date" class="form-control w-100" value="{{ old('end_date') }}"></div>
+                        <div class="form-group col-md-6"><label>Term starts</label><input type="date" name="start_date" id="nt_start" class="form-control w-100" value="{{ old('start_date') }}"></div>
+                        <div class="form-group col-md-6"><label>Term ends</label><input type="date" name="end_date" id="nt_end" class="form-control w-100" value="{{ old('end_date') }}"></div>
                         <div class="form-group col-md-6"><label>Invoices due on</label><input type="date" name="due_date" class="form-control w-100" value="{{ old('due_date') }}">
                             <div class="bl-hint">Leave empty to use {{ $settings->due_days }} days after issue.</div></div>
                         <div class="form-group col-md-6"><label>Rate per student ({{ $settings->currency }})</label>
@@ -157,6 +191,17 @@
             $('#et_rate').val(d.rate); $('#et_notes').val(d.notes);
             $('#editTermWarn').toggle(parseInt(d.invoices, 10) > 0);
             $('#editTermModal').modal('show');
+        });
+        // Dates come from the term calendar the administrators set (year + term -> dates).
+        var calendar = @json($calendarTerms->mapWithKeys(fn($c) => [$c->academic_year_id . '-' . $c->term => ['start' => $c->start_date->format('Y-m-d'), 'end' => $c->end_date->format('Y-m-d')]]));
+        function fillFromCalendar() {
+            var c = calendar[$('#nt_year').val() + '-' + $('#nt_term').val()];
+            if (c) { $('#nt_start').val(c.start); $('#nt_end').val(c.end); }
+        }
+        $('#nt_year, #nt_term').on('change', fillFromCalendar);
+        $(document).on('click', '.from-calendar', function () {
+            $('#nt_year').val(this.dataset.year); $('#nt_term').val(this.dataset.term); fillFromCalendar();
+            $('#termModal').modal('show');
         });
         @if ($errors->any() && old('academic_year_id') !== null) $('#termModal').modal('show'); @endif
     </script>

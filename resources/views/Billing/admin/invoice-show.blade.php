@@ -110,6 +110,6 @@
             <div class="form-group col-md-7"><label>Amount ({{ $settings->currency }})</label><input type="number" name="amount" min="1" class="form-control w-100" required></div>
             <div class="form-group col-12 mb-0"><label>Description</label><input name="description" maxlength="255" class="form-control w-100" required placeholder="e.g. Onboarding & training fee"></div></div></div>
         <div class="modal-footer"><button type="button" class="bl-btn ghost" data-dismiss="modal">Cancel</button><button class="bl-btn primary">Add line</button></div></form></div></div>
-</div>
+</div></div></div></div>
 @endsection
 @section('js') @include('Billing.partials.reason-modal') @endsection
