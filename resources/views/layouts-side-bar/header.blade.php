@@ -927,8 +927,7 @@
                                 </a>
                             @endif
 
-                            <a class="dropdown-item d-flex"
-                                href="{{ url('/update-teacher-profile', Session('LoggedAdmin')) }}">
+                            <a class="dropdown-item d-flex" href="{{ route('admin.profile') }}">
                                 <i class="fa fa-user fa-2x mr-3"></i>
                                 <div class="mt-1">User Profile</div>
                             </a>

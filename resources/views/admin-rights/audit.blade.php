@@ -258,6 +258,10 @@
 
 /* ---------- IP cell ---------- */
 .arp-ip {
+    display: inline-block;
+    white-space: nowrap;          /* never break an address across lines */
+    word-break: normal;
+    overflow-wrap: normal;
     font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
     font-size: 11px;
     padding: 3px 8px;
@@ -266,6 +270,13 @@
     color: #4a5568;
     border: 1px solid #e6ebf4;
 }
+
+/* Keep the IP column wide enough for a full address (IPv4 and most IPv6). */
+.arp-table-audit th:last-child,
+.arp-table-audit td:last-child { white-space: nowrap; min-width: 130px; }
+
+/* Mid-size screens: scroll the table sideways rather than squash columns. */
+.arp-table-audit { min-width: 680px; }
 
 /* ---------- Empty state ---------- */
 .arp-empty { padding: 40px 16px !important; }
@@ -303,6 +314,59 @@
     .arp-audit-filter { max-width: none; }
     .arp-stats-strip { flex-direction: column; }
     .arp-stat { flex: 1 1 100%; }
+}
+
+/* ---------- Phones: each log entry becomes a stacked card ---------- */
+@media (max-width: 640px) {
+    .arp-table-audit { min-width: 0; }
+    .arp-table-audit thead { display: none; }
+    .arp-table-audit,
+    .arp-table-audit tbody,
+    .arp-table-audit tr,
+    .arp-table-audit td { display: block; width: 100%; box-sizing: border-box; }
+
+    .arp-table-audit tbody tr.arp-row {
+        border: 1px solid #e6ebf4;
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: 12px;
+        padding: 4px 14px;
+    }
+    .arp-table-audit tbody tr.arp-row:hover { box-shadow: inset 3px 0 0 #2C29CA; }
+
+    .arp-table-audit td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 10px 0;
+        border: 0;
+        border-bottom: 1px dashed #e6ebf4;
+        text-align: right;
+        white-space: normal;
+        min-width: 0;
+    }
+    .arp-table-audit td:last-child { border-bottom: 0; white-space: normal; min-width: 0; }
+
+    .arp-table-audit td::before {
+        content: attr(data-label);
+        flex: 0 0 64px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #8a94a6;
+        padding-top: 3px;
+    }
+    .arp-table-audit td.arp-empty::before { display: none; }
+
+    /* Plenty of room per line on phones, so a long IPv6 address may wrap. */
+    .arp-table-audit .arp-ip { white-space: normal; word-break: break-all; text-align: right; }
+
+    .arp-table-audit td > * { min-width: 0; max-width: 100%; }
+    .arp-audit-details { text-align: right; }
+    .arp-changes { text-align: left; }
 }
     </style>
 
@@ -393,13 +457,13 @@
                         $actorInitial = $actorName ? strtoupper(mb_substr($actorName, 0, 1)) : null;
                     @endphp
                     <tr class="arp-row">
-                        <td>
+                        <td data-label="When">
                             <div class="arp-audit-when">
                                 <span class="arp-time">{{ $log->created_at?->format('H:i') ?? '—' }}</span>
                                 <span class="arp-date">{{ $log->created_at?->format('d M Y') ?? '' }}</span>
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Who">
                             @if ($actorName)
                                 <span class="arp-actor">
                                     <span class="arp-actor-badge">{{ $actorInitial }}</span>
@@ -412,13 +476,13 @@
                                 </span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="Action">
                             <span class="arp-action-badge {{ $actionClass }}">
                                 <i class="fa fa-circle" style="font-size:6px"></i>
                                 {{ $log->action }}
                             </span>
                         </td>
-                        <td>
+                        <td data-label="Details">
                             <div class="arp-audit-details">
                                 {{ $log->description }}
                                 @if (!empty($log->meta['added']) || !empty($log->meta['removed']))
@@ -440,7 +504,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td>
+                        <td data-label="IP">
                             @if ($log->ip_address)
                                 <code class="arp-ip">{{ $log->ip_address }}</code>
                             @else
