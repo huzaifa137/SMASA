@@ -323,6 +323,21 @@
     .arp-btn.icon-btn:hover,
     .arp-btn.primary:hover { transform: none; }
 }
+
+.arp-table-users thead th {
+    background: #2C29CA !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.arp-table-users thead th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.arp-table-users thead th:last-child {
+    border-top-right-radius: 10px;
+}
 </style>
 @section('content')
     @include('admin-rights._nav', ['arpActive' => 'roles'])
@@ -348,16 +363,16 @@
 
         <div class="arp-wrap">
             <table class="arp-table arp-table-modern">
-                <thead>
-                    <tr>
-                        <th>Role</th>
-                        <th>Description</th>
-                        <th>Permissions</th>
-                        <th>Users</th>
-                        <th>Status</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                </thead>
+               <thead>
+    <tr>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em; border-top-left-radius: 10px;">Role</th>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em;">Description</th>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em;">Permissions</th>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em;">Users</th>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em;">Status</th>
+        <th style="background-color: #2C29CA !important; color: #FFFFFF !important; font-weight: 600; letter-spacing: .02em; text-align: right; border-top-right-radius: 10px;">Actions</th>
+    </tr>
+</thead>
                 <tbody>
                 @forelse ($roles as $role)
                     <tr data-id="{{ $role->id }}"

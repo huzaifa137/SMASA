@@ -225,7 +225,7 @@
 .arp-savebar {
     position: sticky;
     bottom: 16px;
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;

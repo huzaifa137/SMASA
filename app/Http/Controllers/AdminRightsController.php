@@ -276,7 +276,7 @@ class AdminRightsController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'username' => ['required', 'string', 'max:100', Rule::unique('users', 'username')],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')],
-            'password' => ['nullable', 'string', Password::min(8)->letters()->numbers()],
+            'password' => ['nullable', 'string', Password::min(4)],
             'admin_role_id' => ['nullable', 'integer', 'exists:admin_roles,id'],
             'is_super_admin' => ['nullable', 'boolean'],
         ]);
@@ -446,7 +446,7 @@ class AdminRightsController extends Controller
         }
 
         $data = $request->validate([
-            'password' => ['nullable', 'string', Password::min(8)->letters()->numbers()],
+            'password' => ['nullable', 'string', Password::min(4)],
         ]);
 
         $plain = $data['password'] ?? Str::password(12, true, true, false);

@@ -517,7 +517,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td><a href="mailto:{{ $u->email }}" class="arp-email-link">{{ $u->email }}</a></td>
+                        <td><span class="arp-email-link">{{ $u->email }}</span></td>
                         <td>
                             @if ($u->is_super_admin)
                                 <span class="arp-badge super"><i class="fa fa-crown"></i> Super Administrator</span>

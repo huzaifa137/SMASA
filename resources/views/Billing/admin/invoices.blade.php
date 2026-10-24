@@ -61,5 +61,7 @@
         @endif
     </div>
 </div>
+ </div>
+</div>
 @endsection
 @section('js') @include('Billing.partials.reason-modal') @endsection
