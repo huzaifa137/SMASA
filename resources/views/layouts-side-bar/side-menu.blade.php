@@ -67,11 +67,13 @@ use App\Helpers\PermissionHelper;
     <div class="app-sidebar__logo text-center">
         @if (Session('LoggedAdmin'))
             <a class="header-brand" data-no-loader href="{{ url('/admin/dashboard') }}">
-                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
+                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}"
+                        alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
         @elseif(Session('LoggedSchool'))
             <a class="header-brand" data-no-loader href="{{ url('/school/dashboard') }}">
-                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}" alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
+                <span class="sidebar-logo-ring"><img src="{{ URL::asset('assets/images/brand/uplogolight.png') }}"
+                        alt="SMASA" class="sidebar-logo" width="130" height="130" decoding="sync"></span>
             </a>
         @endif
     </div>
@@ -357,21 +359,21 @@ use App\Helpers\PermissionHelper;
                                             class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
                             @endif
                             <!-- @if(PermissionHelper::canFeature('view_chart_of_accounts'))
-                                                                                            <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
-                                                                                                    Accounts</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_general_ledger'))
-                                                                                            <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
-                                                                                                    Ledger</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_student_fee_ledger'))
-                                                                                            <li><a href="{{ route('finance.ledger.student-fees') }}"><i
-                                                                                                        class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_trial_balance'))
-                                                                                            <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
-                                                                                                    Balance</a></li>
-                                                                                        @endif -->
+                                                                                                        <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
+                                                                                                                Accounts</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_general_ledger'))
+                                                                                                        <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
+                                                                                                                Ledger</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_student_fee_ledger'))
+                                                                                                        <li><a href="{{ route('finance.ledger.student-fees') }}"><i
+                                                                                                                    class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_trial_balance'))
+                                                                                                        <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
+                                                                                                                Balance</a></li>
+                                                                                                    @endif -->
                         </ul>
                     </li>
                 @endif
@@ -639,7 +641,8 @@ use App\Helpers\PermissionHelper;
                             <li><a href="{{ route('arp.roles.index') }}"><i class="fas fa-id-badge mr-2"></i>Roles</a></li>
                         @endif
                         @if($__A::can('admin_rights.view_permissions'))
-                            <li><a href="{{ route('arp.permissions.index') }}"><i class="fas fa-key mr-2"></i>Permission Matrix</a></li>
+                            <li><a href="{{ route('arp.permissions.index') }}"><i class="fas fa-key mr-2"></i>Permission Matrix</a>
+                            </li>
                         @endif
                         @if($__A::can('admin_rights.view_users'))
                             <li><a href="{{ route('arp.users.index') }}"><i class="fas fa-users-cog mr-2"></i>Admin Users</a></li>
@@ -660,10 +663,13 @@ use App\Helpers\PermissionHelper;
                     </a>
                     <ul class="sub-menu">
                         @if($__A::can('billing.view'))
-                            <li><a href="{{ route('billing.dashboard') }}"><i class="fas fa-chart-pie mr-2"></i>Billing Dashboard</a></li>
-                            <li><a href="{{ route('billing.terms') }}"><i class="fas fa-calendar-days mr-2"></i>Billing Terms</a></li>
+                            <li><a href="{{ route('billing.dashboard') }}"><i class="fas fa-chart-pie mr-2"></i>Billing
+                                    Dashboard</a></li>
+                            <li><a href="{{ route('billing.terms') }}"><i class="fas fa-calendar-days mr-2"></i>Billing Terms</a>
+                            </li>
                             <li><a href="{{ route('billing.invoices') }}"><i class="fas fa-file-invoice mr-2"></i>Invoices</a></li>
-                            <li><a href="{{ route('billing.payments') }}"><i class="fas fa-hand-holding-dollar mr-2"></i>Payments</a></li>
+                            <li><a href="{{ route('billing.payments') }}"><i
+                                        class="fas fa-hand-holding-dollar mr-2"></i>Payments</a></li>
                         @endif
                         @if($__A::can('billing.manage_pricing'))
                             <li><a href="{{ route('billing.pricing') }}"><i class="fas fa-tags mr-2"></i>School Pricing</a></li>
@@ -711,13 +717,18 @@ use App\Helpers\PermissionHelper;
                             <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
                         @endif
                         @if($__A::can('secondary_subjects.view'))
-                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
-                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
+                                        class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
+                                        class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
                         @endif
                         @if($__A::can('nlsc_curriculum.view'))
-                            <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp; Competency Areas</a></li>
-                            <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC Projects (Project Work)</a></li>
-                            <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC Subject Achievement</a></li>
+                            <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
+                                    Competency Areas</a></li>
+                            <li><a href="{{ route('admin.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
+                                    Projects (Project Work)</a></li>
+                            <li><a href="{{ route('admin.nlsc-subject-achievements') }}"><i class="fas fa-bullseye mr-2"></i>NLSC
+                                    Subject Achievement</a></li>
                         @endif
                     </ul>
                 </li>
@@ -1003,21 +1014,21 @@ use App\Helpers\PermissionHelper;
                                 </li>
                             @endif
                             <!-- @if(PermissionHelper::canFeature('view_chart_of_accounts'))
-                                                                                            <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
-                                                                                                    Accounts</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_general_ledger'))
-                                                                                            <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
-                                                                                                    Ledger</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_student_fee_ledger'))
-                                                                                            <li><a href="{{ route('finance.ledger.student-fees') }}"><i
-                                                                                                        class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
-                                                                                        @endif
-                                                                                        @if(PermissionHelper::canFeature('view_trial_balance'))
-                                                                                            <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
-                                                                                                    Balance</a></li>
-                                                                                        @endif -->
+                                                                                                        <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
+                                                                                                                Accounts</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_general_ledger'))
+                                                                                                        <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
+                                                                                                                Ledger</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_student_fee_ledger'))
+                                                                                                        <li><a href="{{ route('finance.ledger.student-fees') }}"><i
+                                                                                                                    class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
+                                                                                                    @endif
+                                                                                                    @if(PermissionHelper::canFeature('view_trial_balance'))
+                                                                                                        <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
+                                                                                                                Balance</a></li>
+                                                                                                    @endif -->
                         </ul>
                     </li>
                 @endif
@@ -1238,7 +1249,6 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
-                @include('audit.partials.menu-item')
                 {{-- User Rights --}}
                 {{-- PermissionHelper::canModule('user_rights') already covers both
                 legitimate cases on its own: (1) a role was explicitly granted
@@ -1300,6 +1310,9 @@ use App\Helpers\PermissionHelper;
                         </div>
                     </li>
                 @endif
+
+                @include('audit.partials.menu-item')
+
 
             @endif {{-- End of ACTIVE school status --}}
 

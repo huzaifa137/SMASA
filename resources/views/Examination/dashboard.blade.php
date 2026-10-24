@@ -179,8 +179,8 @@ use App\Helpers\PermissionHelper;
         }
 
         /* Only 'Results Released' timeline rows navigate anywhere now —
-    the rest keep their normal look but shouldn't hover-highlight like
-    a button that does nothing when clicked. */
+        the rest keep their normal look but shouldn't hover-highlight like
+        a button that does nothing when clicked. */
         .timeline-item.tl-static:hover {
             background: #f8f7ff;
             transform: none;
@@ -457,8 +457,8 @@ use App\Helpers\PermissionHelper;
         }
 
         /* Only 'Results Released' activity rows navigate anywhere now —
-    suppress the same hover-highlight on the rest so they don't look
-    like a dead button. */
+        suppress the same hover-highlight on the rest so they don't look
+        like a dead button. */
         .activity-item-new.act-static:hover {
             background: #fafbff;
             border-color: #f0efff;
@@ -1453,8 +1453,8 @@ use App\Helpers\PermissionHelper;
         }
 
         /* ══════════════════════════════════════════════════════
-    PIPELINE TABLE — complete rewrite
-    ══════════════════════════════════════════════════════ */
+        PIPELINE TABLE — complete rewrite
+        ══════════════════════════════════════════════════════ */
         /* 1. Table layout */
         .exam-table-enhanced {
             table-layout: auto !important;
@@ -1530,8 +1530,8 @@ use App\Helpers\PermissionHelper;
         }
 
         /* Exam Subjects entry point — its own aligned column between the
-           schedule and the action icons, so it is visible without opening
-           any popup. */
+               schedule and the action icons, so it is visible without opening
+               any popup. */
         .epc-subj {
             flex: 0 0 160px;
             width: 160px;
@@ -2122,7 +2122,8 @@ use App\Helpers\PermissionHelper;
                                                 </div>
                                                 <div class="mec-class-action" onclick="event.stopPropagation()">
                                                     @if ($class->is_released)
-                                                        @if(PermissionHelper::canFeature('view_report_cards'))<a href="{{ route('examination.passslips.index', $exam->id) }}"
+                                                        @if(PermissionHelper::canFeature('view_report_cards'))<a
+                                                            href="{{ route('examination.passslips.index', $exam->id) }}"
                                                             class="mec-badge mec-badge-released mec-badge-link"
                                                             title="Released {{ optional($class->released_at)->format('M d, Y H:i') }}{{ $class->released_by_name ? ' by ' . $class->released_by_name : '' }} — click to view pass slips">
                                                             <i class="fas fa-check-circle me-1"></i> Released
@@ -2652,136 +2653,136 @@ use App\Helpers\PermissionHelper;
                                     </div>
                                     <div class="pending-progress-section">
                                         @forelse ($pendingMarksProgress as $progress)
-                                                                        <div class="exam-progress-container mb-4">
-                                                                            <div class="overall-progress">
-                                                                                <div class="progress-label d-flex justify-content-between align-items-center">
-                                                                                    <div>
-                                                                                        <i class="fas fa-chalkboard-teacher me-1"></i>
-                                                                                        <strong>{{ $progress->exam->exam_name }}</strong>
-                                                                                        @php
-                                                                                            $daysLeft = (int) ceil($progress->days_left);
-                                                                                        @endphp
-                                                                                        <span class="ms-2 badge text-white
-                                            @if ($progress->is_deadline_passed) bg-secondary
-                                            @elseif($progress->urgency == 'urgent') bg-danger
-                                            @elseif($progress->urgency == 'warning') bg-warning
-                                            @else bg-info @endif">
-                                                                                            @if ($progress->is_deadline_passed)
-                                                                                                Deadline passed
-                                                                                            @else
-                                                                                                @if($daysLeft <= 0)
-                                                                                                    Due today
-                                                                                                @else
-                                                                                                    {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
-                                                                                                @endif
-                                                                                            @endif
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <span>{{ $progress->submitted_subjects }}/{{ $progress->total_subjects }}
-                                                                                        subjects</span>
-                                                                                </div>
-                                                                                <div class="progress-bar-bg">
-                                                                                    <div class="progress-bar-fill-orange"
-                                                                                        style="width: {{ $progress->overall_progress }}%"></div>
-                                                                                </div>
-                                                                            </div>
-                                                                            @if (count($progress->subject_progress) > 0)
-                                                                                <div class="subject-list mt-3">
-                                                                                    <!-- Subjects to complete (only show if not all completed or deadline not passed) -->
-                                                                                    @if ($progress->overall_progress < 100 || !$progress->is_deadline_passed)
-                                                                                        <div class="subject-list-title">
-                                                                                            <i class="fas fa-book-open me-1"></i>
-                                                                                            @if ($progress->is_deadline_passed)
-                                                                                                Subjects with pending marks
-                                                                                            @else
-                                                                                                Subjects to complete
-                                                                                            @endif
-                                                                                        </div>
-                                                                                        @foreach ($progress->subject_progress as $subject)
-                                                                                            @if ($subject->progress < 100)
-                                                                                                @php
-                                                                                                    $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
-                                                                                                @endphp
-                                                                                                <div class="subject-item pending-subject" @if (!$progress->is_deadline_passed)
-                                                                                                    onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                                                style="cursor: {{ $cursorStyle }};" @else
-                                                                                                    style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
-                                                                                                    <div class="subject-name">
-                                                                                                        {{ $subject->subject_name }}
-                                                                                                    </div>
-                                                                                                    <div class="subject-meta">
-                                                                                                        <span>
-                                                                                                            <i class="fas fa-users me-1"></i>
-                                                                                                            {{ $subject->class_name }} @if ($subject->stream) •
-                                                                                                            {{ $subject->stream }} @endif
-                                                                                                        </span>
-                                                                                                        <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                                                            <div class="subject-progress-bar flex-grow-1">
-                                                                                                                <div class="subject-progress-fill"
-                                                                                                                    style="width: {{ $subject->progress }}%"></div>
-                                                                                                            </div>
-                                                                                                            <span class="subject-stats">
-                                                                                                                {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                                                            </span>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            @endif
-                                                                                        @endforeach
-                                                                                    @endif
-                                                                                    <!-- Completed subjects (always show if deadline not passed) -->
-                                                                                    @php
-                                                                                        $completedSubjects = array_filter($progress->subject_progress, function ($subject) {
-                                                                                            return $subject->progress == 100;
-                                                                                        });
-                                                                                    @endphp
-                                                                                    @if (count($completedSubjects) > 0 && (!$progress->is_deadline_passed || $progress->has_pending_marks))
-                                                                                        <div class="subject-list-title mt-3" style="color: #28a745;">
-                                                                                            <i class="fas fa-check-circle me-1"></i>
-                                                                                            @if ($progress->is_deadline_passed)
-                                                                                                Completed subjects
-                                                                                            @else
-                                                                                                Completed subjects (click to review)
-                                                                                            @endif
-                                                                                        </div>
-                                                                                        @foreach ($completedSubjects as $subject)
-                                                                                            @php
-                                                                                                $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
-                                                                                            @endphp
-                                                                                            <div class="subject-item completed-subject" @if (!$progress->is_deadline_passed)
-                                                                                                onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
-                                                                                            style="cursor: {{ $cursorStyle }};" @else
-                                                                                                style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
-                                                                                                <div class="subject-name">
-                                                                                                    {{ $subject->subject_name }}
-                                                                                                </div>
-                                                                                                <div class="subject-meta">
-                                                                                                    <span>
-                                                                                                        <i class="fas fa-users me-1"></i>
-                                                                                                        {{ $subject->class_name }} @if ($subject->stream) •
-                                                                                                        {{ $subject->stream }} @endif
-                                                                                                    </span>
-                                                                                                    <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
-                                                                                                        <div class="subject-progress-bar flex-grow-1">
-                                                                                                            <div class="subject-progress-fill"
-                                                                                                                style="width: 100%; background-color: #28a745;"></div>
-                                                                                                        </div>
-                                                                                                        <span class="subject-stats" style="color: #28a745;">
-                                                                                                            {{ $subject->entered_marks }}/{{ $subject->total_students }}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        @endforeach
-                                                                                    @endif
-                                                                                </div>
-                                                                            @else
-                                                                                <div class="alert alert-info mt-3" role="alert">
-                                                                                    <i class="fas fa-info-circle me-2"></i>
-                                                                                    No subjects assigned for this examination.
-                                                                                </div>
-                                                                            @endif
+                                            <div class="exam-progress-container mb-4">
+                                                <div class="overall-progress">
+                                                    <div class="progress-label d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-chalkboard-teacher me-1"></i>
+                                                            <strong>{{ $progress->exam->exam_name }}</strong>
+                                                            @php
+                                                                $daysLeft = (int) ceil($progress->days_left);
+                                                            @endphp
+                                                            <span class="ms-2 badge text-white
+                                                            @if ($progress->is_deadline_passed) bg-secondary
+                                                            @elseif($progress->urgency == 'urgent') bg-danger
+                                                            @elseif($progress->urgency == 'warning') bg-warning
+                                                            @else bg-info @endif">
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Deadline passed
+                                                                @else
+                                                                    @if($daysLeft <= 0)
+                                                                        Due today
+                                                                    @else
+                                                                        {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
+                                                                    @endif
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                        <span>{{ $progress->submitted_subjects }}/{{ $progress->total_subjects }}
+                                                            subjects</span>
+                                                    </div>
+                                                    <div class="progress-bar-bg">
+                                                        <div class="progress-bar-fill-orange"
+                                                            style="width: {{ $progress->overall_progress }}%"></div>
+                                                    </div>
+                                                </div>
+                                                @if (count($progress->subject_progress) > 0)
+                                                    <div class="subject-list mt-3">
+                                                        <!-- Subjects to complete (only show if not all completed or deadline not passed) -->
+                                                        @if ($progress->overall_progress < 100 || !$progress->is_deadline_passed)
+                                                            <div class="subject-list-title">
+                                                                <i class="fas fa-book-open me-1"></i>
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Subjects with pending marks
+                                                                @else
+                                                                    Subjects to complete
+                                                                @endif
+                                                            </div>
+                                                            @foreach ($progress->subject_progress as $subject)
+                                                                @if ($subject->progress < 100)
+                                                                    @php
+                                                                        $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
+                                                                    @endphp
+                                                                    <div class="subject-item pending-subject" @if (!$progress->is_deadline_passed)
+                                                                        onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
+                                                                    style="cursor: {{ $cursorStyle }};" @else
+                                                                        style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
+                                                                        <div class="subject-name">
+                                                                            {{ $subject->subject_name }}
                                                                         </div>
+                                                                        <div class="subject-meta">
+                                                                            <span>
+                                                                                <i class="fas fa-users me-1"></i>
+                                                                                {{ $subject->class_name }} @if ($subject->stream) •
+                                                                                {{ $subject->stream }} @endif
+                                                                            </span>
+                                                                            <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
+                                                                                <div class="subject-progress-bar flex-grow-1">
+                                                                                    <div class="subject-progress-fill"
+                                                                                        style="width: {{ $subject->progress }}%"></div>
+                                                                                </div>
+                                                                                <span class="subject-stats">
+                                                                                    {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            @endforeach
+                                                        @endif
+                                                        <!-- Completed subjects (always show if deadline not passed) -->
+                                                        @php
+                                                            $completedSubjects = array_filter($progress->subject_progress, function ($subject) {
+                                                                return $subject->progress == 100;
+                                                            });
+                                                        @endphp
+                                                        @if (count($completedSubjects) > 0 && (!$progress->is_deadline_passed || $progress->has_pending_marks))
+                                                            <div class="subject-list-title mt-3" style="color: #28a745;">
+                                                                <i class="fas fa-check-circle me-1"></i>
+                                                                @if ($progress->is_deadline_passed)
+                                                                    Completed subjects
+                                                                @else
+                                                                    Completed subjects (click to review)
+                                                                @endif
+                                                            </div>
+                                                            @foreach ($completedSubjects as $subject)
+                                                                @php
+                                                                    $cursorStyle = $progress->is_deadline_passed ? 'not-allowed' : 'pointer';
+                                                                @endphp
+                                                                <div class="subject-item completed-subject" @if (!$progress->is_deadline_passed)
+                                                                    onclick="window.location.href='{{ route('examination.marks.subject', [$progress->exam->id, $subject->class_subject_id]) }}'"
+                                                                style="cursor: {{ $cursorStyle }};" @else
+                                                                    style="cursor: {{ $cursorStyle }}; opacity: 0.8;" @endif>
+                                                                    <div class="subject-name">
+                                                                        {{ $subject->subject_name }}
+                                                                    </div>
+                                                                    <div class="subject-meta">
+                                                                        <span>
+                                                                            <i class="fas fa-users me-1"></i>
+                                                                            {{ $subject->class_name }} @if ($subject->stream) •
+                                                                            {{ $subject->stream }} @endif
+                                                                        </span>
+                                                                        <div class="d-flex align-items-center gap-2 flex-grow-1 ms-2">
+                                                                            <div class="subject-progress-bar flex-grow-1">
+                                                                                <div class="subject-progress-fill"
+                                                                                    style="width: 100%; background-color: #28a745;"></div>
+                                                                            </div>
+                                                                            <span class="subject-stats" style="color: #28a745;">
+                                                                                {{ $subject->entered_marks }}/{{ $subject->total_students }}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div class="alert alert-info mt-3" role="alert">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        No subjects assigned for this examination.
+                                                    </div>
+                                                @endif
+                                            </div>
                                         @empty
                                             <div class="alert alert-success" role="alert">
                                                 <i class="fas fa-check-circle me-2"></i>
@@ -3096,7 +3097,8 @@ use App\Helpers\PermissionHelper;
                                         }
                                     </style>
                                     <div class="pending-footer">
-                                        @if(PermissionHelper::canFeature('view_marks_entry'))<a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
+                                        @if(PermissionHelper::canFeature('view_marks_entry'))<a
+                                            href="{{ route('examination.marks.entry', $exam->id) }}" class="btn-continue-marks">
                                             <i class="fas fa-pen-alt"></i>
                                             Continue Entering Marks
                                         </a>@endif
@@ -3253,248 +3255,250 @@ use App\Helpers\PermissionHelper;
                             <table class="exam-table-enhanced" id="examTable">
                                 <thead>
                                     <tr>
-    <th style="width:60px;">#</th>
-    <th>Examination</th>
-    <th style="width:120px;">Term</th>
-    <th style="width:230px; min-width:230px;">Schedule</th>
-    {{-- Status column removed – replaced by the inline pipeline below --}}
-    <th style="width:160px; min-width:160px; text-align:center;">Exam Subjects</th>
-    <th style="width:160px; min-width:160px;">Actions</th>
-</tr>
+                                        <th style="width:60px;">#</th>
+                                        <th>Examination</th>
+                                        <th style="width:120px;">Term</th>
+                                        <th style="width:230px; min-width:230px;">Schedule</th>
+                                        {{-- Status column removed – replaced by the inline pipeline below --}}
+                                        <th style="width:160px; min-width:160px; text-align:center;">Exam Subjects</th>
+                                        <th style="width:160px; min-width:160px;">Actions</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($examinations as $count => $exam)
-                                                                        @php
-                                                                                /*─ helpers ─────────────────────────────────────────────*/
-                                                                                $statusIcons = [
-                                                                                    'draft' => 'fa-pen-fancy',
-                                                                                    'active' => 'fa-play-circle',
-                                                                                    'marks_entry' => 'fa-edit',
-                                                                                    'closed' => 'fa-lock',
-                                                                                    'results_released' => 'fa-trophy',
-                                                                                ];
-                                                                                $startDate = \Carbon\Carbon::parse($exam->start_date);
-                                                                                $endDate = \Carbon\Carbon::parse($exam->end_date);
-                                                                                $duration = $startDate->diffInDays($endDate) + 1;
-                                                                                /*─ pipeline stage definitions ───────────────────────────
-                                                                                 * order matters – it drives the connector "done" logic.
-                                                                                 * "Create Assessment" is inserted between Active and
-                                                                                 * Marks Entry only for exams that actually have a
-                                                                                 * Secondary O-Level class attached (see
-                                                                                 * Helper::examHasSecondaryOLevelClasses()) — it's not a
-                                                                                 * real $exam->status value, just a screen a Secondary
-                                                                                 * O-Level class-subject has to pass through before its
-                                                                                 * marks entry opens (NlscAssessmentController).
-                                                                                 *──────────────────────────────────────────────────────*/
-                                                                                $examHasOLevel = \App\Http\Controllers\Helper::examHasSecondaryOLevelClasses($exam->id);
-                                                                                $examPendingAssessments = $examHasOLevel ? \App\Http\Controllers\Helper::pendingNlscAssessmentsCountForExam($exam->id) : 0;
-                                                                                $stages = [
-                                                                                    ['key' => 'draft', 'icon' => 'fa-pen', 'label' => 'Draft'],
-                                                                                    ['key' => 'active', 'icon' => 'fa-play', 'label' => 'Active'],
-                                                                                ];
-                                                                                if ($examHasOLevel) {
-                                                                                    $stages[] = ['key' => 'create_assessment', 'icon' => 'fa-list-check', 'label' => 'Create Assessment'];
-                                                                                }
-                                                                                $stages = array_merge($stages, [
-                                                                                    ['key' => 'marks_entry', 'icon' => 'fa-pen-alt', 'label' => 'Marks Entry'],
-                                                                                    ['key' => 'closed', 'icon' => 'fa-lock', 'label' => 'Closed'],
-                                                                                    ['key' => 'results_released', 'icon' => 'fa-trophy', 'label' => 'Results Released'],
-                                                                                ]);
-                                                                                /*─ find current index ───────────────────────────────────*/
-                                                                                if ($examHasOLevel && $exam->status === 'active') {
-                                                                                    // "Create Assessment" work happens throughout the
-                                                                            // Active phase (a class-subject can be added after
-                                                                            // the rest are already done) — treat it as the current
-                                                                            // stage for the whole time the exam is Active, rather
-                                                                            // than only until the pending count first hits zero.
-                                                                                    $currentIdx = collect($stages)->search(fn($s) => $s['key'] === 'create_assessment');
-                                                                                } else {
-                                                                                    $currentIdx = collect($stages)->search(fn($s) => $s['key'] === $exam->status);
-                                                                                }
-                                                                                if ($currentIdx === false)
-                                                                                    $currentIdx = 0;
-                                                                                /*─ tooltip text per stage ───────────────────────────────*/
-                                                                                $stageTips = [
-                                                                                    'draft' => 'Examination created, not yet published',
-                                                                                    'active' => 'Examination is currently running',
-                                                                                    'create_assessment' => $examPendingAssessments > 0
-                                                                                        ? $examPendingAssessments . ' Secondary O-Level class-subject(s) still need an assessment before marks entry'
-                                                                                        : 'All Secondary O-Level class-subjects have an assessment set up',
-                                                                                    'marks_entry' => 'Teachers are entering marks',
-                                                                                    'closed' => 'Marks locked, results being compiled',
-                                                                                    'results_released' => 'Results published to students',
-                                                                                ];
-                                                                        @endphp
-                                                                        {{-- ── Single examination card row ────────────────────────── --}}
-                                                                        <tr class="exam-pipeline-card" data-status="{{ $exam->status }}"
-                                                                            data-name="{{ strtolower($exam->exam_name) }}"
-                                                                            data-code="{{ strtolower($exam->exam_code) }}"
-                                                                            data-term="{{ strtolower($exam->term) }}">
-                                                                            <td colspan="6" style="padding:0; border:none;">
-                                                                                {{-- TOP: existing info columns --}}
-                                                                                <div class="exam-pipeline-top">
-                                                                                    {{-- # --}}
-                                                                                    <div class="epc-num">
-                                                                                        <span class="row-number">{{ $count + 1 }}</span>
-                                                                                    </div>
-                                                                                    {{-- Name & code --}}
-                                                                                    <div class="epc-name">
-                                                                                        <div class="exam-name-cell">
-                                                                                            <span class="exam-name-text">
-                                                                                                {{ Str::limit($exam->exam_name, 35) }}
-                                                                                            </span>
-                                                                                            <span class="exam-name-sub">
-                                                                                                <i class="fas fa-hashtag"></i>
-                                                                                                {{ $exam->exam_code }}
-                                                                                                @if ($exam->exam_type)
-                                                                                                    <span style="margin-left:.5rem;">
-                                                                                                        <i class="fas fa-tag"></i> {{ $exam->exam_type }}
-                                                                                                    </span>
-                                                                                                @endif
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    {{-- Term --}}
-                                                                                    <div class="epc-term">
-                                                                                        <span class="term-badge">
-                                                                                            <i class="fas fa-calendar-alt"></i>
-                                                                                            {{ \App\Support\Term::label($exam->term) }}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    {{-- Schedule --}}
-                                                                                    <div class="epc-sched">
-                                                                                        <div class="period-display">
-                                                                                            <span class="period-date">
-                                                                                                <i class="far fa-calendar-check"
-                                                                                                    style="color:#10B981;font-size:.7rem;"></i>
-                                                                                                {{ $startDate->format('M d') }}
-                                                                                            </span>
-                                                                                            <i class="fas fa-long-arrow-alt-right period-arrow"></i>
-                                                                                            <span class="period-date">{{ $endDate->format('M d, Y') }}</span>
-                                                                                            <span class="period-duration
-                                        {{ $duration == 1 ? 'text-danger fw-bold' : ($duration <= 2 ? 'text-warning fw-bold' : 'text-info') }}">
-                                                                                                @if ($duration > 0)
-                                                                                                    {{ $duration }} {{ Str::plural('day', $duration) }} left
-                                                                                                @elseif($duration === 0)
-                                                                                                    <span class="text-danger fw-bold">Due today</span>
-                                                                                                @else
-                                                                                                    <span class="text-danger fw-bold">Deadline passed</span>
-                                                                                                @endif
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    {{-- Actions (unchanged) --}}
-                                                                                    {{-- Exam Subjects: choose which subjects are sat / shown --}}
-<div class="epc-subj">
-    @if(PermissionHelper::canFeature('edit_exam'))
-        @php
-            $esRows = collect(\App\Models\ExaminationSubjectSetting::forExam($exam->id));
-            $esCustomised = $esRows->count();
-        @endphp
-        @if(PermissionHelper::canFeature('manage_exam_subjects'))<a href="{{ route('examination.subjects.edit', $exam->id) }}"
-            class="btn-exam-subjects"
-            title="Choose which subjects are sat and shown on pass slips for this examination{{ $esCustomised ? ' (' . $esCustomised . ' customised)' : '' }}">
-            <i class="fas fa-list-check"></i>
-            <span>Exam Subjects</span>
-            @if($esCustomised > 0)
-                <span class="es-count">{{ $esCustomised }}</span>
-            @endif
-        </a>@endif
-    @endif
-</div>
-                                                                                    <div class="epc-acts">
-                                                                                        <div class="action-buttons">
-                                                                                            <button class="btn-action btn-action-view"
-                                                                                                onclick="showExamDetails({{ $exam->id }})" title="View Details">
-                                                                                                <i class="fas fa-eye"></i>
-                                                                                            </button>
-                                                                                            @if(PermissionHelper::canFeature('edit_exam'))
-                                                                                                <button class="btn-action btn-action-edit"
-                                                                                                    onclick="editExam({{ $exam->id }})"
-                                                                                                    title="Edit / Change Status">
-                                                                                                    <i class="fas fa-edit"></i>
-                                                                                                </button>
-                                                                                            @endif
-                                                                                            @if(PermissionHelper::canFeature('delete_exam'))
-                                                                                                <button class="btn-action action-delete"
-                                                                                                    onclick="deleteExam({{ $exam->id }})"
-                                                                                                    style="background:#EF4444;color:#fff;border:none;"
-                                                                                                    title="Delete">
-                                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                                </button>
-                                                                                            @endif
-                                                                                            <!-- @if (in_array($exam->status, ['active', 'marks_entry']))
-                                                                                                <button class="btn-action btn-action-marks"
-                                                                                                    onclick="window.location.href='/examinations/{{ $exam->id }}/marks'"
-                                                                                                    title="Enter Marks">
-                                                                                                    <i class="fas fa-file-signature"></i>
-                                                                                                </button>
-                                                                                            @endif -->
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                {{-- BOTTOM: pipeline stepper ─────────────────────── --}}
-                                                                                <div class="exam-pipeline-stages">
-                                                                                    <div class="pipeline-stages-inner">
-                                                                                        @foreach ($stages as $idx => $stage)
-                                                                                            @php
-                                                                                                        if ($idx < $currentIdx)
-                                                                                                            $state = 'done';
-                                                                                                        elseif ($idx === $currentIdx)
-                                                                                                            $state = 'active';
-                                                                                                        else
-                                                                                                            $state = 'future';
-                                                                                                        $tip = $stageTips[$stage['key']];
-                                                                                                        /*─ Which status to transition TO when clicking
-                                                                                                         * a future stage node? We allow clicking only
-                                                                                                         * the very next stage to keep things orderly.
-                                                                                                         * Clicking an already-done stage does nothing.
-                                                                                                         *────────────────────────────────────────────*/
-                                                                                                        $isNextStage = ($idx === $currentIdx + 1);
-                                                                                                        $isCurrentStage = ($idx === $currentIdx);
-                                                                                                        $clickAction = '';
-                                                                                                        // "Create Assessment" isn't a real status to
-                                                                                                // transition into — it always links to the
-                                                                                                // per-exam pending list instead, regardless of
-                                                                                                // done/active/future state.
-                                                                                                        if ($stage['key'] === 'create_assessment') {
-                                                                                                            $pendingUrl = route('nlsc-assessments.pending', ['examination_id' => $exam->id]);
-                                                                                                            $clickAction = "window.location.href='{$pendingUrl}'";
+                                        @php
+                                            /*─ helpers ─────────────────────────────────────────────*/
+                                            $statusIcons = [
+                                                'draft' => 'fa-pen-fancy',
+                                                'active' => 'fa-play-circle',
+                                                'marks_entry' => 'fa-edit',
+                                                'closed' => 'fa-lock',
+                                                'results_released' => 'fa-trophy',
+                                            ];
+                                            $startDate = \Carbon\Carbon::parse($exam->start_date);
+                                            $endDate = \Carbon\Carbon::parse($exam->end_date);
+                                            $duration = $startDate->diffInDays($endDate) + 1;
+                                            /*─ pipeline stage definitions ───────────────────────────
+                                             * order matters – it drives the connector "done" logic.
+                                             * "Create Assessment" is inserted between Active and
+                                             * Marks Entry only for exams that actually have a
+                                             * Secondary O-Level class attached (see
+                                             * Helper::examHasSecondaryOLevelClasses()) — it's not a
+                                             * real $exam->status value, just a screen a Secondary
+                                             * O-Level class-subject has to pass through before its
+                                             * marks entry opens (NlscAssessmentController).
+                                             *──────────────────────────────────────────────────────*/
+                                            $examHasOLevel = \App\Http\Controllers\Helper::examHasSecondaryOLevelClasses($exam->id);
+                                            $examPendingAssessments = $examHasOLevel ? \App\Http\Controllers\Helper::pendingNlscAssessmentsCountForExam($exam->id) : 0;
+                                            $stages = [
+                                                ['key' => 'draft', 'icon' => 'fa-pen', 'label' => 'Draft'],
+                                                ['key' => 'active', 'icon' => 'fa-play', 'label' => 'Active'],
+                                            ];
+                                            if ($examHasOLevel) {
+                                                $stages[] = ['key' => 'create_assessment', 'icon' => 'fa-list-check', 'label' => 'Create Assessment'];
+                                            }
+                                            $stages = array_merge($stages, [
+                                                ['key' => 'marks_entry', 'icon' => 'fa-pen-alt', 'label' => 'Marks Entry'],
+                                                ['key' => 'closed', 'icon' => 'fa-lock', 'label' => 'Closed'],
+                                                ['key' => 'results_released', 'icon' => 'fa-trophy', 'label' => 'Results Released'],
+                                            ]);
+                                            /*─ find current index ───────────────────────────────────*/
+                                            if ($examHasOLevel && $exam->status === 'active') {
+                                                // "Create Assessment" work happens throughout the
+                                                // Active phase (a class-subject can be added after
+                                                // the rest are already done) — treat it as the current
+                                                // stage for the whole time the exam is Active, rather
+                                                // than only until the pending count first hits zero.
+                                                $currentIdx = collect($stages)->search(fn($s) => $s['key'] === 'create_assessment');
+                                            } else {
+                                                $currentIdx = collect($stages)->search(fn($s) => $s['key'] === $exam->status);
+                                            }
+                                            if ($currentIdx === false)
+                                                $currentIdx = 0;
+                                            /*─ tooltip text per stage ───────────────────────────────*/
+                                            $stageTips = [
+                                                'draft' => 'Examination created, not yet published',
+                                                'active' => 'Examination is currently running',
+                                                'create_assessment' => $examPendingAssessments > 0
+                                                    ? $examPendingAssessments . ' Secondary O-Level class-subject(s) still need an assessment before marks entry'
+                                                    : 'All Secondary O-Level class-subjects have an assessment set up',
+                                                'marks_entry' => 'Teachers are entering marks',
+                                                'closed' => 'Marks locked, results being compiled',
+                                                'results_released' => 'Results published to students',
+                                            ];
+                                        @endphp
+                                        {{-- ── Single examination card row ────────────────────────── --}}
+                                        <tr class="exam-pipeline-card" data-status="{{ $exam->status }}"
+                                            data-name="{{ strtolower($exam->exam_name) }}"
+                                            data-code="{{ strtolower($exam->exam_code) }}"
+                                            data-term="{{ strtolower($exam->term) }}">
+                                            <td colspan="6" style="padding:0; border:none;">
+                                                {{-- TOP: existing info columns --}}
+                                                <div class="exam-pipeline-top">
+                                                    {{-- # --}}
+                                                    <div class="epc-num">
+                                                        <span class="row-number">{{ $count + 1 }}</span>
+                                                    </div>
+                                                    {{-- Name & code --}}
+                                                    <div class="epc-name">
+                                                        <div class="exam-name-cell">
+                                                            <span class="exam-name-text">
+                                                                {{ Str::limit($exam->exam_name, 35) }}
+                                                            </span>
+                                                            <span class="exam-name-sub">
+                                                                <i class="fas fa-hashtag"></i>
+                                                                {{ $exam->exam_code }}
+                                                                @if ($exam->exam_type)
+                                                                    <span style="margin-left:.5rem;">
+                                                                        <i class="fas fa-tag"></i> {{ $exam->exam_type }}
+                                                                    </span>
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {{-- Term --}}
+                                                    <div class="epc-term">
+                                                        <span class="term-badge">
+                                                            <i class="fas fa-calendar-alt"></i>
+                                                            {{ \App\Support\Term::label($exam->term) }}
+                                                        </span>
+                                                    </div>
+                                                    {{-- Schedule --}}
+                                                    <div class="epc-sched">
+                                                        <div class="period-display">
+                                                            <span class="period-date">
+                                                                <i class="far fa-calendar-check"
+                                                                    style="color:#10B981;font-size:.7rem;"></i>
+                                                                {{ $startDate->format('M d') }}
+                                                            </span>
+                                                            <i class="fas fa-long-arrow-alt-right period-arrow"></i>
+                                                            <span class="period-date">{{ $endDate->format('M d, Y') }}</span>
+                                                            <span
+                                                                class="period-duration
+                                                {{ $duration == 1 ? 'text-danger fw-bold' : ($duration <= 2 ? 'text-warning fw-bold' : 'text-info') }}">
+                                                                @if ($duration > 0)
+                                                                    {{ $duration }} {{ Str::plural('day', $duration) }} left
+                                                                @elseif($duration === 0)
+                                                                    <span class="text-danger fw-bold">Due today</span>
+                                                                @else
+                                                                    <span class="text-danger fw-bold">Deadline passed</span>
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {{-- Actions (unchanged) --}}
+                                                    {{-- Exam Subjects: choose which subjects are sat / shown --}}
+                                                    <div class="epc-subj">
+                                                        @if(PermissionHelper::canFeature('edit_exam'))
+                                                            @php
+                                                                $esRows = collect(\App\Models\ExaminationSubjectSetting::forExam($exam->id));
+                                                                $esCustomised = $esRows->count();
+                                                            @endphp
+                                                            @if(PermissionHelper::canFeature('manage_exam_subjects'))<a
+                                                                href="{{ route('examination.subjects.edit', $exam->id) }}"
+                                                                class="btn-exam-subjects"
+                                                                title="Choose which subjects are sat and shown on pass slips for this examination{{ $esCustomised ? ' (' . $esCustomised . ' customised)' : '' }}">
+                                                                <i class="fas fa-list-check"></i>
+                                                                <span>Exam Subjects</span>
+                                                                @if($esCustomised > 0)
+                                                                    <span class="es-count">{{ $esCustomised }}</span>
+                                                                @endif
+                                                            </a>@endif
+                                                        @endif
+                                                    </div>
+                                                    <div class="epc-acts">
+                                                        <div class="action-buttons">
+                                                            <button class="btn-action btn-action-view"
+                                                                onclick="showExamDetails({{ $exam->id }})" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            @if(PermissionHelper::canFeature('edit_exam'))
+                                                                <button class="btn-action btn-action-edit"
+                                                                    onclick="editExam({{ $exam->id }})"
+                                                                    title="Edit / Change Status">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            @endif
+                                                            @if(PermissionHelper::canFeature('delete_exam'))
+                                                                <button class="btn-action action-delete"
+                                                                    onclick="deleteExam({{ $exam->id }})"
+                                                                    style="background:#EF4444;color:#fff;border:none;"
+                                                                    title="Delete">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </button>
+                                                            @endif
+                                                            <!-- @if (in_array($exam->status, ['active', 'marks_entry']))
+                                                                                                        <button class="btn-action btn-action-marks"
+                                                                                                            onclick="window.location.href='/examinations/{{ $exam->id }}/marks'"
+                                                                                                            title="Enter Marks">
+                                                                                                            <i class="fas fa-file-signature"></i>
+                                                                                                        </button>
+                                                                                                    @endif -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {{-- BOTTOM: pipeline stepper ─────────────────────── --}}
+                                                <div class="exam-pipeline-stages">
+                                                    <div class="pipeline-stages-inner">
+                                                        @foreach ($stages as $idx => $stage)
+                                                            @php
+                                                                if ($idx < $currentIdx)
+                                                                    $state = 'done';
+                                                                elseif ($idx === $currentIdx)
+                                                                    $state = 'active';
+                                                                else
+                                                                    $state = 'future';
+                                                                $tip = $stageTips[$stage['key']];
+                                                                /*─ Which status to transition TO when clicking
+                                                                 * a future stage node? We allow clicking only
+                                                                 * the very next stage to keep things orderly.
+                                                                 * Clicking an already-done stage does nothing.
+                                                                 *────────────────────────────────────────────*/
+                                                                $isNextStage = ($idx === $currentIdx + 1);
+                                                                $isCurrentStage = ($idx === $currentIdx);
+                                                                $clickAction = '';
+                                                                // "Create Assessment" isn't a real status to
+                                                                // transition into — it always links to the
+                                                                // per-exam pending list instead, regardless of
+                                                                // done/active/future state.
+                                                                if ($stage['key'] === 'create_assessment') {
+                                                                    $pendingUrl = route('nlsc-assessments.pending', ['examination_id' => $exam->id]);
+                                                                    $clickAction = "window.location.href='{$pendingUrl}'";
                                                                 } elseif ($exam->status === 'results_released' && $stage['key'] === 'results_released') {
                                                                     // Straight to the released examination's pass slips —
                                                                     // no popup in between.
                                                                     $clickAction = "window.location.href='" . route('examination.passslips.index', $exam->id) . "'";
-                                                                                                        } elseif (($state === 'active' || $isNextStage) && \App\Helpers\PermissionHelper::canFeature('publish_results')) {
-                                                                                                            $clickAction = "openStageTransition({$exam->id}, '{$exam->status}', '{$stage['key']}')";
-                                                                                                        }
-                                                                                            @endphp
-                                                                                            {{-- Connector line before each node (except the first) --}}
-                                                                                            @if ($idx > 0)
-                                                                                                @php $connectorDone = ($idx <= $currentIdx); @endphp
-                                                                                                <div class="pipeline-connector {{ $connectorDone ? 'done' : '' }}">
-                                                                                                </div>
-                                                                                            @endif
-                                                                                            {{-- Stage node --}}
-                                                                                            <button class="pipeline-stage" data-state="{{ $state }}"
-                                                                                                title="{{ $tip }}" {{ ($state === 'done') ? 'disabled' : '' }} @if ($clickAction) onclick="{{ $clickAction }}" @endif>
-                                                                                                <div class="ps-node">
-                                                                                                    @if ($state === 'done')
-                                                                                                        <i class="fas fa-check"></i>
-                                                                                                    @else
-                                                                                                        <i class="fas {{ $stage['icon'] }}"></i>
-                                                                                                    @endif
-                                                                                                    {{-- "ACTIVE" badge on current stage --}}
-                                                                                                    @if ($state === 'active')
-                                                                                                        <span class="ps-next-badge">NOW</span>
-                                                                                                    @endif
-                                                                                                </div>
-                                                                                                <span class="ps-label">{{ $stage['label'] }}</span>
-                                                                                            </button>
-                                                                                        @endforeach
-                                                                                    </div>{{-- /.pipeline-stages-inner --}}
-                                                                                </div>{{-- /.exam-pipeline-stages --}}
-                                                                            </td>
-                                                                        </tr>
+                                                                } elseif (($state === 'active' || $isNextStage) && \App\Helpers\PermissionHelper::canFeature('publish_results')) {
+                                                                    $clickAction = "openStageTransition({$exam->id}, '{$exam->status}', '{$stage['key']}')";
+                                                                }
+                                                            @endphp
+                                                            {{-- Connector line before each node (except the first) --}}
+                                                            @if ($idx > 0)
+                                                                @php $connectorDone = ($idx <= $currentIdx); @endphp
+                                                                <div class="pipeline-connector {{ $connectorDone ? 'done' : '' }}">
+                                                                </div>
+                                                            @endif
+                                                            {{-- Stage node --}}
+                                                            <button class="pipeline-stage" data-state="{{ $state }}"
+                                                                title="{{ $tip }}" {{ ($state === 'done') ? 'disabled' : '' }} @if ($clickAction) onclick="{{ $clickAction }}" @endif>
+                                                                <div class="ps-node">
+                                                                    @if ($state === 'done')
+                                                                        <i class="fas fa-check"></i>
+                                                                    @else
+                                                                        <i class="fas {{ $stage['icon'] }}"></i>
+                                                                    @endif
+                                                                    {{-- "ACTIVE" badge on current stage --}}
+                                                                    @if ($state === 'active')
+                                                                        <span class="ps-next-badge">NOW</span>
+                                                                    @endif
+                                                                </div>
+                                                                <span class="ps-label">{{ $stage['label'] }}</span>
+                                                            </button>
+                                                        @endforeach
+                                                    </div>{{-- /.pipeline-stages-inner --}}
+                                                </div>{{-- /.exam-pipeline-stages --}}
+                                            </td>
+                                        </tr>
                                     @empty
                                         <tr>
                                             <td colspan="5">
@@ -3594,7 +3598,8 @@ use App\Helpers\PermissionHelper;
                                                     <i class="fas fa-calendar-alt"></i>
                                                     <div>
                                                         <small>Term</small>
-                                                        <strong>{{ \App\Support\Term::label($exam->term) }} • {{ $exam->academic_year }}</strong>
+                                                        <strong>{{ \App\Support\Term::label($exam->term) }} •
+                                                            {{ $exam->academic_year }}</strong>
                                                     </div>
                                                 </div>
                                                 <div class="released-info-item">
@@ -4080,22 +4085,23 @@ use App\Helpers\PermissionHelper;
                             overflow-y: auto !important;
                         }
                     }
+
                     /* Line the row's flex columns up with the table header columns.
-   The row's right padding is removed so its columns end at the same edge
-   as the header, and the Actions column gets it back as inner padding
-   (1.25rem + 0.5rem), so the action icons stay exactly where they were. */
-.exam-pipeline-top {
-    padding-right: 0 !important;
-}
+       The row's right padding is removed so its columns end at the same edge
+       as the header, and the Actions column gets it back as inner padding
+       (1.25rem + 0.5rem), so the action icons stay exactly where they were. */
+                    .exam-pipeline-top {
+                        padding-right: 0 !important;
+                    }
 
-.epc-acts {
-    padding-right: 1.75rem !important;
-}
+                    .epc-acts {
+                        padding-right: 1.75rem !important;
+                    }
 
-.epc-subj {
-    justify-content: center !important;
-    padding: 0 !important;
-}
+                    .epc-subj {
+                        justify-content: center !important;
+                        padding: 0 !important;
+                    }
                 </style>
                 <script>
                     // ── Enhanced Responsive Table Functions ──────────────────────────────────
@@ -4156,16 +4162,16 @@ use App\Helpers\PermissionHelper;
                                 const noResultRow = document.createElement('tr');
                                 noResultRow.className = 'no-result-row';
                                 noResultRow.innerHTML = `
-    <td colspan="6">
-    <div class="empty-state-enhanced" style="padding: 2rem;">
-    <div class="empty-icon" style="width: 60px; height: 60px;">
-    <i class="fas fa-search"></i>
-    </div>
-    <h4>No matching examinations</h4>
-    <p>Try a different search term</p>
-    </div>
-    </td>
-    `;
+        <td colspan="6">
+        <div class="empty-state-enhanced" style="padding: 2rem;">
+        <div class="empty-icon" style="width: 60px; height: 60px;">
+        <i class="fas fa-search"></i>
+        </div>
+        <h4>No matching examinations</h4>
+        <p>Try a different search term</p>
+        </div>
+        </td>
+        `;
                                 document.querySelector('#examTable tbody').appendChild(noResultRow);
                             }
                         } else if (existingNoResult) {
@@ -4271,11 +4277,13 @@ use App\Helpers\PermissionHelper;
                                     <i class="fas fa-plus-circle"></i> Create New Examination
                                 </a>
                             @endif
-                            @if(PermissionHelper::canFeature('view_grading_schemes'))<a href="{{ route('examination.grading-schemes.index') }}"
+                            @if(PermissionHelper::canFeature('view_grading_schemes'))<a
+                                href="{{ route('examination.grading-schemes.index') }}"
                                 class="btn btn-outline-purple w-100 mb-2">
                                 <i class="fas fa-sort-amount-up mr-2"></i> Grading Scales
                             </a>@endif
-                            @if(PermissionHelper::canFeature('view_assessment_scales'))<a href="{{ route('examination.assessment-scales.index') }}"
+                            @if(PermissionHelper::canFeature('view_assessment_scales'))<a
+                                href="{{ route('examination.assessment-scales.index') }}"
                                 class="btn btn-outline-purple w-100 mb-2">
                                 <i class="fas fa-ruler-combined mr-2"></i>Assessment Scales
                             </a>@endif
@@ -4427,12 +4435,12 @@ use App\Helpers\PermissionHelper;
                     today.getMonth() === month &&
                     today.getDate() === day;
                 html += `
-    <div class="cal-date ${hasExam ? 'has-exam' : ''} ${isToday ? 'today' : ''}"
-    ${hasExam ? `onclick="showDateExams('${dateStr}')"` : ''}
-    title="${hasExam ? 'Click to view exams' : ''}">
-    ${day}
-    </div>
-    `;
+        <div class="cal-date ${hasExam ? 'has-exam' : ''} ${isToday ? 'today' : ''}"
+        ${hasExam ? `onclick="showDateExams('${dateStr}')"` : ''}
+        title="${hasExam ? 'Click to view exams' : ''}">
+        ${day}
+        </div>
+        `;
             }
             html += '</div>';
             document.getElementById('calendarContainer').innerHTML = html;
@@ -4459,19 +4467,19 @@ use App\Helpers\PermissionHelper;
                     'results_released': '#2C29CA'
                 };
                 html += `
-    <div class="timeline-item mb-2" style="border-left-color: ${statusColors[exam.status]}; cursor:pointer;"
-    onclick="Swal.close(); showExamDetails(${exam.id})">
-    <strong>${exam.exam_code}</strong>
-    <br><small>${exam.name}</small>
-    </div>
-    `;
+        <div class="timeline-item mb-2" style="border-left-color: ${statusColors[exam.status]}; cursor:pointer;"
+        onclick="Swal.close(); showExamDetails(${exam.id})">
+        <strong>${exam.exam_code}</strong>
+        <br><small>${exam.name}</small>
+        </div>
+        `;
             });
             html += '</div>';
             Swal.fire({
                 title: `<span style="font-size: 1.3rem; font-weight: 700; color: #1a1a2e;">
-    <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
-    ${new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-    </span>`,
+        <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
+        ${new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        </span>`,
                 html: html,
                 showConfirmButton: false,
                 showCloseButton: true,
@@ -4519,10 +4527,10 @@ use App\Helpers\PermissionHelper;
             Swal.fire({
                 title: 'Loading Examination Details...',
                 html: `
-    <div style="text-align: center; padding: 1.5rem;">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-    </div>
-    `,
+        <div style="text-align: center; padding: 1.5rem;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        </div>
+        `,
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 showCloseButton: false,
@@ -4566,123 +4574,123 @@ use App\Helpers\PermissionHelper;
                     let actionButtonsHTML = '';
                     if (exam.status === 'draft') {
                         actionButtonsHTML = `
-    <button onclick="Swal.close(); updateExamStatus(${examId}, 'active')"
-    style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-play me-2"></i> Activate
-    </button>
-    <button onclick="Swal.close(); deleteExam(${examId})"
-    style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-trash-alt me-2"></i> Delete
-    </button>
-    `;
+        <button onclick="Swal.close(); updateExamStatus(${examId}, 'active')"
+        style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-play me-2"></i> Activate
+        </button>
+        <button onclick="Swal.close(); deleteExam(${examId})"
+        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-trash-alt me-2"></i> Delete
+        </button>
+        `;
                     } else if (exam.status === 'active') {
                         actionButtonsHTML = `
-    <button onclick="Swal.close(); updateExamStatus(${examId}, 'marks_entry')"
-    style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-edit me-2"></i> Open Marks Entry
-    </button>
-    <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')"
-    style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-lock me-2"></i> Close Exam
-    </button>
-    `;
+        <button onclick="Swal.close(); updateExamStatus(${examId}, 'marks_entry')"
+        style="background: #F59E0B; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-edit me-2"></i> Open Marks Entry
+        </button>
+        <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')"
+        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-lock me-2"></i> Close Exam
+        </button>
+        `;
                     } else if (exam.status === 'marks_entry') {
                         actionButtonsHTML = `
-    <button onclick="window.location.href='/examinations/${examId}/marks'"
-    style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-pen me-2"></i> Enter Marks
-    </button>
-    <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')"
-    style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-lock me-2"></i> Close Exam
-    </button>
-    `;
+        <button onclick="window.location.href='/examinations/${examId}/marks'"
+        style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-pen me-2"></i> Enter Marks
+        </button>
+        <button onclick="Swal.close(); updateExamStatus(${examId}, 'closed')"
+        style="background: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-lock me-2"></i> Close Exam
+        </button>
+        `;
                     } else if (exam.status === 'closed') {
                         actionButtonsHTML = `
-    <button onclick="Swal.close(); updateExamStatus(${examId}, 'results_released')"
-    style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-trophy me-2"></i> Release Results
-    </button>
-    `;
+        <button onclick="Swal.close(); updateExamStatus(${examId}, 'results_released')"
+        style="background: #2C29CA; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-trophy me-2"></i> Release Results
+        </button>
+        `;
                     } else if (exam.status === 'results_released') {
                         actionButtonsHTML = `
-    <button disabled
-    style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: not-allowed; margin: 5px;">
-    <i class="fas fa-check-circle me-2"></i> Completed
-    </button>
-    `;
+        <button disabled
+        style="background: #94A3B8; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: not-allowed; margin: 5px;">
+        <i class="fas fa-check-circle me-2"></i> Completed
+        </button>
+        `;
                     }
                     actionButtonsHTML += `
-    <button onclick="window.location.href='/examinations/${examId}/subjects'"
-    style="background: #0EA5E9; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
-    <i class="fas fa-list-check me-2"></i> Exam Subjects
-    </button>
-    `;
+        <button onclick="window.location.href='/examinations/${examId}/subjects'"
+        style="background: #0EA5E9; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin: 5px;">
+        <i class="fas fa-list-check me-2"></i> Exam Subjects
+        </button>
+        `;
                     let deadlineBadge = '';
                     if (exam.days_until_deadline > 0) {
                         const isUrgent = exam.days_until_deadline <= 3;
                         deadlineBadge = `
-    <span style="background: ${isUrgent ? '#FEF3C7' : '#D1FAE5'}; color: ${isUrgent ? '#D97706' : '#059669'}; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-    <i class="fas fa-clock"></i> ${exam.days_until_deadline} day${exam.days_until_deadline !== 1 ? 's' : ''} left
-    </span>
-    `;
+        <span style="background: ${isUrgent ? '#FEF3C7' : '#D1FAE5'}; color: ${isUrgent ? '#D97706' : '#059669'}; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+        <i class="fas fa-clock"></i> ${exam.days_until_deadline} day${exam.days_until_deadline !== 1 ? 's' : ''} left
+        </span>
+        `;
                     } else {
                         deadlineBadge = `
-    <span style="background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-    <i class="fas fa-ban"></i> Expired
-    </span>
-    `;
+        <span style="background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+        <i class="fas fa-ban"></i> Expired
+        </span>
+        `;
                     }
                     Swal.fire({
                         title: exam.exam_name,
                         html: `
-    <div style="text-align: left; margin-top: 10px;">
-    <div style="text-align: center; margin-bottom: 20px;">
-    <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${statusColor}30;">
-    <i class="fas ${statusIcon}"></i>
-    ${statusLabel}
-    </span>
-    </div>
-    <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-    <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
-    <div style="color: white; font-size: 1.3rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
-    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-layer-group me-1"></i> Type</div>
-    <div style="font-weight: 600; color: #1E293B;">${exam.exam_type}</div>
-    </div>
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
-    <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-calendar-alt me-1"></i> Term</div>
-    <div style="font-weight: 600; color: #1E293B;">${exam.term}</div>
-    </div>
-    </div>
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
-    <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-calendar-week me-1"></i> Examination Period</div>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div><div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div><div style="font-weight: 600; color: #1E293B;">${exam.start_date}</div></div>
-    <i class="fas fa-arrow-right" style="color: #2C29CA;"></i>
-    <div><div style="font-size: 0.7rem; color: #94A3B8;">End Date</div><div style="font-weight: 600; color: #1E293B;">${exam.end_date}</div></div>
-    </div>
-    </div>
-    <div style="background: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FFFBEB' : '#F8FAFC'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FDE68A' : '#E2E8F0'};">
-    <div style="color: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#D97706' : '#2C29CA'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline</div>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div style="font-weight: 600; color: #1E293B;">${exam.marks_entry_deadline}</div>
-    ${deadlineBadge}
-    </div>
-    </div>
-    ${exam.description ? `
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
-    <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-align-left me-1"></i> Description</div>
-    <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${exam.description}</div>
-    </div>
-    ` : ''}
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
-    ${actionButtonsHTML}
-    </div>
-    </div>
-    `,
+        <div style="text-align: left; margin-top: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; background: ${statusColor}15; color: ${statusColor}; padding: 6px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${statusColor}30;">
+        <i class="fas ${statusIcon}"></i>
+        ${statusLabel}
+        </span>
+        </div>
+        <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+        <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
+        <div style="color: white; font-size: 1.3rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
+        <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-layer-group me-1"></i> Type</div>
+        <div style="font-weight: 600; color: #1E293B;">${exam.exam_type}</div>
+        </div>
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; border: 1px solid #E2E8F0;">
+        <div style="color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;"><i class="fas fa-calendar-alt me-1"></i> Term</div>
+        <div style="font-weight: 600; color: #1E293B;">${exam.term}</div>
+        </div>
+        </div>
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
+        <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-calendar-week me-1"></i> Examination Period</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div><div style="font-size: 0.7rem; color: #94A3B8;">Start Date</div><div style="font-weight: 600; color: #1E293B;">${exam.start_date}</div></div>
+        <i class="fas fa-arrow-right" style="color: #2C29CA;"></i>
+        <div><div style="font-size: 0.7rem; color: #94A3B8;">End Date</div><div style="font-weight: 600; color: #1E293B;">${exam.end_date}</div></div>
+        </div>
+        </div>
+        <div style="background: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FFFBEB' : '#F8FAFC'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#FDE68A' : '#E2E8F0'};">
+        <div style="color: ${exam.days_until_deadline <= 3 && exam.days_until_deadline > 0 ? '#D97706' : '#2C29CA'}; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-hourglass-half me-1"></i> Marks Entry Deadline</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-weight: 600; color: #1E293B;">${exam.marks_entry_deadline}</div>
+        ${deadlineBadge}
+        </div>
+        </div>
+        ${exam.description ? `
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
+        <div style="color: #2C29CA; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-align-left me-1"></i> Description</div>
+        <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">${exam.description}</div>
+        </div>
+        ` : ''}
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+        ${actionButtonsHTML}
+        </div>
+        </div>
+        `,
                         showConfirmButton: false,
                         showCloseButton: true,
                         width: '600px',
@@ -4791,10 +4799,10 @@ use App\Helpers\PermissionHelper;
             Swal.fire({
                 title: 'Delete Examination?',
                 html: `
-    <div style="text-align: center; margin: 1rem 0;">
-    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
-    <p style="color: #475569; font-size: 0.95rem;">This action <strong style="color: #EF4444;">cannot be undone</strong>. All associated data will be permanently removed.</p>
-    `,
+        <div style="text-align: center; margin: 1rem 0;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #EF4444; margin-bottom: 15px;"></i>
+        <p style="color: #475569; font-size: 0.95rem;">This action <strong style="color: #EF4444;">cannot be undone</strong>. All associated data will be permanently removed.</p>
+        `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#EF4444',
@@ -4857,37 +4865,37 @@ use App\Helpers\PermissionHelper;
             // Minimal SweetAlert2 styling that won't interfere with functionality
             const swalStyles = document.createElement('style');
             swalStyles.textContent = `
-    .swal2-popup {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    border-radius: 20px;
-    }
-    .swal2-title {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 700;
-    color: #1a1a2e;
-    }
-    .swal2-html-container {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .swal2-confirm {
-    border-radius: 10px !important;
-    padding: 10px 24px !important;
-    font-weight: 600 !important;
-    font-size: 0.9rem !important;
-    }
-    .swal2-cancel {
-    border-radius: 10px !important;
-    padding: 10px 24px !important;
-    font-weight: 600 !important;
-    font-size: 0.9rem !important;
-    }
-    .swal2-close {
-    outline: none !important;
-    }
-    .swal2-close:focus {
-    box-shadow: none !important;
-    }
-    `;
+        .swal2-popup {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        border-radius: 20px;
+        }
+        .swal2-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 700;
+        color: #1a1a2e;
+        }
+        .swal2-html-container {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .swal2-confirm {
+        border-radius: 10px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        }
+        .swal2-cancel {
+        border-radius: 10px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        }
+        .swal2-close {
+        outline: none !important;
+        }
+        .swal2-close:focus {
+        box-shadow: none !important;
+        }
+        `;
             document.head.appendChild(swalStyles);
         });
         // ── Edit Examination Modal ──────────────────────────────────────────────
@@ -4926,11 +4934,11 @@ use App\Helpers\PermissionHelper;
             Swal.fire({
                 title: 'Loading Examination Data...',
                 html: `
-    <div style="text-align: center; padding: 2rem;">
-    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
-    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
-    </div>
-    `,
+        <div style="text-align: center; padding: 2rem;">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+        <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
+        </div>
+        `,
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 showCloseButton: false,
@@ -4972,16 +4980,16 @@ use App\Helpers\PermissionHelper;
                     ];
                     const currentStatus = statusOptions.find(s => s.value === exam.status);
                     const statusOptionsHTML = statusOptions.map(s => `
-    <option value="${s.value}" ${exam.status === s.value ? 'selected' : ''}>
-    ${s.label}
-    </option>
-    `).join('');
+        <option value="${s.value}" ${exam.status === s.value ? 'selected' : ''}>
+        ${s.label}
+        </option>
+        `).join('');
                     const gradingSchemes = exam.grading_schemes || [];
                     const gradingSchemeOptionsHTML = gradingSchemes.map(s => `
-    <option value="${s.id}" data-total-marks="${s.total_marks}" data-pass-mark="${s.pass_mark}" data-bands='${JSON.stringify(s.bands)}' ${String(exam.grading_scheme_id) === String(s.id) ? 'selected' : ''}>
-    ${s.name}${s.is_global ? ' (Global default)' : ''} — out of ${s.total_marks}, pass ${s.pass_mark}
-    </option>
-    `).join('');
+        <option value="${s.id}" data-total-marks="${s.total_marks}" data-pass-mark="${s.pass_mark}" data-bands='${JSON.stringify(s.bands)}' ${String(exam.grading_scheme_id) === String(s.id) ? 'selected' : ''}>
+        ${s.name}${s.is_global ? ' (Global default)' : ''} — out of ${s.total_marks}, pass ${s.pass_mark}
+        </option>
+        `).join('');
                     const classStreams = exam.class_streams || [];
                     const selectedClassStreams = (exam.selected_class_streams || []).map(String);
                     // 🔥 Per-class grading scheme overrides currently saved for this exam
@@ -4989,454 +4997,454 @@ use App\Helpers\PermissionHelper;
                     const classGradingSchemes = exam.class_grading_schemes || {};
                     const hasAnyOverride = Object.keys(classGradingSchemes).length > 0;
                     const classGradingSchemeOptionsHTML = (currentValue) => `
-    <option value="">-- Use Exam Default --</option>
-    ${gradingSchemes.map(s => `
-    <option value="${s.id}" ${String(currentValue) === String(s.id) ? 'selected' : ''}>${s.name}</option>
-    `).join('')}
-    `;
+        <option value="">-- Use Exam Default --</option>
+        ${gradingSchemes.map(s => `
+        <option value="${s.id}" ${String(currentValue) === String(s.id) ? 'selected' : ''}>${s.name}</option>
+        `).join('')}
+        `;
                     const classStreamItemsHTML = classStreams.length ? classStreams.map(cs => {
                         const isSelected = selectedClassStreams.includes(String(cs.value));
                         const currentSchemeId = classGradingSchemes[cs.value] ?? '';
                         const hasCustomScheme = hasAnyOverride && currentSchemeId !== '';
                         return `
-    <div class="edit-cs-item ${isSelected ? 'selected' : ''} ${hasCustomScheme ? 'has-custom-scheme' : ''}" data-value="${cs.value}">
-    <div class="edit-cs-top" onclick="toggleEditClassStream(this.parentElement)">
-    <div class="edit-cs-icon"><i class="fas fa-users"></i></div>
-    <div>
-    <div class="fw-semibold" style="line-height:1.2;">${cs.class_name || 'Unnamed Class'}</div>
-    <div class="text-muted" style="font-size:.75rem;">${cs.stream_name || 'No Stream'}</div>
-    </div>
-    <input type="checkbox" name="class_streams[]" value="${cs.value}" class="d-none edit-cs-checkbox" ${isSelected ? 'checked' : ''}>
-    </div>
-    <div class="edit-class-grading-scheme-wrapper">
-    <select class="edit-class-grading-scheme-select" data-cs-key="${cs.value}" onclick="event.stopPropagation();">
-    ${classGradingSchemeOptionsHTML(currentSchemeId)}
-    </select>
-    </div>
-    </div>`;
+        <div class="edit-cs-item ${isSelected ? 'selected' : ''} ${hasCustomScheme ? 'has-custom-scheme' : ''}" data-value="${cs.value}">
+        <div class="edit-cs-top" onclick="toggleEditClassStream(this.parentElement)">
+        <div class="edit-cs-icon"><i class="fas fa-users"></i></div>
+        <div>
+        <div class="fw-semibold" style="line-height:1.2;">${cs.class_name || 'Unnamed Class'}</div>
+        <div class="text-muted" style="font-size:.75rem;">${cs.stream_name || 'No Stream'}</div>
+        </div>
+        <input type="checkbox" name="class_streams[]" value="${cs.value}" class="d-none edit-cs-checkbox" ${isSelected ? 'checked' : ''}>
+        </div>
+        <div class="edit-class-grading-scheme-wrapper">
+        <select class="edit-class-grading-scheme-select" data-cs-key="${cs.value}" onclick="event.stopPropagation();">
+        ${classGradingSchemeOptionsHTML(currentSchemeId)}
+        </select>
+        </div>
+        </div>`;
                     }).join('') : `
-    <div class="text-center text-muted py-4" style="grid-column:1/-1;">
-    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-    No class-stream assignments found for this school.
-    </div>`;
+        <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+        No class-stream assignments found for this school.
+        </div>`;
                     Swal.fire({
                         title: '',
                         html: `
-    <style>
-    .edit-modal-header {
-    background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%);
-    margin: -2rem -2rem 0 -2rem;
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-radius: 20px 20px 0 0;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    }
-    .edit-modal-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    }
-    .edit-modal-header .exam-code-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 99px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
-    margin-bottom: 8px;
-    backdrop-filter: blur(10px);
-    }
-    .edit-modal-header .exam-title {
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    }
-    .edit-modal-header .edit-label {
-    color: rgba(255,255,255,0.7);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    }
-    .edit-section {
-    background: #ffffff;
-    border: 1px solid #ede9ff;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
-    }
-    .edit-section:hover {
-    border-color: #d4d0ff;
-    box-shadow: 0 4px 12px rgba(44, 41, 202, 0.06);
-    }
-    .edit-section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 0.78rem;
-    color: #2C29CA;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #ede9ff;
-    }
-    .edit-section-title i {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    background: #ede9ff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    }
-    .edit-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    }
-    .edit-form-group {
-    display: flex;
-    flex-direction: column;
-    }
-    .edit-form-group.full-width {
-    grid-column: 1 / -1;
-    }
-    .edit-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #4a5568;
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    }
-    .edit-label .required {
-    color: #EF4444;
-    }
-    .edit-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 0.82rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #1a1a2e;
-    background: #fafbff;
-    transition: all 0.2s ease;
-    outline: none;
-    }
-    .edit-input:focus {
-    border-color: #5351e4;
-    box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.08);
-    background: #ffffff;
-    }
-    .edit-input:hover {
-    border-color: #c4c0ff;
-    }
-    select.edit-input {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236c757d'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-    }
-    textarea.edit-input {
-    resize: vertical;
-    min-height: 80px;
-    }
-    .status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 99px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    margin-top: 6px;
-    }
-    .edit-cs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px;
-    max-height: 220px;
-    overflow-y: auto;
-    padding-right: 2px;
-    }
-    .edit-cs-item {
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: all .18s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .8rem;
-    background: #fafbff;
-    }
-    .edit-cs-item:hover {
-    border-color: #5351e4;
-    background: #f5f4ff;
-    }
-    .edit-cs-item.selected {
-    border-color: #2C29CA;
-    background: #ede9ff;
-    color: #2C29CA;
-    font-weight: 600;
-    }
-    .edit-cs-item .edit-cs-icon {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    background: #ede9ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .7rem;
-    flex-shrink: 0;
-    color: #5351e4;
-    transition: background .18s;
-    }
-    .edit-cs-item.selected .edit-cs-icon {
-    background: #2C29CA;
-    color: #fff;
-    }
-    .edit-cs-item {
-    flex-wrap: wrap;
-    }
-    .edit-cs-item .edit-cs-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    }
-    .edit-grading-mode-box {
-    background: #fafbff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    }
-    .edit-grading-mode-box .form-check {
-    font-size: 0.8rem;
-    }
-    .edit-per-class-info {
-    display: none;
-    font-size: 0.72rem;
-    color: #6c757d;
-    margin-top: 6px;
-    }
-    .edit-cs-item .edit-class-grading-scheme-wrapper {
-    width: 100%;
-    display: none;
-    margin-top: 0.25rem;
-    }
-    .edit-cs-item.has-custom-scheme .edit-class-grading-scheme-wrapper {
-    display: block;
-    }
-    .edit-cs-item .edit-class-grading-scheme-select {
-    width: 100%;
-    font-size: 0.72rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 0.4rem;
-    border: 1.5px solid #d4d0f0;
-    background: #ffffff;
-    color: #1a1a2e;
-    font-weight: 500;
-    cursor: pointer;
-    }
-    .edit-cs-item .edit-class-grading-scheme-select:focus {
-    outline: none;
-    border-color: #2C29CA;
-    box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.12);
-    }
-    </style>
-    <div style="margin-top: 1rem;">
-    <!-- Header -->
-    <div class="edit-modal-header">
-    <div class="edit-label">
-    <i class="fas fa-pen me-1"></i> Editing Examination
-    </div>
-    <div class="exam-code-badge">${exam.exam_code}</div>
-    <div class="exam-title">${exam.exam_name}</div>
-    </div>
-    <form id="editExamForm" style="margin-top: 20px;">
-    <input type="hidden" name="exam_id" value="${exam.id}">
-    <!-- Examination Details Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-file-alt"></i> Examination Details
-    </div>
-    <div class="edit-form-grid">
-    <div class="edit-form-group full-width">
-    <label class="edit-label">
-    <span class="required">*</span> Examination Name
-    </label>
-    <input type="text" name="exam_name" value="${exam.exam_name || ''}" class="edit-input" placeholder="e.g. End of Term I Examinations 2025">
-    </div>
-    <div class="edit-form-group">
-    <label class="edit-label">
-    <span class="required">*</span> Examination Type
-    </label>
-    <select name="exam_type" class="edit-input">
-    <option value="Beginning-of-Term" ${exam.exam_type === 'Beginning-of-Term' ? 'selected' : ''}>Beginning of Term</option>
-    <option value="Mid-Term" ${exam.exam_type === 'Mid-Term' ? 'selected' : ''}>Mid Term</option>
-    <option value="End-of-Term" ${exam.exam_type === 'End-of-Term' ? 'selected' : ''}>End of Term</option>
-    <option value="Continuous Assessment" ${exam.exam_type === 'Continuous Assessment' ? 'selected' : ''}>Continuous Assessment</option>
-    </select>
-    </div>
-    <div class="edit-form-group">
-    <label class="edit-label">
-    <span class="required">*</span> Term
-    </label>
-    <select name="term" class="edit-input">
-    <option value="Term 1" ${exam.term === 'Term 1' ? 'selected' : ''}>Term I</option>
-    <option value="Term 2" ${exam.term === 'Term 2' ? 'selected' : ''}>Term II</option>
-    <option value="Term 3" ${exam.term === 'Term 3' ? 'selected' : ''}>Term III</option>
-    </select>
-    </div>
-    </div>
-    </div>
-    <!-- Dates Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-calendar-alt"></i> Dates & Timeline
-    </div>
-    <div class="edit-form-grid">
-    <div class="edit-form-group">
-    <label class="edit-label">
-    <span class="required">*</span> Start Date
-    </label>
-    <input type="date" name="start_date" value="${exam.start_date}" class="edit-input">
-    </div>
-    <div class="edit-form-group">
-    <label class="edit-label">
-    <span class="required">*</span> End Date
-    </label>
-    <input type="date" name="end_date" value="${exam.end_date}" class="edit-input">
-    </div>
-    <div class="edit-form-group full-width">
-    <label class="edit-label">
-    Marks Entry Deadline
-    </label>
-    <input type="date" name="marks_entry_deadline" value="${exam.marks_entry_deadline}" class="edit-input">
-    </div>
-    </div>
-    </div>
-    <!-- Marks Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-percent"></i> Marks & Grading
-    </div>
-    <div class="edit-form-group full-width">
-    <label class="edit-label">Grading Scheme</label>
-    <select name="grading_scheme_id" id="editGradingSchemeSelect" class="edit-input">
-    <option value="">-- Keep current / none --</option>
-    ${gradingSchemeOptionsHTML}
-    </select>
-    </div>
-    <div class="edit-form-grid">
-    <div class="edit-form-group">
-    <label class="edit-label">Total Marks</label>
-    <input type="number" name="total_marks" id="editTotalMarksInput" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
-    </div>
-    <div class="edit-form-group">
-    <label class="edit-label">Pass Mark</label>
-    <input type="number" name="pass_mark" id="editPassMarkInput" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
-    </div>
-    </div>
-    </div>
-    <!-- Classes Involved Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-chalkboard-teacher"></i> Classes Involved
-    </div>
-    <!-- 🔥 Grading mode: single scheme for all classes, or per-class overrides -->
-    <div class="edit-grading-mode-box">
-    <div class="form-check">
-    <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModeSingle" value="single" ${hasAnyOverride ? '' : 'checked'}>
-    <label class="form-check-label" for="editGradingModeSingle">
-    Use single grading scheme for all classes
-    </label>
-    </div>
-    <div class="form-check mt-1">
-    <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModePerClass" value="per_class" ${hasAnyOverride ? 'checked' : ''}>
-    <label class="form-check-label" for="editGradingModePerClass">
-    Assign different grading schemes per class
-    </label>
-    </div>
-    <div class="edit-per-class-info" id="editPerClassInfo">
-    <i class="fas fa-info-circle text-primary me-1"></i>
-    Pick a scheme per selected class below, or leave it on "Use Exam Default".
-    Switching back to "single" clears any class-specific overrides when you save.
-    </div>
-    </div>
-    <div class="d-flex justify-content-between align-items-center mb-2">
-    <span id="editSelectedCount" class="badge bg-primary text-white" style="font-size:.7rem;">${selectedClassStreams.length} selected</span>
-    <button type="button" id="editToggleAllClasses" class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.72rem;">
-    <i class="fas fa-check-double me-1"></i> ${classStreams.length && selectedClassStreams.length === classStreams.length ? 'Deselect All' : 'Select All'}
-    </button>
-    </div>
-    <div class="edit-cs-grid" id="editClassStreamGrid">
-    ${classStreamItemsHTML}
-    </div>
-    <div id="editClassStreamError" class="text-danger mt-2" style="font-size:.75rem; display:none;">
-    <i class="fas fa-exclamation-circle"></i> At least one class must sit this examination. Please select a class before saving.
-    </div>
-    </div>
-    <!-- Status Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-toggle-on"></i> Examination Status
-    </div>
-    <div class="edit-form-group">
-    <select name="status" class="edit-input">
-    ${statusOptionsHTML}
-    </select>
-    <div class="status-indicator mt-2" style="background: ${currentStatus.color}15; color: ${currentStatus.color};">
-    <i class="fas ${currentStatus.icon}"></i>
-    Current: ${currentStatus.label}
-    </div>
-    </div>
-    </div>
-    ${exam.has_o_level_classes ? `
-    <!-- Secondary O-Level marking mode -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-graduation-cap"></i> Senior 1–4 Marking Mode
-    </div>
-    <div class="edit-form-group">
-    <select name="o_level_mode" class="edit-input">
-    <option value="assessments" ${exam.o_level_mode === 'assessments' ? 'selected' : ''}>Assessments (new curriculum — teachers create assessments)</option>
-    <option value="standard" ${exam.o_level_mode === 'standard' ? 'selected' : ''}>Standard examination (normal marks entry)</option>
-    </select>
-    </div>
-    </div>` : ''}
-    <!-- Description Section -->
-    <div class="edit-section">
-    <div class="edit-section-title">
-    <i class="fas fa-align-left"></i> Description & Notes
-    </div>
-    <div class="edit-form-group">
-    <textarea name="description" rows="3" class="edit-input" placeholder="Add any additional notes or description about this examination...">${exam.description || ''}</textarea>
-    </div>
-    </div>
-    </form>
-    </div>
-    `,
+        <style>
+        .edit-modal-header {
+        background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%);
+        margin: -2rem -2rem 0 -2rem;
+        padding: 2rem 2rem 1.5rem 2rem;
+        border-radius: 20px 20px 0 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        }
+        .edit-modal-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        }
+        .edit-modal-header .exam-code-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        margin-bottom: 8px;
+        backdrop-filter: blur(10px);
+        }
+        .edit-modal-header .exam-title {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        }
+        .edit-modal-header .edit-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        }
+        .edit-section {
+        background: #ffffff;
+        border: 1px solid #ede9ff;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+        }
+        .edit-section:hover {
+        border-color: #d4d0ff;
+        box-shadow: 0 4px 12px rgba(44, 41, 202, 0.06);
+        }
+        .edit-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        color: #2C29CA;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #ede9ff;
+        }
+        .edit-section-title i {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: #ede9ff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        }
+        .edit-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        }
+        .edit-form-group {
+        display: flex;
+        flex-direction: column;
+        }
+        .edit-form-group.full-width {
+        grid-column: 1 / -1;
+        }
+        .edit-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        }
+        .edit-label .required {
+        color: #EF4444;
+        }
+        .edit-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1a1a2e;
+        background: #fafbff;
+        transition: all 0.2s ease;
+        outline: none;
+        }
+        .edit-input:focus {
+        border-color: #5351e4;
+        box-shadow: 0 0 0 3px rgba(83, 81, 228, 0.08);
+        background: #ffffff;
+        }
+        .edit-input:hover {
+        border-color: #c4c0ff;
+        }
+        select.edit-input {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236c757d'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 32px;
+        }
+        textarea.edit-input {
+        resize: vertical;
+        min-height: 80px;
+        }
+        .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 99px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-top: 6px;
+        }
+        .edit-cs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding-right: 2px;
+        }
+        .edit-cs-item {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+        transition: all .18s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .8rem;
+        background: #fafbff;
+        }
+        .edit-cs-item:hover {
+        border-color: #5351e4;
+        background: #f5f4ff;
+        }
+        .edit-cs-item.selected {
+        border-color: #2C29CA;
+        background: #ede9ff;
+        color: #2C29CA;
+        font-weight: 600;
+        }
+        .edit-cs-item .edit-cs-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: #ede9ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .7rem;
+        flex-shrink: 0;
+        color: #5351e4;
+        transition: background .18s;
+        }
+        .edit-cs-item.selected .edit-cs-icon {
+        background: #2C29CA;
+        color: #fff;
+        }
+        .edit-cs-item {
+        flex-wrap: wrap;
+        }
+        .edit-cs-item .edit-cs-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        }
+        .edit-grading-mode-box {
+        background: #fafbff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        }
+        .edit-grading-mode-box .form-check {
+        font-size: 0.8rem;
+        }
+        .edit-per-class-info {
+        display: none;
+        font-size: 0.72rem;
+        color: #6c757d;
+        margin-top: 6px;
+        }
+        .edit-cs-item .edit-class-grading-scheme-wrapper {
+        width: 100%;
+        display: none;
+        margin-top: 0.25rem;
+        }
+        .edit-cs-item.has-custom-scheme .edit-class-grading-scheme-wrapper {
+        display: block;
+        }
+        .edit-cs-item .edit-class-grading-scheme-select {
+        width: 100%;
+        font-size: 0.72rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 0.4rem;
+        border: 1.5px solid #d4d0f0;
+        background: #ffffff;
+        color: #1a1a2e;
+        font-weight: 500;
+        cursor: pointer;
+        }
+        .edit-cs-item .edit-class-grading-scheme-select:focus {
+        outline: none;
+        border-color: #2C29CA;
+        box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.12);
+        }
+        </style>
+        <div style="margin-top: 1rem;">
+        <!-- Header -->
+        <div class="edit-modal-header">
+        <div class="edit-label">
+        <i class="fas fa-pen me-1"></i> Editing Examination
+        </div>
+        <div class="exam-code-badge">${exam.exam_code}</div>
+        <div class="exam-title">${exam.exam_name}</div>
+        </div>
+        <form id="editExamForm" style="margin-top: 20px;">
+        <input type="hidden" name="exam_id" value="${exam.id}">
+        <!-- Examination Details Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-file-alt"></i> Examination Details
+        </div>
+        <div class="edit-form-grid">
+        <div class="edit-form-group full-width">
+        <label class="edit-label">
+        <span class="required">*</span> Examination Name
+        </label>
+        <input type="text" name="exam_name" value="${exam.exam_name || ''}" class="edit-input" placeholder="e.g. End of Term I Examinations 2025">
+        </div>
+        <div class="edit-form-group">
+        <label class="edit-label">
+        <span class="required">*</span> Examination Type
+        </label>
+        <select name="exam_type" class="edit-input">
+        <option value="Beginning-of-Term" ${exam.exam_type === 'Beginning-of-Term' ? 'selected' : ''}>Beginning of Term</option>
+        <option value="Mid-Term" ${exam.exam_type === 'Mid-Term' ? 'selected' : ''}>Mid Term</option>
+        <option value="End-of-Term" ${exam.exam_type === 'End-of-Term' ? 'selected' : ''}>End of Term</option>
+        <option value="Continuous Assessment" ${exam.exam_type === 'Continuous Assessment' ? 'selected' : ''}>Continuous Assessment</option>
+        </select>
+        </div>
+        <div class="edit-form-group">
+        <label class="edit-label">
+        <span class="required">*</span> Term
+        </label>
+        <select name="term" class="edit-input">
+        <option value="Term 1" ${exam.term === 'Term 1' ? 'selected' : ''}>Term I</option>
+        <option value="Term 2" ${exam.term === 'Term 2' ? 'selected' : ''}>Term II</option>
+        <option value="Term 3" ${exam.term === 'Term 3' ? 'selected' : ''}>Term III</option>
+        </select>
+        </div>
+        </div>
+        </div>
+        <!-- Dates Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-calendar-alt"></i> Dates & Timeline
+        </div>
+        <div class="edit-form-grid">
+        <div class="edit-form-group">
+        <label class="edit-label">
+        <span class="required">*</span> Start Date
+        </label>
+        <input type="date" name="start_date" value="${exam.start_date}" class="edit-input">
+        </div>
+        <div class="edit-form-group">
+        <label class="edit-label">
+        <span class="required">*</span> End Date
+        </label>
+        <input type="date" name="end_date" value="${exam.end_date}" class="edit-input">
+        </div>
+        <div class="edit-form-group full-width">
+        <label class="edit-label">
+        Marks Entry Deadline
+        </label>
+        <input type="date" name="marks_entry_deadline" value="${exam.marks_entry_deadline}" class="edit-input">
+        </div>
+        </div>
+        </div>
+        <!-- Marks Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-percent"></i> Marks & Grading
+        </div>
+        <div class="edit-form-group full-width">
+        <label class="edit-label">Grading Scheme</label>
+        <select name="grading_scheme_id" id="editGradingSchemeSelect" class="edit-input">
+        <option value="">-- Keep current / none --</option>
+        ${gradingSchemeOptionsHTML}
+        </select>
+        </div>
+        <div class="edit-form-grid">
+        <div class="edit-form-group">
+        <label class="edit-label">Total Marks</label>
+        <input type="number" name="total_marks" id="editTotalMarksInput" value="${exam.total_marks}" min="1" max="1000" class="edit-input" placeholder="100">
+        </div>
+        <div class="edit-form-group">
+        <label class="edit-label">Pass Mark</label>
+        <input type="number" name="pass_mark" id="editPassMarkInput" value="${exam.pass_mark}" min="1" class="edit-input" placeholder="50">
+        </div>
+        </div>
+        </div>
+        <!-- Classes Involved Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-chalkboard-teacher"></i> Classes Involved
+        </div>
+        <!-- 🔥 Grading mode: single scheme for all classes, or per-class overrides -->
+        <div class="edit-grading-mode-box">
+        <div class="form-check">
+        <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModeSingle" value="single" ${hasAnyOverride ? '' : 'checked'}>
+        <label class="form-check-label" for="editGradingModeSingle">
+        Use single grading scheme for all classes
+        </label>
+        </div>
+        <div class="form-check mt-1">
+        <input class="form-check-input" type="radio" name="edit_grading_mode" id="editGradingModePerClass" value="per_class" ${hasAnyOverride ? 'checked' : ''}>
+        <label class="form-check-label" for="editGradingModePerClass">
+        Assign different grading schemes per class
+        </label>
+        </div>
+        <div class="edit-per-class-info" id="editPerClassInfo">
+        <i class="fas fa-info-circle text-primary me-1"></i>
+        Pick a scheme per selected class below, or leave it on "Use Exam Default".
+        Switching back to "single" clears any class-specific overrides when you save.
+        </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+        <span id="editSelectedCount" class="badge bg-primary text-white" style="font-size:.7rem;">${selectedClassStreams.length} selected</span>
+        <button type="button" id="editToggleAllClasses" class="btn btn-sm btn-outline-primary" style="border-radius:.5rem; font-size:.72rem;">
+        <i class="fas fa-check-double me-1"></i> ${classStreams.length && selectedClassStreams.length === classStreams.length ? 'Deselect All' : 'Select All'}
+        </button>
+        </div>
+        <div class="edit-cs-grid" id="editClassStreamGrid">
+        ${classStreamItemsHTML}
+        </div>
+        <div id="editClassStreamError" class="text-danger mt-2" style="font-size:.75rem; display:none;">
+        <i class="fas fa-exclamation-circle"></i> At least one class must sit this examination. Please select a class before saving.
+        </div>
+        </div>
+        <!-- Status Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-toggle-on"></i> Examination Status
+        </div>
+        <div class="edit-form-group">
+        <select name="status" class="edit-input">
+        ${statusOptionsHTML}
+        </select>
+        <div class="status-indicator mt-2" style="background: ${currentStatus.color}15; color: ${currentStatus.color};">
+        <i class="fas ${currentStatus.icon}"></i>
+        Current: ${currentStatus.label}
+        </div>
+        </div>
+        </div>
+        ${exam.has_o_level_classes ? `
+        <!-- Secondary O-Level marking mode -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-graduation-cap"></i> Senior 1–4 Marking Mode
+        </div>
+        <div class="edit-form-group">
+        <select name="o_level_mode" class="edit-input">
+        <option value="assessments" ${exam.o_level_mode === 'assessments' ? 'selected' : ''}>Assessments (new curriculum — teachers create assessments)</option>
+        <option value="standard" ${exam.o_level_mode === 'standard' ? 'selected' : ''}>Standard examination (normal marks entry)</option>
+        </select>
+        </div>
+        </div>` : ''}
+        <!-- Description Section -->
+        <div class="edit-section">
+        <div class="edit-section-title">
+        <i class="fas fa-align-left"></i> Description & Notes
+        </div>
+        <div class="edit-form-group">
+        <textarea name="description" rows="3" class="edit-input" placeholder="Add any additional notes or description about this examination...">${exam.description || ''}</textarea>
+        </div>
+        </div>
+        </form>
+        </div>
+        `,
                         showCancelButton: true,
                         showConfirmButton: true,
                         confirmButtonText: '<i class="fas fa-save me-2"></i> Save Changes',
@@ -5457,45 +5465,45 @@ use App\Helpers\PermissionHelper;
                             // Add custom button styles
                             const style = document.createElement('style');
                             style.textContent = `
-    .swal-edit-popup {
-    border-radius: 20px !important;
-    overflow: hidden;
-    }
-    .swal-edit-html {
-    margin: 0 !important;
-    padding: 0 2rem 1.5rem 2rem !important;
-    }
-    .swal-edit-actions {
-    padding: 1rem 2rem 1.5rem 2rem !important;
-    border-top: 1px solid #ede9ff;
-    margin: 0 !important;
-    }
-    .swal-edit-confirm {
-    border-radius: 10px !important;
-    padding: 12px 28px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    background: linear-gradient(135deg, #2C29CA, #5351e4) !important;
-    transition: all 0.3s ease !important;
-    }
-    .swal-edit-confirm:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(44, 41, 202, 0.3) !important;
-    }
-    .swal-edit-cancel {
-    border-radius: 10px !important;
-    padding: 12px 28px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    transition: all 0.3s ease !important;
-    }
-    .swal-edit-cancel:hover {
-    background: #f1f3f5 !important;
-    }
-    .swal2-close:focus {
-    box-shadow: none !important;
-    }
-    `;
+        .swal-edit-popup {
+        border-radius: 20px !important;
+        overflow: hidden;
+        }
+        .swal-edit-html {
+        margin: 0 !important;
+        padding: 0 2rem 1.5rem 2rem !important;
+        }
+        .swal-edit-actions {
+        padding: 1rem 2rem 1.5rem 2rem !important;
+        border-top: 1px solid #ede9ff;
+        margin: 0 !important;
+        }
+        .swal-edit-confirm {
+        border-radius: 10px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        background: linear-gradient(135deg, #2C29CA, #5351e4) !important;
+        transition: all 0.3s ease !important;
+        }
+        .swal-edit-confirm:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(44, 41, 202, 0.3) !important;
+        }
+        .swal-edit-cancel {
+        border-radius: 10px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        }
+        .swal-edit-cancel:hover {
+        background: #f1f3f5 !important;
+        }
+        .swal2-close:focus {
+        box-shadow: none !important;
+        }
+        `;
                             document.head.appendChild(style);
                             // Auto-fill Total Marks / Pass Mark whenever a different Grading Scheme is chosen,
                             // so the fields actually reflect the newly selected scheme instead of the old values.
@@ -5639,11 +5647,11 @@ use App\Helpers\PermissionHelper;
                         Swal.fire({
                             title: 'Updating Examination...',
                             html: `
-    <div style="text-align: center; padding: 2rem;">
-    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
-    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Saving your changes...</p>
-    </div>
-    `,
+        <div style="text-align: center; padding: 2rem;">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+        <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Saving your changes...</p>
+        </div>
+        `,
                             allowOutsideClick: false,
                             showConfirmButton: false,
                             showCloseButton: false,
@@ -5701,11 +5709,11 @@ use App\Helpers\PermissionHelper;
             Swal.fire({
                 title: 'Loading Examination Results...',
                 html: `
-    <div style="text-align: center; padding: 2rem;">
-    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
-    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
-    </div>
-    `,
+        <div style="text-align: center; padding: 2rem;">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #2C29CA;"></div>
+        <p style="margin-top: 1rem; color: #6c757d; font-size: 0.85rem;">Fetching examination details...</p>
+        </div>
+        `,
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 showCloseButton: false,
@@ -5724,58 +5732,58 @@ use App\Helpers\PermissionHelper;
                             Swal.fire({
                                 title: '<span style="font-size: 1.2rem; font-weight: 700;">' + exam.exam_name + '</span>',
                                 html: `
-    <div style="text-align: left;">
-    <!-- Header Stats -->
-    <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-    <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
-    <div style="color: white; font-size: 1.1rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
-    <div style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-top: 8px;">
-    <i class="fas fa-calendar-alt me-1"></i> ${exam.start_date} - ${exam.end_date}
-    </div>
-    </div>
-    ${hasResultsData ? `
-    <!-- Results Statistics -->
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
-    <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Total Students</div>
-    <div style="font-size: 1.5rem; font-weight: 700; color: #2C29CA;">${summary.total_students || 0}</div>
-    </div>
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
-    <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Pass Rate</div>
-    <div style="font-size: 1.5rem; font-weight: 700; color: #10B981;">${summary.pass_rate || 0}%</div>
-    </div>
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
-    <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Average Score</div>
-    <div style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">${summary.average_score || 0}%</div>
-    </div>
-    </div>
-    <!-- Published Date -->
-    <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-    <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
-    <span style="font-size: 0.75rem; color: #64748B;">Results Released</span>
-    </div>
-    <div style="font-weight: 600; font-size: 0.8rem; color: #1E293B;">${exam.published_at || exam.end_date}</div>
-    </div>
-    ` : `
-    <div style="text-align: center; padding: 20px;">
-    <i class="fas fa-chart-line" style="font-size: 3rem; color: #94A3B8; margin-bottom: 10px; display: block;"></i>
-    <p style="color: #64748B; font-size: 0.85rem;">Detailed results statistics are being compiled.</p>
-    </div>
-    `}
-    <!-- Action Buttons -->
-    <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
-    <button onclick="Swal.close(); viewPassSlips(${examId})"
-    style="flex: 1; background: linear-gradient(135deg, #2C29CA, #5351e4); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
-    <i class="fas fa-print me-2"></i> View Pass Slips
-    </button>
-    <button onclick="Swal.close(); downloadResultsReport(${examId})"
-    style="flex: 1; background: white; color: #2C29CA; border: 2px solid #2C29CA; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
-    <i class="fas fa-download me-2"></i> Download Report
-    </button>
-    </div>
-    </div>
-    `,
+        <div style="text-align: left;">
+        <!-- Header Stats -->
+        <div style="background: linear-gradient(135deg, #2C29CA 0%, #5351e4 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+        <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Examination Code</div>
+        <div style="color: white; font-size: 1.1rem; font-weight: 700; font-family: 'Courier New', monospace;">${exam.exam_code}</div>
+        <div style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-top: 8px;">
+        <i class="fas fa-calendar-alt me-1"></i> ${exam.start_date} - ${exam.end_date}
+        </div>
+        </div>
+        ${hasResultsData ? `
+        <!-- Results Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+        <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Total Students</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: #2C29CA;">${summary.total_students || 0}</div>
+        </div>
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+        <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Pass Rate</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: #10B981;">${summary.pass_rate || 0}%</div>
+        </div>
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+        <div style="color: #94A3B8; font-size: 0.65rem; text-transform: uppercase;">Average Score</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">${summary.average_score || 0}%</div>
+        </div>
+        </div>
+        <!-- Published Date -->
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+        <i class="fas fa-calendar-check me-2" style="color: #2C29CA;"></i>
+        <span style="font-size: 0.75rem; color: #64748B;">Results Released</span>
+        </div>
+        <div style="font-weight: 600; font-size: 0.8rem; color: #1E293B;">${exam.published_at || exam.end_date}</div>
+        </div>
+        ` : `
+        <div style="text-align: center; padding: 20px;">
+        <i class="fas fa-chart-line" style="font-size: 3rem; color: #94A3B8; margin-bottom: 10px; display: block;"></i>
+        <p style="color: #64748B; font-size: 0.85rem;">Detailed results statistics are being compiled.</p>
+        </div>
+        `}
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 2px solid #E2E8F0;">
+        <button onclick="Swal.close(); viewPassSlips(${examId})"
+        style="flex: 1; background: linear-gradient(135deg, #2C29CA, #5351e4); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+        <i class="fas fa-print me-2"></i> View Pass Slips
+        </button>
+        <button onclick="Swal.close(); downloadResultsReport(${examId})"
+        style="flex: 1; background: white; color: #2C29CA; border: 2px solid #2C29CA; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+        <i class="fas fa-download me-2"></i> Download Report
+        </button>
+        </div>
+        </div>
+        `,
                                 showConfirmButton: false,
                                 showCloseButton: true,
                                 width: '550px',
@@ -5856,25 +5864,25 @@ use App\Helpers\PermissionHelper;
                 : '';
             Swal.fire({
                 html: `
-    <div style="text-align:left;">
-    <!-- Header strip -->
-    <div style="background:linear-gradient(135deg,#2C29CA,#5351e4);border-radius:14px;padding:18px;margin-bottom:18px;text-align:center;">
-    <div style="color:rgba(255,255,255,.7);font-size:.65rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Stage Transition</div>
-    <!-- from → to display -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
-    <div style="background:${from.bg};border-radius:99px;padding:5px 14px;font-size:.75rem;font-weight:700;color:${from.color};">
-    <i class="fas ${from.icon} me-1"></i>${from.label}
-    </div>
-    <i class="fas fa-long-arrow-alt-right" style="color:rgba(255,255,255,.6);font-size:1rem;"></i>
-    <div style="background:${to.bg};border-radius:99px;padding:5px 14px;font-size:.75rem;font-weight:700;color:${to.color};border:2px solid ${to.color}44;">
-    <i class="fas ${to.icon} me-1"></i>${to.label}
-    </div>
-    </div>
-    </div>
-    <p style="font-size:.82rem;color:#374151;margin-bottom:0;">${desc}</p>
-    ${warningHtml}
-    </div>
-    `,
+        <div style="text-align:left;">
+        <!-- Header strip -->
+        <div style="background:linear-gradient(135deg,#2C29CA,#5351e4);border-radius:14px;padding:18px;margin-bottom:18px;text-align:center;">
+        <div style="color:rgba(255,255,255,.7);font-size:.65rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Stage Transition</div>
+        <!-- from → to display -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+        <div style="background:${from.bg};border-radius:99px;padding:5px 14px;font-size:.75rem;font-weight:700;color:${from.color};">
+        <i class="fas ${from.icon} me-1"></i>${from.label}
+        </div>
+        <i class="fas fa-long-arrow-alt-right" style="color:rgba(255,255,255,.6);font-size:1rem;"></i>
+        <div style="background:${to.bg};border-radius:99px;padding:5px 14px;font-size:.75rem;font-weight:700;color:${to.color};border:2px solid ${to.color}44;">
+        <i class="fas ${to.icon} me-1"></i>${to.label}
+        </div>
+        </div>
+        </div>
+        <p style="font-size:.82rem;color:#374151;margin-bottom:0;">${desc}</p>
+        ${warningHtml}
+        </div>
+        `,
                 title: '<span style="font-size:1rem;font-weight:700;color:#1a1a2e;">Advance to Next Stage?</span>',
                 showCancelButton: true,
                 confirmButtonText: `<i class="fas ${to.icon} me-2"></i> Move to ${to.label}`,
@@ -5937,12 +5945,12 @@ use App\Helpers\PermissionHelper;
                     const noRow = document.createElement('tr');
                     noRow.className = 'no-result-row';
                     noRow.innerHTML = `<td colspan="5">
-    <div class="empty-state-enhanced" style="padding:2rem;">
-    <div class="empty-icon" style="width:60px;height:60px;"><i class="fas fa-search"></i></div>
-    <h4>No matching examinations</h4>
-    <p>Try a different search term</p>
-    </div>
-    </td>`;
+        <div class="empty-state-enhanced" style="padding:2rem;">
+        <div class="empty-icon" style="width:60px;height:60px;"><i class="fas fa-search"></i></div>
+        <h4>No matching examinations</h4>
+        <p>Try a different search term</p>
+        </div>
+        </td>`;
                     document.querySelector('#examTable tbody').appendChild(noRow);
                 }
             } else if (existingNoResult) {

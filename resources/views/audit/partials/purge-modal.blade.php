@@ -18,11 +18,25 @@
     </div>
 @endif
 
+<style>
+    #auPurgeModal .modal-content{border:0;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+    #auPurgeModal .modal-header{background:#fef2f2;border-bottom:1px solid #fecaca;padding:1rem 1.25rem}
+    #auPurgeModal .modal-title{font-weight:700;font-size:1.05rem}
+    #auPurgeModal .modal-body{padding:1.25rem}
+    #auPurgeModal .modal-footer{border-top:1px solid #eef0f4;background:#f9fafb}
+    #auPurgeModal label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;margin-bottom:.3rem}
+    #auPurgeModal .form-control{border-radius:8px;border:1px solid #dfe4ea;background:#f8fafc;font-size:.88rem}
+    #auPurgeModal .form-control:focus{border-color:#4f7cff;box-shadow:0 0 0 3px rgba(79,124,255,.12);background:#fff}
+    #auPurgeModal .btn{border-radius:99px;font-weight:600;padding:.5rem 1.2rem}
+    #auPurgeModal #auPurgeExport{background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3}
+    #auPurgeModal #auPurgeExport:hover{background:#e0e7ff}
+</style>
+
 <div class="modal fade" id="auPurgeModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <form method="POST" action="{{ route('audit.purge') }}" class="modal-content" id="auPurgeForm" autocomplete="off">
             @csrf
-            <div class="modal-header">
+            <div class="modal-header bg-primary">
                 <h5 class="modal-title text-white"><i class="fas fa-exclamation-triangle mr-1"></i>Purge old audit entries</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>

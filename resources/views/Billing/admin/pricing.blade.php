@@ -20,6 +20,12 @@
     </div>
 @endsection
 @section('content')
+<style>
+    .bl-table thead th {
+    background-color: #2C29CA !important;
+    color: #FFFFFF !important;
+}
+</style>
     <div class="bl">
         @include('Billing.partials.flash') @include('Billing.partials.admin-nav')
         @if (!$term)

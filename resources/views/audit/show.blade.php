@@ -17,11 +17,27 @@
 <div class="side-app">
 
     <div class="au-hero">
-        <div>
-            <h4>{{ $log->event_label }} @if($log->outcome === 'failure')<small>(failed)</small>@endif</h4>
-            <small>{{ $log->description }}</small>
+        <div class="au-hero-main">
+            <div class="au-hero-left">
+                <div class="au-hero-icon"><i class="fas fa-file-signature"></i></div>
+                <div class="au-hero-info">
+                    <h4>
+                        {{ $log->event_label }}
+                        @if($log->outcome === 'failure')
+                            <span class="au-hero-chip au-hero-chip--bad">Failed</span>
+                        @else
+                            <span class="au-hero-chip au-hero-chip--ok">Success</span>
+                        @endif
+                    </h4>
+                    <p>{{ $log->description }}</p>
+                </div>
+            </div>
+            <div class="au-hero-actions">
+                <a href="{{ route('audit.index') }}" class="au-hero-btn au-hero-btn--primary">
+                    <i class="fas fa-arrow-left"></i><span>Back to audit trail</span>
+                </a>
+            </div>
         </div>
-        <a href="{{ route('audit.index') }}" class="btn btn-sm btn-light"><i class="fas fa-arrow-left mr-1"></i>Back to audit trail</a>
     </div>
 
     <div class="row">

@@ -1,6 +1,27 @@
 <style>
-    .au-hero{background:linear-gradient(135deg,#2C29CA 0%,#5351e4 100%);color:#fff;border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
-    .au-hero h4{margin:0;font-weight:700}.au-hero small{opacity:.85}
+    /* ── Hero (same family as Examination reports) ── */
+    .au-hero{background:linear-gradient(135deg,#000 0%,#070189 100%);border-radius:20px;padding:1.5rem 2rem;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 24px rgba(7,1,137,.3);color:#fff}
+    .au-hero-main{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+    .au-hero-left{display:flex;align-items:center;gap:1.1rem;min-width:0}
+    .au-hero-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;flex-shrink:0;box-shadow:0 4px 12px rgba(102,126,234,.3)}
+    .au-hero-info h4{font-size:1.35rem;font-weight:700;color:#fff !important;margin:0 0 .15rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .au-hero-info p{color:rgba(255,255,255,.75) !important;font-size:.9rem;margin:0;word-break:break-word}
+    .au-hero-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+    .au-hero-actions form{margin:0}
+    .au-hero .au-hero-btn{display:inline-flex;align-items:center;gap:.55rem;padding:.6rem 1.25rem;border-radius:99px;font-size:.85rem;font-weight:600;line-height:1.2;white-space:nowrap;cursor:pointer;text-decoration:none !important;transition:all .2s ease;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff !important}
+    .au-hero .au-hero-btn:hover,.au-hero .au-hero-btn:focus{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.5);color:#fff !important;transform:translateY(-1px);outline:none}
+    .au-hero .au-hero-btn--primary{background:#fff;border-color:#fff;color:#1e1b4b !important}
+    .au-hero .au-hero-btn--primary:hover,.au-hero .au-hero-btn--primary:focus{background:#eef0ff;border-color:#eef0ff;color:#1e1b4b !important}
+    .au-hero .au-hero-btn--danger{background:#dc2626;border-color:#dc2626;color:#fff !important}
+    .au-hero .au-hero-btn--danger:hover,.au-hero .au-hero-btn--danger:focus{background:#b91c1c;border-color:#b91c1c;color:#fff !important}
+    .au-hero-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,.08)}
+    .au-hero-feature{display:flex;align-items:center;gap:.75rem;padding:.35rem .5rem;border-radius:10px}
+    .au-hero-feature-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:1px solid rgba(255,255,255,.06)}
+    .au-hero-feature-title{font-size:.8rem;font-weight:600;color:#fff;line-height:1.2}
+    .au-hero-feature-desc{font-size:.72rem;color:rgba(255,255,255,.6)}
+    .au-hero-chip{display:inline-block;padding:.12rem .6rem;border-radius:99px;font-size:.7rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff}
+    .au-hero-chip--bad{background:#dc2626}.au-hero-chip--ok{background:#16a34a}
+    @media (max-width:768px){.au-hero{padding:1.25rem}.au-hero-main{flex-direction:column;align-items:stretch}.au-hero-actions{flex-direction:column;align-items:stretch}.au-hero .au-hero-btn,.au-hero-actions form .au-hero-btn{justify-content:center;width:100%}}
     .au-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.9rem;margin-bottom:1.25rem}
     .au-stat{background:#fff;border-radius:12px;padding:.9rem 1.1rem;box-shadow:0 1px 4px rgba(20,20,60,.08);border-left:4px solid #5351e4}
     .au-stat .n{font-size:1.6rem;font-weight:700;line-height:1.1;color:#1f2354}.au-stat .l{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:#6b7280}

@@ -2,6 +2,12 @@
 @section('export_title', 'Billing Reports')
 @section('css') @include('Billing.partials.styles') @endsection
 @section('page-header')
+    <style>
+        .bl-table thead th {
+    background-color: #2C29CA !important;
+    color: #FFFFFF !important;
+}
+    </style>
     <div class="bl">
         <div class="bl-hero">
             <div style="position:relative;z-index:1;"><span class="bl-badge"><i class="fas fa-chart-column"></i>

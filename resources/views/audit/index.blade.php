@@ -267,27 +267,56 @@
 @section('content')
 <div class="side-app">
 
+    @php
+        $auRetention = (int) config('audit.retention_days');
+    @endphp
+
     <div class="au-hero">
-        <div>
-            <h4><i class="fas fa-clipboard-list mr-2"></i>Audit Trail</h4>
-            <small>
-                A permanent, tamper-evident record of who did what, when and from where.
-                @unless($isPlatform) Showing activity for your school only. @endunless
-            </small>
+        <div class="au-hero-main">
+            <div class="au-hero-left">
+                <div class="au-hero-icon"><i class="fas fa-list-check"></i></div>
+                <div class="au-hero-info">
+                    <h4>Audit Trail</h4>
+                    <p>A permanent, tamper-evident record of who did what, when and from where.</p>
+                </div>
+            </div>
+            <div class="au-hero-actions">
+                @if($canExport)
+                    <a href="{{ route('audit.export', $filters) }}" class="au-hero-btn au-hero-btn--primary">
+                        <i class="fas fa-file-csv"></i><span>Export CSV</span>
+                    </a>
+                @endif
+                @if($canVerify)
+                    <form method="POST" action="{{ route('audit.verify') }}">
+                        @csrf
+                        <button type="submit" class="au-hero-btn"><i class="fas fa-shield-alt"></i><span>Verify integrity</span></button>
+                    </form>
+                @endif
+                @if($canPurge ?? false)
+                    <button type="button" id="auPurgeOpen" class="au-hero-btn au-hero-btn--danger" data-toggle="modal" data-target="#auPurgeModal">
+                        <i class="fas fa-trash-alt"></i><span>Purge old entries</span>
+                    </button>
+                @endif
+            </div>
         </div>
-        <div>
-            @if($canExport)
-                <a href="{{ route('audit.export', $filters) }}" class="btn btn-sm btn-light"><i class="fas fa-file-csv mr-1"></i>Export CSV</a>
-            @endif
-            @if($canPurge ?? false)
-                <button type="button" id="auPurgeOpen" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#auPurgeModal"><i class="fas fa-trash-alt mr-1"></i>Purge old entries</button>
-            @endif
-            @if($canVerify)
-                <form method="POST" action="{{ route('audit.verify') }}" class="d-inline">
-                    @csrf
-                    <button class="btn btn-sm btn-outline-light"><i class="fas fa-shield-alt mr-1"></i>Verify integrity</button>
-                </form>
-            @endif
+
+        <div class="au-hero-features">
+            <div class="au-hero-feature">
+                <div class="au-hero-feature-icon" style="background:rgba(129,140,248,.15);"><i class="fas fa-fingerprint" style="color:#818cf8;"></i></div>
+                <div><div class="au-hero-feature-title">Tamper-evident</div><div class="au-hero-feature-desc">Every entry is cryptographically signed</div></div>
+            </div>
+            <div class="au-hero-feature">
+                <div class="au-hero-feature-icon" style="background:rgba(52,211,153,.15);"><i class="fas fa-lock" style="color:#34d399;"></i></div>
+                <div><div class="au-hero-feature-title">Append-only</div><div class="au-hero-feature-desc">Entries cannot be edited or deleted one by one</div></div>
+            </div>
+            <div class="au-hero-feature">
+                <div class="au-hero-feature-icon" style="background:rgba(251,191,36,.15);"><i class="fas fa-hourglass-half" style="color:#fbbf24;"></i></div>
+                <div><div class="au-hero-feature-title">Retention</div><div class="au-hero-feature-desc">{{ $auRetention > 0 ? number_format($auRetention) . ' days, then pruned automatically' : 'Kept forever' }}</div></div>
+            </div>
+            <div class="au-hero-feature">
+                <div class="au-hero-feature-icon" style="background:rgba(244,114,182,.15);"><i class="fas fa-school" style="color:#f472b6;"></i></div>
+                <div><div class="au-hero-feature-title">Scope</div><div class="au-hero-feature-desc">{{ $isPlatform ? 'All schools' : 'Your school only' }}</div></div>
+            </div>
         </div>
     </div>
 
@@ -584,6 +613,10 @@
         </div>
         <div class="p-3">{{ $logs->links() }}</div>
     </div>
+</div>
+ </div>
+</div>
+ </div>
 </div>
 
 {{-- Searchable Select JS --}}
