@@ -115,6 +115,17 @@ return [
             ],
         ],
 
+        'audit_trail' => [
+            'name' => 'Audit Trail',
+            'icon' => 'fa fa-clipboard-list',
+            'description' => 'Tamper-evident record of who did what, when and from where, across every school',
+            'permissions' => [
+                'view' => 'View the audit trail (all schools)',
+                'export' => 'Export the audit trail to CSV',
+                'verify' => 'Run the audit trail integrity check',
+            ],
+        ],
+
         'custom_report_cards' => [
             'name' => 'Custom Report Cards',
             'icon' => 'fa fa-chart-bar',

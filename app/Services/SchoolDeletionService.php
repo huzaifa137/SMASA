@@ -64,6 +64,7 @@ class SchoolDeletionService
     public function delete(School $school): array
     {
         $schoolId = $school->id;
+        $snapshot = $school->only(['id', 'name', 'registration_code', 'school_type']);
 
         // File paths have to be read before the rows disappear.
         $files = $this->collectFiles($schoolId);
@@ -126,6 +127,17 @@ class SchoolDeletionService
 
         // Files go last: a rolled-back delete must not lose them.
         $this->deleteFiles($files);
+
+        \App\Audit\Audit::critical('school_deleted', 'Permanently deleted school "' . ($snapshot['name'] ?? ('#' . $schoolId)) . '" with ' . count($studentIds) . ' student(s) and ' . count($teacherIds) . ' teacher(s)', [
+            'category' => 'security',
+            'entity_type' => 'School',
+            'entity_id' => $schoolId,
+            'entity_label' => $snapshot['name'] ?? null,
+            'school_id' => $schoolId,
+            'school_name' => $snapshot['name'] ?? null,
+            'old' => $snapshot,
+            'metadata' => ['students_deleted' => count($studentIds), 'teachers_deleted' => count($teacherIds)],
+        ]);
 
         return ['students' => count($studentIds), 'teachers' => count($teacherIds)];
     }

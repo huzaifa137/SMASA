@@ -570,6 +570,7 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
+                @include('audit.partials.menu-item')
                 {{-- User Rights --}}
                 @if(PermissionHelper::canModule('user_rights'))
                     <li class="slide has-sub">
@@ -684,6 +685,8 @@ use App\Helpers\PermissionHelper;
                     </a>
                 </li>
             @endif
+
+            @include('audit.partials.menu-item')
 
             @if($__A::can('custom_report_cards.view'))
                 <li class="slide">
@@ -1235,6 +1238,7 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
+                @include('audit.partials.menu-item')
                 {{-- User Rights --}}
                 {{-- PermissionHelper::canModule('user_rights') already covers both
                 legitimate cases on its own: (1) a role was explicitly granted

@@ -25,6 +25,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+
+        // Audit trail retention (see config/audit.php)
+        $schedule->command('audit:prune')->dailyAt('02:30');
     }
 
     /**

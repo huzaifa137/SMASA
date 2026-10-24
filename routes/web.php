@@ -35,6 +35,8 @@ use App\Http\Controllers\ParentPortalController;
 use App\Http\Controllers\StudentConsolidationController;
 use App\Http\Controllers\StudentPhotoImportController;
 
+require __DIR__ . '/audit.php';
+
 Route::get('/logout', function () {
     session()->flush();
 
