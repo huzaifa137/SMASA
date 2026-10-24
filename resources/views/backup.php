@@ -45,7 +45,7 @@ storage:relink
 
 th table stylings #
 
-.bl-table thead th {
+table thead th {
     background-color: #2C29CA !important;
     color: #FFFFFF !important;
 }

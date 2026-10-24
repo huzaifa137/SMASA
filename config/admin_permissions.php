@@ -127,6 +127,16 @@ return [
             ],
         ],
 
+        'school_activity' => [
+            'name' => 'School Activity',
+            'icon' => 'fa fa-heart-pulse',
+            'description' => 'See which schools are really using the system (exams, attendance, finance...) and which are idle or dormant',
+            'permissions' => [
+                'view' => 'View school activity & usage status',
+                'export' => 'Export school activity to CSV',
+            ],
+        ],
+
         'custom_report_cards' => [
             'name' => 'Custom Report Cards',
             'icon' => 'fa fa-chart-bar',

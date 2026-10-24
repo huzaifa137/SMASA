@@ -213,9 +213,62 @@ class StudentController extends Controller
         }
     }
 
-    public function adminDashboard(GradingService $gradingService)
+    /**
+     * Admin Portal landing page. The same URL serves every admin, so what is
+     * shown is decided by the permissions of the admin's role (Admin Rights),
+     * never by the page itself. Super administrators see everything.
+     */
+    public function adminDashboard(GradingService $gradingService, \App\Services\SchoolActivityService $activity)
     {
-        return view('student.admin-dashboard');
+        // AdminAuth lets school sessions through for shared screens; this page
+        // holds platform-wide figures, so only a genuine admin session may see it.
+        if (!\App\Support\AdminAccess::isAdminSession()) {
+            return session()->has('LoggedSchool')
+                ? redirect('/school/home')
+                : redirect('/users/login')->with('fail', 'You must be logged in as an administrator.');
+        }
+
+        $A = \App\Support\AdminAccess::class;
+
+        $caps = [
+            'schools'      => $A::can('schools.view'),
+            'create_school' => $A::can('schools.create'),
+            'activity'     => $A::can('school_activity.view'),
+            'billing'      => $A::can('billing.view'),
+            'audit'        => $A::can('audit_trail.view'),
+            'admin_rights' => $A::canAny(['admin_rights.view_overview', 'admin_rights.view_users', 'admin_rights.view_roles']),
+            'school_roles' => $A::can('school_rights.view'),
+            'master_data'  => $A::canAny(['master_data.view_data', 'master_data.view_codes']),
+            'super'        => $A::isSuperAdmin(),
+        ];
+        $caps['any'] = in_array(true, $caps, true);
+
+        $adoption = null;
+        $attention = collect();
+
+        if ($caps['activity']) {
+            $adoption = $activity->overview();
+            // Live schools that are dormant / never used, longest silent first.
+            $attention = $activity->schools(['status' => 'all', 'sort' => 'attention'])
+                ->filter(fn ($r) => in_array($r['status'], ['dormant', 'never'], true))
+                ->take(5)
+                ->values();
+        }
+
+        $failedSignIns = $caps['audit']
+            ? DB::table('audit_logs')
+                ->where('event', 'login_failed')
+                ->where('occurred_at', '>=', now('UTC')->subDay()->format('Y-m-d H:i:s'))
+                ->count()
+            : null;
+
+        return view('student.admin-dashboard', [
+            'caps'          => $caps,
+            'adoption'      => $adoption,
+            'attention'     => $attention,
+            'failedSignIns' => $failedSignIns,
+            'roleName'      => $A::roleName(),
+        ]);
     }
 
     private function getSubjectIdsForCategory($category)

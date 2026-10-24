@@ -25,7 +25,8 @@ class AdminRolesSeeder extends Seeder
                 array_merge(
                     AdminAccess::moduleKeys('schools'),
                     AdminAccess::moduleKeys('academic_calendar'),
-                    AdminAccess::moduleKeys('school_rights')
+                    AdminAccess::moduleKeys('school_rights'),
+                    AdminAccess::moduleKeys('school_activity')
                 ),
             ],
             'Curriculum Manager' => [

@@ -15,8 +15,9 @@
     
     // ─ SCHOOLS DATA ─
     $totalSchools       = School::count();
-    $activeSchools      = School::where('school_status', 1)->count();
-    $inactiveSchools    = School::where('school_status', 0)->count();
+    // Live = school_status 10 (see BillingService::ACTIVE_SCHOOL_STATUS); everything else is not live.
+    $activeSchools      = School::where('school_status', 10)->count();
+    $inactiveSchools    = max(0, $totalSchools - $activeSchools);
     
     // ─ STUDENTS DATA ─
     $totalStudents      = Student::count();
@@ -35,7 +36,7 @@
     $totalExams         = Examination::count();
     $markedExams        = ExaminationMark::whereNotNull('marks_obtained')->distinct('examination_id')->count();
     $pendingApprovals   = ExaminationMark::where('status', 'pending')->count();
-    $systemAlerts       = 3; // Could be calculated from logs/alerts
+    $systemAlerts       = (int) ($adoption['needs_attention'] ?? 0); // dormant / never-used live schools
     
     // ─ RECENT SCHOOLS (Last 5) ─
     $recentSchools = School::latest('created_at')
@@ -103,7 +104,7 @@
     }
     
     // ─ TOP PERFORMING SCHOOLS (By average marks) ─
-    $topSchools = DB::table('schools as s')
+    $topSchools = !$caps['schools'] ? [] : DB::table('schools as s')
         ->leftJoin('students as st', 's.id', '=', 'st.school_id')
         ->leftJoin('examination_marks as em', 'st.id', '=', 'em.student_id')
         ->select('s.id', 's.name', DB::raw('COUNT(DISTINCT st.id) as students'))
@@ -167,17 +168,9 @@
             'icon'   => 'fa-triangle-exclamation',
             'color'  => '#e0a020',
             'text'   => 'Pending exam approvals: ' . $pendingApprovals . ' marks awaiting verification',
-            'time'   => '1 hr ago',
+            'time'   => 'Needs review',
         ];
     }
-    
-    // System alerts
-    $recentActivity[] = [
-        'icon'   => 'fa-bell',
-        'color'  => '#ef4444',
-        'text'   => 'System alert: Database backup completed successfully',
-        'time'   => '5 hrs ago',
-    ];
     
     // Add school and exam activities
     $recentActivity = array_merge($recentActivity, $recentSchoolsActivity->toArray(), $recentExamActivity->toArray());
@@ -200,15 +193,19 @@
         ];
     })->toArray();
     
-    // ─ SYSTEM HEALTH ─
-    $systemHealth = [
-        ['label'=>'Server Uptime',      'value'=>'99.98%', 'icon'=>'fa-server',       'status'=>'good'],
-        ['label'=>'Database Health',    'value'=>'Optimal','icon'=>'fa-database',     'status'=>'good'],
-        ['label'=>'Storage Used',       'value'=>'67%',    'icon'=>'fa-hard-drive',   'status'=>'warn'],
-        ['label'=>'Active Schools',     'value'=>$activeSchools,  'icon'=>'fa-users',        'status'=>'good'],
-        ['label'=>'Pending Exams',      'value'=>Examination::where('status', 'marks_entry')->count(),      'icon'=>'fa-cloud-arrow-up','status'=>'warn'],
-        ['label'=>'System Alerts',      'value'=>$systemAlerts,      'icon'=>'fa-bug',          'status'=>'good'],
-    ];
+    // ─ PLATFORM HEALTH (real signals only) ─
+    $systemHealth = [];
+    if ($adoption) {
+        $systemHealth[] = ['label'=>'Live Schools',         'value'=>$adoption['live'],                          'icon'=>'fa-school',        'status'=>'good'];
+        $systemHealth[] = ['label'=>'Using The System',     'value'=>$adoption['using_pct'].'%',                  'icon'=>'fa-heart-pulse',   'status'=>$adoption['using_pct'] >= 60 ? 'good' : 'warn'];
+        $systemHealth[] = ['label'=>'Dormant / Never Used', 'value'=>$adoption['needs_attention'],                'icon'=>'fa-moon',          'status'=>$adoption['needs_attention'] > 0 ? 'warn' : 'good'];
+    }
+    if ($caps['schools']) {
+        $systemHealth[] = ['label'=>'Pending Exams',        'value'=>Examination::where('status', 'marks_entry')->count(), 'icon'=>'fa-cloud-arrow-up', 'status'=>'warn'];
+    }
+    if ($failedSignIns !== null) {
+        $systemHealth[] = ['label'=>'Failed Sign-ins (24h)','value'=>$failedSignIns,                              'icon'=>'fa-user-lock',     'status'=>$failedSignIns > 20 ? 'warn' : 'good'];
+    }
 
 @endphp
 
@@ -578,12 +575,20 @@
                     Admin Command Centre
                 </h1>
                 <div class="hero-badges">
-                    <span class="hero-badge"><span class="dot"></span>{{ $activeSchools }} Schools Online</span>
+                    <span class="hero-badge"><i class="fas fa-user-shield" style="font-size:.7rem"></i>{{ $roleName }}</span>
+                    @if($caps['schools'])
+                    <span class="hero-badge"><span class="dot"></span>{{ $activeSchools }} Schools Live</span>
                     <span class="hero-badge"><i class="fas fa-users" style="font-size:.7rem"></i>{{ number_format($totalStudents) }} Students</span>
+                    @endif
                 </div>
             </div>
             <div class="hero-actions" style="padding-top:4px">
+                @if($caps['create_school'])
                 <a href="{{ route('school.create-school') }}" class="hero-btn hero-btn-solid"><i class="fas fa-plus"></i> Add School</a>
+                @endif
+                @if($caps['activity'])
+                <a href="{{ route('school-activity.index') }}" class="hero-btn hero-btn-outline"><i class="fas fa-heart-pulse"></i> School Activity</a>
+                @endif
                 <!-- <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-file-export"></i> Export Report</a>
                 <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-gear"></i> Settings</a> -->
             </div>
@@ -607,6 +612,19 @@
         </div>
         @endif -->
 
+        @unless($caps['any'])
+        <div class="card-adm" style="margin-bottom:20px">
+            <div class="card-adm-body" style="text-align:center;padding:36px 20px">
+                <i class="fas fa-user-lock" style="font-size:2rem;color:var(--text-muted)"></i>
+                <h3 style="margin:12px 0 6px">No permissions assigned yet</h3>
+                <p style="color:var(--text-secondary);margin:0">
+                    Your account ({{ $roleName }}) has no Admin Portal permissions. Ask a Super Administrator to assign you a role.
+                </p>
+            </div>
+        </div>
+        @endunless
+
+        @if($caps['schools'])
         {{-- ─────────────────────── KPI CARDS ────────────────────────── --}}
         <div class="kpi-grid">
 
@@ -681,7 +699,7 @@
                 <div class="kpi-value">{{ number_format($totalTeachers) }}</div>
                 <div>
                     <span class="kpi-trend up"><i class="fas fa-arrow-up" style="font-size:.65rem"></i>Active staff</span>
-                    <span style="font-size:.73rem;color:var(--text-muted);margin-left:8px">≈{{ round($totalTeachers/$totalSchools) }} per school</span>
+                    <span style="font-size:.73rem;color:var(--text-muted);margin-left:8px">≈{{ round($totalTeachers / max($totalSchools, 1)) }} per school</span>
                 </div>
                 <div class="mini-bar-wrap">
                     @for($b=0; $b<6; $b++)
@@ -692,51 +710,87 @@
             </div>
 
         </div>{{-- /kpi-grid --}}
+        @endif
 
-        {{-- ─────────────────── QUICK LINKS ───────────────────────────── --}}
-      <div class="quick-links">
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--brand-muted);color:var(--brand)"><i class="fas fa-school-flag"></i></div>
-        <div><div class="ql-title">Manage Schools</div><div class="ql-desc">Add, edit, manage</div></div>
-    </a>
+        {{-- ─────────────────── QUICK LINKS (only what this role may open) ─ --}}
+        @php
+            $quickLinks = array_values(array_filter([
+                $caps['schools']      ? ['route'=>route('school.allSchools'),        'icon'=>'fa-school-flag',   'bg'=>'var(--brand-muted)',  'fg'=>'var(--brand)',  'title'=>'Manage Schools',    'desc'=>'View & edit schools'] : null,
+                $caps['activity']     ? ['route'=>route('school-activity.index'),    'icon'=>'fa-heart-pulse',   'bg'=>'var(--info-muted)',   'fg'=>'var(--info)',   'title'=>'School Activity',   'desc'=>'Who is using the system'] : null,
+                $caps['billing']      ? ['route'=>route('billing.dashboard'),        'icon'=>'fa-wallet',        'bg'=>'var(--accent-muted)', 'fg'=>'#b07d00',       'title'=>'Billing',           'desc'=>'Invoices & payments'] : null,
+                $caps['school_roles'] ? ['route'=>route('urp.admin.index'),          'icon'=>'fa-sitemap',       'bg'=>'var(--purple-muted)', 'fg'=>'var(--purple)', 'title'=>'Schools & Roles',   'desc'=>'Staff roles per school'] : null,
+                $caps['master_data']  ? ['route'=>route('master-code'),              'icon'=>'fa-database',      'bg'=>'var(--info-muted)',   'fg'=>'var(--info)',   'title'=>'Master Data',       'desc'=>'Codes & lists'] : null,
+                $caps['audit']        ? ['route'=>route('audit.index'),              'icon'=>'fa-list-check',    'bg'=>'var(--danger-muted)', 'fg'=>'var(--danger)', 'title'=>'Audit Trail',       'desc'=>'Who did what, when'] : null,
+                $caps['admin_rights'] ? ['route'=>route('arp.users.index'),          'icon'=>'fa-user-shield',   'bg'=>'rgba(100,100,100,.1)','fg'=>'#555',          'title'=>'Admin Users',       'desc'=>'Roles & access'] : null,
+            ]));
+        @endphp
+        @if(count($quickLinks))
+        <div class="quick-links">
+            @foreach($quickLinks as $ql)
+            <a href="{{ $ql['route'] }}" class="ql-card">
+                <div class="ql-icon" style="background:{{ $ql['bg'] }};color:{{ $ql['fg'] }}"><i class="fas {{ $ql['icon'] }}"></i></div>
+                <div><div class="ql-title">{{ $ql['title'] }}</div><div class="ql-desc">{{ $ql['desc'] }}</div></div>
+            </a>
+            @endforeach
+        </div>
+        @endif
 
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-users"></i></div>
-        <div><div class="ql-title">Student Management</div><div class="ql-desc">Enrollment & records</div></div>
-    </a>
+        {{-- ─────────────────── SCHOOL ADOPTION (School Activity) ─────── --}}
+        @if($caps['activity'] && $adoption)
+        @php
+            $adoptBars = [
+                'active'   => ['#16a34a', 'Active'],
+                'idle'     => ['#d97706', 'Idle'],
+                'dormant'  => ['#dc2626', 'Dormant'],
+                'never'    => ['#7f1d1d', 'Never used'],
+                'new'      => ['#3b82f6', 'New'],
+            ];
+            $liveTotal = max($adoption['live'], 1);
+        @endphp
+        <div class="card-adm" style="margin-bottom:20px">
+            <div class="card-adm-header">
+                <div class="sec-title" style="margin:0">
+                    <span class="icon-pill" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-heart-pulse"></i></span>
+                    School Adoption — are live schools really using SMASA?
+                </div>
+                <a href="{{ route('school-activity.index') }}" class="sec-link">Full report <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="card-adm-body">
+                <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-3);margin-bottom:12px">
+                    @foreach($adoptBars as $k => [$color, $label])
+                        @if(($adoption['counts'][$k] ?? 0) > 0)
+                        <div title="{{ $label }}: {{ $adoption['counts'][$k] }}" style="width:{{ ($adoption['counts'][$k] / $liveTotal) * 100 }}%;background:{{ $color }}"></div>
+                        @endif
+                    @endforeach
+                </div>
+                <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;margin-bottom:16px">
+                    @foreach($adoptBars as $k => [$color, $label])
+                        <a href="{{ route('school-activity.index', ['status' => $k]) }}" style="color:inherit;text-decoration:none">
+                            <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:{{ $color }}"></span>
+                            {{ $label }} <strong>{{ $adoption['counts'][$k] ?? 0 }}</strong>
+                        </a>
+                    @endforeach
+                    <span style="margin-left:auto;color:var(--text-muted)">{{ $adoption['using_pct'] }}% of {{ $adoption['live'] }} live schools active or idle</span>
+                </div>
 
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--purple-muted);color:var(--purple)"><i class="fas fa-chart-bar"></i></div>
-        <div><div class="ql-title">Exam Reports</div><div class="ql-desc">Grades & results</div></div>
-    </a>
-
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--accent-muted);color:#b07d00"><i class="fas fa-person-chalkboard"></i></div>
-        <div><div class="ql-title">Teachers</div><div class="ql-desc">Staff management</div></div>
-    </a>
-
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--danger-muted);color:var(--danger)"><i class="fas fa-bell-exclamation"></i></div>
-        <div><div class="ql-title">System Alerts</div><div class="ql-desc">Monitoring</div></div>
-    </a>
-
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--brand-muted);color:var(--brand)"><i class="fas fa-calendar-check"></i></div>
-        <div><div class="ql-title">Academic Calendar</div><div class="ql-desc">Terms & dates</div></div>
-    </a>
-
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-cloud-upload-alt"></i></div>
-        <div><div class="ql-title">Data Import</div><div class="ql-desc">Bulk operations</div></div>
-    </a>
-
-    <a href="javascript:void();" class="ql-card">
-        <div class="ql-icon" style="background:rgba(100,100,100,.1);color:#555"><i class="fas fa-gear"></i></div>
-        <div><div class="ql-title">System Settings</div><div class="ql-desc">Configuration</div></div>
-    </a>
-</div>
+                @if($attention->isNotEmpty())
+                <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:6px">Needs attention</div>
+                @foreach($attention as $a)
+                <a href="{{ route('school-activity.show', $a['id']) }}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);color:inherit;text-decoration:none">
+                    <span style="flex:1;min-width:0;font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $a['name'] }}</span>
+                    <span style="font-size:.76rem;color:var(--text-muted)">{{ $a['last_activity_at'] ? 'last active '.$a['last_activity_at']->diffForHumans() : 'no activity recorded' }}</span>
+                    <i class="fas fa-chevron-right" style="font-size:.7rem;color:var(--text-muted)"></i>
+                </a>
+                @endforeach
+                @else
+                <p style="color:var(--text-muted);margin:0;font-size:.85rem">No live school is dormant. Nice.</p>
+                @endif
+            </div>
+        </div>
+        @endif
 
         {{-- ─────────────────── ROW: Schools Table + Activity ─────────── --}}
+        @if($caps['schools'])
         <div class="grid-3-1">
 
             {{-- Recent Schools --}}
@@ -823,8 +877,10 @@
             </div>
 
         </div>{{-- /grid-3-1 --}}
+        @endif
 
         {{-- ─────────────────── ROW: Revenue + Categories + Top Schools ── --}}
+        @if($caps['schools'])
         <div class="grid-3">
 
             {{-- Subscription Plans --}}
@@ -916,11 +972,13 @@
             </div>
 
         </div>{{-- /grid-3 --}}
+        @endif
 
         {{-- ─────────────────── ROW: Exam Overview + System Health ────── --}}
         <div class="grid-2">
 
             {{-- Exam Overview --}}
+            @if($caps['schools'])
             <div class="card-adm">
                 <div class="card-adm-header">
                     <div class="sec-title" style="margin:0">
@@ -983,7 +1041,10 @@
                 </div>
             </div>
 
-            {{-- System Health --}}
+            @endif
+
+            {{-- Platform Health (needs at least one real signal) --}}
+            @if(count($systemHealth))
             <div class="card-adm">
                 <div class="card-adm-header">
                     <div class="sec-title" style="margin:0">
@@ -991,8 +1052,8 @@
                         System Health
                     </div>
                     <span style="font-size:.75rem;color:var(--brand);font-weight:700;display:flex;align-items:center;gap:5px">
-                        <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:var(--brand);display:inline-block"></span>
-                        All Systems Operational
+                        <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:{{ $systemAlerts > 0 ? 'var(--accent)' : 'var(--brand)' }};display:inline-block"></span>
+                        {{ $systemAlerts > 0 ? $systemAlerts.' school(s) need attention' : 'All live schools in use' }}
                     </span>
                 </div>
                 <div class="card-adm-body">
@@ -1013,6 +1074,8 @@
                 </div>
             </div>
 
+            @endif
+
         </div>{{-- /grid-2 --}}
 
     </div>{{-- /page-body --}}
@@ -1021,7 +1084,9 @@
     <div class="page-meta">
         <span><i class="fas fa-shield-halved" style="color:var(--brand)"></i> SMASA Admin Dashboard — School Management System</span>
         <span><i class="fas fa-clock"></i> Last updated: {{ now()->format('H:i:s') }}</span>
-        <span><i class="fas fa-database"></i> {{ number_format(DB::select('SELECT COUNT(*) as count FROM students')[0]->count) }} Records</span>
+        @if($caps['schools'])
+        <span><i class="fas fa-database"></i> {{ number_format($totalStudents) }} Records</span>
+        @endif
     </div>
 
 </div>{{-- /adm-wrap --}}

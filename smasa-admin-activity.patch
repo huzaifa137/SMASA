@@ -1,0 +1,1380 @@
+diff -ruN a/app/Http/Controllers/SchoolActivityController.php b/app/Http/Controllers/SchoolActivityController.php
+--- a/app/Http/Controllers/SchoolActivityController.php	1970-01-01 00:00:00.000000000 +0000
++++ b/app/Http/Controllers/SchoolActivityController.php	2026-10-24 21:19:43.309690607 +0000
+@@ -0,0 +1,136 @@
++<?php
++
++namespace App\Http\Controllers;
++
++use App\Services\SchoolActivityService;
++use App\Support\AdminAccess;
++use Illuminate\Http\Request;
++use Illuminate\Pagination\LengthAwarePaginator;
++
++/**
++ * Admin Portal → School Activity.
++ *
++ * Shows platform admins which schools are genuinely using SMASA (exams,
++ * attendance, finance...) versus schools that are registered but silent.
++ * Routes are protected by `admin.can:school_activity.*` (routes/school-activity.php).
++ */
++class SchoolActivityController extends Controller
++{
++    public function __construct(private SchoolActivityService $activity)
++    {
++    }
++
++    public function index(Request $request)
++    {
++        $filters = $this->filters($request);
++
++        $all = $this->activity->schools($filters);
++        $perPage = (int) config('school_activity.per_page', 25);
++        $page = max(1, (int) $request->query('page', 1));
++
++        $schools = new LengthAwarePaginator(
++            $all->forPage($page, $perPage)->values(),
++            $all->count(),
++            $perPage,
++            $page,
++            ['path' => $request->url(), 'query' => $request->query()]
++        );
++
++        return view('Admin.school-activity.index', [
++            'schools' => $schools,
++            'overview' => $this->activity->overview(),
++            'filters' => $filters,
++            'modules' => config('school_activity.modules'),
++            'statusLabels' => SchoolActivityService::STATUS_LABELS,
++            'types' => $this->activity->rows()->pluck('school_type')->filter()->unique()->sort()->values(),
++            'canExport' => AdminAccess::can('school_activity.export'),
++            'cfg' => config('school_activity'),
++        ]);
++    }
++
++    public function show(int $id)
++    {
++        $school = $this->activity->find($id);
++        abort_unless($school, 404, 'School not found.');
++
++        return view('Admin.school-activity.show', [
++            'school' => $school,
++            'trend' => $this->activity->dailyTrend($id, (int) config('school_activity.window_days', 30)),
++            'events' => $this->activity->recentEvents($id, 25),
++            'modules' => config('school_activity.modules'),
++            'statusLabels' => SchoolActivityService::STATUS_LABELS,
++            'cfg' => config('school_activity'),
++        ]);
++    }
++
++    public function export(Request $request)
++    {
++        $rows = $this->activity->schools($this->filters($request));
++        $modules = config('school_activity.modules');
++        $filename = 'school-activity-' . now()->format('Ymd-His') . '.csv';
++
++        return response()->streamDownload(function () use ($rows, $modules) {
++            $out = fopen('php://output', 'w');
++            fwrite($out, "\xEF\xBB\xBF"); // Excel-friendly UTF-8
++
++            $head = ['School', 'Code', 'Type', 'Live', 'Usage status', 'Last activity', 'Days silent',
++                'Last sign-in', 'Active users (window)', 'Actions (window)', 'Students', 'Teachers'];
++            foreach ($modules as $m) {
++                $head[] = $m['label'] . ' actions';
++                $head[] = $m['label'] . ' last used';
++            }
++            fputcsv($out, $head);
++
++            foreach ($rows as $r) {
++                $line = [
++                    $r['name'], $r['code'], $r['school_type'], $r['is_live'] ? 'Yes' : 'No',
++                    SchoolActivityService::STATUS_LABELS[$r['status']] ?? $r['status'],
++                    $r['last_activity_at']?->format('Y-m-d H:i'), $r['days_since'],
++                    $r['last_login_at']?->format('Y-m-d H:i'), $r['active_users'], $r['actions'],
++                    $r['students'], $r['teachers'],
++                ];
++                foreach (array_keys($modules) as $key) {
++                    $line[] = $r['modules'][$key]['recent'];
++                    $line[] = $r['modules'][$key]['last_at']?->format('Y-m-d H:i');
++                }
++                fputcsv($out, array_map([$this, 'csvSafe'], $line));
++            }
++            fclose($out);
++        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
++    }
++
++    public function refresh()
++    {
++        $this->activity->forget();
++
++        return redirect()->route('school-activity.index')->with('success', 'Activity data refreshed.');
++    }
++
++    // ────────────────────────────────────────────────────────────────────
++
++    private function filters(Request $request): array
++    {
++        $status = (string) $request->query('status', 'all');
++        $valid = array_merge(['all'], array_keys(SchoolActivityService::STATUS_LABELS));
++
++        return [
++            'status' => in_array($status, $valid, true) ? $status : 'all',
++            'q' => trim((string) $request->query('q', '')),
++            'type' => trim((string) $request->query('type', '')),
++            'module' => (string) $request->query('module', ''),
++            'usage' => (string) $request->query('usage', ''),
++            'sort' => in_array($request->query('sort'), ['attention', 'recent', 'actions', 'name'], true)
++                ? $request->query('sort') : 'attention',
++        ];
++    }
++
++    /** Prevent CSV/formula injection from school-supplied names. */
++    private function csvSafe($value)
++    {
++        if (is_string($value) && $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
++            return "'" . $value;
++        }
++
++        return $value;
++    }
++}
+diff -ruN a/app/Http/Controllers/StudentController.php b/app/Http/Controllers/StudentController.php
+--- a/app/Http/Controllers/StudentController.php	2026-10-24 21:19:43.246160603 +0000
++++ b/app/Http/Controllers/StudentController.php	2026-10-24 21:19:43.308465526 +0000
+@@ -213,9 +213,62 @@
+         }
+     }
+ 
+-    public function adminDashboard(GradingService $gradingService)
++    /**
++     * Admin Portal landing page. The same URL serves every admin, so what is
++     * shown is decided by the permissions of the admin's role (Admin Rights),
++     * never by the page itself. Super administrators see everything.
++     */
++    public function adminDashboard(GradingService $gradingService, \App\Services\SchoolActivityService $activity)
+     {
+-        return view('student.admin-dashboard');
++        // AdminAuth lets school sessions through for shared screens; this page
++        // holds platform-wide figures, so only a genuine admin session may see it.
++        if (!\App\Support\AdminAccess::isAdminSession()) {
++            return session()->has('LoggedSchool')
++                ? redirect('/school/home')
++                : redirect('/users/login')->with('fail', 'You must be logged in as an administrator.');
++        }
++
++        $A = \App\Support\AdminAccess::class;
++
++        $caps = [
++            'schools'      => $A::can('schools.view'),
++            'create_school' => $A::can('schools.create'),
++            'activity'     => $A::can('school_activity.view'),
++            'billing'      => $A::can('billing.view'),
++            'audit'        => $A::can('audit_trail.view'),
++            'admin_rights' => $A::canAny(['admin_rights.view_overview', 'admin_rights.view_users', 'admin_rights.view_roles']),
++            'school_roles' => $A::can('school_rights.view'),
++            'master_data'  => $A::canAny(['master_data.view_data', 'master_data.view_codes']),
++            'super'        => $A::isSuperAdmin(),
++        ];
++        $caps['any'] = in_array(true, $caps, true);
++
++        $adoption = null;
++        $attention = collect();
++
++        if ($caps['activity']) {
++            $adoption = $activity->overview();
++            // Live schools that are dormant / never used, longest silent first.
++            $attention = $activity->schools(['status' => 'all', 'sort' => 'attention'])
++                ->filter(fn ($r) => in_array($r['status'], ['dormant', 'never'], true))
++                ->take(5)
++                ->values();
++        }
++
++        $failedSignIns = $caps['audit']
++            ? DB::table('audit_logs')
++                ->where('event', 'login_failed')
++                ->where('occurred_at', '>=', now('UTC')->subDay()->format('Y-m-d H:i:s'))
++                ->count()
++            : null;
++
++        return view('student.admin-dashboard', [
++            'caps'          => $caps,
++            'adoption'      => $adoption,
++            'attention'     => $attention,
++            'failedSignIns' => $failedSignIns,
++            'roleName'      => $A::roleName(),
++        ]);
+     }
+ 
+     private function getSubjectIdsForCategory($category)
+diff -ruN a/app/Services/SchoolActivityService.php b/app/Services/SchoolActivityService.php
+--- a/app/Services/SchoolActivityService.php	1970-01-01 00:00:00.000000000 +0000
++++ b/app/Services/SchoolActivityService.php	2026-10-24 21:19:43.317410303 +0000
+@@ -0,0 +1,329 @@
++<?php
++
++namespace App\Services;
++
++use Carbon\Carbon;
++use Illuminate\Support\Collection;
++use Illuminate\Support\Facades\Cache;
++use Illuminate\Support\Facades\DB;
++
++/**
++ * School Activity Monitor.
++ *
++ * Answers "which schools are actually USING the system?" for platform admins.
++ * A school can be registered and live yet never touch exams, attendance, etc.
++ *
++ * Source of truth is the existing audit trail (audit_logs). Only actions by
++ * school users (teacher / student / parent sessions) count, so a platform
++ * admin working inside a school never makes it look active. All timestamps in
++ * audit_logs are UTC; rows returned here are converted to the app timezone.
++ *
++ * Usage status (live schools only):
++ *   active  last school-user action within `active_days`
++ *   idle    within `idle_days`
++ *   dormant older than `idle_days`
++ *   never   live, past the grace period, no recorded school-user action at all
++ *   new     live, registered inside the grace period, nothing yet (onboarding)
++ *   not_live  school_status is not "live" (pending activation / suspended)
++ *
++ * Limitation: the trail records WRITES (creates, edits, deletes, marks entry,
++ * attendance, payments...) and sign-ins. A school that only browses pages
++ * without saving anything does not register as active.
++ */
++class SchoolActivityService
++{
++    public const STATUS_LABELS = [
++        'active' => 'Active',
++        'idle' => 'Idle',
++        'dormant' => 'Dormant',
++        'never' => 'Never used',
++        'new' => 'New (onboarding)',
++        'not_live' => 'Not live',
++    ];
++
++    // ── Public API ──────────────────────────────────────────────────────
++
++    /** Counts per status plus headline figures (cached). */
++    public function overview(): array
++    {
++        $rows = $this->rows();
++        $live = $rows->where('is_live', true);
++
++        $counts = array_fill_keys(array_keys(self::STATUS_LABELS), 0);
++        foreach ($rows as $row) {
++            $counts[$row['status']]++;
++        }
++
++        $liveCount = $live->count();
++        $using = $counts['active'] + $counts['idle'];
++
++        return [
++            'total' => $rows->count(),
++            'live' => $liveCount,
++            'counts' => $counts,
++            'using_pct' => $liveCount ? (int) round(($using / $liveCount) * 100) : 0,
++            'needs_attention' => $counts['dormant'] + $counts['never'],
++        ];
++    }
++
++    /**
++     * All schools with their activity row, filtered and sorted.
++     *
++     * @param array{status?:string,q?:string,module?:string,usage?:string,sort?:string,type?:string} $f
++     */
++    public function schools(array $f = []): Collection
++    {
++        $rows = $this->rows();
++
++        if (($f['status'] ?? '') !== '' && $f['status'] !== 'all') {
++            $rows = $rows->where('status', $f['status']);
++        }
++
++        if (($f['type'] ?? '') !== '') {
++            $rows = $rows->where('school_type', $f['type']);
++        }
++
++        if (($q = trim((string) ($f['q'] ?? ''))) !== '') {
++            $needle = mb_strtolower($q);
++            $rows = $rows->filter(fn ($r) => str_contains(mb_strtolower($r['name']), $needle)
++                || str_contains(mb_strtolower((string) $r['code']), $needle));
++        }
++
++        // "Schools that have / have not used <module> in the window" (live schools only).
++        $module = $f['module'] ?? '';
++        $usage = $f['usage'] ?? '';
++        if ($module !== '' && isset(config('school_activity.modules')[$module]) && in_array($usage, ['used', 'unused'], true)) {
++            $rows = $rows->where('is_live', true)->filter(function ($r) use ($module, $usage) {
++                $used = ($r['modules'][$module]['recent'] ?? 0) > 0;
++
++                return $usage === 'used' ? $used : !$used;
++            });
++        }
++
++        return $this->sort($rows, $f['sort'] ?? 'attention')->values();
++    }
++
++    public function find(int $schoolId): ?array
++    {
++        return $this->rows()->firstWhere('id', $schoolId);
++    }
++
++    /** Daily action counts for one school, oldest first, zero-filled. */
++    public function dailyTrend(int $schoolId, int $days = 30): array
++    {
++        $from = Carbon::now('UTC')->subDays($days - 1)->startOfDay();
++
++        $raw = DB::table('audit_logs')
++            ->selectRaw('DATE(occurred_at) as d, COUNT(*) as c')
++            ->where('school_id', $schoolId)
++            ->whereIn('actor_type', config('school_activity.actor_types'))
++            ->where('outcome', 'success')
++            ->where('occurred_at', '>=', $from->format('Y-m-d H:i:s'))
++            ->groupBy('d')
++            ->pluck('c', 'd');
++
++        $out = [];
++        for ($i = 0; $i < $days; $i++) {
++            $day = $from->copy()->addDays($i)->format('Y-m-d');
++            $out[] = ['date' => $day, 'count' => (int) ($raw[$day] ?? 0)];
++        }
++
++        return $out;
++    }
++
++    /** Most recent school-user events for one school. */
++    public function recentEvents(int $schoolId, int $limit = 25): Collection
++    {
++        return DB::table('audit_logs')
++            ->select('id', 'occurred_at', 'event', 'category', 'description', 'actor_type', 'actor_name', 'actor_role', 'entity_type')
++            ->where('school_id', $schoolId)
++            ->whereIn('actor_type', config('school_activity.actor_types'))
++            ->where('outcome', 'success')
++            ->orderByDesc('occurred_at')
++            ->limit($limit)
++            ->get()
++            ->map(function ($e) {
++                $e->occurred_at = $this->local($e->occurred_at);
++
++                return $e;
++            });
++    }
++
++    public function forget(): void
++    {
++        Cache::forget('school_activity.rows.v1');
++    }
++
++    // ── Core computation ────────────────────────────────────────────────
++
++    /** @return Collection<int, array<string, mixed>> */
++    public function rows(): Collection
++    {
++        $ttl = (int) config('school_activity.cache_seconds', 300);
++
++        if ($ttl <= 0) {
++            return collect($this->compute());
++        }
++
++        return collect(Cache::remember('school_activity.rows.v1', $ttl, fn () => $this->compute()));
++    }
++
++    private function compute(): array
++    {
++        $cfg = config('school_activity');
++        $actorTypes = $cfg['actor_types'];
++        $nowUtc = Carbon::now('UTC');
++        $windowFrom = $nowUtc->copy()->subDays($cfg['window_days'])->format('Y-m-d H:i:s');
++
++        $schools = DB::table('schools')
++            ->select('id', 'name', 'registration_code', 'school_type', 'school_product', 'school_status', 'email', 'phone', 'created_at')
++            ->get();
++
++        // 1) Last school-user action EVER, per school (decides the status).
++        $lastEver = DB::table('audit_logs')
++            ->selectRaw('school_id, MAX(occurred_at) as last_at')
++            ->whereNotNull('school_id')
++            ->whereIn('actor_type', $actorTypes)
++            ->where('outcome', 'success')
++            ->groupBy('school_id')
++            ->pluck('last_at', 'school_id');
++
++        // 2) Per school + entity inside the window (module matrix).
++        $entityRows = DB::table('audit_logs')
++            ->selectRaw('school_id, entity_type, MAX(occurred_at) as last_at, COUNT(*) as total')
++            ->whereNotNull('school_id')
++            ->whereIn('actor_type', $actorTypes)
++            ->where('outcome', 'success')
++            ->where('occurred_at', '>=', $windowFrom)
++            ->groupBy('school_id', 'entity_type')
++            ->get()
++            ->groupBy('school_id');
++
++        // 3) Sign-ins and distinct users inside the window.
++        $userRows = DB::table('audit_logs')
++            ->selectRaw(
++                "school_id,
++                 MAX(CASE WHEN event = 'login' THEN occurred_at END) as last_login,
++                 SUM(CASE WHEN event = 'login' THEN 1 ELSE 0 END) as logins,
++                 COUNT(DISTINCT CONCAT(actor_type, ':', actor_id)) as users,
++                 COUNT(*) as actions"
++            )
++            ->whereNotNull('school_id')
++            ->whereIn('actor_type', $actorTypes)
++            ->where('outcome', 'success')
++            ->where('occurred_at', '>=', $windowFrom)
++            ->groupBy('school_id')
++            ->get()
++            ->keyBy('school_id');
++
++        // 4) Size of the school (context for "is 3 actions a lot?").
++        $studentCounts = DB::table('students')->selectRaw('school_id, COUNT(*) as c')->groupBy('school_id')->pluck('c', 'school_id');
++        $teacherCounts = DB::table('teachers')->selectRaw('school_id, COUNT(*) as c')->groupBy('school_id')->pluck('c', 'school_id');
++
++        $entityToModule = [];
++        foreach ($cfg['modules'] as $key => $def) {
++            foreach ($def['entities'] as $entity) {
++                $entityToModule[$entity] = $key;
++            }
++        }
++
++        $out = [];
++
++        foreach ($schools as $s) {
++            $modules = [];
++            foreach ($cfg['modules'] as $key => $def) {
++                $modules[$key] = ['last_at' => null, 'recent' => 0];
++            }
++
++            foreach ($entityRows->get($s->id, collect()) as $r) {
++                $key = $entityToModule[$r->entity_type] ?? null;
++                if (!$key) {
++                    continue;
++                }
++                $modules[$key]['recent'] += (int) $r->total;
++                if ($modules[$key]['last_at'] === null || $r->last_at > $modules[$key]['last_at']) {
++                    $modules[$key]['last_at'] = $r->last_at;
++                }
++            }
++            foreach ($modules as $key => $m) {
++                $modules[$key]['last_at'] = $this->local($m['last_at']);
++            }
++
++            $last = $this->local($lastEver[$s->id] ?? null);
++            $u = $userRows->get($s->id);
++            $createdAt = $s->created_at ? Carbon::parse($s->created_at) : null;
++            $isLive = (int) $s->school_status === (int) $cfg['live_status'];
++
++            $out[] = [
++                'id' => (int) $s->id,
++                'name' => (string) $s->name,
++                'code' => $s->registration_code,
++                'school_type' => $s->school_type,
++                'school_product' => $s->school_product,
++                'school_status' => (int) $s->school_status,
++                'is_live' => $isLive,
++                'email' => $s->email,
++                'phone' => $s->phone,
++                'created_at' => $createdAt,
++                'students' => (int) ($studentCounts[$s->id] ?? 0),
++                'teachers' => (int) ($teacherCounts[$s->id] ?? 0),
++                'last_activity_at' => $last,
++                'days_since' => $last ? (int) $last->diffInDays(now()) : null,
++                'last_login_at' => $this->local($u->last_login ?? null),
++                'logins' => (int) ($u->logins ?? 0),
++                'active_users' => (int) ($u->users ?? 0),
++                'actions' => (int) ($u->actions ?? 0),
++                'modules' => $modules,
++                'modules_used' => count(array_filter($modules, fn ($m) => $m['recent'] > 0)),
++                'status' => $this->status($isLive, $last, $createdAt),
++            ];
++        }
++
++        return $out;
++    }
++
++    private function status(bool $isLive, ?Carbon $last, ?Carbon $createdAt): string
++    {
++        if (!$isLive) {
++            return 'not_live';
++        }
++
++        $cfg = config('school_activity');
++
++        if (!$last) {
++            $isNew = $createdAt && $createdAt->diffInDays(now()) < $cfg['new_school_grace_days'];
++
++            return $isNew ? 'new' : 'never';
++        }
++
++        $days = $last->diffInDays(now());
++
++        return match (true) {
++            $days <= $cfg['active_days'] => 'active',
++            $days <= $cfg['idle_days'] => 'idle',
++            default => 'dormant',
++        };
++    }
++
++    private function sort(Collection $rows, string $sort): Collection
++    {
++        return match ($sort) {
++            // Most recently active first.
++            'recent' => $rows->sortByDesc(fn ($r) => $r['last_activity_at']?->timestamp ?? 0),
++            'actions' => $rows->sortByDesc('actions'),
++            'name' => $rows->sortBy(fn ($r) => mb_strtolower($r['name'])),
++            // Default: schools that need a nudge first (live + longest silent / never used).
++            default => $rows->sortBy(fn ($r) => [
++                $r['is_live'] ? 0 : 1,
++                $r['last_activity_at'] ? 1 : 0,
++                $r['last_activity_at']?->timestamp ?? 0,
++            ]),
++        };
++    }
++
++    /** audit_logs.occurred_at is UTC → app timezone. */
++    private function local($value): ?Carbon
++    {
++        return $value ? Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone')) : null;
++    }
++}
+diff -ruN a/config/admin_permissions.php b/config/admin_permissions.php
+--- a/config/admin_permissions.php	2026-10-24 21:19:43.251382796 +0000
++++ b/config/admin_permissions.php	2026-10-24 21:19:43.320722681 +0000
+@@ -127,6 +127,16 @@
+             ],
+         ],
+ 
++        'school_activity' => [
++            'name' => 'School Activity',
++            'icon' => 'fa fa-heart-pulse',
++            'description' => 'See which schools are really using the system (exams, attendance, finance...) and which are idle or dormant',
++            'permissions' => [
++                'view' => 'View school activity & usage status',
++                'export' => 'Export school activity to CSV',
++            ],
++        ],
++
+         'custom_report_cards' => [
+             'name' => 'Custom Report Cards',
+             'icon' => 'fa fa-chart-bar',
+diff -ruN a/config/school_activity.php b/config/school_activity.php
+--- a/config/school_activity.php	1970-01-01 00:00:00.000000000 +0000
++++ b/config/school_activity.php	2026-10-24 21:19:43.321811987 +0000
+@@ -0,0 +1,84 @@
++<?php
++
++/**
++ * School Activity Monitor — tuning knobs.
++ *
++ * Activity is derived from the existing audit trail (audit_logs), so every
++ * module that already writes to the database is covered automatically and no
++ * module needs to be instrumented. Only actions performed by SCHOOL users
++ * (teacher / student / parent sessions) count — a platform admin working
++ * inside a school never makes that school look "active".
++ */
++return [
++
++    // Days since the last school-user action, for a live school.
++    'active_days' => (int) env('SCHOOL_ACTIVITY_ACTIVE_DAYS', 7),    // <= 7  => Active
++    'idle_days' => (int) env('SCHOOL_ACTIVITY_IDLE_DAYS', 30),       // <= 30 => Idle, otherwise Dormant
++
++    // A school registered less than this many days ago is "New" (onboarding),
++    // not "Never used", until the grace period has passed.
++    'new_school_grace_days' => (int) env('SCHOOL_ACTIVITY_GRACE_DAYS', 14),
++
++    // Window used for per-module counts, active users and the daily trend.
++    'window_days' => (int) env('SCHOOL_ACTIVITY_WINDOW_DAYS', 30),
++
++    // Results are cached so the dashboard stays fast (seconds). 0 disables.
++    'cache_seconds' => (int) env('SCHOOL_ACTIVITY_CACHE_SECONDS', 300),
++
++    'per_page' => 25,
++
++    // schools.school_status value meaning "live" (see BillingService::ACTIVE_SCHOOL_STATUS).
++    'live_status' => 10,
++
++    // Audit actor types that count as genuine school usage.
++    'actor_types' => ['teacher', 'student', 'parent'],
++
++    /*
++    | Modules shown in the matrix. `entities` are the model class basenames
++    | recorded in audit_logs.entity_type. Add a model here and it is counted.
++    */
++    'modules' => [
++        'students' => [
++            'label' => 'Students',
++            'icon' => 'fa-user-graduate',
++            'entities' => ['Student', 'StudentBasic', 'StudentIdCard', 'StudentALevelCombination', 'StudentOLevelElective', 'StudentDisciplineRating'],
++        ],
++        'staff' => [
++            'label' => 'Staff',
++            'icon' => 'fa-chalkboard-user',
++            'entities' => ['Teacher', 'TeacherSchoolRole', 'TeacherIdCard', 'TeacherSalaryStructure'],
++        ],
++        'exams' => [
++            'label' => 'Examinations',
++            'icon' => 'fa-file-pen',
++            'entities' => [
++                'Examination', 'ExaminationClass', 'ExaminationMark', 'ExaminationSubjectSetting', 'Mark',
++                'StudentResult', 'StudentExamResult', 'StudentExamSummary', 'AnnualExamination', 'CreatedExam',
++                'OpenAssessment', 'OpenAssessmentMark', 'NlscAssessment', 'NlscAssessmentMark', 'ReportCardRemark',
++            ],
++        ],
++        'attendance' => [
++            'label' => 'Attendance',
++            'icon' => 'fa-calendar-check',
++            'entities' => ['StudentAttendance', 'TeacherAttendance', 'SchoolArrivalAttendance'],
++        ],
++        'finance' => [
++            'label' => 'Finance',
++            'icon' => 'fa-coins',
++            'entities' => [
++                'FeePayment', 'FeePaymentItem', 'FeeStructure', 'FeeStructureItem', 'StudentFeeAllocation',
++                'FinanceTransaction', 'Expense', 'Budget', 'PayrollPeriod', 'PayrollSlip',
++            ],
++        ],
++        'library' => [
++            'label' => 'Library',
++            'icon' => 'fa-book',
++            'entities' => ['LibraryBook', 'LibraryBorrowing', 'LibraryMember', 'LibraryFine', 'LibraryReservation', 'LibraryBookRequest'],
++        ],
++        'timetable' => [
++            'label' => 'Timetable',
++            'icon' => 'fa-table-cells',
++            'entities' => ['Timetable', 'TimetablePeriod', 'TimetableSlot'],
++        ],
++    ],
++];
+diff -ruN a/database/migrations/2026_10_26_090000_add_school_activity_index_to_audit_logs.php b/database/migrations/2026_10_26_090000_add_school_activity_index_to_audit_logs.php
+--- a/database/migrations/2026_10_26_090000_add_school_activity_index_to_audit_logs.php	1970-01-01 00:00:00.000000000 +0000
++++ b/database/migrations/2026_10_26_090000_add_school_activity_index_to_audit_logs.php	2026-10-24 21:19:43.336108771 +0000
+@@ -0,0 +1,26 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++/**
++ * Speeds up the School Activity Monitor ("last action by a school user, per
++ * school"). Index only — no data is touched.
++ */
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::table('audit_logs', function (Blueprint $table) {
++            $table->index(['school_id', 'actor_type', 'occurred_at'], 'audit_school_actor_time_idx');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('audit_logs', function (Blueprint $table) {
++            $table->dropIndex('audit_school_actor_time_idx');
++        });
++    }
++};
+diff -ruN a/database/seeders/AdminRolesSeeder.php b/database/seeders/AdminRolesSeeder.php
+--- a/database/seeders/AdminRolesSeeder.php	2026-10-24 21:19:43.256096338 +0000
++++ b/database/seeders/AdminRolesSeeder.php	2026-10-24 21:19:43.336192843 +0000
+@@ -25,7 +25,8 @@
+                 array_merge(
+                     AdminAccess::moduleKeys('schools'),
+                     AdminAccess::moduleKeys('academic_calendar'),
+-                    AdminAccess::moduleKeys('school_rights')
++                    AdminAccess::moduleKeys('school_rights'),
++                    AdminAccess::moduleKeys('school_activity')
+                 ),
+             ],
+             'Curriculum Manager' => [
+diff -ruN a/resources/views/Admin/school-activity/_styles.blade.php b/resources/views/Admin/school-activity/_styles.blade.php
+--- a/resources/views/Admin/school-activity/_styles.blade.php	1970-01-01 00:00:00.000000000 +0000
++++ b/resources/views/Admin/school-activity/_styles.blade.php	2026-10-24 21:19:43.341295693 +0000
+@@ -0,0 +1,39 @@
++<style>
++    .sam { --sam-brand:#5351e4; --sam-ok:#16a34a; --sam-warn:#d97706; --sam-bad:#dc2626; --sam-mute:#64748b; --sam-line:#e5e7eb; padding:8px 4px 40px; }
++    .sam h1 { font-size:1.35rem; font-weight:700; margin:0 0 4px; }
++    .sam .sub { color:var(--sam-mute); font-size:.85rem; margin-bottom:18px; }
++    .sam-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
++    .sam-card { background:#fff; border:1px solid var(--sam-line); border-radius:12px; padding:14px 16px; text-decoration:none; color:inherit; display:block; }
++    .sam-card:hover { border-color:var(--sam-brand); }
++    .sam-card.on { border-color:var(--sam-brand); box-shadow:0 0 0 2px rgba(83,81,228,.15); }
++    .sam-card .n { font-size:1.6rem; font-weight:800; line-height:1.1; }
++    .sam-card .l { font-size:.74rem; text-transform:uppercase; letter-spacing:.4px; color:var(--sam-mute); font-weight:600; }
++    .sam-panel { background:#fff; border:1px solid var(--sam-line); border-radius:12px; margin-bottom:18px; }
++    .sam-panel > .hd { padding:12px 16px; border-bottom:1px solid var(--sam-line); font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
++    .sam-panel > .bd { padding:14px 16px; }
++    .sam-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
++    .sam-filters input, .sam-filters select { border:1px solid var(--sam-line); border-radius:8px; padding:7px 10px; font-size:.85rem; background:#fff; }
++    .sam-btn { border:1px solid var(--sam-brand); background:var(--sam-brand); color:#fff; border-radius:8px; padding:7px 14px; font-size:.85rem; text-decoration:none; cursor:pointer; display:inline-block; }
++    .sam-btn.ghost { background:#fff; color:var(--sam-brand); }
++    .sam-table { width:100%; border-collapse:collapse; font-size:.85rem; }
++    .sam-table th { text-align:left; padding:10px 12px; font-size:.72rem; text-transform:uppercase; letter-spacing:.4px; color:var(--sam-mute); border-bottom:1px solid var(--sam-line); white-space:nowrap; }
++    .sam-table td { padding:10px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
++    .sam-table tr:hover td { background:#fafbff; }
++    .sam-wrap { overflow-x:auto; }
++    .sam-badge { display:inline-block; padding:2px 9px; border-radius:99px; font-size:.72rem; font-weight:700; white-space:nowrap; }
++    .sam-badge.active { background:#dcfce7; color:#166534; }
++    .sam-badge.idle { background:#fef3c7; color:#92400e; }
++    .sam-badge.dormant, .sam-badge.never { background:#fee2e2; color:#991b1b; }
++    .sam-badge.new { background:#dbeafe; color:#1e40af; }
++    .sam-badge.not_live { background:#e5e7eb; color:#374151; }
++    .sam-dots { display:flex; gap:4px; }
++    .sam-dot { width:22px; height:22px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:.68rem; background:#f1f5f9; color:#cbd5e1; }
++    .sam-dot.on { background:#e0e7ff; color:var(--sam-brand); }
++    .sam-muted { color:var(--sam-mute); font-size:.78rem; }
++    .sam-spark { display:flex; align-items:flex-end; gap:3px; height:90px; }
++    .sam-spark span { flex:1; background:#c7d2fe; border-radius:3px 3px 0 0; min-height:2px; }
++    .sam-spark span.z { background:#e5e7eb; }
++    .sam-grid2 { display:grid; grid-template-columns:2fr 1fr; gap:18px; }
++    @media (max-width:991px){ .sam-grid2 { grid-template-columns:1fr; } }
++    .sam-flash { background:#dcfce7; color:#166534; border-radius:8px; padding:9px 14px; margin-bottom:14px; font-size:.85rem; }
++</style>
+diff -ruN a/resources/views/Admin/school-activity/index.blade.php b/resources/views/Admin/school-activity/index.blade.php
+--- a/resources/views/Admin/school-activity/index.blade.php	1970-01-01 00:00:00.000000000 +0000
++++ b/resources/views/Admin/school-activity/index.blade.php	2026-10-24 21:19:43.341326960 +0000
+@@ -0,0 +1,142 @@
++@extends('layouts-side-bar.master')
++
++@section('content')
++@include('Admin.school-activity._styles')
++
++@php
++    $fmt = fn ($c) => $c ? $c->format('d M Y, H:i') : '—';
++    $ago = fn ($c) => $c ? $c->diffForHumans() : 'Never';
++    $q = fn (array $over = []) => array_filter(array_merge(request()->query(), ['page' => null], $over), fn ($v) => $v !== null && $v !== '' && $v !== 'all');
++@endphp
++
++<div class="sam">
++    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
++        <div>
++            <h1><i class="fas fa-heart-pulse" style="color:var(--sam-brand)"></i> School Activity</h1>
++            <div class="sub">
++                Which schools are really using SMASA. Based on actions by school users in the last
++                {{ $cfg['window_days'] }} days; "Active" means an action within {{ $cfg['active_days'] }} days,
++                "Idle" within {{ $cfg['idle_days'] }}. Figures refresh every {{ max(1, intdiv($cfg['cache_seconds'], 60)) }} min.
++            </div>
++        </div>
++        <div style="display:flex;gap:8px;flex-wrap:wrap">
++            <form method="POST" action="{{ route('school-activity.refresh') }}">@csrf
++                <button class="sam-btn ghost" type="submit"><i class="fas fa-rotate"></i> Refresh now</button>
++            </form>
++            @if($canExport)
++                <a class="sam-btn" href="{{ route('school-activity.export', $q()) }}"><i class="fas fa-file-csv"></i> Export CSV</a>
++            @endif
++        </div>
++    </div>
++
++    @if(session('success'))<div class="sam-flash">{{ session('success') }}</div>@endif
++
++    {{-- Status cards (click to filter) --}}
++    <div class="sam-cards">
++        <a class="sam-card {{ $filters['status'] === 'all' ? 'on' : '' }}" href="{{ route('school-activity.index', $q(['status' => 'all'])) }}">
++            <div class="n">{{ $overview['total'] }}</div><div class="l">All schools</div>
++        </a>
++        @foreach(['active' => '--sam-ok', 'idle' => '--sam-warn', 'dormant' => '--sam-bad', 'never' => '--sam-bad', 'new' => '--sam-brand', 'not_live' => '--sam-mute'] as $key => $color)
++            <a class="sam-card {{ $filters['status'] === $key ? 'on' : '' }}" href="{{ route('school-activity.index', $q(['status' => $key])) }}">
++                <div class="n" style="color:var({{ $color }})">{{ $overview['counts'][$key] }}</div>
++                <div class="l">{{ $statusLabels[$key] }}</div>
++            </a>
++        @endforeach
++        <div class="sam-card" title="Live schools that were active or idle">
++            <div class="n">{{ $overview['using_pct'] }}%</div><div class="l">Live schools using it</div>
++        </div>
++    </div>
++
++    <div class="sam-panel">
++        <div class="hd">
++            <form class="sam-filters" method="GET" action="{{ route('school-activity.index') }}">
++                <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Search school or code">
++                <select name="status">
++                    <option value="all">All statuses</option>
++                    @foreach($statusLabels as $k => $label)
++                        <option value="{{ $k }}" @selected($filters['status'] === $k)>{{ $label }}</option>
++                    @endforeach
++                </select>
++                <select name="type">
++                    <option value="">All types</option>
++                    @foreach($types as $t)
++                        <option value="{{ $t }}" @selected($filters['type'] === $t)>{{ \App\Http\Controllers\Helper::recordMdname($t) }}</option>
++                    @endforeach
++                </select>
++                <select name="usage">
++                    <option value="">Module usage…</option>
++                    <option value="unused" @selected($filters['usage'] === 'unused')>NOT using</option>
++                    <option value="used" @selected($filters['usage'] === 'used')>Using</option>
++                </select>
++                <select name="module">
++                    <option value="">…which module</option>
++                    @foreach($modules as $k => $m)
++                        <option value="{{ $k }}" @selected($filters['module'] === $k)>{{ $m['label'] }}</option>
++                    @endforeach
++                </select>
++                <select name="sort">
++                    <option value="attention" @selected($filters['sort'] === 'attention')>Needs attention first</option>
++                    <option value="recent" @selected($filters['sort'] === 'recent')>Most recently active</option>
++                    <option value="actions" @selected($filters['sort'] === 'actions')>Most actions</option>
++                    <option value="name" @selected($filters['sort'] === 'name')>Name A–Z</option>
++                </select>
++                <button class="sam-btn" type="submit">Apply</button>
++                <a class="sam-btn ghost" href="{{ route('school-activity.index') }}">Reset</a>
++            </form>
++            <span class="sam-muted">{{ $schools->total() }} school(s)</span>
++        </div>
++
++        <div class="sam-wrap">
++            <table class="sam-table">
++                <thead>
++                    <tr>
++                        <th>School</th>
++                        <th>Status</th>
++                        <th>Last activity</th>
++                        <th>Last sign-in</th>
++                        <th>Users</th>
++                        <th>Actions</th>
++                        <th>Modules in use</th>
++                        <th></th>
++                    </tr>
++                </thead>
++                <tbody>
++                @forelse($schools as $s)
++                    <tr>
++                        <td>
++                            <strong>{{ $s['name'] }}</strong>
++                            <div class="sam-muted">{{ $s['code'] }} · {{ number_format($s['students']) }} students · {{ number_format($s['teachers']) }} staff</div>
++                        </td>
++                        <td><span class="sam-badge {{ $s['status'] }}">{{ $statusLabels[$s['status']] }}</span></td>
++                        <td title="{{ $fmt($s['last_activity_at']) }}">{{ $ago($s['last_activity_at']) }}</td>
++                        <td title="{{ $fmt($s['last_login_at']) }}">{{ $ago($s['last_login_at']) }}</td>
++                        <td>{{ $s['active_users'] }}</td>
++                        <td>{{ number_format($s['actions']) }}</td>
++                        <td>
++                            <div class="sam-dots">
++                                @foreach($modules as $k => $m)
++                                    <span class="sam-dot {{ ($s['modules'][$k]['recent'] ?? 0) > 0 ? 'on' : '' }}"
++                                          title="{{ $m['label'] }}: {{ $s['modules'][$k]['recent'] }} action(s) in {{ $cfg['window_days'] }} days">
++                                        <i class="fas {{ $m['icon'] }}"></i>
++                                    </span>
++                                @endforeach
++                            </div>
++                        </td>
++                        <td><a href="{{ route('school-activity.show', $s['id']) }}">Details →</a></td>
++                    </tr>
++                @empty
++                    <tr><td colspan="8" style="text-align:center;padding:30px" class="sam-muted">No schools match these filters.</td></tr>
++                @endforelse
++                </tbody>
++            </table>
++        </div>
++
++        <div class="bd">{{ $schools->links() }}</div>
++    </div>
++
++    <div class="sam-muted">
++        Counts reflect saved actions (records created, edited or deleted, marks and attendance entered, payments, sign-ins) by school users.
++        Platform-admin actions are excluded. A school that only views pages without saving anything will not register as active.
++    </div>
++</div>
++@endsection
+diff -ruN a/resources/views/Admin/school-activity/show.blade.php b/resources/views/Admin/school-activity/show.blade.php
+--- a/resources/views/Admin/school-activity/show.blade.php	1970-01-01 00:00:00.000000000 +0000
++++ b/resources/views/Admin/school-activity/show.blade.php	2026-10-24 21:19:43.341393083 +0000
+@@ -0,0 +1,112 @@
++@extends('layouts-side-bar.master')
++
++@section('content')
++@include('Admin.school-activity._styles')
++
++@php
++    $fmt = fn ($c) => $c ? $c->format('d M Y, H:i') : '—';
++    $ago = fn ($c) => $c ? $c->diffForHumans() : 'Never';
++    $max = max(1, collect($trend)->max('count'));
++    $canAudit = \App\Audit\AuditAccess::isPlatformAdmin();
++@endphp
++
++<div class="sam">
++    <a href="{{ route('school-activity.index') }}" class="sam-muted">← All schools</a>
++
++    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:6px 0 16px">
++        <div>
++            <h1>{{ $school['name'] }}</h1>
++            <div class="sub" style="margin-bottom:0">
++                {{ $school['code'] }} · {{ \App\Http\Controllers\Helper::recordMdname($school['school_type']) }}
++                · registered {{ $school['created_at'] ? $school['created_at']->format('d M Y') : '—' }}
++            </div>
++        </div>
++        <span class="sam-badge {{ $school['status'] }}" style="font-size:.85rem;padding:5px 14px">{{ $statusLabels[$school['status']] }}</span>
++    </div>
++
++    <div class="sam-cards">
++        <div class="sam-card"><div class="n" style="font-size:1.05rem">{{ $ago($school['last_activity_at']) }}</div><div class="l">Last activity</div><div class="sam-muted">{{ $fmt($school['last_activity_at']) }}</div></div>
++        <div class="sam-card"><div class="n" style="font-size:1.05rem">{{ $ago($school['last_login_at']) }}</div><div class="l">Last sign-in ({{ $cfg['window_days'] }}d)</div><div class="sam-muted">{{ $fmt($school['last_login_at']) }}</div></div>
++        <div class="sam-card"><div class="n">{{ $school['active_users'] }}</div><div class="l">Active users</div><div class="sam-muted">of {{ $school['teachers'] }} staff</div></div>
++        <div class="sam-card"><div class="n">{{ number_format($school['actions']) }}</div><div class="l">Actions ({{ $cfg['window_days'] }}d)</div></div>
++        <div class="sam-card"><div class="n">{{ $school['modules_used'] }}/{{ count($modules) }}</div><div class="l">Modules in use</div></div>
++        <div class="sam-card"><div class="n">{{ number_format($school['students']) }}</div><div class="l">Students enrolled</div></div>
++    </div>
++
++    <div class="sam-grid2">
++        <div>
++            <div class="sam-panel">
++                <div class="hd">Module usage — last {{ $cfg['window_days'] }} days</div>
++                <div class="sam-wrap">
++                    <table class="sam-table">
++                        <thead><tr><th>Module</th><th>Actions</th><th>Last used</th><th>State</th></tr></thead>
++                        <tbody>
++                        @foreach($modules as $k => $m)
++                            @php $mm = $school['modules'][$k]; @endphp
++                            <tr>
++                                <td><i class="fas {{ $m['icon'] }}" style="color:var(--sam-brand);width:20px"></i> {{ $m['label'] }}</td>
++                                <td>{{ number_format($mm['recent']) }}</td>
++                                <td title="{{ $fmt($mm['last_at']) }}">{{ $ago($mm['last_at']) }}</td>
++                                <td>
++                                    @if($mm['recent'] > 0)<span class="sam-badge active">In use</span>
++                                    @else<span class="sam-badge never">Not used</span>@endif
++                                </td>
++                            </tr>
++                        @endforeach
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++
++            <div class="sam-panel">
++                <div class="hd">Daily actions — last {{ count($trend) }} days</div>
++                <div class="bd">
++                    <div class="sam-spark">
++                        @foreach($trend as $d)
++                            <span class="{{ $d['count'] === 0 ? 'z' : '' }}"
++                                  style="height:{{ $d['count'] ? max(4, round($d['count'] / $max * 100)) : 2 }}%"
++                                  title="{{ \Carbon\Carbon::parse($d['date'])->format('d M') }}: {{ $d['count'] }}"></span>
++                        @endforeach
++                    </div>
++                </div>
++            </div>
++        </div>
++
++        <div>
++            <div class="sam-panel">
++                <div class="hd">Contact</div>
++                <div class="bd" style="font-size:.88rem">
++                    <div><i class="fas fa-envelope sam-muted"></i> {{ $school['email'] ?: '—' }}</div>
++                    <div style="margin-top:6px"><i class="fas fa-phone sam-muted"></i> {{ $school['phone'] ?: '—' }}</div>
++                    @if(in_array($school['status'], ['dormant', 'never', 'idle']))
++                        <div class="sam-muted" style="margin-top:12px">
++                            Suggested follow-up: reach out to this school to find out whether they need training or support.
++                        </div>
++                    @endif
++                </div>
++            </div>
++        </div>
++    </div>
++
++    <div class="sam-panel">
++        <div class="hd">Latest school-user activity</div>
++        <div class="sam-wrap">
++            <table class="sam-table">
++                <thead><tr><th>When</th><th>Who</th><th>What</th>@if($canAudit)<th></th>@endif</tr></thead>
++                <tbody>
++                @forelse($events as $e)
++                    <tr>
++                        <td title="{{ $fmt($e->occurred_at) }}">{{ $ago($e->occurred_at) }}</td>
++                        <td>{{ $e->actor_name ?: '—' }}<div class="sam-muted">{{ $e->actor_role }}</div></td>
++                        <td>{{ \Illuminate\Support\Str::limit($e->description, 110) }}</td>
++                        @if($canAudit)<td><a href="{{ route('audit.show', $e->id) }}">Audit entry</a></td>@endif
++                    </tr>
++                @empty
++                    <tr><td colspan="4" class="sam-muted" style="text-align:center;padding:24px">No school-user activity has ever been recorded for this school.</td></tr>
++                @endforelse
++                </tbody>
++            </table>
++        </div>
++    </div>
++</div>
++@endsection
+diff -ruN a/resources/views/layouts-side-bar/side-menu.blade.php b/resources/views/layouts-side-bar/side-menu.blade.php
+--- a/resources/views/layouts-side-bar/side-menu.blade.php	2026-10-24 21:19:43.279506851 +0000
++++ b/resources/views/layouts-side-bar/side-menu.blade.php	2026-10-24 21:19:43.385587056 +0000
+@@ -628,6 +628,14 @@
+                 </li>
+             @endif
+ 
++            @if($__A::can('school_activity.view'))
++                <li class="slide">
++                    <a class="side-menu__item" href="{{ route('school-activity.index') }}">
++                        <i class="fas fa-heart-pulse fa-2x mr-3"></i>School Activity
++                    </a>
++                </li>
++            @endif
++
+             @if($__A::canAny(['admin_rights.view_overview', 'admin_rights.view_roles', 'admin_rights.view_permissions', 'admin_rights.view_users', 'admin_rights.view_audit']))
+                 <li class="slide has-sub">
+                     <a class="side-menu__item" href="#" data-toggle="submenu">
+diff -ruN a/resources/views/student/admin-dashboard.blade.php b/resources/views/student/admin-dashboard.blade.php
+--- a/resources/views/student/admin-dashboard.blade.php	2026-10-24 21:19:43.286978629 +0000
++++ b/resources/views/student/admin-dashboard.blade.php	2026-10-24 21:19:43.398934903 +0000
+@@ -15,8 +15,9 @@
+     
+     // ─ SCHOOLS DATA ─
+     $totalSchools       = School::count();
+-    $activeSchools      = School::where('school_status', 1)->count();
+-    $inactiveSchools    = School::where('school_status', 0)->count();
++    // Live = school_status 10 (see BillingService::ACTIVE_SCHOOL_STATUS); everything else is not live.
++    $activeSchools      = School::where('school_status', 10)->count();
++    $inactiveSchools    = max(0, $totalSchools - $activeSchools);
+     
+     // ─ STUDENTS DATA ─
+     $totalStudents      = Student::count();
+@@ -35,7 +36,7 @@
+     $totalExams         = Examination::count();
+     $markedExams        = ExaminationMark::whereNotNull('marks_obtained')->distinct('examination_id')->count();
+     $pendingApprovals   = ExaminationMark::where('status', 'pending')->count();
+-    $systemAlerts       = 3; // Could be calculated from logs/alerts
++    $systemAlerts       = (int) ($adoption['needs_attention'] ?? 0); // dormant / never-used live schools
+     
+     // ─ RECENT SCHOOLS (Last 5) ─
+     $recentSchools = School::latest('created_at')
+@@ -103,7 +104,7 @@
+     }
+     
+     // ─ TOP PERFORMING SCHOOLS (By average marks) ─
+-    $topSchools = DB::table('schools as s')
++    $topSchools = !$caps['schools'] ? [] : DB::table('schools as s')
+         ->leftJoin('students as st', 's.id', '=', 'st.school_id')
+         ->leftJoin('examination_marks as em', 'st.id', '=', 'em.student_id')
+         ->select('s.id', 's.name', DB::raw('COUNT(DISTINCT st.id) as students'))
+@@ -167,18 +168,10 @@
+             'icon'   => 'fa-triangle-exclamation',
+             'color'  => '#e0a020',
+             'text'   => 'Pending exam approvals: ' . $pendingApprovals . ' marks awaiting verification',
+-            'time'   => '1 hr ago',
++            'time'   => 'Needs review',
+         ];
+     }
+     
+-    // System alerts
+-    $recentActivity[] = [
+-        'icon'   => 'fa-bell',
+-        'color'  => '#ef4444',
+-        'text'   => 'System alert: Database backup completed successfully',
+-        'time'   => '5 hrs ago',
+-    ];
+-    
+     // Add school and exam activities
+     $recentActivity = array_merge($recentActivity, $recentSchoolsActivity->toArray(), $recentExamActivity->toArray());
+     $recentActivity = array_slice($recentActivity, 0, 6);
+@@ -200,15 +193,19 @@
+         ];
+     })->toArray();
+     
+-    // ─ SYSTEM HEALTH ─
+-    $systemHealth = [
+-        ['label'=>'Server Uptime',      'value'=>'99.98%', 'icon'=>'fa-server',       'status'=>'good'],
+-        ['label'=>'Database Health',    'value'=>'Optimal','icon'=>'fa-database',     'status'=>'good'],
+-        ['label'=>'Storage Used',       'value'=>'67%',    'icon'=>'fa-hard-drive',   'status'=>'warn'],
+-        ['label'=>'Active Schools',     'value'=>$activeSchools,  'icon'=>'fa-users',        'status'=>'good'],
+-        ['label'=>'Pending Exams',      'value'=>Examination::where('status', 'marks_entry')->count(),      'icon'=>'fa-cloud-arrow-up','status'=>'warn'],
+-        ['label'=>'System Alerts',      'value'=>$systemAlerts,      'icon'=>'fa-bug',          'status'=>'good'],
+-    ];
++    // ─ PLATFORM HEALTH (real signals only) ─
++    $systemHealth = [];
++    if ($adoption) {
++        $systemHealth[] = ['label'=>'Live Schools',         'value'=>$adoption['live'],                          'icon'=>'fa-school',        'status'=>'good'];
++        $systemHealth[] = ['label'=>'Using The System',     'value'=>$adoption['using_pct'].'%',                  'icon'=>'fa-heart-pulse',   'status'=>$adoption['using_pct'] >= 60 ? 'good' : 'warn'];
++        $systemHealth[] = ['label'=>'Dormant / Never Used', 'value'=>$adoption['needs_attention'],                'icon'=>'fa-moon',          'status'=>$adoption['needs_attention'] > 0 ? 'warn' : 'good'];
++    }
++    if ($caps['schools']) {
++        $systemHealth[] = ['label'=>'Pending Exams',        'value'=>Examination::where('status', 'marks_entry')->count(), 'icon'=>'fa-cloud-arrow-up', 'status'=>'warn'];
++    }
++    if ($failedSignIns !== null) {
++        $systemHealth[] = ['label'=>'Failed Sign-ins (24h)','value'=>$failedSignIns,                              'icon'=>'fa-user-lock',     'status'=>$failedSignIns > 20 ? 'warn' : 'good'];
++    }
+ 
+ @endphp
+ 
+@@ -578,12 +575,20 @@
+                     Admin Command Centre
+                 </h1>
+                 <div class="hero-badges">
+-                    <span class="hero-badge"><span class="dot"></span>{{ $activeSchools }} Schools Online</span>
++                    <span class="hero-badge"><i class="fas fa-user-shield" style="font-size:.7rem"></i>{{ $roleName }}</span>
++                    @if($caps['schools'])
++                    <span class="hero-badge"><span class="dot"></span>{{ $activeSchools }} Schools Live</span>
+                     <span class="hero-badge"><i class="fas fa-users" style="font-size:.7rem"></i>{{ number_format($totalStudents) }} Students</span>
++                    @endif
+                 </div>
+             </div>
+             <div class="hero-actions" style="padding-top:4px">
++                @if($caps['create_school'])
+                 <a href="{{ route('school.create-school') }}" class="hero-btn hero-btn-solid"><i class="fas fa-plus"></i> Add School</a>
++                @endif
++                @if($caps['activity'])
++                <a href="{{ route('school-activity.index') }}" class="hero-btn hero-btn-outline"><i class="fas fa-heart-pulse"></i> School Activity</a>
++                @endif
+                 <!-- <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-file-export"></i> Export Report</a>
+                 <a href="#" class="hero-btn hero-btn-outline"><i class="fas fa-gear"></i> Settings</a> -->
+             </div>
+@@ -607,6 +612,19 @@
+         </div>
+         @endif -->
+ 
++        @unless($caps['any'])
++        <div class="card-adm" style="margin-bottom:20px">
++            <div class="card-adm-body" style="text-align:center;padding:36px 20px">
++                <i class="fas fa-user-lock" style="font-size:2rem;color:var(--text-muted)"></i>
++                <h3 style="margin:12px 0 6px">No permissions assigned yet</h3>
++                <p style="color:var(--text-secondary);margin:0">
++                    Your account ({{ $roleName }}) has no Admin Portal permissions. Ask a Super Administrator to assign you a role.
++                </p>
++            </div>
++        </div>
++        @endunless
++
++        @if($caps['schools'])
+         {{-- ─────────────────────── KPI CARDS ────────────────────────── --}}
+         <div class="kpi-grid">
+ 
+@@ -681,7 +699,7 @@
+                 <div class="kpi-value">{{ number_format($totalTeachers) }}</div>
+                 <div>
+                     <span class="kpi-trend up"><i class="fas fa-arrow-up" style="font-size:.65rem"></i>Active staff</span>
+-                    <span style="font-size:.73rem;color:var(--text-muted);margin-left:8px">≈{{ round($totalTeachers/$totalSchools) }} per school</span>
++                    <span style="font-size:.73rem;color:var(--text-muted);margin-left:8px">≈{{ round($totalTeachers / max($totalSchools, 1)) }} per school</span>
+                 </div>
+                 <div class="mini-bar-wrap">
+                     @for($b=0; $b<6; $b++)
+@@ -692,51 +710,87 @@
+             </div>
+ 
+         </div>{{-- /kpi-grid --}}
++        @endif
++
++        {{-- ─────────────────── QUICK LINKS (only what this role may open) ─ --}}
++        @php
++            $quickLinks = array_values(array_filter([
++                $caps['schools']      ? ['route'=>route('school.allSchools'),        'icon'=>'fa-school-flag',   'bg'=>'var(--brand-muted)',  'fg'=>'var(--brand)',  'title'=>'Manage Schools',    'desc'=>'View & edit schools'] : null,
++                $caps['activity']     ? ['route'=>route('school-activity.index'),    'icon'=>'fa-heart-pulse',   'bg'=>'var(--info-muted)',   'fg'=>'var(--info)',   'title'=>'School Activity',   'desc'=>'Who is using the system'] : null,
++                $caps['billing']      ? ['route'=>route('billing.dashboard'),        'icon'=>'fa-wallet',        'bg'=>'var(--accent-muted)', 'fg'=>'#b07d00',       'title'=>'Billing',           'desc'=>'Invoices & payments'] : null,
++                $caps['school_roles'] ? ['route'=>route('urp.admin.index'),          'icon'=>'fa-sitemap',       'bg'=>'var(--purple-muted)', 'fg'=>'var(--purple)', 'title'=>'Schools & Roles',   'desc'=>'Staff roles per school'] : null,
++                $caps['master_data']  ? ['route'=>route('master-code'),              'icon'=>'fa-database',      'bg'=>'var(--info-muted)',   'fg'=>'var(--info)',   'title'=>'Master Data',       'desc'=>'Codes & lists'] : null,
++                $caps['audit']        ? ['route'=>route('audit.index'),              'icon'=>'fa-list-check',    'bg'=>'var(--danger-muted)', 'fg'=>'var(--danger)', 'title'=>'Audit Trail',       'desc'=>'Who did what, when'] : null,
++                $caps['admin_rights'] ? ['route'=>route('arp.users.index'),          'icon'=>'fa-user-shield',   'bg'=>'rgba(100,100,100,.1)','fg'=>'#555',          'title'=>'Admin Users',       'desc'=>'Roles & access'] : null,
++            ]));
++        @endphp
++        @if(count($quickLinks))
++        <div class="quick-links">
++            @foreach($quickLinks as $ql)
++            <a href="{{ $ql['route'] }}" class="ql-card">
++                <div class="ql-icon" style="background:{{ $ql['bg'] }};color:{{ $ql['fg'] }}"><i class="fas {{ $ql['icon'] }}"></i></div>
++                <div><div class="ql-title">{{ $ql['title'] }}</div><div class="ql-desc">{{ $ql['desc'] }}</div></div>
++            </a>
++            @endforeach
++        </div>
++        @endif
++
++        {{-- ─────────────────── SCHOOL ADOPTION (School Activity) ─────── --}}
++        @if($caps['activity'] && $adoption)
++        @php
++            $adoptBars = [
++                'active'   => ['#16a34a', 'Active'],
++                'idle'     => ['#d97706', 'Idle'],
++                'dormant'  => ['#dc2626', 'Dormant'],
++                'never'    => ['#7f1d1d', 'Never used'],
++                'new'      => ['#3b82f6', 'New'],
++            ];
++            $liveTotal = max($adoption['live'], 1);
++        @endphp
++        <div class="card-adm" style="margin-bottom:20px">
++            <div class="card-adm-header">
++                <div class="sec-title" style="margin:0">
++                    <span class="icon-pill" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-heart-pulse"></i></span>
++                    School Adoption — are live schools really using SMASA?
++                </div>
++                <a href="{{ route('school-activity.index') }}" class="sec-link">Full report <i class="fas fa-arrow-right"></i></a>
++            </div>
++            <div class="card-adm-body">
++                <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-3);margin-bottom:12px">
++                    @foreach($adoptBars as $k => [$color, $label])
++                        @if(($adoption['counts'][$k] ?? 0) > 0)
++                        <div title="{{ $label }}: {{ $adoption['counts'][$k] }}" style="width:{{ ($adoption['counts'][$k] / $liveTotal) * 100 }}%;background:{{ $color }}"></div>
++                        @endif
++                    @endforeach
++                </div>
++                <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;margin-bottom:16px">
++                    @foreach($adoptBars as $k => [$color, $label])
++                        <a href="{{ route('school-activity.index', ['status' => $k]) }}" style="color:inherit;text-decoration:none">
++                            <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:{{ $color }}"></span>
++                            {{ $label }} <strong>{{ $adoption['counts'][$k] ?? 0 }}</strong>
++                        </a>
++                    @endforeach
++                    <span style="margin-left:auto;color:var(--text-muted)">{{ $adoption['using_pct'] }}% of {{ $adoption['live'] }} live schools active or idle</span>
++                </div>
+ 
+-        {{-- ─────────────────── QUICK LINKS ───────────────────────────── --}}
+-      <div class="quick-links">
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--brand-muted);color:var(--brand)"><i class="fas fa-school-flag"></i></div>
+-        <div><div class="ql-title">Manage Schools</div><div class="ql-desc">Add, edit, manage</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-users"></i></div>
+-        <div><div class="ql-title">Student Management</div><div class="ql-desc">Enrollment & records</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--purple-muted);color:var(--purple)"><i class="fas fa-chart-bar"></i></div>
+-        <div><div class="ql-title">Exam Reports</div><div class="ql-desc">Grades & results</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--accent-muted);color:#b07d00"><i class="fas fa-person-chalkboard"></i></div>
+-        <div><div class="ql-title">Teachers</div><div class="ql-desc">Staff management</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--danger-muted);color:var(--danger)"><i class="fas fa-bell-exclamation"></i></div>
+-        <div><div class="ql-title">System Alerts</div><div class="ql-desc">Monitoring</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--brand-muted);color:var(--brand)"><i class="fas fa-calendar-check"></i></div>
+-        <div><div class="ql-title">Academic Calendar</div><div class="ql-desc">Terms & dates</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:var(--info-muted);color:var(--info)"><i class="fas fa-cloud-upload-alt"></i></div>
+-        <div><div class="ql-title">Data Import</div><div class="ql-desc">Bulk operations</div></div>
+-    </a>
+-
+-    <a href="javascript:void();" class="ql-card">
+-        <div class="ql-icon" style="background:rgba(100,100,100,.1);color:#555"><i class="fas fa-gear"></i></div>
+-        <div><div class="ql-title">System Settings</div><div class="ql-desc">Configuration</div></div>
+-    </a>
+-</div>
++                @if($attention->isNotEmpty())
++                <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:6px">Needs attention</div>
++                @foreach($attention as $a)
++                <a href="{{ route('school-activity.show', $a['id']) }}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);color:inherit;text-decoration:none">
++                    <span style="flex:1;min-width:0;font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $a['name'] }}</span>
++                    <span style="font-size:.76rem;color:var(--text-muted)">{{ $a['last_activity_at'] ? 'last active '.$a['last_activity_at']->diffForHumans() : 'no activity recorded' }}</span>
++                    <i class="fas fa-chevron-right" style="font-size:.7rem;color:var(--text-muted)"></i>
++                </a>
++                @endforeach
++                @else
++                <p style="color:var(--text-muted);margin:0;font-size:.85rem">No live school is dormant. Nice.</p>
++                @endif
++            </div>
++        </div>
++        @endif
+ 
+         {{-- ─────────────────── ROW: Schools Table + Activity ─────────── --}}
++        @if($caps['schools'])
+         <div class="grid-3-1">
+ 
+             {{-- Recent Schools --}}
+@@ -823,8 +877,10 @@
+             </div>
+ 
+         </div>{{-- /grid-3-1 --}}
++        @endif
+ 
+         {{-- ─────────────────── ROW: Revenue + Categories + Top Schools ── --}}
++        @if($caps['schools'])
+         <div class="grid-3">
+ 
+             {{-- Subscription Plans --}}
+@@ -916,11 +972,13 @@
+             </div>
+ 
+         </div>{{-- /grid-3 --}}
++        @endif
+ 
+         {{-- ─────────────────── ROW: Exam Overview + System Health ────── --}}
+         <div class="grid-2">
+ 
+             {{-- Exam Overview --}}
++            @if($caps['schools'])
+             <div class="card-adm">
+                 <div class="card-adm-header">
+                     <div class="sec-title" style="margin:0">
+@@ -983,7 +1041,10 @@
+                 </div>
+             </div>
+ 
+-            {{-- System Health --}}
++            @endif
++
++            {{-- Platform Health (needs at least one real signal) --}}
++            @if(count($systemHealth))
+             <div class="card-adm">
+                 <div class="card-adm-header">
+                     <div class="sec-title" style="margin:0">
+@@ -991,8 +1052,8 @@
+                         System Health
+                     </div>
+                     <span style="font-size:.75rem;color:var(--brand);font-weight:700;display:flex;align-items:center;gap:5px">
+-                        <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:var(--brand);display:inline-block"></span>
+-                        All Systems Operational
++                        <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:{{ $systemAlerts > 0 ? 'var(--accent)' : 'var(--brand)' }};display:inline-block"></span>
++                        {{ $systemAlerts > 0 ? $systemAlerts.' school(s) need attention' : 'All live schools in use' }}
+                     </span>
+                 </div>
+                 <div class="card-adm-body">
+@@ -1013,6 +1074,8 @@
+                 </div>
+             </div>
+ 
++            @endif
++
+         </div>{{-- /grid-2 --}}
+ 
+     </div>{{-- /page-body --}}
+@@ -1021,7 +1084,9 @@
+     <div class="page-meta">
+         <span><i class="fas fa-shield-halved" style="color:var(--brand)"></i> SMASA Admin Dashboard — School Management System</span>
+         <span><i class="fas fa-clock"></i> Last updated: {{ now()->format('H:i:s') }}</span>
+-        <span><i class="fas fa-database"></i> {{ number_format(DB::select('SELECT COUNT(*) as count FROM students')[0]->count) }} Records</span>
++        @if($caps['schools'])
++        <span><i class="fas fa-database"></i> {{ number_format($totalStudents) }} Records</span>
++        @endif
+     </div>
+ 
+ </div>{{-- /adm-wrap --}}
+diff -ruN a/routes/school-activity.php b/routes/school-activity.php
+--- a/routes/school-activity.php	1970-01-01 00:00:00.000000000 +0000
++++ b/routes/school-activity.php	2026-10-24 21:19:43.412402715 +0000
+@@ -0,0 +1,19 @@
++<?php
++
++use App\Http\Controllers\SchoolActivityController;
++use Illuminate\Support\Facades\Route;
++use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
++
++/*
++| School Activity Monitor (Admin Portal).
++| AdminAuth + an Admin Rights permission on every route. School / teacher
++| sessions can never satisfy `admin.can`, so this is platform-admin only.
++*/
++Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localized', 'AdminAuth']], function () {
++    Route::prefix('admin/school-activity')->controller(SchoolActivityController::class)->group(function () {
++        Route::get('/', 'index')->name('school-activity.index')->middleware('admin.can:school_activity.view');
++        Route::get('/export', 'export')->name('school-activity.export')->middleware('admin.can:school_activity.export');
++        Route::post('/refresh', 'refresh')->name('school-activity.refresh')->middleware('admin.can:school_activity.view');
++        Route::get('/{id}', 'show')->whereNumber('id')->name('school-activity.show')->middleware('admin.can:school_activity.view');
++    });
++});
+diff -ruN a/routes/web.php b/routes/web.php
+--- a/routes/web.php	2026-10-24 21:19:43.295341931 +0000
++++ b/routes/web.php	2026-10-24 21:19:43.411890582 +0000
+@@ -36,6 +36,7 @@
+ use App\Http\Controllers\StudentPhotoImportController;
+ 
+ require __DIR__ . '/audit.php';
++require __DIR__ . '/school-activity.php';
+ require __DIR__ . '/admin-profile.php';
+ 
+ Route::get('/logout', function () {

@@ -628,6 +628,14 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
+            @if($__A::can('school_activity.view'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('school-activity.index') }}">
+                        <i class="fas fa-heart-pulse fa-2x mr-3"></i>School Activity
+                    </a>
+                </li>
+            @endif
+
             @if($__A::canAny(['admin_rights.view_overview', 'admin_rights.view_roles', 'admin_rights.view_permissions', 'admin_rights.view_users', 'admin_rights.view_audit']))
                 <li class="slide has-sub">
                     <a class="side-menu__item" href="#" data-toggle="submenu">
