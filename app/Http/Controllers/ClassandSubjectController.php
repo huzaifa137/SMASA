@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolContext;
+use App\Support\SchoolRule;
 use App\Helpers\PermissionHelper;
 use App\Models\Classroom;
 use App\Models\ClassStreamAssignment;
@@ -715,7 +717,7 @@ class ClassandSubjectController extends Controller
     {
         PermissionHelper::denyUnlessFeature('delete_class');
 
-        $class = Classroom::findOrFail($id);
+        $class = Classroom::forCurrentSchool()->findOrFail($id);
         $class_id = $class->class_name;
 
         $schoolId = Helper::requireSchool();
@@ -761,6 +763,8 @@ class ClassandSubjectController extends Controller
 
     public function deleteStream(Stream $stream)
     {
+        SchoolContext::abortUnlessOwns($stream->school_id);
+
         PermissionHelper::denyUnlessFeature('delete_stream');
 
         $class_id = $stream->class_id;
@@ -807,6 +811,8 @@ class ClassandSubjectController extends Controller
      */
     public function previewStreamRename(Stream $stream)
     {
+        SchoolContext::abortUnlessOwns($stream->school_id);
+
         PermissionHelper::denyUnlessFeature('edit_class');
 
         abort_unless((int) $stream->school_id === (int) Helper::requireSchool(), 403);
@@ -825,6 +831,8 @@ class ClassandSubjectController extends Controller
      */
     public function renameStream(Request $request, Stream $stream)
     {
+        SchoolContext::abortUnlessOwns($stream->school_id);
+
         PermissionHelper::denyUnlessFeature('edit_class');
 
         abort_unless((int) $stream->school_id === (int) Helper::requireSchool(), 403);
@@ -874,11 +882,11 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'class_id' => 'required|exists:classrooms,id',
-            'teacher_id' => 'required|exists:teachers,id',
+            'class_id' => ['required', SchoolRule::exists('classrooms')],
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
         ]);
 
-        $classroom = Classroom::find($request->class_id);
+        $classroom = Classroom::forCurrentSchool()->find($request->class_id);
 
         if ($classroom->class_supervisor !== null && $classroom->class_supervisor != $request->teacher_id) {
             return response()->json([
@@ -903,10 +911,10 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'class_id' => 'required|exists:classrooms,id',
+            'class_id' => ['required', SchoolRule::exists('classrooms')],
         ]);
 
-        $classroom = Classroom::find($request->class_id);
+        $classroom = Classroom::forCurrentSchool()->find($request->class_id);
 
         if (!$classroom->class_supervisor) {
             return response()->json(['status' => 'error', 'message' => 'No supervisor to remove.']);
@@ -928,11 +936,11 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'subject_id' => 'required|exists:class_subjects,id',
-            'teacher_id' => 'required|exists:teachers,id',
+            'subject_id' => ['required', SchoolRule::exists('class_subjects')],
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
         ]);
 
-        $subject = ClassSubject::find($request->subject_id);
+        $subject = ClassSubject::forCurrentSchool()->find($request->subject_id);
 
         if ($subject->subject_teacher_1 !== null && $subject->subject_teacher_1 != $request->teacher_id) {
             return response()->json([
@@ -957,10 +965,10 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'subject_id' => 'required|exists:class_subjects,id',
+            'subject_id' => ['required', SchoolRule::exists('class_subjects')],
         ]);
 
-        $subject = ClassSubject::find($request->subject_id);
+        $subject = ClassSubject::forCurrentSchool()->find($request->subject_id);
 
         if (!$subject->subject_teacher_1) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
@@ -982,11 +990,11 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'subject_id' => 'required|exists:class_subjects,id',
-            'teacher_id' => 'required|exists:teachers,id',
+            'subject_id' => ['required', SchoolRule::exists('class_subjects')],
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
         ]);
 
-        $subject = ClassSubject::find($request->subject_id);
+        $subject = ClassSubject::forCurrentSchool()->find($request->subject_id);
 
         if ($subject->subject_teacher_2 !== null && $subject->subject_teacher_2 != $request->teacher_id) {
             return response()->json([
@@ -1011,10 +1019,10 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'subject_id' => 'required|exists:class_subjects,id',
+            'subject_id' => ['required', SchoolRule::exists('class_subjects')],
         ]);
 
-        $subject = ClassSubject::find($request->subject_id);
+        $subject = ClassSubject::forCurrentSchool()->find($request->subject_id);
 
         if (!$subject->subject_teacher_2) {
             return response()->json(['status' => 'error', 'message' => 'No Subject Teacher to remove.']);
@@ -1049,11 +1057,11 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'class_id' => 'required|exists:streams,id',
-            'teacher_id' => 'required|exists:teachers,id',
+            'class_id' => ['required', SchoolRule::exists('streams')],
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
         ]);
 
-        $stream = Stream::find($request->class_id);
+        $stream = Stream::forCurrentSchool()->find($request->class_id);
 
         if ($stream->class_teacher !== null && $stream->class_teacher != $request->teacher_id) {
             return response()->json([
@@ -1078,10 +1086,10 @@ class ClassandSubjectController extends Controller
         }
 
         $request->validate([
-            'class_id' => 'required|exists:streams,id',
+            'class_id' => ['required', SchoolRule::exists('streams')],
         ]);
 
-        $stream = Stream::find($request->class_id);
+        $stream = Stream::forCurrentSchool()->find($request->class_id);
 
         if (!$stream->class_teacher) {
             return response()->json(['status' => 'error', 'message' => 'No Class Teacher to remove.']);
@@ -1367,7 +1375,7 @@ class ClassandSubjectController extends Controller
     public function update(Request $request, $assignmentId)
     {
         // Find the existing assignment
-        $assignment = ClassStreamAssignment::find($assignmentId);
+        $assignment = ClassStreamAssignment::forCurrentSchool()->find($assignmentId);
 
         if (!$assignment) {
             return redirect()->back()->with('error', 'Class-Stream Assignment not found.');

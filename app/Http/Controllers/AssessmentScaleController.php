@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Helpers\PermissionHelper;
 use App\Models\AssessmentScale;
 use App\Models\AssessmentScalePreset;
@@ -224,8 +225,8 @@ class AssessmentScaleController extends Controller
         $schoolId = Session('LoggedSchool');
 
         $validated = $request->validate([
-            'class_subject_id' => 'required|exists:class_subjects,id',
-            'assessment_scale_id' => 'nullable|exists:assessment_scales,id',
+            'class_subject_id' => ['required', SchoolRule::exists('class_subjects')],
+            'assessment_scale_id' => ['nullable', SchoolRule::exists('assessment_scales')],
         ]);
 
         $classSubject = ClassSubject::where('id', $validated['class_subject_id'])
@@ -365,7 +366,7 @@ class AssessmentScaleController extends Controller
             'max_score' => 'required|numeric|gt:min_score',
             'allow_custom_score' => 'nullable|boolean',
             'grade_mode' => 'required|in:none,linked_grading_scheme',
-            'grading_scheme_id' => 'nullable|required_if:grade_mode,linked_grading_scheme|exists:grading_schemes,id',
+            'grading_scheme_id' => ['nullable', 'required_if:grade_mode,linked_grading_scheme', SchoolRule::existsOrGlobal('grading_schemes')],
             'is_default' => 'nullable|boolean',
             'presets' => 'required|array|min:1',
             // A preset is either a single value (min_score only, e.g. "3")

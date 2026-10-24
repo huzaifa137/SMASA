@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolContext;
+use App\Support\SchoolRule;
 use App\Models\AcademicYear;
 use App\Models\DynamicFormValue;
 use App\Models\House;
@@ -237,6 +239,8 @@ class SchoolController extends Controller
             );
         }
 
+        SchoolContext::abortUnlessOwns($school_Id);
+
         $school_id = $school_Id;
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
@@ -452,7 +456,7 @@ class SchoolController extends Controller
     {
         $validated = $request->validate([
             // school_id stays required - it's how we know which profile to update.
-            'school_id' => 'required|integer|exists:schools,id',
+            'school_id' => ['required', 'integer', SchoolRule::school()],
             // Everything else is optional now, so users can save partial progress
             // and come back later to fill in the rest.
             'school_type' => 'nullable|string|max:255',
@@ -550,6 +554,19 @@ class SchoolController extends Controller
         dd($request->all());
     }
 
+    /**
+     * Academic years and term dates are managed by platform administrators
+     * (already permission-checked by `admin.guard`) and by school
+     * administrators. `admin.guard` deliberately lets every non-admin session
+     * through, so teachers and students must be stopped here.
+     */
+    private function requireCalendarManager(): void
+    {
+        $allowed = session()->has('LoggedAdmin') || Helper::isTechSateAdminOrSchoolAdminsAlone();
+
+        abort_unless($allowed, 403, 'Only administrators can manage the academic calendar.');
+    }
+
     public function addAcademicYear()
     {
 
@@ -577,6 +594,8 @@ class SchoolController extends Controller
 
     public function storeYear(Request $request)
     {
+        $this->requireCalendarManager();
+
         $currentYear = date('Y');
         $nextYear = $currentYear + 1;
 
@@ -649,6 +668,8 @@ class SchoolController extends Controller
 
     public function activate($id)
     {
+        $this->requireCalendarManager();
+
         AcademicYear::query()->update(['is_active' => false]); // Deactivate all
         $year = AcademicYear::findOrFail($id);
         $year->update(['is_active' => true]);
@@ -658,6 +679,8 @@ class SchoolController extends Controller
 
     public function deactivate($id)
     {
+        $this->requireCalendarManager();
+
         $year = AcademicYear::findOrFail($id);
         $year->update(['is_active' => false]);
 
@@ -666,6 +689,8 @@ class SchoolController extends Controller
 
     public function destroy($id)
     {
+        $this->requireCalendarManager();
+
         $academicYear = AcademicYear::findOrFail($id);
 
         if ($academicYear->is_active) {
@@ -679,6 +704,8 @@ class SchoolController extends Controller
 
     public function updateYear(Request $request, $id)
     {
+        $this->requireCalendarManager();
+
         $academicYear = AcademicYear::findOrFail($id);
 
         $validated = $request->validate([
@@ -702,12 +729,14 @@ class SchoolController extends Controller
 
     public function storeTermDate(Request $request)
     {
+        $this->requireCalendarManager();
+
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
             'term' => 'required|string|max:255',
             'start_date' => 'required|date',
-            'school_id' => 'required',
+            'school_id' => ['required', 'integer', SchoolRule::school()],
             'end_date' => 'required|date|after_or_equal:start_date',
             'week_starts_on' => 'required|in:1,2',
         ]);
@@ -733,7 +762,10 @@ class SchoolController extends Controller
 
     public function destroyTerm($id)
     {
+        $this->requireCalendarManager();
+
         $academicTerm = TermDate::findOrFail($id);
+        SchoolContext::abortUnlessOwns($academicTerm->school_id);
         $academicTerm->delete();
 
         return response()->json(['message' => 'Term deleted successfully.']);
@@ -779,6 +811,8 @@ class SchoolController extends Controller
 
     public function toggleActive(Request $request)
     {
+        $this->requireCalendarManager();
+
         try {
             $request->validate([
                 'term_id' => 'required|exists:term_dates,id',

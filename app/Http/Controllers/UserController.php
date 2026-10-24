@@ -445,7 +445,27 @@ class UserController extends Controller
         ]);
 
         $school_id = $request->selected_school_id;
-        $user = DB::table('users')->where('email', $request->email)->first();
+
+        // SECURITY: this endpoint is public. It may only finish a login that already
+        // passed the previous step (session login_email) and only for a school that
+        // account actually belongs to. Never trust the posted email / school id.
+        $pendingEmail = session('login_email');
+
+        if (!$pendingEmail || strcasecmp((string) $pendingEmail, (string) $request->email) !== 0) {
+            return response()->json(['status' => false, 'message' => 'Your login session has expired. Please sign in again.'], 403);
+        }
+
+        $ownSchools = DB::table('teachers')->where('email', $pendingEmail)->pluck('school_id')->map(fn ($id) => (int) $id);
+
+        if (!$ownSchools->contains((int) $school_id)) {
+            return response()->json(['status' => false, 'message' => 'You do not belong to the selected school.'], 403);
+        }
+
+        $user = DB::table('users')->where('email', $pendingEmail)->first();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Account not found.'], 404);
+        }
 
         $statusMessages = [
             0 => 'Your account has been banned.',

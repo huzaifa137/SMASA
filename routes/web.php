@@ -76,6 +76,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/teacher-password-reset-form', [TeacherPasswordResetController::class, 'showResetPasswordForm'])->name('teacher.password.reset.form');
             Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link');
             Route::post('/teacher-password-reset', [TeacherPasswordResetController::class, 'resetPassword'])->name('teacher.password.reset');
+            // Hardened (security): now requires the pending login in the session and a school the account really belongs to.
             Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school');
             Route::post('update-internal-user', 'storeUpdatedInternalUser')->name('update.internal-user');
             Route::post('store-updated-information', 'storeUpdatedInformation')->name('store-updated-information');
@@ -696,61 +697,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         });
     });
 
-    Route::controller(ItebController::class)->group(function () {
-
-        Route::group(['middleware' => ['AdminAuth']], function () {
-
-            Route::get('/search-iteb-students', 'searchItebStudents')->name('search.iteb.students');
-            Route::get('/enter-marks', 'enterMarks')->name('enter.marks');
-
-            Route::get('/class-allocation', 'enterMarks');
-            Route::get('/class-allocation/filter', 'filter')->name('class.allocation.filter');
-
-            Route::post('/iteb/save-marks', 'saveMarks')->name('iteb.save.marks');
-            Route::post('/iteb/get-marks', 'getMarksForSubject')->name('iteb.get.marks');
-            Route::post('iteb/get-subject-marks', 'getSubjectMarks')->name('iteb.get.subject.marks');
-
-            Route::get('/iteb/grading-summary', 'gradingSummary')->name('iteb.grading.summary');
-            Route::post('/iteb/process-grading', 'processGrading')->name('iteb.process.grading');
-            Route::post('/iteb/save-grading-results', 'saveGradingResults')->name('iteb.save.grading');
-            Route::get('/iteb/export-grading', 'exportGrading')->name('iteb.export.grading');
-
-            Route::get('/iteb/analytics/dashboard', 'analyticsDashboard')->name('iteb.analytics.dashboard');
-            Route::post('/iteb/analytics/school-ranking', 'getSchoolRanking')->name('iteb.analytics.school.ranking');
-            Route::post('/iteb/analytics/student-ranking', 'getStudentRanking')->name('iteb.analytics.student.ranking');
-            Route::post('/iteb/analytics/subject-analysis', 'getSubjectAnalysis')->name('iteb.analytics.subject.analysis');
-            Route::post('/iteb/analytics/year-comparison', 'getYearComparison')->name('iteb.analytics.year.comparison');
-            Route::post('/iteb/analytics/export-report', 'exportAnalyticsReport')->name('iteb.analytics.export');
-            Route::get('/iteb/analytics/download/{format}', 'downloadReport')->name('iteb.analytics.download');
-
-            Route::match(['get', 'post'], '/iteb/exam-statistics', 'examStatistics')->name('iteb.exam.statistics');
-
-        });
-
-        Route::get('/about', 'about')->name('about.us');
-        Route::get('/contact', 'contact')->name('contact.us');
-
-        Route::post('iteb/exam-statistics/download', 'downloadExamStatistics')->name('iteb.exam.statistics.download');
-        Route::post('iteb/exam-statistics/download-excel', 'downloadExamStatisticsExcel')->name('iteb.exam.statistics.download.excel');
-        Route::post('iteb/exam-statistics/download-pdf', 'downloadExamStatisticsPdf')->name('iteb.exam.statistics.download.pdf');
-        Route::post('exam-statistics/download/students', 'downloadStudentsReport')->name('iteb.exam.statistics.download.students');
-        Route::post('exam-statistics/download/schools', 'downloadSchoolsReport')->name('iteb.exam.statistics.download.schools');
-
-    });
-
-    Route::group(['middleware' => ['AdminAuth']], function () {
-
-        Route::prefix('school-passwords')
-            ->controller(ItebController::class)
-            ->group(function () {
-
-                Route::get('/setup', 'schoolPasswordsSetup')->name('school.passwords.setup');
-                Route::post('/fetch', 'fetchPassword')->name('school.passwords.fetch');
-                Route::post('/generate', 'generatePassword')->name('school.passwords.generate');
-                Route::post('/save', 'savePassword')->name('school.passwords.save');
-
-            });
-    });
+    // ── ITEB leftovers REMOVED (security) ───────────────────────────────────
+    // The ITEB marks / grading / analytics / exam-statistics / school-password
+    // routes came from the project SMASA was cloned from. Nothing in SMASA links
+    // to them, several had no auth at all and one returned school passwords in
+    // plain text. Only the public About / Contact pages are kept.
+    Route::get('/about', [ItebController::class, 'about'])->name('about.us');
+    Route::get('/contact', [ItebController::class, 'contact'])->name('contact.us');
 
     Route::controller(SchoolsController::class)->group(function () {
         Route::group(['middleware' => ['SchoolAuth']], function () {
@@ -758,13 +711,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::group(['prefix' => '/school'], function () {
 
                 Route::get('/dashboard', 'schoolDashboard')->name('school.dashboard');
-                Route::get('/grading-summary', 'schoolGradingSummary')->name('school.grading.summary');
-                Route::post('/process-grading', 'processGrading')->name('school.process.grading');
-                Route::post('iteb/grading/results/pdf', 'generateResultsPDF')->name('iteb.grading.results.pdf');
+                // Removed (ITEB leftovers, unused): /school/grading-summary, /school/process-grading,
+                // iteb/grading/results/pdf and the UNAUTHENTICATED /school-passwords/export-all-pdf.
             });
         });
-
-        Route::post('/school-passwords/export-all-pdf', 'exportAllPasswordsPDF')->name('school.passwords.export-all-pdf');
     });
 
 

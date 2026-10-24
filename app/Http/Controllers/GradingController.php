@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentExamImport;
 use App\Models\AnnualExamination;
@@ -195,7 +196,7 @@ class GradingController extends Controller
     private function handleExamImport(Request $request, $examType)
     {
         $request->validate([
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => ['required', SchoolRule::school()],
             'file' => 'required|file|mimes:xlsx,xls',
         ]);
 

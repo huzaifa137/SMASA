@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class ExaminationMark extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'examination_id',
         'student_id',

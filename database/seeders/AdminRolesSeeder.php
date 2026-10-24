@@ -41,6 +41,14 @@ class AdminRolesSeeder extends Seeder
                 'Can look at schools, curriculum and notifications but change nothing.',
                 $viewOnly,
             ],
+            'Billing Manager' => [
+                'Runs SMASA billing: terms, invoices, payments, pricing, reports and settings.',
+                AdminAccess::moduleKeys('billing'),
+            ],
+            'Billing Clerk' => [
+                'Views invoices and records or reverses school payments; cannot change pricing, terms or settings.',
+                ['billing.view', 'billing.record_payments', 'billing.view_reports'],
+            ],
             'Rights Administrator' => [
                 'Manages admin roles and users, but cannot grant more than they hold themselves.',
                 AdminAccess::moduleKeys('admin_rights'),

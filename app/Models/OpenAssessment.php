@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class OpenAssessment extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'open_assessments';
 
     /** General, free-form types — no catalogue behind them. */

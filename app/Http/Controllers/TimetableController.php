@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\ClassSubject;
@@ -311,9 +312,9 @@ class TimetableController extends Controller
     }
 
         $request->validate([
-            'timetable_id' => 'required|exists:timetables,id',
+            'timetable_id' => ['required', SchoolRule::exists('timetables')],
             'day_of_week' => 'required|integer|between:1,7',
-            'period_id' => 'required|exists:timetable_periods,id',
+            'period_id' => ['required', SchoolRule::exists('timetable_periods')],
         ]);
 
         $schoolId = session('LoggedSchool');

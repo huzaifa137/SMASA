@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class FinanceTransaction extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'finance_transactions';
 
     protected $fillable = [

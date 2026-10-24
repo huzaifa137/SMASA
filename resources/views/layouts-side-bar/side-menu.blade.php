@@ -377,7 +377,7 @@ use App\Helpers\PermissionHelper;
                 @endif
 
                 {{-- Billing (SMASA subscription invoices) --}}
-                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canModule('finance'))
+                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canFeature('view_billing'))
                     <li class="slide">
                         <a class="side-menu__item" href="{{ route('school.billing.index') }}">
                             <i class="fas fa-file-invoice-dollar fa-2x mr-3"></i>Billing &amp; Invoices
@@ -1023,7 +1023,7 @@ use App\Helpers\PermissionHelper;
                 @endif
 
                 {{-- Billing (SMASA subscription invoices) --}}
-                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canModule('finance'))
+                @if(\App\Support\AdminAccess::can('billing.view') || PermissionHelper::canFeature('view_billing'))
                     <li class="slide">
                         <a class="side-menu__item" href="{{ route('school.billing.index') }}">
                             <i class="fas fa-file-invoice-dollar fa-2x mr-3"></i>Billing &amp; Invoices

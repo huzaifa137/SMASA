@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class FeeCategory extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'school_id', 'name', 'slug', 'color', 'icon',
         'description', 'is_external', 'is_active', 'sort_order',

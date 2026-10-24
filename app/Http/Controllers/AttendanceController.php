@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Models\Classroom;
 use App\Models\ClassSubject;
 use App\Models\Stream;
@@ -534,7 +535,7 @@ class AttendanceController extends Controller
     }
 
         $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
             'attendance_date' => 'required|date',
             'status' => 'required|in:present,absent,late,on_leave,half_day,excused',
         ]);

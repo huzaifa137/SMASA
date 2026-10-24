@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class TeacherSalaryStructure extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'teacher_salary_structures';
 
     protected $fillable = [

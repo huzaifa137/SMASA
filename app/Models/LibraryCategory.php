@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class LibraryCategory extends Model
 {
+    use BelongsToSchool;
+
     protected $table = "library_categories";
     
     protected $fillable = [

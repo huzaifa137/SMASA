@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class StudentDisciplineRating extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'student_discipline_ratings';
 
     protected $fillable = [

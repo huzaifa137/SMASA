@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ExaminationSubjectSetting extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'examination_subject_settings';
 
     protected $fillable = [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Models\CustomReportTemplate;
 use App\Models\Examination;
 use App\Models\School;
@@ -140,7 +141,7 @@ class CustomReportCardController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'school_id' => 'required|integer|exists:schools,id',
+            'school_id' => ['required', 'integer', SchoolRule::school()],
             'level' => ['required', Rule::in(array_keys(CustomReportCards::LEVELS))],
             'template_id' => 'required|integer|exists:custom_report_templates,id',
             'notes' => 'nullable|string|max:500',

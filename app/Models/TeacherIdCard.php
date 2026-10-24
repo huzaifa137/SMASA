@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class TeacherIdCard extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'teacher_id',
         'school_id',

@@ -391,6 +391,26 @@ class SystemModulesSeeder extends Seeder
                 ],
             ],
 
+            // ── Billing & Invoices (school side, read-only) ───────────────
+            // A school's own SMASA subscription invoices and receipts. Previously
+            // borrowed the Finance module; roles that already had Finance inherit
+            // all three features when this module is first created, so nobody
+            // loses access. Review on /user-rights/permissions afterwards.
+            [
+                "key" => "billing",
+                "name" => "Billing & Invoices",
+                "icon" => "fas fa-file-invoice-dollar",
+                "route" => "school.billing.index",
+                "description" => "The school's own SMASA subscription invoices, payments and receipts",
+                "sort_order" => 85,
+                "inherits_module" => "finance",
+                "features" => [
+                    ["key" => "view_billing", "name" => "View Billing & Invoices", "inherits" => ["module:finance"]],
+                    ["key" => "download_invoice_pdf", "name" => "Download Invoice PDF", "inherits" => ["module:finance"]],
+                    ["key" => "download_receipt_pdf", "name" => "Download Receipt PDF", "inherits" => ["module:finance"]],
+                ],
+            ],
+
             // ── Attendance ────────────────────────────────────────────────
             [
                 "key" => "attendance",

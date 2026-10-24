@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Support\ExportName;
+use App\Support\SchoolContext;
+use App\Support\SchoolRule;
 use App\Exports\StudentsExamExport;
 use App\Imports\StudentExamImport;
 use App\Models\Classroom;
@@ -679,7 +681,7 @@ class StudentController extends Controller
     {
 
         PermissionHelper::denyUnlessFeature('view_student_details');
-        $student = Student::findOrFail($id);
+        $student = Student::forCurrentSchool()->findOrFail($id);
 
         $student->photo_url = null;
 
@@ -708,7 +710,7 @@ class StudentController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized. You do not have permission to edit students.'], 403);
         }
 
-        $student = Student::findOrFail($request->student_id);
+        $student = Student::forCurrentSchool()->findOrFail($request->student_id);
 
         $validated = $request->validate([
             'firstname' => 'required|string|max:100',
@@ -850,6 +852,8 @@ class StudentController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete students.'], 403);
         }
 
+        SchoolContext::abortUnlessOwns($student->school_id);
+
         $result = $deletionService->deleteStudent($student);
 
         return response()->json($result, $result['success'] ? 200 : 500);
@@ -875,7 +879,7 @@ class StudentController extends Controller
 
         $validated = $request->validate([
             'student_ids'   => 'nullable|array',
-            'student_ids.*' => 'integer|exists:students,id',
+            'student_ids.*' => ['integer', SchoolRule::exists('students')],
             'senior'        => 'nullable|string',
             'stream'        => 'nullable|string',
             'q'             => 'nullable|string',
@@ -946,6 +950,8 @@ class StudentController extends Controller
             return back()->with('error', 'No Active Academic Year Set.');
         }
 
+        SchoolContext::abortUnlessOwns($schoolId);
+
         $school = School::findOrFail($schoolId);
 
         $students = Student::where('school_id', $schoolId)->get();
@@ -979,7 +985,7 @@ class StudentController extends Controller
     public function uploadExamResults(Request $request)
     {
         $request->validate([
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => ['required', SchoolRule::school()],
             'type' => 'required|in:thanawi,idaad',
             'file' => 'required|file|mimes:xlsx,xls',
         ]);
@@ -1089,7 +1095,7 @@ class StudentController extends Controller
 
     public function updateProfiles()
     {
-        $students = Student::orderBy('created_at', 'desc')->get();
+        $students = Student::forCurrentSchool()->orderBy('created_at', 'desc')->get();
 
         $classRecord = Helper::MasterRecordMerge(
             config('constants.options.O_LEVEL'),
@@ -1111,10 +1117,15 @@ class StudentController extends Controller
             'senior' => 'required|max:255',
             'stream' => 'required|max:255',
             'gender' => 'required|in:Male,Female,Other',
-            'school_id' => 'required|integer|exists:schools,id',
+            'school_id' => ['required', 'integer', SchoolRule::school()],
             'admission_number' => 'nullable|string|max:255|unique:students,admission_number,' . $student->id,
 
         ]);
+
+        SchoolContext::abortUnlessOwns($student->school_id);
+
+        // A student can never be re-parented to another school through this form.
+        $validated['school_id'] = $student->school_id;
 
         $student->update($validated);
 
@@ -1124,7 +1135,7 @@ class StudentController extends Controller
     public function showStudentInformation($id)
     {
         PermissionHelper::denyUnlessFeature('view_student_details');
-        $student = Student::findOrFail($id);
+        $student = Student::forCurrentSchool()->findOrFail($id);
 
         return response()->json([
             'id' => $student->id,
@@ -1335,6 +1346,8 @@ class StudentController extends Controller
             'stream' => 'required|string',
         ]);
 
+        SchoolContext::abortUnlessOwns($validated['school_id']);
+
         $students = Student::where('school_id', $validated['school_id'])
             ->where('senior', $validated['senior'])
             ->where('stream', $validated['stream'])
@@ -1353,7 +1366,7 @@ class StudentController extends Controller
 
         $validated = $request->validate([
             'student_ids' => 'required|array',
-            'student_ids.*' => 'integer|exists:students,id',
+            'student_ids.*' => ['integer', SchoolRule::exists('students')],
             'new_senior' => 'required|string|max:255',
             'new_stream' => 'required|string|max:255',
         ]);
@@ -1362,7 +1375,7 @@ class StudentController extends Controller
 
         try {
 
-            Student::whereIn('id', $validated['student_ids'])->update([
+            Student::forCurrentSchool()->whereIn('id', $validated['student_ids'])->update([
                 'senior' => $validated['new_senior'],
                 'stream' => $validated['new_stream'],
             ]);
@@ -1371,7 +1384,7 @@ class StudentController extends Controller
             // destination class-stream needs matching class_subjects rows.
             app(\App\Services\StudentSubjectChoiceSyncService::class)
                 ->syncForStudents(
-                    Student::whereIn('id', $validated['student_ids'])->value('school_id'),
+                    Student::forCurrentSchool()->whereIn('id', $validated['student_ids'])->value('school_id'),
                     $validated['student_ids']
                 );
 

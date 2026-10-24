@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollPeriod extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'school_id', 'period_name', 'academic_year', 'term',
         'period_start', 'period_end', 'status',

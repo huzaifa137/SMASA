@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class StudentFeeAllocation extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'school_id', 'student_id', 'fee_structure_id', 'academic_year', 'term',
         'allocated_amount', 'discount_amount', 'discount_reason', 'balance',

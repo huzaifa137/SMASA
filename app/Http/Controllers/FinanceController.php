@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Models\Budget;
 use App\Models\BudgetItem;
 use App\Models\ChartOfAccount;
@@ -191,7 +192,7 @@ class FinanceController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
-            'items.*.fee_category_id' => 'required|exists:fee_categories,id',
+            'items.*.fee_category_id' => ['required', SchoolRule::exists('fee_categories')],
             'items.*.custom_category' => 'nullable|string|max:100',
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.is_mandatory' => 'boolean',
@@ -274,7 +275,7 @@ class FinanceController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:200',
-            'items.*.fee_category_id' => 'required|exists:fee_categories,id',
+            'items.*.fee_category_id' => ['required', SchoolRule::exists('fee_categories')],
             'items.*.custom_category' => 'nullable|string|max:100',
             'items.*.amount' => 'required|numeric|min:0',
         ]);
@@ -542,7 +543,7 @@ class FinanceController extends Controller
 
         $validated = $request->validate([
             'student_ids' => 'required|array|min:1',
-            'fee_structure_id' => 'required|exists:fee_structures,id',
+            'fee_structure_id' => ['required', SchoolRule::exists('fee_structures')],
             // Only needed for an all-terms structure: 1, 2, 3 or "all".
             'term' => 'nullable|in:1,2,3,all',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -762,8 +763,8 @@ class FinanceController extends Controller
         }
 
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'allocation_id' => 'nullable|exists:student_fee_allocations,id',
+            'student_id' => ['required', SchoolRule::exists('students')],
+            'allocation_id' => ['nullable', SchoolRule::exists('student_fee_allocations')],
             'academic_year' => 'required|digits:4',
             'term' => 'required|in:1,2,3',
             'amount_paid' => 'required|numeric|min:1',
@@ -777,7 +778,7 @@ class FinanceController extends Controller
             // recorded against the allocation, same as always.
             'items' => 'nullable|array|min:1',
             'items.*.fee_structure_item_id' => 'nullable|exists:fee_structure_items,id',
-            'items.*.fee_category_id' => 'nullable|exists:fee_categories,id',
+            'items.*.fee_category_id' => ['nullable', SchoolRule::exists('fee_categories')],
             'items.*.label' => 'required_with:items|string|max:200',
             'items.*.amount' => 'required_with:items|numeric|min:0.01',
             'items.*.is_external' => 'nullable|boolean',
@@ -1131,7 +1132,7 @@ class FinanceController extends Controller
         }
 
         $validated = $request->validate([
-            'category_id' => 'required|exists:expense_categories,id',
+            'category_id' => ['required', SchoolRule::exists('expense_categories')],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
@@ -1209,7 +1210,7 @@ class FinanceController extends Controller
         $expense = Expense::where('school_id', $schoolId)->findOrFail($id);
 
         $validated = $request->validate([
-            'category_id' => 'required|exists:expense_categories,id',
+            'category_id' => ['required', SchoolRule::exists('expense_categories')],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
@@ -1457,7 +1458,7 @@ class FinanceController extends Controller
         }
 
         $validated = $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
             'basic_salary' => 'required|numeric|min:0',
             'housing_allowance' => 'nullable|numeric|min:0',
             'transport_allowance' => 'nullable|numeric|min:0',
@@ -2437,7 +2438,7 @@ class FinanceController extends Controller
         $allocation = StudentFeeAllocation::where('school_id', $schoolId)->findOrFail($id);
 
         $validated = $request->validate([
-            'fee_structure_id' => 'required|exists:fee_structures,id',
+            'fee_structure_id' => ['required', SchoolRule::exists('fee_structures')],
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_reason' => 'nullable|string|max:255',
         ]);

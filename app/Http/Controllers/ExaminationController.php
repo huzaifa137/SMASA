@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
@@ -119,7 +120,7 @@ class ExaminationController extends Controller
             'marks_entry_deadline' => 'required|date|after_or_equal:end_date',
             'total_marks' => 'required|integer|min:1|max:1000',
             'pass_mark' => 'required|integer|min:1',
-            'grading_scheme_id' => 'required|integer|exists:grading_schemes,id',
+            'grading_scheme_id' => ['required', 'integer', SchoolRule::existsOrGlobal('grading_schemes')],
             'description' => 'nullable|string',
             // How Secondary O-Level (Senior 1-4) subjects are marked in this exam:
             // 'assessments' = NLSC Create Assessment (default), 'standard' = normal marks entry.
@@ -127,7 +128,7 @@ class ExaminationController extends Controller
             'class_streams' => 'required|array|min:1',
             'class_streams.*' => 'string',
             'class_grading_schemes' => 'nullable|array',
-            'class_grading_schemes.*' => 'nullable|integer|exists:grading_schemes,id',
+            'class_grading_schemes.*' => ['nullable', 'integer', SchoolRule::existsOrGlobal('grading_schemes')],
         ]);
 
         $schoolId = Session('LoggedSchool');
@@ -818,7 +819,7 @@ class ExaminationController extends Controller
 
     public function getDetails($id)
     {
-        $exam = Examination::findOrFail($id);
+        $exam = Examination::forCurrentSchool()->findOrFail($id);
 
         return response()->json([
             'exam_name' => $exam->exam_name,
@@ -2844,7 +2845,7 @@ class ExaminationController extends Controller
 
         if ($marks->isEmpty()) {
             if (!$student) {
-                $student = DB::table('students')->where('id', $studentId)->first();
+                $student = DB::table('students')->where('id', $studentId)->where('school_id', $schoolId)->first();
             }
             $this->attachRemarksAndSignatures($student, $examId, $schoolId);
 
@@ -3164,7 +3165,7 @@ class ExaminationController extends Controller
 
         // Fetch student record if not passed in
         if (!$student) {
-            $student = DB::table('students')->where('id', $studentId)->first();
+            $student = DB::table('students')->where('id', $studentId)->where('school_id', $schoolId)->first();
         }
 
         $this->attachRemarksAndSignatures($student, $examId, $schoolId, $classId, $streamId);
@@ -3490,7 +3491,7 @@ class ExaminationController extends Controller
 
 
         if (!$student) {
-            $student = DB::table('students')->where('id', $studentId)->first();
+            $student = DB::table('students')->where('id', $studentId)->where('school_id', $schoolId)->first();
         }
 
         // Remarks/signatures follow the same "most recent exam in the set"
@@ -4318,7 +4319,7 @@ class ExaminationController extends Controller
     }
     public function examinationDetails($id)
     {
-        $examination = Examination::findOrFail($id);
+        $examination = Examination::forCurrentSchool()->findOrFail($id);
 
         $daysUntilDeadline = Carbon::now()->diffInDays(Carbon::parse($examination->marks_entry_deadline), false);
 
@@ -4356,7 +4357,7 @@ class ExaminationController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to publish results.'], 403);
         }
 
-        $examination = Examination::findOrFail($id);
+        $examination = Examination::forCurrentSchool()->findOrFail($id);
         $newStatus = $request->status;
 
         // Validate status transition
@@ -4449,7 +4450,7 @@ class ExaminationController extends Controller
         PermissionHelper::denyUnlessFeature('edit_exam');
 
 
-        $examination = Examination::findOrFail($id);
+        $examination = Examination::forCurrentSchool()->findOrFail($id);
 
         $schoolId = Session('LoggedSchool');
 
@@ -4534,7 +4535,7 @@ class ExaminationController extends Controller
         }
 
 
-        $examination = Examination::findOrFail($id);
+        $examination = Examination::forCurrentSchool()->findOrFail($id);
 
         $validated = $request->validate([
             // ✅ NEW: Examination Details (name, type, term) can now be edited too
@@ -4548,7 +4549,7 @@ class ExaminationController extends Controller
 
             'total_marks' => 'nullable|integer|min:1',
             'pass_mark' => 'nullable|integer|min:1',
-            'grading_scheme_id' => 'nullable|integer|exists:grading_schemes,id',
+            'grading_scheme_id' => ['nullable', 'integer', SchoolRule::existsOrGlobal('grading_schemes')],
 
             'description' => 'nullable|string',
 
@@ -4558,7 +4559,7 @@ class ExaminationController extends Controller
 
             // 🔥 NEW: Per-class grading scheme overrides
             'class_grading_schemes' => 'nullable|array',
-            'class_grading_schemes.*' => 'nullable|integer|exists:grading_schemes,id',
+            'class_grading_schemes.*' => ['nullable', 'integer', SchoolRule::existsOrGlobal('grading_schemes')],
 
             'o_level_mode' => 'nullable|in:assessments,standard',
 

@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollSlip extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'payroll_period_id', 'school_id', 'teacher_id', 'payslip_number',
         'basic_salary', 'housing_allowance', 'transport_allowance', 'other_allowances',

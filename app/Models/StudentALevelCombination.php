@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class StudentALevelCombination extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'student_alevel_combinations';
 
     protected $fillable = [

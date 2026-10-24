@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class OpenAssessmentMark extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'open_assessment_marks';
 
     protected $fillable = [

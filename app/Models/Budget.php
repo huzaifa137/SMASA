@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class Budget extends Model
 {
+    use BelongsToSchool;
+
     protected $fillable = [
         'school_id', 'title', 'academic_year', 'term',
         'total_income_budget', 'total_expense_budget',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchoolRule;
 use App\Helpers\PermissionHelper;
 use App\Models\ChartOfAccount;
 use App\Models\FinanceTransaction;
@@ -70,7 +71,7 @@ class LedgerController extends Controller
             'account_code' => 'required|string|max:20|unique:chart_of_accounts,account_code,NULL,id,school_id,' . $schoolId,
             'name'         => 'required|string|max:255',
             'type'         => 'required|in:asset,liability,income,expense,equity',
-            'parent_id'    => 'nullable|exists:chart_of_accounts,id',
+            'parent_id' => ['nullable', SchoolRule::exists('chart_of_accounts')],
             'description'  => 'nullable|string',
         ]);
 
@@ -93,7 +94,7 @@ class LedgerController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'type'        => 'required|in:asset,liability,income,expense,equity',
-            'parent_id'   => 'nullable|exists:chart_of_accounts,id',
+            'parent_id' => ['nullable', SchoolRule::exists('chart_of_accounts')],
             'description' => 'nullable|string',
             'is_active'   => 'nullable|boolean',
         ]);

@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class ReportCardRemark extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'report_card_remarks';
 
     protected $fillable = [

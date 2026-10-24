@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class NlscAssessment extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'nlsc_assessments';
 
     protected $fillable = [

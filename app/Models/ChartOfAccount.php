@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class ChartOfAccount extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'chart_of_accounts';
 
     protected $fillable = [

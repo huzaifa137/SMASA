@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class LibrarySetting extends Model
 {
+    use BelongsToSchool;
+
     protected $table = "library_settings";
     
     protected $fillable = [

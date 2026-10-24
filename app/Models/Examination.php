@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 
 class Examination extends Model
 {
+    use BelongsToSchool;
+
     use HasFactory;
 
     public const MODE_ASSESSMENTS = 'assessments';

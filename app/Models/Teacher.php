@@ -1,6 +1,8 @@
 <?php
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
@@ -8,6 +10,8 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class Teacher extends Model
 {
+    use BelongsToSchool;
+
     use HasFactory, Notifiable, HasPushSubscriptions;
 
     protected $fillable = [

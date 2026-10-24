@@ -15,8 +15,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
  * payments recorded against them. Read-only — payments are recorded by the
  * platform administrator once the money is received.
  *
- * Who in a school may open it: anyone who can open the Finance module
- * (school administrators / bursars) — see canView().
+ * Who in a school may open it: roles holding the "Billing & Invoices" module
+ * features view_billing / download_invoice_pdf / download_receipt_pdf — see canView().
  */
 class SchoolBillingController extends Controller
 {
@@ -24,14 +24,16 @@ class SchoolBillingController extends Controller
     {
     }
 
-    private function canView(): bool
+    private function canView(string $feature = 'view_billing'): bool
     {
-        return \App\Support\AdminAccess::can('billing.view') || PermissionHelper::canModule('finance');
+        // Platform admins with the Billing right, or a school role holding the
+        // Billing & Invoices feature (seeded by SystemModulesSeeder).
+        return \App\Support\AdminAccess::can('billing.view') || PermissionHelper::canFeature($feature);
     }
 
-    private function guard()
+    private function guard(string $feature = 'view_billing')
     {
-        if (!$this->canView()) {
+        if (!$this->canView($feature)) {
             return redirect()->route('school.dashboard')
                 ->with('error', 'Access denied: you do not have permission to view billing.');
         }
@@ -97,7 +99,7 @@ class SchoolBillingController extends Controller
 
     public function pdf(int $id)
     {
-        if ($r = $this->guard()) {
+        if ($r = $this->guard('download_invoice_pdf')) {
             return $r;
         }
 
@@ -110,7 +112,7 @@ class SchoolBillingController extends Controller
 
     public function receipt(int $id)
     {
-        if ($r = $this->guard()) {
+        if ($r = $this->guard('download_receipt_pdf')) {
             return $r;
         }
 

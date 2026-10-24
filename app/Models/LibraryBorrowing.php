@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 class LibraryBorrowing extends Model
 {
+    use BelongsToSchool;
+
     protected $table = "library_borrowings";
     
     protected $fillable = [

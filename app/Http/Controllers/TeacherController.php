@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Support\ExportName;
+use App\Support\SchoolContext;
+use App\Support\SchoolRule;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\Teacher;
@@ -43,7 +45,7 @@ class TeacherController extends Controller
         }
 
         $validated = $request->validate([
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => ['required', SchoolRule::school()],
             'surname' => 'required|string|max:255',
             'firstname' => 'required|string|max:255',
             'othername' => 'nullable|string|max:255',
@@ -168,6 +170,8 @@ class TeacherController extends Controller
             'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
 
+        SchoolContext::abortUnlessOwns($teacher->school_id);
+
         $profile = Teacher::where('id', $teacher->id)->first();
 
         if ($request->hasFile('teacher_profile')) {
@@ -233,7 +237,7 @@ class TeacherController extends Controller
     }
 
         try {
-            $teacher = Teacher::findOrFail($id);
+            $teacher = Teacher::forCurrentSchool()->findOrFail($id);
 
             // Verify school authorization
 
@@ -273,7 +277,7 @@ class TeacherController extends Controller
     public function getTeacherProfileData($id)
     {
         PermissionHelper::denyUnlessFeature('view_teachers');
-        $teacher = Teacher::with('role')->findOrFail($id);
+        $teacher = Teacher::forCurrentSchool()->with('role')->findOrFail($id);
 
         // Add role name to the response
         $teacher->role_name = $teacher->role ? $teacher->role->name : 'Not Assigned';
@@ -288,12 +292,12 @@ class TeacherController extends Controller
     }
 
         $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
+            'teacher_id' => ['required', SchoolRule::exists('teachers')],
             'role_id' => 'required|exists:roles,id',
             'alias' => 'nullable|string|max:100',
         ]);
 
-        $teacher = Teacher::findOrFail($request->teacher_id);
+        $teacher = Teacher::forCurrentSchool()->findOrFail($request->teacher_id);
 
         // Ensure teacher belongs to this school
         if ($teacher->school_id !== Helper::requireSchool()) {
@@ -310,6 +314,7 @@ class TeacherController extends Controller
     public function individualSchoolTeachers($schoolId)
     {
         PermissionHelper::denyUnlessFeature('view_teachers');
+        SchoolContext::abortUnlessOwns($schoolId);
         $teachers = Teacher::with('school')
             ->where('school_id', $schoolId)
             ->orderBy('id')
@@ -326,7 +331,7 @@ class TeacherController extends Controller
             return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
         }
 
-        $teacher = Teacher::findOrFail($id);
+        $teacher = Teacher::forCurrentSchool()->findOrFail($id);
 
         $result = $deletionService->deleteTeacher($teacher);
 
@@ -350,7 +355,7 @@ class TeacherController extends Controller
 
         $validated = $request->validate([
             'teacher_ids'   => 'required|array|min:1',
-            'teacher_ids.*' => 'integer|exists:teachers,id',
+            'teacher_ids.*' => ['integer', SchoolRule::exists('teachers')],
         ]);
 
         $teacherIds = Teacher::whereIn('id', $validated['teacher_ids'])
@@ -388,13 +393,13 @@ class TeacherController extends Controller
             $request->validate([
                 // 'password' => 'required|min:8|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
                 'password' => 'required',
-                'teacher_id' => 'required|exists:teachers,id'
+                'teacher_id' => ['required', SchoolRule::exists('teachers')]
             ], [
                 'password.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.'
             ]);
 
             // Find the teacher
-            $teacher = Teacher::findOrFail($request->teacher_id);
+            $teacher = Teacher::forCurrentSchool()->findOrFail($request->teacher_id);
 
             // Update password
             $teacher->password = Hash::make($request->password);
@@ -501,7 +506,7 @@ class TeacherController extends Controller
             'status_reason' => 'nullable|string|max:500',
         ]);
 
-        $teacher = \App\Models\Teacher::findOrFail($id);
+        $teacher = \App\Models\Teacher::forCurrentSchool()->findOrFail($id);
 
         if ($teacher->school_id !== Helper::requireSchool()) {
             return response()->json(['status' => false, 'message' => 'Unauthorized.'], 403);
@@ -581,13 +586,13 @@ class TeacherController extends Controller
             'group_teacher' => 'nullable|integer|between:1,5',
             'teacher_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => ['required', SchoolRule::school()],
             'staff_number' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'password' => 'nullable|string|min:4|confirmed', // Add password validation
         ]);
 
-        $teacher = Teacher::findOrFail($request->teacher_id);
+        $teacher = Teacher::forCurrentSchool()->findOrFail($request->teacher_id);
 
         // Handle profile image upload
         if ($request->hasFile('teacher_profile')) {
