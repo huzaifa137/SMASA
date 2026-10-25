@@ -137,6 +137,21 @@ return [
             ],
         ],
 
+        'sales_team' => [
+            'name' => 'Sales Team',
+            'icon' => 'fa fa-ranking-star',
+            'description' => 'Leaders dashboard, sales representatives, targets and the schools each one is responsible for',
+            'permissions' => [
+                'view_own' => 'View my own performance, targets and schools',
+                'view_team' => 'View the Leaders Dashboard and every representative',
+                'manage_reps' => 'Add, edit, activate and deactivate sales representatives',
+                'set_targets' => 'Create, edit and delete targets',
+                'transfer_schools' => 'Transfer schools from one representative to another',
+                'assign_schools' => 'Assign schools that have no owner, and pick the owner at enrolment',
+                'export' => 'Export sales team reports to CSV',
+            ],
+        ],
+
         'custom_report_cards' => [
             'name' => 'Custom Report Cards',
             'icon' => 'fa fa-chart-bar',

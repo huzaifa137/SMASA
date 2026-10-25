@@ -113,6 +113,16 @@ class SchoolController extends Controller
             'school_name_arabic' => 'nullable|string|max:255',
         ]);
 
+        // Sales Team: an admin with the right may enrol the school on behalf of a representative.
+        $chosenRepId = null;
+        if (\App\Support\AdminAccess::can('sales_team.assign_schools') && $request->filled('sales_rep_id')) {
+            $chosenRepId = (int) $request->input('sales_rep_id');
+
+            if (!\App\Models\SalesRepProfile::where('user_id', $chosenRepId)->where('status', 'active')->exists()) {
+                return back()->withInput()->with('error', 'The selected sales representative is not active.');
+            }
+        }
+
         // Generate school registration code
         $registrationCode = $this->generateSchoolCode();
 
@@ -122,6 +132,14 @@ class SchoolController extends Controller
 
         // Create new school
         $school = School::create($validated);
+
+        // Sales Team: record who enrolled the school and who is now responsible for it.
+        // Never allowed to block the enrolment itself.
+        try {
+            app(\App\Services\SalesOwnershipService::class)->registerEnrollment($school, \App\Support\AdminAccess::userId(), $chosenRepId);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Record its starting School Product in the school_products table
         // too (not just the legacy schools.school_product column), so it's

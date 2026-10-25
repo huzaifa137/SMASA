@@ -115,6 +115,18 @@ $controller = new Controller();
                                         <input type="text" name="school_name_arabic" class="form-control"
                                             placeholder="School Name Arabic" dir="rtl" lang="ar">
                                     </div>
+                                    @if(\App\Support\AdminAccess::can('sales_team.assign_schools'))
+                                        <div class="form-group">
+                                            <label class="form-label">Sales Representative</label>
+                                            <select name="sales_rep_id" class="form-control">
+                                                <option value="">Me / leave unassigned</option>
+                                                @foreach(app(\App\Services\SalesPerformanceService::class)->repOptions() as $__repId => $__repLabel)
+                                                    <option value="{{ $__repId }}">{{ $__repLabel }}</option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">The representative becomes responsible for this school and gets enrolment credit.</small>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             <div class="mt-4 text-left">

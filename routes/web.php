@@ -37,6 +37,7 @@ use App\Http\Controllers\StudentPhotoImportController;
 
 require __DIR__ . '/audit.php';
 require __DIR__ . '/school-activity.php';
+require __DIR__ . '/sales-team.php';
 require __DIR__ . '/admin-profile.php';
 
 Route::get('/logout', function () {

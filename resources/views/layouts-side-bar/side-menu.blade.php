@@ -636,6 +636,20 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
+            @if($__A::can('sales_team.view_team'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('sales.index') }}">
+                        <i class="fas fa-ranking-star fa-2x mr-3"></i>Sales Team
+                    </a>
+                </li>
+            @elseif($__A::can('sales_team.view_own'))
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('sales.me') }}">
+                        <i class="fas fa-user-check fa-2x mr-3"></i>My Performance
+                    </a>
+                </li>
+            @endif
+
             @if($__A::canAny(['admin_rights.view_overview', 'admin_rights.view_roles', 'admin_rights.view_permissions', 'admin_rights.view_users', 'admin_rights.view_audit']))
                 <li class="slide has-sub">
                     <a class="side-menu__item" href="#" data-toggle="submenu">
