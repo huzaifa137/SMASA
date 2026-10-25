@@ -150,6 +150,27 @@
     <div class="bl">
         @include('Billing.partials.flash')
         @include('Billing.partials.admin-nav')
+        @if ($invoice->isSupplementary() && $invoice->parent)
+            <div class="bl-alert info"><i class="fas fa-circle-info mt-1"></i>
+                <div>Supplementary invoice for students added after
+                    <a href="{{ route('billing.invoices.show', $invoice->parent) }}">{{ $invoice->parent->invoice_number }}</a>
+                    was counted. The original invoice is unchanged.</div></div>
+        @endif
+        @if (!empty($gap))
+            <div class="bl-alert warn"><i class="fas fa-user-plus mt-1"></i>
+                <div style="flex:1"><strong>{{ $gap['gap'] }} {{ \Illuminate\Support\Str::plural('student', $gap['gap']) }} not billed yet.</strong>
+                    This school now has {{ number_format($gap['now']) }} enrolled students but only {{ number_format($gap['billed']) }}
+                    {{ $gap['billed'] === 1 ? 'is' : 'are' }} billed for this term. This invoice stays as it is
+                    ({{ $invoice->status_label }}); raise a supplementary invoice of about
+                    {{ $settings->currency }} {{ $f($gap['estimate']) }} for the difference.
+                    @if ($can('generate_invoices'))
+                        <form method="POST" action="{{ route('billing.invoices.supplement', $invoice) }}" class="mt-2"
+                            data-confirm="Issue supplementary invoice?"
+                            data-confirm-text="A new invoice for {{ $gap['gap'] }} student(s) will be issued to {{ $school->name }}. This invoice is not changed.">
+                            @csrf<button class="bl-btn primary"><i class="fas fa-file-circle-plus"></i> Bill {{ $gap['gap'] }} new {{ \Illuminate\Support\Str::plural('student', $gap['gap']) }}</button></form>
+                    @endif
+                </div></div>
+        @endif
         <div class="bl-inv-grid">
             <div>
                 <div class="inv-wrap">@include('Billing.partials.invoice-document')</div>
@@ -165,12 +186,14 @@
                             <button class="bl-btn primary" data-toggle="modal" data-target="#payModal"><i
                                     class="fas fa-hand-holding-dollar"></i> Record payment</button>
                         @endif
-                        @if ($live && $can('edit_invoices'))
+                        @if ($live && $can('edit_invoices') && !$invoice->isSupplementary())
                             <form method="POST" action="{{ route('billing.invoices.recount', $invoice) }}"
                                 data-confirm="Re-count students?"
                                 data-confirm-text="Currently {{ $invoice->student_count }}. The invoice will use today's number of enrolled students.">
                                 @csrf<button class="bl-btn tint tint-teal"><i class="fas fa-rotate"></i> Recount
                                     students</button></form>
+                        @endif
+                        @if ($live && $can('edit_invoices'))
                             <button class="bl-btn tint tint-amber" data-toggle="modal" data-target="#editModal"><i
                                     class="fas fa-pen"></i> Edit price / discount</button>
                             <button type="button" class="bl-btn tint tint-violet due-btn"

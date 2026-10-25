@@ -67,6 +67,33 @@
             <button class="bl-btn primary"><i class="fas fa-filter"></i> Filter</button>
             <a class="bl-btn ghost" href="{{ route('billing.invoices') }}">Reset</a>
         </form>
+        @if ($unbilled->isNotEmpty())
+            <div class="bl-alert warn"><i class="fas fa-user-plus mt-1"></i>
+                <div style="flex:1"><strong>{{ $unbilled->count() }} {{ \Illuminate\Support\Str::plural('school', $unbilled->count()) }} added students after being invoiced.</strong>
+                    Their original invoices stay as they are; bill only the new students.
+                    <div class="bl-table-wrap mt-2"><table class="bl-table">
+                        <thead><tr><th>School</th><th class="num">Billed</th><th class="num">Enrolled now</th><th class="num">New</th><th class="num">Approx. amount</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach ($unbilled as $u)
+                            <tr>
+                                <td><a href="{{ route('billing.invoices.show', $u['invoice']) }}">{{ $u['invoice']->school->name ?? '—' }}</a></td>
+                                <td class="num">{{ number_format($u['billed']) }}</td>
+                                <td class="num">{{ number_format($u['now']) }}</td>
+                                <td class="num"><strong>+{{ number_format($u['gap']) }}</strong></td>
+                                <td class="num">{{ number_format($u['estimate'], 0) }}</td>
+                                <td>
+                                    @if (\App\Support\AdminAccess::can('billing.generate_invoices'))
+                                        <form method="POST" action="{{ route('billing.invoices.supplement', $u['invoice']) }}"
+                                            data-confirm="Bill {{ $u['gap'] }} new student(s)?"
+                                            data-confirm-text="A supplementary invoice will be issued to {{ $u['invoice']->school->name ?? 'this school' }}.">
+                                            @csrf<button class="bl-btn primary">Bill new students</button></form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody></table></div>
+                </div></div>
+        @endif
         @if ($invoices->isEmpty())
             <div class="bl-empty"><i class="fas fa-file-circle-question"></i>No invoices match these filters.</div>
         @else
@@ -75,7 +102,7 @@
             <tbody>
             @foreach ($invoices as $i)
                 <tr>
-                    <td><a href="{{ route('billing.invoices.show', $i) }}"><strong>{{ $i->invoice_number }}</strong></a></td>
+                    <td><a href="{{ route('billing.invoices.show', $i) }}"><strong>{{ $i->invoice_number }}</strong></a>@if ($i->isSupplementary()) <span class="bl-pill issued">Supplementary</span>@endif</td>
                     <td>{{ $i->school->name ?? '—' }}<div class="bl-muted">{{ $i->school->registration_code ?? '' }}</div></td>
                     <td class="num">{{ number_format($i->student_count) }}</td>
                     <td class="num">{{ number_format($i->rate_per_student, 0) }}</td>

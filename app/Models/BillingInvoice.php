@@ -17,7 +17,7 @@ class BillingInvoice extends Model
     ];
 
     protected $fillable = [
-        'invoice_number', 'billing_term_id', 'school_id', 'sequence', 'student_count',
+        'invoice_number', 'billing_term_id', 'school_id', 'sequence', 'supplement_no', 'parent_invoice_id', 'student_count',
         'rate_per_student', 'subtotal', 'discount_type', 'discount_value', 'discount_reason',
         'discount_amount', 'tax_name', 'tax_rate', 'tax_amount', 'total', 'amount_paid',
         'balance', 'status', 'issue_date', 'due_date', 'paid_at', 'counted_at', 'notes',
@@ -39,6 +39,27 @@ class BillingInvoice extends Model
         'paid_at'          => 'datetime',
         'counted_at'       => 'datetime',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_invoice_id');
+    }
+
+    public function supplements()
+    {
+        return $this->hasMany(self::class, 'parent_invoice_id')->orderBy('supplement_no');
+    }
+
+    public function isSupplementary(): bool
+    {
+        return (int) $this->supplement_no > 0;
+    }
+
+    /** The normal term invoice (not a supplementary one). */
+    public function scopePrimary($q)
+    {
+        return $q->where('supplement_no', 0);
+    }
 
     public function term()
     {

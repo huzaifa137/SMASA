@@ -173,26 +173,20 @@
     @endphp
 
     <div class="sam mt-5">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-            <div>
-                <h1><i class="fas fa-heart-pulse" style="color:var(--sam-brand)"></i> School Activity</h1>
-                <div class="sub">
-                    Which schools are really using SMASA. Based on actions by school users in the last
-                    {{ $cfg['window_days'] }} days; "Active" means an action within {{ $cfg['active_days'] }} days,
-                    "Idle" within {{ $cfg['idle_days'] }}. Figures refresh every
-                    {{ max(1, intdiv($cfg['cache_seconds'], 60)) }} min.
-                </div>
-            </div>
-            <div class="sam-top-actions mb-3">
-                <form method="POST" action="{{ route('school-activity.refresh') }}" style="margin:0">@csrf
-                    <button class="sam-btn ghost" type="submit"><i class="fas fa-rotate"></i> Refresh now</button>
+        @component('Admin.school-activity._hero', [
+            'title' => 'School Activity',
+            'icon' => 'fa-heart-pulse',
+            'subtitle' => 'Which schools are really using SMASA — and which are registered but silent.',
+        ])
+            @slot('actions')
+                <form method="POST" action="{{ route('school-activity.refresh') }}">@csrf
+                    <button class="sa-hero-btn" type="submit"><i class="fas fa-rotate"></i><span>Refresh now</span></button>
                 </form>
                 @if($canExport)
-                    <a class="sam-btn" href="{{ route('school-activity.export', $q()) }}"><i class="fas fa-file-csv"></i> Export
-                        CSV</a>
+                    <a class="sa-hero-btn sa-hero-btn--primary" href="{{ route('school-activity.export', $q()) }}"><i class="fas fa-file-csv"></i><span>Export CSV</span></a>
                 @endif
-            </div>
-        </div>
+            @endslot
+        @endcomponent
 
         @if(session('success'))
         <div class="sam-flash">{{ session('success') }}</div>@endif
@@ -317,5 +311,7 @@
             Platform-admin actions are excluded. A school that only views pages without saving anything will not register as
             active.
         </div>
+    </div>  </div>
+    </div>  </div>
     </div>
 @endsection

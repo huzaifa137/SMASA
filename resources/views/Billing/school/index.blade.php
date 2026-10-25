@@ -38,6 +38,16 @@
                 <div>{{ $current->name }} is fully paid. Thank you!</div>
             </div>
         @endif
+        {{-- Students added after the term invoice was counted are billed on supplementary invoices --}}
+        @php $suppDue = $current ? $invoices->filter(fn($i) => $i->isSupplementary() && $i->billing_term_id == $current->id && $i->isCollectable()) : collect(); @endphp
+        @foreach ($suppDue as $si)
+            <div class="bl-alert {{ $si->isOverdue() ? 'error' : 'warn' }}"><i class="fas fa-user-plus mt-1"></i>
+                <div><strong>{{ $si->student_count }} new {{ \Illuminate\Support\Str::plural('student', $si->student_count) }} added this term:
+                        {{ $cur }} {{ $f($si->balance) }} {{ $si->isOverdue() ? 'is overdue' : 'is due' }}</strong>
+                    @if ($si->due_date) — {{ $si->isOverdue() ? 'was due' : 'due' }} {{ $si->due_date->format('j M Y') }}@endif.
+                    <a href="{{ route('school.billing.show', $si->id) }}">View invoice {{ $si->invoice_number }}</a></div>
+            </div>
+        @endforeach
         {{-- Unpaid from EARLIER terms (a school that did not pay a term keeps owing it) --}}
         @if ($arrears['count'] > 0)
             <div class="bl-alert error"><i class="fas fa-triangle-exclamation mt-1"></i>
@@ -124,7 +134,7 @@
                         @foreach ($invoices as $i)
                             <tr>
                                 <td><a
-                                        href="{{ route('school.billing.show', $i->id) }}"><strong>{{ $i->invoice_number }}</strong></a>
+                                        href="{{ route('school.billing.show', $i->id) }}"><strong>{{ $i->invoice_number }}</strong></a>@if ($i->isSupplementary()) <span class="bl-pill issued">Supplementary</span>@endif
                                 </td>
                                 <td>{{ $i->term->name ?? '' }}</td>
                                 <td class="num">{{ number_format($i->student_count) }}</td>

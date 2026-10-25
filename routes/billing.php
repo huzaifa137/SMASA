@@ -44,6 +44,7 @@ Route::prefix('admin/billing')
         Route::put('/invoices/{invoice}', 'updateInvoice')->name('invoices.update')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/issue', 'issueInvoice')->name('invoices.issue')->middleware('admin.can:billing.generate_invoices');
         Route::post('/invoices/{invoice}/recount', 'recountInvoice')->name('invoices.recount')->middleware('admin.can:billing.edit_invoices');
+        Route::post('/invoices/{invoice}/supplement', 'supplementInvoice')->name('invoices.supplement')->middleware('admin.can:billing.generate_invoices');
         Route::post('/invoices/{invoice}/cancel', 'cancelInvoice')->name('invoices.cancel')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/due-date', 'changeDueDate')->name('invoices.due-date')->middleware('admin.can:billing.edit_invoices');
         Route::post('/invoices/{invoice}/write-off', 'writeOffInvoice')->name('invoices.write-off')->middleware('admin.can:billing.edit_invoices');
@@ -87,6 +88,7 @@ Route::prefix('school/billing')
     ->middleware(['SchoolAuth'])
     ->controller(SchoolBillingController::class)
     ->group(function () {
+        Route::get('/locked', 'locked')->name('locked');
         Route::get('/', 'index')->name('index');
         Route::get('/invoices/{id}', 'show')->name('show');
         Route::get('/invoices/{id}/pdf', 'pdf')->name('pdf');

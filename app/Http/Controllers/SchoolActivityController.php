@@ -56,7 +56,7 @@ class SchoolActivityController extends Controller
         return view('Admin.school-activity.show', [
             'school' => $school,
             'trend' => $this->activity->dailyTrend($id, (int) config('school_activity.window_days', 30)),
-            'events' => $this->activity->recentEvents($id, 25),
+            'events' => $this->activity->eventsPaginated($id, 10),
             'modules' => config('school_activity.modules'),
             'statusLabels' => SchoolActivityService::STATUS_LABELS,
             'cfg' => config('school_activity'),

@@ -33,6 +33,15 @@
                                     min="0" max="365" name="due_days" value="{{ old('due_days', $settings->due_days) }}"
                                     class="form-control w-100" required></div>
                             <div class="col-12 mb-2">
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="eol"
+                                        name="enforce_overdue_lock" value="1" @checked(old('enforce_overdue_lock', $settings->enforce_overdue_lock))><label for="eol" class="form-check-label">Block schools with overdue invoices from using the system</label></div>
+                                <div class="bl-hint">Locked schools see a payment screen instead of any module. Access returns automatically once you record the payment, write the invoice off or extend its due date.</div>
+                            </div>
+                            <div class="form-group col-md-6"><label>Grace period before locking (days)</label><input type="number"
+                                    min="0" max="365" name="lock_grace_days" value="{{ old('lock_grace_days', $settings->lock_grace_days) }}"
+                                    class="form-control w-100" required>
+                                <div class="bl-hint">0 = lock the day after the due date.</div></div>
+                            <div class="col-12 mb-2">
                                 <div class="form-check"><input type="checkbox" class="form-check-input" id="te"
                                         name="tax_enabled" value="1" @checked(old('tax_enabled', $settings->tax_enabled))><label for="te" class="form-check-label">Charge tax on
                                         invoices</label></div>

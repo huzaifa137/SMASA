@@ -542,6 +542,152 @@ class BillingService
         return $n;
     }
 
+    // ─── supplementary invoices (students added after the term invoice was counted) ──
+
+    /** Statuses whose students count as "already billed" (written-off students were billed, then forgiven). */
+    private const BILLED_STATUSES = ['issued', 'partial', 'paid', 'waived'];
+
+    /** Students already billed on a school's invoices for a term (term invoice + supplements). */
+    private function billedStudents(int $termId, int $schoolId): int
+    {
+        return (int) BillingInvoice::where('billing_term_id', $termId)->where('school_id', $schoolId)
+            ->whereIn('status', self::BILLED_STATUSES)->sum('student_count');
+    }
+
+    /**
+     * Unbilled students for one term invoice, or null when none apply.
+     * Only the CURRENT term can have a gap (today's enrolment says nothing about a past term),
+     * and a draft invoice needs no supplement — it is simply recounted.
+     *
+     * @return array{now:int,billed:int,gap:int,estimate:float}|null
+     */
+    public function unbilledGap(BillingInvoice $invoice): ?array
+    {
+        if ($invoice->isSupplementary() || !in_array($invoice->status, self::BILLED_STATUSES, true)) {
+            return null;
+        }
+        $term = $invoice->term ?? BillingTerm::find($invoice->billing_term_id);
+        if (!$term || !$term->is_current) {
+            return null;
+        }
+
+        $now = $this->countStudents((int) $invoice->school_id);
+        $billed = $this->billedStudents($term->id, (int) $invoice->school_id);
+
+        return $now > $billed ? $this->gapRow($invoice, $now, $billed) : null;
+    }
+
+    private function gapRow(BillingInvoice $invoice, int $now, int $billed): array
+    {
+        $gap = $now - $billed;
+        $net = self::money($gap * $invoice->rate_per_student);
+        if ($invoice->discount_type === 'percent') {
+            $net = self::money($net * (1 - min(max($invoice->discount_value, 0), 100) / 100));
+        }
+
+        return ['now' => $now, 'billed' => $billed, 'gap' => $gap, 'estimate' => self::money($net * (1 + max($invoice->tax_rate, 0) / 100))];
+    }
+
+    /** Every school in the current term with students not yet billed (one pass, a few queries). */
+    public function unbilledForTerm(BillingTerm $term): Collection
+    {
+        if (!$term->is_current) {
+            return collect();
+        }
+
+        $primaries = BillingInvoice::with('school:id,name,registration_code')
+            ->where('billing_term_id', $term->id)->primary()->whereIn('status', self::BILLED_STATUSES)->get();
+        if ($primaries->isEmpty()) {
+            return collect();
+        }
+
+        $ids = $primaries->pluck('school_id')->all();
+        $now = $this->studentCounts($ids);
+        $billed = BillingInvoice::where('billing_term_id', $term->id)->whereIn('school_id', $ids)
+            ->whereIn('status', self::BILLED_STATUSES)
+            ->selectRaw('school_id, SUM(student_count) as n')->groupBy('school_id')->pluck('n', 'school_id');
+
+        return $primaries->map(function (BillingInvoice $p) use ($now, $billed) {
+            $n = (int) ($now[$p->school_id] ?? 0);
+            $b = (int) ($billed[$p->school_id] ?? 0);
+
+            return $n > $b ? ['invoice' => $p] + $this->gapRow($p, $n, $b) : null;
+        })->filter()->sortByDesc('gap')->values();
+    }
+
+    /**
+     * Issue a supplementary invoice for students enrolled since the term invoice was counted.
+     * The original invoice is never modified. Pricing follows the original: same rate, same
+     * percentage discount and tax. A FIXED discount is not repeated (it was already given once).
+     */
+    public function createSupplement(BillingInvoice $invoice): BillingInvoice
+    {
+        return DB::transaction(function () use ($invoice) {
+            $parent = BillingInvoice::with('term')->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            if ($parent->isSupplementary()) {
+                throw new InvalidArgumentException('Choose the original term invoice, not a supplementary one.');
+            }
+            if (!in_array($parent->status, self::BILLED_STATUSES, true)) {
+                throw new InvalidArgumentException('Issue this invoice first; a draft is simply recounted.');
+            }
+            if (!$parent->term || !$parent->term->is_current) {
+                throw new InvalidArgumentException('Supplementary invoices can only be raised for the current term.');
+            }
+
+            $now = $this->countStudents((int) $parent->school_id);
+            $billed = $this->billedStudents($parent->billing_term_id, (int) $parent->school_id);
+            $gap = $now - $billed;
+            if ($gap <= 0) {
+                throw new InvalidArgumentException('Every enrolled student is already billed. Nothing to add.');
+            }
+
+            $no = (int) BillingInvoice::where('billing_term_id', $parent->billing_term_id)
+                ->where('school_id', $parent->school_id)->max('supplement_no') + 1;
+            $settings = $this->settings();
+
+            $inv = BillingInvoice::create([
+                'invoice_number'    => $parent->invoice_number . '-A' . $no,
+                'billing_term_id'   => $parent->billing_term_id,
+                'school_id'         => $parent->school_id,
+                'sequence'          => $parent->sequence,
+                'supplement_no'     => $no,
+                'parent_invoice_id' => $parent->id,
+                'student_count'     => $gap,
+                'rate_per_student'  => $parent->rate_per_student,
+                'discount_type'     => $parent->discount_type === 'percent' ? 'percent' : 'none',
+                'discount_value'    => $parent->discount_type === 'percent' ? $parent->discount_value : 0,
+                'discount_reason'   => $parent->discount_type === 'percent' ? $parent->discount_reason : null,
+                'tax_name'          => $parent->tax_name,
+                'tax_rate'          => $parent->tax_rate,
+                'status'            => 'draft',
+                'due_date'          => today()->addDays((int) $settings->due_days),
+                'counted_at'        => now(),
+                'notes'             => "Supplementary invoice for {$gap} student(s) enrolled after {$parent->invoice_number} was counted. The original invoice is unchanged.",
+                'created_by'        => session('LoggedAdmin') ?: null,
+            ]);
+
+            BillingInvoiceItem::create([
+                'invoice_id'  => $inv->id,
+                'type'        => 'students',
+                'description' => 'SMASA platform subscription — ' . $parent->term->name . ' (additional students enrolled after ' . $parent->invoice_number . ')',
+                'quantity'    => $gap,
+                'unit_price'  => $parent->rate_per_student,
+                'amount'      => self::money($gap * $parent->rate_per_student),
+                'sort_order'  => 0,
+            ]);
+
+            $this->recalculate($inv);
+            $this->issue($inv, false);
+
+            $this->log('supplement', "Issued supplementary invoice {$inv->invoice_number} for {$gap} new student(s) on {$parent->invoice_number}.", [
+                'term_id' => $parent->billing_term_id, 'invoice_id' => $inv->id, 'school_id' => $parent->school_id,
+            ]);
+
+            return $inv->fresh();
+        });
+    }
+
     /** Re-take the student count (draft / unpaid / partially paid invoices only). */
     public function recount(BillingInvoice $invoice): BillingInvoice
     {
@@ -549,7 +695,14 @@ class BillingService
             throw new InvalidArgumentException('This invoice can no longer be recounted.');
         }
 
-        $count = $this->countStudents($invoice->school_id);
+        if ($invoice->isSupplementary()) {
+            throw new InvalidArgumentException('A supplementary invoice has a fixed student count. Recount the original invoice instead.');
+        }
+
+        // Students already billed on this invoice's supplements are not billed again here.
+        $onSupplements = (int) BillingInvoice::where('parent_invoice_id', $invoice->id)
+            ->whereIn('status', self::BILLED_STATUSES)->sum('student_count');
+        $count = max(0, $this->countStudents($invoice->school_id) - $onSupplements);
         $old = $invoice->student_count;
 
         DB::transaction(function () use ($invoice, $count) {
@@ -796,6 +949,31 @@ class BillingService
             })->values();
     }
 
+    /**
+     * Overdue-lock check. Returns the invoices that currently block this school
+     * (unpaid, past due date + grace days), or an empty collection when the school
+     * may use the system. Always evaluated live, so recording a payment, writing an
+     * invoice off, cancelling it or moving its due date lifts the lock instantly.
+     */
+    public function lockingInvoices(int $schoolId): Collection
+    {
+        $s = $this->settings();
+        if (!$s->enforce_overdue_lock) {
+            return collect();
+        }
+
+        $cutoff = today()->subDays(max(0, (int) $s->lock_grace_days));
+
+        return BillingInvoice::with('term')
+            ->where('school_id', $schoolId)
+            ->whereIn('status', ['issued', 'partial'])
+            ->where('balance', '>', 0.004)
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<', $cutoff)
+            ->orderBy('due_date')
+            ->get();
+    }
+
     public function writeOff(BillingInvoice $invoice, string $reason): BillingInvoice
     {
         if (!$invoice->isCollectable()) {
@@ -955,7 +1133,7 @@ class BillingService
             'discounts'       => (float) $live->sum('discount_amount'),
             'tax'             => (float) $live->sum('tax_amount'),
             'students'        => (int) $live->sum('student_count'),
-            'schools_billed'  => $live->count(),
+            'schools_billed'  => $live->pluck('school_id')->unique()->count(),
             'count_paid'      => $live->where('status', 'paid')->count(),
             'count_partial'   => $collectable->where('status', 'partial')->filter(fn($i) => !$i->isOverdue())->count(),
             'count_unpaid'    => $collectable->where('status', 'issued')->filter(fn($i) => !$i->isOverdue())->count(),

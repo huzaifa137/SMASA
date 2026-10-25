@@ -28,6 +28,11 @@ public function handle(Request $request, Closure $next): Response
          return redirect('/school/home');
         }
 
+    // Overdue lock: block every school module until the balance is cleared.
+    if ($blocked = $this->billingLock($request)) {
+        return $blocked;
+    }
+
     $response = $next($request);
 
     // Prevent caching
@@ -37,4 +42,43 @@ public function handle(Request $request, Closure $next): Response
 
     return $response;
 }
+
+    /**
+     * Returns a response when this school is locked for non-payment, otherwise null.
+     * Platform admins browsing a school are never locked, and a billing/DB fault
+     * never takes the system down (fails open).
+     */
+    private function billingLock(Request $request): ?Response
+    {
+        if (session()->has('LoggedAdmin')) {
+            return null;
+        }
+
+        // Pages a locked school must still reach: the lock screen, invoice/receipt
+        // downloads (so it can pay) and sign-out.
+        if ($request->routeIs('school.billing.locked', 'school.billing.pdf', 'school.billing.receipt', 'school.billing.proof', 'logout')
+            || $request->is('*logout*')) {
+            return null;
+        }
+
+        try {
+            $locked = app(\App\Services\BillingService::class)
+                ->lockingInvoices((int) session('LoggedSchool'))->isNotEmpty();
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if (!$locked) {
+            return null;
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Access suspended: your school has an overdue SMASA invoice.',
+                'redirect' => route('school.billing.locked'),
+            ], 402);
+        }
+
+        return redirect()->route('school.billing.locked');
+    }
 }

@@ -124,6 +124,7 @@
             <td style="width:42%;">
                 <div class="inv-title">INVOICE</div>
                 <div class="inv-no">{{ $invoice->invoice_number }}</div>
+                @if ($invoice->isSupplementary() && $invoice->parent)<div style="font-size:11px;color:#64748b;margin-top:2px">Supplementary to {{ $invoice->parent->invoice_number }}</div>@endif
             </td>
         </tr>
     </table>

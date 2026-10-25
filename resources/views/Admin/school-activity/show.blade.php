@@ -90,18 +90,18 @@
 </style>
 
 <div class="sam">
-    <a href="{{ route('school-activity.index') }}" class="sam-muted">← All schools</a>
-
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:6px 0 16px">
-        <div>
-            <h1>{{ $school['name'] }}</h1>
-            <div class="sub" style="margin-bottom:0">
-                {{ $school['code'] }} · {{ \App\Http\Controllers\Helper::recordMdname($school['school_type']) }}
-                · registered {{ $school['created_at'] ? $school['created_at']->format('d M Y') : '—' }}
-            </div>
-        </div>
-        <span class="sam-badge {{ $school['status'] }}" style="font-size:.85rem;padding:5px 14px">{{ $statusLabels[$school['status']] }}</span>
-    </div>
+    @component('Admin.school-activity._hero', [
+        'title' => $school['name'],
+        'icon' => 'fa-school',
+        'chip' => $statusLabels[$school['status']],
+        'chipClass' => $school['status'],
+        'subtitle' => $school['code'] . ' · ' . \App\Http\Controllers\Helper::recordMdname($school['school_type'])
+            . ' · registered ' . ($school['created_at'] ? $school['created_at']->format('d M Y') : '—'),
+    ])
+        @slot('actions')
+            <a href="{{ route('school-activity.index') }}" class="sa-hero-btn sa-hero-btn--primary"><i class="fas fa-arrow-left"></i><span>All schools</span></a>
+        @endslot
+    @endcomponent
 
     <div class="sam-cards">
         <div class="sam-card accent-info">
@@ -188,8 +188,8 @@
         </div>
     </div>
 
-    <div class="sam-panel">
-        <div class="hd">Latest school-user activity</div>
+    <div class="sam-panel" id="latest-activity">
+        <div class="hd">Latest school-user activity <span class="sam-muted">{{ number_format($events->total()) }} total</span></div>
         <div class="sam-wrap">
             <table class="sam-table">
                 <thead><tr><th>When</th><th>Who</th><th>What</th>@if($canAudit)<th></th>@endif</tr></thead>
@@ -207,6 +207,11 @@
                 </tbody>
             </table>
         </div>
+        @if($events->hasPages())
+            <div class="bd">{{ $events->links() }}</div>
+        @endif
     </div>
+</div>  </div>
+</div>  </div>
 </div>
 @endsection

@@ -43,6 +43,32 @@ class SchoolBillingController extends Controller
         return null;
     }
 
+    /** Full-page "access suspended" screen shown while an invoice is overdue. */
+    public function locked()
+    {
+        $schoolId = (int) session('LoggedSchool');
+        $invoices = $this->billing->lockingInvoices($schoolId);
+
+        // Cleared (or lock switched off): nothing to show here any more.
+        if ($invoices->isEmpty()) {
+            return redirect('/school/home');
+        }
+
+        $canBilling = false;
+        try {
+            $canBilling = \App\Helpers\PermissionHelper::canFeature('view_billing');
+        } catch (\Throwable $e) {
+        }
+
+        return view('Billing.school.locked', [
+            'invoices'   => $invoices,
+            'total'      => (float) $invoices->sum('balance'),
+            'settings'   => $this->billing->settings(),
+            'schoolName' => session('LoggedSchoolName'),
+            'canBilling' => $canBilling,
+        ]);
+    }
+
     public function index()
     {
         if ($r = $this->guard()) {
@@ -56,7 +82,7 @@ class SchoolBillingController extends Controller
             ->orderByDesc('id')->get();
 
         $current = BillingTerm::current();
-        $currentInvoice = $current ? $invoices->firstWhere('billing_term_id', $current->id) : null;
+        $currentInvoice = $current ? $invoices->first(fn($i) => $i->billing_term_id == $current->id && !$i->isSupplementary()) : null;
 
         $payments = BillingPayment::with(['invoice:id,invoice_number', 'term'])
             ->where('school_id', $schoolId)->valid()

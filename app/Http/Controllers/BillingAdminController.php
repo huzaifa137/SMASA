@@ -308,6 +308,7 @@ class BillingAdminController extends Controller
             'search'   => $search,
             'invoices' => $invoices,
             'totals'   => $totals,
+            'unbilled' => ($term && $request->input('term') !== 'all') ? $this->billing->unbilledForTerm($term) : collect(),
         ]);
     }
 
@@ -322,7 +323,7 @@ class BillingAdminController extends Controller
         // History: 10 entries a page, newest first; "Older" walks back through the earlier records.
         $logs = $invoice->logs()->paginate(10, ['*'], 'history_page')->withQueryString()->fragment('history');
 
-        return view('Billing.admin.invoice-show', $this->invoiceViewData($invoice) + ['logs' => $logs]);
+        return view('Billing.admin.invoice-show', $this->invoiceViewData($invoice) + ['logs' => $logs, 'gap' => $this->billing->unbilledGap($invoice)]);
     }
 
     private function invoiceViewData(BillingInvoice $invoice): array
@@ -394,6 +395,18 @@ class BillingAdminController extends Controller
         }
 
         return back()->with('success', "Student count refreshed: {$inv->student_count} students.");
+    }
+
+    public function supplementInvoice(BillingInvoice $invoice)
+    {
+        try {
+            $inv = $this->billing->createSupplement($invoice);
+        } catch (\Throwable $e) {
+            return $this->fail($e);
+        }
+
+        return redirect()->route('billing.invoices.show', $inv)
+            ->with('success', "{$inv->invoice_number} issued for {$inv->student_count} new student(s).");
     }
 
     public function cancelInvoice(Request $request, BillingInvoice $invoice)
@@ -631,7 +644,7 @@ class BillingAdminController extends Controller
         $arrears = $this->billing->arrearsMap($ids);
         $rates = BillingSchoolRate::whereIn('school_id', $ids)->get()->groupBy('school_id');
         $invoiced = $term
-            ? BillingInvoice::where('billing_term_id', $term->id)->whereIn('school_id', $ids)->pluck('id', 'school_id')
+            ? BillingInvoice::where('billing_term_id', $term->id)->primary()->whereIn('school_id', $ids)->pluck('id', 'school_id')
             : collect();
 
         // Without a billing term there is nothing to price (the page shows "create a term first").
@@ -721,6 +734,7 @@ class BillingAdminController extends Controller
             'tax_name'                 => 'required|string|max:30',
             'tax_rate'                 => 'required|numeric|min:0|max:100',
             'due_days'                 => 'required|integer|min:0|max:365',
+            'lock_grace_days'          => 'required|integer|min:0|max:365',
             'invoice_prefix'           => 'required|string|max:12|alpha_num',
             'company_name'             => 'required|string|max:150',
             'company_tagline'          => 'nullable|string|max:190',
@@ -733,6 +747,7 @@ class BillingAdminController extends Controller
             'invoice_notes'            => 'nullable|string|max:3000',
         ]);
         $data['tax_enabled'] = $request->boolean('tax_enabled');
+        $data['enforce_overdue_lock'] = $request->boolean('enforce_overdue_lock');
 
         $this->billing->settings()->update($data);
         $this->billing->log('settings', 'Billing settings updated.');

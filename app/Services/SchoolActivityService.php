@@ -149,6 +149,25 @@ class SchoolActivityService
             });
     }
 
+    /** Same events as recentEvents(), paginated (10 per page) for the school detail page. */
+    public function eventsPaginated(int $schoolId, int $perPage = 10)
+    {
+        return DB::table('audit_logs')
+            ->select('id', 'occurred_at', 'event', 'category', 'description', 'actor_type', 'actor_name', 'actor_role', 'entity_type')
+            ->where('school_id', $schoolId)
+            ->whereIn('actor_type', config('school_activity.actor_types'))
+            ->where('outcome', 'success')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->fragment('latest-activity')
+            ->through(function ($e) {
+                $e->occurred_at = $this->local($e->occurred_at);
+
+                return $e;
+            });
+    }
+
     public function forget(): void
     {
         Cache::forget('school_activity.rows.v1');
