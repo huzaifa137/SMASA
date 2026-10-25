@@ -702,10 +702,10 @@ use App\Http\Controllers\Helper;
                     onclick="setLanguage('en')">
                     <i class="fas fa-flag-usa"></i> English
                 </button>
-                <button type="button" class="ps-lang-btn {{ $currentLang === 'ar' ? 'active' : '' }}"
+                <!-- <button type="button" class="ps-lang-btn {{ $currentLang === 'ar' ? 'active' : '' }}"
                     onclick="setLanguage('ar')">
                     <i class="fas fa-flag"></i> العربية
-                </button>
+                </button> -->
             </div>
         </div>
 
@@ -1481,6 +1481,15 @@ use App\Http\Controllers\Helper;
                     <i class="fas fa-chevron-right chev"></i>
                 </a>@endif
                 @endif
+
+                @if(\App\Helpers\PermissionHelper::canFeature('customize_report_cards'))<a href="{{ route('examination.passslips.arabic', $exam->id) }}" class="stack-btn">
+                    <div class="ic"><i class="fas fa-language"></i></div>
+                    <div>
+                        <div class="t">Arabic Report Card</div>
+                        <div class="d">Assign classes · العربية / English</div>
+                    </div>
+                    <i class="fas fa-chevron-right chev"></i>
+                </a>@endif
             </div>
 
         </div>{{-- /.ps-bento --}}

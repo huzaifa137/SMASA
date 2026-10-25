@@ -88,13 +88,9 @@ use App\Http\Controllers\Helper;
                                             </td>
                                             <td class="text-center">
                                                 @if ($row->compute_status != 1)
-                                                    <form
-                                                        action="{{ route('exams.download.reportcard', ['exam' => $row->exam_id, 'class' => $row->class_id]) }}"
-                                                        method="GET">
-                                                        <button class="btn btn-sm btn-secondary">
-                                                            <i class="bi bi-file-earmark-pdf"></i> Download Report Card
-                                                        </button>
-                                                    </form>
+                                                    <a href="{{ route('examination.passslips.hub') }}" class="btn btn-sm btn-secondary">
+                                                            <i class="bi bi-file-earmark-pdf"></i> Report Cards
+                                                        </a>
                                                 @endif
                                             </td>
 

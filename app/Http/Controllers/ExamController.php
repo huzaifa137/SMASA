@@ -314,48 +314,15 @@ class ExamController extends Controller
     //     return $pdf->download("ReportCard_{$className}_{$examName}.pdf");
     // }
 
+    /**
+     * The old one-click Arabic PDF (mPDF, no RTL) was replaced by the Arabic
+     * Report Card design that is assigned to classes under Report Cards.
+     * Kept as a redirect so old links and bookmarks don't break.
+     */
     public function downloadReportCard($examId, $classId)
     {
-        $schoolId = session('LoggedSchool');
-
-        $students = StudentResult::where('exam_id', $examId)
-            ->where('class_id', $classId)
-            ->where('school_id', $schoolId)
-            ->with('student')
-            ->get()
-            ->groupBy('student_id');
-
-        $className = Helper::item_md_name($classId);
-        $examName = Helper::db_item_from_column('created_exams', $examId, 'ce_exam_name');
-        $schoolName = Helper::current_logged_school(Session('LoggedSchool'));
-
-        // Name the download after what it contains: one student's card
-        // carries the student's name, a whole class is "Report-Cards_<class>".
-        $examYear = Helper::db_item_from_column('created_exams', $examId, 'ce_exam_year');
-        $filename = $students->count() === 1
-            ? ExportName::file(['Report-Card', Helper::school_student_fullName($students->keys()->first()), $className, $examName, $examYear], 'pdf')
-            : ExportName::file(['Report-Cards', $className, $examName, $examYear], 'pdf');
-
-        $html = view('Exam.arabic-report-card-template', compact(
-            'students',
-            'className',
-            'examName',
-            'schoolName',
-
-        ))->render();
-
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4',
-            'default_font' => 'dejavusans'
-        ]);
-
-        // $mpdf->SetDirectionality('rtl'); // CRITICAL
-        $mpdf->WriteHTML($html);
-
-        return response($mpdf->Output($filename, 'S'))
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        return redirect()->route('examination.passslips.hub')
+            ->with('success', 'Arabic report cards are now printed from Report Cards: assign the class to the Arabic Report Card design.');
     }
 
     /**

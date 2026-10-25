@@ -797,6 +797,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{id}/passslips/student/{studentId}', 'passslipStudent')->name('passslips.student');
             Route::get('/{id}/passslips/all', 'passslipAll')->name('passslips.all');
             Route::get('/{id}/passslips/customize', 'passslipCustomize')->name('passslips.customize');
+            // Arabic report card: assign it to classes (language default + look), same per-class
+            // assignment the other designs use. See ExaminationController::passslipArabic().
+            Route::get('/{id}/passslips/arabic', 'passslipArabic')->name('passslips.arabic');
+            Route::post('/{id}/passslips/arabic', 'savePassslipArabic')->name('passslips.arabic.save');
             Route::get('/{id}/passslips/preview', 'passslipPreview')->name('passslips.preview');
             Route::get('/{id}/passslips/settings', 'getPassslipSettings')->name('passslips.settings.get');
             Route::post('/{id}/passslips/settings', 'savePassslipSettings')->name('passslips.settings.save');

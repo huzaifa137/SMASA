@@ -56,7 +56,10 @@
         .pr-kpi { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--pt, #fff) 0%, #fff 75%); border: 1px solid var(--pb, var(--brd)); border-radius: 14px; padding: 16px 18px 14px 22px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; animation: prUp .55s cubic-bezier(.2, .8, .2, 1) both; }
         .pr-kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--pc, #4f46e5); }
         .pr-kpi:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, .12); border-color: var(--pc, #4f46e5); }
-        .pr-kpi-ic { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border-radius: 12px; background: var(--pc, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 6px 14px rgba(15, 23, 42, .18); transition: transform .25s ease; }
+        .pr-kpi-ic { position: absolute; top: 14px; right: 14px; width: 42px; height: 42px; border-radius: 12px; background: var(--pc, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 14px rgba(15, 23, 42, .18); transition: transform .25s ease; }
+        /* the icon is a child of the box (not the box itself) so Font Awesome's own display/line-height rules can't pull the glyph into a corner */
+        .pr-kpi-ic i { display: block; width: auto; height: auto; margin: 0; padding: 0; position: static; font-size: 1.05rem; line-height: 1; text-align: center; color: #fff; }
+        .pr-kpi-ic i::before { display: block; line-height: 1; }
         .pr-kpi:hover .pr-kpi-ic { transform: rotate(-8deg) scale(1.08); }
         .pr-kpi small { display: block; color: var(--pc, #6b6f99); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding-right: 48px; }
         .pr-kpi b { display: block; font-size: 1.6rem; color: #111827; margin-top: .25rem; line-height: 1.15; font-weight: 800; }
@@ -271,13 +274,13 @@
     </div>
 
     <div class="pr-kpis">
-        <div class="pr-kpi pc-indigo"><i class="fas fa-user-graduate pr-kpi-ic"></i><small>Enrolled students</small>
+        <div class="pr-kpi pc-indigo"><div class="pr-kpi-ic"><i class="fas fa-user-graduate"></i></div><small>Enrolled students</small>
             <b>{{ number_format($stats['enrolled']) }}</b><span>Currently in class lists</span></div>
-        <div class="pr-kpi pc-emerald"><i class="fas fa-graduation-cap pr-kpi-ic"></i><small>Alumni (graduated)</small>
+        <div class="pr-kpi pc-emerald"><div class="pr-kpi-ic"><i class="fas fa-graduation-cap"></i></div><small>Alumni (graduated)</small>
             <b>{{ number_format($stats['alumni']) }}</b><span>Moved out of class lists</span></div>
-        <div class="pr-kpi pc-amber"><i class="fas fa-hourglass-half pr-kpi-ic"></i><small>Awaiting approval</small>
+        <div class="pr-kpi pc-amber"><div class="pr-kpi-ic"><i class="fas fa-hourglass-half"></i></div><small>Awaiting approval</small>
             <b>{{ number_format($stats['pending']) }}</b><span>Proposals waiting for a decision</span></div>
-        <div class="pr-kpi pc-sky"><i class="fas fa-clock-rotate-left pr-kpi-ic"></i><small>Last promotion</small>
+        <div class="pr-kpi pc-sky"><div class="pr-kpi-ic"><i class="fas fa-clock-rotate-left"></i></div><small>Last promotion</small>
             <b class="sm">{{ $stats['last_run'] ? ($stats['last_run']->executed_at?->format('d M Y') ?? '—') : 'No promotion yet' }}</b>
             <span>{{ $stats['last_run'] ? $stats['last_run']->reference : 'Run one from the Promote tab' }}</span></div>
     </div>

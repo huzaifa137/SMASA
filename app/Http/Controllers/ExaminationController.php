@@ -20,6 +20,7 @@ use App\Models\StudentDisciplineRating;
 use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
 use App\Support\CustomReportCards;
+use App\Support\ArabicReportCard;
 use App\Support\CustomReportData;
 use Carbon\Carbon;
 
@@ -976,6 +977,10 @@ class ExaminationController extends Controller
         'classic', 'modern', 'minimal',
         'nursery-classic', 'nursery-modern', 'nursery-minimal',
         'secondary-classic',
+        // Arabic report card - assigned to any class (Primary, Nursery or
+        // Secondary) from Report Cards -> "Arabic Report Card". See
+        // ArabicReportCard and slip-arabic.blade.php.
+        'arabic-classic',
     ];
 
     /**
@@ -996,6 +1001,36 @@ class ExaminationController extends Controller
     public static function isSecondaryTemplateKey(?string $template): bool
     {
         return str_starts_with((string) $template, 'secondary-');
+    }
+
+    /**
+     * Whether a Design Template key is the Arabic report card. Unlike the
+     * Nursery / Secondary keys this one is not tied to a level: any class
+     * can be assigned it (Report Cards -> "Arabic Report Card").
+     */
+    public static function isArabicTemplateKey(?string $template): bool
+    {
+        return ArabicReportCard::isTemplateKey($template);
+    }
+
+    /**
+     * Whether this class is currently assigned the Arabic report card, i.e.
+     * the design saved most recently for the class is the Arabic one (same
+     * "latest saved design is the active one" rule every print route uses).
+     * Used by the bulk print, which picks its Blade view once for all classes.
+     */
+    public function classUsesArabicCard($schoolId, $classId): bool
+    {
+        if (empty($classId)) {
+            return false;
+        }
+
+        return self::isArabicTemplateKey(Helper::getPassslipSettings($schoolId, $classId)['template'] ?? null);
+    }
+
+    public function resolveArabicSlipView(): string
+    {
+        return 'Examination.passslips.slip-arabic';
     }
 
     /**
@@ -1635,6 +1670,8 @@ class ExaminationController extends Controller
         $termDates = Helper::passslipTermDates($schoolId);
         $isNursery = $this->isNurseryClass($student->senior);
         $isSecondary = !$isNursery && $this->isSecondaryClass($student->senior);
+        // applySavedPassslipSettings() above merged the class's saved design in.
+        $isArabic = self::isArabicTemplateKey(request('template'));
 
         // Progressive Assessment Record — Primary design templates only
         // (Classic/Modern/Minimal); Nursery's and Secondary's report
@@ -1642,7 +1679,7 @@ class ExaminationController extends Controller
         // combined-exam data when the sidebar already selected extra
         // exams, otherwise resolves every sitting for this class/term/
         // year automatically.
-        $progressiveAssessment = ($isNursery || $isSecondary) ? null : $this->buildProgressiveAssessmentData(
+        $progressiveAssessment = ($isNursery || $isSecondary || $isArabic) ? null : $this->buildProgressiveAssessmentData(
             $examId,
             $studentId,
             $schoolId,
@@ -1668,7 +1705,9 @@ class ExaminationController extends Controller
         // would show for that class, instead of always hard-falling
         // back to nursery-minimal (slip-nursery.blade.php) regardless of
         // what was actually saved.
-        if ($isNursery) {
+        if ($isArabic) {
+            $view = $this->resolveArabicSlipView();
+        } elseif ($isNursery) {
             $template = request('template', 'nursery-classic');
             if (!self::isNurseryTemplateKey($template)) {
                 $template = 'nursery-classic';
@@ -1754,7 +1793,8 @@ class ExaminationController extends Controller
         // Nursery's and Secondary's report layouts don't have a
         // Progressive Assessment Record section — skip the extra query
         // work for those families.
-        $isNurseryForProgressive = $this->isNurseryClass($classId) || $this->isSecondaryClass($classId) || $custom !== null;
+        $isArabic = self::isArabicTemplateKey(request('template'));
+        $isNurseryForProgressive = $this->isNurseryClass($classId) || $this->isSecondaryClass($classId) || $custom !== null || $isArabic;
 
         // 🔥 KEY FIX: Build complete slip structure for each student & sort by performance
         $slips = $students->map(function ($student) use ($examId, $schoolId, $exam, $examIds, $avgExamIds, $multiExam, &$examsList, $classId, $streamId, $isNurseryForProgressive) {
@@ -1827,7 +1867,10 @@ class ExaminationController extends Controller
 
         $lang = request('lang', 'en');
 
-        if ($isNursery) {
+        if ($isArabic) {
+            // Arabic report card assigned to this class (see ArabicReportCard).
+            $view = $this->resolveArabicSlipView();
+        } elseif ($isNursery) {
             // Now routes through the same $renderSlips-aware
             // resolveNurserySlipView() passslipStudent() already uses,
             // instead of always hard-falling back to 'nursery-minimal'
@@ -1910,7 +1953,7 @@ class ExaminationController extends Controller
                 ->where('stream', $ec->stream_id)
                 ->get(); // ✅ Removed orderBy('lastname')
 
-            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id) || $this->isSecondaryClass($ec->class_id) || $custom !== null;
+            $isNurseryClassForProgressive = $this->isNurseryClass($ec->class_id) || $this->isSecondaryClass($ec->class_id) || $custom !== null || $this->classUsesArabicCard($schoolId, $ec->class_id);
 
             // Progressive Assessment Record's "Sittings" picker, resolved
             // per-class directly from that class's own saved settings —
@@ -2013,7 +2056,16 @@ class ExaminationController extends Controller
 
         $lang = request('lang', 'en');
 
-        if ($isNursery) {
+        // The Arabic report card is used for a bulk print only when EVERY class
+        // in the run is assigned it (one Blade view is chosen for the whole
+        // response - same rule as Nursery / Secondary above). Mixed runs keep
+        // the old fallback; print those class by class instead.
+        $allArabic = $examClasses->isNotEmpty()
+            && $examClasses->every(fn($ec) => $this->classUsesArabicCard($schoolId, $ec->class_id));
+
+        if ($allArabic) {
+            $view = $this->resolveArabicSlipView();
+        } elseif ($isNursery) {
             // Same fix as passslipClass() — resolveBulkPassslipTemplate()
             // above already merged the first class's saved 'template' into
             // request() when no explicit ?template= was given, so this now
@@ -2203,6 +2255,13 @@ class ExaminationController extends Controller
         // that level, show it instead (locked schools can't opt out, unlocked
         // ones can still reach the built-ins with an explicit built-in key).
         $requested = $request->query('template', 'classic');
+
+        // The Arabic report card isn't tied to a level, so it has its own
+        // class-assignment page instead of the Primary/Nursery/Secondary designer.
+        if (self::isArabicTemplateKey($requested)) {
+            return redirect()->route('examination.passslips.arabic', $examId);
+        }
+
         $requestedLevel = CustomReportCards::isCustomTemplateKey($requested)
             ? (CustomReportCards::readMeta((string) CustomReportCards::slugFromKey($requested))['level'] ?? 'primary')
             : CustomReportCards::levelForBuiltinKey($requested);
@@ -2359,12 +2418,18 @@ class ExaminationController extends Controller
         $wantsSecondaryTemplate = $previewLevel !== null
             ? $previewLevel === 'secondary'
             : self::isSecondaryTemplateKey($request->query('template'));
+        // The Arabic design works for a class of any level, so it previews any of them.
+        $wantsArabicTemplate = $previewLevel === null && self::isArabicTemplateKey($request->query('template'));
 
         $familyClasses = DB::table('examination_classes')
             ->where('examination_id', $examId)
             ->where('school_id', $schoolId)
             ->get()
-            ->filter(function ($row) use ($wantsNurseryTemplate, $wantsSecondaryTemplate) {
+            ->filter(function ($row) use ($wantsNurseryTemplate, $wantsSecondaryTemplate, $wantsArabicTemplate) {
+                if ($wantsArabicTemplate) {
+                    return true;
+                }
+
                 $classIsNursery = Helper::isNurseryClass($row->class_id);
                 $classIsSecondary = !$classIsNursery && Helper::isSecondaryClass($row->class_id);
 
@@ -2421,7 +2486,7 @@ class ExaminationController extends Controller
         }
 
         if (!$student) {
-            $familyName = $wantsNurseryTemplate ? 'Nursery' : ($wantsSecondaryTemplate ? 'Secondary' : 'Primary');
+            $familyName = $wantsNurseryTemplate ? 'Nursery' : ($wantsSecondaryTemplate ? 'Secondary' : ($wantsArabicTemplate ? 'enrolled' : 'Primary'));
             return response(
                 '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
                 . '<body style="font-family:system-ui,sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:1rem;">'
@@ -2480,7 +2545,7 @@ class ExaminationController extends Controller
         $isSecondary = !$isNursery && $this->isSecondaryClass($student->senior);
         $lang = request('lang', 'en');
 
-        $progressiveAssessment = ($isNursery || $isSecondary) ? null : $this->buildProgressiveAssessmentData(
+        $progressiveAssessment = ($isNursery || $isSecondary || $wantsArabicTemplate) ? null : $this->buildProgressiveAssessmentData(
             $examId,
             $student->id,
             $schoolId,
@@ -2496,7 +2561,9 @@ class ExaminationController extends Controller
             $this->parseIdCsv($request->query('progressive_exam_ids'))
         );
 
-        if ($isNursery) {
+        if ($wantsArabicTemplate) {
+            $view = $this->resolveArabicSlipView();
+        } elseif ($isNursery) {
             $nurseryTemplate = $request->query('template', 'nursery-classic');
             $view = $this->resolveNurserySlipView($nurseryTemplate, $lang);
         } elseif ($isSecondary) {
@@ -2531,6 +2598,112 @@ class ExaminationController extends Controller
             'termDates',
             'progressiveAssessment'
         ) + ['mode' => 'single', 'multiExam' => $multiExam]);
+    }
+
+    // ─── Arabic report card: assigning it to classes ───────────────────────────
+
+    /**
+     * "Arabic Report Card" — pick which classes of this examination use the
+     * Arabic design, and in which language each one opens (Arabic or
+     * English; the person printing can still flip it on the card itself).
+     *
+     * It is the same per-class assignment the other designs use: one
+     * passslip_settings row per class + template ('arabic-classic'). Once a
+     * class has it, every print route (single student, class, all classes)
+     * renders the Arabic card for that class automatically — no separate
+     * button or download.
+     */
+    public function passslipArabic($examId)
+    {
+        PermissionHelper::denyUnlessFeature('customize_report_cards');
+
+        $schoolId = Session('LoggedSchool');
+
+        $exam = Examination::withReportCards()->where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        // One row per CLASS (the assignment is per class, not per stream).
+        $classes = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->get()
+            ->unique('class_id')
+            ->values()
+            ->map(function ($ec) use ($schoolId) {
+                $arabic = Helper::getPassslipSettings($schoolId, $ec->class_id, ArabicReportCard::TEMPLATE_KEY);
+                $active = Helper::getPassslipSettings($schoolId, $ec->class_id);
+
+                return (object) [
+                    'class_id' => (int) $ec->class_id,
+                    'name' => Helper::recordMdname($ec->class_id),
+                    'assigned' => !empty($arabic),
+                    // Assigned AND still the design the class prints with (a design
+                    // saved later from another customise page takes over).
+                    'active' => !empty($arabic) && ($active['template'] ?? null) === ArabicReportCard::TEMPLATE_KEY,
+                    'lang' => ArabicReportCard::lang($arabic['card_lang'] ?? 'ar'),
+                    'settings' => $arabic,
+                ];
+            });
+
+        // Shared look settings come from the first class that already has the design.
+        $shared = $classes->first(fn($c) => $c->assigned)->settings ?? [];
+
+        return view('Examination.passslips.arabic-assign', compact('exam', 'classes', 'shared'));
+    }
+
+    public function savePassslipArabic(Request $request, $examId)
+    {
+        PermissionHelper::denyUnlessFeature('manage_report_card_settings');
+
+        $request->validate([
+            'all_class_ids' => 'required|array|min:1',
+            'all_class_ids.*' => 'integer',
+            'class_ids' => 'nullable|array',
+            'class_ids.*' => 'integer',
+            'langs' => 'nullable|array',
+            'langs.*' => 'in:ar,en',
+            'accent' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        Examination::withReportCards()->where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        // Only classes that really belong to this examination can be touched.
+        $valid = DB::table('examination_classes')
+            ->where('examination_id', $examId)
+            ->where('school_id', $schoolId)
+            ->pluck('class_id')
+            ->map(fn($id) => (int) $id)
+            ->unique();
+
+        $all = collect($request->input('all_class_ids', []))->map(fn($id) => (int) $id)->intersect($valid)->values();
+        $assign = collect($request->input('class_ids', []))->map(fn($id) => (int) $id)->intersect($all)->values();
+        $remove = $all->diff($assign)->values();
+
+        foreach ($assign as $classId) {
+            Helper::savePassslipSettings($schoolId, [$classId], [
+                'template' => ArabicReportCard::TEMPLATE_KEY,
+                'card_lang' => ArabicReportCard::lang($request->input("langs.$classId")),
+                'accent' => $request->input('accent') ?: '#2f63b8',
+                'show_photo' => $request->boolean('show_photo'),
+                'show_stamp' => $request->boolean('show_stamp'),
+                'show_notes' => $request->boolean('show_notes'),
+                'arabic_digits' => $request->boolean('arabic_digits'),
+            ]);
+        }
+
+        // Un-ticked classes lose ONLY the Arabic design; anything else saved for
+        // them (Classic / Modern / ...) is untouched and becomes the design again.
+        foreach ($remove as $classId) {
+            Helper::deletePassslipSettings($schoolId, $classId, ArabicReportCard::TEMPLATE_KEY);
+        }
+
+        return redirect()->route('examination.passslips.arabic', $examId)
+            ->with('success', $assign->count() . ' class(es) now use the Arabic report card.');
     }
 
     /**
