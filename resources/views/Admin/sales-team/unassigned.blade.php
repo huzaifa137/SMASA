@@ -2,16 +2,18 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php $F = \App\Support\SalesFormat::class; @endphp
-    @include('Admin.sales-team._hero', ['title' => 'Unassigned schools', 'subtitle' => 'Schools no representative is responsible for yet', 'icon' => 'fa-inbox'])
+    @include('Admin.sales-team._hero', [
+        'features' => [['fa-inbox','#fb7185','No owner','Nobody follows these up yet'],['fa-user-check','#34d399','Bulk assign','Pick many, assign in one go'],['fa-medal','#fbbf24','Enrolment credit','Optionally credit the new owner'],['fa-bell','#818cf8','Keep it empty','Every school should have a rep']],'title' => 'Unassigned schools', 'subtitle' => 'Schools no representative is responsible for yet', 'icon' => 'fa-inbox'])
     @include('Admin.sales-team._nav', ['tab' => 'unassigned'])
 
     <div class="st-kpis">
-        <div class="st-kpi {{ $summary['schools'] ? 'st-kpi--warn' : '' }}"><small>Schools without an owner</small><b>{{ number_format($summary['schools']) }}</b></div>
-        <div class="st-kpi {{ $summary['outstanding'] > 0 ? 'st-kpi--bad' : '' }}"><small>Owed on them</small><b>{{ $F::short($summary['outstanding']) }}</b><span>nobody is following this up</span></div>
+        <div class="st-kpi c-{{ $summary['schools'] ? 'amber' : 'emerald' }}"><i class="fas fa-inbox st-kpi-ic"></i><small>Schools without an owner</small><b>{{ number_format($summary['schools']) }}</b></div>
+        <div class="st-kpi c-{{ $summary['outstanding'] > 0 ? 'rose' : 'emerald' }}"><i class="fas fa-sack-xmark st-kpi-ic"></i><small>Owed on them</small><b>{{ $F::short($summary['outstanding']) }}</b><span>nobody is following this up</span></div>
     </div>
 
-    <div class="st-bar"><form method="GET"><input type="text" name="q" value="{{ $q }}" placeholder="Search schools…"><button class="st-btn st-btn--sm">Search</button></form></div>
+    <div class="st-bar"><form method="GET"><input type="text" name="q" value="{{ $q }}" placeholder="Search schools…"><button class="st-btn st-btn--sm st-btn--info"><i class="fas fa-magnifying-glass"></i> Search</button></form></div>
 
     <form method="POST" action="{{ route('sales.unassigned.assign') }}" class="st-card">@csrf
         @if($schools->isEmpty())
@@ -22,7 +24,7 @@
                 <select name="user_id" required><option value="">Assign selected to…</option>@foreach($repOptions as $uid => $l)<option value="{{ $uid }}">{{ $l }}</option>@endforeach</select>
                 <label style="margin:0;font-size:.82rem"><input type="checkbox" name="credit_enrollment" value="1"> Also credit enrolment to them (only where nobody has it)</label>
                 <input type="text" name="note" maxlength="500" placeholder="Note (optional)">
-                <button class="st-btn st-btn--primary st-btn--sm">Assign</button>
+                <button class="st-btn st-btn--success st-btn--sm">Assign</button>
             </div>
             @endif
             <div class="st-scroll"><table class="st-table">
@@ -38,4 +40,8 @@
             <div style="margin-top:1rem">{{ $page->links() }}</div>
         @endif
     </form>
+    </div>
+    </div>
+    </div>
+    </div>
 @endsection

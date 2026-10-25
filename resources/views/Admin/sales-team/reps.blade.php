@@ -2,9 +2,11 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php $F = \App\Support\SalesFormat::class; @endphp
 
     @include('Admin.sales-team._hero', [
+        'features' => [['fa-user-plus','#34d399','Any admin account','Promote an active admin to representative'],['fa-school','#818cf8','Portfolio','Schools, students and money per person'],['fa-percent','#fbbf24','Commission','Optional rate for estimated earnings'],['fa-clock-rotate-left','#f472b6','History kept','Deactivating never deletes results']],
         'title' => 'Sales Representatives',
         'subtitle' => 'Everyone who enrols schools and collects fees, and what each is responsible for',
         'actions' => $canManage ? '<button type="button" class="st-btn st-btn--primary" onclick="stOpen(\'dlg-add\')"><i class="fas fa-user-plus"></i> Add representative</button>' : '',
@@ -41,9 +43,9 @@
                         <td class="num">{{ $F::money($r['outstanding'], '') }}</td>
                         <td class="num" style="{{ $r['overdue'] > 0 ? 'color:#b42318;font-weight:700' : '' }}">{{ $F::money($r['overdue'], '') }}</td>
                         <td class="st-mute">{{ $r['email'] }}{{ $r['phone'] ? ' · ' . $r['phone'] : '' }}</td>
-                        <td class="num"><a class="st-btn st-btn--sm" href="{{ route('sales.show', $r['user_id']) }}">Open</a>
+                        <td class="num"><a class="st-btn st-btn--sm st-btn--primary" href="{{ route('sales.show', $r['user_id']) }}">Open <i class="fas fa-arrow-right"></i></a>
                             @if($canManage && !$r['is_active'])
-                                <form method="POST" action="{{ route('sales.reps.reactivate', $r['user_id']) }}" style="display:inline">@csrf<button class="st-btn st-btn--sm">Reactivate</button></form>
+                                <form method="POST" action="{{ route('sales.reps.reactivate', $r['user_id']) }}" style="display:inline">@csrf<button class="st-btn st-btn--sm st-btn--success"><i class="fas fa-user-check"></i> Reactivate</button></form>
                             @endif</td>
                     </tr>
                 @endforeach
@@ -72,8 +74,12 @@
                     <label>Joined on</label><input name="joined_on" type="date" value="{{ now()->toDateString() }}">
                     <label>Notes</label><textarea name="notes" rows="2" maxlength="2000"></textarea>
                 @endif
-                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button>@if($candidates->isNotEmpty())<button class="st-btn st-btn--primary">Add representative</button>@endif</div>
+                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button>@if($candidates->isNotEmpty())<button class="st-btn st-btn--success"><i class="fas fa-user-plus"></i> Add representative</button>@endif</div>
             </form>
         </dialog>
     @endif
+    </div>
+    </div>
+    </div>
+    </div>
 @endsection

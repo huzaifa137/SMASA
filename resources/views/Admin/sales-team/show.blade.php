@@ -2,6 +2,7 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php
         $F = \App\Support\SalesFormat::class;
         $r = $row;
@@ -14,6 +15,7 @@
     @endphp
 
     @include('Admin.sales-team._hero', [
+        'features' => [['fa-school','#818cf8','Portfolio','Every school with its money position'],['fa-bullseye','#34d399','Targets','Pacing against each goal'],['fa-hand-holding-dollar','#fbbf24','Collections','Cash credited by payment date'],['fa-clock-rotate-left','#f472b6','History','Full ownership trail']],
         'title' => $isOwn ? 'My performance' : $r['name'],
         'subtitle' => ($isOwn ? $r['name'] . ' · ' : '') . $r['code'] . ($r['region'] ? ' · ' . $r['region'] : '') . ' · ' . ($r['is_active'] ? 'Active' : 'Inactive') . ' representative',
         'icon' => 'fa-user-tie',
@@ -31,17 +33,17 @@
     </div>
 
     <div class="st-kpis">
-        <div class="st-kpi"><small>Schools owned</small><b>{{ $r['schools'] }}</b><span>{{ $r['live'] }} live · {{ $r['pending'] }} pending · {{ $r['blocked'] }} blocked</span></div>
-        <div class="st-kpi"><small>Students</small><b>{{ number_format($r['students']) }}</b><span>+{{ number_format($r['new_students']) }} in period</span></div>
-        <div class="st-kpi"><small>Enrolled in period</small><b>{{ $r['enrolled'] }}</b><span>credit stays with the enroller</span></div>
-        <div class="st-kpi"><small>Expected</small><b>{{ $F::short($r['expected']) }}</b><span>{{ $r['rate'] !== null ? $r['rate'] . '% paid' : 'nothing invoiced' }}</span></div>
-        <div class="st-kpi"><small>Cash credited</small><b>{{ $F::short($r['cash']) }}</b><span>{{ $r['commission'] ? 'Est. commission ' . $F::money($r['commission'], $cur) : 'payments dated in period' }}</span></div>
-        <div class="st-kpi {{ $r['overdue'] > 0 ? 'st-kpi--bad' : '' }}"><small>Outstanding</small><b>{{ $F::short($r['outstanding']) }}</b><span>{{ $F::short($r['overdue']) }} overdue · {{ $r['overdue_schools'] }} school(s)</span></div>
+        <div class="st-kpi c-indigo"><i class="fas fa-school st-kpi-ic"></i><small>Schools owned</small><b>{{ $r['schools'] }}</b><span>{{ $r['live'] }} live · {{ $r['pending'] }} pending · {{ $r['blocked'] }} blocked</span></div>
+        <div class="st-kpi c-sky"><i class="fas fa-user-graduate st-kpi-ic"></i><small>Students</small><b>{{ number_format($r['students']) }}</b><span>+{{ number_format($r['new_students']) }} in period</span></div>
+        <div class="st-kpi c-emerald"><i class="fas fa-school-circle-check st-kpi-ic"></i><small>Enrolled in period</small><b>{{ $r['enrolled'] }}</b><span>credit stays with the enroller</span></div>
+        <div class="st-kpi c-sky"><i class="fas fa-file-invoice-dollar st-kpi-ic"></i><small>Expected</small><b>{{ $F::short($r['expected']) }}</b><span>{{ $r['rate'] !== null ? $r['rate'] . '% paid' : 'nothing invoiced' }}</span></div>
+        <div class="st-kpi c-teal"><i class="fas fa-hand-holding-dollar st-kpi-ic"></i><small>Cash credited</small><b>{{ $F::short($r['cash']) }}</b><span>{{ $r['commission'] ? 'Est. commission ' . $F::money($r['commission'], $cur) : 'payments dated in period' }}</span></div>
+        <div class="st-kpi c-{{ $r['overdue'] > 0 ? 'rose' : 'amber' }}"><i class="fas fa-scale-unbalanced st-kpi-ic"></i><small>Outstanding</small><b>{{ $F::short($r['outstanding']) }}</b><span>{{ $F::short($r['overdue']) }} overdue · {{ $r['overdue_schools'] }} school(s)</span></div>
     </div>
 
     <div class="st-grid2">
-        <div class="st-card">
-            <h5><i class="fas fa-bullseye"></i> Targets <small>{{ $r['attainment'] !== null ? 'attainment ' . $r['attainment'] . '%' : '' }}</small></h5>
+        <div class="st-card c-violet">
+            <h5><span class="st-h-ic"><i class="fas fa-bullseye"></i></span>Targets <small>{{ $r['attainment'] !== null ? 'attainment ' . $r['attainment'] . '%' : '' }}</small></h5>
             @forelse($targets as $t)
                 @php $tg = $t['target']; $e = $t['eval']; @endphp
                 <div class="st-tg">
@@ -57,11 +59,11 @@
                 <div class="st-empty"><i class="fas fa-bullseye"></i>No targets set yet.@if($canTarget && $r['is_active'])<br><a href="#" onclick="stOpen('dlg-target');return false">Set the first target</a>@endif</div>
             @endforelse
         </div>
-        <div class="st-card"><h5>Trend <small>last {{ count($trend) }} months</small></h5>@include('Admin.sales-team._trend', ['trend' => $trend, 'cur' => $cur])</div>
+        <div class="st-card c-emerald"><h5><span class="st-h-ic"><i class="fas fa-chart-column"></i></span>Trend <small>last {{ count($trend) }} months</small></h5>@include('Admin.sales-team._trend', ['trend' => $trend, 'cur' => $cur, 'compact' => true])</div>
     </div>
 
-    <div class="st-card">
-        <h5>Schools <small>{{ $schools->count() }} owned · invoices for {{ $period->label }}</small></h5>
+    <div class="st-card c-sky">
+        <h5><span class="st-h-ic"><i class="fas fa-school"></i></span>Schools <small>{{ $schools->count() }} owned · invoices for {{ $period->label }}</small></h5>
         @if($schools->isEmpty())
             <div class="st-empty"><i class="fas fa-school"></i>This representative does not own any schools.</div>
         @else
@@ -88,14 +90,14 @@
     </div>
 
     <div class="st-grid2">
-        <div class="st-card"><h5>Ownership history <small>latest 30</small></h5>
+        <div class="st-card c-amber"><h5><span class="st-h-ic"><i class="fas fa-clock-rotate-left"></i></span>Ownership history <small>latest 30</small></h5>
             @forelse($history as $h)
                 <div class="st-tg"><div><b>{{ $h->school_name }}</b>
                     <div class="st-mute" style="font-size:.78rem">{{ ucfirst($h->type) }}{{ $h->from_name ? ' from ' . $h->from_name : '' }} · {{ \Illuminate\Support\Carbon::parse($h->started_at)->format('j M Y') }}{{ $h->ended_at ? ' → ' . \Illuminate\Support\Carbon::parse($h->ended_at)->format('j M Y') : '' }}</div></div>
                     <span class="st-pill {{ $h->ended_at ? 'mute' : 'ok' }}">{{ $h->ended_at ? 'Ended' : 'Current' }}</span></div>
             @empty<div class="st-empty">No ownership history yet.</div>@endforelse
         </div>
-        <div class="st-card"><h5>Schools handed over by this representative</h5>
+        <div class="st-card c-rose"><h5><span class="st-h-ic"><i class="fas fa-right-left"></i></span>Schools handed over by this representative</h5>
             @forelse($outgoing as $b)
                 <div class="st-tg"><div><a href="{{ route('sales.transfers.show', $b->id) }}"><b>{{ $b->reference }}</b></a>
                     <div class="st-mute" style="font-size:.78rem">{{ $b->school_count }} school(s) · {{ $b->created_at->format('j M Y') }} · {{ $b->reason_label }}</div></div>
@@ -115,7 +117,7 @@
                 <div class="foot">
                     @if($r['is_active'])<button type="button" class="st-btn st-btn--danger" onclick="stClose(this);stOpen('dlg-deactivate')">Deactivate…</button>@endif
                     <span class="st-grow"></span>
-                    <button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--primary">Save</button>
+                    <button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--primary"><i class="fas fa-floppy-disk"></i> Save</button>
                 </div>
             </form>
         </dialog>
@@ -130,7 +132,7 @@
                         @foreach($repOptions as $uid => $label)@if($uid !== $r['user_id'])<option value="{{ $uid }}">{{ $label }}</option>@endif @endforeach
                         <option value="pool">Nobody — release to the Unassigned pool</option></select>
                 @else<div class="st-note">They own no schools. Their history and targets are kept.</div>@endif
-                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--danger">Deactivate</button></div>
+                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--danger-solid"><i class="fas fa-user-slash"></i> Deactivate</button></div>
             </form>
         </dialog>
         @endif
@@ -139,4 +141,8 @@
     @if($canTarget && $r['is_active'])
         @include('Admin.sales-team._target-dialog', ['id' => 'dlg-target', 'fixedUser' => $r['user_id'], 'terms' => $terms, 'metrics' => $metrics, 'repOptions' => []])
     @endif
+    </div>
+    </div>
+    </div>
+    </div>
 @endsection

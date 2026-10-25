@@ -2,13 +2,15 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php $F = \App\Support\SalesFormat::class; @endphp
 
-    @include('Admin.sales-team._hero', ['title' => 'Transfer schools', 'subtitle' => 'Hand schools — and everything owed on them — to another representative', 'icon' => 'fa-right-left'])
+    @include('Admin.sales-team._hero', [
+        'features' => [['fa-1','#818cf8','Pick the giver','Whose schools are moving'],['fa-2','#34d399','Pick the schools','All of them or only some'],['fa-3','#fbbf24','Pick the receiver','A rep, or the unassigned pool'],['fa-shield-halved','#f472b6','Recorded','Reason and note are kept']],'title' => 'Transfer schools', 'subtitle' => 'Hand schools — and everything owed on them — to another representative', 'icon' => 'fa-right-left'])
     @include('Admin.sales-team._nav', ['tab' => 'transfers'])
 
-    <div class="st-card">
-        <h5>1 · Who is handing over?</h5>
+    <div class="st-card c-indigo">
+        <h5><span class="st-h-ic"><i class="fas fa-user-tie"></i></span>1 · Who is handing over?</h5>
         <form method="GET" class="st-bar" style="margin:0">
             <select name="from" onchange="this.form.submit()" style="min-width:280px">
                 <option value="">Choose a representative…</option>
@@ -20,8 +22,8 @@
     @if($from)
     <form method="POST" action="{{ route('sales.transfers.store') }}" id="st-transfer" onsubmit="return confirm('Transfer the selected schools now? This is recorded in the audit trail.')">@csrf
         <input type="hidden" name="from_user_id" value="{{ $from }}">
-        <div class="st-card">
-            <h5>2 · Which schools? <small>{{ $schools->count() }} owned</small></h5>
+        <div class="st-card c-sky">
+            <h5><span class="st-h-ic"><i class="fas fa-school"></i></span>2 · Which schools? <small>{{ $schools->count() }} owned</small></h5>
             @if($schools->isEmpty())
                 <div class="st-empty"><i class="fas fa-school"></i>This representative does not own any schools.</div>
             @else
@@ -42,8 +44,8 @@
         </div>
 
         @if($schools->isNotEmpty())
-        <div class="st-card">
-            <h5>3 · Who takes over?</h5>
+        <div class="st-card c-amber">
+            <h5><span class="st-h-ic"><i class="fas fa-handshake"></i></span>3 · Who takes over?</h5>
             <div class="st-bar"><select name="to" required style="min-width:280px">
                 <option value="">Choose…</option>
                 @foreach($toOptions as $uid => $label)@if($uid !== $from)<option value="{{ $uid }}">{{ $label }}</option>@endif @endforeach
@@ -54,7 +56,7 @@
             </div>
             <div class="st-note" style="margin-top:1rem">The new owner becomes responsible for these schools from now: students, invoices, outstanding and overdue balances and follow-up.
                 Cash the previous owner already collected, and their enrolment credit, stay with them.</div>
-            <div style="margin-top:1rem;display:flex;gap:.6rem"><button class="st-btn st-btn--primary"><i class="fas fa-right-left"></i> Transfer schools</button><a class="st-btn" href="{{ route('sales.transfers') }}">Cancel</a></div>
+            <div style="margin-top:1rem;display:flex;gap:.6rem"><button class="st-btn st-btn--warn"><i class="fas fa-right-left"></i> Transfer schools</button><a class="st-btn" href="{{ route('sales.transfers') }}">Cancel</a></div>
         </div>
         @endif
     </form>
@@ -69,4 +71,8 @@
         stSum();
     </script>
     @endif
+    </div>
+    </div>
+    </div>
+    </div>
 @endsection

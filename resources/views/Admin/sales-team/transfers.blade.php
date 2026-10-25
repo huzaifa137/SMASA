@@ -2,9 +2,11 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php $F = \App\Support\SalesFormat::class; @endphp
 
     @include('Admin.sales-team._hero', [
+        'features' => [['fa-scale-balanced','#fbbf24','Debt handed over','Snapshot of what is owed at transfer'],['fa-shield-halved','#34d399','Audited','Every move is recorded'],['fa-handshake','#818cf8','Full take-over','New owner follows up from that moment'],['fa-clock-rotate-left','#f472b6','Past results kept','Old owner keeps cash already collected']],
         'title' => 'School Transfers',
         'subtitle' => 'Every hand-over of schools between representatives, with the debt handed over',
         'icon' => 'fa-right-left',
@@ -38,5 +40,9 @@
             </table></div>
             <div style="margin-top:1rem">{{ $batches->links() }}</div>
         @endif
+    </div>
+    </div>
+    </div>
+    </div>
     </div>
 @endsection

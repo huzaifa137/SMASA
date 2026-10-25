@@ -2,9 +2,11 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php $F = \App\Support\SalesFormat::class; @endphp
 
     @include('Admin.sales-team._hero', [
+        'features' => [['fa-users','#818cf8','Whole team at once','Set one target for every active rep'],['fa-gauge-high','#34d399','Live pacing','On track, at risk or behind'],['fa-calendar-days','#fbbf24','Any period','A term or your own dates'],['fa-pen','#f472b6','Editable','Change a goal as the term evolves']],
         'title' => 'Targets',
         'subtitle' => 'What each representative is expected to achieve — and how they are pacing',
         'icon' => 'fa-bullseye',
@@ -16,8 +18,8 @@
     <div class="st-note" style="margin-bottom:1rem">Showing targets whose dates overlap {{ $period->label }}. Each target is measured over its own dates.</div>
 
     @forelse($evaluated as $uid => $items)
-        <div class="st-card">
-            <h5><a href="{{ route('sales.show', $uid) }}">{{ \App\Models\SalesRepProfile::displayName($names->get($uid)) }}</a></h5>
+        <div class="st-card c-violet">
+            <h5><span class="st-h-ic"><i class="fas fa-user-tie"></i></span><a href="{{ route('sales.show', $uid) }}">{{ \App\Models\SalesRepProfile::displayName($names->get($uid)) }}</a></h5>
             <div class="st-scroll"><table class="st-table">
                 <thead><tr><th>Target</th><th>Period</th><th class="num">Goal</th><th class="num">Actual</th><th style="min-width:160px">Progress</th><th>Status</th><th></th></tr></thead>
                 <tbody>
@@ -32,7 +34,7 @@
                         <td><span class="st-pill {{ $e['status'] }}">{{ $e['label'] }}</span></td>
                         <td class="num">
                             @if($canSet)
-                                <button type="button" class="st-btn st-btn--sm" onclick="stEdit({{ $t->id }}, {{ $t->target_value }}, @js($t->notes ?? ''))">Edit</button>
+                                <button type="button" class="st-btn st-btn--sm st-btn--violet" onclick="stEdit({{ $t->id }}, {{ $t->target_value }}, @js($t->notes ?? ''))">Edit</button>
                                 <form method="POST" action="{{ route('sales.targets.destroy', $t->id) }}" style="display:inline" onsubmit="return confirm('Delete this target?')">@csrf @method('DELETE')<button class="st-btn st-btn--sm st-btn--danger">Delete</button></form>
                             @endif
                         </td>
@@ -52,11 +54,15 @@
                 <h5>Edit target</h5>
                 <label>Value</label><input name="target_value" id="st-edit-value" type="number" step="0.01" min="0.01" required>
                 <label>Note</label><input name="notes" id="st-edit-notes" maxlength="500">
-                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--primary">Save</button></div>
+                <div class="foot"><button type="button" class="st-btn" onclick="stClose(this)">Cancel</button><button class="st-btn st-btn--primary"><i class="fas fa-floppy-disk"></i> Save</button></div>
             </form>
         </dialog>
         <script>
             function stEdit(id, v, n){var f=document.getElementById('st-edit-form');f.action='{{ url('/admin/sales-team/targets') }}/'+id;document.getElementById('st-edit-value').value=v;document.getElementById('st-edit-notes').value=n;stOpen('dlg-edit-target');}
         </script>
     @endif
+    </div>
+    </div>
+    </div>
+    </div>
 @endsection

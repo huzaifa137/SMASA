@@ -2,6 +2,7 @@
 
 @section('content')
     @include('Admin.sales-team._styles')
+    <div class="st-page">
     @php
         $F = \App\Support\SalesFormat::class;
         $sortUrl = fn ($s) => request()->fullUrlWithQuery(['sort' => $s]);
@@ -10,6 +11,7 @@
     @endphp
 
     @include('Admin.sales-team._hero', [
+        'features' => [['fa-trophy','#fbbf24','Fair credit','Cash follows who owned the school on payment day'],['fa-school','#818cf8','Enrolment credit','Always stays with whoever enrolled the school'],['fa-bullseye','#34d399','Targets','Paced against the time left in the period'],['fa-right-left','#f472b6','Transfers','New owner inherits balances and follow-up']],
         'title' => 'Leaders Dashboard',
         'subtitle' => 'Who is enrolling schools, collecting money and hitting targets — ' . $period->label,
         'actions' => ($canManage ? '<a class="st-btn st-btn--primary" href="' . route('sales.reps') . '"><i class="fas fa-user-plus"></i> Add representative</a>' : '')
@@ -34,7 +36,7 @@
     </div>
 
     @if($totals['unassigned_schools'] > 0)
-        <div class="st-flash err" style="background:#fff4dc;color:#a15c00">
+        <div class="st-flash warn">
             <i class="fas fa-triangle-exclamation"></i>
             {{ number_format($totals['unassigned_schools']) }} school(s) have no representative responsible for them
             @if($totals['unassigned_outstanding'] > 0) and {{ $F::money($totals['unassigned_outstanding'], $cur) }} is owed on them @endif.
@@ -43,12 +45,12 @@
     @endif
 
     <div class="st-kpis">
-        <div class="st-kpi"><small>Active representatives</small><b>{{ $totals['reps'] }}</b><span>{{ number_format($totals['schools']) }} schools · {{ number_format($totals['students']) }} students</span></div>
-        <div class="st-kpi"><small>Schools enrolled</small><b>{{ number_format($totals['enrolled']) }}</b><span>in {{ $period->label }}</span></div>
-        <div class="st-kpi"><small>Expected</small><b>{{ $F::short($totals['expected']) }}</b><span>{{ $F::money($totals['expected'], $cur) }}</span></div>
-        <div class="st-kpi"><small>Cash collected</small><b>{{ $F::short($totals['cash']) }}</b><span>payments dated in period{{ $totals['rate'] !== null ? ' · ' . $totals['rate'] . '% of expected paid' : '' }}</span></div>
-        <div class="st-kpi {{ $totals['overdue'] > 0 ? 'st-kpi--bad' : '' }}"><small>Outstanding</small><b>{{ $F::short($totals['outstanding']) }}</b><span>{{ $F::short($totals['overdue']) }} overdue</span></div>
-        <div class="st-kpi"><small>Target attainment</small><b>{{ $totals['attainment'] !== null ? $totals['attainment'] . '%' : '—' }}</b><span>{{ $totals['reps_with_targets'] }} rep(s) with targets</span></div>
+        <div class="st-kpi c-indigo"><i class="fas fa-users st-kpi-ic"></i><small>Active representatives</small><b>{{ $totals['reps'] }}</b><span>{{ number_format($totals['schools']) }} schools · {{ number_format($totals['students']) }} students</span></div>
+        <div class="st-kpi c-emerald"><i class="fas fa-school-circle-check st-kpi-ic"></i><small>Schools enrolled</small><b>{{ number_format($totals['enrolled']) }}</b><span>in {{ $period->label }}</span></div>
+        <div class="st-kpi c-sky"><i class="fas fa-file-invoice-dollar st-kpi-ic"></i><small>Expected</small><b>{{ $F::short($totals['expected']) }}</b><span>{{ $F::money($totals['expected'], $cur) }}</span></div>
+        <div class="st-kpi c-teal"><i class="fas fa-hand-holding-dollar st-kpi-ic"></i><small>Cash collected</small><b>{{ $F::short($totals['cash']) }}</b><span>payments dated in period{{ $totals['rate'] !== null ? ' · ' . $totals['rate'] . '% of expected paid' : '' }}</span></div>
+        <div class="st-kpi c-{{ $totals['overdue'] > 0 ? 'rose' : 'amber' }}"><i class="fas fa-scale-unbalanced st-kpi-ic"></i><small>Outstanding</small><b>{{ $F::short($totals['outstanding']) }}</b><span>{{ $F::short($totals['overdue']) }} overdue</span></div>
+        <div class="st-kpi c-violet"><i class="fas fa-bullseye st-kpi-ic"></i><small>Target attainment</small><b>{{ $totals['attainment'] !== null ? $totals['attainment'] . '%' : '—' }}</b><span>{{ $totals['reps_with_targets'] }} rep(s) with targets</span></div>
     </div>
 
     @if($top->isNotEmpty())
@@ -56,6 +58,7 @@
             @foreach($top as $r)
                 <div class="st-pod r{{ $r['rank'] }}">
                     <span class="st-rank r{{ $r['rank'] }}">{{ $r['rank'] }}</span>
+                    @if($r['rank'] === 1)<i class="fas fa-crown crown"></i>@endif
                     <span class="st-avatar st-avatar--lg">{{ $r['initials'] }}</span>
                     <h6><a href="{{ route('sales.show', $r['user_id']) }}">{{ $r['name'] }}</a></h6>
                     <div class="sub">{{ $r['code'] }}{{ $r['region'] ? ' · ' . $r['region'] : '' }}</div>
@@ -76,8 +79,8 @@
         </div>
     @endif
 
-    <div class="st-card">
-        <h5>Leaderboard <small>ranked by {{ strtolower($sortLabels[$sort] ?? '') }} — click a column to re-rank</small></h5>
+    <div class="st-card c-indigo">
+        <h5><span class="st-h-ic"><i class="fas fa-ranking-star"></i></span>Leaderboard <small>ranked by {{ strtolower($sortLabels[$sort] ?? '') }} — click a column to re-rank</small></h5>
         @if($rows->isEmpty())
             <div class="st-empty"><i class="fas fa-users"></i>
                 No representatives match.
@@ -126,8 +129,8 @@
         @endif
     </div>
 
-    <div class="st-card">
-        <h5>Team trend <small>last {{ count($trend) }} months</small></h5>
+    <div class="st-card c-emerald">
+        <h5><span class="st-h-ic"><i class="fas fa-chart-column"></i></span>Team trend <small>last {{ count($trend) }} months</small></h5>
         @include('Admin.sales-team._trend', ['trend' => $trend, 'cur' => $cur])
     </div>
 
@@ -135,5 +138,9 @@
         <b>How credit works.</b> Schools, students, expected, outstanding and overdue follow the representative who owns the school <i>now</i>.
         Enrolment credit always stays with whoever enrolled the school. Cash is credited to whoever owned the school on the payment date,
         so a transfer never takes away money someone already collected.
+    </div>
+    </div>
+    </div>
+    </div>
     </div>
 @endsection
