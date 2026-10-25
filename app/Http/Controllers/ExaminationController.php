@@ -3102,9 +3102,9 @@ class ExaminationController extends Controller
             ->where('stream_id', $streamId)
             ->first();
 
-        $gradingScale = ($examClass && $examClass->grading_scheme_id && $examClass->gradingScheme)
-            ? $examClass->gradingScheme->bands
-            : $exam->resolvedGradingBands();
+        $gradingScale = $examClass
+            ? $examClass->resolvedGradingBands()
+            : $exam->resolvedGradingBandsForClass($classId, $streamId);
 
         $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
             $pct = $m->total_marks > 0
@@ -3203,9 +3203,9 @@ class ExaminationController extends Controller
 
                 $aggregate = $aggregatePoints;
 
-                $scheme = ($examClass && $examClass->grading_scheme_id && $examClass->gradingScheme)
-                    ? $examClass->gradingScheme
-                    : $exam->resolvedGradingScheme();
+                $scheme = $examClass
+                    ? $examClass->resolvedGradingScheme()
+                    : $exam->resolvedGradingSchemeForClass($classId, $streamId);
 
                 // Division is looked up purely from the aggregate band.
                 // The "Ungraded on any fail" scheme flag is not applied —
@@ -3646,14 +3646,10 @@ class ExaminationController extends Controller
                 ->first()
             : null;
 
-        $hasSchemeOverride = $examClassLatest && $examClassLatest->grading_scheme_id && $examClassLatest->gradingScheme;
-
-        $gradingScale = $hasSchemeOverride
-            ? $examClassLatest->gradingScheme->bands
-            : ($latestExam?->resolvedGradingBands() ?? collect());
-        $combinedScheme = $hasSchemeOverride
-            ? $examClassLatest->gradingScheme
-            : $latestExam?->resolvedGradingScheme();
+        $combinedScheme = $examClassLatest
+            ? $examClassLatest->resolvedGradingScheme()
+            : ($latestExam ? ($classId ? $latestExam->resolvedGradingSchemeForClass($classId, $streamId) : $latestExam->resolvedGradingScheme()) : null);
+        $gradingScale = $combinedScheme ? $combinedScheme->bands : collect();
 
         $scaleFor = function ($pct) use ($gradingScale) {
             return $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);

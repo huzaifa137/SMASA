@@ -246,6 +246,35 @@ class GradingSchemeController extends Controller
         return response()->json(['success' => true, 'message' => 'Grading scheme deleted.']);
     }
 
+    // ─── Restore defaults ──────────────────────────────────────────────────
+
+    /**
+     * Re-creates any built-in default scheme the school has deleted and
+     * resets the ones it still has back to factory bands. Only the defaults
+     * that belong to the school's enrolled product(s) are touched (e.g. the
+     * A-Level UACE scheme is only for Secondary schools). Custom schemes
+     * the school created itself are never touched.
+     */
+    public function restoreDefaults(Request $request)
+    {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $schoolId = (int) Session('LoggedSchool');
+
+        try {
+            $result = \App\Services\GradingSchemeDefaults::restoreForSchool($schoolId, Session('LoggedTeacher'));
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Default gradings restored ({$result['created']} re-created, {$result['reset']} reset).",
+        ]);
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────
 
     private function syncBands(GradingScheme $scheme, array $bands): void

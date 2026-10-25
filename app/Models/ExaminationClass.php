@@ -67,7 +67,22 @@ class ExaminationClass extends Model
      */
     public function resolvedGradingScheme()
     {
-        return $this->gradingScheme
-            ?? $this->examination?->resolvedGradingScheme();
+        // 1. A scheme explicitly chosen for this class always wins.
+        if ($this->gradingScheme) {
+            return $this->gradingScheme;
+        }
+
+        // 2. Senior 5 / Senior 6 (any stream) -> the school's UACE scheme.
+        if (\App\Services\GradingSchemeDefaults::isALevelClass($this->class_id)) {
+            $uace = \App\Services\GradingSchemeDefaults::uaceSchemeFor(
+                $this->school_id ?: $this->examination?->school_id
+            );
+            if ($uace) {
+                return $uace;
+            }
+        }
+
+        // 3. Otherwise the exam's own default.
+        return $this->examination?->resolvedGradingScheme();
     }
 }

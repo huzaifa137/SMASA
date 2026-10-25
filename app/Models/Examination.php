@@ -142,6 +142,36 @@ class Examination extends Model
         return $scheme;
     }
 
+    /**
+     * Scheme for one class of this exam (explicit class scheme, else the
+     * UACE scheme for Senior 5/6, else the exam default).
+     */
+    public function resolvedGradingSchemeForClass($classId, $streamId = null)
+    {
+        $examClass = ExaminationClass::where('examination_id', $this->id)
+            ->where('class_id', $classId)
+            ->when($streamId, fn($q) => $q->where('stream_id', $streamId))
+            ->first();
+
+        if ($examClass) {
+            return $examClass->resolvedGradingScheme();
+        }
+
+        if (\App\Services\GradingSchemeDefaults::isALevelClass($classId)
+            && ($uace = \App\Services\GradingSchemeDefaults::uaceSchemeFor($this->school_id))) {
+            return $uace;
+        }
+
+        return $this->resolvedGradingScheme();
+    }
+
+    public function resolvedGradingBandsForClass($classId, $streamId = null)
+    {
+        $scheme = $this->resolvedGradingSchemeForClass($classId, $streamId);
+
+        return $scheme ? $scheme->bands : collect();
+    }
+
     // ─── Helpers ───────────────────────────────────────────────────────────────
 
     /**

@@ -276,7 +276,7 @@ class ExaminationReportController extends Controller
             ->orderBy('firstname')
             ->get();
 
-        $gradingScale = $exam->resolvedGradingBands();
+        $gradingScale = $exam->resolvedGradingBandsForClass($classId, $streamId);
 
         // Secondary O-Level (NLSC, Senior 1-4) subjects never write to
         // examination_marks -- see nlscMarksForScope()'s own docblock --
@@ -616,7 +616,7 @@ class ExaminationReportController extends Controller
 
         $marks = $marks->keyBy('student_id');
 
-        $gradingScale = $exam->resolvedGradingBands();
+        $gradingScale = $exam->resolvedGradingBandsForClass($classId);
         $teacherName = Helper::teacherFullName($subjectRow->subject_teacher_1 ?? null);
 
         $rows = $students->map(function ($student) use ($marks, $gradingScale) {

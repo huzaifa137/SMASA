@@ -12,6 +12,7 @@ class GradingScheme extends Model
     protected $fillable = [
         'school_id',
         'name',
+        'default_key',
         'description',
         'total_marks',
         'pass_mark',

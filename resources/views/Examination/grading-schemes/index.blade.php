@@ -1524,6 +1524,11 @@
                             <span>Back to Create Exam</span>
                         </a>@endif
                         <div class="gs-topbar-v2-action-divider"></div>
+                        <button type="button" id="btnRestoreDefaults" class="btn-gs-v2-glass">
+                            <i class="fas fa-undo"></i>
+                            <span>Restore Default Gradings</span>
+                        </button>
+                        <div class="gs-topbar-v2-action-divider"></div>
                         <button type="button" id="btnNewScheme" class="btn-gs-v2-gradient">
                             <i class="fas fa-plus-circle"></i>
                             <span>New Grading Scheme</span>
@@ -2464,6 +2469,31 @@
             }).then(() => window.SMASA.refreshPage());
         });
     }
+
+    document.getElementById('btnRestoreDefaults').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Restore default gradings?',
+            html: 'Deleted default schemes (e.g. UCE, UACE) for your school product will be re-created, and default schemes you edited will be reset to their original bands. Schemes you created yourself are not touched.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, restore',
+            confirmButtonColor: '#2C29CA',
+        }).then(result => {
+            if (!result.isConfirmed) return;
+            $.ajax({
+                url: `{{ route('examination.grading-schemes.restore-defaults') }}`,
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                success: function (res) {
+                    Swal.fire({ icon: 'success', title: 'Restored', text: res.message, confirmButtonColor: '#2C29CA' })
+                        .then(() => window.SMASA.refreshPage());
+                },
+                error: function (xhr) {
+                    Swal.fire('Failed', xhr.responseJSON?.message || 'Could not restore defaults.', 'warning');
+                },
+            });
+        });
+    });
 
     document.getElementById('btnNewScheme').addEventListener('click', () => openSchemeModal());
 
