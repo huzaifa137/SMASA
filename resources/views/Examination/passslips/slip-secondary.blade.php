@@ -502,6 +502,14 @@
             color: #111;
         }
 
+        .sum-reason {
+            font-size: .62rem;
+            font-weight: 500;
+            color: #b91c1c;
+            line-height: 1.25;
+            margin-top: .1rem;
+        }
+
         .sum-main {
             display: flex;
             align-items: center;
@@ -945,14 +953,16 @@
                 ];
 
 
-                /* ── UCE "Result" (new lower-secondary curriculum) ──────────────
-                   Result 3: only grade E in every subject taken.
-                   Result 2 (Senior 4 only): award conditions not met — here, fewer
-                            than 8 subjects with marks. Compulsory-subject and
-                            project/CA presence are NOT checked yet.
-                   Result 1: otherwise, with at least one subject at D or better.
-                   Level comes from the scheme's letter (A-E); if the scheme uses
-                   other grade names, fall back to the UNEB bands on the percentage. */
+                /* ── UCE "Result" (new lower-secondary curriculum, UNEB rules) ────
+                   Result 1: at least one subject at D or better and the entry
+                             requirements are met.
+                   Result 2: entry requirements NOT met (Senior 4): a compulsory
+                             subject was not sat, or fewer than 8 subjects were sat.
+                   Result 3: grade E in every subject sat.
+                   Rules, labels and thresholds: App\Services\UceResultService and
+                   config/uce_results.php. Level comes from the scheme's letter (A-E);
+                   if the scheme uses other grade names, fall back to the UNEB bands
+                   on the percentage. */
                 $levelOf = function ($sm) use ($useAvgSlip) {
                     $g = strtoupper(trim((string) ($sm->grade ?? '')));
                     if (in_array($g, ['A', 'B', 'C', 'D', 'E'], true)) {
@@ -964,17 +974,9 @@
                     }
                     return $p >= 80 ? 'A' : ($p >= 70 ? 'B' : ($p >= 60 ? 'C' : ($p >= 50 ? 'D' : 'E')));
                 };
-                $levels = $subjMarks->map($levelOf)->filter()->values();
-                $resultLabel = null;
-                if ($levels->isNotEmpty()) {
-                    if ($isSenior4 && $levels->count() < 8) {
-                        $resultLabel = 'Result 2';
-                    } elseif ($levels->every(fn($l) => $l === 'E')) {
-                        $resultLabel = 'Result 3';
-                    } else {
-                        $resultLabel = 'Result 1';
-                    }
-                }
+                $uce = \App\Services\UceResultService::evaluate($subjMarks, $s, $schoolId, $examsList, $isSenior4, $levelOf);
+                $resultLabel = $uce['label'];
+                $resultReason = \App\Services\UceResultService::reasonText($uce);
 
                 $passed = $pct >= $exam->pass_mark;
                 $statusLabel = $s->status ?? ($passed ? 'Promoted' : 'Repeat');
@@ -1205,6 +1207,9 @@
                                 <div class="sum-cell">
                                     <div class="sum-lbl">Result</div>
                                     <div class="sum-val">{{ $resultLabel ?? '—' }}</div>
+                                    @if($resultReason)
+                                        <div class="sum-reason">{{ $resultReason }}</div>
+                                    @endif
                                 </div>
                             @endif
                         </div>

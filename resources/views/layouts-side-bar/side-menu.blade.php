@@ -636,6 +636,18 @@ use App\Helpers\PermissionHelper;
                 </li>
             @endif
 
+            @if($__A::can('demo_requests.view'))
+                @php
+                    try { $__newDemos = \App\Models\DemoRequest::where('status', 'new')->count(); } catch (\Throwable $e) { $__newDemos = 0; }
+                @endphp
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('demo-requests.index') }}">
+                        <i class="fas fa-envelope-open-text fa-2x mr-3"></i>Demo Requests
+                        @if($__newDemos > 0)<span class="badge badge-danger ml-2">{{ $__newDemos }}</span>@endif
+                    </a>
+                </li>
+            @endif
+
             @if($__A::can('sales_team.view_team'))
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('sales.index') }}">

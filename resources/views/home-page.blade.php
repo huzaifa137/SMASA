@@ -1267,6 +1267,166 @@
       width: 100%
     }
 
+    /* ── FLAT-RATE PRICING (UGX 1,500 per student per term) ── */
+    .flat-price {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 32px;
+      margin-top: 40px;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto
+    }
+
+    .flat-price-main,
+    .flat-calc {
+      background: rgba(22, 42, 80, .9);
+      border: 1px solid rgba(201, 168, 76, .5);
+      border-radius: 24px;
+      padding: 44px 36px 36px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .flat-calc {
+      background: rgba(15, 32, 64, .7);
+      border-color: rgba(201, 168, 76, .2);
+      padding-top: 36px
+    }
+
+    .flat-price-main h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold2);
+      margin: 6px 0 14px
+    }
+
+    .flat-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--white)
+    }
+
+    .flat-cur {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--gold2);
+      margin-right: 6px
+    }
+
+    [dir=rtl] .flat-cur {
+      margin-right: 0;
+      margin-left: 6px
+    }
+
+    .flat-sub {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin: 6px 0 24px
+    }
+
+    .flat-list {
+      list-style: none;
+      padding: 0;
+      margin: 0
+    }
+
+    .flat-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 12px
+    }
+
+    .flat-list i {
+      color: var(--teal2);
+      margin-top: 4px
+    }
+
+    .flat-calc h4 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold2);
+      margin-bottom: 20px
+    }
+
+    .flat-calc label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px
+    }
+
+    .flat-calc input[type=number] {
+      width: 100%;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 18px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif
+    }
+
+    .flat-calc input[type=number]:focus {
+      outline: none;
+      border-color: rgba(201, 168, 76, .5)
+    }
+
+    .flat-calc input[type=range] {
+      width: 100%;
+      margin: 18px 0 22px;
+      accent-color: var(--gold)
+    }
+
+    .calc-result {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: rgba(201, 168, 76, .08);
+      border: 1px solid rgba(201, 168, 76, .2);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 22px
+    }
+
+    .calc-k {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px
+    }
+
+    .calc-v {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold2)
+    }
+
+    .calc-v-sm {
+      font-size: 17px;
+      color: var(--white)
+    }
+
+    .flat-calc .pricing-note {
+      text-align: center
+    }
+
+    @media (max-width: 860px) {
+      .flat-price {
+        grid-template-columns: 1fr
+      }
+
+      .flat-amount {
+        font-size: 52px
+      }
+    }
+
     /* ── PRICING ── */
     .pricing-bg {
       background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%)
@@ -1429,6 +1589,69 @@
       font-size: 12px;
       color: var(--text-muted);
       margin-top: 12px
+    }
+
+    /* ── DEMO FORM STATES ── */
+    .demo-alert {
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 18px
+    }
+
+    .demo-alert-ok {
+      background: rgba(34, 197, 94, .12);
+      border: 1px solid rgba(34, 197, 94, .4);
+      color: #86efac
+    }
+
+    .demo-alert-err {
+      background: rgba(239, 68, 68, .1);
+      border: 1px solid rgba(239, 68, 68, .4);
+      color: #fca5a5
+    }
+
+    .form-group input.invalid,
+    .form-group select.invalid {
+      border-color: rgba(239, 68, 68, .7)
+    }
+
+    #demoSubmit[disabled] {
+      opacity: .7;
+      cursor: wait
+    }
+
+    .demo-success {
+      text-align: center;
+      padding: 24px 8px
+    }
+
+    .demo-success-icon {
+      font-size: 54px;
+      color: #22c55e;
+      margin-bottom: 12px
+    }
+
+    .demo-success h4 {
+      font-size: 22px;
+      color: var(--gold2);
+      margin-bottom: 10px
+    }
+
+    .demo-success p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.7
+    }
+
+    .demo-ref {
+      margin: 14px 0 22px
+    }
+
+    .demo-ref strong {
+      color: var(--white);
+      letter-spacing: .06em
     }
 
     /* ── CONTACT ── */
@@ -1911,7 +2134,7 @@
       <div class="section-label">What's Inside</div>
       <div class="divider"></div>
       <h2 class="section-title">Everything Your School Needs</h2>
-      <p class="section-desc">From student enrollment to exam analytics — SMASA covers every corner of school
+      <p class="section-desc">From student enrollment to exam analytics, library to parent portal — SMASA covers every corner of school
         administration in one unified platform.</p>
     </div>
     <div class="modules-grid fade-in">
@@ -1977,6 +2200,78 @@
         <p>Schedule exams, upload results, auto-grade with configurable grading rubrics and generate class-wide report
           cards with division calculations.</p>
         <span class="module-tag tag-core">Core Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(201,168,76,.12)"><i class="fas fa-book-open"></i></div>
+        <h3>Subjects &amp; Curriculum</h3>
+        <p>Custom subjects, A-Level combinations, O-Level electives and the NLSC school curriculum, set up once and reused across classes and exams.</p>
+        <span class="module-tag tag-core">Core Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(139,92,246,.12)"><i class="fas fa-file-lines"></i></div>
+        <h3>Report Cards</h3>
+        <p>Printable report cards in English and Arabic, O-Level and A-Level layouts, NLSC assessments and custom designs assigned per school.</p>
+        <span class="module-tag tag-core">Core Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(34,197,94,.12)"><i class="fas fa-arrow-trend-up"></i></div>
+        <h3>Student Promotion</h3>
+        <p>Promote whole classes at the end of the year with suggested paths, review the plan before approving, export it and revert a batch if needed.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(14,165,160,.12)"><i class="fas fa-file-import"></i></div>
+        <h3>Bulk Import &amp; Data Tools</h3>
+        <p>Import students, teachers and photos in bulk, and merge duplicate student records so your data stays clean from day one.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(14,165,160,.12)"><i class="fas fa-qrcode"></i></div>
+        <h3>Card Scan &amp; Gate Arrival</h3>
+        <p>Scan ID cards at the gate to log student and staff arrival in seconds, with a live scanning hub and arrival reports.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(201,168,76,.12)"><i class="fas fa-id-card"></i></div>
+        <h3>Student &amp; Teacher ID Cards</h3>
+        <p>Design, generate and verify professional ID cards for students and teachers, ready to print and scan.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(139,92,246,.12)"><i class="fas fa-book-open-reader"></i></div>
+        <h3>Library Management</h3>
+        <p>Catalogue books, manage members, borrowings, reservations and book requests, track fines and view library reports.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(34,197,94,.12)"><i class="fas fa-user-group"></i></div>
+        <h3>Parent Portal</h3>
+        <p>Parents log in with their phone number to follow results, attendance and fee balances for each child, even across schools.</p>
+        <span class="module-tag tag-new">New Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(239,68,68,.12)"><i class="fas fa-bell"></i></div>
+        <h3>Notifications</h3>
+        <p>Broadcast announcements to staff and schools as in-app and push notifications, with a personal inbox for every user.</p>
+        <span class="module-tag tag-pro">Pro Feature</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(201,168,76,.12)"><i class="fas fa-file-invoice-dollar"></i></div>
+        <h3>Billing &amp; Invoices</h3>
+        <p>See your SMASA termly invoices, payments and receipts in one place, so there are never any billing surprises.</p>
+        <span class="module-tag tag-core">Core Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(14,165,160,.12)"><i class="fas fa-shield-halved"></i></div>
+        <h3>User Rights &amp; Permissions</h3>
+        <p>Create roles and decide exactly which modules and features each staff member can open, view, edit or delete.</p>
+        <span class="module-tag tag-core">Core Module</span>
+      </div>
+      <div class="module-card">
+        <div class="module-icon" style="background:rgba(139,92,246,.12)"><i class="fas fa-list-check"></i></div>
+        <h3>Audit Trail</h3>
+        <p>A tamper-evident record of who did what, when and from where, so every change in your school is accountable.</p>
+        <span class="module-tag tag-pro">Security</span>
       </div>
     </div>
   </section>
@@ -2495,265 +2790,89 @@
     <div class="center fade-in">
       <div class="section-label">Termly Charges</div>
       <div class="divider"></div>
-      <h2 class="section-title">Transparent, School-size Pricing</h2>
-      <p class="section-desc">Charged per term based on your student population. Choose the system that fits your
-        school's curriculum.</p>
+      <h2 class="section-title">Transparent, Simple Pricing</h2>
+      <p class="section-desc">One flat rate for every school. You pay per student, per term — no tiers, no hidden fees,
+        and every module included.</p>
       <div class="pricing-tabs">
         <button class="ptab active" onclick="switchPricing('english',event)">English</button>
         <button class="ptab" onclick="switchPricing('arabic',event)">عربي</button>
       </div>
     </div>
+
+    <!-- ENGLISH -->
     <div id="pricing-english" class="pricing-panel active fade-in">
-      <div class="pricing-cards">
-        <div class="pricing-card">
-          <h3>Single System</h3>
-          <p class="arabic" style="font-size:18px;color:var(--gold3);opacity:.7;margin-bottom:24px;direction:rtl">النظام
-            الواحد</p>
-          <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">Best for schools running a single
-            curriculum — theology only or secular only.</p>
-          <table class="pricing-table">
-            <thead>
-              <tr>
-                <th>Students</th>
-                <th>Per Term</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>0 – 150</td>
-                <td>Shs. 200,000</td>
-              </tr>
-              <tr>
-                <td>151 – 300</td>
-                <td>Shs. 300,000</td>
-              </tr>
-              <tr>
-                <td>301 – 500</td>
-                <td>Shs. 450,000</td>
-              </tr>
-              <tr>
-                <td>501 – 800</td>
-                <td>Shs. 650,000</td>
-              </tr>
-              <tr>
-                <td>801 – 1,200</td>
-                <td>Shs. 850,000</td>
-              </tr>
-              <tr>
-                <td>1,201 – 1,500</td>
-                <td>Shs. 1,250,000</td>
-              </tr>
-              <tr>
-                <td>1,501 – 2,000</td>
-                <td>Shs. 1,500,000</td>
-              </tr>
-              <tr>
-                <td>2,001 – 2,800</td>
-                <td>Shs. 1,750,000</td>
-              </tr>
-              <tr>
-                <td>2,801 – 3,500</td>
-                <td>Shs. 1,900,000</td>
-              </tr>
-              <tr>
-                <td>3,500 – 5,000</td>
-                <td>Shs. 2,150,000</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pricing-footer">
-            <button class="pricing-cta pricing-cta-outline"
-              onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Get a Quote</button>
-            <p class="pricing-note">Includes academic, finance & attendance modules</p>
-          </div>
+      <div class="flat-price">
+        <div class="flat-price-main">
+          <div class="pricing-badge-top">ONE SIMPLE RATE</div>
+          <h3>Per Student, Per Term</h3>
+          <div class="flat-amount"><span class="flat-cur">UGX</span> 1,500</div>
+          <p class="flat-sub">per student, per term</p>
+          <ul class="flat-list">
+            <li><i class="fas fa-circle-check"></i> Every module included, with nothing locked behind a higher tier</li>
+            <li><i class="fas fa-circle-check"></i> Idaad, Thanawi, Primary Theology and Secular curricula</li>
+            <li><i class="fas fa-circle-check"></i> Report cards in English and Arabic</li>
+            <li><i class="fas fa-circle-check"></i> Pay only for the students you actually have</li>
+          </ul>
         </div>
-        <div class="pricing-card featured">
-          <div class="pricing-badge-top">MOST POPULAR</div>
-          <h3>Both Systems</h3>
-          <p class="arabic" style="font-size:18px;color:var(--gold3);opacity:.7;margin-bottom:24px;direction:rtl">
-            النظامان معاً</p>
-          <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">Full coverage — theology and secular
-            curricula running side by side in one school.</p>
-          <table class="pricing-table">
-            <thead>
-              <tr>
-                <th>Students</th>
-                <th>Per Term</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>0 – 150</td>
-                <td>Shs. 350,000</td>
-              </tr>
-              <tr>
-                <td>151 – 300</td>
-                <td>Shs. 500,000</td>
-              </tr>
-              <tr>
-                <td>301 – 500</td>
-                <td>Shs. 750,000</td>
-              </tr>
-              <tr>
-                <td>501 – 800</td>
-                <td>Shs. 950,000</td>
-              </tr>
-              <tr>
-                <td>801 – 1,200</td>
-                <td>Shs. 1,150,000</td>
-              </tr>
-              <tr>
-                <td>1,201 – 1,500</td>
-                <td>Shs. 1,500,000</td>
-              </tr>
-              <tr>
-                <td>1,501 – 2,000</td>
-                <td>Shs. 1,750,000</td>
-              </tr>
-              <tr>
-                <td>2,001 – 2,800</td>
-                <td>Shs. 1,900,000</td>
-              </tr>
-              <tr>
-                <td>2,801 – 3,500</td>
-                <td>Shs. 2,150,000</td>
-              </tr>
-              <tr>
-                <td>3,500 – 5,000</td>
-                <td>Shs. 2,300,000</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pricing-footer">
-            <button class="pricing-cta pricing-cta-primary"
-              onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Get a Quote</button>
-            <p class="pricing-note">Includes all modules + theology support</p>
+        <div class="flat-calc">
+          <h4>Estimate your school's fee</h4>
+          <label for="calc-students-en">Number of students</label>
+          <input type="number" id="calc-students-en" min="0" step="1" value="500" inputmode="numeric"
+            oninput="updateCalc('en')">
+          <input type="range" id="calc-range-en" min="0" max="5000" step="10" value="500"
+            oninput="document.getElementById('calc-students-en').value=this.value;updateCalc('en')">
+          <div class="calc-result">
+            <div>
+              <span class="calc-k">Per term</span>
+              <span class="calc-v" id="calc-term-en">UGX 750,000</span>
+            </div>
+            <div>
+              <span class="calc-k">Per year (3 terms)</span>
+              <span class="calc-v calc-v-sm" id="calc-year-en">UGX 2,250,000</span>
+            </div>
           </div>
+          <button class="pricing-cta pricing-cta-primary"
+            onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Request a Demo</button>
+          <p class="pricing-note">Billed termly on your enrolled student count</p>
         </div>
       </div>
     </div>
+
+    <!-- ARABIC -->
     <div id="pricing-arabic" class="pricing-panel fade-in" dir="rtl">
-      <div class="pricing-cards">
-        <div class="pricing-card">
-          <h3 class="arabic">النظام الواحد</h3>
-          <p class="arabic" style="font-size:15px;color:var(--text-muted);margin-bottom:20px">مناسب للمدارس التي تعمل
-            بمنهج واحد — ديني أو علماني</p>
-          <table class="pricing-table">
-            <thead>
-              <tr>
-                <th style="text-align:right">عدد الطلاب</th>
-                <th>الرسوم الفصلية</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>٠ – ١٥٠</td>
-                <td>٢٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٥١ – ٣٠٠</td>
-                <td>٣٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٣٠١ – ٥٠٠</td>
-                <td>٤٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٥٠١ – ٨٠٠</td>
-                <td>٦٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٨٠١ – ١٢٠٠</td>
-                <td>٨٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٢٠١ – ١٥٠٠</td>
-                <td>١٬٢٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٥٠١ – ٢٠٠٠</td>
-                <td>١٬٥٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٢٠٠١ – ٢٨٠٠</td>
-                <td>١٬٧٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٢٨٠١ – ٣٥٠٠</td>
-                <td>١٬٩٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٣٥٠٠ – ٥٠٠٠</td>
-                <td>٢٬١٥٠٬٠٠٠ شلن</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pricing-footer">
-            <button class="pricing-cta pricing-cta-outline"
-              onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">اطلب عرض سعر</button>
-            <p class="pricing-note arabic">يشمل الإدارة الأكاديمية والمالية والحضور</p>
-          </div>
+      <div class="flat-price">
+        <div class="flat-price-main">
+          <div class="pricing-badge-top">سعر واحد بسيط</div>
+          <h3 class="arabic">لكل طالب، في كل فصل</h3>
+          <div class="flat-amount arabic">١٬٥٠٠ <span class="flat-cur">شلن أوغندي</span></div>
+          <p class="flat-sub arabic">لكل طالب في الفصل الدراسي</p>
+          <ul class="flat-list arabic">
+            <li><i class="fas fa-circle-check"></i> جميع الوحدات مشمولة دون أي رسوم إضافية</li>
+            <li><i class="fas fa-circle-check"></i> يدعم المناهج الشرعية والعلمانية معاً</li>
+            <li><i class="fas fa-circle-check"></i> تقارير الدرجات بالعربية والإنجليزية</li>
+            <li><i class="fas fa-circle-check"></i> تدفع فقط عن عدد طلابك الفعليين</li>
+          </ul>
         </div>
-        <div class="pricing-card featured">
-          <div class="pricing-badge-top">الأكثر طلباً</div>
-          <h3 class="arabic">النظامان معاً</h3>
-          <p class="arabic" style="font-size:15px;color:var(--text-muted);margin-bottom:20px">تغطية كاملة — المنهجان
-            الديني والعلماني في مدرسة واحدة</p>
-          <table class="pricing-table">
-            <thead>
-              <tr>
-                <th style="text-align:right">عدد الطلاب</th>
-                <th>الرسوم الفصلية</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>٠ – ١٥٠</td>
-                <td>٣٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٥١ – ٣٠٠</td>
-                <td>٥٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٣٠١ – ٥٠٠</td>
-                <td>٧٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٥٠١ – ٨٠٠</td>
-                <td>٩٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٨٠١ – ١٢٠٠</td>
-                <td>١٬١٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٢٠١ – ١٥٠٠</td>
-                <td>١٬٥٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>١٥٠١ – ٢٠٠٠</td>
-                <td>١٬٧٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٢٠٠١ – ٢٨٠٠</td>
-                <td>١٬٩٠٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٢٨٠١ – ٣٥٠٠</td>
-                <td>٢٬١٥٠٬٠٠٠ شلن</td>
-              </tr>
-              <tr>
-                <td>٣٥٠٠ – ٥٠٠٠</td>
-                <td>٢٬٣٠٠٬٠٠٠ شلن</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pricing-footer">
-            <button class="pricing-cta pricing-cta-primary"
-              onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">اطلب عرض سعر</button>
-            <p class="pricing-note arabic">يشمل جميع الوحدات + دعم التعليم الشرعي</p>
+        <div class="flat-calc">
+          <h4 class="arabic">قدّر رسوم مدرستك</h4>
+          <label for="calc-students-ar" class="arabic">عدد الطلاب</label>
+          <input type="number" id="calc-students-ar" min="0" step="1" value="500" inputmode="numeric"
+            oninput="updateCalc('ar')">
+          <input type="range" id="calc-range-ar" min="0" max="5000" step="10" value="500"
+            oninput="document.getElementById('calc-students-ar').value=this.value;updateCalc('ar')">
+          <div class="calc-result">
+            <div>
+              <span class="calc-k arabic">لكل فصل</span>
+              <span class="calc-v arabic" id="calc-term-ar">٧٥٠٬٠٠٠ شلن</span>
+            </div>
+            <div>
+              <span class="calc-k arabic">لكل سنة (٣ فصول)</span>
+              <span class="calc-v calc-v-sm arabic" id="calc-year-ar">٢٬٢٥٠٬٠٠٠ شلن</span>
+            </div>
           </div>
+          <button class="pricing-cta pricing-cta-primary arabic"
+            onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">اطلب عرضاً تجريبياً</button>
+          <p class="pricing-note arabic">تُحتسب الرسوم كل فصل حسب عدد الطلاب المسجلين</p>
         </div>
       </div>
     </div>
@@ -2804,46 +2923,74 @@
           </div>
         </div>
       </div>
-      <div class="contact-form">
+      <div class="contact-form" id="demoFormWrap">
         <h3 style="font-size:20px;font-weight:600;color:var(--gold2);margin-bottom:24px">Request a Demo</h3>
-        <div class="form-grid-2">
-          <div class="form-group"><label>School Name</label><input type="text"
-              placeholder="e.g. Noor Islamic Institute"></div>
-          <div class="form-group"><label>Contact Person</label><input type="text" placeholder="Your full name"></div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+256 7XX XXX XXX"></div>
-          <div class="form-group"><label>Email Address</label><input type="email" placeholder="school@example.com">
+
+        @if(session('demo_success'))
+          <div class="demo-alert demo-alert-ok">{{ session('demo_success') }}</div>
+        @endif
+        @if($errors->any())
+          <div class="demo-alert demo-alert-err">
+            @foreach($errors->all() as $err)<div>{{ $err }}</div>@endforeach
           </div>
+        @endif
+
+        <form id="demoForm" method="POST" action="{{ route('demo.request') }}" novalidate>
+          @csrf
+          {{-- honeypot: hidden from people, bots fill it --}}
+          <div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true">
+            <label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <div class="demo-alert demo-alert-err" id="demoErrors" style="display:none" role="alert"></div>
+
+          <div class="form-grid-2">
+            <div class="form-group"><label for="df-school">School Name *</label><input id="df-school" type="text"
+                name="school_name" value="{{ old('school_name') }}" maxlength="191" required
+                placeholder="e.g. Noor Islamic Institute"></div>
+            <div class="form-group"><label for="df-person">Contact Person *</label><input id="df-person" type="text"
+                name="contact_person" value="{{ old('contact_person') }}" maxlength="191" required
+                placeholder="Your full name"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group"><label for="df-phone">Phone Number *</label><input id="df-phone" type="tel"
+                name="phone" value="{{ old('phone') }}" maxlength="40" required placeholder="+256 7XX XXX XXX"></div>
+            <div class="form-group"><label for="df-email">Email Address *</label><input id="df-email" type="email"
+                name="email" value="{{ old('email') }}" maxlength="191" required placeholder="school@example.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="df-type">School Type *</label>
+            <select id="df-type" name="school_type" required>
+              <option value="">— Select —</option>
+              @foreach(config('demo_requests.school_types') as $key => $label)
+                <option value="{{ $key }}" {{ old('school_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="df-range">Student Population (approx.) *</label>
+            <select id="df-range" name="student_range" required>
+              <option value="">— Select range —</option>
+              @foreach(config('demo_requests.student_ranges') as $key => $label)
+                <option value="{{ $key }}" {{ old('student_range') === $key ? 'selected' : '' }}>{{ $label }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="form-group"><label for="df-msg">Message (optional)</label><textarea id="df-msg" name="message"
+              rows="3" maxlength="2000"
+              placeholder="Any specific features or questions?">{{ old('message') }}</textarea></div>
+          <button type="submit" id="demoSubmit" class="btn-primary"
+            style="width:100%;text-align:center;border:none;font-family:'DM Sans',sans-serif">Send Request →</button>
+        </form>
+
+        <div class="demo-success" id="demoSuccess" style="display:none" role="status">
+          <div class="demo-success-icon"><i class="fas fa-circle-check"></i></div>
+          <h4>Request received!</h4>
+          <p id="demoSuccessMsg">Thank you! TechSate will contact you within 24 hours.</p>
+          <p class="demo-ref">Your reference: <strong id="demoRef"></strong></p>
+          <button type="button" class="pricing-cta pricing-cta-outline" onclick="resetDemoForm()">Send another request</button>
         </div>
-        <div class="form-group">
-          <label>School Type</label>
-          <select>
-            <option>— Select —</option>
-            <option>Idaad & Thanawi (Islamic Secondary)</option>
-            <option>Primary Theology</option>
-            <option>Primary Secular</option>
-            <option>Both Primary Theology & Secular</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Student Population (approx.)</label>
-          <select>
-            <option>— Select range —</option>
-            <option>0 – 150</option>
-            <option>151 – 300</option>
-            <option>301 – 500</option>
-            <option>501 – 800</option>
-            <option>801 – 1,200</option>
-            <option>1,201 – 1,500</option>
-            <option>1,501 – 2,000</option>
-            <option>2,001+</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Message (optional)</label><textarea rows="3"
-            placeholder="Any specific features or questions?"></textarea></div>
-        <button class="btn-primary" style="width:100%;text-align:center;border:none;font-family:'DM Sans',sans-serif"
-          onclick="alert('Thank you! TechSate will contact you within 24 hours.')">Send Request →</button>
       </div>
     </div>
   </section>
@@ -2877,7 +3024,8 @@
           <li><a href="#">Idaad & Thanawi</a></li>
           <li><a href="#">Primary Theology</a></li>
           <li><a href="#">Primary Secular</a></li>
-          <li><a href="#">Both Systems</a></li>
+          <li><a href="#">Secondary</a></li>
+          <li><a href="#">Both Secular and Theology</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -2963,6 +3111,98 @@
       if (e && e.target) e.target.classList.add('active');
       const panel = document.getElementById('pricing-' + tab);
       if (panel) panel.classList.add('active');
+    }
+
+    /* ── PRICING CALCULATOR: UGX 1,500 per student per term ── */
+    const RATE_PER_STUDENT = 1500;
+    function updateCalc(lang) {
+      const input = document.getElementById('calc-students-' + lang);
+      const range = document.getElementById('calc-range-' + lang);
+      const students = Math.max(0, Math.floor(Number(input.value) || 0));
+      if (Number(range.max) >= students) range.value = students;
+      const term = students * RATE_PER_STUDENT;
+      const year = term * 3;
+      if (lang === 'ar') {
+        const f = n => n.toLocaleString('ar-EG') + ' شلن';
+        document.getElementById('calc-term-ar').textContent = f(term);
+        document.getElementById('calc-year-ar').textContent = f(year);
+      } else {
+        const f = n => 'UGX ' + n.toLocaleString('en-US');
+        document.getElementById('calc-term-en').textContent = f(term);
+        document.getElementById('calc-year-en').textContent = f(year);
+      }
+    }
+
+    /* ── REQUEST A DEMO ── */
+    (function () {
+      const form = document.getElementById('demoForm');
+      if (!form) return;
+      const btn = document.getElementById('demoSubmit');
+      const errBox = document.getElementById('demoErrors');
+      const okBox = document.getElementById('demoSuccess');
+
+      function showErrors(list) {
+        errBox.innerHTML = '';
+        list.forEach(m => { const d = document.createElement('div'); d.textContent = m; errBox.appendChild(d); });
+        errBox.style.display = 'block';
+        errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        errBox.style.display = 'none';
+        form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+
+        // quick client-side check (the server validates again)
+        const problems = [];
+        [['school_name', 'Please enter your school name.'], ['contact_person', 'Please tell us who we should speak to.'],
+         ['phone', 'Please enter a phone number we can reach you on.'], ['email', 'Please enter your email address.'],
+         ['school_type', 'Please select your school type.'], ['student_range', 'Please select your approximate student population.']
+        ].forEach(([name, msg]) => {
+          const el = form.elements[name];
+          if (!el.value.trim()) { problems.push(msg); el.classList.add('invalid'); }
+        });
+        if (form.elements.email.value && !/^\S+@\S+\.\S+$/.test(form.elements.email.value)) {
+          problems.push('That email address does not look right.'); form.elements.email.classList.add('invalid');
+        }
+        if (problems.length) { showErrors(problems); return; }
+
+        const original = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Sending…';
+        try {
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form),
+            credentials: 'same-origin'
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            document.getElementById('demoSuccessMsg').textContent = data.message;
+            document.getElementById('demoRef').textContent = data.reference;
+            form.style.display = 'none';
+            okBox.style.display = 'block';
+            form.reset();
+          } else if (res.status === 422 && data.errors) {
+            showErrors(Object.values(data.errors).flat());
+            Object.keys(data.errors).forEach(k => form.elements[k] && form.elements[k].classList.add('invalid'));
+          } else if (res.status === 419) {
+            showErrors(['This page has been open for a while. Please refresh it and send the request again.']);
+          } else if (res.status === 429) {
+            showErrors(['Too many requests from this device. Please wait a few minutes or call us on +256 702 082 209.']);
+          } else {
+            showErrors(['Sorry, something went wrong. Please try again or call us on +256 702 082 209.']);
+          }
+        } catch (err) {
+          showErrors(['We could not reach the server. Please check your connection and try again.']);
+        } finally {
+          btn.disabled = false; btn.textContent = original;
+        }
+      });
+    })();
+    function resetDemoForm() {
+      document.getElementById('demoSuccess').style.display = 'none';
+      document.getElementById('demoForm').style.display = 'block';
     }
 
     /* ── SCROLL FADE-IN ── */

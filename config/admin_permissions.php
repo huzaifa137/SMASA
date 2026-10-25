@@ -137,6 +137,16 @@ return [
             ],
         ],
 
+        'demo_requests' => [
+            'name' => 'Demo Requests',
+            'icon' => 'fa fa-envelope-open-text',
+            'description' => 'Schools that asked for a demo from the website: contact details, follow-up status and notes',
+            'permissions' => [
+                'view' => 'View the demo requests inbox',
+                'manage' => 'Change request status and add internal notes',
+            ],
+        ],
+
         'sales_team' => [
             'name' => 'Sales Team',
             'icon' => 'fa fa-ranking-star',
