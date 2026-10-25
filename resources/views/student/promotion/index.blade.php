@@ -1,148 +1,213 @@
 @extends('layouts-side-bar.master')
 
 @section('css')
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {{-- Font Awesome 6 is needed for icons such as fa-stairs / fa-arrow-up-right-dots. No web-font is loaded here: the
+         module inherits the same font as the rest of the system (same as the Sales Team module). --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root {
-            --b: #2f2ccb; --bl: rgba(47, 44, 203, .10); --b2: #2420a8;
+        /* ═════════ Student Promotion: scoped look (matches Sales Team / School Activity / Billing) ═════════
+           Everything lives under .pr-page (or inside SweetAlert popups), so nothing here can restyle the
+           sidebar, header or footer any more. */
+        .pr-page, .swal2-container {
+            --b: #2C29CA; --bl: rgba(44, 41, 202, .10); --b2: #1f1db0;
             --r: #dc2626; --rl: rgba(220, 38, 38, .10);
-            --g: #059669; --gl: rgba(5, 150, 105, .10);
-            --a: #d97706; --al: rgba(217, 119, 6, .12);
-            --surf: #fff; --bg: #f0f4f8; --brd: #e2e8f0;
-            --t1: #0f172a; --t2: #475569; --t3: #94a3b8;
-            --rad: 16px; --rads: 10px;
-            --sh: 0 1px 3px rgba(0, 0, 0, .06), 0 4px 16px rgba(0, 0, 0, .05);
+            --g: #059669; --gl: rgba(5, 150, 105, .12);
+            --a: #d97706; --al: rgba(217, 119, 6, .14);
+            --surf: #fff; --brd: #e6e8f5;
+            --t1: #1e1b4b; --t2: #475569; --t3: #94a3b8;
+            --rad: 14px; --rads: 10px; --sh: 0 1px 3px rgba(16, 24, 40, .05);
         }
-        *, *::before, *::after { box-sizing: border-box; }
-        *:not(i):not([class*="fa"]) { font-family: 'DM Sans', sans-serif; }
-        body { background: var(--bg); }
+        .pr-page { padding: 4px 4px 40px; }
+        .pr-page *, .pr-page *::before, .pr-page *::after { box-sizing: border-box; }
+        /* the batch modal (z-index 9990) must never hide SweetAlert confirmations opened from inside it */
+        .swal2-container { z-index: 10050 !important; }
 
-        .fin-hero { background: linear-gradient(135deg, #464592 0%, #1613c9 60%, #050352 100%); border-radius: 24px; padding: 2rem 2.5rem; margin-bottom: 1.75rem; position: relative; overflow: hidden; }
-        .fin-hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(165, 180, 252, .2) 0%, transparent 70%); }
-        .fin-hero h1 { color: #fff; font-size: 1.5rem; font-weight: 700; margin: 0; }
-        .fin-hero p { color: #c7d2fe; margin: .2rem 0 0; font-size: .88rem; }
-        .hero-badge { display: inline-flex; align-items: center; gap: .4rem; background: rgba(47, 44, 203, .25); border: 1px solid rgba(165, 180, 252, .4); color: #a5b4fc; padding: .25rem .75rem; border-radius: 20px; font-size: .75rem; font-weight: 600; margin-bottom: .6rem; }
+        /* palettes: --pc solid, --pt tint, --pb border */
+        .pc-indigo { --pc: #4f46e5; --pt: #eef2ff; --pb: #c7d2fe; } .pc-violet { --pc: #7c3aed; --pt: #f5f3ff; --pb: #ddd6fe; }
+        .pc-emerald { --pc: #059669; --pt: #ecfdf5; --pb: #a7f3d0; } .pc-amber { --pc: #d97706; --pt: #fffbeb; --pb: #fde68a; }
+        .pc-sky { --pc: #0284c7; --pt: #f0f9ff; --pb: #bae6fd; } .pc-rose { --pc: #e11d48; --pt: #fff1f2; --pb: #fecdd3; }
+        .pc-teal { --pc: #0d9488; --pt: #f0fdfa; --pb: #99f6e4; } .pc-slate { --pc: #475569; --pt: #f8fafc; --pb: #e2e8f0; }
 
-        .card { background: var(--surf); border-radius: var(--rad); border: 1px solid var(--brd); box-shadow: var(--sh); margin-bottom: 1.5rem; overflow: visible !important; }
-        .card-hd { padding: 1rem 1.5rem; border-bottom: 1px solid var(--brd); display: flex; align-items: center; justify-content: space-between; background: #fafbff; border-radius: var(--rad) var(--rad) 0 0; gap: 12px; flex-wrap: wrap; }
-        .card-hd h5 { margin: 0; font-size: .98rem; font-weight: 700; color: var(--t1); }
-        .card-hd p { margin: 2px 0 0; font-size: .8rem; color: var(--t2); }
-        .card-bd { padding: 1.25rem 1.5rem; overflow: visible !important; }
+        /* ── animations (all switched off for people who prefer reduced motion) ── */
+        @keyframes prUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes prPop { from { opacity: 0; transform: scale(.96) translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes prGlow { 0%, 100% { box-shadow: 0 4px 18px rgba(217, 119, 6, .16); } 50% { box-shadow: 0 8px 30px rgba(217, 119, 6, .42); } }
+        @media (prefers-reduced-motion: reduce) {
+            .pr-page *, .pr-page *::before, .pr-modal-bg, .pr-modal { animation: none !important; transition: none !important; }
+        }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.5rem; }
-        .stat-card { background: var(--surf); border: 1px solid var(--brd); border-radius: var(--rad); padding: 1.1rem 1.25rem; box-shadow: var(--sh); }
-        .stat-card .val { font-size: 1.6rem; font-weight: 700; color: var(--t1); line-height: 1.1; }
-        .stat-card .lbl { font-size: .8rem; color: var(--t2); margin-top: 4px; }
-        .stat-card i { float: right; font-size: 1.2rem; }
-        @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 640px) { .stat-grid { grid-template-columns: 1fr; gap: 10px; } .fin-hero { padding: 1.4rem 1.2rem; } }
+        /* ── hero ── */
+        .pr-hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #000 0%, #070189 100%); border-radius: 20px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; border: 1px solid rgba(255, 255, 255, .08); box-shadow: 0 4px 24px rgba(7, 1, 137, .3); color: #fff; animation: prUp .5s both; }
+        .pr-hero::before { content: ''; position: absolute; top: -70px; right: -70px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(165, 180, 252, .22) 0%, transparent 70%); pointer-events: none; }
+        .pr-hero > * { position: relative; }
+        .pr-hero-left { display: flex; align-items: center; gap: 1.1rem; min-width: 0; }
+        .pr-hero-icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102, 126, 234, .35); }
+        .pr-hero h4 { font-size: 1.35rem; font-weight: 700; color: #fff !important; margin: 0 0 .15rem; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+        .pr-hero p { color: rgba(255, 255, 255, .75) !important; font-size: .9rem; margin: 0; word-break: break-word; }
+        .pr-hero-chip { font-size: .7rem; font-weight: 700; padding: .2rem .65rem; border-radius: 99px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .25); color: #fff; display: inline-flex; align-items: center; gap: .35rem; }
+        .pr-hero-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, .08); }
+        .pr-hero-feature { display: flex; align-items: center; gap: .7rem; animation: prUp .6s both; }
+        .pr-hero-feature:nth-child(2) { animation-delay: .08s; } .pr-hero-feature:nth-child(3) { animation-delay: .16s; } .pr-hero-feature:nth-child(4) { animation-delay: .24s; }
+        .pr-hero-feature-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .pr-hero-feature-title { font-size: .82rem; font-weight: 700; color: #fff; } .pr-hero-feature-desc { font-size: .74rem; color: rgba(255, 255, 255, .62); }
 
-        /* tabs */
-        .pr-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; background: var(--surf); border: 1px solid var(--brd); border-radius: 14px; padding: 6px; box-shadow: var(--sh); }
-        .pr-tab { border: 0; background: transparent; padding: .6rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: .86rem; color: var(--t2); cursor: pointer; display: inline-flex; gap: .5rem; align-items: center; }
-        .pr-tab:hover { background: #f8fafc; }
-        .pr-tab.active { background: var(--b); color: #fff; }
-        .pr-tab .cnt { background: var(--r); color: #fff; border-radius: 20px; font-size: .68rem; padding: 1px 7px; }
+        /* ── KPI cards (coloured, lift on hover, stagger in) ── */
+        .pr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 1.4rem; }
+        .pr-kpi { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--pt, #fff) 0%, #fff 75%); border: 1px solid var(--pb, var(--brd)); border-radius: 14px; padding: 16px 18px 14px 22px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; animation: prUp .55s cubic-bezier(.2, .8, .2, 1) both; }
+        .pr-kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--pc, #4f46e5); }
+        .pr-kpi:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, .12); border-color: var(--pc, #4f46e5); }
+        .pr-kpi-ic { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border-radius: 12px; background: var(--pc, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 6px 14px rgba(15, 23, 42, .18); transition: transform .25s ease; }
+        .pr-kpi:hover .pr-kpi-ic { transform: rotate(-8deg) scale(1.08); }
+        .pr-kpi small { display: block; color: var(--pc, #6b6f99); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding-right: 48px; }
+        .pr-kpi b { display: block; font-size: 1.6rem; color: #111827; margin-top: .25rem; line-height: 1.15; font-weight: 800; }
+        .pr-kpi b.sm { font-size: 1.15rem; padding: .3rem 0 .15rem; }
+        .pr-kpi span { display: block; font-size: .78rem; color: #6b6f99; margin-top: .2rem; }
+        .pr-kpis > :nth-child(2) { animation-delay: .06s; } .pr-kpis > :nth-child(3) { animation-delay: .12s; } .pr-kpis > :nth-child(4) { animation-delay: .18s; }
+
+        /* ── tabs ── */
+        .pr-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+        .pr-tab { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem 1.05rem; border-radius: 99px; font-weight: 600; font-size: .85rem; color: var(--pc, #5b5f8a); background: var(--pt, #f5f6ff); border: 1px solid var(--pb, var(--brd)); cursor: pointer; transition: all .18s ease; }
+        .pr-tab:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15, 23, 42, .1); }
+        .pr-tab.active { background: var(--pc); border-color: var(--pc); color: #fff; box-shadow: 0 6px 16px rgba(15, 23, 42, .18); }
+        .pr-tab .cnt { background: var(--r); color: #fff; border-radius: 99px; font-size: .68rem; font-weight: 700; padding: 1px 7px; }
         .pr-pane { display: none; }
-        .pr-pane.active { display: block; }
+        .pr-pane.active { display: block; animation: prUp .4s cubic-bezier(.2, .8, .2, 1) both; }
 
-        /* forms */
-        .pr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: end; }
+        /* ── steps strip ── */
+        .pr-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 1.25rem; }
+        .pr-step { display: flex; align-items: center; gap: .75rem; background: var(--pt); border: 1px solid var(--pb); border-radius: 14px; padding: .7rem .9rem; transition: transform .2s ease, box-shadow .2s ease; }
+        .pr-step:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15, 23, 42, .1); }
+        .pr-step-n { width: 32px; height: 32px; border-radius: 50%; background: var(--pc); color: #fff; font-weight: 800; font-size: .85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(15, 23, 42, .18); }
+        .pr-step b { display: block; font-size: .86rem; color: var(--t1); } .pr-step small { color: var(--t2); font-size: .76rem; }
+
+        /* ── cards ── */
+        .pr-card { background: #fff; border: 1px solid var(--brd); border-top: 4px solid var(--pc, #4f46e5); border-radius: var(--rad); box-shadow: var(--sh); margin-bottom: 1.25rem; transition: box-shadow .2s ease; animation: prUp .55s cubic-bezier(.2, .8, .2, 1) both; }
+        .pr-card:hover { box-shadow: 0 8px 24px rgba(44, 41, 202, .10); }
+        .pr-card--flat { border-top: 1px solid var(--brd); }
+        .pr-card--pending { border-color: var(--pb); border-top-color: var(--pc); animation: prUp .55s both, prGlow 3s ease-in-out infinite 1s; }
+        .pr-card-hd { padding: 1rem 1.4rem; border-bottom: 1px solid var(--brd); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(180deg, var(--pt, #fafbff) 0%, #fff 100%); border-radius: 10px 10px 0 0; gap: 12px; flex-wrap: wrap; }
+        .pr-card-hd h5 { margin: 0; font-size: .98rem; font-weight: 700; color: var(--t1); display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+        .pr-card-hd p { margin: 3px 0 0; font-size: .8rem; color: var(--t2); }
+        .pr-h-ic { width: 30px; height: 30px; border-radius: 9px; background: var(--pt); color: var(--pc); border: 1px solid var(--pb); display: inline-flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; }
+        .pr-card-bd { padding: 1.25rem 1.4rem; }
+
+        /* ── forms ── */
+        .pr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: start; }
         @media (max-width: 900px) { .pr-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 560px) { .pr-grid { grid-template-columns: 1fr; } }
-        .pr-field label { display: block; font-size: .76rem; font-weight: 600; color: var(--t2); margin-bottom: 4px; }
-        .pr-field .hint { font-size: .72rem; color: var(--t3); margin-top: 3px; }
-        .pr-in, .pr-sel { width: 100%; border: 1px solid var(--brd); border-radius: 8px; padding: 8px 12px; font-size: .85rem; background: #fff; color: var(--t1); }
-        .pr-in:focus, .pr-sel:focus { outline: none; border-color: var(--b); box-shadow: 0 0 0 3px var(--bl); }
-        .pr-sel.sm { padding: 6px 8px; font-size: .8rem; }
+        .pr-field label { display: block; font-size: .76rem; font-weight: 700; color: #3b3f6b; margin-bottom: 5px; }
+        .pr-field .hint { font-size: .72rem; color: var(--t3); margin-top: 4px; }
+        .pr-in, .pr-sel { width: 100%; border: 1px solid #d5d8ee; border-radius: 10px; padding: .5rem .75rem; font-size: .85rem; background: #fff; color: var(--t1); transition: border-color .15s, box-shadow .15s; }
+        .pr-in:focus, .pr-sel:focus { outline: none; border-color: #5351e4; box-shadow: 0 0 0 3px rgba(83, 81, 228, .15); }
+        .pr-sel.sm { padding: .38rem .55rem; font-size: .8rem; }
         .pr-sel.invalid { border-color: var(--r); background: var(--rl); }
+        .pr-sel:disabled { background: #f4f5fb; color: var(--t3); cursor: not-allowed; }
 
-        .btn-p { background: var(--b); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-weight: 600; font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; }
-        .btn-p:hover { background: var(--b2); color: #fff; }
-        .btn-p:disabled { opacity: .55; cursor: not-allowed; }
-        .btn-g { background: var(--g); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-weight: 600; font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; }
-        .btn-g:hover { filter: brightness(.93); }
-        .btn-o { background: #fff; color: var(--t2); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: .82rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; }
-        .btn-o:hover { background: #f8fafc; color: var(--t1); }
-        .btn-d { background: #fff; color: var(--r); border: 1px solid rgba(220, 38, 38, .35); border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: .82rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; }
-        .btn-d:hover { background: var(--rl); }
-        .btn-xs { padding: 4px 10px; font-size: .74rem; }
+        /* ── buttons ── */
+        .pr-page .btn-p, .pr-page .btn-g, .pr-page .btn-o, .pr-page .btn-d { display: inline-flex; align-items: center; gap: .5rem; border-radius: 99px; font-weight: 600; font-size: .85rem; line-height: 1.2; padding: .55rem 1.15rem; cursor: pointer; text-decoration: none !important; white-space: nowrap; border: 1px solid transparent; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, filter .18s ease; }
+        .pr-page .btn-p { background: linear-gradient(135deg, #2C29CA, #6d28d9); color: #fff !important; }
+        .pr-page .btn-g { background: linear-gradient(135deg, #059669, #10b981); color: #fff !important; }
+        .pr-page .btn-o { background: #fff; border-color: #c7c9f5; color: #2C29CA !important; }
+        .pr-page .btn-d { background: #fff; border-color: #fecaca; color: #b42318 !important; }
+        .pr-page .btn-p:hover, .pr-page .btn-g:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(44, 41, 202, .25); color: #fff !important; }
+        .pr-page .btn-g:hover { box-shadow: 0 8px 18px rgba(5, 150, 105, .3); }
+        .pr-page .btn-o:hover { background: #eef0ff; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44, 41, 202, .18); }
+        .pr-page .btn-d:hover { background: #fef2f2; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(220, 38, 38, .18); }
+        .pr-page .btn-p:active, .pr-page .btn-g:active, .pr-page .btn-o:active, .pr-page .btn-d:active { transform: translateY(0); }
+        .pr-page .btn-p:disabled, .pr-page .btn-g:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+        .pr-page .btn-xs { padding: .3rem .75rem; font-size: .76rem; }
 
-        /* alerts / chips */
-        .pr-alert { border-radius: var(--rads); padding: .8rem 1rem; font-size: .84rem; margin-bottom: 1rem; display: flex; gap: .7rem; align-items: flex-start; }
+        /* ── alerts / chips (also used inside SweetAlert popups) ── */
+        .pr-alert { border-radius: 12px; padding: .8rem 1rem; font-size: .84rem; margin-bottom: 1rem; display: flex; gap: .7rem; align-items: flex-start; border: 1px solid transparent; border-left-width: 4px; text-align: left; }
         .pr-alert i { margin-top: 2px; }
-        .pr-alert.info { background: var(--bl); color: var(--b2); }
-        .pr-alert.warning { background: var(--al); color: #92400e; }
-        .pr-alert.danger { background: var(--rl); color: #991b1b; }
-        .pr-alert.success { background: var(--gl); color: #065f46; }
-        .chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 3px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
-        .chip.g { background: var(--gl); color: var(--g); } .chip.r { background: var(--rl); color: var(--r); }
-        .chip.a { background: var(--al); color: var(--a); } .chip.b { background: var(--bl); color: var(--b2); } .chip.n { background: #f1f5f9; color: var(--t2); }
-
-        /* tables */
-        .pr-table-wrap { overflow-x: auto; }
-        table.pr-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
-        .pr-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--t2); padding: .65rem .8rem; border-bottom: 1px solid var(--brd); background: #fafbff; white-space: nowrap; }
-        .pr-table td { padding: .65rem .8rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        .pr-table tr:hover td { background: #fafbff; }
-        .pr-table tr.locked td { opacity: .55; }
-        .pr-name { font-weight: 600; color: var(--t1); }
+        .pr-alert > div { flex: 1 1 220px; min-width: 0; }
+        .pr-alert { flex-wrap: wrap; }
+        .pr-alert.info { background: linear-gradient(135deg, #eef2ff, #f5f3ff); border-color: #c7d2fe; border-left-color: #4f46e5; color: #312e81; }
+        .pr-alert.warning { background: #fffbeb; border-color: #fde68a; border-left-color: #d97706; color: #92400e; }
+        .pr-alert.danger { background: #fff1f2; border-color: #fecdd3; border-left-color: #e11d48; color: #991b1b; }
+        .pr-alert.success { background: #ecfdf5; border-color: #a7f3d0; border-left-color: #059669; color: #065f46; }
         .pr-meta { font-size: .74rem; color: var(--t2); }
+        /* the theme gives .chip a fixed 2rem height / line-height; reset it so chips stay compact */
+        .pr-page .chip, .swal2-container .chip { display: inline-flex; align-items: center; gap: 5px; height: auto; line-height: 1.35; border-radius: 99px; padding: 3px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+        .pr-page .chip.g, .swal2-container .chip.g { background: #dcfce7; color: #166534; } .pr-page .chip.r, .swal2-container .chip.r { background: #fee2e2; color: #991b1b; }
+        .pr-page .chip.a, .swal2-container .chip.a { background: #fef3c7; color: #92400e; } .pr-page .chip.b, .swal2-container .chip.b { background: #e0e7ff; color: #3730a3; }
+        .pr-page .chip.n, .swal2-container .chip.n { background: #e5e7eb; color: #374151; }
+
+        /* ── tables ── */
+        .pr-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--brd); }
+        table.pr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .84rem; margin: 0; }
+        .pr-table thead th { background: #2C29CA !important; color: #fff !important; text-align: left; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .75rem .85rem; white-space: nowrap; border: 0; }
+        .pr-table td { padding: .7rem .85rem; border-bottom: 1px solid #eef0fa; vertical-align: middle; background: #fff; transition: background .15s ease; }
+        .pr-table tbody tr:nth-child(even) td { background: #fafbff; }
+        .pr-table tbody tr:hover td { background: #eef0ff; }
+        .pr-table tbody tr:last-child td { border-bottom: 0; }
+        .pr-table tr.locked td { opacity: .55; }
+        .pr-table tr.pr-o-promote td:first-child { box-shadow: inset 4px 0 0 var(--g); }
+        .pr-table tr.pr-o-repeat td:first-child { box-shadow: inset 4px 0 0 var(--a); }
+        .pr-table tr.pr-o-graduate td:first-child { box-shadow: inset 4px 0 0 #4f46e5; }
+        .pr-table tr.pr-o-skip td:first-child { box-shadow: inset 4px 0 0 #cbd5e1; }
+        .pr-name { font-weight: 700; color: var(--t1); }
+        .pr-who { display: flex; align-items: center; gap: .65rem; }
+        .pr-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .76rem; flex-shrink: 0; box-shadow: 0 3px 8px rgba(15, 23, 42, .18); }
+        .pr-table td.nw { white-space: nowrap; }
+        .pr-acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
         .pr-summary { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
         .pr-bulk { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
         .pr-bulk .pr-in { max-width: 260px; }
-        .pr-footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--brd); padding: .9rem 1.5rem; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-radius: 0 0 var(--rad) var(--rad); }
+        .pr-footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--brd); padding: .9rem 1.4rem; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-radius: 0 0 var(--rad) var(--rad); box-shadow: 0 -6px 16px rgba(15, 23, 42, .05); }
 
-        .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--t2); }
-        .empty-state i { font-size: 2.2rem; color: var(--t3); margin-bottom: .6rem; display: block; }
+        .pr-page .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--t2); }
+        .pr-page .empty-state i { font-size: 2.2rem; color: #c7c9f5; margin-bottom: .6rem; display: block; }
 
-        /* setup */
+        /* ── setup ── */
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         @media (max-width: 760px) { .mode-grid { grid-template-columns: 1fr; } }
-        .mode-card { border: 2px solid var(--brd); border-radius: var(--rad); padding: 1.1rem 1.2rem; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; transition: all .15s; }
-        .mode-card:hover { border-color: rgba(47, 44, 203, .4); }
-        .mode-card.active { border-color: var(--b); background: var(--bl); }
-        .mode-card input { margin-top: 4px; accent-color: var(--b); }
+        .mode-card { position: relative; border: 2px solid var(--brd); border-radius: var(--rad); padding: 1.1rem 1.2rem; cursor: pointer; display: flex; gap: 14px; align-items: flex-start; background: #fff; transition: all .18s ease; }
+        .mode-card:hover { border-color: var(--pb); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 23, 42, .08); }
+        .mode-card.active { border-color: var(--pc); background: linear-gradient(160deg, var(--pt) 0%, #fff 80%); box-shadow: 0 8px 22px rgba(15, 23, 42, .1); }
+        .mode-card:focus-within { box-shadow: 0 0 0 3px rgba(83, 81, 228, .2); }
+        .mode-card input { position: absolute; opacity: 0; pointer-events: none; }
+        .mode-ic { width: 44px; height: 44px; border-radius: 12px; background: var(--pt); color: var(--pc); border: 1px solid var(--pb); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; transition: all .18s ease; }
+        .mode-card.active .mode-ic { background: var(--pc); color: #fff; border-color: var(--pc); box-shadow: 0 6px 14px rgba(15, 23, 42, .2); }
+        .mode-card::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--pc); color: #fff; font-size: .62rem; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(.5); transition: all .18s ease; }
+        .mode-card.active::after { opacity: 1; transform: none; }
         .mode-card h6 { margin: 0 0 3px; font-size: .95rem; font-weight: 700; color: var(--t1); }
         .mode-card p { margin: 0; font-size: .8rem; color: var(--t2); }
-        .sub-box { border: 1px dashed var(--brd); border-radius: var(--rads); padding: 1rem 1.1rem; margin-top: 1rem; background: #fafbff; }
-        .opt-row { display: flex; gap: 10px; align-items: flex-start; padding: .35rem 0; font-size: .85rem; color: var(--t1); }
+        .sub-box { border: 1px dashed #c7d2fe; border-radius: var(--rads); padding: 1rem 1.1rem; margin-top: 1rem; background: linear-gradient(135deg, #f8f9ff, #fdfaff); }
+        .sub-box .sb-title { font-weight: 700; font-size: .85rem; color: var(--t1); }
+        .opt-row { display: flex; gap: 10px; align-items: flex-start; padding: .4rem 0; font-size: .85rem; color: var(--t1); cursor: pointer; }
         .opt-row input { margin-top: 3px; accent-color: var(--b); }
         .opt-row small { display: block; color: var(--t2); font-size: .76rem; }
-        .ladder-row.suggested td:first-child { box-shadow: inset 3px 0 0 var(--a); }
-        .sw { position: relative; display: inline-block; width: 38px; height: 22px; }
+        .ladder-row.suggested td:first-child { box-shadow: inset 4px 0 0 var(--a); }
+        .sw { position: relative; display: inline-block; width: 42px; height: 24px; }
         .sw input { opacity: 0; width: 0; height: 0; }
-        .sw span { position: absolute; inset: 0; background: #cbd5e1; border-radius: 22px; cursor: pointer; transition: .2s; }
-        .sw span::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
-        .sw input:checked + span { background: var(--g); }
-        .sw input:checked + span::before { transform: translateX(16px); }
+        .sw span { position: absolute; inset: 0; background: #cbd5e1; border-radius: 24px; cursor: pointer; transition: .2s; }
+        .sw span::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
+        .sw input:checked + span { background: linear-gradient(135deg, #059669, #10b981); }
+        .sw input:checked + span::before { transform: translateX(18px); }
+        .sw input:focus-visible + span { box-shadow: 0 0 0 3px rgba(83, 81, 228, .25); }
 
-        /* modal */
-        .pr-modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, .55); z-index: 9990; display: none; align-items: center; justify-content: center; padding: 1rem; }
+        /* ── batch details modal ── */
+        .pr-modal-bg { position: fixed; inset: 0; background: rgba(10, 8, 60, .6); backdrop-filter: blur(3px); z-index: 9990; display: none; align-items: center; justify-content: center; padding: 1rem; }
         .pr-modal-bg.show { display: flex; }
-        .pr-modal { background: #fff; border-radius: var(--rad); width: 100%; max-width: 1050px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); }
-        .pr-modal-hd { padding: 1rem 1.4rem; border-bottom: 1px solid var(--brd); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .pr-modal-hd h5 { margin: 0; font-size: 1rem; font-weight: 700; }
-        .pr-modal-bd { padding: 1rem 1.4rem; overflow: auto; }
-        .pr-x { background: none; border: 0; font-size: 1.2rem; color: var(--t2); cursor: pointer; }
+        .pr-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 1050px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 70px rgba(7, 1, 137, .4); overflow: hidden; }
+        .pr-modal-bg.show .pr-modal { animation: prPop .25s cubic-bezier(.2, .8, .2, 1); }
+        .pr-modal-hd { background: linear-gradient(135deg, #000 0%, #070189 100%); color: #fff; padding: 1rem 1.4rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .pr-modal-hd h5 { margin: 0; font-size: 1rem; font-weight: 700; color: #fff; }
+        .pr-modal-bd { padding: 1.1rem 1.4rem 1.4rem; overflow: auto; }
+        .pr-x { width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); font-size: 1.2rem; line-height: 1; color: #fff; cursor: pointer; transition: all .18s ease; }
+        .pr-x:hover { background: rgba(255, 255, 255, .28); transform: rotate(90deg); }
 
-        .pagination { display: flex; gap: .25rem; align-items: center; flex-wrap: wrap; }
-        .pagination .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 .5rem; border-radius: 8px; font-size: .8rem; font-weight: 600; color: var(--t2); background: var(--surf); border: 1px solid var(--brd); text-decoration: none; }
-        .pagination .page-item.active .page-link { background: var(--b); color: #fff; border-color: var(--b); }
-        .pagination .page-item.disabled .page-link { opacity: .4; pointer-events: none; }
+        /* ── pagination ── */
+        .pr-page .pagination { display: flex; gap: .25rem; align-items: center; flex-wrap: wrap; }
+        .pr-page .pagination .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 .55rem; border-radius: 10px; font-size: .8rem; font-weight: 600; color: var(--t2); background: var(--surf); border: 1px solid var(--brd); text-decoration: none; transition: all .15s ease; }
+        .pr-page .pagination .page-link:hover { background: #eef0ff; color: #2C29CA; transform: translateY(-1px); }
+        .pr-page .pagination .page-item.active .page-link { background: linear-gradient(135deg, #2C29CA, #6d28d9); color: #fff; border-color: transparent; }
+        .pr-page .pagination .page-item.disabled .page-link { opacity: .4; pointer-events: none; }
+
+        @media (max-width: 640px) { .pr-hero { padding: 1.2rem; } .pr-card-bd { padding: 1rem; } .pr-card-hd { padding: .9rem 1rem; } .pr-footer { padding: .8rem 1rem; } }
     </style>
-@endsection
-
-@section('page-header')
-    <div class="fin-hero mt-4">
-        <div style="position:relative;z-index:1;">
-            <div class="hero-badge"><i class="fas fa-stairs"></i> Students</div>
-            <h1>Promote Students</h1>
-            <p>Move students up to the next class at the end of the year — by hand or automatically — with a full history you can review and undo.</p>
-        </div>
-    </div>
 @endsection
 
 @section('content')
@@ -167,34 +232,71 @@
 
     $outcomeChip = ['promoted' => ['g', 'Promoted'], 'repeated' => ['a', 'Repeating'], 'graduated' => ['b', 'Graduated']];
     $statusChip = ['completed' => ['g', 'Completed'], 'partially_reverted' => ['a', 'Partly reverted'], 'reverted' => ['n', 'Reverted'], 'discarded' => ['n', 'Discarded'], 'pending' => ['a', 'Awaiting approval']];
+
+    // [icon, colour, title, description]
+    $heroFeatures = [
+        ['fa-arrow-up-right-dots', '#fbbf24', 'Manual or automatic', 'Promote by hand or on a schedule'],
+        ['fa-scale-balanced', '#818cf8', 'Smart rules', 'Fees, averages and final classes'],
+        ['fa-clock-rotate-left', '#34d399', 'Full history', 'Every run and every student recorded'],
+        ['fa-rotate-left', '#f472b6', 'Undo anytime', 'Revert a whole run or one student'],
+    ];
 @endphp
 
-    <div class="card">
-        <div class="card-bd">@include('layouts.subjects-buttons')</div>
+    <div class="pr-page">
+
+    {{-- ════════════════════════ HERO ════════════════════════ --}}
+    <div class="pr-hero mt-5">
+        <div class="pr-hero-left">
+            <div class="pr-hero-icon"><i class="fas fa-user-graduate"></i></div>
+            <div>
+                <h4>Promote Students
+                    @if ($defaultYear)<span class="pr-hero-chip"><i class="fas fa-calendar-days"></i> {{ $defaultYear }}</span>@endif
+                    <span class="pr-hero-chip"><i class="fas {{ $setting->isAuto() ? 'fa-robot' : 'fa-hand-pointer' }}"></i> {{ $setting->isAuto() ? 'Automatic' : 'Manual' }}</span>
+                </h4>
+                <p>Move students up to the next class at the end of the year — by hand or automatically — with a full history you can review and undo.</p>
+            </div>
+        </div>
+        <div class="pr-hero-features">
+            @foreach ($heroFeatures as $f)
+                <div class="pr-hero-feature">
+                    <div class="pr-hero-feature-icon" style="background:{{ $f[1] }}26;"><i class="fas {{ $f[0] }}" style="color:{{ $f[1] }};"></i></div>
+                    <div><div class="pr-hero-feature-title">{{ $f[2] }}</div><div class="pr-hero-feature-desc">{{ $f[3] }}</div></div>
+                </div>
+            @endforeach
+        </div>
     </div>
 
-    <div class="stat-grid">
-        <div class="stat-card"><span style="color:blue"><i class="fas fa-user-graduate"></i></span>
-            <div class="val">{{ number_format($stats['enrolled']) }}</div><div class="lbl">Enrolled Students</div></div>
-        <div class="stat-card"><span style="color:green"><i class="fas fa-graduation-cap"></i></span>
-            <div class="val">{{ number_format($stats['alumni']) }}</div><div class="lbl">Alumni (Graduated)</div></div>
-        <div class="stat-card"><span style="color:orange"><i class="fas fa-hourglass-half"></i></span>
-            <div class="val">{{ number_format($stats['pending']) }}</div><div class="lbl">Proposals Awaiting Approval</div></div>
-        <div class="stat-card"><span style="color:red"><i class="fas fa-clock-rotate-left"></i></span>
-            <div class="val" style="font-size:1.05rem;padding-top:.45rem;">
-                {{ $stats['last_run'] ? $stats['last_run']->executed_at?->format('d M Y') : 'No promotion yet' }}</div>
-            <div class="lbl">Last Promotion{{ $stats['last_run'] ? ' · ' . $stats['last_run']->reference : '' }}</div></div>
+    <div class="pr-card pr-card--flat pc-slate">
+        <div class="pr-card-bd">@include('layouts.subjects-buttons')</div>
+    </div>
+
+    <div class="pr-kpis">
+        <div class="pr-kpi pc-indigo"><i class="fas fa-user-graduate pr-kpi-ic"></i><small>Enrolled students</small>
+            <b>{{ number_format($stats['enrolled']) }}</b><span>Currently in class lists</span></div>
+        <div class="pr-kpi pc-emerald"><i class="fas fa-graduation-cap pr-kpi-ic"></i><small>Alumni (graduated)</small>
+            <b>{{ number_format($stats['alumni']) }}</b><span>Moved out of class lists</span></div>
+        <div class="pr-kpi pc-amber"><i class="fas fa-hourglass-half pr-kpi-ic"></i><small>Awaiting approval</small>
+            <b>{{ number_format($stats['pending']) }}</b><span>Proposals waiting for a decision</span></div>
+        <div class="pr-kpi pc-sky"><i class="fas fa-clock-rotate-left pr-kpi-ic"></i><small>Last promotion</small>
+            <b class="sm">{{ $stats['last_run'] ? ($stats['last_run']->executed_at?->format('d M Y') ?? '—') : 'No promotion yet' }}</b>
+            <span>{{ $stats['last_run'] ? $stats['last_run']->reference : 'Run one from the Promote tab' }}</span></div>
     </div>
 
     <div class="pr-tabs" id="prTabs">
-        <button class="pr-tab {{ $tab === 'promote' ? 'active' : '' }}" data-tab="promote"><i class="fas fa-arrow-up-right-dots"></i> Promote</button>
-        <button class="pr-tab {{ $tab === 'setup' ? 'active' : '' }}" data-tab="setup"><i class="fas fa-sliders"></i> Setup</button>
-        <button class="pr-tab {{ $tab === 'history' ? 'active' : '' }}" data-tab="history"><i class="fas fa-clock-rotate-left"></i> History</button>
-        <button class="pr-tab {{ $tab === 'alumni' ? 'active' : '' }}" data-tab="alumni"><i class="fas fa-graduation-cap"></i> Alumni</button>
+        <button type="button" class="pr-tab pc-indigo {{ $tab === 'promote' ? 'active' : '' }}" data-tab="promote"><i class="fas fa-arrow-up-right-dots"></i> Promote @if ($pending->isNotEmpty())<span class="cnt">{{ $pending->count() }}</span>@endif</button>
+        <button type="button" class="pr-tab pc-violet {{ $tab === 'setup' ? 'active' : '' }}" data-tab="setup"><i class="fas fa-sliders"></i> Setup</button>
+        <button type="button" class="pr-tab pc-amber {{ $tab === 'history' ? 'active' : '' }}" data-tab="history"><i class="fas fa-clock-rotate-left"></i> History</button>
+        <button type="button" class="pr-tab pc-emerald {{ $tab === 'alumni' ? 'active' : '' }}" data-tab="alumni"><i class="fas fa-graduation-cap"></i> Alumni</button>
     </div>
 
     {{-- ════════════════════════ PROMOTE ════════════════════════ --}}
     <div class="pr-pane {{ $tab === 'promote' ? 'active' : '' }}" id="pane-promote">
+
+        <div class="pr-steps">
+            <div class="pr-step pc-indigo"><span class="pr-step-n">1</span><div><b>Choose</b><small>Year, class and stream</small></div></div>
+            <div class="pr-step pc-violet"><span class="pr-step-n">2</span><div><b>Review</b><small>Decide for every student</small></div></div>
+            <div class="pr-step pc-emerald"><span class="pr-step-n">3</span><div><b>Confirm</b><small>Promote and keep a full history</small></div></div>
+        </div>
 
         @if (!$setting->isConfigured())
             <div class="pr-alert warning"><i class="fas fa-triangle-exclamation"></i>
@@ -204,7 +306,7 @@
 
         @if ($setting->isAuto() && $setting->isConfigured())
             <div class="pr-alert info"><i class="fas fa-robot"></i>
-                <div style="flex:1;">
+                <div>
                     <strong>Automatic promotion is on.</strong>
                     @if ($setting->auto_trigger === 'date')
                         It runs on <strong>{{ $setting->auto_run_date?->format('d M Y') }}</strong>
@@ -222,19 +324,19 @@
         @endif
 
         @if ($pending->isNotEmpty())
-            <div class="card" style="border-color:rgba(217,119,6,.5);">
-                <div class="card-hd" style="background:var(--al);">
-                    <div><h5><i class="fas fa-hourglass-half me-1" style="color:var(--a);"></i> Proposals awaiting your approval</h5>
+            <div class="pr-card pr-card--pending pc-amber">
+                <div class="pr-card-hd">
+                    <div><h5><span class="pr-h-ic"><i class="fas fa-hourglass-half"></i></span> Proposals awaiting your approval</h5>
                         <p>Prepared automatically. Nothing has moved yet — review, then approve or discard.</p></div>
                 </div>
-                <div class="card-bd">
+                <div class="pr-card-bd">
                     @foreach ($pending as $b)
-                        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.6rem 0;border-bottom:1px solid var(--brd);">
+                        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.7rem 0;{{ !$loop->last ? 'border-bottom:1px solid var(--brd);' : '' }}">
                             <div>
                                 <div class="pr-name">{{ $b->reference }} <span class="chip a">{{ $b->from_academic_year }}{{ $b->to_academic_year ? ' → ' . $b->to_academic_year : '' }}</span></div>
                                 <div class="pr-meta">{{ $b->promoted }} to promote · {{ $b->repeated }} repeating · {{ $b->graduated }} to graduate · prepared {{ $b->created_at->diffForHumans() }}</div>
                             </div>
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <div class="pr-acts">
                                 <button class="btn-o btn-xs" data-view-batch="{{ $b->id }}"><i class="fas fa-eye"></i> Review</button>
                                 @if ($can['promote'])
                                     <button class="btn-g btn-xs" data-approve="{{ $b->id }}" data-ref="{{ $b->reference }}"><i class="fas fa-check"></i> Approve & apply</button>
@@ -247,12 +349,12 @@
             </div>
         @endif
 
-        <div class="card">
-            <div class="card-hd">
-                <div><h5><i class="fas fa-filter me-1" style="color:var(--b);"></i> Choose who to promote</h5>
+        <div class="pr-card pc-indigo">
+            <div class="pr-card-hd">
+                <div><h5><span class="pr-h-ic"><i class="fas fa-filter"></i></span> Choose who to promote</h5>
                     <p>Work one class at a time. Pick the academic year that is ending, the class, and (optionally) a single stream.</p></div>
             </div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 <div class="pr-grid">
                     <div class="pr-field"><label>Academic year being closed</label>
                         <select class="pr-sel" id="fYear">
@@ -269,7 +371,7 @@
                     <div class="pr-field"><label>New academic year (label, optional)</label>
                         <input class="pr-in" id="fToYear" placeholder="e.g. 2027" maxlength="50"></div>
                 </div>
-                <div style="margin-top:1rem;display:flex;gap:10px;flex-wrap:wrap;">
+                <div style="margin-top:1.1rem;display:flex;gap:10px;flex-wrap:wrap;">
                     <button class="btn-p" id="btnLoad"><i class="fas fa-users"></i> Load students</button>
                 </div>
             </div>
@@ -277,14 +379,14 @@
 
         <div id="readinessBox"></div>
         <div id="planBox" style="display:none;">
-            <div class="card">
-                <div class="card-hd">
-                    <div><h5 id="planTitle">Students</h5><p id="planPath"></p></div>
+            <div class="pr-card pc-violet">
+                <div class="pr-card-hd">
+                    <div><h5><span class="pr-h-ic"><i class="fas fa-list-check"></i></span> <span id="planTitle">Students</span></h5><p id="planPath"></p></div>
                     <div class="pr-summary" id="planSummary" style="margin:0;"></div>
                 </div>
-                <div class="card-bd">
+                <div class="pr-card-bd">
                     <div class="pr-bulk">
-                        <span class="pr-meta" style="font-weight:600;">Set everyone to:</span>
+                        <span class="pr-meta" style="font-weight:700;">Set everyone to:</span>
                         <button class="btn-o btn-xs" data-bulk="promote" id="bulkPromote"><i class="fas fa-arrow-up"></i> Promote</button>
                         <button class="btn-o btn-xs" data-bulk="repeat"><i class="fas fa-rotate-left"></i> Repeat</button>
                         <button class="btn-o btn-xs" data-bulk="graduate" id="bulkGraduate"><i class="fas fa-graduation-cap"></i> Graduate</button>
@@ -300,7 +402,7 @@
                             <tbody id="planRows"></tbody>
                         </table>
                     </div>
-                    <div class="empty-state" id="planEmpty" style="display:none;"><i class="fas fa-user-slash"></i><div style="font-weight:600;color:var(--t1);">No students in this selection</div></div>
+                    <div class="empty-state" id="planEmpty" style="display:none;"><i class="fas fa-user-slash"></i><div style="font-weight:700;color:var(--t1);">No students in this selection</div></div>
                 </div>
                 <div class="pr-footer" id="planFooter">
                     <div style="flex:1;min-width:240px;"><input class="pr-in" id="fNote" maxlength="1000" placeholder="Note for the history (optional) — e.g. “End of year 2026 promotion”"></div>
@@ -323,31 +425,33 @@
             <div class="pr-alert warning"><i class="fas fa-lock"></i><div>You can view these settings but not change them.</div></div>
         @endif
 
-        <div class="card">
-            <div class="card-hd"><div><h5><i class="fas fa-route me-1" style="color:var(--b);"></i> 1 · How should promotion work?</h5>
+        <div class="pr-card pc-indigo">
+            <div class="pr-card-hd"><div><h5><span class="pr-h-ic"><i class="fas fa-route"></i></span> 1 · How should promotion work?</h5>
                 <p>You can always run a manual promotion for exceptions, even in automatic mode.</p></div></div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 <div class="mode-grid">
-                    <label class="mode-card {{ !$setting->isAuto() ? 'active' : '' }}" id="modeManual">
+                    <label class="mode-card pc-indigo {{ !$setting->isAuto() ? 'active' : '' }}" id="modeManual">
                         <input type="radio" name="mode" value="manual" {{ !$setting->isAuto() ? 'checked' : '' }}>
-                        <div><h6><i class="fas fa-hand-pointer me-1"></i> Manual</h6>
+                        <span class="mode-ic"><i class="fas fa-hand-pointer"></i></span>
+                        <div><h6>Manual</h6>
                             <p>You choose a class, review every student and promote when you are ready.</p></div>
                     </label>
-                    <label class="mode-card {{ $setting->isAuto() ? 'active' : '' }}" id="modeAuto">
+                    <label class="mode-card pc-violet {{ $setting->isAuto() ? 'active' : '' }}" id="modeAuto">
                         <input type="radio" name="mode" value="auto" {{ $setting->isAuto() ? 'checked' : '' }}>
-                        <div><h6><i class="fas fa-robot me-1"></i> Automatic</h6>
+                        <span class="mode-ic"><i class="fas fa-robot"></i></span>
+                        <div><h6>Automatic</h6>
                             <p>SMASA prepares (or applies) the promotion by itself on a schedule, using the rules below.</p></div>
                     </label>
                 </div>
 
                 <div class="sub-box" id="autoBox" style="{{ $setting->isAuto() ? '' : 'display:none;' }}">
-                    <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem;">When should it run?</div>
+                    <div class="sb-title" style="margin-bottom:.4rem;"><i class="fas fa-calendar-check me-1" style="color:#7c3aed;"></i> When should it run?</div>
                     <label class="opt-row"><input type="radio" name="trigger" value="new_year" {{ $setting->auto_trigger !== 'date' ? 'checked' : '' }}>
                         <span>When a new academic year becomes active for the school<small>Recommended. Fires the first day after the active year in Term Dates / Academic Year changes.</small></span></label>
                     <label class="opt-row"><input type="radio" name="trigger" value="date" {{ $setting->auto_trigger === 'date' ? 'checked' : '' }}>
                         <span>On a fixed date <input type="date" class="pr-in" id="sRunDate" style="width:auto;display:inline-block;margin-left:6px;padding:4px 8px;" value="{{ $setting->auto_run_date?->format('Y-m-d') }}"></span></label>
 
-                    <div style="font-weight:700;font-size:.85rem;margin:1rem 0 .4rem;">What should it do when it runs?</div>
+                    <div class="sb-title" style="margin:1rem 0 .4rem;"><i class="fas fa-bolt me-1" style="color:#d97706;"></i> What should it do when it runs?</div>
                     <label class="opt-row"><input type="radio" name="apply" value="0" {{ !$setting->auto_apply ? 'checked' : '' }}>
                         <span>Prepare a proposal and wait for my approval<small>Recommended. Nothing moves until an authorised person approves it on the Promote tab.</small></span></label>
                     <label class="opt-row"><input type="radio" name="apply" value="1" {{ $setting->auto_apply ? 'checked' : '' }}>
@@ -356,10 +460,10 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-hd"><div><h5><i class="fas fa-scale-balanced me-1" style="color:var(--b);"></i> 2 · Promotion rules</h5>
+        <div class="pr-card pc-violet">
+            <div class="pr-card-hd"><div><h5><span class="pr-h-ic"><i class="fas fa-scale-balanced"></i></span> 2 · Promotion rules</h5>
                 <p>These shape the suggested decision for every student. In the wizard you can still override soft rules; the fee “block” rule cannot be overridden.</p></div></div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 <div class="pr-grid">
                     <div class="pr-field"><label>Outstanding fees</label>
                         <select class="pr-sel" id="sFeePolicy">
@@ -388,17 +492,17 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-hd">
-                <div><h5><i class="fas fa-stairs me-1" style="color:var(--b);"></i> 3 · Class ladder</h5>
+        <div class="pr-card pc-emerald">
+            <div class="pr-card-hd">
+                <div><h5><span class="pr-h-ic"><i class="fas fa-stairs"></i></span> 3 · Class ladder</h5>
                     <p>For each class: which class it promotes into, or mark it as a <strong>final class</strong> (no class after it). Rows marked <span class="chip a">suggested</span> have not been confirmed yet.</p></div>
                 @if ($can['settings'])
                     <button class="btn-o" id="btnSuggest"><i class="fas fa-wand-magic-sparkles"></i> Fill from suggestion</button>
                 @endif
             </div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 @if ($classes->isEmpty())
-                    <div class="empty-state"><i class="fas fa-chalkboard"></i><div style="font-weight:600;color:var(--t1);">No classes yet</div>
+                    <div class="empty-state"><i class="fas fa-chalkboard"></i><div style="font-weight:700;color:var(--t1);">No classes yet</div>
                         <div>Create the school's classes first, then come back to set the promotion ladder.</div></div>
                 @else
                     <div class="pr-table-wrap">
@@ -418,12 +522,12 @@
 
     {{-- ════════════════════════ HISTORY ════════════════════════ --}}
     <div class="pr-pane {{ $tab === 'history' ? 'active' : '' }}" id="pane-history">
-        <div class="card">
-            <div class="card-hd"><div><h5><i class="fas fa-clock-rotate-left me-1" style="color:var(--b);"></i> Promotion history</h5>
+        <div class="pr-card pc-amber">
+            <div class="pr-card-hd"><div><h5><span class="pr-h-ic"><i class="fas fa-clock-rotate-left"></i></span> Promotion history</h5>
                 <p>Every run, who did it and what happened to each student. Open a run to see the full list or undo it.</p></div></div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 @if ($history->isEmpty())
-                    <div class="empty-state"><i class="fas fa-inbox"></i><div style="font-weight:600;color:var(--t1);">No promotions yet</div></div>
+                    <div class="empty-state"><i class="fas fa-inbox"></i><div style="font-weight:700;color:var(--t1);">No promotions yet</div></div>
                 @else
                     <div class="pr-table-wrap">
                         <table class="pr-table">
@@ -432,17 +536,19 @@
                             @foreach ($history as $b)
                                 @php [$sc, $sl] = $statusChip[$b->status] ?? ['n', ucfirst($b->status)]; @endphp
                                 <tr>
-                                    <td class="pr-name">{{ $b->reference }}</td>
-                                    <td>{{ ($b->executed_at ?? $b->created_at)->format('d M Y H:i') }}</td>
-                                    <td>{{ $b->from_academic_year }}{{ $b->to_academic_year ? ' → ' . $b->to_academic_year : '' }}</td>
-                                    <td><span class="chip {{ $b->source === 'auto' ? 'b' : 'n' }}">{{ $b->source === 'auto' ? 'Automatic' : 'Manual' }}</span></td>
+                                    <td class="pr-name nw">{{ $b->reference }}</td>
+                                    <td class="nw">{{ ($b->executed_at ?? $b->created_at)->format('d M Y H:i') }}</td>
+                                    <td class="nw">{{ $b->from_academic_year }}{{ $b->to_academic_year ? ' → ' . $b->to_academic_year : '' }}</td>
+                                    <td><span class="chip {{ $b->source === 'auto' ? 'b' : 'n' }}"><i class="fas {{ $b->source === 'auto' ? 'fa-robot' : 'fa-hand-pointer' }}"></i> {{ $b->source === 'auto' ? 'Automatic' : 'Manual' }}</span></td>
                                     <td><span class="chip g">{{ $b->promoted }} promoted</span> <span class="chip a">{{ $b->repeated }} repeat</span> <span class="chip b">{{ $b->graduated }} graduated</span></td>
-                                    <td>{{ $b->created_by_name }}</td>
+                                    <td class="nw">{{ $b->created_by_name }}</td>
                                     <td><span class="chip {{ $sc }}">{{ $sl }}</span></td>
-                                    <td style="white-space:nowrap;display:flex;gap:6px;">
-                                        <button class="btn-o btn-xs" data-view-batch="{{ $b->id }}"><i class="fas fa-eye"></i> Open</button>
-                                        @if ($can['export'])<a class="btn-o btn-xs" href="{{ route('students.promotion.export', $b->id) }}"><i class="fas fa-file-csv"></i> CSV</a>@endif
-                                        @if ($can['revert'] && $b->canBeReverted())<button class="btn-d btn-xs" data-revert-batch="{{ $b->id }}" data-ref="{{ $b->reference }}"><i class="fas fa-rotate-left"></i> Revert</button>@endif
+                                    <td>
+                                        <div class="pr-acts">
+                                            <button class="btn-o btn-xs" data-view-batch="{{ $b->id }}"><i class="fas fa-eye"></i> Open</button>
+                                            @if ($can['export'])<a class="btn-o btn-xs" href="{{ route('students.promotion.export', $b->id) }}"><i class="fas fa-file-csv"></i> CSV</a>@endif
+                                            @if ($can['revert'] && $b->canBeReverted())<button class="btn-d btn-xs" data-revert-batch="{{ $b->id }}" data-ref="{{ $b->reference }}"><i class="fas fa-rotate-left"></i> Revert</button>@endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -457,28 +563,31 @@
 
     {{-- ════════════════════════ ALUMNI ════════════════════════ --}}
     <div class="pr-pane {{ $tab === 'alumni' ? 'active' : '' }}" id="pane-alumni">
-        <div class="card">
-            <div class="card-hd">
-                <div><h5><i class="fas fa-graduation-cap me-1" style="color:var(--g);"></i> Alumni</h5>
+        <div class="pr-card pc-emerald">
+            <div class="pr-card-hd">
+                <div><h5><span class="pr-h-ic"><i class="fas fa-graduation-cap"></i></span> Alumni</h5>
                     <p>Students who graduated from a final class. They no longer appear in class lists, attendance, marks entry or the student count used for billing.</p></div>
-                <form method="GET" action="{{ route('students.promotion') }}" style="display:flex;gap:8px;">
+                <form method="GET" action="{{ route('students.promotion') }}" style="display:flex;gap:8px;margin:0;">
                     <input type="hidden" name="tab" value="alumni">
                     <input class="pr-in" name="alumni_q" value="{{ $alumniQ }}" placeholder="Search name or admission no…" style="min-width:230px;">
                     <button class="btn-p" type="submit"><i class="fas fa-search"></i></button>
                 </form>
             </div>
-            <div class="card-bd">
+            <div class="pr-card-bd">
                 @if ($alumni->isEmpty())
-                    <div class="empty-state"><i class="fas fa-user-graduate"></i><div style="font-weight:600;color:var(--t1);">No alumni{{ $alumniQ !== '' ? ' match your search' : ' yet' }}</div></div>
+                    <div class="empty-state"><i class="fas fa-user-graduate"></i><div style="font-weight:700;color:var(--t1);">No alumni{{ $alumniQ !== '' ? ' match your search' : ' yet' }}</div></div>
                 @else
                     <div class="pr-table-wrap">
                         <table class="pr-table">
                             <thead><tr><th>Student</th><th>Admission no.</th><th>Graduated from</th><th>Year</th><th></th></tr></thead>
                             <tbody>
                             @foreach ($alumni as $s)
-                                @php $g = $graduations->get($s->id); @endphp
+                                @php
+                                    $g = $graduations->get($s->id);
+                                    $__ini = strtoupper(mb_substr(trim((string) $s->firstname), 0, 1) . mb_substr(trim((string) $s->lastname), 0, 1)) ?: '?';
+                                @endphp
                                 <tr>
-                                    <td class="pr-name">{{ $s->firstname }} {{ $s->lastname }}</td>
+                                    <td><div class="pr-who"><span class="pr-avatar">{{ $__ini }}</span><span class="pr-name">{{ $s->firstname }} {{ $s->lastname }}</span></div></td>
                                     <td>{{ $s->admission_number ?: '—' }}</td>
                                     <td>{{ $g ? $svc->classLabel($g->from_class_id) . ' · ' . $svc->streamLabel($g->from_stream) : '—' }}</td>
                                     <td>{{ $g?->from_academic_year ?: '—' }}</td>
@@ -497,9 +606,15 @@
     {{-- batch details modal --}}
     <div class="pr-modal-bg" id="batchModal">
         <div class="pr-modal">
-            <div class="pr-modal-hd"><h5 id="bmTitle">Promotion</h5><button class="pr-x" id="bmClose">&times;</button></div>
+            <div class="pr-modal-hd"><h5 id="bmTitle">Promotion</h5><button type="button" class="pr-x" id="bmClose" aria-label="Close">&times;</button></div>
             <div class="pr-modal-bd" id="bmBody"></div>
         </div>
+    </div>
+
+    </div>{{-- /.pr-page --}}
+    {{-- 3 extra closing divs: push the footer down below the content (same as the Sales Team module) --}}
+    </div>
+    </div>
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -525,6 +640,8 @@
     const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
     const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
     const fmt = n => Number(n || 0).toLocaleString();
+    const initials = n => String(n || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+    const avatar = n => `<span class="pr-avatar">${esc(initials(n))}</span>`;
 
     const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3200, timerProgressBar: true, background: '#0f172a', color: '#fff' });
     const toast = (m, ok = true) => Toast.fire({ iconHtml: ok ? '✓' : '!', iconColor: ok ? '#34d399' : '#f87171', title: m });
@@ -630,9 +747,9 @@
             const chips = r.flags.map(f => FLAGS[f] ? `<span class="chip ${FLAGS[f][0]}">${FLAGS[f][1]}</span>` : '').join(' ');
             const dest = r.to_class && r.to_stream ? r.to_class + '|' + r.to_stream : '';
             const needs = r.outcome === 'promote' && !dest;
-            return `<tr class="${r.locked ? 'locked' : ''}" data-idx="${idx}">
+            return `<tr class="${r.locked ? 'locked' : 'pr-o-' + esc(r.outcome)}" data-idx="${idx}">
                 <td>${i}</td>
-                <td><div class="pr-name">${esc(r.name)}</div><div class="pr-meta">${esc(r.admission_number || '')}${r.gender ? ' · ' + esc(r.gender) : ''}</div></td>
+                <td><div class="pr-who">${avatar(r.name)}<div><div class="pr-name">${esc(r.name)}</div><div class="pr-meta">${esc(r.admission_number || '')}${r.gender ? ' · ' + esc(r.gender) : ''}</div></div></div></td>
                 <td>${esc(r.stream_label)}</td>
                 <td>${r.average !== null ? r.average + '%' : '<span class="pr-meta">—</span>'}</td>
                 <td>${r.fee_balance > 0 ? '<span style="color:var(--a);font-weight:600;">' + fmt(r.fee_balance) + '</span>' : '<span class="pr-meta">Clear</span>'}</td>
@@ -838,7 +955,7 @@
                 const [c, l] = OUT_CHIP[r.outcome] || ['n', r.outcome];
                 const reverted = r.status === 'reverted';
                 return `<tr style="${reverted ? 'opacity:.55' : ''}">
-                    <td><div class="pr-name">${esc(r.name)}</div><div class="pr-meta">${esc(r.admission_number || '')}</div></td>
+                    <td><div class="pr-who">${avatar(r.name)}<div><div class="pr-name">${esc(r.name)}</div><div class="pr-meta">${esc(r.admission_number || '')}</div></div></div></td>
                     <td><span class="chip ${c}">${l}</span>${reverted ? ' <span class="chip n">Reverted</span>' : (r.status === 'planned' ? ' <span class="chip a">Planned</span>' : '')}</td>
                     <td>${esc(r.from)}</td><td>${esc(r.to)}</td>
                     <td>${r.average !== null ? r.average + '%' : '—'}</td>
