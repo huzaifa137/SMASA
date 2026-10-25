@@ -67,6 +67,12 @@
     </div>
 
     <div class="col-12 col-sm-3 mb-2">
+        @if(PermissionHelper::canFeature('view_student_promotion'))<a href="{{ route('students.promotion') }}" class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
+            <i class="fas fa-stairs me-2"></i>Promote Students
+        </a>@endif
+    </div>
+
+    <div class="col-12 col-sm-3 mb-2">
         @if(PermissionHelper::canFeature('import_student_photos'))<a href="{{ route('students.bulk.photo.import.form') }}"
             class="btn btn-white text-dark w-100 rounded subjects-nav-btn">
             <i class="fas fa-portrait me-2"></i>Bulk Photo Import

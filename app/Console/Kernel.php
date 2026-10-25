@@ -28,6 +28,9 @@ class Kernel extends ConsoleKernel
 
         // Audit trail retention (see config/audit.php)
         $schedule->command('audit:prune')->dailyAt('02:30');
+
+        // Automatic student promotion (schools set to "Automatic" under Students → Promote Students)
+        $schedule->command('promotion:run-auto')->dailyAt('03:00')->withoutOverlapping();
     }
 
     /**

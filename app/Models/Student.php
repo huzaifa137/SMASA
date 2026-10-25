@@ -4,11 +4,43 @@ namespace App\Models;
 
 
 use App\Models\Concerns\BelongsToSchool;
+use App\Models\Scopes\ExcludeAlumniScope;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
     use BelongsToSchool;
+
+    /**
+     * Reserved class marker for students who graduated out of a final class
+     * (see the Student Promotion module). Like 'NO_STREAM' for streams, it is
+     * stored in students.senior and never matches a real class id, so
+     * alumni drop out of rosters, counts and billing automatically.
+     */
+    public const ALUMNI_CLASS = 'ALUMNI';
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new ExcludeAlumniScope());
+    }
+
+    // Include graduated students: Student::withAlumni()->...
+    public function scopeWithAlumni($query)
+    {
+        return $query->withoutGlobalScope(ExcludeAlumniScope::class);
+    }
+
+    // Only graduated students: Student::onlyAlumni()->...
+    public function scopeOnlyAlumni($query)
+    {
+        return $query->withoutGlobalScope(ExcludeAlumniScope::class)
+            ->where($this->getTable() . '.senior', self::ALUMNI_CLASS);
+    }
+
+    public function isAlumnus(): bool
+    {
+        return $this->senior === self::ALUMNI_CLASS;
+    }
 
   protected $fillable = [
     'firstname',

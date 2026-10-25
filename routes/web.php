@@ -33,6 +33,7 @@ use App\Http\Controllers\UserRightsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ParentPortalController;
 use App\Http\Controllers\StudentConsolidationController;
+use App\Http\Controllers\StudentPromotionController;
 use App\Http\Controllers\StudentPhotoImportController;
 
 require __DIR__ . '/audit.php';
@@ -1451,6 +1452,29 @@ Route::controller(StudentConsolidationController::class)
             Route::post('/unlink', 'unlink')->name('students.consolidation.unlink');
             Route::post('/dismiss', 'dismiss')->name('students.consolidation.dismiss');
             Route::post('/delete-duplicates', 'deleteDuplicates')->name('students.consolidation.delete');
+        });
+    });
+
+// ── Student Promotion (class → next class: manual or automatic) ──
+Route::controller(StudentPromotionController::class)
+    ->prefix('students/promotion')
+    ->middleware(['module:students'])
+    ->group(function () {
+        Route::group(['middleware' => ['AdminAuth']], function () {
+            Route::get('/', 'index')->name('students.promotion');
+            Route::get('/plan', 'plan')->name('students.promotion.plan');
+            Route::post('/execute', 'execute')->name('students.promotion.execute');
+
+            Route::get('/suggest', 'suggest')->name('students.promotion.suggest');
+            Route::post('/settings', 'saveSettings')->name('students.promotion.settings');
+            Route::post('/run-auto', 'runAutoNow')->name('students.promotion.run-auto');
+
+            Route::get('/batches/{id}', 'show')->whereNumber('id')->name('students.promotion.batch');
+            Route::get('/batches/{id}/export', 'export')->whereNumber('id')->name('students.promotion.export');
+            Route::post('/batches/{id}/approve', 'approve')->whereNumber('id')->name('students.promotion.approve');
+            Route::post('/batches/{id}/discard', 'discard')->whereNumber('id')->name('students.promotion.discard');
+            Route::post('/batches/{id}/revert', 'revertBatch')->whereNumber('id')->name('students.promotion.revert');
+            Route::post('/records/{id}/revert', 'revertRecord')->whereNumber('id')->name('students.promotion.revert-record');
         });
     });
 

@@ -98,6 +98,11 @@ Student records, transfers, bulk import/export and duplicate consolidation.
 | `view_student_consolidation` | View Student Consolidation |
 | `manage_student_consolidation` | Link / Unlink / Dismiss Duplicates |
 | `delete_duplicate_students` | Delete Duplicate Students |
+| `view_student_promotion` | View Student Promotion (history & alumni) |
+| `promote_students` | Promote Students / Approve Proposals |
+| `manage_promotion_settings` | Manage Promotion Settings & Class Ladder |
+| `revert_student_promotion` | Revert a Promotion |
+| `export_student_promotion` | Export Promotion Results |
 
 ## Card Scan  (`card_scan`)
 

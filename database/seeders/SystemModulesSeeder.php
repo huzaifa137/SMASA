@@ -251,7 +251,7 @@ class SystemModulesSeeder extends Seeder
                 "name" => "Students",
                 "icon" => "fa fa-user-graduate",
                 "route" => "students.individual.search",
-                "description" => "Student records, transfers, bulk import/export and duplicate consolidation",
+                "description" => "Student records, transfers, promotion, bulk import/export and duplicate consolidation",
                 "sort_order" => 30,
                 "features" => [
                     ["key" => "view_students", "name" => "View & Search Students"],
@@ -266,6 +266,11 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "view_student_consolidation", "name" => "View Student Consolidation", "inherits" => ["view_students"]],
                     ["key" => "manage_student_consolidation", "name" => "Link / Unlink / Dismiss Duplicates", "inherits" => ["add_student"]],
                     ["key" => "delete_duplicate_students", "name" => "Delete Duplicate Students", "inherits" => ["add_student"]],
+                    ["key" => "view_student_promotion", "name" => "View Student Promotion (history & alumni)", "inherits" => ["view_students"]],
+                    ["key" => "promote_students", "name" => "Promote Students / Approve Proposals", "inherits" => ["transfer_student"]],
+                    ["key" => "manage_promotion_settings", "name" => "Manage Promotion Settings & Class Ladder", "inherits" => ["transfer_student"]],
+                    ["key" => "revert_student_promotion", "name" => "Revert a Promotion", "inherits" => ["transfer_student"]],
+                    ["key" => "export_student_promotion", "name" => "Export Promotion Results", "inherits" => ["export_students"]],
                 ],
             ],
 
