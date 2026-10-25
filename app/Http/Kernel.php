@@ -38,6 +38,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\RecordAuditTrail::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\EnforceBillingClearance::class,
             \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
             \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter::class,
         ],
