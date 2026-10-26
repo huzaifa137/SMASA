@@ -26,7 +26,7 @@ class TeacherController extends Controller
 
         $school_id = Helper::requireSchool();
 
-        return view('teacher.add-teachers', compact('school_id'));
+        return view('Teacher.add-teachers', compact('school_id'));
     }
 
     public function storeTeacher(Request $request)
@@ -108,7 +108,7 @@ class TeacherController extends Controller
         PermissionHelper::denyUnlessFeature('view_teachers');
         $teachers = Teacher::orderBy('surname')->get();
 
-        return view('teacher.teachers-in-school', compact('teachers'));
+        return view('Teacher.teachers-in-school', compact('teachers'));
     }
 
     public function teacherProfile($id)
@@ -119,7 +119,7 @@ class TeacherController extends Controller
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
         $school_id = Helper::requireSchool();
 
-        return view('teacher.teacher-profile', compact('teacher', 'school_id'));
+        return view('Teacher.teacher-profile', compact('teacher', 'school_id'));
     }
 
     public function updateteacherProfile($id)
@@ -226,7 +226,7 @@ class TeacherController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('teacher.teachers-in-school', compact('teachers', 'school_id', 'schoolRoles'));
+        return view('Teacher.teachers-in-school', compact('teachers', 'school_id', 'schoolRoles'));
     }
 
 
@@ -322,7 +322,7 @@ class TeacherController extends Controller
 
         $school_id = $schoolId;
 
-        return view('teacher.teachers-in-school', compact('teachers', 'school_id'));
+        return view('Teacher.teachers-in-school', compact('teachers', 'school_id'));
     }
 
     public function destroyTeacher($id, TeacherDeletionService $deletionService)
@@ -438,7 +438,7 @@ class TeacherController extends Controller
         $schoolId = Helper::requireSchool();
         $school = \App\Models\School::findOrFail($schoolId);
 
-        return view('teacher.bulk-import-teachers', compact('schoolId', 'school'));
+        return view('Teacher.bulk-import-teachers', compact('schoolId', 'school'));
     }
 
     public function downloadTeacherTemplate()

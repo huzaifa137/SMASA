@@ -94,7 +94,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::post('user-generate-forgot-password-link', 'generateForgotPasswordLink')->name('user-generate-forgot-password-link');
         Route::post('user-store-new-password', 'store_new_password')->name('user-store-new-password');
         Route::post('user-store-first-password', 'store_first_password')->name('user-store-first-password');
-        Route::post('supplier-user-otp-verification', 'supplierOtpVerification')->name('supplier-user-otp-verification');
+        Route::post('user-otp-verification', 'otpVerification')->name('user-otp-verification');
         Route::get('reload-captcha', 'reload_captcha')->name('reload-captcha');
     });
 

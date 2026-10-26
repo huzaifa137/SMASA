@@ -40,7 +40,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('supplier-user-otp-verification') }}"
+                            <form action="{{ route('user-otp-verification') }}"
                                 class="mt-5 border p-4 bg-light shadow" method="POST">
 
                                 <input type="hidden" name="hidden_otp" id="hidden_otp" value={{ $userEmail }}>
@@ -157,7 +157,7 @@
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
-                url: '/supplier-user-otp-verification',
+                url: '/user-otp-verification',
                 success: function(data) {
                     if (data.status) {
                         window.location.href = data.redirect_url;

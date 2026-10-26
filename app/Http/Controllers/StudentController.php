@@ -149,7 +149,7 @@ class StudentController extends Controller
         }
     }
 
-    public function supplierOtpVerification(Request $request)
+    public function otpVerification(Request $request)
     {
 
         $otp_1 = $request->input('otp_1');
@@ -162,7 +162,7 @@ class StudentController extends Controller
         $user_id = $request->input('hidden_otp');
 
         $temp_otp_stored = DB::table('users')->where('id', $user_id)->value('temp_otp');
-        $supplier_username = DB::table('users')->where('id', $user_id)->value('username');
+        $otp_username = DB::table('users')->where('id', $user_id)->value('username');
         $userRole = DB::table('users')->where('id', $user_id)->value('user_role');
 
         if ($new_otp == $temp_otp_stored) {

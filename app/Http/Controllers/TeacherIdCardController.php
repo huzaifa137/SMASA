@@ -34,7 +34,7 @@ class TeacherIdCardController extends Controller
             ->orderByDesc('created_at')
             ->paginate(30);
 
-        return view('teacher.id-cards.index', compact('cards', 'school', 'schoolProfile'));
+        return view('Teacher.id-cards.index', compact('cards', 'school', 'schoolProfile'));
     }
 
     // ──────────────────────────────────────────────
@@ -48,7 +48,7 @@ class TeacherIdCardController extends Controller
         $schoolId = session('LoggedSchool');
         $teachers = Teacher::where('school_id', $schoolId)->orderBy('surname')->get();
 
-        return view('teacher.id-cards.create', compact('teachers'));
+        return view('Teacher.id-cards.create', compact('teachers'));
     }
 
     // ──────────────────────────────────────────────
@@ -197,7 +197,7 @@ class TeacherIdCardController extends Controller
         $photoUrl = $this->getTeacherPhotoUrl($teacher);
         $logoUrl  = $this->getLogoUrl($profile);
 
-        return view('teacher.id-cards.preview', compact(
+        return view('Teacher.id-cards.preview', compact(
             'card', 'teacher', 'school', 'profile', 'qrSvg', 'photoUrl', 'logoUrl'
         ));
     }
@@ -223,7 +223,7 @@ class TeacherIdCardController extends Controller
         $photoUrl = $this->getTeacherPhotoUrl($teacher);
         $logoUrl  = $this->getLogoUrl($profile);
 
-        $pdf = Pdf::loadView('teacher.id-cards.pdf-card', compact(
+        $pdf = Pdf::loadView('Teacher.id-cards.pdf-card', compact(
             'card', 'teacher', 'school', 'profile', 'qrSvg', 'photoUrl', 'logoUrl'
         ))
             ->setPaper([0, 0, 241.89, 153.07])
@@ -269,7 +269,7 @@ class TeacherIdCardController extends Controller
             ];
         });
 
-        $pdf = Pdf::loadView('teacher.id-cards.pdf-bulk', compact('cardsData', 'school', 'profile', 'logoUrl'))
+        $pdf = Pdf::loadView('Teacher.id-cards.pdf-bulk', compact('cardsData', 'school', 'profile', 'logoUrl'))
             ->setPaper('a4');
 
         $teacherCount = $cardsData->count();
@@ -391,7 +391,7 @@ class TeacherIdCardController extends Controller
     {
         PermissionHelper::denyUnlessFeature('verify_teacher_cards');
 
-        return view('teacher.id-cards.scanner');
+        return view('Teacher.id-cards.scanner');
     }
 
     // ──────────────────────────────────────────────

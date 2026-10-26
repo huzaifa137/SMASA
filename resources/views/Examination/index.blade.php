@@ -537,7 +537,7 @@
                 </div>
                 <div class="column-cards" id="draftCards">
                     @foreach($examinations->where('status', 'draft') as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
                 </div>
             </div>
@@ -555,7 +555,7 @@
                 </div>
                 <div class="column-cards" id="activeCards">
                     @foreach($activeReady as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
                 </div>
             </div>
@@ -576,7 +576,7 @@
                 </div>
                 <div class="column-cards" id="createAssessmentCards">
                     @forelse($activeNeedingAssessment as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @empty
                         <div class="text-center text-muted py-4" style="font-size:.82rem;">
                             <i class="fas fa-circle-check d-block mb-1" style="font-size:1.3rem;color:var(--success);"></i>
@@ -599,7 +599,7 @@
                 </div>
                 <div class="column-cards" id="entryCards">
                     @foreach($examinations->where('status', 'marks_entry') as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
                 </div>
             </div>
@@ -617,7 +617,7 @@
                 </div>
                 <div class="column-cards" id="closedCards">
                     @foreach($examinations->where('status', 'closed') as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
                 </div>
             </div>
@@ -635,7 +635,7 @@
                 </div>
                 <div class="column-cards" id="releasedCards">
                     @foreach($examinations->where('status', 'results_released') as $exam)
-                        @include('examination.partials.exam-card', ['exam' => $exam])
+                        @include('Examination.partials.exam-card', ['exam' => $exam])
                     @endforeach
                 </div>
             </div>
