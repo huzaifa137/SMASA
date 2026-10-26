@@ -1273,7 +1273,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
         document.getElementById('czPreviewClass').addEventListener('change', function () {
             const classId = currentPreviewClassId();
             if (classId) {
-                loadClassCustomisation(classId, true);
+                loadClassCustomisation(classId, true, true);
             } else {
                 scheduleRefresh();
             }
@@ -1357,7 +1357,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
            false from a chip click, where doing nothing on a miss and
            leaving the panel as-is is the right call (existing chip
            behaviour, unchanged). */
-        function loadClassCustomisation(classId, pending = false) {
+        function loadClassCustomisation(classId, pending = false, resetOnMiss = false) {
             fetch(GET_URL + '?class_id=' + classId + '&template=' + encodeURIComponent(currentTemplate()), { headers: { 'Accept': 'application/json' } })
                 .then(r => r.json())
                 .then(res => {
@@ -1365,6 +1365,15 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                         && (!res.settings.template || res.settings.template === currentTemplate());
                     if (usable) {
                         applySettingsToPanel(res.settings);
+                    } else if (resetOnMiss) {
+                        // Nothing saved for this class: show the template's
+                        // real defaults (e.g. Decorative border & corners OFF
+                        // for Secondary) instead of leaving the previous
+                        // class's switches in place, where a Save would
+                        // quietly persist them. applySettingsToPanel({})
+                        // resolves every toggle via OFF_BY_DEFAULT and
+                        // refreshes the preview itself.
+                        applySettingsToPanel({});
                     } else if (pending) {
                         refreshPreviewNow();
                     }
@@ -1643,7 +1652,9 @@ function selectSavedTab(classId) {
                 // a fresh selection (not on deselect), and only for the
                 // chip just clicked, so picking several classes at once
                 // to batch-save doesn't fight over whose settings to show.
-                loadClassCustomisation(id);
+                // Reset to template defaults on a miss only when this is the
+                // sole selected class (a multi-class batch keeps the panel).
+                loadClassCustomisation(id, false, selectedClassIds.size === 1);
             }
             updateSelectedCount();
         }));
