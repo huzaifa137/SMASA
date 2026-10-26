@@ -588,7 +588,6 @@ return [
     // Newly added keys (coverage for remaining hardcoded UI strings)
     'edit_master_record' => 'Edit Master Record',
     'edit_record' => 'Edit Record',
-    'edit_supplier_document' => 'Edit Supplier Document',
     'edit_master_code' => 'Edit master code',
     'please_confirm_before_delete_code' => 'Please confirm before you delete this code!',
     'you_are_about_to_edit_this_code' => 'You are about to edit this code !',

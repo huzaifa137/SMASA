@@ -764,7 +764,6 @@ return [
     // Newly added keys (coverage for remaining hardcoded UI strings)
     'edit_master_record' => 'تحرير السجل الرئيسي',
     'edit_record' => 'تحرير السجل',
-    'edit_supplier_document' => 'تحرير مستند المورد',
     'edit_master_code' => 'تحرير الرمز الرئيسي',
     'please_confirm_before_delete_code' => 'يرجى التأكيد قبل حذف هذا الرمز!',
     'you_are_about_to_edit_this_code' => 'أنت على وشك تعديل هذا الرمز!',
