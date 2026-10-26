@@ -107,10 +107,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('/load-data', 'loadData')->name('load.data');
                 Route::get('master-table', 'master_table')->name('master-table');
                 Route::get('master-code', 'master_code')->name('master-code');
-                Route::get('requisition-documents', 'requisitionDocuments');
-                Route::get('travel-requisition-documents', 'travelRequisitionDocuments');
-                Route::get('supplier-prequalification-criteria', 'supplierPrequalificationEvaluationCriteria');
-                Route::post('store-prequalification-criteria', 'storePrequalificationCriteria')->name('store-prequalification-criteria');
 
                 Route::get('edit-record/{id}', 'editRecord');
                 Route::get('add-record', 'addRecord')->name('add-record');
@@ -118,18 +114,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::get('edit-code/{id}', 'editMasterCode');
                 Route::get('master-code-list/{id}', 'masterCodeList')->name('master-code-list');
                 Route::get('master-code-list', 'masterCodeList');
-                Route::get('edit-supplier-document/{id}', 'editSupplierDocument');
-                Route::post('/store-requisition-document', 'storeRequisitionDocument')->name('master-data/store-requisition-document');
             });
 
-            Route::post('store-travel-requisition-document', 'storeTravelRequisitionDocument')->name('store-travel-requisition-document');
-            Route::post('update-supplier-document', 'updateSupplierDocument')->name('update-supplier-document');
             Route::post('update-master-record', 'updateMasterrecord')->name('update-master-record');
             Route::post('update-master-code', 'updateMasterCode')->name('update-master-code');
             Route::post('send-master-code', 'sendMasterCode')->name('send-master-code');
             Route::post('add-new-record', 'addNewRecord')->name('add-new-record');
 
-            Route::get('delete-supplier-document/{id}', 'deleteSupplierDocument');
             Route::get('delete-record/{id}', 'deleteRecord');
             Route::get('delete-code/{id}', 'deleteCode');
         });

@@ -54,11 +54,6 @@ class StudentController extends Controller
         return redirect('/');
     }
 
-    public function userRegistrationOTP()
-    {
-        return view('users.LoginOTP');
-    }
-
     public function userAccountCreation(Request $request)
     {
 

@@ -46,7 +46,7 @@ class SchoolController extends Controller
         $request->session()->put('LoggedAdmin', 1);
         $request->session()->put('LoggedSchool', 2);
 
-        return view('student.dashboard');
+        return redirect()->route('student.dashboard');
     }
 
     public function createSchool()

@@ -90,7 +90,7 @@ class UserController extends Controller
                 'email' => $email,
                 'username' => $username,
                 'resetUrl' => $resetUrl,
-                'title' => 'Idaad & Thanawi Exam System : Reset Password Link',
+                'title' => 'SMASA : Reset Password Link',
             ];
 
             Mail::send('emails.reset_email', $data, function ($message) use ($data) {
@@ -212,11 +212,6 @@ class UserController extends Controller
         session()->flush();
 
         return redirect('/');
-    }
-
-    public function forgotPassword()
-    {
-        return view('users.forgot-password');
     }
 
     public function login(Request $request)
@@ -708,7 +703,7 @@ class UserController extends Controller
             $master_code_name = $master_code_name[0];
             $master_code_id = $master_code_id[0];
 
-            return view('master-logic.master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
+            return view('master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
         }
     }
 

@@ -44,109 +44,6 @@ class MasterDataController extends Controller
         ];
     }
 
-    public function supplierPrequalificationEvaluationCriteria()
-    {
-        AdminAccess::denyUnless('master_data.view_data');
-
-        $documents = DB::table("master_datas")
-            ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
-            ->where('md_code', 'PREQUALIFICATION_CRITERIA')
-            ->get();
-
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-
-        return view('master-logic.supplier-prequalification-criteria', $data)
-            ->with('documents', $documents)
-        ;
-    }
-
-    public function storePrequalificationCriteria(Request $request)
-    {
-        if (!AdminAccess::can('master_data.create_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
-            return back();
-        }
-
-        $select = DB::table('master_datas')->where('md_code', 'PREQUALIFICATION_CRITERIA')->where('md_name', $request->supplier_document)->where('md_misc1', $request->category_of_procurement)->get();
-
-        if (count($select)) {
-            Alert::error('Error', 'Document already exists');
-            return back();
-        }
-
-        DB::table('master_datas')->insert(
-            [
-                'md_master_code_id' => 30075,
-                'md_code' => "PREQUALIFICATION_CRITERIA",
-                'md_name' => $request->supplier_document,
-                'md_misc1' => $request->category_of_procurement,
-                'md_misc2' => $request->mandatory,
-            ]
-        );
-
-        Alert::success('Success', 'New Criteria has been added successfully');
-        return back();
-    }
-
-    public function requisitionDocuments()
-    {
-        AdminAccess::denyUnless('master_data.view_data');
-
-        $documents = DB::table("master_datas")
-            ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
-            ->where('md_master_code_id', 30075)
-            ->get();
-
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-
-        return view('master-logic.requisition-documents', $data)
-            ->with('documents', $documents);
-    }
-
-    public function documentsToLoadRequisition(Request $request)
-    {
-        AdminAccess::denyUnless('master_data.view_data');
-
-        $category = $request->Category;
-
-        //getting business types
-        $Documents = DB::table("master_datas")
-            ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
-            ->where('md_master_code_id', 30075)
-            ->where('md_misc1', $category)
-            ->get();
-
-        $string = "";
-
-        $string .= (!count($Documents)) ? " No Documents required for the selected category" : "";
-        $counter = 1;
-        foreach ($Documents as $document) {
-            $mandatory = ($document->md_misc2) ? " (Mandatory)" : "";
-            $required = ($document->md_misc2) ? 'required="required"' : '';
-            $string .= '<div class="col-md-6">';
-            $string .= '<label for="" class="boldTitle padMarg"
-                    class="padMarg">' . $document->md_name . '<span style="color:red; font-weight:bold; ">' . $mandatory . '</span>:</label>';
-            $string .= '<input data-name = "' . $document->md_name . '"
-                    type="file"
-                    name="attachment' . $counter . '"
-                    id="attachment' . $counter . '"
-                    class="input-sm form-control " ' . $required . '>
-            </div>';
-
-            $counter++;
-        }
-
-        $string .= '<div class="clearfix"></div><br/>';
-
-        $string .= '<input type="hidden" value="' . ($counter - 1) . '"
-        id="Total_Documents" />';
-
-        return response()->json([
-            "status" => true,
-            "message" => $string,
-        ]);
-    }
-
     public function master_table()
     {
         AdminAccess::denyUnless('master_data.view_data');
@@ -184,22 +81,6 @@ class MasterDataController extends Controller
 
         return view('master-logic.master-code-to-data', compact(['all_data']))
             ->with('selected', $selected)
-        ;
-    }
-
-    public function travelRequisitionDocuments()
-    {
-        AdminAccess::denyUnless('master_data.view_data');
-
-        $documents = DB::table("master_datas")
-            ->select('md_id', 'md_name', 'md_misc1', 'md_misc2')
-            ->where('md_code', 'TRA_DOC')
-            ->get();
-
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-
-        return view('master-logic.travel-requisition-documents', $data)
-            ->with('documents', $documents)
         ;
     }
 
@@ -249,7 +130,7 @@ class MasterDataController extends Controller
             $master_code_name = $master_code_name[0];
             $master_code_id = $master_code_id[0];
 
-            return view('master-logic.master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
+            return view('master-logic.edit-record', $data, compact(['tb_record', 'selected', 'master_code_name', 'master_code_id', 'md_id']));
 
         }
     }
@@ -258,18 +139,18 @@ class MasterDataController extends Controller
     {
         AdminAccess::denyUnless('master_data.create_data');
 
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-        $selected = DB::select('select id, mc_name from master_codes');
-
-        return view('master-logic.add-record', $data, compact(['selected']));
+        // Records are added from inside a code's own list (master-code-list/{id}),
+        // so send the user to the code picker instead of a standalone page.
+        return redirect('master-data/master-code-to-data')
+            ->with('info', 'Choose a master code, then use its Add button to create a record.');
     }
 
     public function addMasterCode()
     {
         AdminAccess::denyUnless('master_data.create_codes');
 
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-        return view('master-logic.add-code', $data);
+        // New master codes are created from the code list page's own form.
+        return redirect('master-data/master-code-to-data');
     }
 
     public function editMasterCode($id)
@@ -306,11 +187,7 @@ class MasterDataController extends Controller
         $mc_code = [];
 
         if (empty($id)) {
-            return view('master-logic.master-code-list-select')
-                ->with("selected", $selected)
-                ->with('mc_id', $id)
-                ->with('mc_name', $mc_name)
-                ->with('code_totals', $code_totals);
+            return redirect('master-data/master-code-to-data');
         }
 
         $mc_code = DB::table('master_datas')
@@ -363,19 +240,6 @@ public function dropDown($links)
                 </div>
             </div>';
 }
-
-    public function editSupplierDocument($id)
-    {
-        AdminAccess::denyUnless('master_data.edit_data');
-
-        $user_data = DB::table('master_datas')
-            ->where('md_id', '=', $id)
-            ->first();
-
-        $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
-
-        return view('master-logic.edit-supplier-document', $data, compact(['user_data']));
-    }
 
     public function addNewRecord(Request $request)
     {
@@ -569,103 +433,6 @@ public function dropDown($links)
             ->update(['mc_id' => $master_code, 'mc_code' => $master_code, 'mc_name' => $request->mc_name, 'mc_description' => $request->mc_description, 'mc_date_added' => $date, 'mc_added_by' => $session]);
 
         return redirect('master-data/master-code-to-data')->with('success', 'Master Code has been updated successfully');
-    }
-
-    public function storeRequisitionDocument(Request $request)
-    {
-        if (!AdminAccess::can('master_data.create_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
-            return back();
-        }
-
-        $select = DB::table('master_datas')->where('md_master_code_id', 30075)->where('md_code', 'REQ_DOC')->where('md_name', $request->supplier_document)->where('md_misc1', $request->category_of_procurement)->get();
-
-        if (count($select)) {
-            Alert::error('Error', 'Document already exists');
-            return back();
-        }
-
-        DB::table('master_datas')->insert(
-            [
-                'md_master_code_id' => 30075,
-                'md_code' => "REQ_DOC",
-                'md_name' => $request->supplier_document,
-                'md_misc1' => $request->category_of_procurement,
-                'md_misc2' => $request->mandatory,
-            ]
-        );
-
-        Alert::success('Success', 'New Document has been added successfully');
-        return back();
-    }
-
-    public function deleteSupplierDocument($id)
-    {
-        if (!AdminAccess::can('master_data.delete_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
-            return back();
-        }
-
-        DB::table('master_datas')
-            ->where('md_id', '=', $id)
-            ->delete();
-
-        Alert::success('Success', 'Document has been deleted successfully');
-        return back();
-    }
-
-    public function updateSupplierDocument(Request $request)
-    {
-        if (!AdminAccess::can('master_data.edit_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to edit master data.');
-            return back();
-        }
-
-        $md_md = $request->md_id;
-        $doc = $request->supplier_document;
-        $doc = $request->supplier_document;
-        $category = $request->category_of_procurement;
-        $mandatory = $request->mandatory;
-
-        DB::table('master_datas')
-            ->where('md_id', $md_md)
-            ->update([
-                'md_name' => $doc,
-                'md_misc2' => $mandatory,
-                'md_misc1' => $category,
-            ]);
-
-        Alert::success('Success', 'Successfully Saved');
-
-        return redirect('master-data/requisition-documents')->with('success', 'Master Code has been updated successfully');
-    }
-
-    public function storeTravelRequisitionDocument(Request $request)
-    {
-        if (!AdminAccess::can('master_data.create_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to create master data.');
-            return back();
-        }
-
-        $select = DB::table('master_datas')->where('md_code', 'TRA_DOC')
-            ->where('md_name', $request->supplier_document)->get();
-
-        if (count($select)) {
-            Alert::error('Error', 'Document already exists');
-            return back();
-        }
-
-        DB::table('master_datas')->insert(
-            [
-                'md_master_code_id' => 0001,
-                'md_code' => "TRA_DOC",
-                'md_name' => $request->supplier_document,
-                'md_misc2' => $request->mandatory,
-            ]
-        );
-
-        Alert::success('Success', 'New Document has been added successfully');
-        return back();
     }
 
     /**
