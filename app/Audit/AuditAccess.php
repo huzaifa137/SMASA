@@ -34,7 +34,22 @@ class AuditAccess
             return false;
         }
 
-        return self::$school ??= (session()->has('LoggedSchool') && (bool) Helper::isTechSateAdminOrSchoolAdminsAlone());
+        return self::$school ??= (session()->has('LoggedSchool')
+            && (bool) Helper::isTechSateAdminOrSchoolAdminsAlone()
+            && self::schoolRoleAllows());
+    }
+
+    /**
+     * A teacher who has a School Role (User Rights) only sees their school's
+     * audit trail when that role carries `view_school_audit_trail` — so a
+     * "Teacher" role never gets it just because the account was created with
+     * the administrator teacher_role. No School Role assigned = old behaviour.
+     */
+    private static function schoolRoleAllows(): bool
+    {
+        $role = \App\Helpers\PermissionHelper::getCurrentSchoolRole();
+
+        return $role === null || $role->canAccessFeature('view_school_audit_trail');
     }
 
     public static function canView(): bool

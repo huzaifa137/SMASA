@@ -581,6 +581,7 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "view_role_assignments", "name" => "View Staff Role Assignments", "inherits" => ["view_roles"]],
                     ["key" => "assign_roles_to_users", "name" => "Assign Roles to Staff"],
                     ["key" => "remove_roles_from_users", "name" => "Remove Roles from Staff"],
+                    ["key" => "view_school_audit_trail", "name" => "View School Audit Trail", "inherits" => ["view_roles"]],
                 ],
             ],
 

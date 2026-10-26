@@ -882,7 +882,7 @@ selected classes" is clicked. --}}
                         'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point', 'show_decimals'],
                         'classic' => ['show_signatures', 'show_teacher_col', 'show_decimals'],
                         'modern' => ['show_teacher_col', 'show_col_grade_point', 'show_decimals'],
-                        'secondary-classic' => ['show_decimals'],
+                        'secondary-classic' => ['show_decimals', 'show_border', 'show_sum_result'],
                         default => [],
                     };
                 @endphp

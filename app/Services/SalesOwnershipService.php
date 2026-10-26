@@ -195,7 +195,8 @@ class SalesOwnershipService
             $now = now();
 
             $batch = SalesTransferBatch::create([
-                'reference' => 'TRF-' . Str::uuid(),
+                // Temporary unique placeholder (column is 30 chars); replaced with TRF-YYYY-00001 below.
+                'reference' => 'TRF-' . Str::upper(Str::random(20)),
                 'from_user_id' => $fromId,
                 'to_user_id' => $toId,
                 'school_count' => count($ids),

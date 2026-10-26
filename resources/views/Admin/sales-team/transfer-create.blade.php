@@ -20,7 +20,7 @@
     </div>
 
     @if($from)
-    <form method="POST" action="{{ route('sales.transfers.store') }}" id="st-transfer" onsubmit="return confirm('Transfer the selected schools now? This is recorded in the audit trail.')">@csrf
+    <form method="POST" action="{{ route('sales.transfers.store') }}" id="st-transfer">@csrf
         <input type="hidden" name="from_user_id" value="{{ $from }}">
         <div class="st-card c-sky">
             <h5><span class="st-h-ic"><i class="fas fa-school"></i></span>2 · Which schools? <small>{{ $schools->count() }} owned</small></h5>
@@ -56,7 +56,7 @@
             </div>
             <div class="st-note" style="margin-top:1rem">The new owner becomes responsible for these schools from now: students, invoices, outstanding and overdue balances and follow-up.
                 Cash the previous owner already collected, and their enrolment credit, stay with them.</div>
-            <div style="margin-top:1rem;display:flex;gap:.6rem"><button class="st-btn st-btn--warn"><i class="fas fa-right-left"></i> Transfer schools</button><a class="st-btn" href="{{ route('sales.transfers') }}">Cancel</a></div>
+            <div style="margin-top:1rem;display:flex;gap:.6rem"><button type="submit" class="st-btn st-btn--warn" id="st-submit-btn"><i class="fas fa-right-left"></i> Transfer schools</button><a class="st-btn" href="{{ route('sales.transfers') }}">Cancel</a></div>
         </div>
         @endif
     </form>
@@ -66,7 +66,10 @@
             var all=document.querySelector('[name=mode][value=all]');if(!all)return;
             var boxes=[].slice.call(document.querySelectorAll('.st-sc')), use=all.checked?boxes:boxes.filter(function(b){return b.checked});
             var s=0,o=0,d=0;use.forEach(function(b){s+=+b.dataset.st;o+=+b.dataset.out;d+=+b.dataset.od});
-            document.getElementById('st-summary').innerHTML='<b>'+use.length+'</b> school(s) · <b>'+s.toLocaleString()+'</b> students · <b>'+CUR+' '+o.toLocaleString()+'</b> outstanding of which <b>'+CUR+' '+d.toLocaleString()+'</b> overdue will be handed over.';
+            var el = document.getElementById('st-summary');
+            if (el) {
+                el.innerHTML='<b>'+use.length+'</b> school(s) · <b>'+s.toLocaleString()+'</b> students · <b>'+CUR+' '+o.toLocaleString()+'</b> outstanding of which <b>'+CUR+' '+d.toLocaleString()+'</b> overdue will be handed over.';
+            }
         }
         stSum();
     </script>
@@ -76,3 +79,58 @@
     </div>
     </div>
 @endsection
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('st-transfer');
+    if (!form) return;
+
+    var submitBtn = document.getElementById('st-submit-btn');
+    if (!submitBtn) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        var modeAll = form.querySelector('[name=mode][value=all]');
+        var useAll = modeAll ? modeAll.checked : true;
+        var count = 0;
+        if (useAll) {
+            count = form.querySelectorAll('.st-sc').length;
+        } else {
+            count = form.querySelectorAll('.st-sc:checked').length;
+        }
+
+        var toSelect = form.querySelector('[name=to]');
+        var toLabel = toSelect && toSelect.selectedIndex >= 0 ? toSelect.options[toSelect.selectedIndex].text : '';
+
+        Swal.fire({
+            title: 'Confirm transfer',
+            html: 'You are about to transfer <b>' + count + '</b> school(s)' +
+                  (toLabel ? ' to <b>' + toLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</b>' : '') +
+                  '.<br><br>This action is recorded in the audit trail.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-right-left"></i> Yes, transfer',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true,
+            focusCancel: true
+        }).then(function (result) {
+            if (result.isConfirmed) {
+       
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transferring…';
+                form.submit();
+            }
+        });
+    });
+});
+</script>

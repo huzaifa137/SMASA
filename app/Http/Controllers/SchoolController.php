@@ -157,6 +157,15 @@ class SchoolController extends Controller
         // App\Services\GradingSchemeDefaults).
         \App\Services\GradingSchemeDefaults::seedForSchool($school->id, Session('LoggedStudent'));
 
+        // Starter roles (HeadTeacher + Teacher), filtered by the school's
+        // product and fully editable afterwards — see DefaultRolesService.
+        // Never allowed to block the enrolment itself.
+        try {
+            \App\Services\DefaultRolesService::seedForSchool($school->id);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         // Create corresponding house
         DB::table('houses')->insert([
             'House' => $validated['name'],

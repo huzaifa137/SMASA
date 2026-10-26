@@ -910,7 +910,8 @@
                 /* ── Customisation (per class saved profile, query wins) ── */
                 $savedCfg = Helper::getPassslipSettings($schoolId, $s->senior ?? null);
                 $cfg = [
-                    'border' => $on('show_border', true, $savedCfg),
+                    // Decorative borders: OFF by default for secondary classes.
+                    'border' => $on('show_border', false, $savedCfg),
                     'top_band' => $on('show_top_band', true, $savedCfg),
                     'watermark' => $on('show_watermark', true, $savedCfg),
                     'logo' => $on('show_logo', true, $savedCfg),
@@ -946,10 +947,9 @@
 
                     'sum_total_marks' => $on('show_sum_total_marks', true, $savedCfg),
                     'sum_average_pct' => $on('show_sum_average_pct', true, $savedCfg),
-                    // Result (UNEB new-curriculum UCE: Result 1 / 2 / 3). Defaults ON for
-                    // Senior 4 (the UCE class) and OFF for Senior 1-3, where the label
-                    // is a certificate-eligibility notion, not a termly measure.
-                    'sum_result' => $on('show_sum_result', $isSenior4, $savedCfg),
+                    // Result (UNEB new-curriculum UCE: Result 1 / 2 / 3). OFF by default
+                    // for every secondary class (switch it on per class when wanted).
+                    'sum_result' => $on('show_sum_result', false, $savedCfg),
                 ];
 
 
