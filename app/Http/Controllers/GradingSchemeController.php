@@ -251,8 +251,9 @@ class GradingSchemeController extends Controller
     /**
      * Re-creates any built-in default scheme the school has deleted and
      * resets the ones it still has back to factory bands. Only the defaults
-     * that belong to the school's enrolled product(s) are touched (e.g. the
-     * A-Level UACE scheme is only for Secondary schools). Custom schemes
+     * that belong to the school's enrolled product(s) are touched (Secondary:
+     * UCE + UACE, Primary: Junior School + Simple A-F). Built-in schemes that
+     * were edited are reset to factory values; their edits are lost. Custom schemes
      * the school created itself are never touched.
      */
     public function restoreDefaults(Request $request)

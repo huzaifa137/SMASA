@@ -2473,7 +2473,7 @@
     document.getElementById('btnRestoreDefaults').addEventListener('click', function () {
         Swal.fire({
             title: 'Restore default gradings?',
-            html: 'Deleted default schemes (e.g. UCE, UACE) for your school product will be re-created, and default schemes you edited will be reset to their original bands. Schemes you created yourself are not touched.',
+            html: 'Built-in schemes for your school product (Secondary: UCE &amp; UACE; Primary: Junior School &amp; Simple A-F) that were deleted will be re-created. Built-in schemes you edited will be <b>reset to their original bands, remarks and pass mark</b> &mdash; your edits to them will be lost and exams using them will be graded with the original bands. Schemes you created yourself are not touched.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, restore',
