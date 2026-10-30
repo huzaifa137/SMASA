@@ -33,7 +33,7 @@ class DivisionBand extends Model
 
     /**
      * The standard P.7 PLE aggregate points used by GradingSchemeDefaults'
-     * "UCE Standard (100 Marks)" style scheme: D1..F9 mapped to points 1-9.
+     * "UCE Standard (New Curriculum)" style scheme: D1..F9 mapped to points 1-9.
      * Single source of truth — used both to detect whether a scheme is
      * "PLE-shaped" and to seed its Division Bands, so the seeder, the
      * create-scheme flow, and the `grading:division-bands` command can

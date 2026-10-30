@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  * php artisan db:seed --class=DivisionBandSeeder
  *
  * Gives every existing "D1...F9" style grading scheme (points 1-9 — the
- * shape GradingSchemeDefaults ships as "UCE Standard (100 Marks)", though a
+ * shape GradingSchemeDefaults ships as "UCE Standard (New Curriculum)", though a
  * school may have renamed it, e.g. "Standard (UCE) 100%") the standard P.7
  * PLE Division structure:
  *

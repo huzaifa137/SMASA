@@ -75,7 +75,7 @@ class ExaminationClass extends Model
         // 2. Senior 5 / Senior 6 (any stream) -> the school's UACE scheme.
         if (\App\Services\GradingSchemeDefaults::isALevelClass($this->class_id)) {
             $uace = \App\Services\GradingSchemeDefaults::uaceSchemeFor(
-                $this->school_id ?: $this->examination?->school_id
+                $this->school_id ?: $this->owningExamination()?->school_id
             );
             if ($uace) {
                 return $uace;
@@ -83,6 +83,35 @@ class ExaminationClass extends Model
         }
 
         // 3. Otherwise the exam's own default.
-        return $this->examination?->resolvedGradingScheme();
+        return $this->owningExamination()?->resolvedGradingScheme();
+    }
+
+    /**
+     * The parent examination for GRADING purposes, including report cards.
+     *
+     * The plain `examination` relation goes through Examination's
+     * ExcludeReportCardsScope, so for an O-Level report card
+     * (o_level_mode = 'report_card') it returns null. That made
+     * resolvedGradingScheme() fall through to null -> no grade bands ->
+     * every Grade cell on the Senior pass slip rendered as "—".
+     *
+     * The relation itself is intentionally left untouched (other screens rely
+     * on report cards staying hidden through it); only grading resolution
+     * opts back in, exactly like the pass-slip screens do.
+     */
+    protected function owningExamination(): ?Examination
+    {
+        if (!$this->exists || !$this->examination_id) {
+            return null;
+        }
+
+        if (!$this->relationLoaded('owningExamination')) {
+            $this->setRelation(
+                'owningExamination',
+                Examination::withReportCards()->find($this->examination_id)
+            );
+        }
+
+        return $this->getRelation('owningExamination');
     }
 }

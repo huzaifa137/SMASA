@@ -16,8 +16,6 @@ php artisan optimize:clear
 php artisan test --filter=AdminPermissionCatalogueTest
 
 
-
-
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;
 $teacher->save(); -->

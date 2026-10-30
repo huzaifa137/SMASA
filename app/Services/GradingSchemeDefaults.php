@@ -229,7 +229,7 @@ class GradingSchemeDefaults
                 // Secondary — O-Level (Senior 1-4).
                 'key'         => 'uce',
                 'products'    => [self::SECONDARY_PRODUCT_MD_ID],
-                'name'        => 'UCE Standard (100 Marks)',
+                'name'        => 'UCE Standard (New Curriculum)',
                 'description' => 'O-Level (Senior 1-4): grades A-E with achievement levels, out of 100 marks.',
                 'total_marks' => 100,
                 'pass_mark'   => 40,
