@@ -1,19 +1,14 @@
 <script type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+//Pulling for updates on server from github without conflict any at the server
 
-<!-- php artisan db:seed --class=SecondarySchoolProductSeeder No Need Migrations already do this, Needed if we want to repopulate the db -->
-
-git pull
-php artisan migrate
-php artisan smasa:sync-school-names
-php artisan smasa:sync-school-names --apply
-
-php artisan db:seed --class=SystemModulesSeeder
-php artisan admin:create-super-admin        # only needed on a fresh install
-php artisan db:seed --class=AdminRolesSeeder   # optional starter roles
+cd ~/domains/smasa-academics.com/public_html
+git status                      # only the leftovers below should appear
+git pull origin main
 php artisan optimize:clear
-php artisan test --filter=AdminPermissionCatalogueTest
+php artisan migrate --force     # if there are new migrations
+composer install --no-dev --optimize-autoloader   # if composer.lock changed
 
 
 <!-- $teacher->password = Hash::make($request->password);
