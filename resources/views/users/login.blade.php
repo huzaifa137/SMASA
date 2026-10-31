@@ -9,10 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css"
-        rel="stylesheet" />
     <style>
         :root {
             --orange: #2C29CA;
@@ -366,100 +362,6 @@
                 min-width: 100px;
             }
         }
-
-        /* ── SELECT2 STYLES (single clean set, matches forgot password) ── */
-        .select-wrapper {
-            position: relative;
-            display: block;
-            isolation: isolate;
-        }
-
-        .select-wrapper .input-icon {
-            z-index: 1070 !important;
-            position: absolute;
-            left: 1.2rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-500);
-            font-size: 1.05rem;
-            pointer-events: none;
-        }
-
-        .select2-container {
-            z-index: 9999 !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection {
-            border-radius: 40px !important;
-            padding: 0.65rem 0.5rem 0.65rem 2.8rem !important;
-            border: 1.5px solid var(--gray-300) !important;
-            min-height: 52px !important;
-            display: flex !important;
-            align-items: center !important;
-            background-color: var(--white) !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-            color: var(--gray-900) !important;
-            line-height: 1.5 !important;
-            padding-left: 0 !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
-            color: var(--gray-500) !important;
-        }
-
-        .select2-container--bootstrap-5.select2-container--focus .select2-selection,
-        .select2-container--bootstrap-5.select2-container--open .select2-selection {
-            border-color: var(--orange) !important;
-            box-shadow: 0 0 0 4px rgba(44, 41, 202, 0.08) !important;
-            outline: none !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-dropdown {
-            border-color: var(--orange) !important;
-            border-radius: var(--radius-sm) !important;
-            box-shadow: var(--shadow) !important;
-            margin-top: 4px !important;
-            overflow: hidden;
-        }
-
-        .select2-container--bootstrap-5 .select2-results__option {
-            padding: 10px 15px !important;
-            font-size: 0.9rem !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-results__option--selected {
-            background-color: var(--orange-subtle) !important;
-            color: var(--orange-dark) !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-results__option--highlighted {
-            background-color: var(--orange) !important;
-            color: white !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-search--dropdown {
-            padding: 10px !important;
-            border-bottom: 1px solid var(--gray-300) !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
-            border: 1.5px solid var(--gray-300) !important;
-            border-radius: 30px !important;
-            padding: 8px 15px !important;
-            font-size: 0.9rem !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
-            border-color: var(--orange) !important;
-            outline: none !important;
-            box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.08) !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
-            display: none !important;
-        }
     </style>
 </head>
 
@@ -503,19 +405,8 @@
 
             <!-- School Dropdown -->
             <div class="school-dropdown-container" id="schoolDropdownContainer">
-                <label for="school_id" class="form-label">SELECT SCHOOL</label>
-                <div class="select-wrapper">
-                    <i class="fas fa-school input-icon"></i>
-                    <select name="school_id" id="school_id" class="select2">
-                        <option value="" disabled selected>Choose your school</option>
-
-                        @foreach($schools as $school)
-                            <option value="{{ $school->ID }}">
-                                {{ $school->House }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                <label for="school_search" class="form-label">SELECT SCHOOL</label>
+                @include('partials.school-search')
                 <small class="error-text" id="school_id-error"></small>
             </div>
 
@@ -567,23 +458,6 @@
             </a>
         </form>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            // ── Single Select2 init, same pattern as forgot password ──
-            $('#school_id').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: 'Choose your school',
-                allowClear: true,
-                dropdownParent: $('body'),
-                minimumResultsForSearch: 0,
-            });
-        });
-    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

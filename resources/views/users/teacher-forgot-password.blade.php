@@ -12,10 +12,6 @@
     <link rel="icon" href="{{ URL::asset('assets/images/brand/logo.png') }}" type="image/x-icon" />
 
     <!-- Select2 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css"
-        rel="stylesheet" />
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -294,41 +290,11 @@
         }
 
         /* ── Select2 overrides (matching login page) ── */
-        .select2-container--bootstrap-5 .select2-selection {
-            border-radius: 40px !important;
-            padding: 0.65rem 0.5rem 0.65rem 2.8rem !important;
-            border: 1.5px solid var(--gray-300) !important;
-            min-height: 52px !important;
-            display: flex !important;
-            align-items: center !important;
-            background-color: var(--white) !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-            color: var(--gray-900) !important;
-            line-height: 1.5 !important;
-            padding-left: 0 !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
-            color: var(--gray-500) !important;
-        }
 
-        .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-            border-color: var(--orange) !important;
-            box-shadow: 0 0 0 4px rgba(44, 41, 202, 0.08) !important;
-        }
 
-        .select2-container {
-            z-index: 1050 !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-dropdown {
-            border-color: var(--orange) !important;
-            border-radius: var(--radius-sm) !important;
-            box-shadow: var(--shadow);
-            margin-top: 4px !important;
-        }
 
         .input-group {
             position: relative;
@@ -337,37 +303,11 @@
             z-index: 1;
         }
 
-        .select2-container--bootstrap-5 .select2-results__option--selected {
-            background-color: var(--orange-subtle) !important;
-            color: var(--orange-dark) !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-results__option--highlighted {
-            background-color: var(--orange) !important;
-            color: white !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-search--dropdown {
-            padding: 10px !important;
-            border-bottom: 1px solid var(--gray-300) !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
-            border: 1.5px solid var(--gray-300) !important;
-            border-radius: 30px !important;
-            padding: 8px 15px !important;
-            font-size: 0.9rem !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
-            border-color: var(--orange) !important;
-            outline: none !important;
-            box-shadow: 0 0 0 3px rgba(44, 41, 202, 0.08) !important;
-        }
 
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
-            display: none !important;
-        }
 
         .select-wrapper {
             position: relative;
@@ -576,27 +516,19 @@
 
             <div class="info-box">
                 <strong><i class="fas fa-info-circle"></i> How it works</strong>
-                Select your school from the dropdown, enter your registered email address, and we'll send you
+                Search for your school by name, enter your registered email address, and we'll send you
                 a secure link to reset your password. The link expires in <strong>60 minutes</strong>.
             </div>
 
             <form id="forgotPasswordForm" novalidate>
                 @csrf
 
-                <!-- School dropdown (same as login page) -->
+                <!-- School search (no list shown until the user types) -->
                 <div class="form-group">
-                    <label class="form-label" for="school_id">
+                    <label class="form-label" for="school_search">
                         <i class="fas fa-school" style="color:var(--orange); margin-right:4px;"></i> SELECT YOUR SCHOOL
                     </label>
-                    <div class="select-wrapper">
-                        <i class="fas fa-school input-icon"></i>
-                        <select name="school_id" id="school_id" class="select2">
-                            <option value="" disabled selected>Choose your school</option>
-                            @foreach($schools as $school)
-                                <option value="{{ $school->ID }}">{{ $school->House }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @include('partials.school-search')
                     <small class="error-text" id="school_id-error"></small>
                 </div>
 
@@ -631,21 +563,10 @@
 
     <!-- jQuery + Select2 + SweetAlert -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function () {
-
-            // ── Initialize Select2 ──────────────────────────────────────────────
-            $('#school_id').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: 'Choose your school',
-                allowClear: true,
-                dropdownParent: $('body'),
-                minimumResultsForSearch: 0,
-            });
 
             // ── Form submission ─────────────────────────────────────────────────
             $('#forgotPasswordForm').on('submit', function (e) {
@@ -785,7 +706,7 @@
                 $('#successState').removeClass('show');
                 $('#formFields').removeClass('hidden');
                 $('#forgotPasswordForm')[0].reset();
-                $('#school_id').val(null).trigger('change');
+                window.SchoolSearch.reset();
             });
 
         });

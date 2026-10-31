@@ -42,6 +42,11 @@ require __DIR__ . '/demo-requests.php';
 require __DIR__ . '/sales-team.php';
 require __DIR__ . '/admin-profile.php';
 
+// Public school lookup for the login / forgot-password pages (search-as-you-type, rate limited).
+Route::get('/auth/schools/search', [\App\Http\Controllers\SchoolSearchController::class, 'search'])
+    ->middleware('throttle:60,1')
+    ->name('auth.schools.search');
+
 Route::get('/logout', function () {
     session()->flush();
 

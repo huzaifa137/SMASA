@@ -216,15 +216,11 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $schools = House::whereNotIn('Number', function ($query) {
-            $query->select('registration_code')
-                ->from('schools')
-                ->where('school_status', 1);
-        })->get();
-
+        // Schools are no longer sent to the page; they are searched on demand
+        // via route('auth.schools.search') once the visitor starts typing.
         $activeRole = 'school';
 
-        return view('users.login', compact('schools', 'activeRole'));
+        return view('users.login', compact('activeRole'));
     }
 
     public function courseInformation(Request $request)
