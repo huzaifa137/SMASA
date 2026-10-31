@@ -43,6 +43,7 @@ class DefaultRolesService
         'view_nlsc_assessments', 'manage_nlsc_assessments', 'delete_nlsc_assessments', 'enter_nlsc_marks',
         'view_open_assessments', 'manage_open_assessments', 'delete_open_assessments',
         'enter_open_assessment_marks', 'view_open_assessments_overview',
+        'view_assessment_expectations', 'manage_assessment_expectations',
         'view_olevel_report_cards', 'create_olevel_report_card', 'edit_olevel_report_card', 'delete_olevel_report_card',
     ];
 

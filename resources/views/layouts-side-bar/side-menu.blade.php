@@ -512,6 +512,13 @@ use App\Helpers\PermissionHelper;
                                     </a>
                                 </li>
                             @endif
+                            @if (PermissionHelper::canFeature('view_assessment_expectations') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.compliance') }}">
+                                        <i class="fas fa-bullseye mr-2"></i>Assessment Targets
+                                    </a>
+                                </li>
+                            @endif
                             @if (PermissionHelper::canFeature('view_report_cards'))
                                 <li>
                                     <a href="{{ route('examination.passslips.hub') }}">
@@ -1214,6 +1221,13 @@ use App\Helpers\PermissionHelper;
                                 <li>
                                     <a href="{{ route('open-assessments.overview') }}">
                                         <i class="fas fa-user-check mr-2"></i>Assessments by Teacher
+                                    </a>
+                                </li>
+                            @endif
+                            @if (PermissionHelper::canFeature('view_assessment_expectations') && Helper::schoolHasSecondary())
+                                <li>
+                                    <a href="{{ route('open-assessments.compliance') }}">
+                                        <i class="fas fa-bullseye mr-2"></i>Assessment Targets
                                     </a>
                                 </li>
                             @endif

@@ -6,20 +6,54 @@
 @endsection
 
 @section('content')
-    <div class="oa-hero">
-        <span class="hero-badge"><i class="fas fa-user-check me-1"></i> Administrator view</span>
-        <div class="hero-title">Assessments by Teacher</div>
-        <div class="hero-subtitle">
-            Every open assessment each teacher has created in their subjects, with how far marks entry has got.
-            These are created by teachers on their own, with no examination. To decide which ones count on a report card, tick them on the O-Level Report Card form.
-        </div>
-        @if(\App\Helpers\PermissionHelper::canFeature('create_olevel_report_card'))
-            <div class="hero-links mt-2">
-                <a href="{{ route('olevel-report-cards.create') }}"><i class="fas fa-file-alt me-1"></i> Create an O-Level report card</a>
-                <a href="{{ route('olevel-report-cards.index') }}"><i class="fas fa-list me-1"></i> Existing report cards</a>
-            </div>
-        @endif
+<div class="oa-hero">
+    <span class="hero-badge">
+        <i class="fas fa-user-check me-1"></i> Administrator view
+    </span>
+
+    <div class="hero-title">Assessments by Teacher</div>
+
+    <div class="hero-subtitle">
+        Every open assessment each teacher has created in their subjects, with how far marks entry has got.
+        These are created by teachers on their own, with no examination. To decide which ones count on a report card, tick them on the O-Level Report Card form.
     </div>
+
+    <div class="hero-links mt-3" style="display: flex; flex-wrap: nowrap; align-items: center; gap: 10px;">
+
+        @if(\App\Helpers\PermissionHelper::canFeature('view_assessment_expectations'))
+            <a href="{{ route('open-assessments.compliance') }}"
+               class="btn btn-primary"
+               style="white-space: nowrap;">
+                <i class="fas fa-bullseye me-1"></i>
+                Teacher Progress Against Targets
+            </a>
+
+            <a href="{{ route('open-assessments.expectations') }}"
+               class="btn btn-primary"
+               style="white-space: nowrap;">
+                <i class="fas fa-sliders me-1"></i>
+                Set Assessment Targets
+            </a>
+        @endif
+
+        @if(\App\Helpers\PermissionHelper::canFeature('create_olevel_report_card'))
+            <a href="{{ route('olevel-report-cards.create') }}"
+               class="btn btn-primary"
+               style="white-space: nowrap;">
+                <i class="fas fa-file-alt me-1"></i>
+                Create an O-Level Report Card
+            </a>
+
+            <a href="{{ route('olevel-report-cards.index') }}"
+               class="btn btn-primary"
+               style="white-space: nowrap;">
+                <i class="fas fa-list me-1"></i>
+                Existing Report Cards
+            </a>
+        @endif
+
+    </div>
+</div>
 
     <div class="oa-card">
         <div class="oa-card-body">

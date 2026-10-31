@@ -34,6 +34,7 @@
                         <th>Subject</th>
                         <th style="width:90px;">Students</th>
                         <th style="width:130px;">This term</th>
+                        <th style="width:210px;">Term target</th>
                         <th style="width:110px;">All time</th>
                         <th style="width:130px;"></th>
                     </tr>
@@ -45,13 +46,29 @@
                             <td class="fw-bold">{{ $row->subject }}</td>
                             <td>{{ $row->students }}</td>
                             <td><span class="oa-pill {{ $row->this_term ? 'green' : 'amber' }}">{{ $row->this_term }}</span></td>
+                            <td>
+                                @if($row->target)
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="oa-bar flex-grow-1"><span style="width: {{ $row->target->percent }}%;"></span></div>
+                                        <span class="oa-sub">{{ $row->target->created }}/{{ $row->target->required }}</span>
+                                    </div>
+                                    <div class="oa-sub">
+                                        @if($row->target->remaining > 0){{ $row->target->remaining }} still to create
+                                        @elseif($row->target->marks_pending > 0)Marks still to enter
+                                        @else Target met @endif
+                                        @if($row->target->overdue > 0)<span class="oa-pill amber">Overdue</span>@endif
+                                    </div>
+                                @else
+                                    <span class="oa-sub">No target set</span>
+                                @endif
+                            </td>
                             <td><span class="oa-pill grey">{{ $row->total }}</span></td>
                             <td class="text-end">
                                 <a class="oa-btn sm" href="{{ route('open-assessments.hub', $row->class_subject_id) }}"><i class="fas fa-folder-open"></i> Open</a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><div class="oa-empty"><i class="fas fa-clipboard-list"></i>
+                        <tr><td colspan="7"><div class="oa-empty"><i class="fas fa-clipboard-list"></i>
                             You have no Senior 1–4 subjects assigned yet, so there is nothing to assess.
                         </div></td></tr>
                     @endforelse

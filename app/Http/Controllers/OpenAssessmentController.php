@@ -11,6 +11,7 @@ use App\Models\SchoolNlscProjectArea;
 use App\Models\SchoolNlscProjectCompetencyArea;
 use App\Models\SchoolNlscSubjectAchievement;
 use App\Models\SchoolNlscTopic;
+use App\Services\AssessmentExpectationService as Targets;
 use App\Support\Term;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -58,8 +59,13 @@ class OpenAssessmentController extends Controller
 
         [$year, $term] = $this->defaultYearTerm();
 
-        $rows = $subjects->map(function ($cs) use ($assessments, $year, $term, $schoolId) {
-            $list = $assessments[$this->subjectKey($cs->class_id, $cs->stream_id, $cs->subject_id, $cs->custom_subject_id)] ?? collect();
+        // The school's targets for the current term, per subject.
+        $targets = in_array($term, self::TERMS, true) ? Targets::progress((int) $schoolId, (string) $year, $term, $subjects) : [];
+
+        $rows = $subjects->map(function ($cs) use ($assessments, $year, $term, $schoolId, $targets) {
+            $key = $this->subjectKey($cs->class_id, $cs->stream_id, $cs->subject_id, $cs->custom_subject_id);
+            $list = $assessments[$key] ?? collect();
+            $targetLines = $targets[$key] ?? collect();
 
             return (object) [
                 'class_subject_id' => $cs->id,
@@ -69,6 +75,7 @@ class OpenAssessmentController extends Controller
                 'total' => $list->count(),
                 'this_term' => $list->filter(fn($a) => (string) $a->academic_year === (string) $year && $a->term === $term)->count(),
                 'students' => Helper::expectedStudentCount($schoolId, $cs),
+                'target' => $targetLines->isEmpty() ? null : (object) (Targets::tally($targetLines) + ['lines' => $targetLines]),
             ];
         })->sortBy(fn($r) => $r->class_name . ' ' . $r->stream . ' ' . $r->subject)->values();
 
@@ -138,7 +145,17 @@ class OpenAssessmentController extends Controller
 
         [$year, $term] = $this->defaultYearTerm();
 
+        // Targets for the term being looked at (current term unless ?academic_year=&term= says otherwise).
+        $targetYear = (string) (request('academic_year') ?: $year);
+        $targetTerm = in_array(request('term'), self::TERMS, true) ? request('term') : (in_array($term, self::TERMS, true) ? $term : 'Term 1');
+        $targetKey = $this->subjectKey($classSubject->class_id, $classSubject->stream_id, $classSubject->subject_id, $classSubject->custom_subject_id);
+        $targetLines = Targets::progress((int) $schoolId, $targetYear, $targetTerm, collect([$classSubject]))[$targetKey] ?? collect();
+
         return view('Examination.open-assessments.hub', [
+            'targetLines' => $targetLines,
+            'targetTally' => Targets::tally($targetLines),
+            'targetYear' => $targetYear,
+            'targetTerm' => $targetTerm,
             'classSubject' => $classSubject,
             'className' => Helper::recordMdname($classSubject->class_id),
             'streamLabel' => $this->streamLabel($classSubject->stream_id),

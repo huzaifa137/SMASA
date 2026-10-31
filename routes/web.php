@@ -761,6 +761,21 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/subjects/{classSubjectId}/{assessmentId}/marks', 'marksEntry')->name('marks-entry');
         });
 
+    // Assessment targets: what each teacher is expected to submit per term, and progress against it.
+    Route::prefix('examinations/open-assessments')
+        ->name('open-assessments.')
+        ->controller(\App\Http\Controllers\OpenAssessmentExpectationController::class)
+        ->middleware(['module:examinations', 'secondary.school', 'SchoolAuth'])
+        ->group(function () {
+            Route::get('/targets', 'expectations')->name('expectations');
+            Route::post('/targets', 'store')->name('expectations.store');
+            Route::post('/targets/copy', 'copy')->name('expectations.copy');
+            Route::put('/targets/{id}', 'update')->name('expectations.update');
+            Route::delete('/targets/{id}', 'destroy')->name('expectations.destroy');
+            Route::get('/progress', 'compliance')->name('compliance');
+            Route::get('/progress/export', 'export')->name('compliance.export');
+        });
+
     Route::prefix('examinations')
         ->name('examination.')
         ->controller(ExaminationController::class)

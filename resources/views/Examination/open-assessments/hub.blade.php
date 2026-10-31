@@ -21,6 +21,8 @@
         </div>
     </div>
 
+    @include('Examination.open-assessments._targets')
+
     @if($canManage)
         <div class="oa-card">
             <div class="oa-card-head"><span id="formTitle"><i class="fas fa-plus-circle me-2"></i> New assessment</span></div>

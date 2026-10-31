@@ -530,6 +530,8 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "delete_open_assessments", "name" => "Delete Open Assessments", "inherits" => ["delete_nlsc_assessments"]],
                     ["key" => "enter_open_assessment_marks", "name" => "Enter Open Assessment Marks", "inherits" => ["enter_nlsc_marks"]],
                     ["key" => "view_open_assessments_overview", "name" => "View All Teachers' Open Assessments", "inherits" => ["edit_exam"]],
+                    ["key" => "view_assessment_expectations", "name" => "View Assessment Targets & Teacher Progress", "inherits" => ["view_open_assessments_overview"]],
+                    ["key" => "manage_assessment_expectations", "name" => "Set / Edit / Delete Assessment Targets", "inherits" => ["edit_exam"]],
                     ["key" => "view_report_cards", "name" => "View & Print Report Cards / Passlips", "inherits" => ["generate_reports"]],
                     ["key" => "customize_report_cards", "name" => "Customize Report Card Layout", "inherits" => ["generate_reports"]],
                     ["key" => "manage_report_card_settings", "name" => "Save / Copy / Delete Report Card Settings", "inherits" => ["generate_reports"]],
