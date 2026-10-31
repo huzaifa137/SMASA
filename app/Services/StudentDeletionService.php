@@ -101,6 +101,7 @@ class StudentDeletionService
 
         // ── Academic records ────────────────────────────────────────────
         DB::table('examination_marks')->where('student_id', $id)->delete();
+        DB::table('examination_mark_papers')->where('student_id', $id)->delete();
         DB::table('student_exam_summaries')->where('student_id', $id)->delete();
 
         // New-curriculum (NLSC) assessment marks, report-card remarks and

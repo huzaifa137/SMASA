@@ -107,6 +107,9 @@ class TeacherDeletionService
         // the marks themselves are the student's data and must survive.
         DB::table('examination_marks')->where('entered_by', $id)->update(['entered_by' => null]);
         DB::table('examination_marks')->where('verified_by', $id)->update(['verified_by' => null]);
+        DB::table('examination_mark_papers')->where('entered_by', $id)->update(['entered_by' => null]);
+        DB::table('examination_subject_papers')->where('created_by', $id)->update(['created_by' => null]);
+        DB::table('examination_subject_papers')->where('updated_by', $id)->update(['updated_by' => null]);
 
         // NLSC assessments / assessment marks this teacher created or entered.
         DB::table('nlsc_assessments')->where('created_by', $id)->update(['created_by' => null]);

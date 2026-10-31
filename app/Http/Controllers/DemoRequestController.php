@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
  *  store()   PUBLIC  - saves the request, emails the team (and the school).
  *  index()   ADMIN   - inbox with filters             (demo_requests.view)
  *  update()  ADMIN   - status / internal notes        (demo_requests.manage)
+ *  destroy() / bulkDestroy()  ADMIN - delete requests (demo_requests.delete)
  */
 class DemoRequestController extends Controller
 {
@@ -138,6 +139,7 @@ class DemoRequestController extends Controller
             'activeStatus' => $status,
             'search' => $q,
             'canManage' => AdminAccess::can('demo_requests.manage'),
+            'canDelete' => AdminAccess::can('demo_requests.delete'),
         ]);
     }
 
@@ -159,5 +161,31 @@ class DemoRequestController extends Controller
         $demo->save();
 
         return back()->with('success', "{$demo->school_name} ({$demo->reference}) updated.");
+    }
+
+    public function destroy(int $id)
+    {
+        $demo = DemoRequest::findOrFail($id);
+        $label = "{$demo->school_name} ({$demo->reference})";
+
+        $demo->delete();
+
+        Log::info('Demo request deleted', ['reference' => $demo->reference, 'by' => AdminAccess::userId()]);
+
+        return back()->with('success', "{$label} deleted.");
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer'],
+        ], ['ids.required' => 'Select at least one request to delete.']);
+
+        $count = DemoRequest::whereIn('id', $data['ids'])->delete();
+
+        Log::info('Demo requests bulk deleted', ['count' => $count, 'by' => AdminAccess::userId()]);
+
+        return back()->with('success', "{$count} demo request(s) deleted.");
     }
 }

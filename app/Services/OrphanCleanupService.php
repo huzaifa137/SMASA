@@ -47,7 +47,7 @@ class OrphanCleanupService
             DB::table('nlsc_assessments')->where('examination_id', $examId)->pluck('id')->all()
         );
 
-        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'report_card_remarks', 'student_discipline_ratings'] as $table) {
+        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'examination_subject_papers', 'examination_mark_papers', 'report_card_remarks', 'student_discipline_ratings'] as $table) {
             $this->deleteWhere($table, 'examination_id', $examId);
         }
 
@@ -175,7 +175,7 @@ class OrphanCleanupService
 
         $this->purgeAssessments($scope(DB::table('nlsc_assessments'))->pluck('id')->all());
 
-        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'student_attendances', 'student_discipline_ratings', 'student_exam_summaries'] as $table) {
+        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'examination_subject_papers', 'examination_mark_papers', 'student_attendances', 'student_discipline_ratings', 'student_exam_summaries'] as $table) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, 'class_id') && Schema::hasColumn($table, 'stream_id')) {
                 $scope(DB::table($table))->delete();
             }
@@ -257,6 +257,12 @@ class OrphanCleanupService
                     $this->subjectScope(DB::table('examination_subject_settings'), $schoolId, $row)->delete();
                 }
 
+                foreach (['examination_subject_papers', 'examination_mark_papers'] as $paperTable) {
+                    if (Schema::hasTable($paperTable)) {
+                        $this->subjectScope(DB::table($paperTable), $schoolId, $row)->delete();
+                    }
+                }
+
                 if (Schema::hasTable('nlsc_assessments') && !empty($row->subject_id)) {
                     $this->purgeAssessments($this->assessmentIdsFor($schoolId, $row)->all());
                 }
@@ -336,7 +342,7 @@ class OrphanCleanupService
 
         // Marks / exam settings entered against the subject, including any
         // left on a class that no longer has a class_subjects row for it.
-        foreach (['examination_marks', 'examination_subject_settings'] as $table) {
+        foreach (['examination_marks', 'examination_subject_settings', 'examination_subject_papers', 'examination_mark_papers'] as $table) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, 'school_id') && Schema::hasColumn($table, 'subject_id')) {
                 DB::table($table)->where('school_id', $schoolId)->where('subject_id', $subjectId)->delete();
             }
@@ -517,7 +523,7 @@ class OrphanCleanupService
         $rules = [];
 
         // Examination children
-        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'report_card_remarks', 'student_discipline_ratings', 'nlsc_assessments', 'olevel_report_card_components'] as $t) {
+        foreach (['examination_classes', 'examination_marks', 'examination_subject_settings', 'examination_subject_papers', 'examination_mark_papers', 'report_card_remarks', 'student_discipline_ratings', 'nlsc_assessments', 'olevel_report_card_components'] as $t) {
             $rules[] = [$t, 'examination_id', 'examinations', 'id', 'delete', 'deleted examination'];
         }
         $rules[] = ['student_exam_summaries', 'exam_id', 'examinations', 'id', 'delete', 'deleted examination'];
@@ -530,7 +536,7 @@ class OrphanCleanupService
 
         // Student children
         foreach ([
-            'examination_marks', 'nlsc_assessment_marks', 'student_discipline_ratings', 'report_card_remarks',
+            'examination_marks', 'examination_mark_papers', 'nlsc_assessment_marks', 'student_discipline_ratings', 'report_card_remarks',
             'student_exam_summaries', 'student_attendances', 'fee_payments', 'student_fee_allocations',
             'student_id_cards', 'student_alevel_combinations', 'student_olevel_electives',
         ] as $t) {

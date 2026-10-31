@@ -29,10 +29,24 @@
         .dr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px 20px; margin: 14px 0; font-size: 14px; }
         .dr-grid .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; display: block; }
         .dr-msg { background: #f9fafb; border-radius: 10px; padding: 10px 14px; font-size: 14px; white-space: pre-line; margin-bottom: 12px; }
-        .dr-form { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; align-items: start; }
+        .dr-form { display: grid; grid-template-columns: 230px 1fr auto; gap: 12px; align-items: stretch; }
         @media (max-width: 760px) { .dr-form { grid-template-columns: 1fr; } }
-        .dr-form select, .dr-form textarea { border: 1px solid #d1d5db; border-radius: 10px; padding: 8px 12px; width: 100%; font-size: 14px; }
-        .dr-form button { border: 0; background: #16a34a; color: #fff; border-radius: 10px; padding: 9px 18px; font-weight: 600; }
+        /* Status dropdown and the notes box are the same height and sit on the same line */
+        .dr-form select, .dr-form textarea { border: 2px solid #d1d5db; border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 15px; min-height: 96px; height: 100%; }
+        .dr-form textarea { resize: vertical; }
+        .dr-form select { font-weight: 700; cursor: pointer; text-align-last: center; }
+        /* Coloured by the selected status (set inline + updated live in the script below) */
+        .dr-form select.dr-status { background-color: var(--c, #fff); border-color: var(--c, #d1d5db); color: #fff; }
+        .dr-form select.dr-status option { background: #fff; color: #111827; font-weight: 600; }
+        .dr-btns { display: flex; flex-direction: column; gap: 8px; justify-content: stretch; }
+        .dr-btns button { flex: 1; min-height: 44px; border: 0; color: #fff; border-radius: 10px; padding: 9px 18px; font-weight: 600; white-space: nowrap; }
+        .dr-btns .dr-save { background: #16a34a; }
+        .dr-btns .dr-del { background: #fff; color: #dc2626; border: 2px solid #fecaca; }
+        .dr-btns .dr-del:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+        .dr-bulk { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-size: 14px; }
+        .dr-bulk button { border: 0; background: #dc2626; color: #fff; border-radius: 8px; padding: 7px 16px; font-weight: 600; }
+        .dr-bulk button:disabled { opacity: .45; cursor: not-allowed; }
+        .dr-check { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; vertical-align: middle; }
         .dr-warn { color: #b45309; font-size: 12px; margin-top: 6px; }
         .dr-actions a { margin-right: 14px; font-size: 13px; font-weight: 600; }
         .dr-empty { text-align: center; color: #6b7280; padding: 50px 0; background: #fff; border: 1px dashed #d1d5db; border-radius: 14px; }
@@ -65,12 +79,22 @@
         <button type="submit"><i class="fas fa-search mr-1"></i> Search</button>
     </form>
 
+    @if($canDelete && $requests->count())
+        <form id="drBulkForm" method="POST" action="{{ route('demo-requests.bulk-destroy') }}">@csrf</form>
+        <div class="dr-bulk">
+            <label class="mb-0"><input type="checkbox" class="dr-check" id="drCheckAll"> Select all on this page</label>
+            <button type="submit" form="drBulkForm" id="drBulkBtn" disabled><i class="fas fa-trash mr-1"></i> Delete selected (<span id="drSel">0</span>)</button>
+        </div>
+    @endif
+
     @forelse($requests as $r)
         @php $meta = $r->statusMeta(); @endphp
         <div class="dr-card" style="--c:{{ $meta['color'] }}">
             <div class="dr-head">
                 <div>
-                    <h5 class="dr-school">{{ $r->school_name }}</h5>
+                    <h5 class="dr-school">
+                        @if($canDelete)<input type="checkbox" class="dr-check dr-pick" name="ids[]" value="{{ $r->id }}" form="drBulkForm">@endif{{ $r->school_name }}
+                    </h5>
                     <div class="dr-ref">{{ $r->reference }} &middot; {{ $r->created_at->format('d M Y, H:i') }} ({{ $r->created_at->diffForHumans() }})</div>
                 </div>
                 <span class="dr-pill">{{ $meta['label'] }}</span>
@@ -100,14 +124,22 @@
             @if($canManage)
                 <form method="POST" action="{{ route('demo-requests.update', $r->id) }}" class="dr-form">
                     @csrf
-                    <select name="status">
+                    <select name="status" class="dr-status" style="--c:{{ $meta['color'] }}">
                         @foreach($statuses as $key => $m)
-                            <option value="{{ $key }}" {{ $r->status === $key ? 'selected' : '' }}>{{ $m['label'] }}</option>
+                            <option value="{{ $key }}" data-color="{{ $m['color'] }}" {{ $r->status === $key ? 'selected' : '' }}>{{ $m['label'] }}</option>
                         @endforeach
                     </select>
-                    <textarea name="internal_notes" rows="2" placeholder="Internal notes (not visible to the school)">{{ $r->internal_notes }}</textarea>
-                    <button type="submit">Save</button>
+                    <textarea name="internal_notes" rows="3" placeholder="Internal notes (not visible to the school)">{{ $r->internal_notes }}</textarea>
+                    <div class="dr-btns">
+                        <button type="submit" class="dr-save"><i class="fas fa-save mr-1"></i> Save</button>
+                        @if($canDelete)
+                            <button type="submit" form="drDel{{ $r->id }}" class="dr-del" data-name="{{ $r->school_name }}"><i class="fas fa-trash mr-1"></i> Delete</button>
+                        @endif
+                    </div>
                 </form>
+                @if($canDelete)
+                    <form id="drDel{{ $r->id }}" method="POST" action="{{ route('demo-requests.destroy', $r->id) }}" class="dr-del-form" data-name="{{ $r->school_name }}">@csrf @method('DELETE')</form>
+                @endif
             @elseif($r->internal_notes)
                 <div class="dr-msg"><strong>Notes:</strong> {{ $r->internal_notes }}</div>
             @endif
@@ -117,6 +149,41 @@
     @endforelse
 
     <div class="mt-3">{{ $requests->links() }}</div>
+
+    <script>
+        (function () {
+            // Colour the status dropdown by the selected status, live.
+            document.querySelectorAll('select.dr-status').forEach(function (sel) {
+                sel.addEventListener('change', function () {
+                    var c = sel.options[sel.selectedIndex].dataset.color;
+                    if (c) sel.style.setProperty('--c', c);
+                });
+            });
+
+            // Confirm before deleting one request.
+            document.querySelectorAll('.dr-del-form').forEach(function (f) {
+                f.addEventListener('submit', function (e) {
+                    if (!window.confirm('Permanently delete the demo request from "' + f.dataset.name + '"? This cannot be undone.')) e.preventDefault();
+                });
+            });
+
+            // Bulk selection.
+            var picks = Array.prototype.slice.call(document.querySelectorAll('.dr-pick'));
+            var all = document.getElementById('drCheckAll'), btn = document.getElementById('drBulkBtn'), cnt = document.getElementById('drSel'), bulk = document.getElementById('drBulkForm');
+            function refresh() {
+                var n = picks.filter(function (p) { return p.checked; }).length;
+                if (cnt) cnt.textContent = n;
+                if (btn) btn.disabled = n === 0;
+                if (all) all.checked = n > 0 && n === picks.length;
+            }
+            if (all) all.addEventListener('change', function () { picks.forEach(function (p) { p.checked = all.checked; }); refresh(); });
+            picks.forEach(function (p) { p.addEventListener('change', refresh); });
+            if (bulk) bulk.addEventListener('submit', function (e) {
+                var n = picks.filter(function (p) { return p.checked; }).length;
+                if (!n || !window.confirm('Permanently delete ' + n + ' selected demo request(s)? This cannot be undone.')) e.preventDefault();
+            });
+        })();
+    </script>
 
     {{-- 3 extra closing divs push the footer down (same as the other modules) --}}
     </div>

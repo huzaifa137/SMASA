@@ -35,6 +35,8 @@ class StreamRenameService
         'examination_classes',
         'examination_marks',
         'examination_subject_settings',
+        'examination_subject_papers',
+        'examination_mark_papers',
         'student_attendances',
         'student_discipline_ratings',
         'student_exam_summaries',

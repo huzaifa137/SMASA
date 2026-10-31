@@ -160,6 +160,7 @@ class SchoolProductMergeService
             $this->deleteStudentRows('fee_payments', $studentIds);
             $this->deleteStudentRows('student_fee_allocations', $studentIds);
             $this->deleteStudentRows('examination_marks', $studentIds);
+            $this->deleteStudentRows('examination_mark_papers', $studentIds);
             $this->deleteStudentRows('student_exam_summaries', $studentIds);
             $this->deleteStudentRows('student_attendances', $studentIds);
             $this->deleteStudentRows('student_id_cards', $studentIds);

@@ -144,6 +144,7 @@ return [
             'permissions' => [
                 'view' => 'View the demo requests inbox',
                 'manage' => 'Change request status and add internal notes',
+                'delete' => 'Permanently delete demo requests (e.g. test entries)',
             ],
         ],
 

@@ -19,6 +19,7 @@ use App\Models\DisciplineCriteria;
 use App\Models\StudentDisciplineRating;
 use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
+use App\Services\ExaminationPaperService;
 use App\Support\CustomReportCards;
 use App\Support\ArabicReportCard;
 use App\Support\CustomReportData;
@@ -504,6 +505,25 @@ class ExaminationController extends Controller
             ? $assessmentScale->gradingScheme->bands
             : collect();
 
+        // Secondary subjects can be split into papers (P1/20, P2/80 ...) whose
+        // maximums are set per examination - see ExaminationPaperService.
+        // No papers configured = the screen behaves exactly as it always did.
+        $papersSupported = !$assessmentScale && ExaminationPaperService::supports($exam, $classSubject->class_id);
+        $papers = collect();
+        $paperMarks = [];
+        $canSetPapers = false;
+
+        if ($papersSupported) {
+            $papers = ExaminationPaperService::papers($exam, $classSubject->class_id, $classSubject->stream_id, $classSubject->subject_id, $classSubject->custom_subject_id);
+
+            if ($papers->isNotEmpty()) {
+                $paperMarks = ExaminationPaperService::paperMarks($exam, $classSubject->class_id, $classSubject->stream_id, $classSubject->subject_id, $classSubject->custom_subject_id);
+            }
+
+            $canSetPapers = PermissionHelper::canFeature('enter_marks')
+                && !$this->classIsReleased($exam, $classSubject->class_id, (string) $classSubject->stream_id, $schoolId);
+        }
+
         return view('Examination.marks-entry-subject', compact(
             'exam',
             'classSubject',
@@ -517,7 +537,11 @@ class ExaminationController extends Controller
             'assessmentScale',
             'scaleGradingBands',
             'isCustomSubject',
-            'subjectSelectionNote'
+            'subjectSelectionNote',
+            'papersSupported',
+            'papers',
+            'paperMarks',
+            'canSetPapers'
         ));
     }
 
@@ -536,6 +560,8 @@ class ExaminationController extends Controller
             'marks.*.student_id' => 'required|integer',
             'marks.*.marks' => 'nullable|string', // Changed from numeric to string to allow empty values
             'marks.*.comment' => 'nullable|string|max:255',
+            // Subjects split into papers send [paper_number => raw mark] here instead of `marks`.
+            'marks.*.papers' => 'nullable|array',
             // A subject is identified by subject_id (master subjects, and
             // custom-since-switch subjects that still carry their original
             // master subject_id — see CustomSubjectController::confirmSwitch)
@@ -614,6 +640,43 @@ class ExaminationController extends Controller
         $eligibleStudentIds = $classSubjectRow
             ? Helper::studentIdsTakingClassSubject($schoolId, $classSubjectRow)
             : null;
+
+        // A secondary subject that has papers configured for THIS examination
+        // saves per-paper raw marks; the combined subject mark (what pass
+        // slips and reports read) is derived from them.
+        if (
+            $classSubjectRow && !$isEarlyYears
+            && ExaminationPaperService::supports($exam, $request->class_id)
+            && ExaminationPaperService::papers($exam, $request->class_id, $request->stream_id, $request->subject_id, $request->custom_subject_id)->isNotEmpty()
+        ) {
+            try {
+                $result = ExaminationPaperService::savePaperMarks(
+                    $exam,
+                    $request->class_id,
+                    $request->stream_id,
+                    $request->subject_id,
+                    $request->custom_subject_id,
+                    collect($request->marks)->map(fn($m) => [
+                        'student_id' => $m['student_id'],
+                        'papers' => $m['papers'] ?? [],
+                        'comment' => $m['comment'] ?? null,
+                    ])->all(),
+                    $teacherId,
+                    $eligibleStudentIds
+                );
+            } catch (\InvalidArgumentException $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            } catch (\Throwable $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+
+            $message = 'Marks saved successfully.';
+            if ($result['partial'] > 0) {
+                $message .= " {$result['partial']} student(s) still have papers outstanding, so their subject total stays pending until every paper is entered.";
+            }
+
+            return response()->json(['success' => true, 'message' => $message, 'papers' => true] + $result);
+        }
 
         DB::beginTransaction();
         try {

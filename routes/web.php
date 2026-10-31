@@ -826,6 +826,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/subjects', [\App\Http\Controllers\ExaminationSubjectController::class, 'edit'])->name('subjects.edit');
             Route::post('/{examId}/subjects/save', [\App\Http\Controllers\ExaminationSubjectController::class, 'save'])->name('subjects.save');
 
+            // Papers (P1/20, P2/80 ...) — what each paper of a secondary subject is
+            // marked out of in this examination. Added one at a time by the subject
+            // teacher (from marks entry) or an admin (from Exam Subjects).
+            Route::get('/{examId}/papers', [\App\Http\Controllers\ExaminationPaperController::class, 'show'])->name('papers.show');
+            Route::post('/{examId}/papers/save', [\App\Http\Controllers\ExaminationPaperController::class, 'save'])->name('papers.save');
+            Route::post('/{examId}/papers/delete', [\App\Http\Controllers\ExaminationPaperController::class, 'destroy'])->name('papers.delete');
+
             // Report Card Remarks (Class Teacher / Head Teacher)
             Route::get('/{id}/remarks', 'remarksEntry')->name('remarks.entry');
             Route::post('/{id}/remarks/save', 'saveRemarks')->name('remarks.save');

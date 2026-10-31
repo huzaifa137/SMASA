@@ -321,6 +321,7 @@
                                 <th>Subject</th>
                                 <th class="text-center">Sat in this exam</th>
                                 <th class="text-center">Show on pass slip / report card</th>
+                                <th class="text-center">Papers</th>
                                 <th class="text-center">Marks saved</th>
                             </tr>
                         </thead>
@@ -346,6 +347,19 @@
                                             <input type="checkbox" class="es-show" {{ $sub->show ? 'checked' : '' }}>
                                             <span class="es-slider"></span>
                                         </label>
+                                    </td>
+                                    <td class="text-center" style="min-width:150px;">
+                                        @if($sub->papers_supported)
+                                            <div data-papers-summary class="text-muted" style="font-size:.74rem;line-height:1.2;">
+                                                {{ $sub->papers_summary ?: 'Single score' }}
+                                            </div>
+                                            <button type="button" class="es-mini-btn" data-papers-btn
+                                                title="Set what each paper (P1, P2 ...) of this subject is marked out of in this exam">
+                                                <i class="fas fa-layer-group mr-1"></i> Papers
+                                            </button>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         @if($sub->marks > 0)
@@ -381,6 +395,35 @@
     </div>
     </div>
     </div>
+
+    @include('Examination.partials.papers-modal', ['exam' => $exam])
+
+    <script>
+        // Papers button (per subject): opens the shared Papers modal.
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest("[data-papers-btn]");
+            if (!btn || !window.ExamPapers) return;
+
+            const tr = btn.closest('[data-subject-row]');
+            const card = btn.closest('[data-class-card]');
+            const summaryEl = tr.querySelector('[data-papers-summary]');
+            const fmt = v => String(Math.round(parseFloat(v) * 100) / 100);
+
+            window.ExamPapers.open({
+                classId: card.dataset.classId,
+                streamId: card.dataset.streamId,
+                subjectId: tr.dataset.subjectId || null,
+                customSubjectId: tr.dataset.customSubjectId || null,
+                title: tr.querySelector('.es-name strong').textContent + ' — ' + card.querySelector('[data-class-label]').textContent,
+                canEdit: true,
+                onChange: function (papers) {
+                    summaryEl.textContent = papers.length
+                        ? papers.map(p => 'P' + p.n + '/' + fmt(p.max)).join(' · ')
+                        : 'Single score';
+                }
+            });
+        });
+    </script>
 
     <script>
         (function () {

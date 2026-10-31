@@ -6,7 +6,9 @@ use App\Helpers\PermissionHelper;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
+use App\Models\ExaminationSubjectPaper;
 use App\Models\ExaminationSubjectSetting;
+use App\Services\ExaminationPaperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -48,8 +50,18 @@ class ExaminationSubjectController extends Controller
             ->get()
             ->mapWithKeys(fn($r) => [ExaminationSubjectSetting::keyFor($r) => (int) $r->c]);
 
+        // Papers (P1/20, P2/80 ...) already set for this exam, per class-stream subject.
+        $paperSummaries = ExaminationSubjectPaper::where('examination_id', $exam->id)
+            ->where('school_id', $schoolId)
+            ->orderBy('paper_number')
+            ->get()
+            ->groupBy(fn($p) => ExaminationSubjectSetting::keyFor($p))
+            ->map(fn($rows) => $rows->map(fn($p) => 'P' . $p->paper_number . '/' . rtrim(rtrim(number_format((float) $p->max_score, 2, '.', ''), '0'), '.'))->implode(' · '));
+
         $classes = [];
         foreach ($examClasses as $ec) {
+            $classSupportsPapers = ExaminationPaperService::supports($exam, $ec->class_id);
+
             $subjects = DB::table('class_subjects')
                 ->where('school_id', $schoolId)
                 ->where('class_id', $ec->class_id)
@@ -63,7 +75,7 @@ class ExaminationSubjectController extends Controller
                 continue;
             }
 
-            $rows = $subjects->map(function ($cs) use ($settings, $markCounts, $schoolId, $exam) {
+            $rows = $subjects->map(function ($cs) use ($settings, $markCounts, $schoolId, $exam, $paperSummaries, $classSupportsPapers) {
                 $key = ExaminationSubjectSetting::keyFor($cs);
                 $setting = $settings[$key] ?? null;
 
@@ -75,6 +87,9 @@ class ExaminationSubjectController extends Controller
                     'teacher' => Helper::teacherFullName($cs->subject_teacher_1 ?? null),
                     'sat' => $setting ? (bool) $setting->marks_entry_enabled : true,
                     'show' => $setting ? (bool) $setting->show_on_report : true,
+                    // Papers only apply to Secondary subjects marked with plain scores.
+                    'papers_supported' => $classSupportsPapers && !$cs->assessment_scale_id,
+                    'papers_summary' => $paperSummaries[$key] ?? '',
                     // A choice subject (A-Level principal/subsidiary, O-Level
                     // elective) only counts marks from students who still
                     // take it - otherwise a mark left behind by a student

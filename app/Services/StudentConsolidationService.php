@@ -31,6 +31,7 @@ class StudentConsolidationService
      */
     protected const RELATED_TABLES = [
         ['table' => 'examination_marks', 'column' => 'student_id', 'via' => 'id'],
+        ['table' => 'examination_mark_papers', 'column' => 'student_id', 'via' => 'id'],
         ['table' => 'student_attendances', 'column' => 'student_id', 'via' => 'id'],
         ['table' => 'student_fee_allocations', 'column' => 'student_id', 'via' => 'id'],
         ['table' => 'fee_payments', 'column' => 'student_id', 'via' => 'id'],

@@ -452,6 +452,30 @@ use App\Helpers\PermissionHelper;
     }
 }
 
+/* ── Papers (P1/P2/...) ── */
+.paper-input {
+    width: 84px;
+    text-align: center;
+    border: 2px solid #ede9ff;
+    border-radius: .5rem;
+    font-weight: 700;
+    font-size: .9rem;
+}
+.paper-input:focus { border-color: #5351e4; box-shadow: 0 0 0 3px rgba(83, 81, 228, .12); outline: none; }
+.paper-input.valid { border-color: #1a7a4a; background: #f0fdf4; }
+.paper-input.invalid { border-color: #c0392b; background: #fef2f2; }
+.paper-total { font-weight: 800; font-size: .95rem; white-space: nowrap; }
+.paper-th small { display: block; font-weight: 600; color: rgba(255,255,255,.85); text-transform: none; letter-spacing: 0; }
+.paper-chip {
+    display: inline-block; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+    color: #fff; border-radius: 99px; padding: .2rem .7rem; font-size: .78rem; font-weight: 700; margin: 0 .3rem .3rem 0;
+}
+.paper-btn {
+    border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.15); color: #fff;
+    border-radius: 99px; padding: .3rem .95rem; font-weight: 700; font-size: .8rem; cursor: pointer;
+}
+.paper-btn:hover { background: rgba(255,255,255,.28); }
+
 @media (max-width: 480px) {
     .exam-hero {
         padding: 1rem 1rem 1.5rem;
@@ -489,6 +513,12 @@ use App\Helpers\PermissionHelper;
 @endsection
 
 @section('content')
+    @php
+        // Subject split into papers for THIS examination (P1/20, P2/80 ...)?
+        $paperMode = !$isEarlyYears && $papers->isNotEmpty();
+        $paperMaxTotal = (float) $papers->sum('max_score');
+        $fmtNum = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+    @endphp
     <div class="side-app">
 
         {{-- Hero --}}
@@ -560,6 +590,32 @@ use App\Helpers\PermissionHelper;
                     </div>
                 </div>
 
+                {{-- PAPERS --}}
+                @if ($papersSupported && ($paperMode || $canSetPapers))
+                    <div class="col-12 mt-3">
+                        @if ($paperMode)
+                            <span class="text-white-50" style="font-size:.78rem;margin-right:.4rem;">Papers:</span>
+                            @foreach ($papers as $paper)
+                                <span class="paper-chip">{{ $paper->display_label }} / {{ $fmtNum($paper->max_score) }}</span>
+                            @endforeach
+                        @else
+                            <span style="font-size:.82rem;color:rgba(255,255,255,.75);margin-right:.6rem;">
+                                This subject is marked as one score. Split it into papers (P1, P2 ...) if this exam has them.
+                            </span>
+                        @endif
+                        @if ($canSetPapers)
+                            <button type="button" class="paper-btn" id="openPapersBtn">
+                                <i class="fas fa-layer-group me-1 mr-1"></i>
+                                {{ $paperMode ? 'Add / edit papers' : 'Set papers' }}
+                            </button>
+                        @else
+                            <button type="button" class="paper-btn" id="openPapersBtn">
+                                <i class="fas fa-eye me-1 mr-1"></i> View papers
+                            </button>
+                        @endif
+                    </div>
+                @endif
+
                 {{-- PROGRESS BAR --}}
                 @php
                     $entered = $existingMarks->where('status', 'entered')->count();
@@ -611,6 +667,16 @@ use App\Helpers\PermissionHelper;
                                     @if ($assessmentScale->usesLinkedGrading())
                                         <th>Grade</th>
                                     @endif
+                                    <th>Remark</th>
+                                @elseif ($paperMode)
+                                    @foreach ($papers as $paper)
+                                        <th class="paper-th text-center" style="min-width:100px;">
+                                            {{ $paper->display_label }}
+                                            <small>/ {{ $fmtNum($paper->max_score) }}</small>
+                                        </th>
+                                    @endforeach
+                                    <th class="paper-th text-center">Total <small>/ {{ $fmtNum($exam->total_marks) }}</small></th>
+                                    <th>Grade</th>
                                     <th>Remark</th>
                                 @else
                                     <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
@@ -686,6 +752,48 @@ use App\Helpers\PermissionHelper;
                                                 </span>
                                             </td>
                                         @endif
+                                        <td>
+                                            <span class="text-muted remark-cell" style="font-size:.8rem;"
+                                                id="remark_{{ $student->id }}">
+                                                {{ $mark?->grade_remark ?? '—' }}
+                                            </span>
+                                        </td>
+                                    @elseif ($paperMode)
+                                        @foreach ($papers as $paper)
+                                            <td class="text-center">
+                                                <input type="number" class="form-control paper-input mx-auto"
+                                                    data-student="{{ $student->id }}"
+                                                    data-paper="{{ $paper->paper_number }}"
+                                                    data-max="{{ (float) $paper->max_score }}"
+                                                    value="{{ $paperMarks[$student->id][$paper->paper_number] ?? '' }}"
+                                                    min="0" max="{{ (float) $paper->max_score }}" step="0.5"
+                                                    placeholder="—">
+                                            </td>
+                                        @endforeach
+                                        @php
+                                            $g = $mark?->grade ?? '';
+                                            $gradeClass = '';
+                                            if (str_starts_with($g, 'D')) {
+                                                $gradeClass = 'grade-D';
+                                            } elseif (str_starts_with($g, 'C')) {
+                                                $gradeClass = 'grade-C';
+                                            } elseif (str_starts_with($g, 'P')) {
+                                                $gradeClass = 'grade-P';
+                                            } elseif (str_starts_with($g, 'F')) {
+                                                $gradeClass = 'grade-F';
+                                            }
+                                        @endphp
+                                        <td class="text-center">
+                                            <span class="paper-total" id="total_{{ $student->id }}">
+                                                {{ $mark?->marks_obtained !== null ? $fmtNum($mark->marks_obtained) : '—' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="grade-badge grade-cell {{ $gradeClass }}"
+                                                id="grade_{{ $student->id }}">
+                                                {{ $mark?->grade ?? '—' }}
+                                            </span>
+                                        </td>
                                         <td>
                                             <span class="text-muted remark-cell" style="font-size:.8rem;"
                                                 id="remark_{{ $student->id }}">
@@ -807,6 +915,10 @@ use App\Helpers\PermissionHelper;
     </div>
     </div>
 
+    @if ($papersSupported && ($paperMode || $canSetPapers))
+        @include('Examination.partials.papers-modal', ['exam' => $exam])
+    @endif
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -818,6 +930,12 @@ use App\Helpers\PermissionHelper;
 
         // Pass total_marks from PHP into JS
         const examTotalMarks = {{ $exam->total_marks }};
+
+        // Papers (P1/P2 ...) configured for this subject in this examination
+        const paperMode = @json($paperMode);
+        const papersCfg = @json($papers->map(fn($p) => ['n' => $p->paper_number, 'max' => (float) $p->max_score])->values());
+        const paperMaxTotal = {{ $paperMaxTotal }};
+        let marksDirty = false;
         const scaleMaxScore = {{ $isEarlyYears ? $earlyYearsMaxMark : 'null' }};
 
         // ✅ Convert to percentage FIRST, then match scale
@@ -994,8 +1112,202 @@ use App\Helpers\PermissionHelper;
             }
         });
 
+        // ===== Papers: live subject total / grade as raw paper marks are typed =====
+        function fmtNum(v) { return String(Math.round(v * 100) / 100); }
+
+        function refreshPaperRow(sid) {
+            const $row = $(`tr[data-student-id="${sid}"]`);
+            const $inputs = $row.find('.paper-input');
+            let sum = 0, filled = 0, bad = false;
+
+            $inputs.each(function() {
+                const val = $(this).val();
+                const max = parseFloat($(this).data('max'));
+                $(this).removeClass('valid invalid');
+                if (val === '') return;
+                const num = parseFloat(val);
+                if (isNaN(num) || num < 0 || num > max) {
+                    $(this).addClass('invalid');
+                    bad = true;
+                    return;
+                }
+                $(this).addClass('valid');
+                sum += num;
+                filled++;
+            });
+
+            const $total = $(`#total_${sid}`);
+            const $grade = $(`#grade_${sid}`);
+            const $remark = $(`#remark_${sid}`);
+
+            if (bad) {
+                $total.text('!');
+                $grade.text('!').attr('class', 'grade-badge grade-cell grade-F');
+                $remark.text('Invalid');
+                return;
+            }
+
+            if (filled === papersCfg.length && paperMaxTotal > 0) {
+                const scaled = Math.round((sum / paperMaxTotal) * examTotalMarks * 100) / 100;
+                const g = getGrade((sum / paperMaxTotal) * examTotalMarks);
+                $total.text(fmtNum(scaled));
+                $grade.text(g ? g.grade : '—').attr('class', 'grade-badge grade-cell ' + (g ? gradeCssClass(g.grade) : ''));
+                $remark.text(g ? g.remark : '—');
+            } else {
+                $total.text(filled > 0 ? filled + '/' + papersCfg.length + ' papers' : '—');
+                $grade.text('—').attr('class', 'grade-badge grade-cell');
+                $remark.text(filled > 0 ? 'Pending' : '—');
+            }
+        }
+
+        $(document).on('input', '.paper-input', function() {
+            marksDirty = true;
+            refreshPaperRow($(this).data('student'));
+        });
+        $(document).on('input', '.comment-input', function() { marksDirty = true; });
+
+        // Save paper marks (subjects with papers configured)
+        function savePaperMarks() {
+            let hasError = false;
+            $('.paper-input').each(function() {
+                const val = $(this).val();
+                const max = parseFloat($(this).data('max'));
+                const num = parseFloat(val);
+                if (val !== '' && (isNaN(num) || num < 0 || num > max)) {
+                    $(this).addClass('invalid');
+                    hasError = true;
+                }
+            });
+
+            if (hasError) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid marks',
+                    text: 'Some paper marks are out of range for what that paper is marked out of. Please correct them before saving.'
+                });
+                return;
+            }
+
+            let complete = 0, partial = 0;
+            $('tr[data-student-id]').each(function() {
+                const filled = $(this).find('.paper-input').filter(function() { return $(this).val() !== ''; }).length;
+                if (filled === papersCfg.length) complete++;
+                else if (filled > 0) partial++;
+            });
+
+            Swal.fire({
+                title: 'Save Marks?',
+                html: `<strong>${complete}</strong> student(s) have every paper entered.` +
+                    (partial > 0 ? `<br><strong>${partial}</strong> student(s) have only some papers - their subject total stays pending until every paper is entered.` : '') +
+                    '<br>Empty fields will remain pending.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2C29CA',
+                confirmButtonText: 'Yes, save!',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                const marksData = [];
+                $('tr[data-student-id]').each(function() {
+                    const papers = {};
+                    $(this).find('.paper-input').each(function() {
+                        const v = $(this).val();
+                        papers[$(this).data('paper')] = v !== '' ? v : null;
+                    });
+                    marksData.push({
+                        student_id: $(this).data('student-id'),
+                        marks: null,
+                        papers: papers,
+                        comment: $(this).find('.comment-input').val()
+                    });
+                });
+
+                const $btn = $('#saveMarksBtn');
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
+
+                $.ajax({
+                    url: '{{ route('examination.marks.save', $exam->id) }}',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        _token: '{{ csrf_token() }}',
+                        marks: marksData,
+                        subject_id: @json($classSubject->subject_id),
+                        custom_subject_id: @json($classSubject->custom_subject_id),
+                        class_id: @json($classSubject->class_id),
+                        stream_id: @json($classSubject->stream_id),
+                    }),
+                    success: function(res) {
+                        if (res.success) {
+                            marksDirty = false;
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Marks Saved!',
+                                text: res.message,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#2C29CA',
+                                allowOutsideClick: false
+                            }).then(r => { if (r.isConfirmed) SMASA.reload(); });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message || 'An error occurred while saving marks'
+                        });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Save All Marks');
+                    }
+                });
+            });
+        }
+
+        // Open the shared "Papers" modal (set / add / edit what each paper is out of)
+        $('#openPapersBtn').on('click', function() {
+            const open = function() {
+                if (!window.ExamPapers) return;
+                window.ExamPapers.open({
+                    classId: @json($classSubject->class_id),
+                    streamId: @json((string) $classSubject->stream_id),
+                    subjectId: @json($classSubject->subject_id),
+                    customSubjectId: @json($classSubject->custom_subject_id),
+                    title: @json(Helper::classSubjectName($classSubject) . ' — ' . $exam->exam_name),
+                    canEdit: @json((bool) $canSetPapers),
+                    onChange: function() {
+                        marksDirty = false;
+                        SMASA.reload();
+                    }
+                });
+            };
+
+            if (marksDirty) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Unsaved marks',
+                    html: 'Changing the papers reloads this page, so marks you have typed but not saved will be lost. Save them first, or continue anyway.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2C29CA',
+                    confirmButtonText: 'Continue anyway',
+                    cancelButtonText: 'Go back'
+                }).then(r => { if (r.isConfirmed) open(); });
+                return;
+            }
+            open();
+        });
+
+        // Single-score subjects: track typing too, so the "unsaved" warning above is accurate
+        $(document).on('input', '.marks-input', function() { marksDirty = true; });
+
         // Save marks
         $('#saveMarksBtn').on('click', function() {
+            if (paperMode) {
+                return savePaperMarks();
+            }
+
             // Validate all inputs first
             let hasError = false;
             $('.marks-input').each(function() {
