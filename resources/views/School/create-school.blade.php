@@ -72,7 +72,7 @@ $controller = new Controller();
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
                                         <label class="form-label">School Name</label>
-                                        <input class="form-control" type="text" name="name">
+                                        <input class="form-control" type="text" name="name" style="text-transform: uppercase;">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">School Products</label>
@@ -245,6 +245,15 @@ $controller = new Controller();
                                 });
                             },
                             error: function(data) {
+                                // A friendly message (e.g. duplicate school name) instead of dumping the response into the page.
+                                if (data.responseJSON && data.responseJSON.message) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not save',
+                                        text: data.responseJSON.message
+                                    });
+                                    return;
+                                }
                                 $('body').html(data.responseText);
                             },
                             complete: function() {

@@ -31,6 +31,12 @@ class School extends Model
         'admin_staff_add_open' => 'boolean',
     ];
 
+    /** Names are always stored UPPER CASE - see App\Support\SchoolName. */
+    public function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = \App\Support\SchoolName::normalize($value);
+    }
+
     public function classrooms()
     {
         return $this->hasMany(Classroom::class);

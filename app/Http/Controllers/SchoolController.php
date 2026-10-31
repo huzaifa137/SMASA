@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\SchoolContext;
+use App\Support\SchoolName;
 use App\Support\SchoolRule;
 use App\Models\AcademicYear;
 use App\Models\DynamicFormValue;
@@ -99,6 +100,9 @@ class SchoolController extends Controller
 
     public function createNewSchool(Request $request)
     {
+        // Names are always stored UPPER CASE, so look-alikes ("st mary" / "ST MARY") collapse to one.
+        $request->merge(['name' => SchoolName::normalize($request->input('name'))]);
+
         $validated = $request->validate([
             'school_type' => 'required|string|max:255',
             'email' => 'required|email',
@@ -112,6 +116,14 @@ class SchoolController extends Controller
             'population' => 'required|string',
             'school_name_arabic' => 'nullable|string|max:255',
         ]);
+
+        if (SchoolName::isTaken($validated['name'])) {
+            return response()->json([
+                'success' => false,
+                'message' => SchoolName::takenMessage($validated['name']),
+                'errors' => ['name' => [SchoolName::takenMessage($validated['name'])]],
+            ], 422);
+        }
 
         // Sales Team: an admin with the right may enrol the school on behalf of a representative.
         $chosenRepId = null;
@@ -311,6 +323,8 @@ class SchoolController extends Controller
     {
         $school = School::findOrFail($request->school_id);
 
+        $request->merge(['name' => SchoolName::normalize($request->input('name'))]);
+
         $validated = $request->validate([
             'school_type' => 'required|string|max:255',
             'email' => 'required|email',
@@ -325,6 +339,16 @@ class SchoolController extends Controller
             'population' => 'required|string',
             'school_name_arabic' => 'nullable|string|max:255',
         ]);
+
+        // Only a real rename is checked: a school keeps saving fine even if
+        // an older duplicate of its name already exists.
+        if ($validated['name'] !== SchoolName::normalize($school->name) && SchoolName::isTaken($validated['name'], $school->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => SchoolName::takenMessage($validated['name']),
+                'errors' => ['name' => [SchoolName::takenMessage($validated['name'])]],
+            ], 422);
+        }
 
         // The registration code is the link to houses.Number and
         // school_passwords, and the form shows it read-only: never let a
@@ -490,6 +514,10 @@ class SchoolController extends Controller
 
     public function storeSchoolProfile(Request $request)
     {
+        if ($request->filled('name')) {
+            $request->merge(['name' => SchoolName::normalize($request->input('name'))]);
+        }
+
         $validated = $request->validate([
             // school_id stays required - it's how we know which profile to update.
             'school_id' => ['required', 'integer', SchoolRule::school()],
@@ -517,6 +545,18 @@ class SchoolController extends Controller
         // A school user may only edit their own school's profile.
         if (Session::has('LoggedSchool') && (int) Session::get('LoggedSchool') !== (int) $validated['school_id']) {
             abort(403, 'You can only edit your own school profile.');
+        }
+
+        if (!empty($validated['name'])) {
+            $current = School::find($validated['school_id']);
+
+            if ($current && $validated['name'] !== SchoolName::normalize($current->name) && SchoolName::isTaken($validated['name'], $current->id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => SchoolName::takenMessage($validated['name']),
+                    'errors' => ['name' => [SchoolName::takenMessage($validated['name'])]],
+                ], 422);
+            }
         }
 
         $profile = SchoolProfile::where('school_id', $validated['school_id'])->first();

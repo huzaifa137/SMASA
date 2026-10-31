@@ -76,7 +76,7 @@ $controller = new Controller();
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="schoolName" class="form-label">School Name</label>
-                                                    <input type="text" name="name" id="schoolName" class="form-control"
+                                                    <input type="text" name="name" id="schoolName" class="form-control" style="text-transform: uppercase;"
                                                         value="{{ (!empty($profile) && !empty($profile->name)) ? $profile->name : (!empty($school) ? $school->name : '') }}">
                                                 </div>
 

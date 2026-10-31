@@ -8,6 +8,13 @@ class SchoolProfile extends Model
 {
     use HasFactory;
 
+    /** Names are always stored UPPER CASE - see App\Support\SchoolName. A blank stays blank. */
+    public function setNameAttribute($value): void
+    {
+        $name = \App\Support\SchoolName::normalize($value);
+        $this->attributes['name'] = $name === '' ? null : $name;
+    }
+
     protected $fillable = [
         'school_id',
         'school_type',

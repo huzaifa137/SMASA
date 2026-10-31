@@ -41,7 +41,8 @@ class SchoolIdentityService
      */
     public function syncName(School $school, string $name, ?string $arabic = null): array
     {
-        $name = trim($name);
+        // Every table gets the same UPPER CASE name, however it was typed.
+        $name = \App\Support\SchoolName::normalize($name);
 
         if ($name === '') {
             return [];
