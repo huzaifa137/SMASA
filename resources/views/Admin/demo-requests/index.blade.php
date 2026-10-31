@@ -60,7 +60,9 @@
         </div>
     </div>
 
-    @if(session('success'))<div class="dr-flash">{{ session('success') }}</div>@endif
+    @if(session('success'))
+        <div class="dr-flash">{{ session('success') }}</div>
+    @endif
 
     <div class="dr-tabs">
         <a href="{{ route('demo-requests.index') }}" class="dr-tab {{ !$activeStatus ? 'active' : '' }}" style="--c:#0a1628">
@@ -150,8 +152,39 @@
 
     <div class="mt-3">{{ $requests->links() }}</div>
 
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
+            // Shared SweetAlert theme so it matches the page's look.
+            var drSwal = Swal.mixin({
+                confirmButtonColor: '#2C29CA',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+                focusCancel: true
+            });
+
+            // ---- Success flash -> auto-closing toast + optional dialog ----
+            @if(session('success'))
+                drSwal.fire({
+                    icon: 'success',
+                    title: 'Done',
+                    text: @json(session('success')),
+                    timer: 3200,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            @endif
+
+            // ---- Error flash (if your controller sends one) ----
+            @if(session('error'))
+                drSwal.fire({
+                    icon: 'error',
+                    title: 'Something went wrong',
+                    text: @json(session('error'))
+                });
+            @endif
+
             // Colour the status dropdown by the selected status, live.
             document.querySelectorAll('select.dr-status').forEach(function (sel) {
                 sel.addEventListener('change', function () {
@@ -160,10 +193,23 @@
                 });
             });
 
-            // Confirm before deleting one request.
+            // Confirm before deleting ONE request.
             document.querySelectorAll('.dr-del-form').forEach(function (f) {
                 f.addEventListener('submit', function (e) {
-                    if (!window.confirm('Permanently delete the demo request from "' + f.dataset.name + '"? This cannot be undone.')) e.preventDefault();
+                    e.preventDefault();
+                    drSwal.fire({
+                        icon: 'warning',
+                        title: 'Delete this request?',
+                        html: 'Permanently delete the demo request from <strong>' + f.dataset.name + '</strong>?<br>This cannot be undone.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete it',
+                        confirmButtonColor: '#dc2626',
+                        cancelButtonText: 'Cancel'
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            f.submit();
+                        }
+                    });
                 });
             });
 
@@ -178,9 +224,25 @@
             }
             if (all) all.addEventListener('change', function () { picks.forEach(function (p) { p.checked = all.checked; }); refresh(); });
             picks.forEach(function (p) { p.addEventListener('change', refresh); });
+
+            // Confirm before bulk deleting.
             if (bulk) bulk.addEventListener('submit', function (e) {
+                e.preventDefault();
                 var n = picks.filter(function (p) { return p.checked; }).length;
-                if (!n || !window.confirm('Permanently delete ' + n + ' selected demo request(s)? This cannot be undone.')) e.preventDefault();
+                if (!n) return;
+                drSwal.fire({
+                    icon: 'warning',
+                    title: 'Delete ' + n + ' request(s)?',
+                    html: 'Permanently delete <strong>' + n + '</strong> selected demo request(s)?<br>This cannot be undone.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete them',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        bulk.submit();
+                    }
+                });
             });
         })();
     </script>
