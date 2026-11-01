@@ -381,8 +381,34 @@
                 origLabel: p.label || '',
                 entered: p.entered,
                 setBy: p.set_by,
+                editable: p.editable !== false,
+                assignedTo: p.assigned_to || null,
                 isNew: false
             }));
+            render();
+        }
+
+        // Standard papers attached to this class (Classes -> Subject Papers) that this
+        // exam doesn't have yet: offered as ready-made new rows, pre-filled with the
+        // paper's usual "out of". Nothing is saved until the person presses Save.
+        // Papers that belong to another teacher are not offered.
+        function addSuggested(list) {
+            (list || []).forEach(s => {
+                if (s.editable === false || state.some(r => r.n === s.paper_number)) return;
+                state.push({
+                    n: s.paper_number,
+                    label: s.label || '',
+                    max: s.default_max ? fmt(s.default_max) : '',
+                    origMax: '',
+                    origLabel: '',
+                    entered: 0,
+                    setBy: null,
+                    editable: true,
+                    assignedTo: s.assigned_to || null,
+                    fromStandard: true,
+                    isNew: true
+                });
+            });
             render();
         }
 
@@ -400,6 +426,7 @@
 
             state.sort((a, b) => a.n - b.n).forEach((r, idx) => {
                 const tr = document.createElement('tr');
+                const rowEdit = edit && r.editable !== false;
 
                 const tdN = document.createElement('td');
                 const pill = document.createElement('span');
@@ -413,7 +440,7 @@
                 label.maxLength = 60;
                 label.placeholder = 'Paper ' + r.n;
                 label.value = r.label;
-                label.disabled = !edit;
+                label.disabled = !rowEdit;
                 label.addEventListener('input', () => {
                     r.label = label.value;
                 });
@@ -428,7 +455,7 @@
                 max.step = '0.5';
                 max.placeholder = 'e.g. 20';
                 max.value = r.max;
-                max.disabled = !edit;
+                max.disabled = !rowEdit;
                 max.addEventListener('input', () => {
                     r.max = max.value;
                     max.classList.remove('bad');
@@ -443,7 +470,7 @@
                 const meta = document.createElement('div');
                 meta.className = 'xp-meta';
                 if (r.isNew) {
-                    meta.textContent = 'new';
+                    meta.textContent = r.fromStandard ? 'standard paper' : 'new';
                 } else {
                     meta.textContent = r.entered > 0 ? r.entered + ' mark(s)' : 'none yet';
                     if (r.setBy) {
@@ -452,10 +479,15 @@
                         meta.appendChild(by);
                     }
                 }
+                if (r.assignedTo) {
+                    const who = document.createElement('div');
+                    who.textContent = (r.editable === false ? '\uD83D\uDD12 ' : '') + 'marked by ' + r.assignedTo;
+                    meta.appendChild(who);
+                }
                 tdE.appendChild(meta);
 
                 const tdD = document.createElement('td');
-                if (edit) {
+                if (rowEdit) {
                     const del = document.createElement('button');
                     del.type = 'button';
                     del.className = 'xp-del';
@@ -620,6 +652,7 @@
                 });
                 maxPapers = data.max_papers || 10;
                 load(data.papers);
+                if (ctx.canEdit) addSuggested(data.suggested);
             } catch (e) {
                 rowsEl.innerHTML = '';
                 showError(e.message);

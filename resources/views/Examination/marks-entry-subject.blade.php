@@ -518,6 +518,10 @@ use App\Helpers\PermissionHelper;
         $paperMode = !$isEarlyYears && $papers->isNotEmpty();
         $paperMaxTotal = (float) $papers->sum('max_score');
         $fmtNum = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+        // Papers given to other teachers (Classes -> Subject Papers) are shown, but locked.
+        $paperEditable = $paperEditable ?? [];
+        $paperLockedTo = $paperLockedTo ?? [];
+        $anyPaperLocked = $paperMode && count($paperLockedTo) > 0;
     @endphp
     <div class="side-app">
 
@@ -596,8 +600,20 @@ use App\Helpers\PermissionHelper;
                         @if ($paperMode)
                             <span class="text-white-50" style="font-size:.78rem;margin-right:.4rem;">Papers:</span>
                             @foreach ($papers as $paper)
-                                <span class="paper-chip">{{ $paper->display_label }} / {{ $fmtNum($paper->max_score) }}</span>
+                                <span class="paper-chip" @if (isset($paperLockedTo[$paper->paper_number])) title="Marked by {{ $paperLockedTo[$paper->paper_number] }}" @endif>
+                                    @if (isset($paperLockedTo[$paper->paper_number]))<i class="fas fa-lock" style="font-size:.7rem;"></i>@endif
+                                    {{ $paper->display_label }} / {{ $fmtNum($paper->max_score) }}
+                                </span>
                             @endforeach
+                            @if ($anyPaperLocked)
+                                <div class="mt-2" style="font-size:.8rem;color:rgba(255,255,255,.85);">
+                                    <i class="fas fa-lock me-1 mr-1"></i>
+                                    @foreach ($paperLockedTo as $n => $who)
+                                        {{ $papers->firstWhere('paper_number', $n)?->display_label }} is marked by {{ $who }}@if (!$loop->last); @endif
+                                    @endforeach
+                                    &mdash; those columns are locked for you.
+                                </div>
+                            @endif
                         @else
                             <span style="font-size:.82rem;color:rgba(255,255,255,.75);margin-right:.6rem;">
                                 This subject is marked as one score. Split it into papers (P1, P2 ...) if this exam has them.
@@ -671,6 +687,7 @@ use App\Helpers\PermissionHelper;
                                 @elseif ($paperMode)
                                     @foreach ($papers as $paper)
                                         <th class="paper-th text-center" style="min-width:100px;">
+                                            @if (isset($paperLockedTo[$paper->paper_number]))<i class="fas fa-lock" style="font-size:.7rem;" title="Marked by {{ $paperLockedTo[$paper->paper_number] }}"></i>@endif
                                             {{ $paper->display_label }}
                                             <small>/ {{ $fmtNum($paper->max_score) }}</small>
                                         </th>
@@ -767,7 +784,8 @@ use App\Helpers\PermissionHelper;
                                                     data-max="{{ (float) $paper->max_score }}"
                                                     value="{{ $paperMarks[$student->id][$paper->paper_number] ?? '' }}"
                                                     min="0" max="{{ (float) $paper->max_score }}" step="0.5"
-                                                    placeholder="—">
+                                                    placeholder="—"
+                                                    @if (isset($paperLockedTo[$paper->paper_number])) disabled title="Marked by {{ $paperLockedTo[$paper->paper_number] }}" @endif>
                                             </td>
                                         @endforeach
                                         @php
@@ -837,7 +855,8 @@ use App\Helpers\PermissionHelper;
                                     <td>
                                         <input type="text" class="form-control comment-input"
                                             name="comment[{{ $student->id }}]"
-                                            value="{{ $mark?->teacher_comment ?? '' }}" placeholder="Optional comment">
+                                            value="{{ $mark?->teacher_comment ?? '' }}" placeholder="Optional comment"
+                                            @if ($anyPaperLocked) disabled title="Only a teacher who marks every paper can write the subject comment" @endif>
                                     </td>
                                     <td>
                                         <span
@@ -1169,7 +1188,7 @@ use App\Helpers\PermissionHelper;
         // Save paper marks (subjects with papers configured)
         function savePaperMarks() {
             let hasError = false;
-            $('.paper-input').each(function() {
+            $('.paper-input:not(:disabled)').each(function() {
                 const val = $(this).val();
                 const max = parseFloat($(this).data('max'));
                 const num = parseFloat(val);
@@ -1210,7 +1229,7 @@ use App\Helpers\PermissionHelper;
                 const marksData = [];
                 $('tr[data-student-id]').each(function() {
                     const papers = {};
-                    $(this).find('.paper-input').each(function() {
+                    $(this).find('.paper-input:not(:disabled)').each(function() {
                         const v = $(this).val();
                         papers[$(this).data('paper')] = v !== '' ? v : null;
                     });

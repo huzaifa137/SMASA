@@ -8,6 +8,8 @@ use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationSubjectSetting;
 use App\Services\ExaminationPaperService;
+use App\Services\PaperTeacherAccess;
+use App\Services\SubjectPaperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -55,6 +57,14 @@ class ExaminationPaperController extends Controller
             return $ctx;
         }
 
+        // A paper given to another teacher (Subject Papers screen) can only be
+        // set by that teacher or an administrator.
+        foreach ($request->input('papers') as $incoming) {
+            if (!PaperTeacherAccess::canEdit($ctx->access, (int) $incoming['paper_number'])) {
+                return $this->lockedPaper($ctx, (int) $incoming['paper_number']);
+            }
+        }
+
         try {
             ExaminationPaperService::savePapers(
                 $ctx->exam,
@@ -91,6 +101,10 @@ class ExaminationPaperController extends Controller
             return $ctx;
         }
 
+        if (!PaperTeacherAccess::canEdit($ctx->access, (int) $request->input('paper_number'))) {
+            return $this->lockedPaper($ctx, (int) $request->input('paper_number'));
+        }
+
         try {
             $removed = ExaminationPaperService::deletePaper(
                 $ctx->exam,
@@ -112,12 +126,67 @@ class ExaminationPaperController extends Controller
         ] + $this->payload($ctx));
     }
 
+    /**
+     * Admin shortcut (Exam Subjects page): create this examination's papers for
+     * EVERY class-stream subject that has standard papers attached, using each
+     * paper's usual "out of". Anything that already has papers / single scores /
+     * released results is skipped and reported, never overwritten.
+     */
+    public function applyStandard(Request $request, $examId)
+    {
+        if (!PermissionHelper::canFeature('manage_exam_subjects')) {
+            return $this->fail('Unauthorized. You do not have permission to change exam subjects.', 403);
+        }
+
+        $exam = Examination::where('id', $examId)->where('school_id', session('LoggedSchool'))->first();
+
+        if (!$exam) {
+            return $this->fail('Examination not found.', 404);
+        }
+
+        $result = SubjectPaperService::applyToExamination($exam, session('LoggedTeacher'));
+
+        $message = count($result['applied'])
+            ? 'Standard papers applied to ' . count($result['applied']) . ' subject(s).'
+            : 'No subject needed standard papers applied.';
+
+        return response()->json(['success' => true, 'message' => $message] + $result);
+    }
+
     // ─── Internals ─────────────────────────────────────────────────────────
+
+    private function lockedPaper(object $ctx, int $paperNumber)
+    {
+        $label = $ctx->access->labels[$paperNumber] ?? ('Paper ' . $paperNumber);
+        $names = PaperTeacherAccess::namesFor($ctx->access, $paperNumber);
+
+        return $this->fail(
+            $names
+                ? "{$label} is assigned to {$names}, so only they (or an administrator) can change it."
+                : "You are not allowed to change {$label} for this subject.",
+            403
+        );
+    }
 
     private function payload(object $ctx): array
     {
         $papers = ExaminationPaperService::papers($ctx->exam, $ctx->classId, $ctx->streamId, $ctx->subjectId, $ctx->customSubjectId);
         $progress = ExaminationPaperService::paperProgress($ctx->exam, $ctx->classId, $ctx->streamId, $ctx->subjectId, $ctx->customSubjectId);
+
+        // Standard papers (Classes -> Subject Papers) attached to this class-stream
+        // that this exam doesn't have yet: offered as pre-filled rows in the modal.
+        $have = $papers->pluck('paper_number')->all();
+        $suggested = SubjectPaperService::attachedPapers($ctx->exam->school_id, $ctx->classId, $ctx->streamId, $ctx->subjectId, $ctx->customSubjectId)
+            ->filter(fn($a) => !in_array($a->paper->paper_number, $have, true))
+            ->map(fn($a) => [
+                'paper_number' => $a->paper->paper_number,
+                'label' => $a->paper->label,
+                'paper_type' => $a->paper->paper_type,
+                'default_max' => $a->paper->default_max_score,
+                'editable' => PaperTeacherAccess::canEdit($ctx->access, (int) $a->paper->paper_number),
+                'assigned_to' => PaperTeacherAccess::namesFor($ctx->access, (int) $a->paper->paper_number),
+            ])
+            ->values();
 
         return [
             'exam_total' => (float) $ctx->exam->total_marks,
@@ -130,7 +199,10 @@ class ExaminationPaperController extends Controller
                 'max_score' => (float) $p->max_score,
                 'entered' => $progress[$p->paper_number] ?? 0,
                 'set_by' => Helper::teacherFullName($p->created_by),
+                'editable' => PaperTeacherAccess::canEdit($ctx->access, (int) $p->paper_number),
+                'assigned_to' => PaperTeacherAccess::namesFor($ctx->access, (int) $p->paper_number),
             ])->values(),
+            'suggested' => $suggested,
         ];
     }
 
@@ -202,10 +274,13 @@ class ExaminationPaperController extends Controller
 
         // Admins who manage Exam Subjects can set papers for anyone; otherwise
         // it has to be one of this subject's own teachers who may enter marks.
+        // A teacher named as a PAPER teacher (Subject Papers screen) counts as one
+        // of the subject's own teachers for that subject.
         $isAdminSetter = PermissionHelper::canFeature('manage_exam_subjects');
+        $access = PaperTeacherAccess::forActor($classSubject, $teacherId, $isAdminSetter);
         $isOwnTeacher = $teacherId
             && PermissionHelper::canFeature($forWrite ? 'enter_marks' : 'view_marks_entry')
-            && in_array((string) $teacherId, [(string) $classSubject->subject_teacher_1, (string) $classSubject->subject_teacher_2], true);
+            && ($access->isSubjectTeacher || PaperTeacherAccess::isPaperTeacher($access));
 
         if (!$isAdminSetter && !$isOwnTeacher) {
             return $this->fail('You do not have permission to set papers for this subject.', 403);
@@ -215,7 +290,7 @@ class ExaminationPaperController extends Controller
             return $this->fail('Results for this class have been released (or the examination is closed), so papers can no longer be changed.', 422);
         }
 
-        return (object) compact('exam', 'classId', 'streamId', 'subjectId', 'customSubjectId', 'classSubject');
+        return (object) compact('exam', 'classId', 'streamId', 'subjectId', 'customSubjectId', 'classSubject', 'access');
     }
 
     private function fail(string $message, int $status)

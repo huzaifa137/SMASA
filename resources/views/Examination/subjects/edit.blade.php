@@ -386,6 +386,12 @@
                 <span class="es-status" id="esStatus">
                     <i class="fas fa-check-circle text-success mr-1"></i> No unsaved changes.
                 </span>
+                @if (\App\Helpers\PermissionHelper::canFeature('manage_exam_subjects') && \App\Http\Controllers\Helper::schoolHasSecondary())
+                    <button type="button" class="es-mini-btn" id="esApplyStandardBtn"
+                        title="Create the papers of every subject in this exam from the standard papers attached to its classes (Classes → Subject Papers)">
+                        <i class="fas fa-magic mr-1"></i> Apply standard papers
+                    </button>
+                @endif
                 <button type="button" class="es-save" id="esSaveBtn">
                     <i class="fas fa-save mr-1"></i> Save subjects
                 </button>
@@ -399,6 +405,61 @@
     @include('Examination.partials.papers-modal', ['exam' => $exam])
 
     <script>
+        // "Apply standard papers": creates this exam's papers for every subject that has
+        // standard papers attached (Classes -> Subject Papers), skipping anything that
+        // already has papers or marks, and reports what it did.
+        (function () {
+            const btn = document.getElementById('esApplyStandardBtn');
+            if (!btn) return;
+
+            const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+
+            btn.addEventListener('click', async function () {
+                if (!window.Swal) {
+                    await new Promise(resolve => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                        s.onload = resolve;
+                        document.head.appendChild(s);
+                    });
+                }
+                const ok = await Swal.fire({
+                    icon: 'question',
+                    title: 'Apply standard papers?',
+                    html: 'Every subject in this exam that has <strong>standard papers</strong> attached, and no papers yet, ' +
+                        'gets them now, each marked out of its <em>usual</em> total. Subjects that already have papers or marks are left alone.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2C29CA',
+                    confirmButtonText: 'Yes, apply'
+                });
+                if (!ok.isConfirmed) return;
+
+                btn.disabled = true;
+                try {
+                    const res = await fetch(@json(route('examination.papers.apply-standard', $exam->id)), {
+                        method: 'POST',
+                        headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': @json(csrf_token())},
+                        credentials: 'same-origin'
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || data.success === false) throw new Error(data.message || 'Something went wrong (' + res.status + ').');
+
+                    let html = '<p><strong>' + data.applied.length + '</strong> subject(s) got their papers.' +
+                        (data.already_set ? ' <strong>' + data.already_set + '</strong> already had papers.' : '') + '</p>';
+                    if (data.skipped.length) {
+                        html += '<p class="mb-1 text-left"><strong>Skipped:</strong></p><ul class="text-left" style="font-size:.85rem;">' +
+                            data.skipped.map(s => '<li>' + esc(s.label) + ' — ' + esc(s.reason) + '</li>').join('') + '</ul>';
+                    }
+                    await Swal.fire({icon: data.applied.length ? 'success' : 'info', title: data.message, html: html});
+                    if (data.applied.length) location.reload();
+                } catch (e) {
+                    Swal.fire({icon: 'error', title: 'Could not apply', text: e.message});
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
+
         // Papers button (per subject): opens the shared Papers modal.
         document.addEventListener('click', function (e) {
             const btn = e.target.closest("[data-papers-btn]");

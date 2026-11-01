@@ -325,10 +325,14 @@ class ExaminationPaperService
      *
      * @param array $entries list of ['student_id' => int, 'papers' => [paper_number => value|null], 'comment' => ?string]
      * @param Collection|null $eligibleStudentIds when given, other students are ignored
+     * @param array|null $editablePaperNumbers when given (a teacher who only marks SOME papers of the
+     *        subject - see PaperTeacherAccess), values for any other paper are ignored, never saved or cleared
+     * @param bool $touchComments false = leave teacher comments alone (a paper-only teacher must not
+     *        overwrite the comment the subject teacher wrote)
      * @return array ['complete' => int, 'partial' => int]  students with every / only some papers entered
      * @throws InvalidArgumentException with a user-facing message
      */
-    public static function savePaperMarks(Examination $exam, $classId, $streamId, $subjectId, $customSubjectId, array $entries, $userId, ?Collection $eligibleStudentIds = null): array
+    public static function savePaperMarks(Examination $exam, $classId, $streamId, $subjectId, $customSubjectId, array $entries, $userId, ?Collection $eligibleStudentIds = null, ?array $editablePaperNumbers = null, bool $touchComments = true): array
     {
         $papers = static::papers($exam, $classId, $streamId, $subjectId, $customSubjectId)->keyBy('paper_number');
 
@@ -358,6 +362,10 @@ class ExaminationPaperService
                     continue; // a paper that was removed meanwhile (stale page)
                 }
 
+                if ($editablePaperNumbers !== null && !in_array($n, $editablePaperNumbers, true)) {
+                    continue; // another teacher's paper: never touched from here
+                }
+
                 if ($value === null || trim((string) $value) === '') {
                     $values[$n] = null;
                     continue;
@@ -379,7 +387,7 @@ class ExaminationPaperService
             throw new InvalidArgumentException('Invalid mark(s): ' . implode('; ', $shown) . (count($errors) > 3 ? '; …' : '') . '.');
         }
 
-        return DB::transaction(function () use ($exam, $classId, $streamId, $subjectId, $customSubjectId, $clean, $userId, $papers) {
+        return DB::transaction(function () use ($exam, $classId, $streamId, $subjectId, $customSubjectId, $clean, $userId, $papers, $touchComments) {
             static::lockSubject($exam, $classId, $streamId, $subjectId, $customSubjectId);
 
             $studentIds = array_keys($clean);
@@ -425,7 +433,7 @@ class ExaminationPaperService
             static::recompute($exam, $classId, $streamId, $subjectId, $customSubjectId, $studentIds, $userId);
 
             // Teacher comments live on the combined row, exactly as before.
-            foreach ($clean as $studentId => $data) {
+            foreach ($touchComments ? $clean : [] as $studentId => $data) {
                 $comment = $data['comment'] !== null && trim((string) $data['comment']) !== '' ? mb_substr((string) $data['comment'], 0, 255) : null;
 
                 $mark = static::markQuery($exam, $studentId, $subjectId, $customSubjectId)->first();

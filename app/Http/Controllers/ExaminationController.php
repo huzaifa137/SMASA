@@ -20,6 +20,7 @@ use App\Models\StudentDisciplineRating;
 use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
 use App\Services\ExaminationPaperService;
+use App\Services\PaperTeacherAccess;
 use App\Support\CustomReportCards;
 use App\Support\ArabicReportCard;
 use App\Support\CustomReportData;
@@ -251,10 +252,7 @@ class ExaminationController extends Controller
         // Find class subjects this teacher is responsible for
         $assignedSubjects = DB::table('class_subjects')
             ->where('school_id', $schoolId)
-            ->where(function ($q) use ($teacherId) {
-                $q->where('subject_teacher_1', $teacherId)
-                    ->orWhere('subject_teacher_2', $teacherId);
-            })
+            ->tap(fn($q) => PaperTeacherAccess::scopeTeacherSubjects($q, $teacherId))
             ->whereIn('class_id', $examClasses->pluck('class_id'))
             ->get();
 
@@ -368,10 +366,7 @@ class ExaminationController extends Controller
         $classSubject = DB::table('class_subjects')
             ->where('id', $classSubjectId)
             ->where('school_id', $schoolId)
-            ->where(function ($q) use ($teacherId) {
-                $q->where('subject_teacher_1', $teacherId)
-                    ->orWhere('subject_teacher_2', $teacherId);
-            })
+            ->tap(fn($q) => PaperTeacherAccess::scopeTeacherSubjects($q, $teacherId))
             ->firstOrFail();
 
         // Not sat in this exam (Exam Subjects screen) → no marks entry,
@@ -524,6 +519,28 @@ class ExaminationController extends Controller
                 && !$this->classIsReleased($exam, $classSubject->class_id, (string) $classSubject->stream_id, $schoolId);
         }
 
+        // Paper teachers (Classes -> Subject Papers): when some papers of this
+        // subject belong to specific teachers, this teacher can only type marks
+        // into the papers that are theirs; the others are shown locked.
+        $paperAccess = PaperTeacherAccess::forActor($classSubject, $teacherId, PermissionHelper::canFeature('manage_exam_subjects'));
+        $paperEditable = [];
+        $paperLockedTo = [];
+
+        foreach ($papers as $paper) {
+            $n = (int) $paper->paper_number;
+            $paperEditable[$n] = PaperTeacherAccess::canEdit($paperAccess, $n);
+
+            if (!$paperEditable[$n]) {
+                $paperLockedTo[$n] = PaperTeacherAccess::namesFor($paperAccess, $n) ?: 'another teacher';
+            }
+        }
+
+        // Papers not yet set for this exam: only someone who may enter a single
+        // score for the subject (or set papers) can do anything on this page.
+        if ($papers->isEmpty() && !PaperTeacherAccess::canEnterSingleScore($paperAccess)) {
+            $canSetPapers = $canSetPapers && PaperTeacherAccess::isPaperTeacher($paperAccess);
+        }
+
         return view('Examination.marks-entry-subject', compact(
             'exam',
             'classSubject',
@@ -541,7 +558,10 @@ class ExaminationController extends Controller
             'papersSupported',
             'papers',
             'paperMarks',
-            'canSetPapers'
+            'canSetPapers',
+            'paperEditable',
+            'paperLockedTo',
+            'paperAccess'
         ));
     }
 
@@ -641,6 +661,12 @@ class ExaminationController extends Controller
             ? Helper::studentIdsTakingClassSubject($schoolId, $classSubjectRow)
             : null;
 
+        // Paper teachers (Classes -> Subject Papers): who may type into which paper.
+        // Subjects with no paper teachers are unrestricted, exactly as before.
+        $paperAccess = $classSubjectRow
+            ? PaperTeacherAccess::forActor($classSubjectRow, $teacherId, PermissionHelper::canFeature('manage_exam_subjects'))
+            : null;
+
         // A secondary subject that has papers configured for THIS examination
         // saves per-paper raw marks; the combined subject mark (what pass
         // slips and reports read) is derived from them.
@@ -649,6 +675,28 @@ class ExaminationController extends Controller
             && ExaminationPaperService::supports($exam, $request->class_id)
             && ExaminationPaperService::papers($exam, $request->class_id, $request->stream_id, $request->subject_id, $request->custom_subject_id)->isNotEmpty()
         ) {
+            $examPapers = ExaminationPaperService::papers($exam, $request->class_id, $request->stream_id, $request->subject_id, $request->custom_subject_id);
+            $editablePapers = null;
+            $touchComments = true;
+
+            if ($paperAccess->restricted && !$paperAccess->isAdmin) {
+                $editablePapers = $examPapers->pluck('paper_number')
+                    ->map(fn($n) => (int) $n)
+                    ->filter(fn($n) => PaperTeacherAccess::canEdit($paperAccess, $n))
+                    ->values()
+                    ->all();
+
+                if (empty($editablePapers)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'None of the papers of this subject are assigned to you, so you cannot enter marks for it.',
+                    ], 403);
+                }
+
+                // Only a teacher who marks every paper may touch the combined comment.
+                $touchComments = count($editablePapers) === $examPapers->count();
+            }
+
             try {
                 $result = ExaminationPaperService::savePaperMarks(
                     $exam,
@@ -662,7 +710,9 @@ class ExaminationController extends Controller
                         'comment' => $m['comment'] ?? null,
                     ])->all(),
                     $teacherId,
-                    $eligibleStudentIds
+                    $eligibleStudentIds,
+                    $editablePapers,
+                    $touchComments
                 );
             } catch (\InvalidArgumentException $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
@@ -676,6 +726,15 @@ class ExaminationController extends Controller
             }
 
             return response()->json(['success' => true, 'message' => $message, 'papers' => true] + $result);
+        }
+
+        // Papers belong to specific teachers here but this exam has no papers yet:
+        // a paper-only teacher must not enter one combined score for the subject.
+        if ($paperAccess && !PaperTeacherAccess::canEnterSingleScore($paperAccess)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The papers of this subject have not been set for this examination yet. Set them first, then enter the marks of your paper.',
+            ], 403);
         }
 
         DB::beginTransaction();
@@ -4123,10 +4182,7 @@ class ExaminationController extends Controller
             // Get subjects assigned to this teacher for these classes
             $teacherSubjects = DB::table('class_subjects')
                 ->where('school_id', $schoolId)
-                ->where(function ($q) use ($teacherId) {
-                    $q->where('subject_teacher_1', $teacherId)
-                        ->orWhere('subject_teacher_2', $teacherId);
-                })
+                ->tap(fn($q) => PaperTeacherAccess::scopeTeacherSubjects($q, $teacherId))
                 ->whereIn('class_id', $examClasses->pluck('class_id'))
                 ->get();
 

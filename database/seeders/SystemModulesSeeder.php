@@ -183,6 +183,9 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "assign_class_teacher", "name" => "Assign / Remove Class Teacher"],
                     ["key" => "assign_class_supervisor", "name" => "Assign / Remove Class Supervisor", "inherits" => ["assign_class_teacher"]],
                     ["key" => "assign_subject_teachers", "name" => "Assign / Remove Subject Teachers"],
+                    ["key" => "view_subject_papers", "name" => "View Subject Papers", "inherits" => ["edit_class", "assign_subject_teachers"]],
+                    ["key" => "manage_subject_papers", "name" => "Define Subject Papers & Attach Them to Classes", "inherits" => ["edit_class"]],
+                    ["key" => "assign_paper_teachers", "name" => "Assign Paper Teachers", "inherits" => ["assign_subject_teachers"]],
                 ],
             ],
 

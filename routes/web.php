@@ -531,6 +531,16 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     });
 
+    // Subject Papers (Classes & Streams): define a subject's standard papers
+    // (P1, P2, P3 practical ...) once, attach them to many class-streams at
+    // once and choose who marks which paper. Secondary schools only.
+    Route::controller(\App\Http\Controllers\SubjectPaperController::class)->middleware(['module:classes', 'secondary.school'])->group(function () {
+        Route::get('subject-papers', 'index')->name('school.subject-papers');
+        Route::get('subject-papers/{key}', 'show')->name('school.subject-papers.show');
+        Route::post('subject-papers/{key}/papers', 'savePapers')->name('school.subject-papers.save-papers');
+        Route::post('subject-papers/{key}/assignments', 'saveAssignments')->name('school.subject-papers.save-assignments');
+    });
+
     // A-Level (Secondary) student subject combinations — separate from the
     // class-level subject pool above, since it's a per-student choice.
     Route::controller(\App\Http\Controllers\ALevelCombinationController::class)->middleware(['module:curriculum', 'secondary.school'])->group(function () {
@@ -837,6 +847,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/papers', [\App\Http\Controllers\ExaminationPaperController::class, 'show'])->name('papers.show');
             Route::post('/{examId}/papers/save', [\App\Http\Controllers\ExaminationPaperController::class, 'save'])->name('papers.save');
             Route::post('/{examId}/papers/delete', [\App\Http\Controllers\ExaminationPaperController::class, 'destroy'])->name('papers.delete');
+            // Create every subject's papers of this exam from the standard papers attached to its classes.
+            Route::post('/{examId}/papers/apply-standard', [\App\Http\Controllers\ExaminationPaperController::class, 'applyStandard'])->name('papers.apply-standard');
 
             // Report Card Remarks (Class Teacher / Head Teacher)
             Route::get('/{id}/remarks', 'remarksEntry')->name('remarks.entry');

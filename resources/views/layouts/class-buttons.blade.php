@@ -125,6 +125,30 @@
                     </a>@endif
                 </div>
             @endif
+
+            @if(Helper::schoolHasSecondary() && PermissionHelper::canFeature('view_subject_papers'))
+                <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <a href="{{ route('school.subject-papers') }}"
+                        class="w-100 mt-2 d-flex align-items-center justify-content-center" style="
+                            display: flex;
+                            padding: 12px 20px;
+                            text-decoration: none;
+                            background: linear-gradient(135deg, #14b8a6, #0f766e);
+                            color: #fff;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 15px;
+                            box-shadow: 0 8px 20px rgba(20, 184, 166, 0.35);
+                            transition: all .3s ease;
+                            border: 1px solid rgba(255,255,255,.15);
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 28px rgba(20,184,166,.45)';"
+                        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 20px rgba(20,184,166,.35)';">
+                        <i class="fas fa-layer-group me-2"></i>&nbsp;
+                        <span>Subject Papers</span>
+                    </a>
+                </div>
+            @endif
         @endif
 
     </div>
