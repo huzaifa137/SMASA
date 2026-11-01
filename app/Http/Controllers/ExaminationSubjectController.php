@@ -89,6 +89,9 @@ class ExaminationSubjectController extends Controller
                     'show' => $setting ? (bool) $setting->show_on_report : true,
                     // Papers only apply to Secondary subjects marked with plain scores.
                     'papers_supported' => $classSupportsPapers && !$cs->assessment_scale_id,
+                    'papers_blocked_note' => !$classSupportsPapers
+                        ? 'Papers are not used by this class in this exam'
+                        : ($cs->assessment_scale_id ? 'Graded on an Assessment Scale, so no papers' : ''),
                     'papers_summary' => $paperSummaries[$key] ?? '',
                     // A choice subject (A-Level principal/subsidiary, O-Level
                     // elective) only counts marks from students who still

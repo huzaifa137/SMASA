@@ -358,7 +358,10 @@
                                                 <i class="fas fa-layer-group mr-1"></i> Papers
                                             </button>
                                         @else
-                                            <span class="text-muted">—</span>
+                                            <span class="text-muted" @if(!empty($sub->papers_blocked_note)) title="{{ $sub->papers_blocked_note }}" @endif>—</span>
+                                            @if(!empty($sub->papers_blocked_note))
+                                                <div class="text-muted" style="font-size:.68rem;line-height:1.15;">{{ $sub->papers_blocked_note }}</div>
+                                            @endif
                                         @endif
                                     </td>
                                     <td class="text-center">

@@ -89,6 +89,40 @@ class SubjectPaperService
             ->get();
     }
 
+    /**
+     * class_subjects rows of a subject that are graded on an Assessment Scale
+     * (comment-driven, no papers). They are not hidden from the screen any
+     * more: they are listed as "not available" so a teacher can see WHY a
+     * subject has no papers instead of the subject silently going missing.
+     */
+    protected static function scaledRows($schoolId, $subjectId, $customSubjectId): Collection
+    {
+        return DB::table('class_subjects')
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', Helper::secondaryClassIds())
+            ->whereNotNull('assessment_scale_id')
+            ->when(!empty($subjectId), function ($q) use ($subjectId) {
+                $q->where('subject_id', $subjectId);
+            }, function ($q) use ($customSubjectId) {
+                $q->where(function ($z) {
+                    $z->whereNull('subject_id')->orWhere('subject_id', 0);
+                })->where('custom_subject_id', $customSubjectId);
+            })
+            ->get();
+    }
+
+    /** id => name of the Assessment Scales used by the given class_subjects rows. */
+    protected static function scaleNames(Collection $rows): array
+    {
+        $ids = $rows->pluck('assessment_scale_id')->filter()->unique()->values()->all();
+
+        if (!$ids) {
+            return [];
+        }
+
+        return DB::table('assessment_scales')->whereIn('id', $ids)->pluck('name', 'id')->all();
+    }
+
     public static function classStreamLabel($classId, $streamId): string
     {
         $name = Helper::recordMdname($classId) ?: ('Class ' . $classId);
@@ -104,11 +138,15 @@ class SubjectPaperService
      */
     public static function catalogue($schoolId): Collection
     {
+        // Every secondary subject is listed, including the ones graded on an
+        // Assessment Scale. Those carry a flag so the screen can explain that
+        // papers do not apply to them (and how to change that).
         $rows = DB::table('class_subjects')
             ->where('school_id', $schoolId)
             ->whereIn('class_id', Helper::secondaryClassIds())
-            ->whereNull('assessment_scale_id')
             ->get();
+
+        $scaleNames = static::scaleNames($rows);
 
         $papers = SubjectPaper::where('school_id', $schoolId)->get()
             ->groupBy(fn($p) => static::key($p->subject_id, $p->custom_subject_id));
@@ -118,15 +156,23 @@ class SubjectPaperService
 
         return $rows
             ->groupBy(fn($r) => static::key($r->subject_id, $r->custom_subject_id))
-            ->map(function ($group, $key) use ($papers, $attached) {
+            ->map(function ($group, $key) use ($papers, $attached, $scaleNames) {
                 $first = $group->first();
                 $name = trim((string) Helper::classSubjectName($first));
                 $attachedRows = $attached->get($key, collect());
 
+                $plain = $group->filter(fn($r) => empty($r->assessment_scale_id));
+                $scaled = $group->filter(fn($r) => !empty($r->assessment_scale_id));
+
                 return (object) [
                     'key' => $key,
                     'name' => $name !== '' ? $name : 'Subject ' . $key,
-                    'offerings' => $group->map(fn($r) => $r->class_id . '|' . $r->stream_id)->unique()->count(),
+                    'offerings' => $plain->map(fn($r) => $r->class_id . '|' . $r->stream_id)->unique()->count(),
+                    'scaled' => $scaled->map(fn($r) => $r->class_id . '|' . $r->stream_id)->unique()->count(),
+                    'scale_names' => $scaled->pluck('assessment_scale_id')->unique()
+                        ->map(fn($id) => $scaleNames[$id] ?? 'Assessment scale')->values()->all(),
+                    // Nothing to attach papers to: every class that teaches it grades it on a scale.
+                    'blocked' => $plain->isEmpty(),
                     'papers' => $papers->get($key, collect())->sortBy('paper_number')->values(),
                     'attached' => $attachedRows->map(fn($a) => $a->class_id . '|' . $a->stream_id)->unique()->count(),
                     'with_teachers' => $attachedRows->filter(fn($a) => $a->teacher_1_id || $a->teacher_2_id)->count(),
@@ -140,9 +186,38 @@ class SubjectPaperService
     public static function detail($schoolId, ?int $subjectId, ?int $customSubjectId): ?array
     {
         $rows = static::offeringRows($schoolId, $subjectId, $customSubjectId);
+        $scaledRows = static::scaledRows($schoolId, $subjectId, $customSubjectId);
 
-        if ($rows->isEmpty()) {
+        if ($rows->isEmpty() && $scaledRows->isEmpty()) {
             return null;
+        }
+
+        $scaleNames = static::scaleNames($scaledRows);
+        $scaledOfferings = $scaledRows
+            ->unique(fn($r) => $r->class_id . '|' . $r->stream_id)
+            ->sortBy(fn($r) => sprintf('%010d|%s', $r->class_id, $r->stream_id))
+            ->map(fn($r) => [
+                'label' => static::classStreamLabel($r->class_id, $r->stream_id),
+                'scale' => $scaleNames[$r->assessment_scale_id] ?? 'Assessment scale',
+            ])
+            ->values()
+            ->all();
+
+        // Every class that teaches this subject grades it on an Assessment
+        // Scale: there is nothing papers could be attached to.
+        if ($rows->isEmpty()) {
+            $name = trim((string) Helper::classSubjectName($scaledRows->first()));
+
+            return [
+                'key' => static::key($subjectId, $customSubjectId),
+                'name' => $name !== '' ? $name : 'Subject',
+                'max_papers' => ExaminationPaperService::MAX_PAPERS,
+                'types' => static::TYPES,
+                'blocked' => true,
+                'papers' => [],
+                'offerings' => [],
+                'scaled_offerings' => $scaledOfferings,
+            ];
         }
 
         $papers = static::whereSubject(SubjectPaper::where('school_id', $schoolId), $subjectId, $customSubjectId)
@@ -187,6 +262,8 @@ class SubjectPaperService
             'name' => $name !== '' ? $name : 'Subject',
             'max_papers' => ExaminationPaperService::MAX_PAPERS,
             'types' => static::TYPES,
+            'blocked' => false,
+            'scaled_offerings' => $scaledOfferings,
             'papers' => $papers->map(fn($p) => [
                 'id' => $p->id,
                 'paper_number' => $p->paper_number,
@@ -212,7 +289,11 @@ class SubjectPaperService
     public static function syncPapers($schoolId, ?int $subjectId, ?int $customSubjectId, array $incoming, $userId = null, bool $confirmDetach = false): void
     {
         if (static::offeringRows($schoolId, $subjectId, $customSubjectId)->isEmpty()) {
-            throw new InvalidArgumentException('That subject is not taught in any secondary class here.');
+            throw new InvalidArgumentException(
+                static::scaledRows($schoolId, $subjectId, $customSubjectId)->isNotEmpty()
+                    ? 'This subject is graded on an Assessment Scale in every class that teaches it, so it cannot have papers. Set the subject back to numeric marks first (Examinations → Assessment Scales → Assign).'
+                    : 'That subject is not taught in any secondary class here.'
+            );
         }
 
         if (count($incoming) > ExaminationPaperService::MAX_PAPERS) {

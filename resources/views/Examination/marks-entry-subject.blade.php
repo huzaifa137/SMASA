@@ -594,6 +594,15 @@ use App\Helpers\PermissionHelper;
                     </div>
                 </div>
 
+                {{-- PAPERS: say why they are unavailable instead of silently hiding the button --}}
+                @if (!$papersSupported && !empty($papersBlockedReason))
+                    <div class="col-12 mt-3">
+                        <span style="font-size:.82rem;color:rgba(255,255,255,.8);">
+                            <i class="fas fa-info-circle me-1 mr-1"></i> {{ $papersBlockedReason }}
+                        </span>
+                    </div>
+                @endif
+
                 {{-- PAPERS --}}
                 @if ($papersSupported && ($paperMode || $canSetPapers))
                     <div class="col-12 mt-3">

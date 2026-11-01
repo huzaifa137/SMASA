@@ -81,6 +81,12 @@
                                 marked <em>out of</em> is still set per examination &mdash; the usual total you enter here only
                                 pre-fills it.
                             </p>
+                            <p>
+                                Papers are used by <strong>standard</strong> examinations. An O-Level examination that runs on
+                                <strong>Assessments (new curriculum)</strong> is marked through <em>Create Assessment</em> instead
+                                (Activities of Integration, Projects, Subject Achievement &mdash; each with its own maximum), and a
+                                subject graded on an <strong>Assessment Scale</strong> is comment-driven, so neither uses papers.
+                            </p>
                         </div>
 
                         @if (!$canManage && !$canAssign)
@@ -100,7 +106,9 @@
                                             <button type="button" class="sp-subject" data-key="{{ $s->key }}" data-name="{{ mb_strtolower($s->name) }}">
                                                 <strong>{{ $s->name }}</strong>
                                                 <span class="sp-badges">
-                                                    @if ($s->papers->isEmpty())
+                                                    @if ($s->blocked)
+                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">assessment scale</span>
+                                                    @elseif ($s->papers->isEmpty())
                                                         <span class="sp-badge">single score</span>
                                                     @else
                                                         <span class="sp-badge ok">{{ $s->papers->count() }} {{ \Illuminate\Support\Str::plural('paper', $s->papers->count()) }}</span>
@@ -108,6 +116,9 @@
                                                         @if ($s->with_teachers)
                                                             <span class="sp-badge teal">paper teachers</span>
                                                         @endif
+                                                    @endif
+                                                    @if (!$s->blocked && $s->scaled)
+                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">{{ $s->scaled }} on a scale</span>
                                                     @endif
                                                 </span>
                                             </button>
@@ -128,6 +139,8 @@
 
                     </div>
                 </div>
+            </div>
+        </div></div>
             </div>
         </div>
 
@@ -253,9 +266,32 @@
                 }
 
                 // ── Rendering ───────────────────────────────────────────────
+                function scaledNote(d) {
+                    if (!d.scaled_offerings || !d.scaled_offerings.length) return '';
+                    return '<div class="sp-note warn"><i class="fas fa-info-circle mr-1"></i> ' +
+                        '<strong>Not listed below:</strong> ' +
+                        d.scaled_offerings.map(o => esc(o.label) + ' (scale: ' + esc(o.scale) + ')').join('; ') +
+                        '. These class-streams grade this subject on an Assessment Scale (comment-driven), so papers cannot be attached there. ' +
+                        'To use papers, set the subject back to <em>Numeric marks</em> under <strong>Examinations &rarr; Assessment Scales &rarr; Assign</strong>.</div>';
+                }
+
                 function render() {
                     const d = current;
+
+                    if (d.blocked) {
+                        detailEl.innerHTML =
+                            '<div class="sp-panel"><div class="sp-panel-hd"><h5>' + esc(d.name) + ' &mdash; papers not available</h5></div>' +
+                            '<div class="sp-panel-bd">' + scaledNote(d) +
+                            '<div class="sp-note">Every class that teaches <strong>' + esc(d.name) + '</strong> grades it on an Assessment Scale, ' +
+                            'so it is marked with comments rather than plain scores and cannot be split into papers (P1, P2 &hellip;). ' +
+                            'If that scale was set by mistake, open <strong>Examinations &rarr; Assessment Scales</strong>, choose the scale, press <em>Assign</em>, and set this subject back to ' +
+                            '<em>Numeric marks</em>. It will then be ready for papers here.</div></div></div>';
+                        papersDirty = cellsDirty = false;
+                        return;
+                    }
+
                     detailEl.innerHTML =
+                        scaledNote(d) +
                         '<div class="sp-panel mb-3">' +
                             '<div class="sp-panel-hd"><h5>' + esc(d.name) + ' &mdash; standard papers<small>The papers this subject has. Leave a paper\'s "usually out of" blank if it changes every exam.</small></h5>' +
                             '<span id="spStatus" class="sp-status"></span></div>' +

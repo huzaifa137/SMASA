@@ -519,6 +519,16 @@ class ExaminationController extends Controller
                 && !$this->classIsReleased($exam, $classSubject->class_id, (string) $classSubject->stream_id, $schoolId);
         }
 
+        // Why there is no "Set papers" button, so the page can say so instead of
+        // just leaving it out (the usual surprise: a subject left on an
+        // Assessment Scale after testing).
+        $papersBlockedReason = null;
+
+        if ($assessmentScale) {
+            $papersBlockedReason = 'This subject is graded on the "' . $assessmentScale->name . '" Assessment Scale, so it is marked as one score and cannot be split into papers. '
+                . 'To use papers, set it back to numeric marks under Examinations → Assessment Scales → Assign.';
+        }
+
         // Paper teachers (Classes -> Subject Papers): when some papers of this
         // subject belong to specific teachers, this teacher can only type marks
         // into the papers that are theirs; the others are shown locked.
@@ -556,6 +566,7 @@ class ExaminationController extends Controller
             'isCustomSubject',
             'subjectSelectionNote',
             'papersSupported',
+            'papersBlockedReason',
             'papers',
             'paperMarks',
             'canSetPapers',
