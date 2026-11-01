@@ -86,6 +86,74 @@ class AssessmentScale extends Model
     }
 
     /**
+     * Smallest top score for which a scale still counts as a "marks" scale.
+     * Scales such as Early Years (1-3) are a handful of fixed steps: a score
+     * like 2.4 means nothing on them, so they cannot be built from papers.
+     * Anything 10 or wider (1-100, 0-50, 1-10...) is a real score range - the
+     * mark is a number the teacher types, and the scale only turns it into a
+     * comment (and optionally a letter grade) afterwards.
+     */
+    public const PAPER_MIN_TOP_SCORE = 10;
+
+    /**
+     * Can a subject graded on this scale be split into papers (P1, P2 ...)?
+     *
+     * Yes for range-based scales: the paper marks are combined into ONE
+     * score on the scale's own range and the scale then picks the comment /
+     * grade for that score exactly as if the teacher had typed it. No for
+     * tiny fixed-step scales, where there is no number to derive.
+     */
+    public function supportsPapers(): bool
+    {
+        return (float) $this->max_score >= self::PAPER_MIN_TOP_SCORE
+            && (float) $this->max_score > (float) $this->min_score;
+    }
+
+    /**
+     * Turn "what share of the paper maximums did the student score" (0-1)
+     * into this scale's result: the score on the scale, the matching
+     * system comment, remark and (for linked scales) letter grade/points.
+     * Mirrors what ExaminationController::saveMarks() does for a typed score.
+     *
+     * @return array ['score' => float, 'label' => ?string, 'remark' => ?string, 'grade' => ?string, 'points' => mixed]
+     */
+    public function resultForRatio(float $ratio): array
+    {
+        $ratio = max(0.0, min(1.0, $ratio));
+        $raw = $ratio * (float) $this->max_score;
+
+        $score = $this->allow_custom_score
+            ? round($raw, 2)
+            : max((float) $this->min_score, min((float) $this->max_score, round($raw)));
+
+        $preset = $this->presetForScore($score);
+        $remark = $preset->remark ?? null;
+        $grade = null;
+        $points = null;
+
+        if ($this->usesLinkedGrading()) {
+            $percentage = $this->max_score > 0 ? round(($score / $this->max_score) * 100, 4) : 0;
+            $band = $this->gradingScheme->bands->first(
+                fn($g) => $percentage >= $g->min_mark && $percentage <= $g->max_mark
+            );
+
+            if ($band) {
+                $grade = $band->grade;
+                $points = $band->points;
+                $remark = $remark ?? $band->remark;
+            }
+        }
+
+        return [
+            'score' => $score,
+            'label' => $preset->label ?? null,
+            'remark' => $remark,
+            'grade' => $grade,
+            'points' => $points,
+        ];
+    }
+
+    /**
      * Find the preset matching a given score exactly. Used to auto-fill
      * the comment box and remark when a teacher picks (or types a score
      * that matches) a system comment.

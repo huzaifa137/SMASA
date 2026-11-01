@@ -503,7 +503,11 @@ class ExaminationController extends Controller
         // Secondary subjects can be split into papers (P1/20, P2/80 ...) whose
         // maximums are set per examination - see ExaminationPaperService.
         // No papers configured = the screen behaves exactly as it always did.
-        $papersSupported = !$assessmentScale && ExaminationPaperService::supports($exam, $classSubject->class_id);
+        // A subject on a range-based Assessment Scale (e.g. 1-100 with comments per
+        // range) is still a real score, so it can have papers. Only tiny fixed-step
+        // scales (Early Years 1-3) cannot.
+        $scaleAllowsPapers = !$assessmentScale || $assessmentScale->supportsPapers();
+        $papersSupported = $scaleAllowsPapers && ExaminationPaperService::supports($exam, $classSubject->class_id);
         $papers = collect();
         $paperMarks = [];
         $canSetPapers = false;
@@ -524,9 +528,8 @@ class ExaminationController extends Controller
         // Assessment Scale after testing).
         $papersBlockedReason = null;
 
-        if ($assessmentScale) {
-            $papersBlockedReason = 'This subject is graded on the "' . $assessmentScale->name . '" Assessment Scale, so it is marked as one score and cannot be split into papers. '
-                . 'To use papers, set it back to numeric marks under Examinations → Assessment Scales → Assign.';
+        if ($assessmentScale && !$scaleAllowsPapers) {
+            $papersBlockedReason = ExaminationPaperService::scaleBlockReason($assessmentScale->id);
         }
 
         // Paper teachers (Classes -> Subject Papers): when some papers of this
@@ -682,7 +685,7 @@ class ExaminationController extends Controller
         // saves per-paper raw marks; the combined subject mark (what pass
         // slips and reports read) is derived from them.
         if (
-            $classSubjectRow && !$isEarlyYears
+            $classSubjectRow && (!$isEarlyYears || $assessmentScale->supportsPapers())
             && ExaminationPaperService::supports($exam, $request->class_id)
             && ExaminationPaperService::papers($exam, $request->class_id, $request->stream_id, $request->subject_id, $request->custom_subject_id)->isNotEmpty()
         ) {

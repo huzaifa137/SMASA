@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\PapersWouldReplaceMarksException;
 use App\Http\Controllers\Helper;
 use App\Models\Examination;
+use App\Models\AssessmentScale;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
 use App\Models\ExaminationMarkPaper;
@@ -73,6 +74,59 @@ class ExaminationPaperService
         }
 
         return true;
+    }
+
+    // ─── Assessment scales ─────────────────────────────────────────────────
+
+    /**
+     * The Assessment Scale a class-stream subject is graded on, but only when
+     * that scale is a real score range (see AssessmentScale::supportsPapers).
+     * Papers on such a subject are combined onto the SCALE's range (e.g. /100)
+     * instead of the examination's total_marks, and the scale supplies the
+     * system comment / remark / grade. null = plain numeric subject, or a
+     * scale that cannot carry papers.
+     */
+    public static function paperScale(Examination $exam, $classId, $streamId, $subjectId, $customSubjectId): ?AssessmentScale
+    {
+        $scaleId = DB::table('class_subjects')
+            ->where('school_id', $exam->school_id)
+            ->where('class_id', $classId)
+            ->where('stream_id', (string) $streamId)
+            ->when($subjectId, function ($q) use ($subjectId) {
+                $q->where('subject_id', $subjectId);
+            }, function ($q) use ($customSubjectId) {
+                $q->whereNull('subject_id')->where('custom_subject_id', $customSubjectId);
+            })
+            ->value('assessment_scale_id');
+
+        if (!$scaleId) {
+            return null;
+        }
+
+        $scale = AssessmentScale::with(['presets', 'gradingScheme.bands'])->find($scaleId);
+
+        return $scale && $scale->supportsPapers() ? $scale : null;
+    }
+
+    /**
+     * Why papers cannot be used on a subject because of its Assessment Scale,
+     * or null when they can (no scale, or a range-based scale).
+     */
+    public static function scaleBlockReason($scaleId): ?string
+    {
+        if (empty($scaleId)) {
+            return null;
+        }
+
+        $scale = AssessmentScale::find($scaleId);
+
+        if (!$scale || $scale->supportsPapers()) {
+            return null;
+        }
+
+        return 'This subject is graded on the "' . $scale->name . '" Assessment Scale, which has only a few fixed steps '
+            . '(' . static::fmt($scale->min_score) . '–' . static::fmt($scale->max_score) . '), so there is no score to build from papers. '
+            . 'Papers work with range-based scales (for example 1–100) and with plain numeric marks.';
     }
 
     // ─── Queries ───────────────────────────────────────────────────────────
@@ -504,6 +558,12 @@ class ExaminationPaperService
         $totalMax = (float) $papers->sum('max_score');
         $paperNumbers = $papers->pluck('paper_number')->all();
         $bands = static::bands($exam, $classId, $streamId);
+
+        // A subject on a range-based Assessment Scale is combined onto the
+        // SCALE's range (e.g. /100) and graded by the scale; every other
+        // subject keeps using the examination's total_marks + grading bands.
+        $scale = static::paperScale($exam, $classId, $streamId, $subjectId, $customSubjectId);
+        $rowTotal = $scale ? (float) $scale->max_score : $exam->total_marks;
         $perStudent = static::paperMarks($exam, $classId, $streamId, $subjectId, $customSubjectId);
 
         $existingMarks = ExaminationMark::where('examination_id', $exam->id)
@@ -536,8 +596,17 @@ class ExaminationPaperService
             if ($complete) {
                 $sum = array_sum(array_intersect_key($raws, array_flip($paperNumbers)));
                 $ratio = $sum / $totalMax;
-                $obtained = round($ratio * $exam->total_marks, 2);
-                [$grade, $remark, $points] = static::gradeFor($ratio * 100, $bands);
+
+                if ($scale) {
+                    $result = $scale->resultForRatio($ratio);
+                    $obtained = $result['score'];
+                    $grade = $result['grade'];
+                    $remark = $result['remark'];
+                    $points = $result['points'];
+                } else {
+                    $obtained = round($ratio * $exam->total_marks, 2);
+                    [$grade, $remark, $points] = static::gradeFor($ratio * 100, $bands);
+                }
             }
 
             $attrs = [
@@ -545,7 +614,7 @@ class ExaminationPaperService
                 'stream_id' => $streamId,
                 'school_id' => $exam->school_id,
                 'marks_obtained' => $obtained,
-                'total_marks' => $exam->total_marks,
+                'total_marks' => $rowTotal,
                 'grade' => $grade,
                 'grade_remark' => $remark,
                 'grade_points' => $points,

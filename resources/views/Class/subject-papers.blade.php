@@ -28,6 +28,17 @@
             .sp-badge.warn { background: #fef3c7; color: #92400e; }
             .sp-badge.teal { background: #ccfbf1; color: #0f766e; }
 
+            .sp-qual { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; margin-top: .15rem; font-size: .74rem; color: #4b5563; font-weight: 600; }
+            .sp-lvl { font-size: .66rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .1rem .45rem; border-radius: .35rem; color: #fff; }
+            .sp-lvl.o { background: #2C29CA; }
+            .sp-lvl.a { background: #7c3aed; }
+            .sp-classes { display: block; font-size: .7rem; color: #6b7280; margin-top: .1rem; }
+            .sp-subject.dup { border-left: 4px solid #f59e0b; }
+            .sp-idstrip { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; background: #f5f5ff; border: 1px solid #d9d8ff; border-radius: .7rem; padding: .55rem .85rem; margin-bottom: .8rem; font-size: .82rem; color: #1B1D28; }
+            .sp-idstrip strong { font-size: .98rem; }
+            .sp-idstrip .sp-sub { color: #4b5563; font-size: .78rem; }
+            .sp-scaletag { display: inline-block; margin-top: .2rem; font-size: .66rem; font-weight: 700; background: #e0f2fe; color: #075985; border-radius: 999px; padding: .08rem .45rem; }
+
             .sp-empty { text-align: center; color: #6b7280; padding: 3rem 1rem; }
             .sp-empty i { font-size: 2rem; color: #c7c9d9; margin-bottom: .6rem; display: block; }
 
@@ -82,10 +93,12 @@
                                 pre-fills it.
                             </p>
                             <p>
-                                Papers are used by <strong>standard</strong> examinations. An O-Level examination that runs on
-                                <strong>Assessments (new curriculum)</strong> is marked through <em>Create Assessment</em> instead
-                                (Activities of Integration, Projects, Subject Achievement &mdash; each with its own maximum), and a
-                                subject graded on an <strong>Assessment Scale</strong> is comment-driven, so neither uses papers.
+                                Papers are used by <strong>standard</strong> examinations. A subject graded on a
+                                <strong>range-based Assessment Scale</strong> (for example 1&ndash;100, where the mark decides the comment)
+                                can also have papers: they are added up into one score on that scale and the scale picks the comment.
+                                An O-Level examination that runs on <strong>Assessments (new curriculum)</strong> is marked through
+                                <em>Create Assessment</em> instead (each assessment has its own maximum), and a
+                                <strong>fixed-step scale</strong> (like Early Years 1&ndash;3) has no score to build from papers.
                             </p>
                         </div>
 
@@ -103,22 +116,38 @@
                                     <input type="search" class="sp-search" id="spSearch" placeholder="Search subjects…">
                                     <div class="sp-list" id="spList">
                                         @forelse ($subjects as $s)
-                                            <button type="button" class="sp-subject" data-key="{{ $s->key }}" data-name="{{ mb_strtolower($s->name) }}">
+                                            <button type="button" class="sp-subject{{ $s->duplicate_name ? ' dup' : '' }}" data-key="{{ $s->key }}" data-name="{{ mb_strtolower($s->name . ' ' . $s->qualifier . ' ' . $s->classes_label) }}">
                                                 <strong>{{ $s->name }}</strong>
+                                                <span class="sp-qual">
+                                                    @foreach ($s->levels as $lvl)
+                                                        <span class="sp-lvl {{ $lvl === 'A-Level' ? 'a' : 'o' }}">{{ $lvl }}</span>
+                                                    @endforeach
+                                                    <span>{{ $s->category }}</span>
+                                                </span>
+                                                <span class="sp-classes"><i class="fas fa-chalkboard mr-1"></i>{{ $s->classes_label }}</span>
                                                 <span class="sp-badges">
                                                     @if ($s->blocked)
-                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">assessment scale</span>
+                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">fixed-step scale</span>
                                                     @elseif ($s->papers->isEmpty())
                                                         <span class="sp-badge">single score</span>
+                                                        @if (!empty($s->range_scale_names))
+                                                            <span class="sp-badge teal" title="{{ implode(', ', $s->range_scale_names) }}">range scale</span>
+                                                        @endif
                                                     @else
                                                         <span class="sp-badge ok">{{ $s->papers->count() }} {{ \Illuminate\Support\Str::plural('paper', $s->papers->count()) }}</span>
                                                         <span class="sp-badge {{ $s->attached >= $s->offerings ? 'ok' : 'warn' }}">on {{ $s->attached }}/{{ $s->offerings }} classes</span>
                                                         @if ($s->with_teachers)
                                                             <span class="sp-badge teal">paper teachers</span>
                                                         @endif
+                                                        @if (!empty($s->range_scale_names))
+                                                            <span class="sp-badge teal" title="{{ implode(', ', $s->range_scale_names) }}">range scale</span>
+                                                        @endif
+                                                    @endif
+                                                    @if ($s->duplicate_name)
+                                                        <span class="sp-badge warn" title="Another subject has the same name. Check the level and classes before you change anything.">same name as another subject</span>
                                                     @endif
                                                     @if (!$s->blocked && $s->scaled)
-                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">{{ $s->scaled }} on a scale</span>
+                                                        <span class="sp-badge warn" title="{{ implode(', ', $s->scale_names) }}">{{ $s->scaled }} on a fixed-step scale</span>
                                                     @endif
                                                 </span>
                                             </button>
@@ -266,13 +295,31 @@
                 }
 
                 // ── Rendering ───────────────────────────────────────────────
+                function identityStrip(d) {
+                    const lv = (d.levels || []).map(l => '<span class="sp-lvl ' + (l === 'A-Level' ? 'a' : 'o') + '">' + esc(l) + '</span>').join(' ');
+                    return '<div class="sp-idstrip"><span>You are editing</span><strong>' + esc(d.name) + '</strong>' + lv +
+                        '<span>' + esc(d.category || '') + '</span>' +
+                        '<span class="sp-sub"><i class="fas fa-chalkboard mr-1"></i>' + esc(d.classes_label || '') + '</span></div>';
+                }
+
                 function scaledNote(d) {
                     if (!d.scaled_offerings || !d.scaled_offerings.length) return '';
                     return '<div class="sp-note warn"><i class="fas fa-info-circle mr-1"></i> ' +
                         '<strong>Not listed below:</strong> ' +
                         d.scaled_offerings.map(o => esc(o.label) + ' (scale: ' + esc(o.scale) + ')').join('; ') +
-                        '. These class-streams grade this subject on an Assessment Scale (comment-driven), so papers cannot be attached there. ' +
-                        'To use papers, set the subject back to <em>Numeric marks</em> under <strong>Examinations &rarr; Assessment Scales &rarr; Assign</strong>.</div>';
+                        '. Those class-streams use a <strong>fixed-step</strong> Assessment Scale (a few set steps, like Early Years 1&ndash;3), ' +
+                        'so the result is a step rather than a score and there is nothing to add up from papers. ' +
+                        'A range-based scale (for example 1&ndash;100) or numeric marks works with papers &mdash; change it under ' +
+                        '<strong>Examinations &rarr; Assessment Scales &rarr; Assign</strong>.</div>';
+                }
+
+                function rangeScaleNote(d) {
+                    const scales = Array.from(new Set((d.offerings || []).map(o => o.scale).filter(Boolean)));
+                    if (!scales.length) return '';
+                    return '<div class="sp-note"><i class="fas fa-info-circle mr-1"></i> ' +
+                        'Some classes below grade this subject on the range-based scale <strong>' + scales.map(esc).join(', ') + '</strong>. ' +
+                        'Papers still work there: the paper marks are added up into <strong>one score on that scale</strong>, ' +
+                        'and the scale then picks the comment (and grade, if linked) from the range the score falls in &mdash; exactly as if the teacher had typed the score.</div>';
                 }
 
                 function render() {
@@ -281,19 +328,19 @@
                     if (d.blocked) {
                         detailEl.innerHTML =
                             '<div class="sp-panel"><div class="sp-panel-hd"><h5>' + esc(d.name) + ' &mdash; papers not available</h5></div>' +
-                            '<div class="sp-panel-bd">' + scaledNote(d) +
-                            '<div class="sp-note">Every class that teaches <strong>' + esc(d.name) + '</strong> grades it on an Assessment Scale, ' +
-                            'so it is marked with comments rather than plain scores and cannot be split into papers (P1, P2 &hellip;). ' +
-                            'If that scale was set by mistake, open <strong>Examinations &rarr; Assessment Scales</strong>, choose the scale, press <em>Assign</em>, and set this subject back to ' +
-                            '<em>Numeric marks</em>. It will then be ready for papers here.</div></div></div>';
+                            '<div class="sp-panel-bd">' + identityStrip(d) + scaledNote(d) +
+                            '<div class="sp-note">Every class that teaches <strong>' + esc(d.name) + '</strong> (' + esc((d.levels || []).join(' / ')) + ') grades it on a fixed-step Assessment Scale, ' +
+                            'so it cannot be split into papers (P1, P2 &hellip;). To use papers, open <strong>Examinations &rarr; Assessment Scales</strong>, ' +
+                            'choose the scale, press <em>Assign</em>, and give this subject a range-based scale (for example 1&ndash;100) or numeric marks.</div></div></div>';
                         papersDirty = cellsDirty = false;
                         return;
                     }
 
                     detailEl.innerHTML =
+                        identityStrip(d) +
                         scaledNote(d) +
                         '<div class="sp-panel mb-3">' +
-                            '<div class="sp-panel-hd"><h5>' + esc(d.name) + ' &mdash; standard papers<small>The papers this subject has. Leave a paper\'s "usually out of" blank if it changes every exam.</small></h5>' +
+                            '<div class="sp-panel-hd"><h5>' + esc(d.name) + ' <span class="text-muted" style="font-weight:600;font-size:.8rem;">(' + esc(d.qualifier || '') + ')</span> &mdash; standard papers<small>The papers this subject has. Leave a paper\'s "usually out of" blank if it changes every exam.</small></h5>' +
                             '<span id="spStatus" class="sp-status"></span></div>' +
                             '<div class="sp-panel-bd" id="spPapersBox"></div>' +
                         '</div>' +
@@ -359,12 +406,12 @@
                         ? '<button type="button" class="sp-btn sm" id="spAttachAll"><i class="fas fa-check-double mr-1"></i> Attach all papers to all classes</button>'
                         : '';
 
-                    let html = '';
+                    let html = rangeScaleNote(d);
                     if (blocked) {
                         html += '<div class="sp-note warn"><i class="fas fa-exclamation-triangle mr-1"></i> You changed the papers above. Save the papers first, then attach them to classes.</div>';
                     }
 
-                    html += '<div class="sp-matrix-wrap"><table class="sp-table sp-matrix"><thead><tr><th>Class &amp; stream</th>';
+                    html += '<div class="sp-matrix-wrap"><table class="sp-table sp-matrix"><thead><tr><th style="color: #2C29CA !important;">Class &amp; stream</th>';
                     d.papers.forEach(p => {
                         html += '<th class="sp-colhd"><label class="mb-0" style="display:flex;gap:.4rem;align-items:center;cursor:pointer;">' +
                             (CAN_MANAGE ? '<input type="checkbox" data-colall="' + p.id + '" title="Attach to every class">' : '') +
@@ -377,6 +424,7 @@
                     d.offerings.forEach(o => {
                         html += '<tr data-class="' + o.class_id + '" data-stream="' + esc(o.stream_id) + '"><td class="sp-rowname">' +
                             '<strong>' + esc(o.label) + '</strong>' +
+                            (o.scale ? '<span class="sp-scaletag" title="Marked on this range-based Assessment Scale; papers are added into one score on it">scale: ' + esc(o.scale) + '</span><br>' : '') +
                             '<small>' + (o.subject_teachers.length ? 'Subject teacher: ' + esc(o.subject_teachers.join(', ')) : 'No subject teacher yet') + '</small>' +
                             (CAN_MANAGE || CAN_ASSIGN
                                 ? '<div class="mt-1" style="display:flex;gap:.3rem;flex-wrap:wrap;">' +

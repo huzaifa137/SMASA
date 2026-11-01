@@ -7,6 +7,7 @@ use App\Exceptions\PapersWouldReplaceMarksException;
 use App\Exceptions\SubjectPapersWouldDetachException;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\Helper;
+use App\Models\AssessmentScale;
 use App\Models\ClassSubjectPaper;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
@@ -72,43 +73,138 @@ class SubjectPaperService
         });
     }
 
-    /** class_subjects rows of a subject that can carry papers: secondary classes, plain-score subjects. */
+    /**
+     * ids of this school's Assessment Scales that are real score ranges
+     * (1-100 ...). Subjects on those are marked with numbers, so they CAN
+     * carry papers; only fixed-step scales (Early Years 1-3) cannot.
+     */
+    protected static function paperScaleIds($schoolId): array
+    {
+        return AssessmentScale::where('school_id', $schoolId)->get()
+            ->filter(fn($sc) => $sc->supportsPapers())
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+    }
+
+    protected static function whereSubjectRows($query, $subjectId, $customSubjectId)
+    {
+        return $query->when(!empty($subjectId), function ($q) use ($subjectId) {
+            $q->where('subject_id', $subjectId);
+        }, function ($q) use ($customSubjectId) {
+            $q->where(function ($z) {
+                $z->whereNull('subject_id')->orWhere('subject_id', 0);
+            })->where('custom_subject_id', $customSubjectId);
+        });
+    }
+
+    /** class_subjects rows of a subject that can carry papers: secondary classes, plain-score subjects AND subjects on a range-based scale. */
     protected static function offeringRows($schoolId, $subjectId, $customSubjectId): Collection
     {
-        return DB::table('class_subjects')
-            ->where('school_id', $schoolId)
-            ->whereIn('class_id', Helper::secondaryClassIds())
-            ->whereNull('assessment_scale_id')
-            ->when(!empty($subjectId), function ($q) use ($subjectId) {
-                $q->where('subject_id', $subjectId);
-            }, function ($q) use ($customSubjectId) {
-                $q->where(function ($z) {
-                    $z->whereNull('subject_id')->orWhere('subject_id', 0);
-                })->where('custom_subject_id', $customSubjectId);
-            })
-            ->get();
+        $okScales = static::paperScaleIds($schoolId);
+
+        return static::whereSubjectRows(
+            DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->whereIn('class_id', Helper::secondaryClassIds())
+                ->where(function ($q) use ($okScales) {
+                    $q->whereNull('assessment_scale_id');
+                    if ($okScales) {
+                        $q->orWhereIn('assessment_scale_id', $okScales);
+                    }
+                }),
+            $subjectId,
+            $customSubjectId
+        )->get();
     }
 
     /**
-     * class_subjects rows of a subject that are graded on an Assessment Scale
-     * (comment-driven, no papers). They are not hidden from the screen any
-     * more: they are listed as "not available" so a teacher can see WHY a
-     * subject has no papers instead of the subject silently going missing.
+     * class_subjects rows of a subject graded on a FIXED-STEP Assessment Scale
+     * (Early Years 1-3 style). Listed as "not available" so a teacher can see
+     * WHY a subject has no papers there instead of it silently going missing.
      */
     protected static function scaledRows($schoolId, $subjectId, $customSubjectId): Collection
     {
-        return DB::table('class_subjects')
-            ->where('school_id', $schoolId)
-            ->whereIn('class_id', Helper::secondaryClassIds())
-            ->whereNotNull('assessment_scale_id')
-            ->when(!empty($subjectId), function ($q) use ($subjectId) {
-                $q->where('subject_id', $subjectId);
-            }, function ($q) use ($customSubjectId) {
-                $q->where(function ($z) {
-                    $z->whereNull('subject_id')->orWhere('subject_id', 0);
-                })->where('custom_subject_id', $customSubjectId);
-            })
-            ->get();
+        $okScales = static::paperScaleIds($schoolId);
+
+        return static::whereSubjectRows(
+            DB::table('class_subjects')
+                ->where('school_id', $schoolId)
+                ->whereIn('class_id', Helper::secondaryClassIds())
+                ->whereNotNull('assessment_scale_id')
+                ->when($okScales, fn($q) => $q->whereNotIn('assessment_scale_id', $okScales)),
+            $subjectId,
+            $customSubjectId
+        )->get();
+    }
+
+    // ─── Subject identity shown to people ──────────────────────────────────
+
+    /** 'O-Level' / 'A-Level' for a class_subjects row. */
+    protected static function levelOf($row): string
+    {
+        return ($row->subject_type ?? '') === 'secondary_alevel' ? 'A-Level' : 'O-Level';
+    }
+
+    /**
+     * What KIND of subject it is within its level, so two subjects with the
+     * same name (Arabic the A-Level principal vs Arabic the O-Level elective)
+     * never look alike: Compulsory / Elective / Principal – Arts / Subsidiary...
+     */
+    protected static function categoryOf($row): string
+    {
+        static $memo = [];
+
+        $subjectId = (int) ($row->subject_id ?? 0);
+        $cacheKey = $subjectId > 0 ? 's' . $subjectId : 'c' . (int) ($row->custom_subject_id ?? 0);
+
+        if (isset($memo[$cacheKey])) {
+            return $memo[$cacheKey];
+        }
+
+        if ($subjectId <= 0) {
+            $label = 'Custom subject';
+        } elseif ($subjectId >= 9_500_000_000) {
+            $label = 'Elective (school-added)';
+        } elseif ($subjectId >= 9_000_000_000) {
+            $group = DB::table('school_alevel_subjects')->where('id', $subjectId - 9_000_000_000)->value('subject_group');
+            $label = $group ? str_replace(' - ', ' – ', $group) . ' (school-added)' : 'A-Level subject (school-added)';
+        } else {
+            $group = DB::table('master_datas')->where('md_id', $subjectId)->value('md_misc1');
+            $label = match (true) {
+                $group === 'Elective' => 'Elective',
+                $group === 'General' => 'General Paper',
+                $group === 'Subsidiary' => 'Subsidiary',
+                is_string($group) && str_starts_with($group, 'Principal') => str_replace(' - ', ' – ', $group),
+                default => 'Compulsory',
+            };
+        }
+
+        return $memo[$cacheKey] = $label;
+    }
+
+    /**
+     * Who/what a subject entry is: its level(s), category and the classes it
+     * is taught in. Built from ALL its class_subjects rows (scaled or not).
+     */
+    protected static function identity(Collection $rows): array
+    {
+        $first = $rows->first();
+        $levels = $rows->map(fn($r) => static::levelOf($r))->unique()->sort()->values()->all();
+        $category = static::categoryOf($first);
+
+        $classes = $rows->pluck('class_id')->unique()->sort()->map(fn($id) => Helper::recordMdname($id) ?: ('Class ' . $id))->values()->all();
+
+        return [
+            'levels' => $levels,
+            'category' => $category,
+            // "A-Level · Principal – Arts": the line that tells lookalike subjects apart
+            'qualifier' => implode(' / ', $levels) . ' · ' . $category,
+            'classes' => $classes,
+            'classes_label' => count($classes) > 4
+                ? $classes[0] . ' … ' . end($classes) . ' (' . count($classes) . ' classes)'
+                : implode(', ', $classes),
+        ];
     }
 
     /** id => name of the Assessment Scales used by the given class_subjects rows. */
@@ -147,6 +243,7 @@ class SubjectPaperService
             ->get();
 
         $scaleNames = static::scaleNames($rows);
+        $okScales = static::paperScaleIds($schoolId);
 
         $papers = SubjectPaper::where('school_id', $schoolId)->get()
             ->groupBy(fn($p) => static::key($p->subject_id, $p->custom_subject_id));
@@ -154,17 +251,18 @@ class SubjectPaperService
         $attached = ClassSubjectPaper::where('school_id', $schoolId)->get()
             ->groupBy(fn($a) => static::key($a->subject_id, $a->custom_subject_id));
 
-        return $rows
+        $subjects = $rows
             ->groupBy(fn($r) => static::key($r->subject_id, $r->custom_subject_id))
-            ->map(function ($group, $key) use ($papers, $attached, $scaleNames) {
+            ->map(function ($group, $key) use ($papers, $attached, $scaleNames, $okScales) {
                 $first = $group->first();
                 $name = trim((string) Helper::classSubjectName($first));
                 $attachedRows = $attached->get($key, collect());
 
-                $plain = $group->filter(fn($r) => empty($r->assessment_scale_id));
-                $scaled = $group->filter(fn($r) => !empty($r->assessment_scale_id));
+                $plain = $group->filter(fn($r) => empty($r->assessment_scale_id) || in_array((int) $r->assessment_scale_id, $okScales, true));
+                $scaled = $group->filter(fn($r) => !$plain->contains($r));
 
-                return (object) [
+                return (object) (static::identity($group) + [
+                    'duplicate_name' => false,
                     'key' => $key,
                     'name' => $name !== '' ? $name : 'Subject ' . $key,
                     'offerings' => $plain->map(fn($r) => $r->class_id . '|' . $r->stream_id)->unique()->count(),
@@ -176,9 +274,19 @@ class SubjectPaperService
                     'papers' => $papers->get($key, collect())->sortBy('paper_number')->values(),
                     'attached' => $attachedRows->map(fn($a) => $a->class_id . '|' . $a->stream_id)->unique()->count(),
                     'with_teachers' => $attachedRows->filter(fn($a) => $a->teacher_1_id || $a->teacher_2_id)->count(),
-                ];
-            })
-            ->sortBy(fn($s) => mb_strtolower($s->name))
+                    // Subjects marked on a range-based scale (1-100 ...): papers are allowed, the scale still supplies the comment.
+                    'range_scale_names' => $plain->pluck('assessment_scale_id')->filter()->unique()
+                        ->map(fn($id) => $scaleNames[$id] ?? 'Assessment scale')->values()->all(),
+                ]);
+            });
+
+        // Two subjects that share a name (Arabic A-Level vs Arabic O-Level
+        // elective) are flagged so the screen can make the difference loud.
+        $nameCounts = $subjects->countBy(fn($s) => mb_strtolower($s->name));
+        $subjects->each(fn($s) => $s->duplicate_name = ($nameCounts[mb_strtolower($s->name)] ?? 0) > 1);
+
+        return $subjects
+            ->sortBy(fn($s) => mb_strtolower($s->name) . '|' . $s->qualifier)
             ->values();
     }
 
@@ -192,7 +300,8 @@ class SubjectPaperService
             return null;
         }
 
-        $scaleNames = static::scaleNames($scaledRows);
+        $identity = static::identity($rows->concat($scaledRows));
+        $scaleNames = static::scaleNames($scaledRows->concat($rows));
         $scaledOfferings = $scaledRows
             ->unique(fn($r) => $r->class_id . '|' . $r->stream_id)
             ->sortBy(fn($r) => sprintf('%010d|%s', $r->class_id, $r->stream_id))
@@ -208,7 +317,7 @@ class SubjectPaperService
         if ($rows->isEmpty()) {
             $name = trim((string) Helper::classSubjectName($scaledRows->first()));
 
-            return [
+            return $identity + [
                 'key' => static::key($subjectId, $customSubjectId),
                 'name' => $name !== '' ? $name : 'Subject',
                 'max_papers' => ExaminationPaperService::MAX_PAPERS,
@@ -234,7 +343,7 @@ class SubjectPaperService
         $offerings = $rows
             ->unique(fn($r) => $r->class_id . '|' . $r->stream_id)
             ->sortBy(fn($r) => sprintf('%010d|%s', $r->class_id, $r->stream_id))
-            ->map(function ($r) use ($attachments, $teacherNames) {
+            ->map(function ($r) use ($attachments, $teacherNames, $scaleNames) {
                 $cells = [];
                 foreach ($attachments->get($r->class_id . '|' . $r->stream_id, collect()) as $a) {
                     $cells[$a->subject_paper_id] = [
@@ -247,6 +356,8 @@ class SubjectPaperService
                     'class_id' => (int) $r->class_id,
                     'stream_id' => (string) $r->stream_id,
                     'label' => static::classStreamLabel($r->class_id, $r->stream_id),
+                    'level' => static::levelOf($r),
+                    'scale' => !empty($r->assessment_scale_id) ? ($scaleNames[$r->assessment_scale_id] ?? 'Assessment scale') : null,
                     'subject_teachers' => collect([$r->subject_teacher_1, $r->subject_teacher_2])
                         ->filter()->map(fn($id) => $teacherNames[$id] ?? null)->filter()->values()->all(),
                     'cells' => (object) $cells,
@@ -257,7 +368,7 @@ class SubjectPaperService
 
         $name = trim((string) Helper::classSubjectName($rows->first()));
 
-        return [
+        return $identity + [
             'key' => static::key($subjectId, $customSubjectId),
             'name' => $name !== '' ? $name : 'Subject',
             'max_papers' => ExaminationPaperService::MAX_PAPERS,
@@ -291,7 +402,7 @@ class SubjectPaperService
         if (static::offeringRows($schoolId, $subjectId, $customSubjectId)->isEmpty()) {
             throw new InvalidArgumentException(
                 static::scaledRows($schoolId, $subjectId, $customSubjectId)->isNotEmpty()
-                    ? 'This subject is graded on an Assessment Scale in every class that teaches it, so it cannot have papers. Set the subject back to numeric marks first (Examinations → Assessment Scales → Assign).'
+                    ? 'This subject is graded on a fixed-step Assessment Scale (like Early Years 1–3) in every class that teaches it, so there is no score to build from papers. Give it a range-based scale (for example 1–100) or numeric marks first (Examinations → Assessment Scales → Assign).'
                     : 'That subject is not taught in any secondary class here.'
             );
         }
@@ -568,7 +679,7 @@ class SubjectPaperService
                     $first->custom_subject_id
                 )->first();
 
-                if (!$cs || $cs->assessment_scale_id || !ExaminationSubjectSetting::marksEntryOpen($exam->id, $cs)) {
+                if (!$cs || ExaminationPaperService::scaleBlockReason($cs->assessment_scale_id) || !ExaminationSubjectSetting::marksEntryOpen($exam->id, $cs)) {
                     continue; // not sat in this exam / not a plain-score subject: nothing to apply
                 }
 

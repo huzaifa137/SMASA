@@ -264,8 +264,8 @@ class ExaminationPaperController extends Controller
             return $this->fail('Papers are only available for Secondary subjects that are marked with plain scores.', 422);
         }
 
-        if ($classSubject->assessment_scale_id) {
-            return $this->fail('This subject is graded on an Assessment Scale, so it cannot have papers.', 422);
+        if ($scaleBlock = ExaminationPaperService::scaleBlockReason($classSubject->assessment_scale_id)) {
+            return $this->fail($scaleBlock, 422);
         }
 
         if (!ExaminationSubjectSetting::marksEntryOpen($exam->id, $classSubject)) {

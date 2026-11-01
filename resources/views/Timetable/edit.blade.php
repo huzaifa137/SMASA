@@ -824,7 +824,7 @@ $palette = [
     '#991b1b', // Maroon
     '#be123c', // Burgundy
     '#6d28d9', // Deep Purple
-    '#0369a1', // Ocean Blue
+    '#2C29CA', // Ocean Blue
     '#374151', // Slate Gray
     '#4b5563', // Charcoal
     '#111827', // Jet Black

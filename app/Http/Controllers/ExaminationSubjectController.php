@@ -59,6 +59,7 @@ class ExaminationSubjectController extends Controller
             ->map(fn($rows) => $rows->map(fn($p) => 'P' . $p->paper_number . '/' . rtrim(rtrim(number_format((float) $p->max_score, 2, '.', ''), '0'), '.'))->implode(' · '));
 
         $classes = [];
+        $scaleBlocks = [];
         foreach ($examClasses as $ec) {
             $classSupportsPapers = ExaminationPaperService::supports($exam, $ec->class_id);
 
@@ -75,9 +76,11 @@ class ExaminationSubjectController extends Controller
                 continue;
             }
 
-            $rows = $subjects->map(function ($cs) use ($settings, $markCounts, $schoolId, $exam, $paperSummaries, $classSupportsPapers) {
+            $rows = $subjects->map(function ($cs) use ($settings, $markCounts, $schoolId, $exam, $paperSummaries, $classSupportsPapers, &$scaleBlocks) {
                 $key = ExaminationSubjectSetting::keyFor($cs);
                 $setting = $settings[$key] ?? null;
+                // Only a fixed-step scale (Early Years 1-3) rules papers out; a 1-100 range scale does not.
+                $scaleBlock = $cs->assessment_scale_id ? ($scaleBlocks[$cs->assessment_scale_id] ??= ExaminationPaperService::scaleBlockReason($cs->assessment_scale_id)) : null;
 
                 return (object) [
                     'key' => $key,
@@ -88,10 +91,10 @@ class ExaminationSubjectController extends Controller
                     'sat' => $setting ? (bool) $setting->marks_entry_enabled : true,
                     'show' => $setting ? (bool) $setting->show_on_report : true,
                     // Papers only apply to Secondary subjects marked with plain scores.
-                    'papers_supported' => $classSupportsPapers && !$cs->assessment_scale_id,
+                    'papers_supported' => $classSupportsPapers && !$scaleBlock,
                     'papers_blocked_note' => !$classSupportsPapers
                         ? 'Papers are not used by this class in this exam'
-                        : ($cs->assessment_scale_id ? 'Graded on an Assessment Scale, so no papers' : ''),
+                        : ($scaleBlock ? 'Graded on a fixed-step Assessment Scale, so no papers' : ''),
                     'papers_summary' => $paperSummaries[$key] ?? '',
                     // A choice subject (A-Level principal/subsidiary, O-Level
                     // elective) only counts marks from students who still

@@ -515,7 +515,12 @@ use App\Helpers\PermissionHelper;
 @section('content')
     @php
         // Subject split into papers for THIS examination (P1/20, P2/80 ...)?
-        $paperMode = !$isEarlyYears && $papers->isNotEmpty();
+        // (also true for a subject on a range-based Assessment Scale such as 1-100:
+        // the paper marks are combined into ONE score on that scale and the scale
+        // then supplies the System Comment / grade, same as a typed score.)
+        $paperMode = $papers->isNotEmpty();
+        $scaledPapers = $paperMode && $isEarlyYears;
+        $paperTotalOutOf = $scaledPapers ? $earlyYearsMaxMark : $exam->total_marks;
         $paperMaxTotal = (float) $papers->sum('max_score');
         $fmtNum = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
         // Papers given to other teachers (Classes -> Subject Papers) are shown, but locked.
@@ -665,7 +670,16 @@ use App\Helpers\PermissionHelper;
         {{-- Marks Table --}}
         <div class="card marks-card mb-5">
             <div class="card-body p-0">
-                @if ($isEarlyYears)
+                @if ($scaledPapers)
+                    <div class="alert alert-info m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This subject is graded on the <strong>{{ $assessmentScale->name }}</strong> scale
+                        ({{ $fmtNum($assessmentScale->min_score) }}–{{ $fmtNum($earlyYearsMaxMark) }}) and split into papers.
+                        Enter each paper's mark: they are added up into <strong>one score out of {{ $fmtNum($earlyYearsMaxMark) }}</strong>,
+                        and the scale picks the System Comment @if ($assessmentScale->usesLinkedGrading()) and the letter grade (<strong>{{ $assessmentScale->gradingScheme->name ?? 'linked' }}</strong>) @endif
+                        from the range that score falls in. The Comment box is filled in for you and stays editable.
+                    </div>
+                @elseif ($isEarlyYears)
                     <div class="alert alert-info m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
                         <i class="fas fa-info-circle me-1"></i>
                         This subject uses the <strong>{{ $assessmentScale->name }}</strong> scale
@@ -686,7 +700,7 @@ use App\Helpers\PermissionHelper;
                             <tr>
                                 <th style="width:40px;">#</th>
                                 <th>Student</th>
-                                @if ($isEarlyYears)
+                                @if ($isEarlyYears && !$paperMode)
                                     <th style="width:70px;">Score <small class="fw-normal text-white">({{ rtrim(rtrim(number_format($assessmentScale->min_score, 2), '0'), '.') }}–{{ rtrim(rtrim(number_format($earlyYearsMaxMark, 2), '0'), '.') }}{{ $assessmentScale->allow_custom_score ? '+' : '' }})</small></th>
                                     <th style="min-width:230px;">System Comment</th>
                                     @if ($assessmentScale->usesLinkedGrading())
@@ -701,8 +715,13 @@ use App\Helpers\PermissionHelper;
                                             <small>/ {{ $fmtNum($paper->max_score) }}</small>
                                         </th>
                                     @endforeach
-                                    <th class="paper-th text-center">Total <small>/ {{ $fmtNum($exam->total_marks) }}</small></th>
-                                    <th>Grade</th>
+                                    <th class="paper-th text-center">Total <small>/ {{ $fmtNum($paperTotalOutOf) }}</small></th>
+                                    @if ($scaledPapers)
+                                        <th style="min-width:200px;">System Comment</th>
+                                    @endif
+                                    @if (!$scaledPapers || $assessmentScale->usesLinkedGrading())
+                                        <th>Grade</th>
+                                    @endif
                                     <th>Remark</th>
                                 @else
                                     <th>Marks <small class="fw-normal text-white">(/{{ $exam->total_marks }})</small></th>
@@ -740,7 +759,7 @@ use App\Helpers\PermissionHelper;
                                         </div>
                                     </td>
 
-                                    @if ($isEarlyYears)
+                                    @if ($isEarlyYears && !$paperMode)
                                         <td>
                                             <input type="number" class="form-control marks-input"
                                                 name="marks[{{ $student->id }}]" data-student="{{ $student->id }}"
@@ -815,12 +834,21 @@ use App\Helpers\PermissionHelper;
                                                 {{ $mark?->marks_obtained !== null ? $fmtNum($mark->marks_obtained) : '—' }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <span class="grade-badge grade-cell {{ $gradeClass }}"
-                                                id="grade_{{ $student->id }}">
-                                                {{ $mark?->grade ?? '—' }}
-                                            </span>
-                                        </td>
+                                        @if ($scaledPapers)
+                                            <td>
+                                                <span class="remark-cell" style="font-size:.8rem;" id="syscomment_{{ $student->id }}">
+                                                    {{ $mark?->marks_obtained !== null ? ($assessmentScale->presetForScore($mark->marks_obtained)->label ?? '—') : '—' }}
+                                                </span>
+                                            </td>
+                                        @endif
+                                        @if (!$scaledPapers || $assessmentScale->usesLinkedGrading())
+                                            <td>
+                                                <span class="grade-badge grade-cell {{ $gradeClass }}"
+                                                    id="grade_{{ $student->id }}">
+                                                    {{ $mark?->grade ?? '—' }}
+                                                </span>
+                                            </td>
+                                        @endif
                                         <td>
                                             <span class="text-muted remark-cell" style="font-size:.8rem;"
                                                 id="remark_{{ $student->id }}">
@@ -965,6 +993,10 @@ use App\Helpers\PermissionHelper;
         const paperMaxTotal = {{ $paperMaxTotal }};
         let marksDirty = false;
         const scaleMaxScore = {{ $isEarlyYears ? $earlyYearsMaxMark : 'null' }};
+        // Papers on a range-based Assessment Scale are combined onto the SCALE's range, not the exam's total
+        const scaledPapers = @json($scaledPapers);
+        const scaleMinScore = {{ $isEarlyYears ? (float) $assessmentScale->min_score : 'null' }};
+        const scaleAllowCustom = @json($isEarlyYears ? (bool) $assessmentScale->allow_custom_score : false);
 
         // ✅ Convert to percentage FIRST, then match scale
         function getGrade(marks) {
@@ -1170,12 +1202,35 @@ use App\Helpers\PermissionHelper;
 
             if (bad) {
                 $total.text('!');
+                $(`#syscomment_${sid}`).text('—');
                 $grade.text('!').attr('class', 'grade-badge grade-cell grade-F');
                 $remark.text('Invalid');
                 return;
             }
 
-            if (filled === papersCfg.length && paperMaxTotal > 0) {
+            if (filled === papersCfg.length && paperMaxTotal > 0 && scaledPapers) {
+                // Same rules as the server (AssessmentScale::resultForRatio): round to a whole score unless the scale allows free scores
+                const raw = (sum / paperMaxTotal) * scaleMaxScore;
+                const score = scaleAllowCustom
+                    ? Math.round(raw * 100) / 100
+                    : Math.max(scaleMinScore, Math.min(scaleMaxScore, Math.round(raw)));
+                const preset = findEarlyYearsPreset(score);
+                $total.text(fmtNum(score));
+                $(`#syscomment_${sid}`).text(preset ? preset.label : '—');
+                $remark.text(preset ? preset.remark : '—');
+                if (scaleGradingBands.length) {
+                    const sg = getScaleGrade(score);
+                    $grade.text(sg ? sg.grade : '—').attr('class', 'grade-badge grade-cell ' + (sg ? gradeCssClass(sg.grade) : ''));
+                }
+
+                // Fill the Comment box with the System Comment, but never over text the teacher wrote
+                const $comment = $row.find('.comment-input');
+                if (!$comment.prop('disabled')) {
+                    const currentText = $comment.val();
+                    const wasAutoFilled = !currentText || earlyYearsPresets.some(p => p.label === currentText);
+                    if (wasAutoFilled) $comment.val(preset ? preset.label : '');
+                }
+            } else if (filled === papersCfg.length && paperMaxTotal > 0) {
                 const scaled = Math.round((sum / paperMaxTotal) * examTotalMarks * 100) / 100;
                 const g = getGrade((sum / paperMaxTotal) * examTotalMarks);
                 $total.text(fmtNum(scaled));
@@ -1183,6 +1238,7 @@ use App\Helpers\PermissionHelper;
                 $remark.text(g ? g.remark : '—');
             } else {
                 $total.text(filled > 0 ? filled + '/' + papersCfg.length + ' papers' : '—');
+                $(`#syscomment_${sid}`).text('—');
                 $grade.text('—').attr('class', 'grade-badge grade-cell');
                 $remark.text(filled > 0 ? 'Pending' : '—');
             }
