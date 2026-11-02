@@ -2323,6 +2323,7 @@ class Helper extends Controller
             'chemistry' => 'chemistry',
             'biology' => 'biology',
             'history' => 'history and political education',
+            'history and political education' => 'history and political education',
             'geography' => 'geography',
             'christian religious education' => 'christian religious education',
             'islamic religious education' => 'islamic religious education',

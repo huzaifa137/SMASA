@@ -190,7 +190,8 @@ $controller = new Controller();
 
                     let fieldName = $(this).attr('name');
 
-                    if (fieldName === 'school_name_arabic') {
+                    // Optional fields: the sales representative may be left on "Me / leave unassigned".
+                    if (fieldName === 'school_name_arabic' || fieldName === 'sales_rep_id') {
                         return true;
                     }
 

@@ -11,6 +11,10 @@ php artisan migrate --force     # if there are new migrations
 composer install --no-dev --optimize-autoloader   # if composer.lock changed
 
 
+php artisan classes:seed-secondary-defaults 12     # one existing school: adds any missing Senior 1-6
+php artisan classes:seed-secondary-defaults 204    #204 DEMO SECOUNDARY SCHOOL: created [Senior 2, Senior 3, Senior 4, Senior 5] kept existing [Senior 1, Senior 6]
+php artisan classes:seed-secondary-defaults --all  # every Secondary school with no classes yet
+
 <!-- $teacher->password = Hash::make($request->password);
 $teacher->must_change_password = false;
 $teacher->save(); -->

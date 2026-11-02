@@ -178,6 +178,16 @@ class SchoolController extends Controller
             report($e);
         }
 
+        // Secondary schools start with Senior 1 - Senior 6 already created
+        // (no streams, the compulsory subjects ticked), all editable like any
+        // class made by hand — see DefaultSecondaryClassesService.
+        // Never allowed to block the enrolment itself.
+        try {
+            \App\Services\DefaultSecondaryClassesService::seedForSchool($school->id, Session('LoggedAdmin'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         // Create corresponding house
         DB::table('houses')->insert([
             'House' => $validated['name'],
