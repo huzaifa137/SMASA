@@ -272,7 +272,7 @@
                 // ── State from the server ───────────────────────────────────
                 function load(detail) {
                     current = detail;
-                    paperRows = detail.papers.map(p => ({id: p.id, n: p.paper_number, label: p.label || '', type: p.paper_type, max: fmt(p.default_max_score)}));
+                    paperRows = detail.papers.map(p => ({id: p.id, n: p.paper_number, label: p.label || '', type: p.paper_type, max: fmt(p.default_max_score), last: (p.last_used_max === null || p.last_used_max === undefined) ? '' : fmt(p.last_used_max)}));
                     cells = {};
                     detail.offerings.forEach(o => {
                         detail.papers.forEach(p => {
@@ -372,11 +372,19 @@
                                 '<td><select class="sp-in" data-i="' + i + '" data-f="type"' + (edit ? '' : ' disabled') + '>' +
                                     Object.entries(TYPES).map(([k, v]) => '<option value="' + k + '"' + (r.type === k ? ' selected' : '') + '>' + esc(v) + '</option>').join('') +
                                 '</select></td>' +
-                                '<td style="max-width:130px"><input class="sp-in" type="number" min="0.01" max="1000" step="0.5" data-i="' + i + '" data-f="max" placeholder="e.g. 80" value="' + esc(r.max) + '"' + (edit ? '' : ' disabled') + '></td>' +
+                                '<td style="max-width:130px"><input class="sp-in" type="number" min="0.01" max="1000" step="0.5" data-i="' + i + '" data-f="max" placeholder="' + (r.last ? 'last used: ' + esc(r.last) : 'e.g. 80') + '" value="' + esc(r.max) + '"' + (edit ? '' : ' disabled') + '></td>' +
                                 '<td class="text-right">' + (edit ? '<button type="button" class="sp-btn danger sm" data-del="' + i + '" title="Remove this paper"><i class="fas fa-trash"></i></button>' : '') + '</td>' +
                             '</tr>';
                         });
                         html += '</tbody></table></div>';
+                    }
+
+                    // Exams have already used a value for papers whose usual "out of" is still blank
+                    const fillable = paperRows.filter(r => (r.max === '' || r.max == null) && r.last);
+                    if (fillable.length) {
+                        html += '<div class="sp-note mt-2"><i class="fas fa-lightbulb mr-1"></i> ' +
+                            fillable.map(r => 'P' + r.n + ' was last set to <strong>' + esc(r.last) + '</strong> in an examination').join('; ') + '. ' +
+                            (edit ? '<button type="button" class="sp-btn sm" id="spFillLast">Use these as the usual values</button> (then press <em>Save papers</em>)' : '') + '</div>';
                     }
 
                     if (edit) {
@@ -519,6 +527,9 @@
                         let n = 1; const used = new Set(paperRows.map(r => r.n));
                         while (used.has(n)) n++;
                         paperRows.push({id: null, n, label: '', type: 'theory', max: ''});
+                        papersDirty = true; renderPapers(); renderMatrix(); markDirty();
+                    } else if (b.id === 'spFillLast') {
+                        paperRows.forEach(r => { if ((r.max === '' || r.max == null) && r.last) r.max = r.last; });
                         papersDirty = true; renderPapers(); renderMatrix(); markDirty();
                     } else if (b.dataset.del !== undefined) {
                         paperRows.splice(+b.dataset.del, 1);

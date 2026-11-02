@@ -87,6 +87,8 @@ class ExaminationPaperController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
 
+        $this->auditOverride($ctx, array_map(fn($p) => (int) $p['paper_number'], $request->input('papers')), 'Set what is marked out of for');
+
         return response()->json(['success' => true, 'message' => 'Papers saved.'] + $this->payload($ctx));
     }
 
@@ -117,6 +119,8 @@ class ExaminationPaperController extends Controller
         } catch (InvalidArgumentException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
+
+        $this->auditOverride($ctx, [(int) $request->input('paper_number')], 'Removed');
 
         return response()->json([
             'success' => true,
@@ -155,6 +159,24 @@ class ExaminationPaperController extends Controller
 
     // ─── Internals ─────────────────────────────────────────────────────────
 
+    /** Record that an administrator changed a paper that belongs to other teachers. */
+    private function auditOverride(object $ctx, array $paperNumbers, string $what): void
+    {
+        $over = array_values(array_filter($paperNumbers, fn($n) => PaperTeacherAccess::isAdminOverride($ctx->access, (int) $n)));
+
+        if (!$over) {
+            return;
+        }
+
+        try {
+            \App\Audit\Audit::log('paper_admin_override', "{$what} paper(s) " . implode(', ', array_map(fn($n) => 'P' . $n, $over)) . ' that belong to other teachers, as an administrator', [
+                'metadata' => ['examination_id' => $ctx->exam->id, 'class_id' => $ctx->classId, 'stream_id' => $ctx->streamId, 'subject_id' => $ctx->subjectId, 'papers' => $over],
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     private function lockedPaper(object $ctx, int $paperNumber)
     {
         $label = $ctx->access->labels[$paperNumber] ?? ('Paper ' . $paperNumber);
@@ -184,6 +206,7 @@ class ExaminationPaperController extends Controller
                 'paper_type' => $a->paper->paper_type,
                 'default_max' => $a->paper->default_max_score,
                 'editable' => PaperTeacherAccess::canEdit($ctx->access, (int) $a->paper->paper_number),
+                'override' => PaperTeacherAccess::isAdminOverride($ctx->access, (int) $a->paper->paper_number),
                 'assigned_to' => PaperTeacherAccess::namesFor($ctx->access, (int) $a->paper->paper_number),
             ])
             ->values();
@@ -200,6 +223,7 @@ class ExaminationPaperController extends Controller
                 'entered' => $progress[$p->paper_number] ?? 0,
                 'set_by' => Helper::teacherFullName($p->created_by),
                 'editable' => PaperTeacherAccess::canEdit($ctx->access, (int) $p->paper_number),
+                'override' => PaperTeacherAccess::isAdminOverride($ctx->access, (int) $p->paper_number),
                 'assigned_to' => PaperTeacherAccess::namesFor($ctx->access, (int) $p->paper_number),
             ])->values(),
             'suggested' => $suggested,

@@ -21,6 +21,7 @@ use App\Models\ReportCardRemark;
 use App\Services\DisciplineCriteriaDefaults;
 use App\Services\ExaminationPaperService;
 use App\Services\PaperTeacherAccess;
+use App\Services\SubjectPaperService;
 use App\Support\CustomReportCards;
 use App\Support\ArabicReportCard;
 use App\Support\CustomReportData;
@@ -539,13 +540,35 @@ class ExaminationController extends Controller
         $paperEditable = [];
         $paperLockedTo = [];
 
+        $paperOverride = []; // papers an ADMIN could edit but that belong to other teachers: locked until unlocked on purpose
+
         foreach ($papers as $paper) {
             $n = (int) $paper->paper_number;
             $paperEditable[$n] = PaperTeacherAccess::canEdit($paperAccess, $n);
 
             if (!$paperEditable[$n]) {
                 $paperLockedTo[$n] = PaperTeacherAccess::namesFor($paperAccess, $n) ?: 'another teacher';
+            } elseif (PaperTeacherAccess::isAdminOverride($paperAccess, $n)) {
+                $paperLockedTo[$n] = PaperTeacherAccess::namesFor($paperAccess, $n) ?: 'another teacher';
+                $paperOverride[$n] = true;
             }
+        }
+
+        // Standard papers (Classes -> Subject Papers) this class-stream subject HAS, but
+        // that this examination has not been given yet. Without this the page looks like
+        // a plain single-score subject and nobody knows the subject is sat in papers.
+        $pendingStandardPapers = [];
+
+        if ($papersSupported && $papers->isEmpty()) {
+            $pendingStandardPapers = SubjectPaperService::attachedPapers($schoolId, $classSubject->class_id, $classSubject->stream_id, $classSubject->subject_id, $classSubject->custom_subject_id)
+                ->map(fn($a) => [
+                    'n' => (int) $a->paper->paper_number,
+                    'label' => $a->paper->display_label,
+                    'max' => $a->paper->default_max_score !== null ? (float) $a->paper->default_max_score : null,
+                    'who' => PaperTeacherAccess::namesFor($paperAccess, (int) $a->paper->paper_number),
+                ])
+                ->values()
+                ->all();
         }
 
         // Papers not yet set for this exam: only someone who may enter a single
@@ -575,6 +598,8 @@ class ExaminationController extends Controller
             'canSetPapers',
             'paperEditable',
             'paperLockedTo',
+            'paperOverride',
+            'pendingStandardPapers',
             'paperAccess'
         ));
     }
@@ -732,6 +757,23 @@ class ExaminationController extends Controller
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             } catch (\Throwable $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+
+            // An administrator who typed into a paper that belongs to other teachers:
+            // keep a record of it (they unlocked it on purpose, but it must be traceable).
+            if ($paperAccess->isAdmin && $paperAccess->restricted) {
+                $sent = collect($request->marks)->flatMap(fn($m) => array_keys((array) ($m['papers'] ?? [])))->map(fn($n) => (int) $n)->unique();
+                $overridden = $sent->filter(fn($n) => PaperTeacherAccess::isAdminOverride($paperAccess, $n))->values()->all();
+
+                if ($overridden) {
+                    try {
+                        \App\Audit\Audit::log('paper_marks_admin_override', 'Entered marks in paper(s) ' . implode(', ', array_map(fn($n) => 'P' . $n, $overridden)) . ' that belong to other teachers, as an administrator', [
+                            'metadata' => ['examination_id' => $exam->id, 'class_id' => $request->class_id, 'stream_id' => $request->stream_id, 'subject_id' => $request->subject_id, 'papers' => $overridden],
+                        ]);
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
             }
 
             $message = 'Marks saved successfully.';

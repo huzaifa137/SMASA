@@ -126,6 +126,22 @@ class PaperTeacherAccess
         return $access->isSubjectTeacher;
     }
 
+    /**
+     * True when the actor may edit this paper ONLY because they are an
+     * administrator: the paper was given to other teachers and the actor is
+     * not one of them. Administrators keep that right (they must be able to
+     * cover for an absent teacher) but the screens lock these papers by default
+     * and ask them to unlock on purpose, and the change is audited.
+     */
+    public static function isAdminOverride(object $access, int $paperNumber): bool
+    {
+        if (!$access->isAdmin || empty($access->assigned[$paperNumber])) {
+            return false;
+        }
+
+        return $access->teacherId === null || !in_array($access->teacherId, $access->assigned[$paperNumber], true);
+    }
+
     /** Is the actor named as a paper teacher on at least one paper of the subject? */
     public static function isPaperTeacher(object $access): bool
     {

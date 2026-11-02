@@ -11,6 +11,7 @@ use App\Models\AssessmentScale;
 use App\Models\ClassSubjectPaper;
 use App\Models\Examination;
 use App\Models\ExaminationClass;
+use App\Models\ExaminationSubjectPaper;
 use App\Models\ExaminationSubjectSetting;
 use App\Models\SubjectPaper;
 use App\Models\Teacher;
@@ -367,6 +368,7 @@ class SubjectPaperService
             ->all();
 
         $name = trim((string) Helper::classSubjectName($rows->first()));
+        $lastUsed = static::lastUsedMax($schoolId, $subjectId, $customSubjectId);
 
         return $identity + [
             'key' => static::key($subjectId, $customSubjectId),
@@ -376,6 +378,7 @@ class SubjectPaperService
             'blocked' => false,
             'scaled_offerings' => $scaledOfferings,
             'papers' => $papers->map(fn($p) => [
+                'last_used_max' => $lastUsed[(int) $p->paper_number] ?? null,
                 'id' => $p->id,
                 'paper_number' => $p->paper_number,
                 'label' => $p->label,
@@ -612,6 +615,55 @@ class SubjectPaperService
         }
 
         return $summary;
+    }
+
+    // ─── Keeping "usually out of" in step with what exams use ──────────────
+
+    /**
+     * When an examination's papers are set (P1/20, P2/80 ...), remember those
+     * numbers as the standard paper's "usually out of" - but ONLY where that is
+     * still blank, and only for papers actually attached to this class-stream.
+     * A value somebody chose on the Subject Papers screen is never overwritten.
+     * This is what stops the Subject Papers boxes staying empty while every exam
+     * already shows the values.
+     *
+     * @param array $maxByNumber [paper_number => max_score]
+     */
+    public static function rememberDefaults($schoolId, $classId, $streamId, $subjectId, $customSubjectId, array $maxByNumber): void
+    {
+        if (empty($maxByNumber)) {
+            return;
+        }
+
+        $attached = static::attachedPapers($schoolId, $classId, $streamId, $subjectId, $customSubjectId);
+
+        foreach ($attached as $a) {
+            $paper = $a->paper;
+            $n = (int) $paper->paper_number;
+
+            if ($paper->default_max_score === null && isset($maxByNumber[$n]) && (float) $maxByNumber[$n] > 0) {
+                $paper->update(['default_max_score' => round((float) $maxByNumber[$n], 2)]);
+            }
+        }
+    }
+
+    /**
+     * paper_number => the "out of" most recently used for it in any examination
+     * of this subject. Shown as a hint when the standard paper has no usual value.
+     */
+    protected static function lastUsedMax($schoolId, ?int $subjectId, ?int $customSubjectId): array
+    {
+        $rows = static::whereSubject(ExaminationSubjectPaper::where('school_id', $schoolId), $subjectId, $customSubjectId)
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->get(['paper_number', 'max_score']);
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r->paper_number] ??= (float) $r->max_score;
+        }
+
+        return $out;
     }
 
     // ─── Suggestions for an examination ────────────────────────────────────

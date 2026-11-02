@@ -383,6 +383,8 @@
                 setBy: p.set_by,
                 editable: p.editable !== false,
                 assignedTo: p.assigned_to || null,
+                override: !!p.override,
+                unlocked: false,
                 isNew: false
             }));
             render();
@@ -405,6 +407,8 @@
                     setBy: null,
                     editable: true,
                     assignedTo: s.assigned_to || null,
+                    override: !!s.override,
+                    unlocked: false,
                     fromStandard: true,
                     isNew: true
                 });
@@ -426,7 +430,9 @@
 
             state.sort((a, b) => a.n - b.n).forEach((r, idx) => {
                 const tr = document.createElement('tr');
-                const rowEdit = edit && r.editable !== false;
+                // An administrator may change another teacher's paper, but only after unlocking it on purpose.
+                const adminLocked = !!r.override && !r.unlocked;
+                const rowEdit = edit && r.editable !== false && !adminLocked;
 
                 const tdN = document.createElement('td');
                 const pill = document.createElement('span');
@@ -481,12 +487,30 @@
                 }
                 if (r.assignedTo) {
                     const who = document.createElement('div');
-                    who.textContent = (r.editable === false ? '\uD83D\uDD12 ' : '') + 'marked by ' + r.assignedTo;
+                    who.textContent = (r.editable === false || adminLocked ? '\uD83D\uDD12 ' : '') + 'marked by ' + r.assignedTo +
+                        (r.override && r.unlocked ? ' (you are editing it as an administrator)' : '');
                     meta.appendChild(who);
                 }
                 tdE.appendChild(meta);
 
                 const tdD = document.createElement('td');
+                if (edit && adminLocked) {
+                    const unlock = document.createElement('button');
+                    unlock.type = 'button';
+                    unlock.className = 'xp-del';
+                    unlock.title = 'This paper belongs to ' + r.assignedTo + '. Unlock it to edit as an administrator.';
+                    unlock.innerHTML = '<i class="fas fa-lock-open"></i>';
+                    unlock.addEventListener('click', async () => {
+                        const ok = await confirmBox('Edit ' + r.assignedTo + '\'s paper?',
+                            'P' + r.n + ' is marked by <strong>' + r.assignedTo + '</strong>. As an administrator you can change it, and the change is recorded in the audit log.',
+                            'Yes, unlock it');
+                        if (ok) {
+                            r.unlocked = true;
+                            render();
+                        }
+                    });
+                    tdD.appendChild(unlock);
+                }
                 if (rowEdit) {
                     const del = document.createElement('button');
                     del.type = 'button';
@@ -554,12 +578,14 @@
 
         async function save(confirmReplace) {
             showError('');
-            const rows = state.filter(r => r.isNew || r.max !== r.origMax || (r.label || '') !== (r.origLabel || ''));
+            // Another teacher's paper that was never unlocked is never sent, even if it is a suggested row
+            const skipLocked = r => !!r.override && !r.unlocked;
+            const rows = state.filter(r => !skipLocked(r) && (r.isNew || r.max !== r.origMax || (r.label || '') !== (r.origLabel || '')));
             let bad = false;
             rowsEl.querySelectorAll('.xp-num').forEach((el, i) => {
                 const r = state[i];
                 const v = parseFloat(r.max);
-                const needs = rows.includes(r) || r.isNew;
+                const needs = rows.includes(r) || (r.isNew && !skipLocked(r));
                 if (needs && (isNaN(v) || v <= 0)) {
                     el.classList.add('bad');
                     bad = true;

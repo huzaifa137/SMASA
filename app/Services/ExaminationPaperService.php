@@ -327,6 +327,21 @@ class ExaminationPaperService
             static::recompute($exam, $classId, $streamId, $subjectId, $customSubjectId);
         });
 
+        // Remember what these papers were set to as the standard papers' usual
+        // "out of" (only where that is still blank). Never allowed to fail the save.
+        try {
+            SubjectPaperService::rememberDefaults(
+                $exam->school_id,
+                $classId,
+                $streamId,
+                $subjectId ?: null,
+                $customSubjectId ?: null,
+                collect($incoming)->mapWithKeys(fn($p) => [(int) $p['paper_number'] => (float) $p['max_score']])->all()
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return static::papers($exam, $classId, $streamId, $subjectId, $customSubjectId);
     }
 

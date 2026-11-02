@@ -527,6 +527,11 @@ use App\Helpers\PermissionHelper;
         $paperEditable = $paperEditable ?? [];
         $paperLockedTo = $paperLockedTo ?? [];
         $anyPaperLocked = $paperMode && count($paperLockedTo) > 0;
+        $paperOverride = $paperOverride ?? [];
+        $pendingStandardPapers = $pendingStandardPapers ?? [];
+        // Locks that exist only because an administrator must unlock another teacher's paper on purpose
+        $onlyOverrideLocks = $anyPaperLocked && count($paperLockedTo) === count($paperOverride);
+        $pendingLabel = collect($pendingStandardPapers)->map(fn($p) => 'P' . $p['n'] . ($p['max'] ? '/' . $fmtNum($p['max']) : ''))->implode(', ');
     @endphp
     <div class="side-app">
 
@@ -625,18 +630,33 @@ use App\Helpers\PermissionHelper;
                                     @foreach ($paperLockedTo as $n => $who)
                                         {{ $papers->firstWhere('paper_number', $n)?->display_label }} is marked by {{ $who }}@if (!$loop->last); @endif
                                     @endforeach
-                                    &mdash; those columns are locked for you.
+                                    &mdash;
+                                    @if ($onlyOverrideLocks)
+                                        locked so you don't change another teacher's marks by accident.
+                                        <button type="button" class="paper-btn" id="unlockOverrideBtn" style="margin-left:.4rem;">
+                                            <i class="fas fa-lock-open me-1 mr-1"></i> Edit them as administrator
+                                        </button>
+                                    @else
+                                        those columns are locked for you.
+                                    @endif
                                 </div>
                             @endif
                         @else
-                            <span style="font-size:.82rem;color:rgba(255,255,255,.75);margin-right:.6rem;">
-                                This subject is marked as one score. Split it into papers (P1, P2 ...) if this exam has them.
-                            </span>
+                            @if (count($pendingStandardPapers))
+                                <span style="font-size:.82rem;color:#fff;margin-right:.6rem;">
+                                    <i class="fas fa-exclamation-triangle me-1 mr-1"></i>
+                                    This subject has {{ count($pendingStandardPapers) }} papers ({{ $pendingLabel }}), but this exam has not been told what each is out of yet.
+                                </span>
+                            @else
+                                <span style="font-size:.82rem;color:rgba(255,255,255,.75);margin-right:.6rem;">
+                                    This subject is marked as one score. Split it into papers (P1, P2 ...) if this exam has them.
+                                </span>
+                            @endif
                         @endif
                         @if ($canSetPapers)
                             <button type="button" class="paper-btn" id="openPapersBtn">
                                 <i class="fas fa-layer-group me-1 mr-1"></i>
-                                {{ $paperMode ? 'Add / edit papers' : 'Set papers' }}
+                                {{ $paperMode ? 'Add / edit papers' : (count($pendingStandardPapers) ? 'Set what each paper is out of' : 'Set papers') }}
                             </button>
                         @else
                             <button type="button" class="paper-btn" id="openPapersBtn">
@@ -670,6 +690,24 @@ use App\Helpers\PermissionHelper;
         {{-- Marks Table --}}
         <div class="card marks-card mb-5">
             <div class="card-body p-0">
+                @if (count($pendingStandardPapers))
+                    <div class="alert alert-warning m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
+                        <i class="fas fa-layer-group me-1"></i>
+                        <strong>This subject is sat in {{ count($pendingStandardPapers) }} papers:</strong>
+                        @foreach ($pendingStandardPapers as $sp)
+                            {{ $sp['label'] }}@if ($sp['max']) (usually out of {{ $fmtNum($sp['max']) }})@endif @if ($sp['who']) &mdash; marked by {{ $sp['who'] }}@endif @if (!$loop->last); @endif
+                        @endforeach
+                        <br>
+                        This examination has not been told what each paper is out of, so the table below is still a <strong>single combined score</strong>.
+                        @if ($canSetPapers)
+                            Press <strong>{{ collect($pendingStandardPapers)->every(fn($p) => $p['max']) ? 'Set papers' : 'Set what each paper is out of' }}</strong> above
+                            (@if (collect($pendingStandardPapers)->every(fn($p) => $p['max'])) the usual values are pre-filled @else enter what each paper is out of @endif)
+                            before entering marks.
+                        @else
+                            Ask the subject teacher or an administrator to set the papers before you enter marks.
+                        @endif
+                    </div>
+                @endif
                 @if ($scaledPapers)
                     <div class="alert alert-info m-3 mb-0" style="border-radius:.75rem;font-size:.85rem;">
                         <i class="fas fa-info-circle me-1"></i>
@@ -809,6 +847,7 @@ use App\Helpers\PermissionHelper;
                                                 <input type="number" class="form-control paper-input mx-auto"
                                                     data-student="{{ $student->id }}"
                                                     data-paper="{{ $paper->paper_number }}"
+                                                    @if (isset($paperOverride[$paper->paper_number])) data-override="1" @endif
                                                     data-max="{{ (float) $paper->max_score }}"
                                                     value="{{ $paperMarks[$student->id][$paper->paper_number] ?? '' }}"
                                                     min="0" max="{{ (float) $paper->max_score }}" step="0.5"
@@ -893,6 +932,7 @@ use App\Helpers\PermissionHelper;
                                         <input type="text" class="form-control comment-input"
                                             name="comment[{{ $student->id }}]"
                                             value="{{ $mark?->teacher_comment ?? '' }}" placeholder="Optional comment"
+                                            @if ($onlyOverrideLocks) data-override="1" @endif
                                             @if ($anyPaperLocked) disabled title="Only a teacher who marks every paper can write the subject comment" @endif>
                                     </td>
                                     <td>
@@ -991,6 +1031,7 @@ use App\Helpers\PermissionHelper;
         const paperMode = @json($paperMode);
         const papersCfg = @json($papers->map(fn($p) => ['n' => $p->paper_number, 'max' => (float) $p->max_score])->values());
         const paperMaxTotal = {{ $paperMaxTotal }};
+        const pendingPapers = @json($pendingStandardPapers); // standard papers this exam has not been given yet
         let marksDirty = false;
         const scaleMaxScore = {{ $isEarlyYears ? $earlyYearsMaxMark : 'null' }};
         // Papers on a range-based Assessment Scale are combined onto the SCALE's range, not the exam's total
@@ -1383,6 +1424,23 @@ use App\Helpers\PermissionHelper;
             open();
         });
 
+        // Administrator unlocks papers that belong to other teachers (locked by default)
+        $('#unlockOverrideBtn').on('click', function() {
+            Swal.fire({
+                icon: 'question',
+                title: 'Edit other teachers\' papers?',
+                html: 'These papers belong to other teachers. As an administrator you can enter or change their marks; it is recorded in the audit log.',
+                showCancelButton: true,
+                confirmButtonColor: '#2C29CA',
+                confirmButtonText: 'Yes, unlock them'
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                $('.paper-input[data-override="1"], .comment-input[data-override="1"]').prop('disabled', false).removeAttr('title');
+                $(this).closest('div').find('i.fa-lock').hide();
+                $(this).remove();
+            });
+        });
+
         // Single-score subjects: track typing too, so the "unsaved" warning above is accurate
         $(document).on('input', '.marks-input', function() { marksDirty = true; });
 
@@ -1432,7 +1490,8 @@ use App\Helpers\PermissionHelper;
             Swal.fire({
                 title: 'Save Marks?',
                 html: `You are saving marks for <strong>${enteredCount}</strong> of <strong>${totalCount}</strong> student(s).<br>
-               Empty fields will remain pending.`,
+               Empty fields will remain pending.` +
+                    (pendingPapers.length ? `<br><br><strong style="color:#b45309;">This subject has ${pendingPapers.length} papers (${pendingPapers.map(p => 'P' + p.n).join(', ')}) but you are saving ONE combined score.</strong> Cancel and use <em>Set papers</em> if each paper should be marked separately.` : ''),
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#2C29CA',
