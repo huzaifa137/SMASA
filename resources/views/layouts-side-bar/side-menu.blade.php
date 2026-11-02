@@ -177,10 +177,9 @@ use App\Helpers\PermissionHelper;
                             <li><a href="{{ route('all.my-classes') }}"><i class="fas fa-list mr-2"></i>All Classes</a></li>
                             @if(PermissionHelper::canFeature('view_olevel_electives'))
                                 @if(Helper::schoolHasSecondary())
-                                    <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O-Level
+                                    <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O Level
                                             Electives</a></li>
-                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i
-                                                class="fas fa-project-diagram mr-2"></i>A-Level Combinations</a></li>
+                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level Combinations</a></li>
                                     <li><a href="{{ route('school.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
                                             Competency Areas</a></li>
                                     <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
@@ -717,9 +716,9 @@ use App\Helpers\PermissionHelper;
                         @endif
                         @if($__A::can('secondary_subjects.view'))
                             <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
-                                        class="fas fa-graduation-cap mr-2"></i>A-Level Subjects</a></li>
+                                        class="fas fa-graduation-cap mr-2"></i>A Level Subjects</a></li>
                             <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
-                                        class="fas fa-book-reader mr-2"></i>O-Level Subjects</a></li>
+                                        class="fas fa-book-reader mr-2"></i>O Level Subjects</a></li>
                         @endif
                         @if($__A::can('nlsc_curriculum.view'))
                             <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
@@ -875,11 +874,10 @@ use App\Helpers\PermissionHelper;
                             <li><a href="{{ route('all.my-classes') }}"><i class="fas fa-list mr-2"></i>All Classes</a></li>
                             @if(PermissionHelper::canFeature('view_olevel_electives'))
                                 @if(Helper::schoolHasSecondary())
-                                    <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O-Level
+                                    <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O Level
                                             Electives</a></li>
 
-                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i
-                                                class="fas fa-project-diagram mr-2"></i>A-Level Combinations</a></li>
+                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level Combinations</a></li>
                                     <li><a href="{{ route('school.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
                                             Competency Areas</a></li>
                                     <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC

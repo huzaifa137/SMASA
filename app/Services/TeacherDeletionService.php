@@ -164,6 +164,14 @@ class TeacherDeletionService
         DB::table('teacher_school_roles')->where('teacher_id', $id)->delete();
         DB::table('teacher_id_cards')->where('teacher_id', $id)->delete();
 
+        // Browser push devices (polymorphic, no foreign key).
+        if (\Illuminate\Support\Facades\Schema::hasTable('push_subscriptions')) {
+            DB::table('push_subscriptions')
+                ->where('subscribable_type', $teacher->getMorphClass())
+                ->where('subscribable_id', $id)
+                ->delete();
+        }
+
         $libraryMember = DB::table('library_members')
             ->where('member_type', 'teacher')
             ->where('member_id', $id)
@@ -180,8 +188,21 @@ class TeacherDeletionService
 
     protected function deletePhoto(Teacher $teacher): void
     {
-        if ($teacher->teacher_profile && File::exists(public_path($teacher->teacher_profile))) {
-            File::delete(public_path($teacher->teacher_profile));
+        // Photo and signature: either moved under public/uploads/... or stored on the public disk.
+        foreach ([$teacher->teacher_profile, $teacher->signature] as $path) {
+            if (empty($path)) {
+                continue;
+            }
+
+            if (File::exists(public_path($path))) {
+                File::delete(public_path($path));
+            }
+
+            try {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete(ltrim($path, '/'));
+            } catch (\Throwable $e) {
+                Log::warning('Teacher file cleanup failed', ['path' => $path, 'error' => $e->getMessage()]);
+            }
         }
     }
 }

@@ -127,7 +127,7 @@
     @if(PermissionHelper::canFeature('view_olevel_electives') && in_array('Secondary O-Level', Helper::schoolClassTypes(Session('LoggedSchool')), true))
         <div class="col-12 col-sm-3 mb-2">
             <a href="{{ route('olevel.electives.entry') }}" class="btn w-100 rounded subjects-nav-btn sn-indigo">
-                <i class="fas fa-list-check sn-ic"></i><span>O-Level Electives</span>
+                <i class="fas fa-list-check sn-ic"></i><span>O Level Electives</span>
         </a>
         </div>
     @endif

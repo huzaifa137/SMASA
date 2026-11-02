@@ -105,6 +105,8 @@ class SchoolDeletionService
 
             $this->deleteChildRowsWithoutSchoolId($schoolId);
 
+            $this->deletePushSubscriptions($teacherIds);
+
             // The rows below are removed explicitly, so foreign key checks
             // are switched off only to avoid depending on delete order.
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
@@ -178,6 +180,8 @@ class SchoolDeletionService
             ['role_feature_access', 'school_role_id', 'school_roles'],
             ['role_module_access', 'school_role_id', 'school_roles'],
             ['timetable_slots', 'timetable_id', 'timetables'],
+            // No foreign key and no school_id of their own: they hang off billing_invoices only.
+            ['billing_invoice_items', 'invoice_id', 'billing_invoices'],
             // School NLSC copies and O-Level report card components. The NLSC
             // children cascade from their parent, and the component tables
             // have no foreign key at all, so none of them follow the school.
@@ -269,6 +273,27 @@ class SchoolDeletionService
         return array_values($affected);
     }
 
+    /**
+     * Browser push subscriptions are polymorphic (subscribable_type/id), carry no
+     * school_id and have no foreign key, so a deleted teacher's device stays
+     * registered. Students have no push yet; only teachers subscribe here.
+     */
+    protected function deletePushSubscriptions(array $teacherIds): void
+    {
+        if (empty($teacherIds) || !Schema::hasTable('push_subscriptions')) {
+            return;
+        }
+
+        $type = (new Teacher())->getMorphClass();
+
+        foreach (array_chunk($teacherIds, 500) as $chunk) {
+            DB::table('push_subscriptions')
+                ->where('subscribable_type', $type)
+                ->whereIn('subscribable_id', $chunk)
+                ->delete();
+        }
+    }
+
     /** System-wide notifications whose only recipients were this school's people. */
     protected function deleteEmptyNotifications(array $notificationIds): void
     {
@@ -313,7 +338,7 @@ class SchoolDeletionService
         DB::table('houses')->where('Number', $school->registration_code)->delete();
     }
 
-    /** @return array{public_paths:string[], storage_paths:string[], school_id:int} */
+    /** @return array{public_paths:string[], storage_paths:string[], private_paths:string[], school_id:int} */
     protected function collectFiles(int $schoolId): array
     {
         $public = [];
@@ -329,13 +354,28 @@ class SchoolDeletionService
             }
         }
 
+        // Teacher photos and signatures are saved in two ways: moved into
+        // public/uploads/... (the column holds that path) or stored on the
+        // public disk (the column holds e.g. teacherProfiles/xyz.jpg). Try both.
         foreach (DB::table('teachers')->where('school_id', $schoolId)->get(['teacher_profile', 'signature']) as $t) {
-            if (!empty($t->teacher_profile)) {
-                $public[] = $t->teacher_profile;
+            foreach ([$t->teacher_profile, $t->signature] as $path) {
+                if (!empty($path)) {
+                    $public[] = ltrim($path, '/');
+                    $storage[] = ltrim($path, '/');
+                }
             }
             if (!empty($t->signature)) {
-                $storage[] = $t->signature;
                 $public[] = 'uploads/teacherSignatures/' . $t->signature;
+            }
+        }
+
+        // Proof-of-payment uploads for the school's billing payments (private "local" disk).
+        $private = [];
+        if (Schema::hasTable('billing_payments') && Schema::hasColumn('billing_payments', 'attachment_path')) {
+            foreach (DB::table('billing_payments')->where('school_id', $schoolId)->whereNotNull('attachment_path')->pluck('attachment_path') as $path) {
+                if (is_string($path) && $path !== '') {
+                    $private[] = ltrim($path, '/');
+                }
             }
         }
 
@@ -364,7 +404,7 @@ class SchoolDeletionService
             }
         }
 
-        return ['public_paths' => $public, 'storage_paths' => $storage, 'school_id' => $schoolId];
+        return ['public_paths' => $public, 'storage_paths' => $storage, 'private_paths' => $private, 'school_id' => $schoolId];
     }
 
     protected function deleteFiles(array $files): void
@@ -386,6 +426,14 @@ class SchoolDeletionService
             }
         } catch (\Throwable $e) {
             Log::warning('School library folder cleanup failed', ['error' => $e->getMessage()]);
+        }
+
+        foreach (array_unique($files['private_paths'] ?? []) as $path) {
+            try {
+                Storage::disk('local')->delete($path);
+            } catch (\Throwable $e) {
+                Log::warning('School private file cleanup failed', ['path' => $path, 'error' => $e->getMessage()]);
+            }
         }
 
         foreach (array_unique($files['storage_paths']) as $path) {
