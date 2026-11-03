@@ -178,16 +178,30 @@ class LedgerController extends Controller
                 ->orderBy('transaction_date')
                 ->orderBy('id');
 
-            $running = 0;
-            $entries = $query->get()->map(function ($txn) use (&$running) {
-                $signed = $txn->type === 'refund' ? -$txn->amount : (float) $txn->amount;
-                $running += $signed;
-                $txn->signed_amount = $signed;
+            $signed = fn($txn) => $txn->type === 'refund' ? -(float) $txn->amount : (float) $txn->amount;
+
+            // Paginated. The running balance carries across pages: a page
+            // opens with the total of every entry before it.
+            $perPage = 50;
+            $entries = (clone $query)->paginate($perPage)->withQueryString();
+
+            $offset = ($entries->currentPage() - 1) * $perPage;
+            $openingBalance = $offset > 0
+                ? (clone $query)->limit($offset)->get(['type', 'amount'])->sum($signed)
+                : 0;
+
+            $running = $openingBalance;
+            $entries->getCollection()->transform(function ($txn) use (&$running, $signed) {
+                $txn->signed_amount = $signed($txn);
+                $running += $txn->signed_amount;
                 $txn->running_balance = $running;
                 return $txn;
             });
 
-            $closingBalance = $running;
+            // Closing balance of the WHOLE ledger (not just this page).
+            $closingBalance = (clone $query)->reorder()
+                ->selectRaw("COALESCE(SUM(CASE WHEN type = 'refund' THEN -amount ELSE amount END), 0) as t")
+                ->value('t');
         }
 
         return view('Finance.Ledger.general-ledger', compact(

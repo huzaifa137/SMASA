@@ -803,23 +803,29 @@ class CardScanController extends Controller
             ")
             ->first();
 
-        // Records
+        // Records: paginated, and names / classes are looked up in ONE batch
+        // for the page instead of several queries per row.
         $records = SchoolArrivalAttendance::where('school_id', $schoolId)
             ->where('attendance_date', $date)
             ->where('person_type', $personType)
             ->orderBy('arrival_time')
-            ->get()
-            ->map(function ($r) use ($personType) {
-                $r->person_name = $r->person_name_attribute;
-                if ($personType === 'student') {
-                    $s = Student::find($r->person_id);
-                    $r->extra = $s ? Helper::recordMdname($s->senior) : '';
-                } else {
-                    $t = Teacher::find($r->person_id);
-                    $r->extra = $t ? ($t->phonenumber ?? '') : '';
-                }
-                return $r;
-            });
+            ->orderBy('id')
+            ->paginate(50)
+            ->withQueryString();
+
+        $people = $this->peopleById($personType, $schoolId, $records->getCollection()->pluck('person_id')->all());
+        $classNames = [];
+        $records->getCollection()->transform(function ($r) use ($personType, $people, &$classNames) {
+            $p = $people[$r->person_id] ?? null;
+            if ($personType === 'student') {
+                $r->person_name = $p ? trim(($p->firstname ?? '') . ' ' . ($p->lastname ?? '')) : 'Unknown';
+                $r->extra = $p ? ($classNames[$p->senior] ??= Helper::recordMdname($p->senior)) : '';
+            } else {
+                $r->person_name = $p ? trim(($p->firstname ?? '') . ' ' . ($p->surname ?? '')) : 'Unknown';
+                $r->extra = $p->phonenumber ?? '';
+            }
+            return $r;
+        });
 
         // Total enrolled (for "not arrived" count)
         $totalEnrolled = $personType === 'student'
@@ -972,6 +978,21 @@ class CardScanController extends Controller
     //  AJAX: Arrival Attendance Report
     // ══════════════════════════════════════════════════════════════
 
+    /**
+     * Students or teachers for a page of arrival rows, keyed by id, in one
+     * query (the page used to run several queries per row).
+     */
+    private function peopleById(string $personType, $schoolId, array $ids)
+    {
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return ($personType === 'student' ? Student::class : Teacher::class)::whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+    }
+
     public function arrivalReport(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_arrival_reports');
@@ -981,7 +1002,7 @@ class CardScanController extends Controller
         $to = $request->to ?? Carbon::today()->toDateString();
         $personType = $request->person_type ?? 'student';
 
-        $summary = SchoolArrivalAttendance::where('school_id', $schoolId)
+        $base = SchoolArrivalAttendance::where('school_id', $schoolId)
             ->where('person_type', $personType)
             ->whereBetween('attendance_date', [$from, $to])
             ->selectRaw("
@@ -993,24 +1014,38 @@ class CardScanController extends Controller
                 ROUND(SUM(status IN ('present','late'))/COUNT(*)*100,1) as attendance_rate,
                 AVG(TIME_TO_SEC(arrival_time))/3600 as avg_arrival_hour
             ")
-            ->groupBy('person_id')
-            ->get()
-            ->map(function ($row) use ($personType) {
-                if ($personType === 'student') {
-                    $p = Student::find($row->person_id);
-                    $row->name = $p ? trim($p->firstname . ' ' . $p->lastname) : 'N/A';
-                    $row->extra = $p ? Helper::recordMdname($p->senior) : '';
-                } else {
-                    $p = Teacher::find($row->person_id);
-                    $row->name = $p ? trim($p->firstname . ' ' . $p->surname) : 'N/A';
-                    $row->extra = '';
-                }
-                return $row;
-            })
-            ->sortByDesc('attendance_rate');
+            ->groupBy('person_id');
+
+        // Figures for the whole range (footer cards): one small row per
+        // person, no name lookups.
+        $rates = (clone $base)->get()->pluck('attendance_rate');
+        $stats = (object) [
+            'total' => $rates->count(),
+            'avg' => $rates->avg() ?? 0,
+            'perfect' => $rates->filter(fn($r) => $r >= 100)->count(),
+            'poor' => $rates->filter(fn($r) => $r < 60)->count(),
+        ];
+
+        // The table itself is paginated, ranked by attendance rate.
+        $summary = $base->orderByDesc('attendance_rate')->orderBy('person_id')->paginate(50)->withQueryString();
+
+        $people = $this->peopleById($personType, $schoolId, $summary->getCollection()->pluck('person_id')->all());
+        $classNames = [];
+        $summary->getCollection()->transform(function ($row) use ($personType, $people, &$classNames) {
+            $p = $people[$row->person_id] ?? null;
+            if ($personType === 'student') {
+                $row->name = $p ? trim($p->firstname . ' ' . $p->lastname) : 'N/A';
+                $row->extra = $p ? ($classNames[$p->senior] ??= Helper::recordMdname($p->senior)) : '';
+            } else {
+                $row->name = $p ? trim($p->firstname . ' ' . $p->surname) : 'N/A';
+                $row->extra = '';
+            }
+            return $row;
+        });
 
         return view('Attendance.arrival-report', compact(
             'summary',
+            'stats',
             'from',
             'to',
             'personType'

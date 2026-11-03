@@ -899,7 +899,7 @@ use App\Helpers\PermissionHelper;
                         <tbody>
                             @foreach($records as $i => $r)
                                         <tr>
-                                            <td style="color:var(--t3);font-size:.75rem">{{ $i + 1 }}</td>
+                                            <td style="color:var(--t3);font-size:.75rem">{{ $records->firstItem() + $i }}</td>
                                             <td>
                                                 <div style="font-weight:600;color:var(--t1)">{{ $r->person_name }}</div>
                                                 @if($r->card_number)
@@ -952,6 +952,9 @@ use App\Helpers\PermissionHelper;
                         </tbody>
                     </table>
                 </div>
+                @if($records->hasPages())
+                    <div style="padding:.9rem 1rem;">{{ $records->links() }}</div>
+                @endif
             @endif
         </div>
 

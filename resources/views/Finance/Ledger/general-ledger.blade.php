@@ -206,7 +206,7 @@
     @if($selectedAccount)
         <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
             <div class="stat-card">
-                <div class="value">{{ $entries->count() }}</div>
+                <div class="value">{{ method_exists($entries, 'total') ? $entries->total() : $entries->count() }}</div>
                 <div class="label">Transactions</div>
             </div>
             <div class="stat-card">
@@ -263,6 +263,9 @@
                         </tbody>
                     </table>
                 </div>
+                @if(method_exists($entries, 'hasPages') && $entries->hasPages())
+                    <div style="padding:.9rem 1rem;">{{ $entries->links() }}</div>
+                @endif
             @endif
         </div>
     @else

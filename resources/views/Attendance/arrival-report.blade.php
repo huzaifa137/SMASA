@@ -460,7 +460,7 @@
                     <strong>{{ \Carbon\Carbon::parse($to)->format('d M Y') }}</strong></p>
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-                <span class="hero-badge"><i class="fas fa-users me-1"></i> {{ $summary->count() }} {{ $personType }}s</span>
+                <span class="hero-badge"><i class="fas fa-users me-1"></i> {{ $summary->total() }} {{ $personType }}s</span>
             </div>
         </div>
 
@@ -484,7 +484,7 @@
         <div class="panel">
             <div class="panel-title"><i class="fas fa-table"></i>
                 {{ ucfirst($personType) }} Attendance Summary
-                <span style="margin-left:auto;font-size:.8rem;font-weight:400;color:var(--t3)">{{ $summary->count() }}
+                <span style="margin-left:auto;font-size:.8rem;font-weight:400;color:var(--t3)">{{ $summary->total() }}
                     records · sorted by attendance rate</span>
             </div>
 
@@ -511,15 +511,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($summary->values() as $i => $row)
+                            @foreach($summary as $i => $row)
                                 @php
+                                    $rank = $summary->firstItem() + $i;
                                     $rate = $row->attendance_rate ?? 0;
                                     $rateColor = $rate >= 80 ? 'var(--g)' : ($rate >= 60 ? 'var(--a)' : 'var(--r)');
                                     $avgHour = $row->avg_arrival_hour ? sprintf('%02d:%02d', floor($row->avg_arrival_hour), round(($row->avg_arrival_hour - floor($row->avg_arrival_hour)) * 60)) : '—';
                                 @endphp
                                 <tr>
                                     <td style="color:var(--t3);font-weight:700;font-size:.8rem">
-                                        @if($i === 0) 🥇 @elseif($i === 1) 🥈 @elseif($i === 2) 🥉 @else {{ $i + 1 }} @endif
+                                        @if($rank === 1) 🥇 @elseif($rank === 2) 🥈 @elseif($rank === 3) 🥉 @else {{ $rank }} @endif
                                     </td>
                                     <td style="font-weight:600;color:var(--t1)">{{ $row->name }}</td>
                                     @if($personType === 'student')
@@ -544,12 +545,15 @@
                         </tbody>
                     </table>
                 </div>
+                @if($summary->hasPages())
+                    <div style="margin-top:1rem;">{{ $summary->links() }}</div>
+                @endif
 
-                {{-- Summary footer --}}
+                {{-- Summary footer (whole date range, not just this page) --}}
                 @php
-                    $avgRate = $summary->avg('attendance_rate');
-                    $perfect = $summary->where('attendance_rate', '>=', 100)->count();
-                    $poor = $summary->where('attendance_rate', '<', 60)->count();
+                    $avgRate = $stats->avg;
+                    $perfect = $stats->perfect;
+                    $poor = $stats->poor;
                 @endphp
                 <div style="margin-top:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem">
                     <div
