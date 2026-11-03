@@ -360,6 +360,11 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
                 Route::get('/dashboard', 'dashboard')->name('dashboard');
 
+                // Web Push registration for the parent's phone
+                Route::post('/push/subscribe', 'pushSubscribe')->name('push.subscribe');
+                Route::post('/push/unsubscribe', 'pushUnsubscribe')->name('push.unsubscribe');
+                Route::post('/push/status', 'pushStatus')->name('push.status');
+
                 Route::get('/student/{id}', 'childOverview')->name('child');
                 Route::get('/student/{id}/results', 'results')->name('results');
                 Route::get('/student/{id}/results/{examId}', 'viewResult')->name('result.view');
@@ -1304,6 +1309,8 @@ Route::controller(CardScanController::class)
         Route::post('/arrival/save', 'saveArrivalAttendance')->name('arrival.save');
         Route::post('/arrival/save-bulk', 'saveBulkArrivalAttendance')->name('arrival.save.bulk');
         Route::get('/arrival/report', 'arrivalReport')->name('arrival.report');
+        Route::get('/hours', 'attendanceHours')->name('hours');
+        Route::post('/hours', 'saveAttendanceHours')->name('hours.save');
     });
 
 // ═══════════════════════════════════════════════════════════
@@ -1459,6 +1466,7 @@ Route::middleware(['AdminAuth'])->group(function () {
         ->group(function () {
             Route::post('/push/subscribe', 'savePushSubscription')->name('push.subscribe');
             Route::post('/push/unsubscribe', 'deletePushSubscription')->name('push.unsubscribe');
+            Route::post('/push/status', 'pushStatus')->name('push.status');
             Route::get('/ajax/unread-count', 'unreadCount')->name('ajax.unread');
             Route::get('/ajax/dropdown', 'dropdown')->name('ajax.dropdown');
             Route::post('/read-all', 'markAllRead')->name('read-all');

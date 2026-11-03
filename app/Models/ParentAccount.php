@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 /**
  * A parent/guardian's login identity, keyed by phone number rather than
@@ -17,6 +19,10 @@ use Illuminate\Support\Facades\Hash;
  */
 class ParentAccount extends Model
 {
+    // Notifiable + HasPushSubscriptions let a parent register their phone for
+    // Web Push from the parent portal (same mechanism admins/teachers use).
+    use Notifiable, HasPushSubscriptions;
+
     protected $fillable = [
         'phone',
         'password',

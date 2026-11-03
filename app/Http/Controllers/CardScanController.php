@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\CardScanLog;
 use App\Models\SchoolArrivalAttendance;
+use App\Models\SchoolAttendanceSetting;
+use App\Models\ParentNotificationLog;
+use App\Services\ParentAttendanceNotifier;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\StudentIdCard;
@@ -78,7 +81,7 @@ class CardScanController extends Controller
 
         $request->validate([
             'card_number' => 'required|string',
-            'category' => 'required|string|in:attendance_arrival,attendance_class,library_issue,library_return,library_reserve,finance_balance,finance_payment,info',
+            'category' => 'required|string|in:attendance_arrival,attendance_departure,attendance_class,library_issue,library_return,library_reserve,finance_balance,finance_payment,info',
         ]);
 
         $schoolId = session('LoggedSchool');
@@ -114,6 +117,7 @@ class CardScanController extends Controller
         // Route to appropriate handler
         return match ($category) {
             'attendance_arrival' => $this->handleArrivalAttendance($request, $schoolId, $resolved),
+            'attendance_departure' => $this->handleDepartureAttendance($request, $schoolId, $resolved),
             'attendance_class' => $this->handleClassAttendance($request, $schoolId, $resolved),
             'library_issue' => $this->handleLibraryIssue($request, $schoolId, $resolved),
             'library_return' => $this->handleLibraryReturn($request, $schoolId, $resolved),
@@ -127,13 +131,18 @@ class CardScanController extends Controller
 
     // ──────────────────────────────────────────────────────────────
     //  HANDLER: School Arrival Attendance
+    //  Early / on time / late is decided by THIS school's own hours
+    //  (Card Scan → Attendance Hours), not a hard-coded 08:00.
     // ──────────────────────────────────────────────────────────────
     private function handleArrivalAttendance(Request $request, $schoolId, array $resolved)
     {
         $today = Carbon::today()->toDateString();
-        $arrivalTime = Carbon::now()->format('H:i:s');
-        $schoolLateTime = $this->getSchoolLateTime($schoolId);
-        $status = (strtotime($arrivalTime) > strtotime($schoolLateTime)) ? 'late' : 'present';
+        $now = Carbon::now();
+        $arrivalTime = $now->format('H:i:s');
+
+        $settings = SchoolAttendanceSetting::forSchool($schoolId);
+        $verdict = $settings->arrivalVerdict($resolved['card_type'], $now);
+        $status = $verdict['status']; // 'present' | 'late'
 
         // Check already scanned today
         $existing = SchoolArrivalAttendance::where('school_id', $schoolId)
@@ -148,8 +157,10 @@ class CardScanController extends Controller
                 'person_name' => $resolved['person_name'],
                 'person_type' => $resolved['card_type'],
                 'arrival_time' => $existing->arrival_time,
+                'departure_time' => $existing->departure_time,
                 'status' => $existing->status,
                 'attendance_date' => $today,
+                'late_cutoff' => Carbon::parse($verdict['cutoff'])->format('h:i A'),
                 'class' => $resolved['class'] ?? null,
                 'photo' => $resolved['photo'] ?? null,
             ];
@@ -183,10 +194,24 @@ class CardScanController extends Controller
             'arrival_time' => $arrivalTime,
             'status' => $status,
             'status_label' => $statusLabel,
+            'punctuality' => $verdict['punctuality'],       // early | on_time | late
+            'punctuality_label' => $verdict['label'],       // e.g. "Early by 12 min", "Late by 7 min"
+            'late_cutoff' => Carbon::parse($verdict['cutoff'])->format('h:i A'),
             'attendance_date' => $today,
             'class' => $resolved['class'] ?? null,
             'photo' => $resolved['photo'] ?? null,
         ];
+
+        // Tell the parent (students only). Never lets a push problem break the scan.
+        $data['parent_notification'] = $this->notifyParent(
+            $settings, $resolved, 'arrival',
+            [
+                'class' => $resolved['class'] ?? null,
+                'time' => $now->format('h:i A'),
+                'label' => $verdict['label'],
+                'status' => $status,
+            ]
+        );
 
         return $this->logAndReturn(
             $schoolId,
@@ -194,9 +219,131 @@ class CardScanController extends Controller
             $resolved['card_type'],
             'attendance_arrival',
             'success',
-            $resolved['person_name'] . ' – ' . $statusLabel . ' at ' . Carbon::now()->format('h:i A'),
+            $resolved['person_name'] . ' – ' . $statusLabel . ' (' . $verdict['label'] . ') at ' . $now->format('h:i A'),
             $data
         );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  HANDLER: School Sign-Out (departure)
+    //  Fills the departure_time column that existed but was never used.
+    // ──────────────────────────────────────────────────────────────
+    private function handleDepartureAttendance(Request $request, $schoolId, array $resolved)
+    {
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+        $settings = SchoolAttendanceSetting::forSchool($schoolId);
+
+        $record = SchoolArrivalAttendance::where('school_id', $schoolId)
+            ->where('person_id', $resolved['person_id'])
+            ->where('person_type', $resolved['card_type'])
+            ->where('attendance_date', $today)
+            ->first();
+
+        $base = [
+            'person_name' => $resolved['person_name'],
+            'person_type' => $resolved['card_type'],
+            'attendance_date' => $today,
+            'class' => $resolved['class'] ?? null,
+            'photo' => $resolved['photo'] ?? null,
+        ];
+
+        // No arrival today (or marked absent) → can't sign out of a day they never started.
+        if (!$record || $record->status === 'absent') {
+            return $this->logAndReturn(
+                $schoolId, $resolved['card_number'], $resolved['card_type'], 'attendance_departure', 'failed',
+                $resolved['person_name'] . ' has no School Arrival recorded today' . ($record ? ' (marked absent)' : '')
+                . '. Scan them in with “School Arrival” first.',
+                $base
+            );
+        }
+
+        // Already signed out → report it, don't overwrite the first sign-out time.
+        if ($record->departure_time) {
+            return $this->logAndReturn(
+                $schoolId, $resolved['card_number'], $resolved['card_type'], 'attendance_departure', 'success',
+                $resolved['person_name'] . ' already signed out today at ' . Carbon::parse($record->departure_time)->format('h:i A'),
+                $base + [
+                    'already_scanned' => true,
+                    'arrival_time' => $record->arrival_time,
+                    'departure_time' => $record->departure_time,
+                    'departure_status' => $record->departure_status,
+                ]
+            );
+        }
+
+        // Double-scan guard: a sign-out seconds after arrival is almost certainly the wrong category.
+        $arrivedAt = Carbon::parse($today . ' ' . $record->arrival_time);
+        $minGap = (int) $settings->min_minutes_before_signout;
+        if ($minGap > 0 && ($now->timestamp - $arrivedAt->timestamp) < $minGap * 60) {
+            return $this->logAndReturn(
+                $schoolId, $resolved['card_number'], $resolved['card_type'], 'attendance_departure', 'failed',
+                $resolved['person_name'] . ' arrived at ' . $arrivedAt->format('h:i A') . '. Sign-out opens '
+                . $minGap . ' min after arrival (looks like a double scan).',
+                $base + ['arrival_time' => $record->arrival_time]
+            );
+        }
+
+        $verdict = $settings->departureVerdict($resolved['card_type'], $now);
+
+        $record->update([
+            'departure_time' => $now->format('H:i:s'),
+            'departure_status' => $verdict['status'], // early | on_time
+            'departure_method' => 'card_scan',
+            'departure_recorded_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
+        ]);
+
+        $data = $base + [
+            'arrival_time' => $record->arrival_time,
+            'departure_time' => $now->format('H:i:s'),
+            'departure_status' => $verdict['status'],
+            'departure_label' => $verdict['label'],
+            'closing_time' => Carbon::parse($verdict['closing'])->format('h:i A'),
+            'status' => $record->status,
+        ];
+
+        $data['parent_notification'] = $this->notifyParent(
+            $settings, $resolved, 'signout',
+            [
+                'class' => $resolved['class'] ?? null,
+                'time' => $now->format('h:i A'),
+                'label' => $verdict['label'],
+                'status' => $verdict['status'],
+            ]
+        );
+
+        $icon = $verdict['status'] === 'early' ? '⚠️' : '✅';
+        return $this->logAndReturn(
+            $schoolId, $resolved['card_number'], $resolved['card_type'], 'attendance_departure', 'success',
+            $resolved['person_name'] . ' – ' . $icon . ' signed out at ' . $now->format('h:i A') . ' (' . $verdict['label'] . ')',
+            $data
+        );
+    }
+
+    /**
+     * Push a parent alert for a student scan. Returns null for teachers,
+     * or the notifier result (sent / failed + reason / skipped).
+     */
+    private function notifyParent(SchoolAttendanceSetting $settings, array $resolved, string $event, array $context): ?array
+    {
+        if (($resolved['card_type'] ?? null) !== 'student') {
+            return null;
+        }
+
+        $student = Student::find($resolved['person_id']);
+        if (!$student) {
+            return null;
+        }
+
+        $enabled = $event === 'arrival' ? $settings->notify_parent_on_arrival : $settings->notify_parent_on_signout;
+        if (!$enabled) {
+            return ParentAttendanceNotifier::skipped(
+                $student, $event,
+                'Parent ' . ($event === 'arrival' ? 'arrival' : 'sign-out') . ' alerts are switched off in Attendance Hours.'
+            );
+        }
+
+        return ParentAttendanceNotifier::notify($student, $event, $context);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -871,6 +1018,76 @@ class CardScanController extends Controller
     }
 
     // ══════════════════════════════════════════════════════════════
+    //  ATTENDANCE HOURS (per-school late time / closing time / alerts)
+    // ══════════════════════════════════════════════════════════════
+
+    public function attendanceHours()
+    {
+        PermissionHelper::denyUnlessFeature('manage_arrival_attendance');
+
+        $schoolId = session('LoggedSchool');
+        $settings = SchoolAttendanceSetting::forSchool($schoolId);
+
+        $since = Carbon::now()->subDays(7);
+        $notifStats = ['sent' => 0, 'failed' => 0];
+        $recentIssues = collect();
+
+        try {
+            $rows = ParentNotificationLog::where('school_id', $schoolId)
+                ->where('created_at', '>=', $since)
+                ->whereIn('status', ['sent', 'failed'])
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+            $notifStats['sent'] = (int) ($rows['sent'] ?? 0);
+            $notifStats['failed'] = (int) ($rows['failed'] ?? 0);
+
+            $recentIssues = ParentNotificationLog::with('student')
+                ->where('school_id', $schoolId)
+                ->where('status', 'failed')
+                ->orderByDesc('created_at')
+                ->limit(15)
+                ->get();
+        } catch (\Throwable $e) {
+            // migration not run yet – page still renders
+        }
+
+        return view('CardScan.hours', compact('settings', 'notifStats', 'recentIssues'));
+    }
+
+    public function saveAttendanceHours(Request $request)
+    {
+        if (!PermissionHelper::canFeature('manage_arrival_attendance')) {
+            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to change attendance hours.');
+        }
+
+        $data = $request->validate([
+            'student_late_time' => 'required|date_format:H:i',
+            'teacher_late_time' => 'required|date_format:H:i',
+            'grace_minutes' => 'required|integer|min:0|max:120',
+            'student_closing_time' => 'required|date_format:H:i',
+            'teacher_closing_time' => 'required|date_format:H:i',
+            'min_minutes_before_signout' => 'required|integer|min:0|max:240',
+        ]);
+
+        // A school can't close before it opens.
+        if ($data['student_closing_time'] <= $data['student_late_time'] || $data['teacher_closing_time'] <= $data['teacher_late_time']) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Closing time must be later than the late-arrival time.');
+        }
+
+        SchoolAttendanceSetting::updateOrCreate(
+            ['school_id' => session('LoggedSchool')],
+            $data + [
+                'notify_parent_on_arrival' => $request->boolean('notify_parent_on_arrival'),
+                'notify_parent_on_signout' => $request->boolean('notify_parent_on_signout'),
+            ]
+        );
+
+        return redirect()->route('card-scan.hours')->with('success', 'Attendance hours saved.');
+    }
+
+    // ══════════════════════════════════════════════════════════════
     //  PRIVATE HELPERS
     // ══════════════════════════════════════════════════════════════
 
@@ -954,10 +1171,10 @@ class CardScanController extends Controller
             ->first();
     }
 
+    /** @deprecated kept for callers; use SchoolAttendanceSetting directly. */
     private function getSchoolLateTime($schoolId): string
     {
-        // Default late cutoff is 8:00 AM — can be made configurable
-        return '08:00:00';
+        return SchoolAttendanceSetting::forSchool($schoolId)->lateTimeFor('student');
     }
 
     private function resolveStudentPhoto(Student $student): ?string
@@ -1001,6 +1218,7 @@ class CardScanController extends Controller
     {
         return [
             ['key' => 'attendance_arrival', 'label' => 'School Arrival', 'icon' => 'fa-school', 'color' => '#2f2ccb', 'desc' => 'Record school gate arrival for students & teachers'],
+            ['key' => 'attendance_departure', 'label' => 'School Sign-Out', 'icon' => 'fa-door-open', 'color' => '#be123c', 'desc' => 'Record students & teachers leaving school (early / on time)'],
             ['key' => 'attendance_class', 'label' => 'Class Attendance', 'icon' => 'fa-chalkboard-teacher', 'color' => '#7c3aed', 'desc' => 'Look up class for manual class attendance marking'],
             ['key' => 'library_issue', 'label' => 'Issue Book', 'icon' => 'fa-book-open', 'color' => '#059669', 'desc' => 'Issue a library book to the card holder'],
             ['key' => 'library_return', 'label' => 'Return Book', 'icon' => 'fa-undo', 'color' => '#0891b2', 'desc' => 'Return a borrowed book via card scan'],

@@ -6,7 +6,8 @@ self.addEventListener('push', function (event) {
         icon: data.icon || 'https://smasa-academics.com/assets/images/brand/logo.png',
         badge: data.badge || 'https://smasa-academics.com/assets/images/brand/uplogolight.png',
         vibrate: [200, 100, 200],
-        data: { url: data.url || '/' },
+        // The Laravel WebPush payload nests the link under data.url
+        data: { url: (data.data && data.data.url) || data.url || '/' },
     };
     event.waitUntil(self.registration.showNotification(title, options));
 });

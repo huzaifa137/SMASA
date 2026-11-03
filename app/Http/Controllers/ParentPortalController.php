@@ -11,6 +11,7 @@ use App\Models\StudentAttendance;
 use App\Models\StudentFeeAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Self-service portal for parents/guardians. Identity here is a phone
@@ -449,5 +450,73 @@ class ParentPortalController extends Controller
             ->get()
             ->filter(fn($exam) => $examController->classIsReleased($exam, $student->senior, $student->stream, $student->school_id))
             ->values();
+    }
+
+    // ─── Web Push (parent's phone) ──────────────────────────────────────
+    // Lets a parent switch attendance alerts (arrival / sign-out) ON or OFF
+    // for this device. Same flow admins/teachers use, keyed by ParentAccount.
+
+    private function pushAccount(): ?ParentAccount
+    {
+        $id = session('ParentId');
+        return $id ? ParentAccount::find($id) : null;
+    }
+
+    public function pushSubscribe(Request $request)
+    {
+        $account = $this->pushAccount();
+        if (!$account) {
+            return response()->json(['error' => 'Unauthenticated user.'], 401);
+        }
+        if (!filled($request->endpoint)) {
+            return response()->json(['error' => 'Missing push endpoint from the browser.'], 422);
+        }
+
+        try {
+            $account->updatePushSubscription(
+                endpoint: $request->endpoint,
+                key: $request->key,
+                token: $request->token,
+                contentEncoding: $request->contentEncoding ?? 'aesgcm'
+            );
+
+            return response()->json(['success' => true, 'message' => 'Notifications are ON for this device.']);
+        } catch (\Throwable $e) {
+            Log::error('Parent push subscribe failed', ['parent_id' => $account->id, 'error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to save push subscription.'], 500);
+        }
+    }
+
+    public function pushUnsubscribe(Request $request)
+    {
+        $account = $this->pushAccount();
+        if (!$account) {
+            return response()->json(['error' => 'Unauthenticated user.'], 401);
+        }
+        if (!filled($request->endpoint)) {
+            return response()->json(['error' => 'Missing endpoint.'], 422);
+        }
+
+        try {
+            $account->deletePushSubscription($request->endpoint);
+            return response()->json(['success' => true, 'message' => 'Notifications are OFF for this device.']);
+        } catch (\Throwable $e) {
+            Log::error('Parent push unsubscribe failed', ['parent_id' => $account->id, 'error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to remove push subscription.'], 500);
+        }
+    }
+
+    public function pushStatus(Request $request)
+    {
+        $account = $this->pushAccount();
+        if (!$account) {
+            return response()->json(['error' => 'Unauthenticated user.'], 401);
+        }
+
+        return response()->json([
+            'registered' => filled($request->endpoint)
+                && $account->pushSubscriptions()->where('endpoint', $request->endpoint)->exists(),
+            'devices' => $account->pushSubscriptions()->count(),
+        ]);
     }
 }

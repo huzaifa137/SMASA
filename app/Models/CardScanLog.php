@@ -27,6 +27,7 @@ class CardScanLog extends Model
     {
         return match ($category) {
             'attendance_arrival' => 'School Arrival',
+            'attendance_departure' => 'School Sign-Out',
             'attendance_class'   => 'Class Attendance',
             'library_issue'      => 'Library Issue Book',
             'library_return'     => 'Library Return Book',
@@ -42,6 +43,7 @@ class CardScanLog extends Model
     {
         return match ($category) {
             'attendance_arrival' => 'fa-school',
+            'attendance_departure' => 'fa-door-open',
             'attendance_class'   => 'fa-chalkboard-teacher',
             'library_issue'      => 'fa-book-open',
             'library_return'     => 'fa-undo',
@@ -57,6 +59,7 @@ class CardScanLog extends Model
     {
         return match ($category) {
             'attendance_arrival' => '#2f2ccb',
+            'attendance_departure' => '#be123c',
             'attendance_class'   => '#7c3aed',
             'library_issue'      => '#059669',
             'library_return'     => '#0891b2',

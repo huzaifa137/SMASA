@@ -397,6 +397,7 @@ table.log-table thead th {
                     @php
                         $catMeta = [
                             'attendance_arrival' => ['icon' => 'fa-school', 'color' => '#2f2ccb', 'label' => 'Arrival'],
+                            'attendance_departure' => ['icon' => 'fa-door-open', 'color' => '#be123c', 'label' => 'Sign-Out'],
                             'attendance_class' => ['icon' => 'fa-chalkboard-teacher', 'color' => '#7c3aed', 'label' => 'Class Att.'],
                             'library_issue' => ['icon' => 'fa-book-open', 'color' => '#059669', 'label' => 'Book Issue'],
                             'library_return' => ['icon' => 'fa-undo', 'color' => '#0891b2', 'label' => 'Book Return'],
@@ -441,6 +442,8 @@ table.log-table thead th {
                         <option value="">All Categories</option>
                         <option value="attendance_arrival" {{ $category === 'attendance_arrival' ? 'selected' : '' }}>School
                             Arrival</option>
+                        <option value="attendance_departure" {{ $category === 'attendance_departure' ? 'selected' : '' }}>School
+                            Sign-Out</option>
                         <option value="attendance_class" {{ $category === 'attendance_class' ? 'selected' : '' }}>Class
                             Attendance
                         </option>

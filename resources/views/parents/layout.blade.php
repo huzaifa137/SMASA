@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     <title>@yield('title', 'Parent Portal') — SMASA</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -654,6 +655,11 @@
                     <span class="pp-topbar-title">@yield('title', 'Parent Portal')</span>
                 </div>
                 <div class="pp-topbar-right">
+                    @include('partials.push-toggle', [
+                        'pushSubscribeUrl' => route('parents.push.subscribe'),
+                        'pushUnsubscribeUrl' => route('parents.push.unsubscribe'),
+                        'pushStatusUrl' => route('parents.push.status'),
+                    ])
                     <a href="{{ route('parents.logout') }}" class="pp-pill"><i class="fas fa-right-from-bracket"></i>
                         Logout</a>
                 </div>

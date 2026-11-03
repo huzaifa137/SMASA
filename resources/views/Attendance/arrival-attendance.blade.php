@@ -767,6 +767,12 @@ use App\Helpers\PermissionHelper;
                         <i class="fas fa-qrcode"></i> Scan Hub
                     </a>
                 @endif
+                @if(PermissionHelper::canFeature('manage_arrival_attendance'))
+                    <a href="{{ route('card-scan.hours') }}" class="btn btn-outline"
+                        style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                        <i class="fas fa-clock"></i> Attendance Hours
+                    </a>
+                @endif
                 @if(PermissionHelper::canFeature('view_arrival_reports'))
                     <a href="{{ route('card-scan.arrival.report') }}" class="btn btn-outline"
                         style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
@@ -883,6 +889,7 @@ use App\Helpers\PermissionHelper;
                                 @if($personType === 'student')
                                 <th>Class</th> @else <th>Contact</th> @endif
                                 <th>Arrival Time</th>
+                                <th>Sign-Out</th>
                                 <th>Status</th>
                                 <th>Method</th>
                                 <th>Remarks</th>
@@ -903,6 +910,16 @@ use App\Helpers\PermissionHelper;
                                             <td style="color:var(--t2);font-size:.82rem">{{ $r->extra ?? '—' }}</td>
                                             <td><span
                                                     class="time-mono">{{ \Carbon\Carbon::parse($r->arrival_time)->format('h:i A') }}</span>
+                                            </td>
+                                            <td>
+                                                @if($r->departure_time)
+                                                    <span class="time-mono">{{ \Carbon\Carbon::parse($r->departure_time)->format('h:i A') }}</span>
+                                                    @if($r->departure_status === 'early')
+                                                        <span class="badge badge-warning" style="margin-left:.25rem">EARLY</span>
+                                                    @endif
+                                                @else
+                                                    <span style="color:var(--t3)">—</span>
+                                                @endif
                                             </td>
                                             <td>
                                 @php

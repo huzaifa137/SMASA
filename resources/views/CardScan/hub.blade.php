@@ -767,6 +767,12 @@
                     <i class="fas fa-school"></i> Arrival Attendance
                 </a>
                 @endif
+                @if(PermissionHelper::canFeature('manage_arrival_attendance'))
+                <a href="{{ route('card-scan.hours') }}" class="btn btn-outline"
+                    style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                    <i class="fas fa-clock"></i> Attendance Hours
+                </a>
+                @endif
             </div>
         </div>
 
@@ -1009,6 +1015,8 @@
 
             if (cat === 'attendance_arrival') {
                 html += renderArrivalResult(d);
+            } else if (cat === 'attendance_departure') {
+                html += renderDepartureResult(d);
             } else if (cat === 'finance_balance') {
                 html += renderBalanceResult(d);
             } else if (cat === 'finance_payment') {
@@ -1034,15 +1042,54 @@
         //  Sub-renderers per category
         // ──────────────────────────────────────────────
         function renderArrivalResult(d) {
+            const punctCls = d.punctuality === 'late' ? 'badge-warning' : 'badge-success';
             let html = `<div class="info-grid">
                 <div class="info-item"><div class="lbl">Arrival Time</div><div class="val">${escHtml(d.arrival_time || '—')}</div></div>
                 <div class="info-item"><div class="lbl">Status</div><div class="val">
                     <span class="badge-status ${d.status === 'present' ? 'badge-success' : d.status === 'late' ? 'badge-warning' : 'badge-danger'}">${escHtml((d.status || '').toUpperCase())}</span>
+                    ${d.punctuality_label ? `<span class="badge-status ${punctCls}" style="margin-left:.25rem">${escHtml(d.punctuality_label)}</span>` : ''}
                 </div></div>
+                <div class="info-item"><div class="lbl">School Late After</div><div class="val">${escHtml(d.late_cutoff || '—')}</div></div>
                 <div class="info-item"><div class="lbl">Date</div><div class="val">${escHtml(d.attendance_date || '—')}</div></div>
                 <div class="info-item"><div class="lbl">Already Scanned</div><div class="val">${d.already_scanned ? 'YES (duplicate)' : 'No'}</div></div>
+                ${d.already_scanned && d.departure_time ? `<div class="info-item"><div class="lbl">Signed Out</div><div class="val">${escHtml(d.departure_time)}</div></div>` : ''}
             </div>`;
-            return html;
+            return html + renderParentNotification(d.parent_notification);
+        }
+
+        function renderDepartureResult(d) {
+            const early = d.departure_status === 'early';
+            let html = `<div class="info-grid">
+                <div class="info-item"><div class="lbl">Arrived</div><div class="val">${escHtml(d.arrival_time || '—')}</div></div>
+                <div class="info-item"><div class="lbl">Signed Out</div><div class="val">${escHtml(d.departure_time || '—')}</div></div>
+                <div class="info-item"><div class="lbl">Departure</div><div class="val">
+                    ${d.departure_status ? `<span class="badge-status ${early ? 'badge-warning' : 'badge-success'}">${early ? 'EARLY' : 'ON TIME'}</span>` : '—'}
+                    ${d.departure_label ? `<div style="font-size:.75rem;color:var(--t2);margin-top:.2rem">${escHtml(d.departure_label)}</div>` : ''}
+                </div></div>
+                <div class="info-item"><div class="lbl">School Closes</div><div class="val">${escHtml(d.closing_time || '—')}</div></div>
+                <div class="info-item"><div class="lbl">Already Signed Out</div><div class="val">${d.already_scanned ? 'YES (duplicate)' : 'No'}</div></div>
+            </div>`;
+            return html + renderParentNotification(d.parent_notification);
+        }
+
+        // Shows whether the parent's phone was actually notified – and WHY not if it wasn't.
+        function renderParentNotification(n) {
+            if (!n) return '';
+            if (n.status === 'sent') {
+                return `<div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:rgba(5,150,105,.1);color:#047857;font-size:.82rem;font-weight:600">
+                    <i class="fas fa-bell"></i> Parent notified (${n.devices_sent} of ${n.devices_total} device${n.devices_total === 1 ? '' : 's'})
+                    ${n.reason ? `<div style="font-weight:500;margin-top:.2rem">${escHtml(n.reason)}</div>` : ''}
+                </div>`;
+            }
+            if (n.status === 'skipped') {
+                return `<div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.82rem">
+                    <i class="fas fa-bell-slash"></i> Parent not notified — ${escHtml(n.reason || 'alerts are off')}
+                </div>`;
+            }
+            return `<div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:rgba(220,38,38,.08);color:#b91c1c;font-size:.82rem">
+                <div style="font-weight:700"><i class="fas fa-exclamation-triangle"></i> Parent NOT notified${n.parent_phone ? ' (' + escHtml(n.parent_phone) + ')' : ''}</div>
+                <div style="margin-top:.2rem">${escHtml(n.reason || 'Unknown problem.')}</div>
+            </div>`;
         }
 
         function renderBalanceResult(d) {

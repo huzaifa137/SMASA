@@ -400,6 +400,7 @@
 
                     #pushStatusWrap,
                     #notifBell,
+                    #refreshPageBtn,
                     .profile-dropdown {
                         order: 2;
                     }
@@ -413,6 +414,55 @@
 
                 .app-header .dropdown-menu {
                     position: absolute !important;
+                }
+
+                /* Keep "Active Year: 2026" and "Active Term: Term III" each on ONE line on every screen size */
+                .active-info-container {
+                    flex-wrap: nowrap;
+                }
+
+                .active-year-badge,
+                .active-term-badge,
+                .active-year-badge span,
+                .active-term-badge span {
+                    white-space: nowrap;
+                }
+
+                .active-year-badge,
+                .active-term-badge {
+                    flex: 0 0 auto;
+                }
+
+                /* Desktop/laptop: nothing in the header row may wrap — school name, active year/term
+                   and the icon row all stay on one line, so we tighten spacing instead. */
+                @media (min-width: 769px) {
+                    .app-header .container-fluid>.d-flex {
+                        flex-wrap: nowrap;
+                    }
+
+                    .app-header .display-name,
+                    .app-header .display-name span {
+                        white-space: nowrap;
+                    }
+
+                    .app-header .container-fluid>.d-flex>.d-flex.order-lg-2.ml-auto:last-child {
+                        flex-shrink: 0;
+                    }
+
+                    .active-info-container {
+                        font-size: 14px;
+                    }
+
+                    .active-year-badge.mr-3 {
+                        margin-right: .75rem !important;
+                    }
+                }
+
+                /* Laptops: shorten the button to "<bell> ON/OFF" to save room */
+                @media (min-width: 769px) and (max-width: 1600px) {
+                    .push-toggle .pt-prefix {
+                        display: none;
+                    }
                 }
             </style>
 
@@ -617,15 +667,12 @@
 
                 {{-- Notification Bell — paste inside header.blade.php nav area --}}
                 @if(session('LoggedAdmin') || session('LoggedTeacher'))
-                    <div id="pushStatusWrap" style="margin-left: 12px;">
-                        <a href="javascript:void(0)" id="pushStatusToggle"
-                            class="position-relative d-flex align-items-center justify-content-center"
-                            style="text-decoration:none; width:42px; height:42px; display:none;"
-                            title="Enable notifications">
-                            <i class="fas fa-bell-slash" id="pushStatusIcon"
-                                style="font-size: 1.3rem; color:#f39c12; line-height:1;"></i>
-                        </a>
-                    </div>
+                    {{-- Notifications ON/OFF button (separate from the bell, always shows real state) --}}
+                    @include('partials.push-toggle', [
+                        'pushSubscribeUrl' => route('notifications.push.subscribe'),
+                        'pushUnsubscribeUrl' => route('notifications.push.unsubscribe'),
+                        'pushStatusUrl' => route('notifications.push.status'),
+                    ])
 
                     <div class="dropdown" id="notifBell" style="margin-left: 12px;">
                         <a href="javascript:void(0)"
@@ -747,142 +794,6 @@
                         })();
                     </script>
 
-                    <script>
-                        (function () {
-                            var vapidMeta = document.querySelector('meta[name="vapid-public-key"]');
-                            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                            if (!vapidMeta || !vapidMeta.content || !csrfMeta || !csrfMeta.content) return;
-                            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-
-                            var VAPID_PUBLIC_KEY = vapidMeta.content;
-                            var CSRF_TOKEN = csrfMeta.content;
-                            var toggle = document.getElementById('pushStatusToggle');
-                            var icon = document.getElementById('pushStatusIcon');
-                            if (!toggle || !icon) return;
-
-                            function urlBase64ToUint8Array(base64String) {
-                                var padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-                                var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-                                var rawData = atob(base64);
-                                var outputArray = new Uint8Array(rawData.length);
-                                for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-                                return outputArray;
-                            }
-                            function arrayBufferToBase64(buffer) {
-                                var bytes = new Uint8Array(buffer), binary = '';
-                                for (var i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-                                return btoa(binary);
-                            }
-                            function showToast(msg, color) {
-                                var el = document.createElement('div');
-                                el.textContent = msg;
-                                el.style.cssText = [
-                                    'position:fixed', 'bottom:20px', 'right:20px', 'z-index:99999',
-                                    'background:' + (color || '#333'), 'color:#fff', 'padding:12px 18px',
-                                    'border-radius:8px', 'font-size:14px', 'max-width:320px',
-                                    'box-shadow:0 4px 14px rgba(0,0,0,.3)', 'word-break:break-word'
-                                ].join(';');
-                                document.body.appendChild(el);
-                                setTimeout(function () { el.remove(); }, 6000);
-                            }
-
-                            function setState(state) {
-                                toggle.style.display = 'flex';
-                                toggle.dataset.state = state;
-                                if (state === 'subscribed') {
-                                    icon.className = 'fas fa-bell';
-                                    icon.style.color = '#27ae60';
-                                    toggle.title = 'Notifications enabled — click to disable';
-                                } else if (state === 'blocked') {
-                                    icon.className = 'fas fa-bell-slash';
-                                    icon.style.color = '#e74c3c';
-                                    toggle.title = 'Notifications blocked — enable them in your browser site settings';
-                                } else {
-                                    icon.className = 'fas fa-bell-slash';
-                                    icon.style.color = '#f39c12';
-                                    toggle.title = 'Enable notifications for this device';
-                                }
-                            }
-
-                            function refreshState(reg) {
-                                if (Notification.permission === 'denied') { setState('blocked'); return; }
-                                reg.pushManager.getSubscription().then(function (sub) {
-                                    setState(sub ? 'subscribed' : 'unsubscribed');
-                                });
-                            }
-
-                            navigator.serviceWorker.register('/sw.js').then(function (reg) {
-                                refreshState(reg);
-
-                                toggle.addEventListener('click', function () {
-                                    var state = toggle.dataset.state;
-
-                                    if (state === 'blocked') {
-                                        showToast('Notifications are blocked for this site. Tap the site info icon in your address bar, allow Notifications, then click this bell again.', '#e74c3c');
-                                        return;
-                                    }
-
-                                    if (state === 'subscribed') {
-                                        reg.pushManager.getSubscription().then(function (sub) {
-                                            if (!sub) { setState('unsubscribed'); return; }
-                                            var endpoint = sub.endpoint;
-                                            sub.unsubscribe().then(function () {
-                                                return fetch("{{ route('notifications.push.unsubscribe') }}", {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                                                    credentials: 'same-origin',
-                                                    body: JSON.stringify({ endpoint: endpoint })
-                                                });
-                                            }).then(function () {
-                                                setState('unsubscribed');
-                                                showToast('🔕 Notifications disabled for this device.', '#555');
-                                            }).catch(function (err) {
-                                                showToast('Could not disable notifications: ' + err.message, '#e74c3c');
-                                            });
-                                        });
-                                        return;
-                                    }
-
-                                    // unsubscribed -> subscribe
-                                    Notification.requestPermission().then(function (perm) {
-                                        if (perm !== 'granted') {
-                                            setState(perm === 'denied' ? 'blocked' : 'unsubscribed');
-                                            return;
-                                        }
-                                        reg.pushManager.subscribe({
-                                            userVisibleOnly: true,
-                                            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                                        }).then(function (sub) {
-                                            var key = sub.getKey('p256dh'), token = sub.getKey('auth');
-                                            var enc = (PushManager.supportedContentEncodings || ['aesgcm'])[0];
-                                            return fetch("{{ route('notifications.push.subscribe') }}", {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                                                credentials: 'same-origin',
-                                                body: JSON.stringify({
-                                                    endpoint: sub.endpoint,
-                                                    key: key ? arrayBufferToBase64(key) : null,
-                                                    token: token ? arrayBufferToBase64(token) : null,
-                                                    contentEncoding: enc
-                                                })
-                                            });
-                                        }).then(function (res) {
-                                            if (res.ok) {
-                                                setState('subscribed');
-                                                showToast('🎉 Welcome! You will now receive SMASA notifications on this device.', '#27ae60');
-                                            } else {
-                                                showToast('Could not save your subscription. Please try again.', '#e74c3c');
-                                            }
-                                        }).catch(function (err) {
-                                            showToast('Subscribe failed: ' + err.message, '#e74c3c');
-                                        });
-                                    });
-                                });
-                            }).catch(function (err) {
-                                console.error('[PushStatus] SW registration failed', err);
-                            });
-                        })();
-                    </script>
                 @endif
 
                 <div class="dropdown profile-dropdown" style="margin-left: 8px;">

@@ -294,6 +294,10 @@ class NotificationController extends Controller
             'auth_token'      => filled($request->token),
         ]);
 
+        if (!filled($request->endpoint)) {
+            return response()->json(['error' => 'Missing push endpoint from the browser.'], 422);
+        }
+
         $subscriber = $this->resolvePushSubscriber();
 
         if (!$subscriber) {
@@ -338,7 +342,11 @@ class NotificationController extends Controller
      */
     public function deletePushSubscription(Request $request)
     {
-        PermissionHelper::denyUnlessFeature('push_notifications');
+        if (!PermissionHelper::canFeature('push_notifications')) {
+            return response()->json([
+                'error' => 'Unauthorized. You do not have permission to change push notifications.'
+            ], 403);
+        }
 
         $subscriber = $this->resolvePushSubscriber();
 
@@ -371,6 +379,28 @@ class NotificationController extends Controller
                 'error' => 'Failed to remove push subscription.',
             ], 500);
         }
+    }
+
+    /**
+     * POST /notifications/push/status
+     * Lets the ON/OFF button check whether THIS browser's subscription is
+     * actually stored on the server (browser and server can drift apart).
+     */
+    public function pushStatus(Request $request)
+    {
+        $subscriber = $this->resolvePushSubscriber();
+
+        if (!$subscriber) {
+            return response()->json(['error' => 'Unauthenticated user.'], 401);
+        }
+
+        $registered = filled($request->endpoint)
+            && $subscriber->pushSubscriptions()->where('endpoint', $request->endpoint)->exists();
+
+        return response()->json([
+            'registered' => $registered,
+            'devices' => $subscriber->pushSubscriptions()->count(),
+        ]);
     }
 
     /**
