@@ -28,8 +28,16 @@ use Illuminate\Support\Facades\Schema;
  */
 class OrphanCleanupService
 {
-    /** school_id sweep never touches these (see SchoolDeletionService::SKIP_TABLES). */
-    protected const SCHOOL_SWEEP_SKIP = ['schools', 'school_passwords', 'houses', 'migrations'];
+    /**
+     * school_id sweep never touches these (see SchoolDeletionService::SKIP_TABLES).
+     * The billing tables are SMASA's own accounting for a school and are kept
+     * after the school is deleted (SchoolDeletionService::KEPT_BILLING_TABLES),
+     * so a missing school is NOT a reason to purge them.
+     */
+    protected const SCHOOL_SWEEP_SKIP = [
+        'schools', 'school_passwords', 'houses', 'migrations',
+        'billing_invoices', 'billing_payments', 'billing_logs',
+    ];
 
     // ═════════════════════════════════════════════════════════════════════
     //  PREVENTION

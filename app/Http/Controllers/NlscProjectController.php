@@ -303,13 +303,23 @@ class NlscProjectController extends Controller
         }
 
         $areaId = $project->nlsc_project_area_id;
-        $project->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateProjectDeletion($id, $request->boolean('cascade_to_schools'));
+        // One transaction: the project, its now-empty area and the school copies
+        // go together or not at all.
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($project, $id, $areaId, $cascade) {
+            $project->delete();
 
-        if (NlscProject::where('nlsc_project_area_id', $areaId)->doesntExist()) {
-            NlscProjectArea::where('id', $areaId)->delete();
-        }
+            $removed = NlscSyncService::propagateProjectDeletion($id, $cascade);
+
+            if (NlscProject::where('nlsc_project_area_id', $areaId)->doesntExist()) {
+                NlscProjectArea::where('id', $areaId)->delete();
+            }
+
+            return $removed;
+        });
+
+        NlscSyncService::auditAdminDeletion('project', ['project_id' => (int) $id], 1, false, $cascade, $schoolCopies);
 
         return response()->json(['success' => true]);
     }
@@ -336,9 +346,18 @@ class NlscProjectController extends Controller
         $projectIds = NlscProject::whereIn('nlsc_project_area_id', $areaIds)->pluck('id')->all();
         $count = count($projectIds);
 
-        NlscProjectArea::whereIn('id', $areaIds)->delete(); // cascades to projects -> competency areas
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateAllProjectsDeletion($projectIds, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($areaIds, $projectIds, $cascade) {
+            NlscProjectArea::whereIn('id', $areaIds)->delete(); // cascades to projects -> competency areas
+
+            return NlscSyncService::propagateAllProjectsDeletion($projectIds, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('projects', [
+            'senior_class_id' => (int) $request->senior_class_id,
+            'subject_id' => (int) $request->subject_id,
+        ], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
@@ -402,9 +421,15 @@ class NlscProjectController extends Controller
             return response()->json(['success' => false, 'message' => 'Competency area not found.'], 404);
         }
 
-        $area->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateProjectCompetencyAreaDeletion($id, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($area, $id, $cascade) {
+            $area->delete();
+
+            return NlscSyncService::propagateProjectCompetencyAreaDeletion($id, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('project competency area', ['competency_area_id' => (int) $id], 1, false, $cascade, $schoolCopies);
 
         return response()->json(['success' => true]);
     }
@@ -422,9 +447,15 @@ class NlscProjectController extends Controller
 
         $areaIds = $project->competencyAreas()->pluck('id')->all();
         $count = count($areaIds);
-        $project->competencyAreas()->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateAllProjectCompetencyAreasDeletion($areaIds, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($project, $areaIds, $cascade) {
+            $project->competencyAreas()->delete();
+
+            return NlscSyncService::propagateAllProjectCompetencyAreasDeletion($areaIds, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('project competency areas', ['project_id' => (int) $projectId], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }

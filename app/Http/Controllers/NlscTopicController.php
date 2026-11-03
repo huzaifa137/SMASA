@@ -197,9 +197,17 @@ class NlscTopicController extends Controller
         // row today (that comes with the future per-student AoI scoring
         // feature, at which point this will need the same "in use, can't
         // delete" guard the subject-management screens already have).
-        $topic->delete();
+        $cascade = $request->boolean('cascade_to_schools');
+        $topicName = $topic->topic_name;
 
-        NlscSyncService::propagateTopicDeletion($id, $request->boolean('cascade_to_schools'));
+        // One transaction: the admin topic and the school copies go together or not at all.
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($topic, $id, $cascade) {
+            $topic->delete();
+
+            return NlscSyncService::propagateTopicDeletion($id, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('topic', ['topic_id' => (int) $id, 'name' => $topicName], 1, false, $cascade, $schoolCopies);
 
         return response()->json(['success' => true]);
     }
@@ -230,11 +238,20 @@ class NlscTopicController extends Controller
             ->pluck('id')
             ->all();
 
-        NlscTopic::where('senior_class_id', $request->senior_class_id)
-            ->where('subject_id', $request->subject_id)
-            ->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateAllTopicsDeletion($topicIds, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $topicIds, $cascade) {
+            NlscTopic::where('senior_class_id', $request->senior_class_id)
+                ->where('subject_id', $request->subject_id)
+                ->delete();
+
+            return NlscSyncService::propagateAllTopicsDeletion($topicIds, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('topics', [
+            'senior_class_id' => (int) $request->senior_class_id,
+            'subject_id' => (int) $request->subject_id,
+        ], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
@@ -307,9 +324,15 @@ class NlscTopicController extends Controller
             return response()->json(['success' => false, 'message' => 'Competency area not found.'], 404);
         }
 
-        $area->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateTopicCompetencyAreaDeletion($id, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($area, $id, $cascade) {
+            $area->delete();
+
+            return NlscSyncService::propagateTopicCompetencyAreaDeletion($id, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('topic competency area', ['competency_area_id' => (int) $id], 1, false, $cascade, $schoolCopies);
 
         return response()->json(['success' => true]);
     }
@@ -331,9 +354,15 @@ class NlscTopicController extends Controller
 
         $areaIds = $topic->competencyAreas()->pluck('id')->all();
         $count = count($areaIds);
-        $topic->competencyAreas()->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateAllTopicCompetencyAreasDeletion($areaIds, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($topic, $areaIds, $cascade) {
+            $topic->competencyAreas()->delete();
+
+            return NlscSyncService::propagateAllTopicCompetencyAreasDeletion($areaIds, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('topic competency areas', ['topic_id' => (int) $topicId, 'name' => $topic->topic_name], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }

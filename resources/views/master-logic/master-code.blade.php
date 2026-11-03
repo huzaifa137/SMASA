@@ -933,7 +933,7 @@ Swal.fire({
     html: `
         <div style="text-align:left">
             <p><strong>This action cannot be undone.</strong></p>
-            <p>The selected master code and all associated records will be permanently deleted.</p>
+            <p>Only a code with no records, that the application does not read directly, can be deleted.</p>
         </div>
     `,
     icon: 'warning',
@@ -944,9 +944,10 @@ Swal.fire({
     cancelButtonText: 'Keep It'
 }).then((result) => {
     if (result.isConfirmed) {
-        window.location.href = deleteUrl;
+        smasaPostDelete(deleteUrl);
     }
 });
 });
     </script>
+    @include('master-logic._post-delete')
 @endsection

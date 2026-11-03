@@ -133,10 +133,13 @@ $controller = new Controller();
                                             </td>
 
                                             <td>
-                                                <button class="btn btn-sm btn-outline-danger btn-delete-academic-year"
-                                                    title="Delete" data-id="{{ $year->id }}">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
+                                                {{-- The calendar is shared by every school: only Admin Portal users may delete a year. --}}
+                                                @if (session()->has('LoggedAdmin'))
+                                                    <button class="btn btn-sm btn-outline-danger btn-delete-academic-year"
+                                                        title="Delete" data-id="{{ $year->id }}">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                @endif
                                             </td>
                                             <td>
                                                 <button class="btn btn-sm btn-outline-info btn-edit-academic-year"
@@ -474,16 +477,11 @@ $controller = new Controller();
                                 'success'
                             );
                         },
-                        // error: function (xhr) {
-                        //     Swal.fire(
-                        //         'Error!',
-                        //         'Something went wrong while deleting.',
-                        //         'error'
-                        //     );
-                        // }
-                        error: function(data) {
-$('body').html(data.responseText);
-}
+                        error: function (xhr) {
+                            var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error))
+                                || 'Something went wrong while deleting.';
+                            Swal.fire('Not deleted', msg, 'error');
+                        }
                     });
                 }
             });

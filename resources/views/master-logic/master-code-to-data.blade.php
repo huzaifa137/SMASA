@@ -249,8 +249,10 @@ $(document).on('click', '.delete-record-btn', function(e) {
         title: 'Delete Master Code?',
         html: `
             <div style="font-size:14px;">
-                This will permanently delete the master code
-                <strong>and all associated records</strong>.
+                This will permanently delete the master code.
+                <br><br>
+                A code that still has records, or that the application
+                reads directly, cannot be deleted.
                 <br><br>
                 This action cannot be undone.
             </div>
@@ -275,9 +277,10 @@ $(document).on('click', '.delete-record-btn', function(e) {
                 }
             });
 
-            window.location.href = deleteUrl;
+            smasaPostDelete(deleteUrl);
         }
     });
 });
     </script>
+    @include('master-logic._post-delete')
 @endsection

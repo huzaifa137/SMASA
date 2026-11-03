@@ -126,8 +126,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('send-master-code', 'sendMasterCode')->name('send-master-code');
             Route::post('add-new-record', 'addNewRecord')->name('add-new-record');
 
-            Route::get('delete-record/{id}', 'deleteRecord');
-            Route::get('delete-code/{id}', 'deleteCode');
+            // DELETE (never GET): a link or an <img src> must not be able to delete master data.
+            Route::delete('delete-record/{id}', 'deleteRecord')->name('master-data.delete-record');
+            Route::delete('delete-code/{id}', 'deleteCode')->name('master-data.delete-code');
         });
 
     Route::controller(StudentController::class)->group(function () {
@@ -429,12 +430,16 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::post('/academic-years', 'storeYear')->name('academic-years.store');
                 Route::patch('/academic-years/{id}/activate', 'activate')->name('academic-years.activate');
                 Route::patch('/academic-years/{id}/deactivate', 'deactivate')->name('academic-years.deactivate');
-                Route::delete('/academic-years/{id}', 'destroy')->name('academic-years.destroy');
                 Route::put('/academic-years/{id}', 'updateYear')->name('academic-years.update');
                 Route::delete('/academic-years-terms/{id}', 'destroyTerm')->name('academic-years.term.destroy');
                 Route::post('/store-term-dates', 'storeTermDate')->name('term-dates.store');
                 Route::post('/term-dates/toggle-active', 'toggleActive')->name('term-dates.toggle-active');
             });
+
+            // The academic calendar is shared by every school, so deleting a year is
+            // platform-wide: strict admin permission, never the soft school-portal guard.
+            Route::delete('/academic-years/{id}', 'destroy')->name('academic-years.destroy')
+                ->middleware('admin.can:academic_calendar.manage');
         });
 
     // ── Developer shortcuts (SECURITY): these log the visitor straight in with

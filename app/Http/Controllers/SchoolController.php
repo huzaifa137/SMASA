@@ -425,6 +425,12 @@ class SchoolController extends Controller
             ['Fee payments', 'fee_payments', 'school_id'],
             ['Expenses', 'expenses', 'school_id'],
             ['Library books', 'library_books', 'school_id'],
+            ['Class subject assignments', 'class_subjects', 'school_id'],
+            ['Timetables', 'timetables', 'school_id'],
+            ['Notifications', 'smasa_notifications', 'school_id'],
+            // Kept after the delete (SchoolDeletionService::KEPT_BILLING_TABLES): shown so nobody expects them gone.
+            ['Billing invoices (kept)', 'billing_invoices', 'school_id'],
+            ['Billing payments (kept)', 'billing_payments', 'school_id'],
         ];
 
         $summary = [];
@@ -441,9 +447,15 @@ class SchoolController extends Controller
             ];
         }
 
+        $active = (int) $schoolId->school_status === \App\Services\BillingService::ACTIVE_SCHOOL_STATUS;
+
         return response()->json([
             'school' => $schoolId->name,
             'items' => $summary,
+            // Lets the page explain at once, instead of making the admin type the name first.
+            'blocked' => $active
+                ? '"' . $schoolId->name . '" is Active. Change its status to something other than Active first, then delete it.'
+                : null,
         ]);
     }
 
@@ -452,10 +464,18 @@ class SchoolController extends Controller
         try {
             // Removes the school and everything attached to it: students and
             // their photos, teachers, marks, classes, subjects, finance,
-            // library, uploaded files, house record and profile.
+            // library, uploaded files, house record and profile. Billing
+            // records are kept. An Active school is refused.
             app(\App\Services\SchoolDeletionService::class)->delete($schoolId);
 
             return response()->json(['success' => true]);
+
+        } catch (\App\Exceptions\SchoolDeletionRefusedException $e) {
+            // Deliberately not deleted, nothing touched: not a server error.
+            return response()->json([
+                'error' => 'Not deleted',
+                'message' => $e->getMessage(),
+            ], 422);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -780,20 +800,105 @@ class SchoolController extends Controller
         return response()->json(['message' => 'Academic year deactivated.']);
     }
 
+    /**
+     * Delete an academic year.
+     *
+     * academic_years is ONE table shared by every school, so this is a
+     * platform-wide action: only an Admin Portal user holding
+     * academic_calendar.manage may do it (a school administrator may manage a
+     * school's own term dates, never the shared calendar). The year is refused
+     * while anything still points at it, because term_dates cascades from it
+     * and the billing, timetable and promotion tables have no foreign key to
+     * stop the delete and would be left pointing at a year that is gone.
+     */
     public function destroy($id)
     {
-        $this->requireCalendarManager();
+        abort_unless(
+            session()->has('LoggedAdmin') && \App\Support\AdminAccess::can('academic_calendar.manage'),
+            403,
+            'Only a platform administrator can delete an academic year.'
+        );
 
         $academicYear = AcademicYear::findOrFail($id);
 
         if ($academicYear->is_active) {
-            return response()->json(['error' => 'Cannot delete an active academic year.'], 403);
+            return $this->academicYearDeleteRefused('Cannot delete an active academic year. Deactivate it first.', 403);
         }
 
-        $academicYear->delete();
-        \App\Models\AcademicTerm::where('academic_year_id', $id)->delete();
+        $blockers = $this->academicYearBlockers($academicYear);
+
+        if (!empty($blockers)) {
+            return $this->academicYearDeleteRefused(
+                'This academic year is still in use (' . implode(', ', $blockers) . '), so it cannot be deleted. '
+                . 'Deactivate it instead, or remove those records first.',
+                422
+            );
+        }
+
+        $snapshot = $academicYear->only(['id', 'name', 'start_date', 'end_date']);
+
+        DB::transaction(function () use ($academicYear) {
+            \App\Models\AcademicTerm::where('academic_year_id', $academicYear->id)->delete();
+            $academicYear->delete();
+        });
+
+        \App\Audit\Audit::warning('academic_year_deleted', 'Deleted academic year "' . ($snapshot['name'] ?? ('#' . $snapshot['id'])) . '"', [
+            'entity_type' => 'AcademicYear',
+            'entity_id' => $snapshot['id'],
+            'entity_label' => $snapshot['name'] ?? null,
+            'old' => $snapshot,
+        ]);
 
         return response()->json(['message' => 'Academic year deleted successfully.']);
+    }
+
+    /**
+     * What still references this year, as readable "N thing(s)" strings.
+     * Every table is checked with hasTable/hasColumn so a missing migration
+     * on one install cannot break the delete.
+     *
+     * @return string[]
+     */
+    private function academicYearBlockers(AcademicYear $year): array
+    {
+        // [label, table, column, value the column holds]
+        $checks = [
+            ['school term-date record(s)', 'term_dates', 'academic_year_id', $year->id],
+            ['billing term(s)', 'billing_terms', 'academic_year_id', $year->id],
+            ['timetable(s)', 'timetables', 'academic_year_id', $year->id],
+            ['school promotion setting(s)', 'promotion_settings', 'cycle_academic_year_id', $year->id],
+            // Promotion batches and records store the year by NAME, not id.
+            ['promotion batch(es) starting in it', 'promotion_batches', 'from_academic_year', $year->name],
+            ['promotion batch(es) ending in it', 'promotion_batches', 'to_academic_year', $year->name],
+            ['student promotion record(s)', 'promotion_records', 'from_academic_year', $year->name],
+        ];
+
+        $blockers = [];
+
+        foreach ($checks as [$label, $table, $column, $value]) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (!\Illuminate\Support\Facades\Schema::hasTable($table)
+                || !\Illuminate\Support\Facades\Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            $count = DB::table($table)->where($column, $value)->count();
+
+            if ($count > 0) {
+                $blockers[] = $count . ' ' . $label;
+            }
+        }
+
+        return $blockers;
+    }
+
+    /** JSON refusal that carries the reason under both keys the calendar pages read. */
+    private function academicYearDeleteRefused(string $message, int $status)
+    {
+        return response()->json(['error' => $message, 'message' => $message], $status);
     }
 
     public function updateYear(Request $request, $id)
@@ -867,7 +972,17 @@ class SchoolController extends Controller
 
         $academicTerm = TermDate::findOrFail($id);
         SchoolContext::abortUnlessOwns($academicTerm->school_id);
+
+        $snapshot = $academicTerm->only(['id', 'school_id', 'academic_year_id', 'term', 'start_date', 'end_date']);
+
         $academicTerm->delete();
+
+        \App\Audit\Audit::notice('term_dates_deleted', 'Deleted term dates for term "' . ($snapshot['term'] ?? '') . '"', [
+            'entity_type' => 'TermDate',
+            'entity_id' => $snapshot['id'],
+            'school_id' => $snapshot['school_id'],
+            'old' => $snapshot,
+        ]);
 
         return response()->json(['message' => 'Term deleted successfully.']);
     }

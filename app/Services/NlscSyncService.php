@@ -46,6 +46,12 @@ use App\Models\SchoolNlscTopic;
  * still end up with that outcome (admin says no), while an admin who
  * really does want a takedown to reach every school can make that happen
  * explicitly instead of it being silently impossible either way.
+ *
+ * Every propagate*Deletion() method returns how many school copies it
+ * removed (0 when the admin chose not to cascade), so the caller can put
+ * the real number in the audit trail. Callers wrap the admin delete and
+ * the propagation in ONE transaction, so a failure part-way leaves
+ * neither side changed.
  */
 class NlscSyncService
 {
@@ -65,26 +71,26 @@ class NlscSyncService
      * An admin Topic was deleted — if the admin chose to, remove every
      * school's copy of it too (competency areas cascade via FK).
      */
-    public static function propagateTopicDeletion(int $topicId, bool $cascadeToSchools): void
+    public static function propagateTopicDeletion(int $topicId, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools) {
-            return;
+            return 0;
         }
 
-        SchoolNlscTopic::where('source_topic_id', $topicId)->delete();
+        return SchoolNlscTopic::where('source_topic_id', $topicId)->delete();
     }
 
     /**
      * Every admin Topic for one Senior/Subject was deleted — same as
      * propagateTopicDeletion() but for the "delete all" bulk action.
      */
-    public static function propagateAllTopicsDeletion(array $topicIds, bool $cascadeToSchools): void
+    public static function propagateAllTopicsDeletion(array $topicIds, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools || empty($topicIds)) {
-            return;
+            return 0;
         }
 
-        SchoolNlscTopic::whereIn('source_topic_id', $topicIds)->delete();
+        return SchoolNlscTopic::whereIn('source_topic_id', $topicIds)->delete();
     }
 
     /**
@@ -132,13 +138,13 @@ class NlscSyncService
      * An admin Topic's Competency Area was deleted — if the admin chose
      * to, remove every school's copy of it too.
      */
-    public static function propagateTopicCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): void
+    public static function propagateTopicCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools) {
-            return;
+            return 0;
         }
 
-        SchoolNlscCompetencyArea::where('source_competency_area_id', $areaId)->delete();
+        return SchoolNlscCompetencyArea::where('source_competency_area_id', $areaId)->delete();
     }
 
     /**
@@ -146,13 +152,13 @@ class NlscSyncService
      * propagateTopicCompetencyAreaDeletion() but for the "delete all"
      * bulk action.
      */
-    public static function propagateAllTopicCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): void
+    public static function propagateAllTopicCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools || empty($areaIds)) {
-            return;
+            return 0;
         }
 
-        SchoolNlscCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
+        return SchoolNlscCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
     }
 
     // ============================ Projects =============================
@@ -188,26 +194,26 @@ class NlscSyncService
      * its own extra projects under that same area, so it isn't safe to
      * assume the area itself should disappear too.
      */
-    public static function propagateProjectDeletion(int $projectId, bool $cascadeToSchools): void
+    public static function propagateProjectDeletion(int $projectId, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools) {
-            return;
+            return 0;
         }
 
-        SchoolNlscProject::where('source_project_id', $projectId)->delete();
+        return SchoolNlscProject::where('source_project_id', $projectId)->delete();
     }
 
     /**
      * Every admin Project for one Senior/Subject was deleted — same as
      * propagateProjectDeletion() but for the "delete all" bulk action.
      */
-    public static function propagateAllProjectsDeletion(array $projectIds, bool $cascadeToSchools): void
+    public static function propagateAllProjectsDeletion(array $projectIds, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools || empty($projectIds)) {
-            return;
+            return 0;
         }
 
-        SchoolNlscProject::whereIn('source_project_id', $projectIds)->delete();
+        return SchoolNlscProject::whereIn('source_project_id', $projectIds)->delete();
     }
 
     /**
@@ -252,13 +258,13 @@ class NlscSyncService
      * An admin Project's Competency Area was deleted — if the admin chose
      * to, remove every school's copy of it too.
      */
-    public static function propagateProjectCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): void
+    public static function propagateProjectCompetencyAreaDeletion(int $areaId, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools) {
-            return;
+            return 0;
         }
 
-        SchoolNlscProjectCompetencyArea::where('source_competency_area_id', $areaId)->delete();
+        return SchoolNlscProjectCompetencyArea::where('source_competency_area_id', $areaId)->delete();
     }
 
     /**
@@ -266,13 +272,13 @@ class NlscSyncService
      * propagateProjectCompetencyAreaDeletion() but for the "delete all"
      * bulk action.
      */
-    public static function propagateAllProjectCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): void
+    public static function propagateAllProjectCompetencyAreasDeletion(array $areaIds, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools || empty($areaIds)) {
-            return;
+            return 0;
         }
 
-        SchoolNlscProjectCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
+        return SchoolNlscProjectCompetencyArea::whereIn('source_competency_area_id', $areaIds)->delete();
     }
 
     // ======================= Subject Achievement ========================
@@ -325,13 +331,13 @@ class NlscSyncService
      * An admin Topic's Subject Achievement statement was deleted — if the
      * admin chose to, remove every school's copy of it too.
      */
-    public static function propagateSubjectAchievementDeletion(int $achievementId, bool $cascadeToSchools): void
+    public static function propagateSubjectAchievementDeletion(int $achievementId, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools) {
-            return;
+            return 0;
         }
 
-        SchoolNlscSubjectAchievement::where('source_subject_achievement_id', $achievementId)->delete();
+        return SchoolNlscSubjectAchievement::where('source_subject_achievement_id', $achievementId)->delete();
     }
 
     /**
@@ -339,12 +345,79 @@ class NlscSyncService
      * whole Senior/Subject) was deleted in bulk — same as
      * propagateAllTopicCompetencyAreasDeletion() but for achievements.
      */
-    public static function propagateAllSubjectAchievementsDeletion(array $achievementIds, bool $cascadeToSchools): void
+    public static function propagateAllSubjectAchievementsDeletion(array $achievementIds, bool $cascadeToSchools): int
     {
         if (!$cascadeToSchools || empty($achievementIds)) {
+            return 0;
+        }
+
+        return SchoolNlscSubjectAchievement::whereIn('source_subject_achievement_id', $achievementIds)->delete();
+    }
+
+    // ============================== Audit ==============================
+
+    /**
+     * One readable audit entry for an admin curriculum delete.
+     *
+     * The automatic audit trail already records every single Eloquent
+     * ->delete() with a full snapshot, but it cannot describe a mass delete
+     * (where()->delete(), "delete all"), the database cascading to child
+     * rows, or a cascade into the school copies: none of those fire model
+     * events, so they only appear as per-table counts. This entry is written
+     * for bulk deletes and for anything that cascaded to schools. A plain
+     * single delete that stayed on the admin side is not repeated here.
+     *
+     * Call it AFTER the transaction has committed; a failure to write the
+     * entry must never turn a completed delete into an error.
+     *
+     * @param string $subject    what was deleted, e.g. "topics", "competency area"
+     * @param array  $scope      where: senior_class_id, subject_id, topic_id, project_id, name
+     * @param int    $adminRows  rows removed from the admin catalogue
+     * @param bool   $bulk       a "delete all" style action
+     */
+    public static function auditAdminDeletion(string $subject, array $scope, int $adminRows, bool $bulk, bool $cascadeToSchools, int $schoolCopies): void
+    {
+        if (!$bulk && !$cascadeToSchools) {
             return;
         }
 
-        SchoolNlscSubjectAchievement::whereIn('source_subject_achievement_id', $achievementIds)->delete();
+        if ($adminRows === 0 && $schoolCopies === 0) {
+            return;
+        }
+
+        try {
+            $where = [];
+
+            foreach (['senior_class_id' => 'class', 'subject_id' => 'subject'] as $key => $label) {
+                if (!empty($scope[$key])) {
+                    $name = \Illuminate\Support\Facades\DB::table('master_datas')->where('md_id', $scope[$key])->value('md_name');
+                    $where[] = $label . ' ' . ($name ?: '#' . $scope[$key]);
+                }
+            }
+
+            if (!empty($scope['name'])) {
+                $where[] = '"' . $scope['name'] . '"';
+            }
+
+            $description = 'Admin deleted ' . $adminRows . ' NLSC ' . $subject
+                . ($where ? ' (' . implode(', ', $where) . ')' : '')
+                . ($cascadeToSchools
+                    ? ' and removed ' . $schoolCopies . ' school cop' . ($schoolCopies === 1 ? 'y' : 'ies')
+                    : '; school copies were kept');
+
+            \App\Audit\Audit::warning('nlsc_curriculum_deleted', $description, [
+                'category' => 'data',
+                'entity_type' => 'NlscCurriculum',
+                'entity_label' => $subject,
+                'metadata' => $scope + [
+                    'admin_rows_deleted' => $adminRows,
+                    'bulk' => $bulk,
+                    'cascade_to_schools' => $cascadeToSchools,
+                    'school_copies_removed' => $schoolCopies,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

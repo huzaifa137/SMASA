@@ -577,7 +577,7 @@ $(document).ready(function() {
 
     // ── DELETE ──
     $('tbody, .td-mobile-cards').on('click', '.btn-delete-term-date', function() {
-        var yearId = $(this).data('id');
+        var termId = $(this).data('id');
         var row = $(this).closest('tr, .td-mobile-term-card');
 
         Swal.fire({
@@ -587,13 +587,19 @@ $(document).ready(function() {
         }).then((result) => {
             if (!result.isConfirmed) return;
             $.ajax({
-                url: '/academic-years/' + yearId, type: 'DELETE',
+                // data-id is a term_dates row id, so this must hit the TERM route.
+                // (It used to hit /academic-years/{id}, which deleted whichever
+                // academic YEAR happened to share that number.)
+                url: '/academic-years-terms/' + termId, type: 'DELETE',
                 data: { _token: '{{ csrf_token() }}' },
                 success: function(response) {
                     row.remove();
                     Swal.fire({ icon: 'success', title: 'Deleted!', text: 'Term has been removed.', confirmButtonColor: '#2C29CA' });
                 },
-                error: function(data) { $('body').html(data.responseText); }
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Could not delete this term.';
+                    Swal.fire({ icon: 'error', title: 'Not deleted', text: msg, confirmButtonColor: '#2C29CA' });
+                }
             });
         });
     });

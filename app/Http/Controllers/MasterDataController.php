@@ -209,7 +209,12 @@ class MasterDataController extends Controller
                         $links[] = '<a class="dropdown-item" href="' . url('master-data/edit-record/' . $item->md_id) . '"><i class="fa fa-fw fa-edit"></i> Edit</a>';
                     }
                     if (AdminAccess::can('master_data.delete_data')) {
-                        $links[] = '<a onclick="return confirm(\'Are sure you want to delete ' . $item->md_name . '?\'); " class="dropdown-item" href="' . url('delete-record/' . $item->md_id) . '"><i class="fa fa-fw fa-times"></i> Delete</a>';
+                        // A DELETE request cannot be sent by a plain link, so confirm, then submit a form
+                        // (smasaPostDelete comes from master-logic/_post-delete). The name and URL go through
+                        // json_encode + htmlspecialchars so a quote in a record name cannot break out of the attribute.
+                        $confirmText = htmlspecialchars(json_encode('Are you sure you want to delete ' . $item->md_name . '?'), ENT_QUOTES);
+                        $deleteUrl = htmlspecialchars(json_encode(url('delete-record/' . $item->md_id)), ENT_QUOTES);
+                        $links[] = '<a onclick="if (confirm(' . $confirmText . ')) { smasaPostDelete(' . $deleteUrl . '); } return false;" class="dropdown-item" href="#"><i class="fa fa-fw fa-times"></i> Delete</a>';
                     }
 
                     return $this->dropDown($links);
@@ -340,77 +345,170 @@ public function dropDown($links)
         }
     }
 
-    public function deleteRecord($md_id)
+    /**
+     * Columns that store a master_datas.md_id. None of them has a foreign key,
+     * so the database will happily let the record be deleted from under them.
+     * Every table/column is checked with hasTable/hasColumn, so a table that
+     * does not exist on this install is skipped.
+     *
+     * [label shown to the admin, table, column]
+     */
+    private const MASTER_RECORD_REFERENCES = [
+        ['school class(es)', 'classes', 'class_id'],
+        ['class subject assignment(s)', 'class_subjects', 'subject_id'],
+        ['student(s) in this class', 'students', 'senior'],
+        ['school product(s)', 'school_products', 'product_md_id'],
+        ['school product merge record(s)', 'school_product_actions', 'product_md_id'],
+        ['school product merge record(s)', 'school_product_actions', 'kept_product_md_id'],
+        ['NLSC topic(s) for this class', 'nlsc_topics', 'senior_class_id'],
+        ['NLSC topic(s) for this subject', 'nlsc_topics', 'subject_id'],
+        ['legacy topic(s) for this class', 'topics', 'senior_id'],
+        ['legacy topic(s) for this subject', 'topics', 'subject_id'],
+    ];
+
+    /**
+     * What still uses this master record, as readable "N thing(s)" strings.
+     * An empty array means nothing found, so it can go.
+     *
+     * @return string[]
+     */
+    private function masterRecordUsage($mdId): array
+    {
+        $usage = [];
+
+        foreach (self::MASTER_RECORD_REFERENCES as [$label, $table, $column]) {
+            if (!Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            $count = DB::table($table)->where($column, $mdId)->count();
+
+            if ($count > 0) {
+                $usage[] = $count . ' ' . $label;
+            }
+        }
+
+        // Subject ids kept inside JSON lists on the student's own choices.
+        if (Schema::hasTable('student_alevel_combinations')) {
+            $count = DB::table('student_alevel_combinations')
+                ->where(function ($q) use ($mdId) {
+                    $q->whereJsonContains('principal_subject_ids', (int) $mdId)
+                        ->orWhereJsonContains('principal_subject_ids', (string) $mdId)
+                        ->orWhere('subsidiary_subject_id', $mdId);
+                })
+                ->count();
+
+            if ($count > 0) {
+                $usage[] = $count . ' student A-Level combination(s)';
+            }
+        }
+
+        if (Schema::hasTable('student_olevel_electives')) {
+            $count = DB::table('student_olevel_electives')
+                ->where(function ($q) use ($mdId) {
+                    $q->whereJsonContains('elective_subject_ids', (int) $mdId)
+                        ->orWhereJsonContains('elective_subject_ids', (string) $mdId);
+                })
+                ->count();
+
+            if ($count > 0) {
+                $usage[] = $count . ' student O-Level elective choice(s)';
+            }
+        }
+
+        return $usage;
+    }
+
+    /** master_codes.id values the application reads by number (config/constants.php). */
+    private function systemMasterCodeIds(): array
+    {
+        return array_map('strval', array_values((array) config('constants.options')));
+    }
+
+    public function deleteRecord(Request $request, $md_id)
     {
         if (!AdminAccess::can('master_data.delete_data')) {
-            Alert::error('Error', 'Unauthorized. You do not have permission to delete master data.');
-            return back();
+            return back()->with('error', 'Unauthorized. You do not have permission to delete master data.');
         }
 
         $masterRecord = DB::table('master_datas')->where('md_id', $md_id)->first();
-        $masterCode = DB::table('master_datas')->where('md_id', $md_id)->value('md_master_code_id');
+
+        if (!$masterRecord) {
+            return redirect('master-data/master-code-to-data')->with('error', 'That record no longer exists.');
+        }
+
+        $masterCode = $masterRecord->md_master_code_id;
+
+        // General Paper is compulsory for every A-Level student (same rule as the subjects screen).
+        if ((string) $masterCode === (string) config('constants.options.SECONDARY_ALEVEL_SUBJECTS')
+            && ($masterRecord->md_misc1 ?? null) === 'General') {
+            return back()->with('error', 'General Paper is compulsory for every A-Level student and cannot be deleted.');
+        }
+
+        $usage = $this->masterRecordUsage($md_id);
+
+        if (!empty($usage)) {
+            return back()->with('error', '"' . $masterRecord->md_name . '" is still in use (' . implode(', ', $usage)
+                . '), so it cannot be deleted. Remove those first.');
+        }
 
         $list_id = $this->rgf('master_codes', $masterCode, "id", "mc_code");
-
-       
 
         DB::table('master_datas')
             ->where('md_id', $md_id)
             ->delete();
 
-        return redirect('master-data/master-code-list/' . $list_id)->with('success', 'Record has been deleted successfully');
+        \App\Audit\Audit::warning('master_record_deleted', 'Deleted master record "' . $masterRecord->md_name . '" (#' . $md_id . ')', [
+            'entity_type' => 'MasterData',
+            'entity_id' => $md_id,
+            'entity_label' => $masterRecord->md_name,
+            'old' => (array) $masterRecord,
+        ]);
+
+        return redirect($list_id ? 'master-data/master-code-list/' . $list_id : 'master-data/master-code-to-data')
+            ->with('success', 'Record has been deleted successfully');
     }
 
-    public function updateMasterrecord(Request $request)
-    {
-        if (!AdminAccess::can('master_data.edit_data')) {
-            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to edit master data.');
-        }
 
-        $record_id = $request->record_id;
-
-        $list_id = $this->rgf('master_datas', $record_id, "md_id", "md_master_code_id");
-
-        $date = time();
-        $session = Helper::user_id();
-
-        DB::table('master_datas')
-            ->where('md_id', $record_id)
-            ->update(['md_code' => $request->md_code, 'md_name' => $request->md_name, 'md_description' => $request->md_description, 'md_date_added' => $date, 'md_added_by' => $session]);
-
-        $list_id = $this->rgf('master_codes', $request->md_master_code_id, "mc_id", "mc_code");
-
-        return redirect('master-data/master-code-list/' . $list_id)
-            ->with('success', 'Data has been updated successfully')
-        ;
-    }
-
-    public function sendMasterCode(Request $request)
-    {
-        if (!AdminAccess::can('master_data.create_codes')) {
-            return redirect()->back()->with('error', 'Unauthorized. You do not have permission to create master codes.');
-        }
-
-        $date = time();
-        $session = Helper::user_id();
-
-        $values = ['mc_id' => $request->mc_code, 'mc_code' => $request->mc_code, 'mc_name' => $request->mc_name, 'mc_description' => $request->mc_description, 'mc_date_added' => $date, 'mc_added_by' => $session];
-
-        DB::table('master_codes')->insert($values);
-
-        return redirect('master-data/master-code-to-data')
-            ->with('success', 'New data code has been added');
-    }
-
-    public function deleteCode($mc_id)
+    public function deleteCode(Request $request, $mc_id)
     {
         if (!AdminAccess::can('master_data.delete_codes')) {
             return redirect()->back()->with('error', 'Unauthorized. You do not have permission to delete master codes.');
         }
 
-        DB::table('master_codes')
-            ->where('mc_id', $mc_id)
-            ->delete();
+        $codes = DB::table('master_codes')->where('mc_id', $mc_id)->get();
+
+        if ($codes->isEmpty()) {
+            return redirect('master-data/master-code-to-data')->with('error', 'That code no longer exists.');
+        }
+
+        if ($codes->count() > 1) {
+            return back()->with('error', 'More than one master code shares this code number, so none was deleted. Fix the duplicate first.');
+        }
+
+        $code = $codes->first();
+
+        // Codes the application looks up by number would break every screen that reads them.
+        if (in_array((string) $code->id, $this->systemMasterCodeIds(), true)) {
+            return back()->with('error', '"' . $code->mc_name . '" is a system code that the application reads directly, so it cannot be deleted.');
+        }
+
+        // Deleting only the code row would leave its records behind with no parent.
+        $records = DB::table('master_datas')->where('md_master_code_id', $code->id)->count();
+
+        if ($records > 0) {
+            return back()->with('error', '"' . $code->mc_name . '" still has ' . $records
+                . ' record(s). Delete or move them first, then delete the code.');
+        }
+
+        DB::table('master_codes')->where('id', $code->id)->delete();
+
+        \App\Audit\Audit::warning('master_code_deleted', 'Deleted master code "' . $code->mc_name . '" (' . $code->mc_code . ')', [
+            'entity_type' => 'MasterCode',
+            'entity_id' => $code->id,
+            'entity_label' => $code->mc_name,
+            'old' => (array) $code,
+        ]);
 
         return redirect('master-data/master-code-to-data')->with('success', 'Code has been deleted successfully');
     }

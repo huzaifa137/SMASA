@@ -428,4 +428,5 @@
             });
         });
     </script>
+    @include('master-logic._post-delete')
 @endsection

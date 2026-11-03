@@ -592,7 +592,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const recordId = '{{ $record->md_id ?? 0 }}';
-                        window.location.href = '{{ url("delete-record/") }}/' + recordId;
+                        smasaPostDelete('{{ url("delete-record/") }}/' + recordId);
                     }
                     return false;
                 });
@@ -678,4 +678,5 @@
             });
         });
     </script>
+    @include('master-logic._post-delete', ['flashError' => false])
 @endsection

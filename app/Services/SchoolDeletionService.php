@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Exceptions\SchoolDeletionRefusedException;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\Teacher;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -34,14 +36,26 @@ use RuntimeException;
  *  5. the school's house/registration record, profile, login password and
  *     the school itself
  *
- * Students and teachers are removed first. If any of them fails, nothing
- * else is touched and a RuntimeException is thrown, so a school is never
- * left half-deleted.
+ * Students and teachers are removed first, each in its own transaction (a
+ * big school cannot fit in one). If any of them fails, nothing else is
+ * touched and an exception says how many were already removed. That means a
+ * failure can leave a school PARTLY deleted; deleting it again simply carries
+ * on where it stopped, because every step is safe to repeat. Everything after
+ * that point (step 3 onward) is one transaction and is all-or-nothing.
+ *
+ * An Active school is refused outright: it must be deactivated first, so a
+ * live school can never be removed by one stray click. Only one delete can
+ * run for a school at a time, and the PHP time limit and a closed browser
+ * tab cannot stop it half-way through.
  *
  * Intentionally NOT touched: parent_accounts (a parent login is phone-based
- * and can have children in other schools) and the legacy national-exam
+ * and can have children in other schools), the legacy national-exam
  * tables (marks, student_results, student_exam_results), which are keyed by
- * a typed-in school/candidate number rather than the school id.
+ * a typed-in school/candidate number rather than the school id, and the
+ * platform's own billing records for the school (invoices, their line items,
+ * payments with their proof-of-payment files, billing log). Those are
+ * SMASA's accounting, not the school's data. They keep the school's name
+ * (see snapshotBillingRecords) so they stay readable after the school is gone.
  */
 class SchoolDeletionService
 {
@@ -52,6 +66,12 @@ class SchoolDeletionService
      */
     protected const SKIP_TABLES = ['schools', 'school_passwords', 'houses', 'migrations'];
 
+    /**
+     * Billing records survive the school. OrphanCleanupService::SCHOOL_SWEEP_SKIP
+     * must list the same tables, or smasa:purge-orphans would delete them later.
+     */
+    protected const KEPT_BILLING_TABLES = ['billing_invoices', 'billing_payments', 'billing_logs'];
+
     public function __construct(
         protected StudentDeletionService $students,
         protected TeacherDeletionService $teachers,
@@ -60,8 +80,51 @@ class SchoolDeletionService
 
     /**
      * @return array{students:int, teachers:int}
+     *
+     * @throws SchoolDeletionRefusedException when the school is Active or already being deleted (nothing touched)
+     * @throws RuntimeException                when it stopped part-way (the message says how far it got)
      */
     public function delete(School $school): array
+    {
+        if ((int) $school->school_status === BillingService::ACTIVE_SCHOOL_STATUS) {
+            throw new SchoolDeletionRefusedException(
+                '"' . $school->name . '" is Active, so it cannot be deleted. Change its status to something other than Active first, then delete it.'
+            );
+        }
+
+        $lock = $this->lockFor($school->id);
+
+        if ($lock && !$lock->get()) {
+            throw new SchoolDeletionRefusedException('"' . $school->name . '" is already being deleted. Wait for that to finish, then check the school list.');
+        }
+
+        // A big school takes minutes: neither the PHP time limit nor a closed
+        // browser tab may stop it half-way through.
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
+        ignore_user_abort(true);
+
+        try {
+            return $this->run($school);
+        } finally {
+            if ($lock) {
+                $lock->release();
+            }
+        }
+    }
+
+    /** Null when the cache store cannot lock (the delete then simply runs unguarded, as before). */
+    protected function lockFor(int $schoolId)
+    {
+        try {
+            return Cache::lock('school-deletion:' . $schoolId, 3600);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    protected function run(School $school): array
     {
         $schoolId = $school->id;
         $snapshot = $school->only(['id', 'name', 'registration_code', 'school_type']);
@@ -80,9 +143,7 @@ class SchoolDeletionService
 
             $result = $this->students->deleteStudents($studentIds);
             if ($result['failed'] > 0) {
-                throw new RuntimeException(
-                    'Could not delete ' . $result['failed'] . ' student(s): ' . implode('; ', array_slice($result['errors'], 0, 3))
-                );
+                throw $this->stoppedPartway($snapshot, 'student', $result, count($studentIds));
             }
         }
 
@@ -92,40 +153,66 @@ class SchoolDeletionService
         if (!empty($teacherIds)) {
             $result = $this->teachers->deleteTeachers($teacherIds);
             if ($result['failed'] > 0) {
-                throw new RuntimeException(
-                    'Could not delete ' . $result['failed'] . ' teacher(s): ' . implode('; ', array_slice($result['errors'], 0, 3))
-                );
+                throw $this->stoppedPartway($snapshot, 'teacher', $result, count($teacherIds));
             }
         }
 
         // 3-5. Everything else, atomically.
-        DB::transaction(function () use ($school, $schoolId, $studentIds, $teacherIds) {
-            // Must run before the school's own notification rows are swept.
-            $orphanCandidates = $this->deleteNotificationRecipients($schoolId, $studentIds, $teacherIds);
+        $billingKept = [];
 
-            $this->deleteChildRowsWithoutSchoolId($schoolId);
+        try {
+            DB::transaction(function () use ($school, $schoolId, $studentIds, $teacherIds, &$billingKept) {
+                // Billing records stay: stamp them with the school's name while it still exists.
+                $billingKept = $this->snapshotBillingRecords($school);
 
-            $this->deletePushSubscriptions($teacherIds);
+                // Must run before the school's own notification rows are swept.
+                $orphanCandidates = $this->deleteNotificationRecipients($schoolId, $studentIds, $teacherIds);
 
-            // The rows below are removed explicitly, so foreign key checks
-            // are switched off only to avoid depending on delete order.
-            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+                $this->deleteChildRowsWithoutSchoolId($schoolId);
 
-            try {
-                foreach ($this->schoolScopedTables() as $table) {
-                    DB::table($table)->where('school_id', $schoolId)->delete();
+                $this->deletePushSubscriptions($teacherIds);
+
+                // The rows below are removed explicitly, so foreign key checks
+                // are switched off only to avoid depending on delete order.
+                DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+                try {
+                    foreach ($this->schoolScopedTables() as $table) {
+                        DB::table($table)->where('school_id', $schoolId)->delete();
+                    }
+
+                    $this->deleteHouseRecords($school);
+
+                    DB::table('schools')->where('id', $schoolId)->delete();
+
+                    $this->deleteEmptyNotifications($orphanCandidates);
+                    $this->deleteTrackerRows($schoolId);
+                } finally {
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
                 }
-
-                $this->deleteHouseRecords($school);
-
-                DB::table('schools')->where('id', $schoolId)->delete();
-
-                $this->deleteEmptyNotifications($orphanCandidates);
-                $this->deleteTrackerRows($schoolId);
-            } finally {
-                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            });
+        } catch (\Throwable $e) {
+            if (empty($studentIds) && empty($teacherIds)) {
+                throw $e;
             }
-        });
+
+            \App\Audit\Audit::critical('school_deletion_incomplete', 'Deleting school "' . ($snapshot['name'] ?? ('#' . $schoolId)) . '" stopped part-way: its students and teachers are gone but the school itself could not be removed', [
+                'category' => 'security',
+                'outcome' => 'failure',
+                'entity_type' => 'School',
+                'entity_id' => $schoolId,
+                'entity_label' => $snapshot['name'] ?? null,
+                'school_id' => $schoolId,
+                'metadata' => ['students_deleted' => count($studentIds), 'teachers_deleted' => count($teacherIds), 'error' => $e->getMessage()],
+            ]);
+
+            throw new RuntimeException(
+                'All ' . count($studentIds) . ' student(s) and ' . count($teacherIds) . ' teacher(s) were removed, but the rest of the school could not be: '
+                . $e->getMessage() . ' The school is only partly deleted. Fix the cause and delete it again to finish.',
+                0,
+                $e
+            );
+        }
 
         // Files go last: a rolled-back delete must not lose them.
         $this->deleteFiles($files);
@@ -138,10 +225,64 @@ class SchoolDeletionService
             'school_id' => $schoolId,
             'school_name' => $snapshot['name'] ?? null,
             'old' => $snapshot,
-            'metadata' => ['students_deleted' => count($studentIds), 'teachers_deleted' => count($teacherIds)],
+            'metadata' => ['students_deleted' => count($studentIds), 'teachers_deleted' => count($teacherIds), 'billing_records_kept' => $billingKept],
         ]);
 
         return ['students' => count($studentIds), 'teachers' => count($teacherIds)];
+    }
+
+    /**
+     * Builds the exception for a students/teachers stage that did not finish,
+     * and leaves a failure entry in the audit trail.
+     *
+     * @param array{deleted:int, failed:int, errors:array} $result
+     */
+    protected function stoppedPartway(array $snapshot, string $what, array $result, int $total): RuntimeException
+    {
+        $name = $snapshot['name'] ?? ('#' . ($snapshot['id'] ?? '?'));
+        $removed = (int) ($result['deleted'] ?? 0);
+
+        \App\Audit\Audit::critical('school_deletion_incomplete', 'Deleting school "' . $name . '" stopped part-way: ' . $removed . ' of ' . $total . ' ' . $what . '(s) removed', [
+            'category' => 'security',
+            'outcome' => 'failure',
+            'entity_type' => 'School',
+            'entity_id' => $snapshot['id'] ?? null,
+            'entity_label' => $snapshot['name'] ?? null,
+            'school_id' => $snapshot['id'] ?? null,
+            'metadata' => ['stage' => $what, 'removed' => $removed, 'failed' => $result['failed'], 'errors' => array_slice($result['errors'], 0, 3)],
+        ]);
+
+        return new RuntimeException(
+            'Could not delete ' . $result['failed'] . ' of ' . $total . ' ' . $what . '(s): ' . implode('; ', array_slice($result['errors'], 0, 3))
+            . '. ' . $removed . ' ' . $what . '(s) were already removed, so the school is only partly deleted and nothing else has been touched. '
+            . 'Fix the cause and delete it again; it carries on where it stopped.'
+        );
+    }
+
+    /**
+     * Billing records outlive the school, so copy its name onto them while it
+     * still exists (the billing screens read it through the models' school()
+     * fallback). Returns how many rows are being kept, per table.
+     *
+     * @return array<string,int>
+     */
+    protected function snapshotBillingRecords(School $school): array
+    {
+        $kept = [];
+
+        foreach (self::KEPT_BILLING_TABLES as $table) {
+            if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'school_id')) {
+                continue;
+            }
+
+            if (Schema::hasColumn($table, 'school_name')) {
+                DB::table($table)->where('school_id', $school->id)->update(['school_name' => $school->name]);
+            }
+
+            $kept[$table] = DB::table($table)->where('school_id', $school->id)->count();
+        }
+
+        return $kept;
     }
 
     /** Every table with a school_id column, minus SKIP_TABLES. */
@@ -152,7 +293,7 @@ class SchoolDeletionService
         foreach (DB::select('SHOW FULL TABLES WHERE Table_type = "BASE TABLE"') as $row) {
             $table = array_values((array) $row)[0];
 
-            if (in_array($table, self::SKIP_TABLES, true)) {
+            if (in_array($table, self::SKIP_TABLES, true) || in_array($table, self::KEPT_BILLING_TABLES, true)) {
                 continue;
             }
 
@@ -180,8 +321,6 @@ class SchoolDeletionService
             ['role_feature_access', 'school_role_id', 'school_roles'],
             ['role_module_access', 'school_role_id', 'school_roles'],
             ['timetable_slots', 'timetable_id', 'timetables'],
-            // No foreign key and no school_id of their own: they hang off billing_invoices only.
-            ['billing_invoice_items', 'invoice_id', 'billing_invoices'],
             // School NLSC copies and O-Level report card components. The NLSC
             // children cascade from their parent, and the component tables
             // have no foreign key at all, so none of them follow the school.
@@ -369,15 +508,9 @@ class SchoolDeletionService
             }
         }
 
-        // Proof-of-payment uploads for the school's billing payments (private "local" disk).
+        // Proof-of-payment uploads belong to billing_payments, which are kept, so
+        // their files are kept too. (Nothing is collected for the private disk.)
         $private = [];
-        if (Schema::hasTable('billing_payments') && Schema::hasColumn('billing_payments', 'attachment_path')) {
-            foreach (DB::table('billing_payments')->where('school_id', $schoolId)->whereNotNull('attachment_path')->pluck('attachment_path') as $path) {
-                if (is_string($path) && $path !== '') {
-                    $private[] = ltrim($path, '/');
-                }
-            }
-        }
 
         if (Schema::hasTable('library_books')) {
             foreach (DB::table('library_books')->where('school_id', $schoolId)->get() as $book) {

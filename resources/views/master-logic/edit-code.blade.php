@@ -433,7 +433,7 @@
             window.confirmDelete = function () {
                 Swal.fire({
                     title: '⚠️ Delete Category?',
-                    text: 'This will permanently delete this category and all its records. This action cannot be undone!',
+                    text: 'This will permanently delete this category. A category that still has records, or that the application reads directly, cannot be deleted. This action cannot be undone!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc2626',
@@ -443,7 +443,7 @@
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = '{{ url("delete-code/" . ($record->mc_id ?? 0)) }}';
+                        smasaPostDelete('{{ url("delete-code/" . ($record->mc_id ?? 0)) }}');
                     }
                     return false;
                 });
@@ -517,4 +517,5 @@
             });
         });
     </script>
+    @include('master-logic._post-delete', ['flashError' => false])
 @endsection

@@ -52,7 +52,11 @@ class BillingPayment extends Model
 
     public function school()
     {
-        return $this->belongsTo(School::class);
+        // The school may have been deleted (its billing records are kept), so never return null:
+        // fall back to the name saved on the row, then to a plain "Deleted school #id".
+        return $this->belongsTo(School::class)->withDefault(function ($school, $row) {
+            $school->name = $row->school_name ?: 'Deleted school #' . $row->school_id;
+        });
     }
 
     public function scopeValid($q)

@@ -197,6 +197,8 @@
                         @endif
                     </script>
 
+                    @include('master-logic._post-delete')
+
                     <script>
                         document.querySelectorAll('.delete-record-btn').forEach(function(btn) {
                             btn.addEventListener('click', function(event) {
@@ -213,7 +215,7 @@
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         // If confirmed, redirect to the href (deletion URL)
-                                        window.location.href = this.href;
+                                        smasaPostDelete(this.href);
                                     }
                                 });
                             });

@@ -341,6 +341,12 @@ use App\Http\Controllers\Helper;
 
             $.get('/school/' + schoolId + '/deletion-summary')
                 .done(function (data) {
+                    // An Active school cannot be deleted: say so now rather than after the name is typed.
+                    if (data.blocked) {
+                        Swal.fire({ icon: 'info', title: 'Deactivate it first', text: data.blocked, confirmButtonColor: '#2C29CA' });
+                        return;
+                    }
+
                     var rows = (data.items || []).map(function (i) {
                         return '<tr><td style="text-align:left;padding:2px 10px;">' + esc(i.label) +
                             '</td><td style="text-align:right;padding:2px 10px;"><strong>' +
@@ -354,6 +360,7 @@ use App\Http\Controllers\Helper;
                             '<p class="text-danger mb-2"><strong>This permanently deletes the school and ALL of its data. It cannot be undone.</strong></p>' +
                             '<table style="margin:0 auto 12px;font-size:14px;">' + rows + '</table>' +
                             '<p class="mb-1">Also removed: subjects, marks, finance, uploaded files, the school profile and login.</p>' +
+                            '<p class="mb-1 text-muted">Billing invoices and payments are kept for accounting.</p>' +
                             '<p class="mb-1">Type <strong>' + esc(schoolName) + '</strong> to confirm:</p>',
                         input: 'text',
                         inputPlaceholder: schoolName,
@@ -390,7 +397,8 @@ use App\Http\Controllers\Helper;
                             },
                             error: function (xhr) {
                                 var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Something went wrong deleting the school.';
-                                Swal.fire('Error!', msg, 'error');
+                                // 422 = refused before anything was touched; anything else may have stopped part-way.
+                                Swal.fire(xhr.status === 422 ? 'Not deleted' : 'Error!', msg, xhr.status === 422 ? 'info' : 'error');
                             }
                         });
                     });

@@ -150,9 +150,15 @@ class NlscSubjectAchievementController extends Controller
             return response()->json(['success' => false, 'message' => 'Subject Achievement not found.'], 404);
         }
 
-        $achievement->delete();
+        $cascade = $request->boolean('cascade_to_schools');
 
-        NlscSyncService::propagateSubjectAchievementDeletion($id, $request->boolean('cascade_to_schools'));
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($achievement, $id, $cascade) {
+            $achievement->delete();
+
+            return NlscSyncService::propagateSubjectAchievementDeletion($id, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('subject achievement', ['subject_achievement_id' => (int) $id], 1, false, $cascade, $schoolCopies);
 
         return response()->json(['success' => true]);
     }
@@ -177,9 +183,13 @@ class NlscSubjectAchievementController extends Controller
         $ids = $topic->subjectAchievements()->pluck('id')->all();
         $count = count($ids);
 
-        $topic->subjectAchievements()->delete();
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($topic, $ids, $cascade) {
+            $topic->subjectAchievements()->delete();
 
-        NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
+            return NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('subject achievements', ['topic_id' => (int) $topicId, 'name' => $topic->topic_name], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
@@ -213,9 +223,16 @@ class NlscSubjectAchievementController extends Controller
         $ids = $achievements->pluck('id')->all();
         $count = count($ids);
 
-        NlscSubjectAchievement::whereIn('id', $ids)->delete();
+        $schoolCopies = \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $cascade) {
+            NlscSubjectAchievement::whereIn('id', $ids)->delete();
 
-        NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
+            return NlscSyncService::propagateAllSubjectAchievementsDeletion($ids, $cascade);
+        });
+
+        NlscSyncService::auditAdminDeletion('subject achievements', [
+            'senior_class_id' => (int) $request->senior_class_id,
+            'subject_id' => (int) $request->subject_id,
+        ], $count, true, $cascade, $schoolCopies);
 
         return response()->json(['success' => true, 'deleted' => $count]);
     }
