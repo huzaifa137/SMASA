@@ -1491,6 +1491,19 @@ Route::middleware(['AdminAuth'])->group(function () {
             Route::get('/{id}', 'show')->name('show');
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
+
+    // ── Parent Portal Access: what parents may see, set by the school ──
+    Route::prefix('parent-portal')
+        ->name('parent-portal.')
+        ->controller(\App\Http\Controllers\ParentPortalSettingsController::class)
+        ->middleware(['module:students'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'update')->name('update');
+            Route::post('/exam-release', 'examRelease')->name('exam-release');
+            Route::post('/override', 'overrideStore')->name('override.store');
+            Route::delete('/override/{id}', 'overrideDelete')->name('override.delete');
+        });
 });
 
 // ── Student Consolidation (Theology / Secular duplicate cleanup) ──

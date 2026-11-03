@@ -274,6 +274,7 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "manage_promotion_settings", "name" => "Manage Promotion Settings & Class Ladder", "inherits" => ["transfer_student"]],
                     ["key" => "revert_student_promotion", "name" => "Revert a Promotion", "inherits" => ["transfer_student"]],
                     ["key" => "export_student_promotion", "name" => "Export Promotion Results", "inherits" => ["export_students"]],
+                    ["key" => "manage_parent_portal", "name" => "Control What Parents See in the Parent Portal", "inherits" => ["manage_promotion_settings"]],
                 ],
             ],
 

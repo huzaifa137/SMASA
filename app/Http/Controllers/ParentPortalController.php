@@ -9,7 +9,9 @@ use App\Models\ParentAccount;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentFeeAllocation;
+use App\Services\ParentVisibility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -165,7 +167,9 @@ class ParentPortalController extends Controller
             ->selectRaw('sum(allocated_amount - discount_amount) as charged, sum(balance) as owing')
             ->first();
 
-        $releasedResultsCount = $this->releasedExamsFor($student)->count();
+        $releasedResultsCount = ParentVisibility::sectionVisible($student, 'results')
+            ? $this->releasedExamsFor($student)->filter(fn($e) => $e->parent_access['allowed'])->count()
+            : 0;
 
         return view('parents.child-overview', compact(
             'student',
@@ -180,6 +184,10 @@ class ParentPortalController extends Controller
     public function results($studentId)
     {
         $student = $this->authorizedStudent($studentId);
+
+        if (!ParentVisibility::sectionVisible($student, 'results')) {
+            return $this->blocked($student, 'results', ParentVisibility::sectionMessage($student, 'results'));
+        }
 
         $exams = $this->releasedExamsFor($student);
 
@@ -199,6 +207,16 @@ class ParentPortalController extends Controller
 
         if (!$this->examReleasedForStudent($exam, $student)) {
             abort(403, 'Results for this exam have not been released yet.');
+        }
+
+        // School-controlled visibility (section switch, manual / scheduled
+        // release, fee-balance hold, per-student override).
+        $access = ParentVisibility::examAccess($exam, $student);
+        if (!$access['visible'] && !$access['message']) {
+            abort(403, 'Results for this exam have not been released yet.');
+        }
+        if (!$access['allowed']) {
+            return $this->blocked($student, 'results', $access['message'] ?: ParentVisibility::DEFAULT_MESSAGE);
         }
 
         // A parent must see EXACTLY the design the school chose, with the
@@ -233,6 +251,10 @@ class ParentPortalController extends Controller
     {
         $student = $this->authorizedStudent($studentId);
 
+        if (!ParentVisibility::sectionVisible($student, 'attendance')) {
+            return $this->blocked($student, 'attendance', ParentVisibility::sectionMessage($student, 'attendance'));
+        }
+
         $month = $request->input('month', now()->format('Y-m'));
 
         $records = StudentAttendance::where('student_id', $student->id)
@@ -251,7 +273,24 @@ class ParentPortalController extends Controller
             ->orderByDesc('ym')
             ->pluck('ym');
 
+        // Gate sign-out time (opt-in) comes from the card-scan arrival log.
+        $vis = ParentVisibility::settings((int) $student->school_id);
+        $showArrival = (bool) $vis->show_arrival_time;
+        $showSignout = (bool) $vis->show_signout_time;
+        $signouts = $showSignout
+            ? DB::table('school_arrival_attendances')
+                ->where('school_id', $student->school_id)
+                ->where('person_type', 'student')
+                ->where('person_id', $student->id)
+                ->whereRaw("DATE_FORMAT(attendance_date, '%Y-%m') = ?", [$month])
+                ->pluck('departure_time', 'attendance_date')
+                ->mapWithKeys(fn($t, $d) => [substr((string) $d, 0, 10) => $t])
+            : collect();
+
         return view('parents.attendance', compact(
+            'showArrival',
+            'showSignout',
+            'signouts',
             'student',
             'records',
             'summary',
@@ -266,6 +305,10 @@ class ParentPortalController extends Controller
     public function finance(Request $request, $studentId)
     {
         $student = $this->authorizedStudent($studentId);
+
+        if (!ParentVisibility::sectionVisible($student, 'fees')) {
+            return $this->blocked($student, 'fees', ParentVisibility::sectionMessage($student, 'fees'));
+        }
 
         $year = $request->input('year', date('Y'));
 
@@ -373,7 +416,19 @@ class ParentPortalController extends Controller
             ->orderByDesc('start_date')
             ->get()
             ->filter(fn($exam) => $this->examReleasedForStudent($exam, $student))
+            ->map(function ($exam) use ($student) {
+                $exam->parent_access = ParentVisibility::examAccess($exam, $student);
+                return $exam;
+            })
+            // Not published to parents yet (manual / scheduled): don't list it.
+            ->filter(fn($exam) => $exam->parent_access['visible'])
             ->values();
+    }
+
+    /** Friendly "the school has limited this" page instead of a bare 403. */
+    private function blocked(Student $student, string $section, string $message)
+    {
+        return response()->view('parents.blocked', compact('student', 'section', 'message'), 403);
     }
 
     /**

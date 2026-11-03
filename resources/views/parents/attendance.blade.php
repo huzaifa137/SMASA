@@ -56,7 +56,8 @@
                         <tr>
                             <th>Date</th>
                             <th>Status</th>
-                            <th>Arrival Time</th>
+                            @if ($showArrival)<th>Arrival Time</th>@endif
+                            @if ($showSignout)<th>Sign-out Time</th>@endif
                             <th>Remarks</th>
                         </tr>
                     </thead>
@@ -78,7 +79,11 @@
                                         {{ \App\Models\StudentAttendance::statusLabel($record->status) }}
                                     </span>
                                 </td>
-                                <td>{{ $record->arrival_time ?? '—' }}</td>
+                                @if ($showArrival)<td>{{ $record->arrival_time ?? '—' }}</td>@endif
+                                @if ($showSignout)
+                                    @php $out = $signouts[\Carbon\Carbon::parse($record->attendance_date)->toDateString()] ?? null; @endphp
+                                    <td>{{ $out ? substr($out, 0, 5) : '—' }}</td>
+                                @endif
                                 <td>{{ $record->remarks ?? '—' }}</td>
                             </tr>
                         @endforeach

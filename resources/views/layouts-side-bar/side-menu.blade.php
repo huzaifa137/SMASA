@@ -164,6 +164,13 @@ use App\Helpers\PermissionHelper;
                         </a>
                     </li>
                 @endif
+                @if(PermissionHelper::canFeature('manage_parent_portal'))
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ route('parent-portal.index') }}">
+                            <i class="fas fa-user-shield fa-2x mr-3"></i>Parent Portal Access
+                        </a>
+                    </li>
+                @endif
 
                 {{-- Classes --}}
                 @if(PermissionHelper::canModule('classes'))
@@ -862,6 +869,13 @@ use App\Helpers\PermissionHelper;
                     <li class="slide">
                         <a class="side-menu__item" href="{{ route('students.individual.search') }}">
                             <i class="fa fa-user-graduate fa-2x mr-3"></i>Students
+                        </a>
+                    </li>
+                @endif
+                @if(PermissionHelper::canFeature('manage_parent_portal'))
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ route('parent-portal.index') }}">
+                            <i class="fas fa-user-shield fa-2x mr-3"></i>Parent Portal Access
                         </a>
                     </li>
                 @endif

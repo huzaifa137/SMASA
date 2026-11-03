@@ -35,9 +35,15 @@
                                 <td>{{ \App\Support\Term::label($exam->term) }}</td>
                                 <td>{{ $exam->academic_year }}</td>
                                 <td style="text-align:right;">
-                                    <a href="{{ route('parents.result.view', [$student->id, $exam->id]) }}" class="pp-btn pp-btn-primary">
-                                        <i class="fas fa-eye"></i> View Report
-                                    </a>
+                                    @if ($exam->parent_access['allowed'])
+                                        <a href="{{ route('parents.result.view', [$student->id, $exam->id]) }}" class="pp-btn pp-btn-primary">
+                                            <i class="fas fa-eye"></i> View Report
+                                        </a>
+                                    @else
+                                        <span style="display:inline-block;max-width:280px;font-size:0.78rem;color:var(--gray-500);text-align:left;">
+                                            <i class="fas fa-lock me-1" style="color:var(--warning);"></i>{{ $exam->parent_access['message'] }}
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

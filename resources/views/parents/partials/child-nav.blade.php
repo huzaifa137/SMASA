@@ -18,13 +18,19 @@
     <a href="{{ route('parents.child', $student->id) }}" class="pp-tab {{ $active === 'overview' ? 'active' : '' }}">
         <i class="fas fa-gauge me-1"></i> Overview
     </a>
+    @if (\App\Services\ParentVisibility::sectionVisible($student, 'results'))
     <a href="{{ route('parents.results', $student->id) }}" class="pp-tab {{ $active === 'results' ? 'active' : '' }}">
         <i class="fas fa-file-lines me-1"></i> Results
     </a>
+    @endif
+    @if (\App\Services\ParentVisibility::sectionVisible($student, 'attendance'))
     <a href="{{ route('parents.attendance', $student->id) }}" class="pp-tab {{ $active === 'attendance' ? 'active' : '' }}">
         <i class="fas fa-calendar-check me-1"></i> Attendance
     </a>
+    @endif
+    @if (\App\Services\ParentVisibility::sectionVisible($student, 'fees'))
     <a href="{{ route('parents.finance', $student->id) }}" class="pp-tab {{ $active === 'finance' ? 'active' : '' }}">
         <i class="fas fa-wallet me-1"></i> Fees
     </a>
+    @endif
 </div>
