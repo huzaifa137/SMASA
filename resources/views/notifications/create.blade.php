@@ -484,7 +484,7 @@
                         <select name="recipient_group" id="recipientGroup" class="form-select" required>
                             <option value="">-- Select recipients --</option>
                             <option value="all">Everyone (Admins, Teachers & Students)</option>
-                            <option value="all_admins">All Admins</option>
+                            <option value="all_admins">All Staff (with notification access)</option>
                             <option value="all_teachers">All Teachers</option>
                             <option value="all_students">All Students</option>
                             <option value="specific_teachers">Specific Teachers</option>

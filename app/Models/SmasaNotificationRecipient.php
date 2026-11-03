@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class SmasaNotificationRecipient extends Model
 {
+    use BelongsToSchool;
+
     protected $table = 'smasa_notification_recipients';
 
     protected $fillable = [

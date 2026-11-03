@@ -28,8 +28,13 @@ class NotificationService
         $config = $typeConfig[$type]
             ?? $typeConfig[SmasaNotification::TYPE_GENERAL];
 
+        $schoolId = isset($data['school_id']) ? (int) $data['school_id'] : null;
+
+        // Never deliver to someone who does not belong to the notification's school.
+        $recipients = self::restrictToSchool($recipients, $schoolId);
+
         $notification = SmasaNotification::create([
-            'school_id' => $data['school_id'] ?? null,
+            'school_id' => $schoolId,
             'title' => $data['title'],
             'body' => $data['body'],
             'type' => $type,
@@ -45,9 +50,7 @@ class NotificationService
                 'notification_id' => $notification->id,
                 'recipient_type' => $recipient['type'],
                 'recipient_id' => $recipient['id'],
-                'school_id' => $recipient['school_id']
-                    ?? $data['school_id']
-                    ?? null,
+                'school_id' => $schoolId,
                 'is_read' => false,
             ]);
         }
@@ -67,7 +70,7 @@ class NotificationService
 
     /**
      * Resolve User models for push-eligible recipients and send.
-     * Only 'admin' type recipients map to the users table right now.
+     * 'admin' = platform users table; 'teacher' = school staff.
      * Teachers/students can be added when those models get Notifiable.
      */
 private static function dispatchPush(array $recipients, array $payload): void
@@ -106,26 +109,109 @@ private static function dispatchPush(array $recipients, array $payload): void
 }
 
     /**
-     * Send to all admins in a school.
+     * Send to the school's own administrators: the active staff of THIS school
+     * whose role grants access to notifications. (Previously this selected every
+     * platform admin in the `users` table, across all schools.)
      */
     public static function sendToAllAdmins(
         array $data,
         int $schoolId
     ): SmasaNotification {
+        return self::sendToSchoolStaff($data, $schoolId);
+    }
+
+    /**
+     * Staff of one school who may see notifications (feature `$feature`).
+     * A school that has not configured any role yet falls back to all its
+     * active staff, so notifications are not silently dropped during set-up.
+     */
+    public static function sendToSchoolStaff(
+        array $data,
+        int $schoolId,
+        string $feature = 'view_my_notifications'
+    ): SmasaNotification {
+        $staff = self::schoolStaffIds($schoolId, $feature)
+            ->map(fn($id) => ['type' => 'teacher', 'id' => $id, 'school_id' => $schoolId])
+            ->toArray();
+
+        return self::send(array_merge($data, ['school_id' => $schoolId]), $staff);
+    }
+
+    /**
+     * Platform (SMASA) administrators only: for system-wide messages that are
+     * not about one school's day-to-day activity.
+     */
+    public static function sendToPlatformAdmins(array $data): SmasaNotification
+    {
         $admins = DB::table('users')
             ->where('user_role', 'admin')
             ->pluck('id')
-            ->map(fn($id) => [
-                'type' => 'admin',
-                'id' => $id,
-                'school_id' => $schoolId,
-            ])
+            ->map(fn($id) => ['type' => 'admin', 'id' => $id])
             ->toArray();
 
-        return self::send(
-            array_merge($data, ['school_id' => $schoolId]),
-            $admins
-        );
+        return self::send(array_merge($data, ['school_id' => null]), $admins);
+    }
+
+    /** @return \Illuminate\Support\Collection<int,int> */
+    private static function schoolStaffIds(int $schoolId, string $feature)
+    {
+        $active = fn($q) => $q->where('teachers.school_id', $schoolId)
+            ->where(function ($w) {
+                $w->whereNull('teachers.account_status')
+                    ->orWhereNotIn('teachers.account_status', ['blocked', 'suspended']);
+            });
+
+        $schoolHasRoles = DB::table('school_roles')->where('school_id', $schoolId)->exists();
+
+        if (!$schoolHasRoles) {
+            return $active(DB::table('teachers'))->pluck('teachers.id')->map(fn($i) => (int) $i);
+        }
+
+        return $active(DB::table('teachers'))
+            ->join('teacher_school_roles as tsr', function ($j) use ($schoolId) {
+                $j->on('tsr.teacher_id', '=', 'teachers.id')->where('tsr.school_id', $schoolId);
+            })
+            ->join('role_feature_access as rfa', function ($j) {
+                $j->on('rfa.school_role_id', '=', 'tsr.school_role_id')->where('rfa.can_access', true);
+            })
+            ->join('module_features as mf', 'mf.id', '=', 'rfa.feature_id')
+            ->where('mf.key', $feature)
+            ->distinct()
+            ->pluck('teachers.id')
+            ->map(fn($i) => (int) $i);
+    }
+
+    /**
+     * Drop recipients that do not belong to $schoolId. Teachers and students
+     * are verified against their own school_id; `admin` (platform) recipients
+     * pass through; any other type is discarded. With no school (system
+     * message) nothing is filtered.
+     */
+    private static function restrictToSchool(array $recipients, ?int $schoolId): array
+    {
+        if ($schoolId === null) {
+            return $recipients;
+        }
+
+        $valid = [];
+        foreach (['teacher' => 'teachers', 'student' => 'students'] as $type => $table) {
+            $ids = collect($recipients)->where('type', $type)->pluck('id')->unique()->values();
+            $valid[$type] = $ids->isEmpty()
+                ? collect()
+                : DB::table($table)->where('school_id', $schoolId)->whereIn('id', $ids)->pluck('id')->map(fn($i) => (int) $i);
+        }
+
+        return collect($recipients)
+            ->filter(function ($r) use ($valid) {
+                return match ($r['type']) {
+                    'admin' => true,
+                    'teacher', 'student' => $valid[$r['type']]->contains((int) $r['id']),
+                    default => false,
+                };
+            })
+            ->unique(fn($r) => $r['type'] . ':' . $r['id'])
+            ->values()
+            ->all();
     }
 
     /**
@@ -182,16 +268,6 @@ private static function dispatchPush(array $recipients, array $payload): void
         int $schoolId
     ): SmasaNotification {
 
-        $admins = DB::table('users')
-            ->where('user_role', 'admin')
-            ->pluck('id')
-            ->map(fn($id) => [
-                'type' => 'admin',
-                'id' => $id,
-                'school_id' => $schoolId,
-            ])
-            ->toArray();
-
         $teachers = DB::table('teachers')
             ->where('school_id', $schoolId)
             ->pluck('id')
@@ -214,7 +290,7 @@ private static function dispatchPush(array $recipients, array $payload): void
 
         return self::send(
             array_merge($data, ['school_id' => $schoolId]),
-            array_merge($admins, $teachers, $students)
+            array_merge($teachers, $students)
         );
     }
 
@@ -223,13 +299,15 @@ private static function dispatchPush(array $recipients, array $payload): void
      */
     public static function unreadCount(
         string $type,
-        int $id
+        int $id,
+        ?int $schoolId = null
     ): int {
         return SmasaNotificationRecipient::where(
             'recipient_type',
             $type
         )
             ->where('recipient_id', $id)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('is_read', false)
             ->count();
     }
@@ -240,11 +318,13 @@ private static function dispatchPush(array $recipients, array $payload): void
     public static function forRecipient(
         string $type,
         int $id,
-        int $perPage = 20
+        int $perPage = 20,
+        ?int $schoolId = null
     ) {
         return SmasaNotificationRecipient::with('notification')
             ->where('recipient_type', $type)
             ->where('recipient_id', $id)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->latest()
             ->paginate($perPage);
     }
@@ -255,13 +335,15 @@ private static function dispatchPush(array $recipients, array $payload): void
     public static function markRead(
         string $type,
         int $recipientId,
-        int $notificationId
+        int $notificationId,
+        ?int $schoolId = null
     ): void {
         SmasaNotificationRecipient::where(
             'recipient_type',
             $type
         )
             ->where('recipient_id', $recipientId)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('notification_id', $notificationId)
             ->update([
                 'is_read' => true,
@@ -274,13 +356,15 @@ private static function dispatchPush(array $recipients, array $payload): void
      */
     public static function markAllRead(
         string $type,
-        int $recipientId
+        int $recipientId,
+        ?int $schoolId = null
     ): void {
         SmasaNotificationRecipient::where(
             'recipient_type',
             $type
         )
             ->where('recipient_id', $recipientId)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('is_read', false)
             ->update([
                 'is_read' => true,

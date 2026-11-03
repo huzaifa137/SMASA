@@ -11,6 +11,7 @@ use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller
 {
@@ -63,10 +64,7 @@ class NotificationController extends Controller
             ->selectRaw("id, TRIM(CONCAT(firstname, ' ', lastname)) as name")
             ->orderBy('firstname')->get();
 
-        $admins = DB::table('users')->where('user_role', 'admin')
-            ->select('id', 'name')->get();
-
-        return view('notifications.create', compact('types', 'teachers', 'students', 'admins'));
+        return view('notifications.create', compact('types', 'teachers', 'students'));
     }
 
     /**
@@ -82,9 +80,13 @@ class NotificationController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
-            'type' => 'required|string',
-            'recipient_group' => 'required|string',
+            'type' => ['required', 'string', Rule::in(array_keys(SmasaNotification::typeConfig()))],
+            'recipient_group' => ['required', 'string', Rule::in([
+                'all', 'all_teachers', 'all_students', 'all_admins', 'all_staff',
+                'specific_teachers', 'specific_students',
+            ])],
             'recipient_ids' => 'nullable|array',
+            'recipient_ids.*' => 'integer',
             'url' => 'nullable|url|max:500',
         ]);
 
@@ -116,7 +118,8 @@ class NotificationController extends Controller
                 break;
 
             case 'all_admins':
-                NotificationService::sendToAllAdmins($data, $school_id);
+            case 'all_staff':
+                NotificationService::sendToSchoolStaff($data, $school_id);
                 break;
 
             case 'specific_teachers':
@@ -178,6 +181,28 @@ class NotificationController extends Controller
             ->with('success', 'Notification deleted.');
     }
 
+
+    /**
+     * Who is reading the bell: [recipient_type, recipient_id, school_id].
+     * School staff are 'teacher' recipients of THEIR school only; platform
+     * admins (users table) are 'admin'. Teacher ids and user ids are different
+     * id spaces and must never be mixed under one type.
+     */
+    private function recipientIdentity(): ?array
+    {
+        $schoolId = session('LoggedSchool') ? (int) session('LoggedSchool') : null;
+
+        if ($adminId = session('LoggedAdmin')) {
+            return ['admin', (int) $adminId, null];
+        }
+
+        if (($teacherId = session('LoggedTeacher')) && $schoolId) {
+            return ['teacher', (int) $teacherId, $schoolId];
+        }
+
+        return null;
+    }
+
     // ─── Recipient-facing (Admin viewing their own notifications) ───
 
     /**
@@ -187,9 +212,10 @@ class NotificationController extends Controller
     {
         PermissionHelper::denyUnlessFeature('view_my_notifications');
 
-        $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
-        $items = NotificationService::forRecipient('admin', $adminId, 20);
-        $unreadCount = NotificationService::unreadCount('admin', $adminId);
+        abort_unless($me = $this->recipientIdentity(), 403);
+        [$type, $id, $schoolId] = $me;
+        $items = NotificationService::forRecipient($type, $id, 20, $schoolId);
+        $unreadCount = NotificationService::unreadCount($type, $id, $schoolId);
 
         return view('notifications.my_notifications', compact('items', 'unreadCount'));
     }
@@ -205,8 +231,10 @@ class NotificationController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
-        $count = NotificationService::unreadCount('admin', $adminId);
+        if (!$me = $this->recipientIdentity()) {
+            return response()->json(['count' => 0]);
+        }
+        $count = NotificationService::unreadCount($me[0], $me[1], $me[2]);
 
         return response()->json(['count' => $count]);
     }
@@ -220,17 +248,22 @@ class NotificationController extends Controller
             return response()->json(['notifications' => []]);
         }
 
-        $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
+        if (!$me = $this->recipientIdentity()) {
+            return response()->json(['notifications' => []]);
+        }
+        [$type, $id, $schoolId] = $me;
 
         $items = SmasaNotificationRecipient::with('notification')
-            ->where('recipient_type', 'admin')
-            ->where('recipient_id', $adminId)
+            ->where('recipient_type', $type)
+            ->where('recipient_id', $id)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->orderByDesc('created_at')
             ->limit(5)
-            ->get();
+            ->get()
+            ->filter(fn($item) => $item->notification);
 
         return response()->json([
-            'notifications' => $items->map(fn($item) => [
+            'notifications' => $items->values()->map(fn($item) => [
                 'id' => $item->notification->id,
                 'title' => $item->notification->title,
                 'body' => \Str::limit($item->notification->body, 80),
@@ -253,8 +286,10 @@ class NotificationController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
-        NotificationService::markRead('admin', $adminId, $id);
+        if (!$me = $this->recipientIdentity()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+        NotificationService::markRead($me[0], $me[1], $id, $me[2]);
 
         return response()->json(['success' => true]);
     }
@@ -268,8 +303,10 @@ class NotificationController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $adminId = session('LoggedAdmin') ?? session('LoggedTeacher');
-        NotificationService::markAllRead('admin', $adminId);
+        if (!$me = $this->recipientIdentity()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+        NotificationService::markAllRead($me[0], $me[1], $me[2]);
 
         return response()->json(['success' => true]);
     }
