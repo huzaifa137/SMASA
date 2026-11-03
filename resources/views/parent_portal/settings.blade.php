@@ -32,12 +32,48 @@
         .pa-badge.red { background: rgba(220,38,38,.1); color: #b91c1c; }
         .pa-badge.grey { background: #f1f5f9; color: #475569; }
         .pa-inline { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+
+        /* ── Professional toggle switch ── */
+        .pa-switch { position: relative; display: inline-flex; align-items: center; gap: .55rem; cursor: pointer; user-select: none; }
+        .pa-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .pa-switch .track {
+            position: relative;
+            width: 46px; height: 26px;
+            background: #cbd5e1;
+            border-radius: 99px;
+            transition: background .25s ease, box-shadow .25s ease;
+            box-shadow: inset 0 1px 2px rgba(15,23,42,.08);
+            flex: 0 0 auto;
+        }
+        .pa-switch .track::after {
+            content: "";
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 20px; height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(15,23,42,.25);
+            transition: transform .25s cubic-bezier(.4,.0,.2,1), width .2s ease;
+        }
+        .pa-switch input:checked + .track { background: #2f2ccb; }
+        .pa-switch input:checked + .track::after { transform: translateX(20px); }
+        .pa-switch input:focus-visible + .track { box-shadow: 0 0 0 3px rgba(47,44,203,.25); }
+        .pa-switch input:active + .track::after { width: 24px; }
+        .pa-switch input:checked:active + .track::after { transform: translateX(16px); }
+        .pa-switch .state {
+            font-size: .78rem;
+            font-weight: 700;
+            color: #94a3b8;
+            min-width: 34px;
+            transition: color .2s ease;
+        }
+        .pa-switch input:checked ~ .state { color: #2f2ccb; }
     </style>
 @endsection
 
 @section('content')
     <div class="pa-wrap">
-        <div class="pa-hero">
+        <div class="pa-hero mt-5">
             <h2><i class="fas fa-user-shield"></i> Parent Portal Access</h2>
             <p>Decide what parents can see, when report cards are released to them, and whether an unpaid fee balance
                 holds results back. Until you change anything, the portal behaves as it always has.</p>
@@ -61,7 +97,11 @@
                 ] as [$key, $label, $hint])
                     <div class="pa-row">
                         <div>{{ $label }} @if($hint)<small>{{ $hint }}</small>@endif</div>
-                        <label><input type="checkbox" name="{{ $key }}" value="1" {{ old($key, $settings->$key) ? 'checked' : '' }}> Visible</label>
+                        <label class="pa-switch">
+                            <input type="checkbox" name="{{ $key }}" value="1" {{ old($key, $settings->$key) ? 'checked' : '' }}>
+                            <span class="track"></span>
+                            <span class="state">Off</span>
+                        </label>
                     </div>
                 @endforeach
             </div>
@@ -107,9 +147,15 @@
         </form>
 
         {{-- ── Per-exam release ── --}}
-        <div class="pa-card" style="margin-top:1.25rem;">
+        <div class="pa-card" style="margin-top:1.25rem;" id="release-by-exam">
             <h3>Release by exam</h3>
             <div class="desc">Override the default for one exam: publish it now, hold it back, or schedule when parents get access.</div>
+            <form method="GET" action="{{ route('parent-portal.index') }}#release-by-exam" class="pa-inline" style="margin-bottom:.8rem;">
+                @if($q !== '')<input type="hidden" name="q" value="{{ $q }}">@endif
+                <input type="text" name="exam_q" value="{{ $examQ }}" class="pa-input" placeholder="Search exam name or code" style="min-width:260px;">
+                <button class="pa-btn sm" type="submit"><i class="fas fa-search"></i> Search</button>
+                @if($examQ !== '')<a href="{{ route('parent-portal.index') }}#release-by-exam" class="pa-btn sm ghost" style="text-decoration:none;">Clear</a>@endif
+            </form>
             <div style="overflow-x:auto;">
                 <table class="pa-table">
                     <thead><tr><th>Exam</th><th>Parents see it</th><th>Change</th></tr></thead>
@@ -144,11 +190,14 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" style="color:#94a3b8;">No exams yet.</td></tr>
+                        <tr><td colspan="3" style="color:#94a3b8;">{{ $examQ !== '' ? 'No exams matched your search.' : 'No exams yet.' }}</td></tr>
                     @endforelse
                     </tbody>
                 </table>
             </div>
+            @if($exams->hasPages())
+                <div style="margin-top:.8rem;">{{ $exams->links() }}</div>
+            @endif
         </div>
 
         {{-- ── Per-student overrides ── --}}
@@ -158,6 +207,7 @@
                 <b>Hold</b> blocks that student's results with your message.</div>
 
             <form method="GET" action="{{ route('parent-portal.index') }}" class="pa-inline" style="margin-bottom:.8rem;">
+                @if($examQ !== '')<input type="hidden" name="exam_q" value="{{ $examQ }}">@endif
                 <input type="text" name="q" value="{{ $q }}" class="pa-input" placeholder="Search name or admission number" style="min-width:260px;">
                 <button class="pa-btn sm" type="submit"><i class="fas fa-search"></i> Find student</button>
             </form>
@@ -202,6 +252,7 @@
                 </tbody>
             </table>
         </div>
+    </div></div>
     </div>
 @endsection
 
@@ -211,6 +262,14 @@
             var mode = document.getElementById('feeMode'), row = document.getElementById('feeAmountRow');
             function sync() { row.style.display = mode.value === 'above_amount' ? '' : 'none'; }
             mode.addEventListener('change', sync); sync();
+
+            // Toggle state labels (On / Off)
+            document.querySelectorAll('.pa-switch input[type="checkbox"]').forEach(function (input) {
+                var label = input.closest('.pa-switch').querySelector('.state');
+                function update() { label.textContent = input.checked ? 'On' : 'Off'; }
+                input.addEventListener('change', update);
+                update();
+            });
         })();
     </script>
 @endsection

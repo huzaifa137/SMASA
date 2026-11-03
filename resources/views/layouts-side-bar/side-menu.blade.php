@@ -186,7 +186,8 @@ use App\Helpers\PermissionHelper;
                                 @if(Helper::schoolHasSecondary())
                                     <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O Level
                                             Electives</a></li>
-                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level Combinations</a></li>
+                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level
+                                            Combinations</a></li>
                                     <li><a href="{{ route('school.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
                                             Competency Areas</a></li>
                                     <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
@@ -367,21 +368,21 @@ use App\Helpers\PermissionHelper;
                                             class="fas fa-hourglass-half mr-2"></i>Outstanding Fees</a></li>
                             @endif
                             <!-- @if(PermissionHelper::canFeature('view_chart_of_accounts'))
-                                                <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
-                                                        Accounts</a></li>
-                                            @endif
-                                            @if(PermissionHelper::canFeature('view_general_ledger'))
-                                                <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
-                                                        Ledger</a></li>
-                                            @endif
-                                            @if(PermissionHelper::canFeature('view_student_fee_ledger'))
-                                                <li><a href="{{ route('finance.ledger.student-fees') }}"><i
-                                                            class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
-                                            @endif
-                                            @if(PermissionHelper::canFeature('view_trial_balance'))
-                                                <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
-                                                        Balance</a></li>
-                                            @endif -->
+                                                                        <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
+                                                                                Accounts</a></li>
+                                                                    @endif
+                                                                    @if(PermissionHelper::canFeature('view_general_ledger'))
+                                                                        <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
+                                                                                Ledger</a></li>
+                                                                    @endif
+                                                                    @if(PermissionHelper::canFeature('view_student_fee_ledger'))
+                                                                        <li><a href="{{ route('finance.ledger.student-fees') }}"><i
+                                                                                    class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
+                                                                    @endif
+                                                                    @if(PermissionHelper::canFeature('view_trial_balance'))
+                                                                        <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
+                                                                                Balance</a></li>
+                                                                    @endif -->
                         </ul>
                     </li>
                 @endif
@@ -726,10 +727,10 @@ use App\Helpers\PermissionHelper;
                             <li><a href="{{ route('master-code-to-data') }}"><i class="fas fa-list mr-2"></i>Master Codes</a></li>
                         @endif
                         @if($__A::can('secondary_subjects.view'))
-                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i
-                                        class="fas fa-graduation-cap mr-2"></i>A Level Subjects</a></li>
-                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i
-                                        class="fas fa-book-reader mr-2"></i>O Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-alevel-subjects') }}"><i class="fas fa-graduation-cap mr-2"></i>A
+                                    Level Subjects</a></li>
+                            <li><a href="{{ route('admin.secondary-olevel-subjects') }}"><i class="fas fa-book-reader mr-2"></i>O
+                                    Level Subjects</a></li>
                         @endif
                         @if($__A::can('nlsc_curriculum.view'))
                             <li><a href="{{ route('admin.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
@@ -775,8 +776,8 @@ use App\Helpers\PermissionHelper;
 
             @include('audit.partials.menu-item')
 
-            
-                        @if($__A::can('demo_requests.view'))
+
+            @if($__A::can('demo_requests.view'))
                 @php
                     try {
                         $__newDemos = \App\Models\DemoRequest::where('status', 'new')->count();
@@ -791,7 +792,7 @@ use App\Helpers\PermissionHelper;
                     </a>
                 </li>
             @endif
-            
+
             {{-- ═══════════════════════════════════════════════════
             SECTION C: SCHOOL (TEACHER) LOGIN
             All items are permission-guarded via PermissionHelper
@@ -872,13 +873,6 @@ use App\Helpers\PermissionHelper;
                         </a>
                     </li>
                 @endif
-                @if(PermissionHelper::canFeature('manage_parent_portal'))
-                    <li class="slide">
-                        <a class="side-menu__item" href="{{ route('parent-portal.index') }}">
-                            <i class="fas fa-user-shield fa-2x mr-3"></i>Parent Portal Access
-                        </a>
-                    </li>
-                @endif
 
                 {{-- Classes --}}
                 @if(PermissionHelper::canModule('classes'))
@@ -895,7 +889,8 @@ use App\Helpers\PermissionHelper;
                                     <li><a href="{{ route('olevel.electives.entry') }}"><i class="fas fa-list-check mr-2"></i>O Level
                                             Electives</a></li>
 
-                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level Combinations</a></li>
+                                    <li><a href="{{ route('alevel.combinations.entry') }}"><i class="fas fa-shapes mr-2"></i>A Level
+                                            Combinations</a></li>
                                     <li><a href="{{ route('school.nlsc-topics') }}"><i class="fas fa-book-open mr-2"></i>NLSC Topics &amp;
                                             Competency Areas</a></li>
                                     <li><a href="{{ route('school.nlsc-projects') }}"><i class="fas fa-diagram-project mr-2"></i>NLSC
@@ -1080,21 +1075,21 @@ use App\Helpers\PermissionHelper;
                                 </li>
                             @endif
                             <!-- @if(PermissionHelper::canFeature('view_chart_of_accounts'))
-                                            <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
-                                                    Accounts</a></li>
-                                        @endif
-                                        @if(PermissionHelper::canFeature('view_general_ledger'))
-                                            <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
-                                                    Ledger</a></li>
-                                        @endif
-                                        @if(PermissionHelper::canFeature('view_student_fee_ledger'))
-                                            <li><a href="{{ route('finance.ledger.student-fees') }}"><i
-                                                        class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
-                                        @endif
-                                        @if(PermissionHelper::canFeature('view_trial_balance'))
-                                            <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
-                                                    Balance</a></li>
-                                        @endif -->
+                                                                    <li><a href="{{ route('finance.ledger.accounts.index') }}"><i class="fas fa-book mr-2"></i>Chart of
+                                                                            Accounts</a></li>
+                                                                @endif
+                                                                @if(PermissionHelper::canFeature('view_general_ledger'))
+                                                                    <li><a href="{{ route('finance.ledger.general') }}"><i class="fas fa-book-open mr-2"></i>General
+                                                                            Ledger</a></li>
+                                                                @endif
+                                                                @if(PermissionHelper::canFeature('view_student_fee_ledger'))
+                                                                    <li><a href="{{ route('finance.ledger.student-fees') }}"><i
+                                                                                class="fas fa-user-graduate mr-2"></i>Student Fee Ledger</a></li>
+                                                                @endif
+                                                                @if(PermissionHelper::canFeature('view_trial_balance'))
+                                                                    <li><a href="{{ route('finance.ledger.trial-balance') }}"><i class="fas fa-balance-scale mr-2"></i>Trial
+                                                                            Balance</a></li>
+                                                                @endif -->
                         </ul>
                     </li>
                 @endif
@@ -1388,6 +1383,13 @@ use App\Helpers\PermissionHelper;
                     </li>
                 @endif
 
+                @if(PermissionHelper::canFeature('manage_parent_portal'))
+                    <li class="slide">
+                        <a class="side-menu__item" href="{{ route('parent-portal.index') }}">
+                            <i class="fas fa-user-shield fa-2x mr-3"></i>Parent Portal Access
+                        </a>
+                    </li>
+                @endif
 
                 @include('audit.partials.menu-item')
 

@@ -26,13 +26,25 @@ class ParentPortalSettingsController extends Controller
         $schoolId = $this->schoolId();
         $settings = ParentVisibility::settings($schoolId);
 
+        $examQ = trim((string) $request->query('exam_q', ''));
+
+        // Paginated so the page stays short for schools with many exams.
         $exams = Examination::withReportCards()
             ->where('school_id', $schoolId)
+            ->when($examQ !== '', fn($q) => $q->where(function ($w) use ($examQ) {
+                $w->where('exam_name', 'like', "%$examQ%")->orWhere('exam_code', 'like', "%$examQ%");
+            }))
             ->orderByDesc('start_date')
-            ->limit(40)
-            ->get(['id', 'exam_name', 'exam_code', 'term', 'academic_year', 'status', 'o_level_mode', 'start_date']);
+            ->orderByDesc('id')
+            ->paginate(8, ['id', 'exam_name', 'exam_code', 'term', 'academic_year', 'status', 'o_level_mode', 'start_date'], 'exams_page')
+            ->withQueryString()
+            ->fragment('release-by-exam');
 
-        $releases = DB::table('parent_exam_releases')->where('school_id', $schoolId)->get()->keyBy('examination_id');
+        $releases = DB::table('parent_exam_releases')
+            ->where('school_id', $schoolId)
+            ->whereIn('examination_id', $exams->pluck('id'))
+            ->get()
+            ->keyBy('examination_id');
 
         $overrides = DB::table('parent_visibility_overrides as o')
             ->join('students as s', 's.id', '=', 'o.student_id')
@@ -54,7 +66,7 @@ class ParentPortalSettingsController extends Controller
                 ->get(['id', 'firstname', 'lastname', 'admission_number']);
         }
 
-        return view('parent_portal.settings', compact('settings', 'exams', 'releases', 'overrides', 'found', 'q'));
+        return view('parent_portal.settings', compact('settings', 'exams', 'releases', 'overrides', 'found', 'q', 'examQ'));
     }
 
     public function update(Request $request)
