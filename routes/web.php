@@ -1483,6 +1483,11 @@ Route::middleware(['AdminAuth'])->group(function () {
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
             Route::get('/my', 'myNotifications')->name('my');
+
+            // Who receives each AUTOMATIC notification (declared before /{id}).
+            Route::get('/routing', [\App\Http\Controllers\NotificationRoutingController::class, 'index'])->name('routing');
+            Route::post('/routing', [\App\Http\Controllers\NotificationRoutingController::class, 'update'])->name('routing.update');
+
             Route::get('/{id}', 'show')->name('show');
             Route::delete('/{id}', 'destroy')->name('destroy');
         });

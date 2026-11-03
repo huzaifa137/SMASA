@@ -755,6 +755,11 @@
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
                 <span class="hero-badge"><i class="fas fa-chart-bar me-1"></i> {{ $todayTotal }} scans today</span>
+                <button type="button" id="soundToggle" class="btn btn-outline" onclick="toggleScanSound()"
+                    title="Play a short sound after every scan"
+                    style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                    <i class="fas fa-volume-up"></i> <span>Sound on</span>
+                </button>
                 @if(PermissionHelper::canFeature('view_scan_logs'))
                 <a href="{{ route('card-scan.logs') }}" class="btn btn-outline"
                     style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
@@ -904,6 +909,178 @@
         const csrfToken = '{{ csrf_token() }}';
 
         // ──────────────────────────────────────────────
+        //  Scan feedback: SweetAlert toasts + short sound
+        //  (so the person scanning never has to look at the panel)
+        // ──────────────────────────────────────────────
+        const SOUND_KEY = 'smasaScanSound';
+        let scanSoundOn = true;
+        try { scanSoundOn = localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { }
+
+        const ScanToast = window.Swal ? Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            showCloseButton: true,
+            timerProgressBar: true,
+            didOpen: (t) => {
+                t.addEventListener('mouseenter', Swal.stopTimer);
+                t.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        }) : null;
+
+        function refreshSoundToggle() {
+            const b = document.getElementById('soundToggle');
+            if (!b) return;
+            b.querySelector('i').className = 'fas ' + (scanSoundOn ? 'fa-volume-up' : 'fa-volume-mute');
+            b.querySelector('span').textContent = scanSoundOn ? 'Sound on' : 'Sound off';
+        }
+        function toggleScanSound() {
+            scanSoundOn = !scanSoundOn;
+            try { localStorage.setItem(SOUND_KEY, scanSoundOn ? 'on' : 'off'); } catch (e) { }
+            refreshSoundToggle();
+            if (scanSoundOn) playScanSound('success');
+        }
+        document.addEventListener('DOMContentLoaded', refreshSoundToggle);
+
+        let audioCtx = null;
+        function playScanSound(kind) {
+            if (!scanSoundOn) return;
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const notes = {
+                    success: [[880, 0.12]],
+                    warning: [[660, 0.12], [520, 0.16]],
+                    error: [[220, 0.35]],
+                    info: [[740, 0.1]],
+                }[kind] || [[740, 0.1]];
+                let t = audioCtx.currentTime;
+                notes.forEach(([freq, dur]) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = kind === 'error' ? 'sawtooth' : 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.0001, t);
+                    gain.gain.exponentialRampToValueAtTime(0.18, t + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                    osc.connect(gain).connect(audioCtx.destination);
+                    osc.start(t);
+                    osc.stop(t + dur + 0.02);
+                    t += dur + 0.04;
+                });
+            } catch (e) { /* sound is a nicety, never an error */ }
+        }
+
+        function fmtTime(t) {
+            if (!t) return '—';
+            const m = String(t).match(/(\d{1,2}):(\d{2})/);
+            if (!m) return String(t);
+            let h = parseInt(m[1], 10);
+            const ap = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${m[2]} ${ap}`;
+        }
+
+        // One call shows a toast; icon = success | warning | error | info.
+        function notify(icon, title, lines, timer) {
+            playScanSound(icon);
+            if (!ScanToast) { return; }
+            const body = (lines || []).filter(Boolean).map(l => `<div style="font-size:.82rem;opacity:.9">${l}</div>`).join('');
+            ScanToast.fire({ icon, title: `<span style="font-size:.95rem">${title}</span>`, html: body, timer: timer || 4500 });
+        }
+
+        function parentLine(n) {
+            if (!n) return '';
+            if (n.status === 'sent') return '🔔 Parent notified';
+            if (n.status === 'skipped') return '🔕 Parent alerts are switched off';
+            return '⚠️ Parent NOT notified' + (n.reason ? ': ' + escHtml(n.reason) : '');
+        }
+
+        // Decide the toast for one scan response.
+        function toastForScan(resp) {
+            const d = resp.data || {};
+            const cat = resp.category || '';
+            const name = d.person_name ? escHtml(d.person_name) : '';
+            const cls = d.class ? ' · ' + escHtml(d.class) : '';
+            const pn = parentLine(d.parent_notification);
+
+            if (!resp.success) {
+                return notify('error', name ? `${name}: not processed` : 'Scan failed', [escHtml(resp.message || '')], 7000);
+            }
+
+            switch (cat) {
+                case 'attendance_arrival':
+                    if (d.already_scanned) {
+                        return notify('info', `${name} already scanned in`,
+                            [`Arrived ${fmtTime(d.arrival_time)}` + (d.departure_time ? ` · signed out ${fmtTime(d.departure_time)}` : '') + cls], 4500);
+                    }
+                    if (d.status === 'late') {
+                        return notify('warning', `${name} arrived LATE`,
+                            [`${fmtTime(d.arrival_time)} · ${escHtml(d.punctuality_label || '')}${cls}`, pn], 6000);
+                    }
+                    return notify('success', `${name} arrived`,
+                        [`${fmtTime(d.arrival_time)} · ${escHtml(d.punctuality_label || 'On time')}${cls}`, pn], 4500);
+
+                case 'attendance_departure':
+                    if (d.already_scanned) {
+                        return notify('info', `${name} already signed out`,
+                            [`Left at ${fmtTime(d.departure_time)}${cls}`], 4500);
+                    }
+                    if (d.departure_status === 'early') {
+                        return notify('warning', `${name} left EARLY`,
+                            [`${fmtTime(d.departure_time)} · ${escHtml(d.departure_label || '')}${cls}`, pn], 6500);
+                    }
+                    return notify('success', `${name} signed out`,
+                        [`${fmtTime(d.departure_time)} · ${escHtml(d.departure_label || 'On time')}${cls}`, pn], 4500);
+
+                case 'finance_balance':
+                    if (Number(d.total_balance || 0) > 0) {
+                        return notify('warning', `${name} owes UGX ${nf(d.total_balance)}`,
+                            [`Paid UGX ${nf(d.total_paid)} of UGX ${nf(d.total_billed)}`], 6000);
+                    }
+                    return notify('success', `${name} is fully paid`, [`UGX ${nf(d.total_paid)} paid`], 4000);
+
+                case 'finance_payment':
+                    if (d.fully_paid) {
+                        return notify('success', `${name} has nothing to pay`, ['No outstanding fees'], 4000);
+                    }
+                    return notify('info', `${name}: UGX ${nf(d.total_outstanding)} outstanding`,
+                        ['Use “Open Payment Form” to record a payment'], 5000);
+
+                case 'library_issue':
+                    return notify('info', `${name} found`,
+                        [d.action_required ? 'Search for the book to issue' : escHtml(resp.message || '')], 4000);
+
+                case 'library_return': {
+                    if (!d.active_borrowings || !d.active_borrowings.length) {
+                        return notify('info', `${name} has no books to return`, [], 4000);
+                    }
+                    const overdue = d.active_borrowings.filter(b => b.overdue).length;
+                    return notify(overdue ? 'warning' : 'info',
+                        `${name} has ${d.active_borrowings.length} book${d.active_borrowings.length > 1 ? 's' : ''} out`,
+                        [overdue ? `${overdue} overdue: fines may apply` : 'Pick the book being returned'], 5000);
+                }
+
+                case 'library_reserve':
+                    return notify('info', `${name} found`, ['Search for the book to reserve'], 4000);
+
+                case 'attendance_class':
+                    return notify('info', `${name}${cls}`, ['Open the attendance form to mark the class'], 4000);
+
+                default:
+                    return notify('success', name ? `${name}: card verified` : 'Card verified', [escHtml(resp.message || '')], 3500);
+            }
+        }
+
+        // Yes/No question (SweetAlert, falling back to the browser dialog).
+        function askConfirm(title, text, confirmLabel) {
+            if (!window.Swal) return Promise.resolve(confirm(title + (text ? '\n' + text : '')));
+            return Swal.fire({
+                icon: 'question', title, text, showCancelButton: true,
+                confirmButtonText: confirmLabel || 'Yes', cancelButtonText: 'Cancel', reverseButtons: true,
+            }).then(r => r.isConfirmed);
+        }
+
+        // ──────────────────────────────────────────────
         //  Category selection
         // ──────────────────────────────────────────────
         function selectCategory(key, btn) {
@@ -948,7 +1125,7 @@
         // ──────────────────────────────────────────────
         function triggerScan(rawCard) {
             rawCard = (rawCard || '').trim();
-            if (!rawCard) { alert('Please enter or scan a card number.'); return; }
+            if (!rawCard) { notify('warning', 'No card number', ['Please enter or scan a card number.'], 3000); return; }
 
             document.getElementById('scanLoading').style.display = 'flex';
             document.getElementById('resultLoading').style.display = 'flex';
@@ -966,6 +1143,7 @@
                     document.getElementById('resultLoading').style.display = 'none';
                     renderResult(data);
                     addToRecentList(data, rawCard);
+                    toastForScan(data);
                     // Clear manual input
                     document.getElementById('manualInput').value = '';
                 })
@@ -973,6 +1151,7 @@
                     document.getElementById('scanLoading').style.display = 'none';
                     document.getElementById('resultLoading').style.display = 'none';
                     renderResult({ success: false, result: 'failed', message: 'Network error: ' + err.message, data: {} });
+                    notify('error', 'Network error', ['The scan did not reach the server. Check your connection and scan again.'], 8000);
                 });
         }
 
@@ -1240,32 +1419,40 @@
             }, 300);
         }
 
-        function issueBook(bookId, bookTitle, memberId) {
-            if (!confirm(`Issue "${bookTitle}" to this member?`)) return;
-            fetch('/library/borrowings', {
+        function libraryRequest(url, payload, okTitle, okLines) {
+            return fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ book_id: bookId, member_id: memberId })
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify(payload)
             })
-                .then(r => r.json())
+                .then(r => r.json().catch(() => ({ success: false, message: 'Unexpected server response.' })))
                 .then(res => {
-                    alert(res.success ? '✅ Book issued successfully!' : '❌ ' + (res.message || 'Failed'));
-                    if (res.success) { document.getElementById('resultContent').innerHTML = ''; document.getElementById('resultEmpty').style.display = 'block'; }
-                });
+                    if (res.success) {
+                        notify('success', okTitle, okLines(res), 4500);
+                        document.getElementById('resultContent').innerHTML = '';
+                        document.getElementById('resultEmpty').style.display = 'block';
+                    } else {
+                        notify('error', 'Could not complete', [escHtml(res.message || 'Failed')], 7000);
+                    }
+                    return res;
+                })
+                .catch(err => notify('error', 'Network error', [escHtml(err.message)], 7000));
+        }
+
+        function issueBook(bookId, bookTitle, memberId) {
+            askConfirm(`Issue "${bookTitle}" to this member?`, '', 'Issue book').then(ok => {
+                if (!ok) return;
+                libraryRequest('/library/borrowings', { book_id: bookId, member_id: memberId },
+                    'Book issued', res => [escHtml(res.message || bookTitle)]);
+            });
         }
 
         function returnBook(borrowingId, bookTitle) {
-            if (!confirm(`Return "${bookTitle}"?`)) return;
-            fetch(`/library/borrowings/${borrowingId}/return`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({})
-            })
-                .then(r => r.json())
-                .then(res => {
-                    alert(res.success ? '✅ Book returned successfully!' : '❌ ' + (res.message || 'Failed'));
-                    if (res.success) { document.getElementById('resultContent').innerHTML = ''; document.getElementById('resultEmpty').style.display = 'block'; }
-                });
+            askConfirm(`Return "${bookTitle}"?`, '', 'Return book').then(ok => {
+                if (!ok) return;
+                libraryRequest(`/library/borrowings/${borrowingId}/return`, {},
+                    'Book returned', res => [escHtml(res.message || bookTitle)]);
+            });
         }
 
         function searchBooksForReserve(q, memberId) {
@@ -1286,14 +1473,11 @@
         }
 
         function reserveBook(bookId, bookTitle, memberId) {
-            if (!confirm(`Reserve "${bookTitle}"?`)) return;
-            fetch('/library/reservations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ book_id: bookId, member_id: memberId })
-            })
-                .then(r => r.json())
-                .then(res => alert(res.success ? '✅ Reserved successfully!' : '❌ ' + (res.message || 'Failed')));
+            askConfirm(`Reserve "${bookTitle}"?`, '', 'Reserve').then(ok => {
+                if (!ok) return;
+                libraryRequest('/library/reservations', { book_id: bookId, member_id: memberId },
+                    'Book reserved', res => [escHtml(res.message || bookTitle)]);
+            });
         }
 
         // ──────────────────────────────────────────────

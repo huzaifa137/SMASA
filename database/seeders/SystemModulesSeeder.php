@@ -564,6 +564,7 @@ class SystemModulesSeeder extends Seeder
                     ["key" => "create_notification", "name" => "Open Create-Notification Form"],
                     ["key" => "send_notification", "name" => "Broadcast Notification"],
                     ["key" => "delete_notification", "name" => "Delete Notification"],
+                    ["key" => "manage_notification_routing", "name" => "Choose Who Receives Automatic Notifications", "inherits" => ["send_notification"]],
                 ],
             ],
 

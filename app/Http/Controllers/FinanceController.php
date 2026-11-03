@@ -885,11 +885,9 @@ class FinanceController extends Controller
 
             DB::commit();
 
-            \App\Services\NotificationService::sendToAllAdmins([
+            \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::FEE_PAYMENT_RECEIVED, [
                 'title' => 'Fee Payment Received',
                 'body' => "UGX " . number_format($validated['amount_paid'], 0) . " received (Receipt {$receiptNum}).",
-                'type' => \App\Models\SmasaNotification::TYPE_FEE,
-                'module' => 'finance',
                 'triggered_by' => session('LoggedAdmin') ?? session('LoggedTeacher'),
             ], $schoolId);
 

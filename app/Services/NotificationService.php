@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\NotificationRoutingRule;
 use App\Models\SmasaNotification;
+use App\Support\NotificationEvents;
 use App\Models\SmasaNotificationRecipient;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -153,7 +155,7 @@ private static function dispatchPush(array $recipients, array $payload): void
     }
 
     /** @return \Illuminate\Support\Collection<int,int> */
-    private static function schoolStaffIds(int $schoolId, string $feature)
+    public static function schoolStaffIds(int $schoolId, string $feature)
     {
         $active = fn($q) => $q->where('teachers.school_id', $schoolId)
             ->where(function ($w) {
@@ -179,6 +181,163 @@ private static function dispatchPush(array $recipients, array $payload): void
             ->distinct()
             ->pluck('teachers.id')
             ->map(fn($i) => (int) $i);
+    }
+
+    // ─── Automatic notifications: who gets what (per school) ────────────────
+
+    /**
+     * Raise one of the automatic notifications listed in NotificationEvents,
+     * delivering it to whoever THIS school chose (Notifications → Who Gets
+     * Notified), or to the built-in default when the school chose nothing.
+     *
+     * Returns null when nothing was sent: the school switched the event off,
+     * or nobody qualifies. Never throws, so a notification problem can never
+     * break the action that raised it (recording a payment, saving attendance…).
+     *
+     * @param array $context  for student events: ['student_ids' => [..]] to limit
+     *                        the audience (default: every student of the school)
+     */
+    public static function sendEvent(string $eventKey, array $data, int $schoolId, array $context = []): ?SmasaNotification
+    {
+        try {
+            $event = NotificationEvents::find($eventKey);
+
+            if (!$event) {
+                Log::warning("Unknown notification event '{$eventKey}', sending to school staff.");
+                return self::sendToSchoolStaff($data, $schoolId);
+            }
+
+            $rule = NotificationRoutingRule::lookup($schoolId, $eventKey);
+
+            if ($rule && $rule->mode === NotificationRoutingRule::MODE_DISABLED) {
+                return null;
+            }
+
+            $data = array_merge(
+                ['type' => $event['type'], 'module' => $event['module']],
+                $data,
+                ['school_id' => $schoolId]
+            );
+
+            if ($event['audience'] === 'students') {
+                $ids = isset($context['student_ids'])
+                    ? collect($context['student_ids'])->map(fn($i) => (int) $i)->unique()->values()
+                    : DB::table('students')->where('school_id', $schoolId)->pluck('id')->map(fn($i) => (int) $i);
+
+                $recipients = $ids->map(fn($id) => ['type' => 'student', 'id' => $id, 'school_id' => $schoolId])->all();
+            } else {
+                $recipients = self::staffIdsForEvent($event, $rule, $schoolId)
+                    ->map(fn($id) => ['type' => 'teacher', 'id' => $id, 'school_id' => $schoolId])
+                    ->all();
+            }
+
+            if (empty($recipients)) {
+                return null;
+            }
+
+            return self::send($data, $recipients);
+        } catch (\Throwable $e) {
+            Log::warning("Notification event '{$eventKey}' failed: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * The staff (teacher ids) who receive an event for this school.
+     *
+     *  custom   → every active staff member holding one of the chosen roles,
+     *             plus the individually chosen people
+     *  default  → staff who can open notifications AND whose role can open the
+     *             event's module (a librarian is not told about fee payments).
+     *             If that leaves nobody, every staff member who can open
+     *             notifications, so an event is never silently lost.
+     *
+     * @return \Illuminate\Support\Collection<int,int>
+     */
+    public static function staffIdsForEvent(array $event, ?NotificationRoutingRule $rule, int $schoolId)
+    {
+        if ($rule && $rule->mode === NotificationRoutingRule::MODE_CUSTOM) {
+            return self::staffIdsWithRoles($schoolId, (array) $rule->role_ids)
+                ->merge(self::activeStaffAmong($schoolId, (array) $rule->teacher_ids))
+                ->unique()
+                ->values();
+        }
+
+        return self::defaultStaffIds($schoolId, $event['module'] ?? null);
+    }
+
+    /** @return \Illuminate\Support\Collection<int,int> */
+    public static function defaultStaffIds(int $schoolId, ?string $module)
+    {
+        $all = self::schoolStaffIds($schoolId, 'view_my_notifications');
+
+        $schoolHasRoles = DB::table('school_roles')->where('school_id', $schoolId)->exists();
+        if (!$module || !$schoolHasRoles) {
+            return $all;
+        }
+
+        $withModule = self::activeStaffQuery($schoolId)
+            ->join('teacher_school_roles as tsr', function ($j) use ($schoolId) {
+                $j->on('tsr.teacher_id', '=', 'teachers.id')->where('tsr.school_id', $schoolId);
+            })
+            ->join('role_module_access as rma', function ($j) {
+                $j->on('rma.school_role_id', '=', 'tsr.school_role_id')->where('rma.can_access', true);
+            })
+            ->join('system_modules as sm', 'sm.id', '=', 'rma.module_id')
+            ->where('sm.key', $module)
+            ->distinct()
+            ->pluck('teachers.id')
+            ->map(fn($i) => (int) $i);
+
+        $narrowed = $all->intersect($withModule)->values();
+
+        return $narrowed->isNotEmpty() ? $narrowed : $all;
+    }
+
+    /** @return \Illuminate\Support\Collection<int,int> */
+    public static function staffIdsWithRoles(int $schoolId, array $roleIds)
+    {
+        $roleIds = collect($roleIds)->map(fn($i) => (int) $i)->filter()->unique()->values();
+        if ($roleIds->isEmpty()) {
+            return collect();
+        }
+
+        return self::activeStaffQuery($schoolId)
+            ->join('teacher_school_roles as tsr', function ($j) use ($schoolId) {
+                $j->on('tsr.teacher_id', '=', 'teachers.id')->where('tsr.school_id', $schoolId);
+            })
+            ->join('school_roles as sr', function ($j) use ($schoolId) {
+                $j->on('sr.id', '=', 'tsr.school_role_id')->where('sr.school_id', $schoolId);
+            })
+            ->whereIn('tsr.school_role_id', $roleIds)
+            ->distinct()
+            ->pluck('teachers.id')
+            ->map(fn($i) => (int) $i);
+    }
+
+    /** @return \Illuminate\Support\Collection<int,int> */
+    public static function activeStaffAmong(int $schoolId, array $teacherIds)
+    {
+        $teacherIds = collect($teacherIds)->map(fn($i) => (int) $i)->filter()->unique()->values();
+        if ($teacherIds->isEmpty()) {
+            return collect();
+        }
+
+        return self::activeStaffQuery($schoolId)
+            ->whereIn('teachers.id', $teacherIds)
+            ->pluck('teachers.id')
+            ->map(fn($i) => (int) $i);
+    }
+
+    /** Active (not blocked / suspended) staff of one school. */
+    private static function activeStaffQuery(int $schoolId)
+    {
+        return DB::table('teachers')
+            ->where('teachers.school_id', $schoolId)
+            ->where(function ($w) {
+                $w->whereNull('teachers.account_status')
+                    ->orWhereNotIn('teachers.account_status', ['blocked', 'suspended']);
+            });
     }
 
     /**

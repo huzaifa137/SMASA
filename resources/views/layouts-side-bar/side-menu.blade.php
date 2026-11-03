@@ -576,6 +576,10 @@ use App\Helpers\PermissionHelper;
                                 <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a>
                                 </li>
                             @endif
+                            @if(PermissionHelper::canFeature('manage_notification_routing'))
+                                <li><a href="{{ route('notifications.routing') }}"><i class="fas fa-user-check mr-2"></i>Who Gets
+                                        Notified</a></li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -1290,6 +1294,10 @@ use App\Helpers\PermissionHelper;
                             @if(PermissionHelper::canFeature('create_notification'))
                                 <li><a href="{{ route('notifications.create') }}"><i class="fas fa-paper-plane mr-2"></i>Broadcast</a>
                                 </li>
+                            @endif
+                            @if(PermissionHelper::canFeature('manage_notification_routing'))
+                                <li><a href="{{ route('notifications.routing') }}"><i class="fas fa-user-check mr-2"></i>Who Gets
+                                        Notified</a></li>
                             @endif
                         </ul>
                     </li>

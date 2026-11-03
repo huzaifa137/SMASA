@@ -1094,7 +1094,7 @@ use App\Helpers\PermissionHelper;
 
         function saveArrival() {
             if (!document.getElementById('m_person_id').value) {
-                alert('Please search and select a person first.');
+                arrivalToast('warning', 'Select a person first', 'Search for a student or teacher, then pick them from the list.');
                 return;
             }
             const formData = {
@@ -1113,11 +1113,23 @@ use App\Helpers\PermissionHelper;
                 .then(res => {
                     if (res.success) {
                         closeModal();
-                        SMASA.reload();
+                        arrivalToast('success', 'Attendance saved', res.message || '');
+                        // Let the toast be seen before the table reloads.
+                        setTimeout(() => SMASA.reload(), 900);
                     } else {
-                        alert('Error: ' + (res.message || 'Could not save.'));
+                        arrivalToast('error', 'Could not save', res.message || 'Please try again.');
                     }
-                });
+                })
+                .catch(err => arrivalToast('error', 'Network error', err.message));
+        }
+
+        function arrivalToast(icon, title, text) {
+            if (!window.Swal) { alert(title + (text ? ': ' + text : '')); return; }
+            Swal.fire({
+                toast: true, position: 'top-end', icon, title, text,
+                showConfirmButton: false, showCloseButton: true,
+                timer: icon === 'error' ? 6500 : 3500, timerProgressBar: true,
+            });
         }
     </script>
 @endsection

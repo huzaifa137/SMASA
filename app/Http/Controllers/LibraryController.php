@@ -1386,11 +1386,9 @@ public function borrowBook(Request $request)
 
             DB::commit();
 
-            \App\Services\NotificationService::sendToAllAdmins([
+            \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::LIBRARY_BOOK_ISSUED, [
                 'title' => 'Library Book Issued',
                 'body' => "\"{$book->title}\" issued to {$member->name}. Due " . \Carbon\Carbon::parse($request->due_date)->format('d M Y') . ".",
-                'type' => \App\Models\SmasaNotification::TYPE_LIBRARY,
-                'module' => 'library',
                 'triggered_by' => $userId,
             ], $schoolId);
 
@@ -1482,11 +1480,9 @@ public function returnBook(Request $request, int $borrowingId)
 
             DB::commit();
 
-            \App\Services\NotificationService::sendToAllAdmins([
+            \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::LIBRARY_BOOK_RETURNED, [
                 'title' => 'Library Book Returned',
                 'body' => "\"{$borrowing->book->title}\" returned by {$borrowing->member->name}." . ($fineAmount > 0 ? " Fine of UGX " . number_format($fineAmount, 0) . " applied." : ''),
-                'type' => \App\Models\SmasaNotification::TYPE_LIBRARY,
-                'module' => 'library',
                 'triggered_by' => $userId,
             ], $schoolId);
 

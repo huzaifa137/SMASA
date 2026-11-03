@@ -389,11 +389,9 @@ class AttendanceController extends Controller
 
             $absentCount = collect($request->attendance)->where('status', 'absent')->count();
             if ($absentCount > 0) {
-                \App\Services\NotificationService::sendToAllAdmins([
+                \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::ATTENDANCE_ABSENTEES, [
                     'title' => 'Attendance Marked — Absentees Recorded',
                     'body' => "{$absentCount} student(s) marked absent on " . \Carbon\Carbon::parse($request->attendance_date)->format('d M Y') . ".",
-                    'type' => \App\Models\SmasaNotification::TYPE_ATTENDANCE,
-                    'module' => 'attendance',
                     'triggered_by' => $teacherId,
                 ], $schoolId);
             }

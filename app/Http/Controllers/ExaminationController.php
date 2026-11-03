@@ -4578,18 +4578,11 @@ class ExaminationController extends Controller
 
         $classLabel = Helper::recordMdname($ec->class_id) . ($ec->stream_id && $ec->stream_id !== 'NO_STREAM' ? ' - ' . $ec->stream_id : '');
 
-        \App\Services\NotificationService::send([
+        \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::EXAM_RESULTS_PUBLISHED, [
             'title' => 'Exam Results Published',
             'body' => "Results for {$exam->exam_name} ({$classLabel}) have been released. Check your portal for details.",
-            'type' => \App\Models\SmasaNotification::TYPE_EXAM,
-            'module' => 'examination',
-            'school_id' => $schoolId,
             'triggered_by' => Session('LoggedAdmin') ?? Session('LoggedTeacher'),
-        ], $classStudentIds->map(fn($id) => [
-                'type' => 'student',
-                'id' => $id,
-                'school_id' => $schoolId,
-            ])->toArray());
+        ], $schoolId, ['student_ids' => $classStudentIds->all()]);
 
         return response()->json([
             'success' => true,
@@ -4729,13 +4722,25 @@ class ExaminationController extends Controller
         $examination->save();
 
         if ($newStatus === 'results_released') {
-            \App\Services\NotificationService::sendToAllStudents([
+            // Only the students of the classes that actually sat this exam,
+            // not every student in the school.
+            $sittingStudentIds = DB::table('examination_classes as ec')
+                ->join('students as s', function ($j) use ($examination) {
+                    $j->on('s.senior', '=', 'ec.class_id')
+                        ->on('s.stream', '=', 'ec.stream_id')
+                        ->where('s.school_id', $examination->school_id);
+                })
+                ->where('ec.examination_id', $examination->id)
+                ->where('ec.school_id', $examination->school_id)
+                ->distinct()
+                ->pluck('s.id')
+                ->all();
+
+            \App\Services\NotificationService::sendEvent(\App\Support\NotificationEvents::EXAM_RESULTS_PUBLISHED, [
                 'title' => 'Exam Results Published',
                 'body' => "Results for {$examination->exam_name} have been released. Check your portal for details.",
-                'type' => \App\Models\SmasaNotification::TYPE_EXAM,
-                'module' => 'examination',
                 'triggered_by' => session('LoggedAdmin') ?? session('LoggedTeacher'),
-            ], $examination->school_id);
+            ], $examination->school_id, ['student_ids' => $sittingStudentIds]);
         }
 
         $messages = [
