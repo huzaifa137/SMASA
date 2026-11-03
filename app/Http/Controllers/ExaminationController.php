@@ -1803,6 +1803,25 @@ class ExaminationController extends Controller
             abort(403, 'Results for this class have not been released yet.');
         }
 
+        return $this->renderStudentSlip($exam, $student, $schoolId);
+    }
+
+    /**
+     * Render ONE student's report card exactly the way the school portal does.
+     *
+     * Single source of truth for "which design, which settings, which
+     * sections" - used by the school portal's passslipStudent() AND by the
+     * parent portal, so a parent can never see a different design from the
+     * one the school chose (Nursery / Primary / Secondary / Arabic / custom
+     * per-school designs, plus the Progressive Assessment Record).
+     * The caller is responsible for authorisation and the release check.
+     * $extra = view flags (e.g. parentView / backUrl).
+     */
+    public function renderStudentSlip($exam, $student, $schoolId, array $extra = [])
+    {
+        $examId = $exam->id;
+        $studentId = $student->id;
+
         $this->applySavedPassslipSettings($schoolId, $student->senior);
 
         [$examIds, $avgExamIds] = $this->resolveExamSelection($examId);
@@ -1821,7 +1840,8 @@ class ExaminationController extends Controller
                 $exam,
                 $schoolId,
                 [$this->slipFromPassslipData($student, $passslipData)],
-                'single'
+                'single',
+                $extra
             );
         }
 
@@ -1925,7 +1945,7 @@ class ExaminationController extends Controller
             'disciplineRatings',
             'termDates',
             'progressiveAssessment'
-        ) + ['mode' => 'single', 'multiExam' => $multiExam]);
+        ) + ['mode' => 'single', 'multiExam' => $multiExam] + $extra);
     }
 
     /**

@@ -313,7 +313,7 @@
             <button type="button" class="tbtn tbtn-pdf" id="btnPdf" onclick="downloadCardsPdf(this)">
                 <i class="fas fa-file-pdf"></i> {{ $T['download'] }}
             </button>
-            <a href="{{ route('examination.passslips.index', $exam->id) }}" class="tbtn">
+            <a href="{{ $backUrl ?? route('examination.passslips.index', $exam->id) }}" class="tbtn">
                 <i class="fas fa-arrow-left"></i> {{ $T['back'] }}
             </a>
         </div>

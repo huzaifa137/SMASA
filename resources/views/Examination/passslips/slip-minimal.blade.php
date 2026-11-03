@@ -1401,7 +1401,7 @@
             <button class="tbtn tbtn-print" onclick="window.print()">
                 <i class="fas fa-print"></i> Print / Save PDF
             </button>
-            <a href="{{ route('examination.passslips.index', $exam->id) }}" class="tbtn tbtn-back">
+            <a href="{{ $backUrl ?? route('examination.passslips.index', $exam->id) }}" class="tbtn tbtn-back">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>

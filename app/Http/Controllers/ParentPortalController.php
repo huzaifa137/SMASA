@@ -190,115 +190,41 @@ class ParentPortalController extends Controller
     {
         $student = $this->authorizedStudent($studentId);
 
-        $exam = Examination::where('id', $examId)
+        // withReportCards(): O-Level report cards are stored as hidden
+        // "report card" examinations; without this they 404 for parents.
+        $exam = Examination::withReportCards()
+            ->where('id', $examId)
             ->where('school_id', $student->school_id)
             ->firstOrFail();
+
+        if (!$this->examReleasedForStudent($exam, $student)) {
+            abort(403, 'Results for this exam have not been released yet.');
+        }
+
+        // A parent must see EXACTLY the design the school chose, with the
+        // school's saved settings. Nothing in the URL (?template=, ?lang=,
+        // ?exam_ids=, show/hide toggles ...) may override that, so drop the
+        // whole query/input before the shared renderer reads request().
+        // The Arabic card's AR/EN switch is a harmless display toggle, so it
+        // is the one value kept.
+        $keep = in_array(request('card_lang'), ['ar', 'en'], true)
+            ? ['card_lang' => request('card_lang')]
+            : [];
+        request()->query->replace($keep);
+        request()->request->replace([]);
 
         /** @var ExaminationController $examController */
         $examController = app(ExaminationController::class);
 
-        if (!$examController->classIsReleased($exam, $student->senior, $student->stream, $student->school_id)) {
-            abort(403, 'Results for this exam have not been released yet.');
-        }
-
-        $examController->applySavedPassslipSettings($student->school_id, $student->senior);
-
-        [$examIds, $avgExamIds] = $examController->resolveExamSelection($examId);
-        $multiExam = count($examIds) > 1;
-
-        $passslipData = $multiExam
-            ? $examController->buildMultiExamPassslipData($examIds, $studentId, $student->school_id, $avgExamIds, $student)
-            : $examController->buildPassslipData($examId, $studentId, $student->school_id, $exam, $student);
-
-        // The school may have its OWN custom report-card design for this
-        // level (assigned by a platform admin) - parents see the same one
-        // the school prints.
-        if ($custom = $examController->resolveCustomSlip($student->school_id, $student->senior)) {
-            return $examController->renderCustomSlips(
-                $custom,
-                $exam,
-                $student->school_id,
-                [$examController->slipFromPassslipData($student, $passslipData)],
-                'single',
-                ['parentView' => true, 'backUrl' => route('parents.results', $student->id)]
-            );
-        }
-
-        $qrText = $passslipData['qrText'] ?? '';
-        $subjectMarks = $passslipData['subjectMarks'] ?? collect();
-        $totalObtained = $passslipData['totalObtained'] ?? 0;
-        $totalMax = $passslipData['totalMax'] ?? 0;
-        $percentage = $passslipData['percentage'] ?? 0;
-        $overallGrade = $passslipData['overallGrade'] ?? '—';
-        $overallRemark = $passslipData['overallRemark'] ?? '—';
-        $classRank = $passslipData['classRank'] ?? '—';
-        $classTotal = $passslipData['classTotal'] ?? 0;
-        $growthData = $passslipData['growthData'] ?? [];
-        $previousSubjectMarks = $passslipData['previousSubjectMarks'] ?? collect();
-        $isEarlyYears = $passslipData['isEarlyYears'] ?? false;
-        $earlyYearsAverage = $passslipData['earlyYearsAverage'] ?? null;
-        $earlyYearsMaxMark = $passslipData['earlyYearsMaxMark'] ?? Helper::earlyYearsMaxMark();
-        $examsList = $passslipData['examsList'] ?? collect([$exam]);
-        $useAvg = $passslipData['useAvg'] ?? false;
-        $examSummary = $passslipData['examSummary'] ?? [];
-        $avgSummary = $passslipData['avgSummary'] ?? null;
-
-        $disciplineRatings = $passslipData['disciplineRatings'] ?? collect();
-        $termDates = Helper::passslipTermDates($student->school_id);
-
-        $lang = request('lang', 'en');
-        $isNursery = $examController->isNurseryClass($student->senior);
-
-        // Same resolution passslipStudent() uses for the school portal —
-        // applySavedPassslipSettings() above already merged this class's
-        // saved 'template' into request() when no explicit ?template= was
-        // given, so this picks the exact same file (Primary classic/
-        // modern/minimal, or the matching saved Nursery design) the
-        // school portal shows for this class, instead of the previous
-        // hardcoded 'slip-nursery' (always Nursery Minimal, ignoring
-        // whatever was actually saved) and 'Examination.passslips.slip'
-        // (not a real view — this is what caused the "View
-        // [Examination.passslips.slip] not found" error for Primary).
-        if ($isNursery) {
-            $template = request('template', 'nursery-classic');
-            if (!ExaminationController::isNurseryTemplateKey($template)) {
-                $template = 'nursery-classic';
-            }
-            $view = $examController->resolveNurserySlipView($template, $lang);
-        } elseif ($examController->isSecondaryClass($student->senior)) {
-            $template = request('template', 'secondary-classic');
-            if (!ExaminationController::isSecondaryTemplateKey($template)) {
-                $template = 'secondary-classic';
-            }
-            $view = $examController->resolveSecondarySlipView($template, $lang);
-        } else {
-            $view = $examController->resolvePrimarySlipView($lang);
-        }
-
-        return view($view, compact(
-            'exam',
-            'student',
-            'qrText',
-            'subjectMarks',
-            'totalObtained',
-            'totalMax',
-            'percentage',
-            'overallGrade',
-            'overallRemark',
-            'classRank',
-            'classTotal',
-            'growthData',
-            'previousSubjectMarks',
-            'isEarlyYears',
-            'earlyYearsAverage',
-            'earlyYearsMaxMark',
-            'examsList',
-            'useAvg',
-            'examSummary',
-            'avgSummary',
-            'disciplineRatings',
-            'termDates'
-        ) + ['mode' => 'single', 'multiExam' => $multiExam, 'parentView' => true]);
+        // Same renderer the school portal uses: picks Nursery / Primary /
+        // Secondary / Arabic / the school's custom design and builds the
+        // Progressive Assessment Record.
+        return $examController->renderStudentSlip(
+            $exam,
+            $student,
+            $student->school_id,
+            ['parentView' => true, 'backUrl' => route('parents.results', $student->id)]
+        );
     }
 
     // ─── Attendance ─────────────────────────────────────────────────────
@@ -439,17 +365,52 @@ class ParentPortalController extends Controller
      */
     private function releasedExamsFor(Student $student)
     {
-        /** @var ExaminationController $examController */
-        $examController = app(ExaminationController::class);
-
-        return Examination::where('school_id', $student->school_id)
+        return Examination::withReportCards()
+            ->where('school_id', $student->school_id)
             ->whereHas('examinationClasses', function ($q) use ($student) {
                 $q->where('class_id', $student->senior)->where('stream_id', $student->stream);
             })
             ->orderByDesc('start_date')
             ->get()
-            ->filter(fn($exam) => $examController->classIsReleased($exam, $student->senior, $student->stream, $student->school_id))
+            ->filter(fn($exam) => $this->examReleasedForStudent($exam, $student))
             ->values();
+    }
+
+    /**
+     * The ONE gate deciding whether a parent may open an exam's report card
+     * (list + detail both use it). Today: the student's class sat the exam
+     * and it is released. An O-Level report card is a computed card built
+     * on a base examination, so it is also held back until that base exam
+     * is released for the class - report cards are stored as 'closed' and
+     * would otherwise open to parents before the results were published.
+     */
+    private function examReleasedForStudent(Examination $exam, Student $student): bool
+    {
+        /** @var ExaminationController $examController */
+        $examController = app(ExaminationController::class);
+
+        $sat = ExaminationClass::where('examination_id', $exam->id)
+            ->where('school_id', $student->school_id)
+            ->where('class_id', $student->senior)
+            ->where('stream_id', $student->stream)
+            ->exists();
+
+        if (!$sat) {
+            return false;
+        }
+
+        if (!$examController->classIsReleased($exam, $student->senior, $student->stream, $student->school_id)) {
+            return false;
+        }
+
+        if ($exam->isReportCard() && $exam->base_examination_id) {
+            $base = Examination::withReportCards()->find($exam->base_examination_id);
+            if ($base && !$examController->classIsReleased($base, $student->senior, $student->stream, $student->school_id)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // ─── Web Push (parent's phone) ──────────────────────────────────────
