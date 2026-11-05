@@ -41,6 +41,46 @@ class GradingSchemeController extends Controller
         return view('Examination.grading-schemes.index', compact('schemes', 'schoolId'));
     }
 
+    // ─── A-Level General Paper / Subsidiary pass (E) / fail (O) ─────────────
+
+    public function savePassFail(Request $request)
+    {
+        if (!PermissionHelper::canFeature('manage_grading_schemes')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $data = $request->validate([
+            'is_enabled' => 'required|boolean',
+            'pass_mark' => 'required|numeric|min:1|max:100',
+            'pass_grade' => 'required|string|max:10',
+            'fail_grade' => 'required|string|max:10|different:pass_grade',
+            'pass_remark' => 'nullable|string|max:60',
+            'fail_remark' => 'nullable|string|max:60',
+            'apply_general_paper' => 'required|boolean',
+            'apply_subsidiary' => 'required|boolean',
+        ]);
+
+        $schoolId = Session('LoggedSchool');
+
+        \App\Models\SchoolPassFailGrading::updateOrCreate(
+            ['school_id' => $schoolId],
+            [
+                'is_enabled' => (bool) $data['is_enabled'],
+                'pass_mark' => $data['pass_mark'],
+                'pass_grade' => trim($data['pass_grade']),
+                'fail_grade' => trim($data['fail_grade']),
+                'pass_remark' => trim($data['pass_remark'] ?? '') ?: 'Pass',
+                'fail_remark' => trim($data['fail_remark'] ?? '') ?: 'Fail',
+                'apply_general_paper' => (bool) $data['apply_general_paper'],
+                'apply_subsidiary' => (bool) $data['apply_subsidiary'],
+            ]
+        );
+
+        \App\Services\PassFailGradingService::flush();
+
+        return response()->json(['success' => true, 'message' => 'General Paper & Subsidiary grading saved. Marks entered from now on use it.']);
+    }
+
     // ─── Create ─────────────────────────────────────────────────────────────
 
     public function store(Request $request)

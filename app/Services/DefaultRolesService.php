@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\DB;
  *
  *   HeadTeacher  every school right the school's product(s) can use.
  *   Teacher      only what a teacher must do: marks entry and, for Secondary
- *                schools, NLSC / open assessments, plus own timetable and
- *                notifications.
+ *                schools, NLSC / open assessments. No Timetable and no
+ *                Notifications to start with; admins add them per school
+ *                in User Rights & Permissions.
  *
  * Both are ordinary SchoolRole rows — admins edit, extend or delete them in
  * User Rights & Permissions like any other role.
@@ -59,8 +60,6 @@ class DefaultRolesService
         'view_remarks', 'enter_remarks',
         'view_nlsc_assessments', 'manage_nlsc_assessments', 'enter_nlsc_marks',
         'view_open_assessments', 'manage_open_assessments', 'enter_open_assessment_marks',
-        'view_teacher_schedule',
-        'view_my_notifications', 'mark_notification_read', 'mark_all_read', 'push_notifications',
     ];
 
     /**
@@ -96,7 +95,7 @@ class DefaultRolesService
                 'feature_keys' => $features->pluck('key')->all(),
             ],
             self::TEACHER => [
-                'description' => 'Marks entry' . ($hasSecondary ? ', assessments' : '') . ' and own schedule. Admins can add more rights.',
+                'description' => 'Marks entry' . ($hasSecondary ? ' and assessments' : '') . '. Admins can add more rights.',
                 'feature_keys' => array_values(array_intersect(self::TEACHER_FEATURES, $features->pluck('key')->all())),
             ],
         ];

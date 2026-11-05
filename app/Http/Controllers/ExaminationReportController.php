@@ -310,7 +310,8 @@ class ExaminationReportController extends Controller
 
                 if ($mark && !is_null($mark->marks_obtained)) {
                     $pct = $this->resolvePercentage($mark);
-                    $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+                    $gradeRow = \App\Services\PassFailGradingService::scale(Session('LoggedSchool'), $gradingScale, $subj->subject_id ?? null, $subj->custom_subject_id ?? null)
+                        ->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
 
                     $cells[$subj->report_key] = (object) [
                         'marks' => $mark->marks_obtained,
@@ -617,6 +618,7 @@ class ExaminationReportController extends Controller
         $marks = $marks->keyBy('student_id');
 
         $gradingScale = $exam->resolvedGradingBandsForClass($classId);
+        $gradingScale = \App\Services\PassFailGradingService::scale($schoolId, $gradingScale, $subjectRow->subject_id ?? null, $subjectRow->custom_subject_id ?? null);
         $teacherName = Helper::teacherFullName($subjectRow->subject_teacher_1 ?? null);
 
         $rows = $students->map(function ($student) use ($marks, $gradingScale) {
@@ -824,7 +826,8 @@ class ExaminationReportController extends Controller
 
         $withPct = $marks->map(function ($m) use ($gradingScale) {
             $pct = $this->resolvePercentage($m);
-            $gradeRow = $gradingScale->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+            $gradeRow = \App\Services\PassFailGradingService::scale($m->school_id ?? Session('LoggedSchool'), $gradingScale, $m->subject_id ?? null, $m->custom_subject_id ?? null)
+                ->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
             $m->percentage = $pct;
             $m->resolved_grade = $gradeRow?->grade ?? '—';
             return $m;
@@ -1323,7 +1326,7 @@ class ExaminationReportController extends Controller
                             'marks' => $mark->marks_obtained,
                             'total' => $mark->total_marks,
                             'percentage' => $pct,
-                            'grade' => $gradeFor($pct),
+                            'grade' => $this->subjectGradeFor($gradeFor, $pct, $subj),
                         ];
                         $pctSum += $pct;
                         $pctCount++;
@@ -1337,7 +1340,7 @@ class ExaminationReportController extends Controller
                 $subjectAverages[$subj->report_key] = (object) [
                     'exams' => $examEntries,
                     'average' => $avg,
-                    'grade' => $avg !== null ? $gradeFor($avg) : '—',
+                    'grade' => $avg !== null ? $this->subjectGradeFor($gradeFor, $avg, $subj) : '—',
                     'entries' => $pctCount,
                 ];
 
@@ -1424,7 +1427,7 @@ class ExaminationReportController extends Controller
                         'marks' => $mark->marks_obtained,
                         'total' => $mark->total_marks,
                         'percentage' => $pct,
-                        'grade' => $gradeFor($pct),
+                        'grade' => $this->subjectGradeFor($gradeFor, $pct, $subject),
                     ];
                     $pctSum += $pct;
                     $pctCount++;
@@ -1439,7 +1442,7 @@ class ExaminationReportController extends Controller
                 'student' => $student,
                 'exams' => $examEntries,
                 'average' => $avg,
-                'grade' => $avg !== null ? $gradeFor($avg) : '—',
+                'grade' => $avg !== null ? $this->subjectGradeFor($gradeFor, $avg, $subject) : '—',
                 'entered' => $pctCount > 0,
             ];
         });
@@ -1647,5 +1650,20 @@ class ExaminationReportController extends Controller
             })
             ->sortBy('class_name')
             ->values();
+    }
+
+    /**
+     * Grade for one subject's percentage: pass => E / fail => O for A-Level
+     * General Paper and Subsidiary subjects, the normal bands otherwise.
+     */
+    private function subjectGradeFor(callable $gradeFor, $pct, $subject): string
+    {
+        $schoolId = Session('LoggedSchool');
+
+        if ($pct !== null && \App\Services\PassFailGradingService::appliesTo($schoolId, $subject->subject_id ?? null, $subject->custom_subject_id ?? null)) {
+            return \App\Services\PassFailGradingService::gradeFor($schoolId, (float) $pct)[0];
+        }
+
+        return $gradeFor($pct);
     }
 }

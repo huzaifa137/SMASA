@@ -573,6 +573,8 @@ class ExaminationPaperService
         $totalMax = (float) $papers->sum('max_score');
         $paperNumbers = $papers->pluck('paper_number')->all();
         $bands = static::bands($exam, $classId, $streamId);
+        // A-Level General Paper / Subsidiary: pass => E, fail => O.
+        $bands = \App\Services\PassFailGradingService::scale($exam->school_id, $bands, $subjectId, $customSubjectId);
 
         // A subject on a range-based Assessment Scale is combined onto the
         // SCALE's range (e.g. /100) and graded by the scale; every other

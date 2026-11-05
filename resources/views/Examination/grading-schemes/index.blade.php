@@ -1538,6 +1538,39 @@
                 </div>
             </div>
 
+
+            {{-- ── A-Level General Paper / Subsidiary: pass (E) / fail (O) ── --}}
+            @php($pf = \App\Services\PassFailGradingService::settings($schoolId))
+            <div id="pfCard" style="background:#fff;border:1px solid #E6E7EE;border-radius:14px;padding:1.1rem 1.25rem;margin:1rem 0;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;">
+                    <div>
+                        <h5 style="margin:0;font-weight:700;"><i class="fas fa-check-double"></i> General Paper &amp; Subsidiary grading</h5>
+                        <p style="margin:.25rem 0 0;color:#6B7280;font-size:.85rem;">
+                            A-Level (Senior 5-6) General Paper and Subsidiary subjects are not graded A-E. A student who
+                            reaches the pass mark gets the pass grade, everyone else gets the fail grade.
+                        </p>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:.5rem;font-weight:600;">
+                        <input type="checkbox" id="pfEnabled" {{ $pf->is_enabled ? 'checked' : '' }}> Enabled
+                    </label>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-top:.9rem;">
+                    <div><label class="small fw-bold">Pass mark (%)</label><input type="number" step="0.01" min="1" max="100" id="pfPassMark" class="form-control" value="{{ rtrim(rtrim(number_format($pf->pass_mark, 2, '.', ''), '0'), '.') }}"></div>
+                    <div><label class="small fw-bold">Pass grade</label><input type="text" maxlength="10" id="pfPassGrade" class="form-control" value="{{ $pf->pass_grade }}"></div>
+                    <div><label class="small fw-bold">Fail grade</label><input type="text" maxlength="10" id="pfFailGrade" class="form-control" value="{{ $pf->fail_grade }}"></div>
+                    <div><label class="small fw-bold">Pass remark</label><input type="text" maxlength="60" id="pfPassRemark" class="form-control" value="{{ $pf->pass_remark }}"></div>
+                    <div><label class="small fw-bold">Fail remark</label><input type="text" maxlength="60" id="pfFailRemark" class="form-control" value="{{ $pf->fail_remark }}"></div>
+                </div>
+                <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center;margin-top:.8rem;">
+                    <label><input type="checkbox" id="pfGeneral" {{ $pf->apply_general_paper ? 'checked' : '' }}> Apply to General Paper</label>
+                    <label><input type="checkbox" id="pfSubsidiary" {{ $pf->apply_subsidiary ? 'checked' : '' }}> Apply to Subsidiary subjects</label>
+                    @if(\App\Helpers\PermissionHelper::canFeature('manage_grading_schemes'))
+                        <button type="button" id="btnSavePassFail" class="btn btn-primary btn-sm ms-auto">Save</button>
+                    @endif
+                </div>
+                <small style="color:#6B7280;">Saved marks keep their old grade until re-graded: run <code>php artisan marks:regrade-pass-fail</code> after changing the pass mark.</small>
+            </div>
+
             <style>
                 /* ── Breadcrumb ────────────────────────────────────────────── */
                 .gs-breadcrumb {
@@ -2198,6 +2231,27 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     const csrfToken = '{{ csrf_token() }}';
+
+    document.getElementById('btnSavePassFail')?.addEventListener('click', function () {
+        const payload = {
+            is_enabled: document.getElementById('pfEnabled').checked ? 1 : 0,
+            pass_mark: document.getElementById('pfPassMark').value,
+            pass_grade: document.getElementById('pfPassGrade').value,
+            fail_grade: document.getElementById('pfFailGrade').value,
+            pass_remark: document.getElementById('pfPassRemark').value,
+            fail_remark: document.getElementById('pfFailRemark').value,
+            apply_general_paper: document.getElementById('pfGeneral').checked ? 1 : 0,
+            apply_subsidiary: document.getElementById('pfSubsidiary').checked ? 1 : 0,
+        };
+        $.ajax({
+            url: '{{ route('examination.grading-schemes.pass-fail') }}',
+            method: 'POST',
+            data: payload,
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            success: res => Swal.fire({ icon: 'success', title: 'Saved', text: res.message, timer: 2200, showConfirmButton: false }),
+            error: xhr => Swal.fire({ icon: 'error', title: 'Could not save', text: (xhr.responseJSON && (xhr.responseJSON.message || Object.values(xhr.responseJSON.errors || {}).flat()[0])) || 'Something went wrong.' }),
+        });
+    });
 
     // ── List ↔ detail switching ──────────────────────────────────────────
     SMASA.bind('Examination/grading-schemes/index:0', function () { document.querySelectorAll('.scheme-list-item').forEach(btn => { if (btn.__smb) return; btn.__smb = true;

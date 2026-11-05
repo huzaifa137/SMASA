@@ -471,6 +471,10 @@ class ExaminationController extends Controller
             ? $examClass->resolvedGradingBands()
             : $exam->resolvedGradingBands();
 
+        // A-Level General Paper / Subsidiary: pass => E, fail => O
+        // (school-configurable pass mark) instead of the A-E bands.
+        $gradingScale = \App\Services\PassFailGradingService::scale(Session('LoggedSchool'), $gradingScale, $classSubject->subject_id ?? null, $classSubject->custom_subject_id ?? null);
+
         // Subjects that have an Assessment Scale attached (via
         // class_subjects.assessment_scale_id) are graded on that scale's
         // score range with a comment-driven system, instead of numeric
@@ -659,6 +663,9 @@ class ExaminationController extends Controller
         $gradingScale = $examClass
             ? $examClass->resolvedGradingBands()
             : $exam->resolvedGradingBands();
+
+        // A-Level General Paper / Subsidiary: pass => E, fail => O.
+        $gradingScale = \App\Services\PassFailGradingService::scale($schoolId, $gradingScale, $request->subject_id, $request->custom_subject_id);
 
         // Subjects with an Assessment Scale attached (class_subjects.
         // assessment_scale_id) use that scale's own score range and
@@ -3363,6 +3370,7 @@ class ExaminationController extends Controller
             : $exam->resolvedGradingBandsForClass($classId, $streamId);
 
         $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
+            $subjectScale = \App\Services\PassFailGradingService::scale($m->school_id ?? Session('LoggedSchool'), $gradingScale, $m->subject_id, $m->custom_subject_id ?? null);
             $pct = $m->total_marks > 0
                 ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
                 : 0;
@@ -3373,7 +3381,7 @@ class ExaminationController extends Controller
 
             if (!$isEarlyYears) {
                 // ✅ Re-derive grade from percentage — fixes any wrongly-stored grades
-                $gradeRow = $gradingScale->first(function ($g) use ($pct) {
+                $gradeRow = $subjectScale->first(function ($g) use ($pct) {
                     return $pct >= $g->min_mark && $pct <= $g->max_mark;
                 });
                 $grade = $gradeRow?->grade ?? $m->grade;
@@ -4012,6 +4020,14 @@ class ExaminationController extends Controller
         $useAvg = count($avgExamIds) >= 2;
 
         $subjectRows = $allSubjectIds->map(function ($subjectKey) use ($examIds, $perExamSubjectMarks, $gradeFor, $scaleFor, $subjectTeachers, $avgExamIds, $useAvg) {
+            // A-Level General Paper / Subsidiary: pass/fail bands for this subject.
+            $pfRef = collect($examIds)->map(fn($e) => $perExamSubjectMarks[$e][$subjectKey] ?? null)->filter()->first();
+            if ($pfRef && \App\Services\PassFailGradingService::appliesTo(Session('LoggedSchool'), $pfRef->subject_id, $pfRef->custom_subject_id ?? null)) {
+                $pfBands = \App\Services\PassFailGradingService::bands(Session('LoggedSchool'));
+                $scaleFor = fn($pct) => $pfBands->first(fn($g) => $pct >= $g->min_mark && $pct <= $g->max_mark);
+                $gradeFor = fn($pct) => $scaleFor($pct)?->grade ?? '—';
+            }
+
             $examData = [];
             $avgPctSum = 0;
             $avgPctCount = 0;

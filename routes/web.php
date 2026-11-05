@@ -926,6 +926,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/', 'index')->name('index');
             Route::post('/', 'store')->name('store');
             Route::post('/restore-defaults', 'restoreDefaults')->name('restore-defaults');
+            Route::post('/pass-fail', 'savePassFail')->name('pass-fail');
             Route::post('/{id}/update', 'update')->name('update');
             Route::post('/{id}/toggle-active', 'toggleActive')->name('toggle-active');
             Route::delete('/{id}', 'destroy')->name('destroy');
