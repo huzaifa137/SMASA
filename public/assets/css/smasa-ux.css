@@ -48,3 +48,125 @@
     overflow: hidden;
     border-radius: 50%;
 }
+
+/* ==========================================================================
+   Small-screen layout fixes
+   - Off-canvas sidebar no longer bleeds its shadow into the left edge
+   - Content, cards, modals and tables stay inside the screen instead of being
+     clipped by .app-content { overflow: hidden }
+   - School dashboard spacing is tightened on phones
+   ========================================================================== */
+
+/* The closed mobile sidebar sits at left:-265px but its large box-shadow still
+   shows as a grey/blue strip on the left edge. Only show the shadow when open. */
+@media (max-width: 767px) {
+    .app:not(.sidenav-toggled) .app-sidebar {
+        box-shadow: none !important;
+        border-right: 0 !important;
+    }
+
+    .app-content {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .app-content .side-app {
+        padding-left: .75rem;
+        padding-right: .75rem;
+    }
+
+    .app-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .page-header {
+        flex-wrap: wrap;
+    }
+
+    .page-title,
+    .card-title,
+    .card-body h1,
+    .card-body h2,
+    .card-body h3,
+    .card-body h4,
+    .card-body h5 {
+        overflow-wrap: break-word;
+    }
+
+    .modal-dialog {
+        margin: .5rem auto;
+        max-width: calc(100vw - 1rem);
+    }
+
+    .table-responsive,
+    .dataTables_wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .select2-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-content .side-app {
+        padding-left: .6rem;
+        padding-right: .6rem;
+    }
+
+    .card-header {
+        flex-wrap: wrap;
+        gap: .5rem;
+        padding-left: .85rem;
+        padding-right: .85rem;
+    }
+
+    .card-body {
+        padding: 1rem .85rem;
+    }
+
+    /* ---- School dashboard (GeneralSchools/schoolsdashboard.blade.php) ----
+       Selectors are prefixed with .school-dashboard so they win over that
+       page's own inline <style>, which is loaded after this file. */
+    .school-dashboard .school-header {
+        padding: 20px 14px 64px;
+        margin-top: .75em;
+    }
+
+    .school-dashboard .school-title h1 {
+        font-size: 1.35rem;
+        flex-wrap: wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .school-dashboard .school-meta-items {
+        gap: 8px 12px !important;
+    }
+
+    .school-dashboard .school-body {
+        padding: 0 10px;
+    }
+
+    .school-dashboard .welcome-card {
+        padding: 18px 16px;
+        gap: 12px;
+    }
+
+    .school-dashboard .welcome-text h3 {
+        font-size: 1.15rem;
+        overflow-wrap: anywhere;
+    }
+
+    .school-dashboard .kpi-card {
+        padding: 16px 14px;
+    }
+}
+
+/* Grids with a fixed minimum column (e.g. minmax(280px, 1fr)) are wider than a
+   small phone's content area and get clipped. Cap the minimum at 100%. */
+.school-dashboard [style*="minmax(280px"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important;
+}

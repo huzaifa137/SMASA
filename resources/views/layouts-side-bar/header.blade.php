@@ -353,7 +353,7 @@
                     font-size: 0.85rem;
                 }
 
-                @media (max-width: 576px) {
+                @media (max-width: 768px) {
                     /*
                      * On mobile the icon row (notif bell, badge, settings) is
                      * centered via justify-content:center, so the bell icon
@@ -398,17 +398,60 @@
                         order: 1;
                     }
 
-                    #pushStatusWrap,
-                    #notifBell,
-                    #refreshPageBtn,
-                    .profile-dropdown {
+                    /*
+                     * Icon row: left-aligned and allowed to wrap, so nothing is pushed
+                     * past the screen edges on narrow phones. Order is
+                     * reload -> bell -> settings, with the wide Notifications
+                     * ON/OFF pill dropping onto its own line underneath.
+                     */
+                    .app-header .container-fluid>.d-flex>.header-actions {
+                        width: 100%;
+                        min-width: 0;
+                        flex: 0 0 100%;
+                        justify-content: flex-start !important;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        margin: 4px 0 0 0 !important;
+                    }
+
+                    .header-actions>* {
+                        margin-left: 0 !important;
+                    }
+
+                    .header-actions #refreshPageBtn {
+                        order: 1;
+                    }
+
+                    .header-actions #notifBell {
                         order: 2;
                     }
 
-                    .app-header .container-fluid>.d-flex>.d-flex.order-lg-2.ml-auto.align-items-center:last-child {
-                        width: 100%;
-                        justify-content: center;
-                        margin-top: 4px;
+                    .header-actions .profile-dropdown {
+                        order: 3;
+                    }
+
+                    .header-actions #pushStatusWrap {
+                        order: 4;
+                        flex: 0 0 100%;
+                        max-width: 100%;
+                    }
+
+                    .header-actions .push-toggle {
+                        max-width: 100%;
+                    }
+
+                    .header-actions .push-toggle .pt-label {
+                        min-width: 0;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                /* Very small phones: let the Active Year / Active Term badges wrap instead of overflowing */
+                @media (max-width: 360px) {
+                    .active-info-container {
+                        flex-wrap: wrap !important;
+                        row-gap: 2px;
                     }
                 }
 
@@ -646,7 +689,7 @@
                 @endif
             </div>
 
-            <div class="d-flex order-lg-2 ml-auto align-items-center" style="margin-top:0.7rem;">
+            <div class="d-flex order-lg-2 ml-auto align-items-center header-actions" style="margin-top:0.7rem;">
                 <div class="display-name responsive-user-section">
                     @if (Session('LoggedSchool'))
                         <span style="line-height:40px;">
@@ -674,6 +717,17 @@
                         'pushStatusUrl' => route('notifications.push.status'),
                     ])
 
+                    <!-- Refresh Button -->
+                    <div id="refreshPageBtn" style="margin-left: 8px;">
+                        <a href="javascript:void(0)"
+                            class="position-relative d-flex align-items-center justify-content-center"
+                            onclick="refreshCurrentPage()" title="Refresh Page"
+                            style="text-decoration:none; width:42px; height:42px;">
+                            <i id="refreshIcon" class="fas fa-spinner"
+                                style="font-size:1.35rem; color:#2C29CA; line-height:1;"></i>
+                        </a>
+                    </div>
+
                     <div class="dropdown" id="notifBell" style="margin-left: 12px;">
                         <a href="javascript:void(0)"
                             class="position-relative d-flex align-items-center justify-content-center" id="notifBellToggle"
@@ -694,17 +748,6 @@
                                 <div class="text-center text-muted py-4 small">Loading...</div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Refresh Button -->
-                    <div id="refreshPageBtn" style="margin-left: 8px;">
-                        <a href="javascript:void(0)"
-                            class="position-relative d-flex align-items-center justify-content-center"
-                            onclick="refreshCurrentPage()" title="Refresh Page"
-                            style="text-decoration:none; width:42px; height:42px;">
-                            <i id="refreshIcon" class="fas fa-spinner"
-                                style="font-size:1.35rem; color:#2C29CA; line-height:1;"></i>
-                        </a>
                     </div>
 
                     <script>
@@ -961,7 +1004,7 @@
     // wins over these non-!important inline styles anyway, but skipping
     // keeps the intent obvious and avoids a pointless reflow on click.
     $('#notifBell').on('shown.bs.dropdown', function () {
-        if (window.innerWidth <= 576) return;
+        if (window.innerWidth <= 768) return;
 
         const menu = $(this).find('.dropdown-menu');
         const rect = menu[0].getBoundingClientRect();
