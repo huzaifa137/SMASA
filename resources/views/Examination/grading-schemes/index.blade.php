@@ -1540,7 +1540,9 @@
 
 
             {{-- ── A-Level General Paper / Subsidiary: pass (E) / fail (O) ── --}}
-            @php($pf = \App\Services\PassFailGradingService::settings($schoolId))
+            @php
+                $pf = \App\Services\PassFailGradingService::settings($schoolId);
+            @endphp
             <div id="pfCard" style="background:#fff;border:1px solid #E6E7EE;border-radius:14px;padding:1.1rem 1.25rem;margin:1rem 0;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;">
                     <div>
