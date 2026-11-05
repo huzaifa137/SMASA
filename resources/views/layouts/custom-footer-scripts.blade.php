@@ -14,3 +14,4 @@
 <!-- Select2 JS -->
 @yield('js')
 @include('layouts.partials.smasa-flash')
+@include('partials.offline-support')

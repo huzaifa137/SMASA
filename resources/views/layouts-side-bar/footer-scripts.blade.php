@@ -42,3 +42,4 @@
 	});
 </script>
 @include('layouts.partials.smasa-flash')
+@include('partials.offline-support')

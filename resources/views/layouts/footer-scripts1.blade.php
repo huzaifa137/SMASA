@@ -32,3 +32,4 @@
 <script src="{{URL::asset('assets/js/custom.js')}}"></script>
 
 @include('layouts.partials.smasa-flash')
+@include('partials.offline-support')

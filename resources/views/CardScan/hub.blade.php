@@ -1580,8 +1580,6 @@
             pingUrl: '{{ route("card-scan.ping") }}',
             cardsUrl: '{{ route("card-scan.offline-cards") }}',
             syncUrl: '{{ route("card-scan.sync") }}',
-            swUrl: '{{ asset("card-scan-sw.js") }}',
-            swScope: '{{ parse_url(route("card-scan.hub"), PHP_URL_PATH) }}',
             categories: ['attendance_arrival', 'attendance_departure'],
             loginUrl: '{{ url("/") }}'
         });

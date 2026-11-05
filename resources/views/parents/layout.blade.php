@@ -703,6 +703,7 @@
         })();
     </script>
     @yield('scripts')
+    @include('partials.offline-support')
 </body>
 
 </html>

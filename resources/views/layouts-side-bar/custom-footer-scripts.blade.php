@@ -11,3 +11,4 @@
 <script src="{{URL::asset('assets/plugins/rating/jquery.rating-stars.js')}}"></script>
 @yield('js')
 @include('layouts.partials.smasa-flash')
+@include('partials.offline-support')

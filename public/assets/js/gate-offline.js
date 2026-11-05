@@ -267,10 +267,7 @@
     GateOffline.init = function (config) {
         cfg = config;
 
-        if ('serviceWorker' in navigator && cfg.swUrl) {
-            // Scope = the gate page only, so it never replaces the site's push-notification worker.
-            navigator.serviceWorker.register(cfg.swUrl, { scope: cfg.swScope }).catch(function () { });
-        }
+        // The page itself is kept for offline use by the site worker (/sw.js, see partials/offline-support).
 
         return openDb().then(function (d) {
             db = d;

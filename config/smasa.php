@@ -10,6 +10,13 @@ return [
     | to the log - with the most repeated queries (the N+1 culprits) - for any
     | request that runs more than QUERY_WARN_THRESHOLD queries.
     */
+    /*
+    | Offline pages: pages a signed-in user opens are saved in their browser so they
+    | still open with no internet (see public/sw.js). Set OFFLINE_PAGES=false to turn
+    | it off for everyone; saved copies are then wiped on each device's next visit.
+    */
+    'offline_pages' => env('OFFLINE_PAGES', true),
+
     'query_counter' => env('QUERY_COUNTER', false),
     'query_warn_threshold' => (int) env('QUERY_WARN_THRESHOLD', 60),
 
