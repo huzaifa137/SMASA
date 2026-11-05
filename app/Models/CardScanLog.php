@@ -16,6 +16,7 @@ class CardScanLog extends Model
         'result_data',
         'scanned_by',
         'scanned_by_type',
+        'client_scan_id',
         'device_info',
     ];
 

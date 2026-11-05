@@ -1306,6 +1306,10 @@ Route::controller(CardScanController::class)
     ->group(function () {
         Route::get('/', 'hub')->name('hub');
         Route::post('/scan', 'scan')->name('scan')->middleware('throttle:scan');
+        // Offline gate scanning (see public/assets/js/gate-offline.js)
+        Route::get('/ping', 'ping')->name('ping')->middleware('throttle:120,1');
+        Route::get('/offline-cards', 'offlineCards')->name('offline-cards')->middleware('throttle:12,1');
+        Route::post('/sync', 'sync')->name('sync')->middleware('throttle:30,1');
         Route::get('/logs', 'scanLogs')->name('logs');
         Route::get('/arrival', 'arrivalAttendancePage')->name('arrival');
         Route::post('/arrival/save', 'saveArrivalAttendance')->name('arrival.save');

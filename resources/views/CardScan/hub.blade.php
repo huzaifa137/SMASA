@@ -901,6 +901,7 @@
 
 @section('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="{{ asset('assets/js/gate-offline.js') }}?v=1"></script>
     <script>
         let html5QrcodeScanner = null;
         let selectedCategory = '{{ $categories[0]["key"] ?? "attendance_arrival" }}';
@@ -1128,17 +1129,29 @@
             rawCard = (rawCard || '').trim();
             if (!rawCard) { notify('warning', 'No card number', ['Please enter or scan a card number.'], 3000); return; }
 
+            // No connection: arrival / sign-out are saved on this device and sent later.
+            if (window.GateOffline && GateOffline.eligible(selectedCategory) && GateOffline.isOffline()) {
+                queueOffline(rawCard);
+                return;
+            }
+
             document.getElementById('scanLoading').style.display = 'flex';
             document.getElementById('resultLoading').style.display = 'flex';
             document.getElementById('resultEmpty').style.display = 'none';
             document.getElementById('resultContent').style.display = 'none';
 
+            // Arrival / sign-out give up after 12 s on a dead connection and are saved offline instead.
+            const canQueue = !!(window.GateOffline && GateOffline.eligible(selectedCategory));
+            const ctl = canQueue && window.AbortController ? new AbortController() : null;
+            const abortTimer = ctl ? setTimeout(() => ctl.abort(), 12000) : null;
+
             fetch('{{ route("card-scan.scan") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ card_number: rawCard, category: selectedCategory })
+                body: JSON.stringify({ card_number: rawCard, category: selectedCategory }),
+                signal: ctl ? ctl.signal : undefined
             })
-                .then(r => r.json())
+                .then(r => { if (abortTimer) clearTimeout(abortTimer); return r.json(); })
                 .then(data => {
                     document.getElementById('scanLoading').style.display = 'none';
                     document.getElementById('resultLoading').style.display = 'none';
@@ -1151,6 +1164,12 @@
                 .catch(err => {
                     document.getElementById('scanLoading').style.display = 'none';
                     document.getElementById('resultLoading').style.display = 'none';
+                    // The server could not be reached (not "the server said no"): keep the scan.
+                    if (abortTimer) clearTimeout(abortTimer);
+                    if ((err instanceof TypeError || (err && err.name === 'AbortError')) && canQueue) {
+                        queueOffline(rawCard);
+                        return;
+                    }
                     renderResult({ success: false, result: 'failed', message: 'Network error: ' + err.message, data: {} });
                     notify('error', 'Network error', ['The scan did not reach the server. Check your connection and scan again.'], 8000);
                 });
@@ -1514,5 +1533,57 @@
         function nf(n) {
             return Number(n || 0).toLocaleString();
         }
+
+        // ----------------------------------------------
+        //  Offline gate scanning (see public/assets/js/gate-offline.js)
+        // ----------------------------------------------
+        function queueOffline(rawCard) {
+            GateOffline.enqueue(rawCard, selectedCategory).then(r => {
+                document.getElementById('scanLoading').style.display = 'none';
+                document.getElementById('resultLoading').style.display = 'none';
+                document.getElementById('resultEmpty').style.display = 'none';
+                const box = document.getElementById('resultContent');
+                box.style.display = 'block';
+                box.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-header ${r.ok ? 'success' : 'failed'}">
+                            <i class="fas ${r.ok ? 'fa-cloud-arrow-up' : 'fa-times-circle'}"></i>
+                            <span>${escHtml(r.message)}</span>
+                        </div>
+                        <div class="result-body">
+                            ${r.name ? `<div class="person-row"><div class="person-photo-placeholder"><i class="fas fa-user"></i></div>
+                                <div><div class="person-name">${escHtml(r.name)}</div>
+                                <div class="person-meta">${r.type ? `<span class="badge-status badge-info">${escHtml(String(r.type).toUpperCase())}</span>` : ''}${r.klass ? ' &nbsp; ' + escHtml(r.klass) : ''}</div></div></div>` : ''}
+                            <div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:#fffbeb;color:#92400e;font-size:.82rem">
+                                <i class="fas fa-wifi"></i> Offline - this scan is saved on this device and will be sent automatically when the connection returns.
+                                Lateness and the parent alert are worked out from the time shown.
+                            </div>
+                        </div>
+                    </div>`;
+                notify(r.duplicate ? 'info' : (r.ok ? 'success' : 'error'),
+                    r.duplicate ? 'Already saved' : 'Saved offline', [escHtml(r.message)], 4000);
+                document.getElementById('manualInput').value = '';
+            });
+        }
+
+        GateOffline.onSynced = function (s) {
+            const lines = [];
+            if (s.synced) lines.push(s.synced + ' scan(s) recorded');
+            if (s.duplicates) lines.push(s.duplicates + ' already recorded');
+            s.rejected.slice(0, 5).forEach(x => lines.push('Not recorded - ' + escHtml(x.name) + (x.time ? ' (' + x.time + ')' : '') + ': ' + escHtml(x.message)));
+            if (s.rejected.length > 5) lines.push('...and ' + (s.rejected.length - 5) + ' more not recorded');
+            notify(s.rejected.length ? 'warning' : 'success', 'Offline scans synced', lines, s.rejected.length ? 15000 : 6000);
+        };
+
+        GateOffline.init({
+            schoolId: {{ (int) session('LoggedSchool') }},
+            pingUrl: '{{ route("card-scan.ping") }}',
+            cardsUrl: '{{ route("card-scan.offline-cards") }}',
+            syncUrl: '{{ route("card-scan.sync") }}',
+            swUrl: '{{ asset("card-scan-sw.js") }}',
+            swScope: '{{ parse_url(route("card-scan.hub"), PHP_URL_PATH) }}',
+            categories: ['attendance_arrival', 'attendance_departure'],
+            loginUrl: '{{ url("/") }}'
+        });
     </script>
 @endsection

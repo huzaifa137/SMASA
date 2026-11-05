@@ -99,9 +99,17 @@ class CardScanController extends Controller
             'category' => 'required|string|in:attendance_arrival,attendance_departure,attendance_class,library_issue,library_return,library_reserve,finance_balance,finance_payment,info',
         ]);
 
-        $schoolId = session('LoggedSchool');
-        $cardNumber = trim($request->card_number);
-        $category = $request->category;
+        return $this->processScan($request, session('LoggedSchool'), $request->card_number, $request->category, null);
+    }
+
+    /**
+     * The scan itself. $at is the moment the card was really scanned: null for
+     * a live scan (= now), or the original time of a scan that was saved on an
+     * offline gate device and is now being synced.
+     */
+    private function processScan(Request $request, $schoolId, string $rawCard, string $category, ?Carbon $at)
+    {
+        $cardNumber = trim($rawCard);
 
         // Parse card number (may be JSON from QR)
         $parsedCard = $this->parseCardNumber($cardNumber);
@@ -131,8 +139,8 @@ class CardScanController extends Controller
 
         // Route to appropriate handler
         return match ($category) {
-            'attendance_arrival' => $this->handleArrivalAttendance($request, $schoolId, $resolved),
-            'attendance_departure' => $this->handleDepartureAttendance($request, $schoolId, $resolved),
+            'attendance_arrival' => $this->handleArrivalAttendance($request, $schoolId, $resolved, $at),
+            'attendance_departure' => $this->handleDepartureAttendance($request, $schoolId, $resolved, $at),
             'attendance_class' => $this->handleClassAttendance($request, $schoolId, $resolved),
             'library_issue' => $this->handleLibraryIssue($request, $schoolId, $resolved),
             'library_return' => $this->handleLibraryReturn($request, $schoolId, $resolved),
@@ -149,10 +157,10 @@ class CardScanController extends Controller
     //  Early / on time / late is decided by THIS school's own hours
     //  (Card Scan → Attendance Hours), not a hard-coded 08:00.
     // ──────────────────────────────────────────────────────────────
-    private function handleArrivalAttendance(Request $request, $schoolId, array $resolved)
+    private function handleArrivalAttendance(Request $request, $schoolId, array $resolved, ?Carbon $at = null)
     {
-        $today = Carbon::today()->toDateString();
-        $now = Carbon::now();
+        $now = $at ?? Carbon::now();
+        $today = $now->toDateString();
         $arrivalTime = $now->format('H:i:s');
 
         $settings = SchoolAttendanceSetting::forSchool($schoolId);
@@ -243,10 +251,10 @@ class CardScanController extends Controller
     //  HANDLER: School Sign-Out (departure)
     //  Fills the departure_time column that existed but was never used.
     // ──────────────────────────────────────────────────────────────
-    private function handleDepartureAttendance(Request $request, $schoolId, array $resolved)
+    private function handleDepartureAttendance(Request $request, $schoolId, array $resolved, ?Carbon $at = null)
     {
-        $today = Carbon::today()->toDateString();
-        $now = Carbon::now();
+        $now = $at ?? Carbon::now();
+        $today = $now->toDateString();
         $settings = SchoolAttendanceSetting::forSchool($schoolId);
 
         $record = SchoolArrivalAttendance::where('school_id', $schoolId)
@@ -810,6 +818,138 @@ class CardScanController extends Controller
     //  ARRIVAL ATTENDANCE MANAGEMENT PAGE
     // ══════════════════════════════════════════════════════════════
 
+    // --------------------------------------------------------------
+    //  OFFLINE GATE SCANNING
+    //  The gate page keeps working with no internet: it saves arrival /
+    //  sign-out scans on the device (with their real time and a unique id)
+    //  and sends them here when the connection is back.
+    // --------------------------------------------------------------
+
+    /** Cheap "am I online and still logged in?" check. Also hands out a fresh CSRF token and the server clock. */
+    public function ping()
+    {
+        abort_unless(PermissionHelper::canFeature('scan_cards'), 403);
+
+        return response()->json([
+            'ok' => true,
+            'time_ms' => (int) round(microtime(true) * 1000),
+            'csrf' => csrf_token(),
+            'school_id' => (int) session('LoggedSchool'),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * The school's ACTIVE cards (card number -> who it is), so a gate device
+     * can recognise a card with no connection. Names and class only: no
+     * photos, no contact details, no fees.
+     */
+    public function offlineCards()
+    {
+        abort_unless(PermissionHelper::canFeature('scan_cards'), 403);
+
+        $schoolId = session('LoggedSchool');
+        $cards = [];
+
+        $studentCards = StudentIdCard::where('status', 'active')->get(['card_number', 'student_id']);
+        $students = Student::whereIn('id', $studentCards->pluck('student_id')->unique())
+            ->get(['id', 'firstname', 'lastname', 'senior'])->keyBy('id');
+        foreach ($studentCards as $c) {
+            if ($st = $students[$c->student_id] ?? null) {
+                $cards[] = [
+                    'card_number' => (string) $c->card_number, 'type' => 'student',
+                    'name' => trim($st->firstname . ' ' . $st->lastname),
+                    'class' => Helper::recordMdname($st->senior ?? ''),
+                ];
+            }
+        }
+
+        $teacherCards = TeacherIdCard::where('status', 'active')->get(['card_number', 'teacher_id']);
+        $teachers = Teacher::whereIn('id', $teacherCards->pluck('teacher_id')->unique())
+            ->get(['id', 'firstname', 'surname'])->keyBy('id');
+        foreach ($teacherCards as $c) {
+            if ($t = $teachers[$c->teacher_id] ?? null) {
+                $cards[] = [
+                    'card_number' => (string) $c->card_number, 'type' => 'teacher',
+                    'name' => trim($t->firstname . ' ' . $t->surname), 'class' => null,
+                ];
+            }
+        }
+
+        return response()->json([
+            'school_id' => (int) $schoolId,
+            'generated_ms' => (int) round(microtime(true) * 1000),
+            'cards' => $cards,
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * Receives scans saved offline. Each one is processed exactly like a live
+     * scan, but AT ITS ORIGINAL TIME (late / on-time, "already arrived", the
+     * parent message all use when the card was really scanned). Safe to send
+     * twice: client_scan_id is unique, so a repeat is answered "duplicate".
+     *
+     * Result per scan:  synced | duplicate | rejected (final, will not succeed
+     * by retrying: unknown card, no arrival yet, bad time) | retry (try again later).
+     */
+    public function sync(Request $request)
+    {
+        abort_unless(PermissionHelper::canFeature('scan_cards'), 403);
+
+        $data = $request->validate([
+            'scans' => 'required|array|min:1|max:100',
+            'scans.*.client_id' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9\-_]+$/'],
+            'scans.*.card_number' => 'required|string|max:500',
+            'scans.*.category' => 'required|in:attendance_arrival,attendance_departure',
+            'scans.*.scanned_at_ms' => 'required|integer',
+        ]);
+
+        $schoolId = session('LoggedSchool');
+        $scans = collect($data['scans'])->sortBy('scanned_at_ms')->values();
+        $results = [];
+
+        foreach ($scans as $scan) {
+            $id = $scan['client_id'];
+
+            // Already processed (a resend after a dropped connection)?
+            $prior = CardScanLog::where('school_id', $schoolId)->where('client_scan_id', $id)->first();
+            if ($prior) {
+                $results[] = ['client_id' => $id, 'status' => 'duplicate', 'message' => $prior->result_message];
+                continue;
+            }
+
+            $at = Carbon::createFromTimestampMs((int) $scan['scanned_at_ms'])->setTimezone(config('app.timezone'));
+
+            // A wrong device clock must not rewrite history.
+            if ($at->gt(now()->addMinutes(5)) || $at->lt(now()->subDays(3))) {
+                $results[] = ['client_id' => $id, 'status' => 'rejected',
+                    'message' => 'Scan time (' . $at->format('d M H:i') . ') is outside the allowed window (last 3 days). Record it manually.'];
+                continue;
+            }
+
+            try {
+                $request->attributes->set('client_scan_id', $id);
+                $payload = $this->processScan($request, $schoolId, $scan['card_number'], $scan['category'], $at)->getData(true);
+
+                $results[] = [
+                    'client_id' => $id,
+                    'status' => !empty($payload['success']) ? 'synced' : 'rejected',
+                    'message' => $payload['message'] ?? '',
+                ];
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Unique client_scan_id hit by a parallel resend = already done.
+                $dup = str_contains($e->getMessage(), 'card_scan_logs_client_scan_unique');
+                $results[] = ['client_id' => $id, 'status' => $dup ? 'duplicate' : 'retry', 'message' => $dup ? 'Already synced.' : 'Server error, will retry.'];
+            } catch (\Throwable $e) {
+                report($e);
+                $results[] = ['client_id' => $id, 'status' => 'retry', 'message' => 'Server error, will retry.'];
+            }
+        }
+
+        $request->attributes->remove('client_scan_id');
+
+        return response()->json(['results' => $results])->header('Cache-Control', 'no-store');
+    }
+
     public function arrivalAttendancePage(Request $request)
     {
         PermissionHelper::denyUnlessFeature('manage_arrival_attendance');
@@ -1267,6 +1407,7 @@ class CardScanController extends Controller
             'result_data' => $data,
             'scanned_by' => session('LoggedTeacher') ?? session('LoggedAdmin'),
             'scanned_by_type' => session('LoggedTeacher') ? 'teacher' : 'admin',
+            'client_scan_id' => request()->attributes->get('client_scan_id'),
         ]);
 
         return response()->json([
