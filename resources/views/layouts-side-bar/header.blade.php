@@ -399,7 +399,7 @@
                     }
 
                     /*
-                     * Icon row: left-aligned and allowed to wrap, so nothing is pushed
+                     * Icon row: centered and allowed to wrap, so nothing is pushed
                      * past the screen edges on narrow phones. Order is
                      * reload -> bell -> settings, with the wide Notifications
                      * ON/OFF pill dropping onto its own line underneath.
@@ -408,7 +408,7 @@
                         width: 100%;
                         min-width: 0;
                         flex: 0 0 100%;
-                        justify-content: flex-start !important;
+                        justify-content: center !important;
                         flex-wrap: wrap;
                         gap: 6px;
                         margin: 4px 0 0 0 !important;
@@ -434,6 +434,8 @@
                         order: 4;
                         flex: 0 0 100%;
                         max-width: 100%;
+                        display: flex;
+                        justify-content: center;
                     }
 
                     .header-actions .push-toggle {
