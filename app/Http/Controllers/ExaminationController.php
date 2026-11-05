@@ -2113,6 +2113,63 @@ class ExaminationController extends Controller
 
         $schoolId = Session('LoggedSchool');
 
+        Examination::withReportCards()->where('id', $examId)
+            ->where('school_id', $schoolId)
+            ->firstOrFail();
+
+        // A whole school's report cards is the heaviest page in the system.
+        // With a real queue it is built by a worker and this request returns
+        // at once with a "preparing" page; with QUEUE_CONNECTION=sync it is
+        // built right here, exactly as before.
+        if (config('queue.default') !== 'sync') {
+            $token = \Illuminate\Support\Str::random(32);
+
+            \Illuminate\Support\Facades\Cache::put('reportcards:' . $token, [
+                'status' => 'queued', 'school_id' => (int) $schoolId, 'exam_id' => (int) $examId,
+            ], now()->addHours(6));
+
+            \App\Jobs\GenerateAllReportCards::dispatch($token, (int) $examId, (int) $schoolId, request()->only(['lang', 'template']));
+
+            return view('Examination.passslips.all-preparing', compact('token', 'examId'));
+        }
+
+        return $this->buildAllSlipsResponse($examId, $schoolId);
+    }
+
+    /** JSON status for the "preparing" page. */
+    public function passslipAllStatus($examId, $token)
+    {
+        PermissionHelper::denyUnlessFeature('view_report_cards');
+
+        $state = \Illuminate\Support\Facades\Cache::get('reportcards:' . $token);
+        abort_unless($state && (int) $state['school_id'] === (int) Session('LoggedSchool') && (int) $state['exam_id'] === (int) $examId, 404);
+
+        return response()->json(['status' => $state['status'], 'error' => $state['error'] ?? null]);
+    }
+
+    /** The finished report-card page, served from storage. */
+    public function passslipAllFile($examId, $token)
+    {
+        PermissionHelper::denyUnlessFeature('view_report_cards');
+
+        $state = \Illuminate\Support\Facades\Cache::get('reportcards:' . $token);
+        abort_unless($state && $state['status'] === 'done'
+            && (int) $state['school_id'] === (int) Session('LoggedSchool')
+            && (int) $state['exam_id'] === (int) $examId, 404);
+
+        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($state['path']);
+        abort_unless(is_file($path), 404);
+
+        return response()->file($path, ['Content-Type' => 'text/html; charset=UTF-8']);
+    }
+
+    /**
+     * Builds the whole-school report-card page. Called inline for a sync
+     * queue, or by GenerateAllReportCards in a worker. Authorisation happens
+     * in passslipAll(), before this is reached.
+     */
+    public function buildAllSlipsResponse($examId, $schoolId)
+    {
         $exam = Examination::withReportCards()->where('id', $examId)
             ->where('school_id', $schoolId)
             ->firstOrFail();
@@ -2289,6 +2346,7 @@ class ExaminationController extends Controller
 
         return view($view, compact('exam', 'allSlips', 'examsList', 'useAvg', 'termDates') + ['mode' => 'all', 'slips' => $allSlips, 'multiExam' => $multiExam, 'isNursery' => $isNursery, 'isSecondary' => $isSecondary]);
     }
+
 
     // ─── METHOD 3: passslipIndex (Optional - for listing) ─────────────────────
 

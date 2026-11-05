@@ -501,7 +501,7 @@
                 @if($isPlatform)
                     <div class="filter-group">
                         <label>School</label>
-                        <div class="ss-wrapper" data-name="school_id" data-placeholder="All schools">
+                        <div class="ss-wrapper" data-name="school_id" data-placeholder="All schools" data-remote="{{ route('admin.schools.lookup') }}">
                             <div class="ss-trigger" tabindex="0">
                                 <span class="ss-value placeholder">All schools</span>
                                 <i class="fas fa-chevron-down ss-arrow"></i>
@@ -632,7 +632,9 @@
         const dropdown   = wrapper.querySelector('.ss-dropdown');
         const searchInput= wrapper.querySelector('.ss-search input');
         const optionsBox = wrapper.querySelector('.ss-options');
-        const options    = Array.from(optionsBox.querySelectorAll('.ss-option'));
+        const getOptions = () => Array.from(optionsBox.querySelectorAll('.ss-option'));
+        let options      = getOptions();
+        const remoteUrl  = wrapper.dataset.remote || null;
         const hiddenInput= wrapper.querySelector('input[type="hidden"]');
         const valueSpan  = trigger.querySelector('.ss-value');
         const placeholder= wrapper.dataset.placeholder || 'Select…';
@@ -658,14 +660,50 @@
             if (!isOpen) {
                 wrapper.classList.add('open');
                 searchInput.value = '';
-                filterOptions('');
+                if (remoteUrl) { loadRemote(''); } else { filterOptions(''); }
                 searchInput.focus();
             }
         });
 
-        // Search filtering
+        // Search filtering. A remote picker (e.g. the school list, which can hold
+        // thousands of entries) asks the server instead of filtering rendered rows.
+        let remoteTimer = null, remoteSeq = 0;
+
+        function esc(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        function loadRemote(query) {
+            const seq = ++remoteSeq;
+            fetch(remoteUrl + '?q=' + encodeURIComponent(query.trim()), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(d => {
+                if (seq !== remoteSeq) return;
+                const current = hiddenInput.value;
+                const check = ' <i class="fas fa-check check-icon ml-auto"></i>';
+                let html = '<div class="ss-option" data-value="">' + esc(placeholder) + check + '</div>';
+                d.results.forEach(r => {
+                    html += '<div class="ss-option" data-value="' + esc(String(r.id)) + '">' + esc(r.text) + check + '</div>';
+                });
+                if (d.more) html += '<div class="ss-no-results">Showing the first ' + d.results.length + ' — type to narrow down</div>';
+                else if (!d.results.length) html += '<div class="ss-no-results">No matches found</div>';
+                optionsBox.innerHTML = html;
+                options = getOptions();
+                options.forEach(o => o.classList.toggle('selected', o.dataset.value === current && current !== ''));
+            })
+            .catch(() => {});
+        }
+
         searchInput.addEventListener('input', function() {
-            filterOptions(this.value);
+            if (!remoteUrl) { filterOptions(this.value); return; }
+            const v = this.value;
+            clearTimeout(remoteTimer);
+            remoteTimer = setTimeout(() => loadRemote(v), 250);
         });
 
         // Stop propagation on search click
@@ -695,12 +733,12 @@
             }
         }
 
-        // Select option
-        options.forEach(opt => {
-            opt.addEventListener('click', function(e) {
-                e.stopPropagation();
-                selectOption(this);
-            });
+        // Select option (delegated, so options added by a remote search work too)
+        optionsBox.addEventListener('click', function(e) {
+            const opt = e.target.closest('.ss-option');
+            if (!opt) return;
+            e.stopPropagation();
+            selectOption(opt);
         });
 
         function selectOption(opt) {

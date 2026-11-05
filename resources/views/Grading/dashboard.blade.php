@@ -48,10 +48,12 @@ use App\Http\Controllers\Helper;
 
                                 <div class="col-md-3">
                                     <label>School</label>
-                                    <select name="school_id" class="form-control">
+                                    <select name="school_id" class="form-control"
+                                        data-remote-schools="{{ route('admin.schools.lookup') }}"
+                                        data-placeholder="{{ trans('common.national') }} (All Schools)">
                                         <option value="">{{ trans('common.national') }} (All Schools)</option>
                                         @foreach($schools as $school)
-                                            <option value="{{ $school->id }}">
+                                            <option value="{{ $school->id }}" selected>
                                                 {{ $school->name }}
                                             </option>
                                         @endforeach
@@ -78,6 +80,12 @@ use App\Http\Controllers\Helper;
 
                     <div class="card-body">
 
+                        @if(!empty($gradingUnavailable))
+                            <div class="alert alert-warning">
+                                The national-exam ranking tables are not available on this database yet,
+                                so there is nothing to rank. Ask your administrator to run the latest migrations.
+                            </div>
+                        @endif
                         @if($results->isEmpty())
                             <div class="alert alert-warning">
                                {{ trans('common.no_results_found') }}.
@@ -162,4 +170,8 @@ use App\Http\Controllers\Helper;
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+@endsection
+
+@section('js')
+<script src="{{ asset('assets/js/remote-school-select.js') }}"></script>
 @endsection

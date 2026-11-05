@@ -52,10 +52,12 @@ class LedgerController extends Controller
         $year = request('year', \App\Support\ActiveYear::calendarYear());
         $term = request('term', '');
 
-        $balances = [];
-        foreach ($accounts as $account) {
-            $balances[$account->id] = $account->balanceWithChildren($year, $term ?: null);
-        }
+        // One grouped query for every account, rolled up the tree in memory
+        // (was one query per account, each loading all of its transactions).
+        $balances = ChartOfAccount::rollUpBalances(
+            $accounts,
+            ChartOfAccount::ownBalances((int) $schoolId, $year, $term ?: null)
+        );
 
         return view('Finance.Ledger.chart-of-accounts', compact(
             'accounts', 'rootAccounts', 'balances', 'year', 'term'
@@ -335,13 +337,22 @@ class LedgerController extends Controller
         $totalDebit = 0;
         $totalCredit = 0;
 
+        // Two queries in total: every account's own balance (grouped), and which
+        // accounts have children (a parent is never a posting account).
+        $own = ChartOfAccount::ownBalances((int) $schoolId, $year, $term ?: null);
+        $parentIds = ChartOfAccount::forSchool($schoolId)
+            ->whereNotNull('parent_id')
+            ->distinct()
+            ->pluck('parent_id')
+            ->flip();
+
         foreach ($accounts as $account) {
-            $isLeaf = $account->children()->doesntExist();
+            $isLeaf = !$parentIds->has($account->id);
             if (!$isLeaf) {
                 continue;
             }
 
-            $balance = $account->balance($year, $term ?: null);
+            $balance = $own[$account->id] ?? 0.0;
             if ($balance == 0) {
                 continue;
             }
@@ -370,11 +381,11 @@ class LedgerController extends Controller
         }
 
         // Income & Expenditure summary
-        $totalIncome = $accounts->filter(fn($a) => $a->type === 'income' && $a->children()->doesntExist())
-            ->sum(fn($a) => $a->balance($year, $term ?: null));
+        $totalIncome = $accounts->filter(fn($a) => $a->type === 'income' && !$parentIds->has($a->id))
+            ->sum(fn($a) => $own[$a->id] ?? 0.0);
 
-        $totalExpense = $accounts->filter(fn($a) => $a->type === 'expense' && $a->children()->doesntExist())
-            ->sum(fn($a) => $a->balance($year, $term ?: null));
+        $totalExpense = $accounts->filter(fn($a) => $a->type === 'expense' && !$parentIds->has($a->id))
+            ->sum(fn($a) => $own[$a->id] ?? 0.0);
 
         $surplusDeficit = $totalIncome - $totalExpense;
 

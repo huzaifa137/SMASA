@@ -136,6 +136,6 @@ class BillingInvoice extends Model
         return $q->whereIn('status', ['issued', 'partial'])
             ->where('balance', '>', 0)
             ->whereNotNull('due_date')
-            ->whereDate('due_date', '<', today());
+            ->where('due_date', '<', today()->toDateString());
     }
 }

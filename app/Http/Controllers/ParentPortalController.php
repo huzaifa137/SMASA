@@ -255,10 +255,17 @@ class ParentPortalController extends Controller
             return $this->blocked($student, 'attendance', ParentVisibility::sectionMessage($student, 'attendance'));
         }
 
-        $month = $request->input('month', now()->format('Y-m'));
+        $month = (string) $request->input('month', now()->format('Y-m'));
+        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+            $month = now()->format('Y-m');
+        }
+        // First and last day of the month: a BETWEEN on the raw column can use
+        // an index, DATE_FORMAT(attendance_date, ...) cannot.
+        $monthStart = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfDay();
+        $monthRange = [$monthStart->toDateString(), $monthStart->copy()->endOfMonth()->toDateString()];
 
         $records = StudentAttendance::where('student_id', $student->id)
-            ->whereRaw("DATE_FORMAT(attendance_date, '%Y-%m') = ?", [$month])
+            ->whereBetween('attendance_date', $monthRange)
             ->orderByDesc('attendance_date')
             ->get();
 
@@ -282,7 +289,7 @@ class ParentPortalController extends Controller
                 ->where('school_id', $student->school_id)
                 ->where('person_type', 'student')
                 ->where('person_id', $student->id)
-                ->whereRaw("DATE_FORMAT(attendance_date, '%Y-%m') = ?", [$month])
+                ->whereBetween('attendance_date', $monthRange)
                 ->pluck('departure_time', 'attendance_date')
                 ->mapWithKeys(fn($t, $d) => [substr((string) $d, 0, 10) => $t])
             : collect();

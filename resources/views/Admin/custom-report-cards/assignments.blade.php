@@ -134,53 +134,59 @@
     @if($ready)
 
         @php
-            $levelCount     = count($levels);
-            $schoolsCustom  = 0;
-            $coverage       = [];
+            $levelCount = count($levels);
+            $coverage   = [];
             foreach ($schools as $school) {
                 $n = 0;
                 foreach ($levels as $lk => $ll) {
                     if ($assignments->get($school->id . '|' . $lk)) { $n++; }
                 }
                 $coverage[$school->id] = $n;
-                if ($n > 0) { $schoolsCustom++; }
             }
-            $assignCount = $assignments->count();
-            $activeCount = $assignments->filter(fn($a) => $a->is_active)->count();
-            $lockedCount = $assignments->filter(fn($a) => $a->lock_to_custom)->count();
+            if ($selected && !isset($coverage[$selected->id])) {
+                $n = 0;
+                foreach ($levels as $lk => $ll) {
+                    if ($assignments->get($selected->id . '|' . $lk)) { $n++; }
+                }
+                $coverage[$selected->id] = $n;
+            }
+            $pageQuery = array_filter(['q' => $q, 'mode' => $mode !== 'all' ? $mode : null, 'page' => request('page')]);
         @endphp
 
         <div class="crc-stats mb-3">
-            <div class="crc-stat"><b>{{ count($schools) }}</b><span>Schools</span></div>
-            <div class="crc-stat"><b>{{ $schoolsCustom }}</b><span>With custom design</span></div>
-            <div class="crc-stat"><b>{{ $activeCount }}<small class="text-muted" style="font-size:.9rem;"> / {{ $assignCount }}</small></b><span>Active assignments</span></div>
-            <div class="crc-stat"><b>{{ $lockedCount }}</b><span>Locked</span></div>
+            <div class="crc-stat"><b>{{ number_format($stats['schools']) }}</b><span>Schools</span></div>
+            <div class="crc-stat"><b>{{ number_format($stats['with_custom']) }}</b><span>With custom design</span></div>
+            <div class="crc-stat"><b>{{ number_format($stats['active']) }}<small class="text-muted" style="font-size:.9rem;"> / {{ number_format($stats['assignments']) }}</small></b><span>Active assignments</span></div>
+            <div class="crc-stat"><b>{{ number_format($stats['locked']) }}</b><span>Locked</span></div>
         </div>
 
         <div class="crc-shell">
 
             {{-- ============ SIDEBAR: school list ============ --}}
             <aside class="crc-side">
-                <div class="crc-side-head">
-                    <label for="schoolFilter" class="crc-search-label">Find a school</label>
-                    <div class="crc-search">
-                        <i class="fas fa-search"></i>
-                        <input type="search" id="schoolFilter" class="form-control" placeholder="Type a school name…" autocomplete="off">
+                <form method="GET" action="{{ route('admin.custom-report-cards.assignments') }}" id="schoolSearchForm">
+                    @if($selected)<input type="hidden" name="school" value="{{ $selected->id }}">@endif
+                    <input type="hidden" name="mode" id="modeInput" value="{{ $mode }}">
+                    <div class="crc-side-head">
+                        <label for="schoolFilter" class="crc-search-label">Find a school</label>
+                        <div class="crc-search">
+                            <i class="fas fa-search"></i>
+                            <input type="search" id="schoolFilter" name="q" value="{{ $q }}" class="form-control" placeholder="Type a school name…" autocomplete="off">
+                        </div>
+                        <div class="crc-seg" id="schoolPills">
+                            <button type="button" data-mode="all" class="{{ $mode === 'all' ? 'active' : '' }}">All</button>
+                            <button type="button" data-mode="custom" class="{{ $mode === 'custom' ? 'active' : '' }}">Custom</button>
+                            <button type="button" data-mode="standard" class="{{ $mode === 'standard' ? 'active' : '' }}">Standard only</button>
+                        </div>
                     </div>
-                    <div class="crc-seg" id="schoolPills">
-                        <button type="button" class="active" data-mode="all">All</button>
-                        <button type="button" data-mode="custom">Custom</button>
-                        <button type="button" data-mode="standard">Standard only</button>
-                    </div>
-                </div>
-                <div class="crc-count"><span id="visibleCount">{{ count($schools) }}</span> school(s)</div>
+                </form>
+                <div class="crc-count"><span id="visibleCount">{{ number_format($schools->total()) }}</span> school(s)</div>
 
                 <div class="crc-list" id="schoolList">
                     @foreach($schools as $school)
-                        <button type="button" class="crc-item"
-                                data-target="school-{{ $school->id }}"
-                                data-name="{{ strtolower($school->name) }}"
-                                data-assigned="{{ $coverage[$school->id] }}">
+                        <a class="crc-item {{ $selected && $selected->id === $school->id ? 'active' : '' }}"
+                           style="text-decoration:none;color:inherit;"
+                           href="{{ route('admin.custom-report-cards.assignments', $pageQuery + ['school' => $school->id]) }}">
                             <div class="crc-av">{{ mb_substr($school->name, 0, 1) }}</div>
                             <div class="crc-item-main">
                                 <div class="crc-item-name">{{ $school->name }}</div>
@@ -193,21 +199,27 @@
                                 </div>
                             </div>
                             <div class="crc-item-n">{{ $coverage[$school->id] }}/{{ $levelCount }}</div>
-                        </button>
+                        </a>
                     @endforeach
                 </div>
+                @if($schools->hasPages())
+                    <div style="padding:8px 10px;">{{ $schools->onEachSide(0)->links() }}</div>
+                @endif
             </aside>
 
             {{-- ============ WORKSPACE: selected school ============ --}}
             <main class="crc-work">
 
-                <div class="crc-placeholder" id="noResults">
-                    <i class="fas fa-search"></i>
-                    <p class="mb-0">No schools match your filter.</p>
-                </div>
+                @unless($selected)
+                    <div class="crc-placeholder" id="noResults" style="display:block">
+                        <i class="fas fa-search"></i>
+                        <p class="mb-0">No schools match your filter.</p>
+                    </div>
+                @endunless
 
-                @foreach($schools as $school)
+                @if($selected)
                     @php
+                        $school = $selected;
                         // Levels with a design set come first, then the rest (original order kept inside each group)
                         $withDesign = [];
                         $withoutDesign = [];
@@ -219,7 +231,7 @@
                         $prevAssigned  = null;
                     @endphp
 
-                    <section class="crc-panel" id="school-{{ $school->id }}" hidden>
+                    <section class="crc-panel" id="school-{{ $school->id }}">
 
                         <div class="crc-ws-head">
                             <div class="crc-av">{{ mb_substr($school->name, 0, 1) }}</div>
@@ -351,7 +363,7 @@
                             @endforeach
                         </div>
                     </section>
-                @endforeach
+                @endif
             </main>
         </div>
     @endif
@@ -365,59 +377,38 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function () {
-    const KEY    = 'crc_assign_school';
-    const input  = document.getElementById('schoolFilter');
-    const pills  = document.querySelectorAll('#schoolPills button');
-    const items  = Array.from(document.querySelectorAll('#schoolList .crc-item'));
-    const panels = Array.from(document.querySelectorAll('.crc-panel'));
-    const noRes  = document.getElementById('noResults');
-    const countEl = document.getElementById('visibleCount');
-    let mode = 'all';
+    // Search and the All / Custom / Standard filter run on the server
+    // (the list is paginated), so this only submits the form.
+    const form  = document.getElementById('schoolSearchForm');
+    const input = document.getElementById('schoolFilter');
+    const modeInput = document.getElementById('modeInput');
+    if (!form || !input) return;
 
-    function select(targetId, remember) {
-        items.forEach(i => i.classList.toggle('active', i.dataset.target === targetId));
-        panels.forEach(p => { p.hidden = (p.id !== targetId); });
-        if (noRes) noRes.style.display = targetId ? 'none' : 'block';
-        if (targetId && remember !== false) { try { sessionStorage.setItem(KEY, targetId); } catch (e) {} }
-    }
+    let timer = null;
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            form.querySelector('input[name="school"]')?.remove();   // new search: let the server pick the first match
+            form.submit();
+        }, 450);
+    });
 
-    function apply() {
-        const q = (input ? input.value : '').toLowerCase();
-        let visible = [];
-        items.forEach(item => {
-            const assigned = parseInt(item.dataset.assigned, 10) > 0;
-            const ok = item.dataset.name.includes(q) &&
-                       (mode === 'all' || (mode === 'custom' && assigned) || (mode === 'standard' && !assigned));
-            item.style.display = ok ? '' : 'none';
-            if (ok) visible.push(item);
+    document.querySelectorAll('#schoolPills button').forEach(function (b) {
+        b.addEventListener('click', function () {
+            modeInput.value = this.dataset.mode;
+            form.querySelector('input[name="school"]')?.remove();
+            form.submit();
         });
-        if (countEl) countEl.textContent = visible.length;
+    });
 
-        const current = items.find(i => i.classList.contains('active'));
-        if (!current || current.style.display === 'none') {
-            select(visible.length ? visible[0].dataset.target : null, false);
-        }
+    // Keep typing after the page reloads with the results
+    if (input.value) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
     }
 
-    items.forEach(i => i.addEventListener('click', () => select(i.dataset.target)));
-    input?.addEventListener('input', apply);
-    pills.forEach(p => p.addEventListener('click', function () {
-        pills.forEach(x => x.classList.remove('active'));
-        this.classList.add('active');
-        mode = this.dataset.mode;
-        apply();
-    }));
-
-    // Restore last selected school (survives Save / Assign / Remove redirects)
-    let saved = null;
-    try { saved = sessionStorage.getItem(KEY); } catch (e) {}
-    const start = items.find(i => i.dataset.target === saved) || items[0];
-    if (start) {
-        select(start.dataset.target, false);
-        start.scrollIntoView({ block: 'nearest' });
-    } else if (noRes) {
-        noRes.style.display = 'block';
-    }
+    const active = document.querySelector('#schoolList .crc-item.active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
 })();
 
 /* ---------- SweetAlert confirmation helpers ---------- */

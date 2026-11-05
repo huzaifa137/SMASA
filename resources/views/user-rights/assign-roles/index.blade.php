@@ -669,38 +669,38 @@
             <div class="stats-container">
                 <div class="stat-pill green">
                     <i class="fa fa-user-check"></i>
-                    <span id="countAssigned">{{ $teachers->filter(fn($t) => $t->schoolRoleAssignment)->count() }}</span>
+                    <span id="countAssigned">{{ number_format($stats['assigned']) }}</span>
                     Assigned
                 </div>
 
                 <div class="stat-pill yellow">
                     <i class="fa fa-user-clock"></i>
-                    <span id="countUnassigned">{{ $teachers->filter(fn($t) => !$t->schoolRoleAssignment)->count() }}</span>
+                    <span id="countUnassigned">{{ number_format($stats['unassigned']) }}</span>
                     No Role
                 </div>
 
                 <div class="stat-pill">
                     <i class="fa fa-users"></i>
-                    {{ $teachers->count() }} Total Staff
+                    {{ number_format($stats['total']) }} Total Staff
                 </div>
             </div>
-            <div class="d-flex gap-2 flex-wrap align-items-center">
-                <select id="filterRole" class="form-control form-control-sm" style="min-width:160px;border-radius:8px;">
+            <form method="GET" action="{{ url()->current() }}" id="assignFilterForm" class="d-flex gap-2 flex-wrap align-items-center">
+                <select id="filterRole" name="role" class="form-control form-control-sm" style="min-width:160px;border-radius:8px;">
                     <option value="">All Roles</option>
-                    <option value="__none__">No Role Assigned</option>
+                    <option value="__none__" {{ $roleFilter === '__none__' ? 'selected' : '' }}>No Role Assigned</option>
                     @foreach($roles as $role)
-                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                        <option value="{{ $role->id }}" {{ (string) $roleFilter === (string) $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
                     @endforeach
                 </select>
-                <input type="text" id="searchTeacher" class="form-control form-control-sm mt-3"
-                    placeholder="Search staff..." style="min-width:180px;border-radius:8px;font-family:inherit;">
-            </div>
+                <input type="text" id="searchTeacher" name="q" value="{{ $term }}" class="form-control form-control-sm mt-3"
+                    placeholder="Search staff..." autocomplete="off" style="min-width:180px;border-radius:8px;font-family:inherit;">
+            </form>
         </div>
 
         @if($teachers->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="fa fa-users fa-3x mb-3 d-block" style="opacity:.3;"></i>
-                <h5>No staff found for this school.</h5>
+                <h5>{{ ($term !== '' || $roleFilter !== '') ? 'No staff match this search.' : 'No staff found for this school.' }}</h5>
             </div>
         @else
             <div id="teacherList">
@@ -759,6 +759,10 @@
                     </div>
                 @endforeach
             </div>
+
+            @if($teachers->hasPages())
+                <div class="mt-3">{{ $teachers->links() }}</div>
+            @endif
         @endif
     </div>
     </div>
@@ -820,9 +824,10 @@
                                 badge.innerHTML = 'No Role';
                             }
 
-                            // Update card data attr
+                            // Update card data attr and the school-wide pills
+                            const hadRole = !!card.dataset.roleId;
                             card.dataset.roleId = roleId;
-                            updateStats();
+                            updateStats(hadRole, !!roleId);
 
                             setTimeout(() => {
                                 this.style.display = 'none';
@@ -845,41 +850,33 @@
             });
         });
 
-        // ── SEARCH ──
-        document.getElementById('searchTeacher').addEventListener('input', function () {
-            const q = this.value.toLowerCase();
-            applyFilters();
-        });
+        // ── SEARCH & ROLE FILTER (server-side: the list is paginated) ──
+        (function () {
+            const form = document.getElementById('assignFilterForm');
+            const input = document.getElementById('searchTeacher');
+            let timer = null;
 
-        // ── FILTER BY ROLE ──
-        document.getElementById('filterRole').addEventListener('change', applyFilters);
-
-        function applyFilters() {
-            const q = document.getElementById('searchTeacher').value.toLowerCase();
-            const roleF = document.getElementById('filterRole').value;
-
-            document.querySelectorAll('.teacher-card').forEach(card => {
-                const name = card.dataset.name || '';
-                const roleId = card.dataset.roleId || '';
-
-                const matchName = !q || name.includes(q);
-                let matchRole = true;
-                if (roleF === '__none__') matchRole = !roleId;
-                else if (roleF) matchRole = roleId === roleF;
-
-                card.style.display = (matchName && matchRole) ? 'flex' : 'none';
+            input.addEventListener('input', function () {
+                clearTimeout(timer);
+                timer = setTimeout(() => form.submit(), 500);
             });
-        }
+            document.getElementById('filterRole').addEventListener('change', () => form.submit());
 
-        function updateStats() {
-            const cards = document.querySelectorAll('.teacher-card');
-            let assigned = 0;
-            let noRole = 0;
-            cards.forEach(c => {
-                if (c.dataset.roleId) assigned++; else noRole++;
-            });
-            document.getElementById('countAssigned').textContent = assigned;
-            document.getElementById('countUnassigned').textContent = noRole;
+            if (input.value) {                       // keep typing after the reload
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
+        })();
+
+        // The pills show school-wide totals, so adjust them by the change just saved.
+        function updateStats(hadRole, hasRole) {
+            if (hadRole === hasRole) return;
+            const a = document.getElementById('countAssigned');
+            const n = document.getElementById('countUnassigned');
+            const num = el => parseInt(el.textContent.replace(/,/g, ''), 10) || 0;
+            const d = hasRole ? 1 : -1;
+            a.textContent = (num(a) + d).toLocaleString();
+            n.textContent = (num(n) - d).toLocaleString();
         }
     </script>
 @endsection

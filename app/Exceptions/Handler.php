@@ -27,6 +27,21 @@ class Handler extends ExceptionHandler
     ];
 
     /**
+     * Error monitoring. When the Sentry package is installed
+     * (composer require sentry/sentry-laravel) and SENTRY_LARAVEL_DSN is set,
+     * every unhandled exception is sent to Sentry as well as the log. Without
+     * the package this does nothing, so it is safe to deploy first.
+     */
+    public function register(): void
+    {
+        $this->reportable(function (Throwable $e) {
+            if (class_exists(\Sentry\Laravel\Integration::class)) {
+                \Sentry\Laravel\Integration::captureUnhandledException($e);
+            }
+        });
+    }
+
+    /**
      * Report or log an exception.
      *
      * @param  \Throwable  $exception

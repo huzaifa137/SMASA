@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->registerLookupInvalidation();
+        $this->registerRateLimiters();
+
         // ── Standard pagination design ──────────────────────────────
         // Every ->links() / ->render() call in the system now renders the
         // same pager used on /students/all-students (see
@@ -113,6 +116,63 @@ class AppServiceProvider extends ServiceProvider
          */
         Blade::directive('whole', function ($expression) {
             return "<?php echo \\App\\Helpers\\NumberHelper::whole({$expression}); ?>";
+        });
+    }
+
+    /**
+     * Keep App\Support\LookupCache honest: any INSERT/UPDATE/DELETE on a
+     * table behind a cached lookup (master data, school names, academic
+     * years, pass-slip settings) flushes that group, wherever the write
+     * comes from (controller, model, seeder, command).
+     */
+    private function registerLookupInvalidation(): void
+    {
+        \Illuminate\Support\Facades\DB::listen(function ($query) {
+            $sql = $query->sql;
+            $head = strtolower(substr(ltrim($sql), 0, 6));
+
+            if ($head !== 'insert' && $head !== 'update' && $head !== 'delete') {
+                return;
+            }
+
+            foreach (\App\Support\LookupCache::TABLE_GROUPS as $table => $group) {
+                if (stripos($sql, '`' . $table . '`') !== false) {
+                    \App\Support\LookupCache::flush($group);
+                }
+            }
+        });
+
+        // Workers keep PHP alive between jobs: never reuse a previous job's memo.
+        \Illuminate\Support\Facades\Queue::before(fn() => \App\Support\LookupCache::forgetMemo());
+    }
+
+    /**
+     * Named limits used by routes as throttle:login / throttle:password-reset /
+     * throttle:scan. Login limits are per IP (generous: a whole school can sit
+     * behind one address) AND per account name (tight: stops password guessing).
+     */
+    private function registerRateLimiters(): void
+    {
+        \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
+            $who = strtolower(trim((string) ($request->input('email') ?? $request->input('username') ?? $request->input('phone') ?? '')));
+
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by('login-ip|' . $request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by('login-id|' . $request->ip() . '|' . $who),
+            ];
+        });
+
+        \Illuminate\Support\Facades\RateLimiter::for('password-reset', function (\Illuminate\Http\Request $request) {
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by('reset-ip|' . $request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perHour(10)->by('reset-id|' . strtolower((string) ($request->input('email') ?? $request->input('phone') ?? $request->ip()))),
+            ];
+        });
+
+        // A gate scans about one card a second at its busiest; this only stops a runaway client.
+        \Illuminate\Support\Facades\RateLimiter::for('scan', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(240)
+                ->by('scan|' . (session('LoggedSchool') ?? 'x') . '|' . $request->ip());
         });
     }
 }

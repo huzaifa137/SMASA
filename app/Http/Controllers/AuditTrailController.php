@@ -64,8 +64,10 @@ class AuditTrailController extends Controller
             'severities' => self::SEVERITIES,
             'actorTypes' => self::ACTOR_TYPES,
             'eventLabels' => (array) config('audit.event_labels'),
-            'schools' => AuditAccess::isPlatformAdmin()
-                ? School::orderBy('name')->get(['id', 'name'])
+            // Only the school currently filtered on is rendered; the picker
+            // searches the rest through admin.schools.lookup.
+            'schools' => (AuditAccess::isPlatformAdmin() && !empty($filters['school_id']))
+                ? School::whereKey((int) $filters['school_id'])->get(['id', 'name'])
                 : collect(),
             'isPlatform' => AuditAccess::isPlatformAdmin(),
             'canExport' => AuditAccess::canExport(),

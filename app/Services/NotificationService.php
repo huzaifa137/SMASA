@@ -47,14 +47,18 @@ class NotificationService
             'triggered_by' => $data['triggered_by'] ?? null,
         ]);
 
-        foreach ($recipients as $recipient) {
-            SmasaNotificationRecipient::create([
+        // One bulk INSERT per 500 recipients instead of one query per recipient.
+        $now = now();
+        foreach (array_chunk($recipients, 500) as $chunk) {
+            \Illuminate\Support\Facades\DB::table('smasa_notification_recipients')->insert(array_map(fn($r) => [
                 'notification_id' => $notification->id,
-                'recipient_type' => $recipient['type'],
-                'recipient_id' => $recipient['id'],
+                'recipient_type' => $r['type'],
+                'recipient_id' => $r['id'],
                 'school_id' => $schoolId,
                 'is_read' => false,
-            ]);
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], $chunk));
         }
 
         // ── Fire Web Push to all User accounts that are recipients ──
@@ -76,6 +80,25 @@ class NotificationService
      * Teachers/students can be added when those models get Notifiable.
      */
 private static function dispatchPush(array $recipients, array $payload): void
+{
+    // With a real queue (QUEUE_CONNECTION=redis/database) the slow part - one
+    // HTTP call per device - runs in a worker; with 'sync' it runs inline as before.
+    if (config('queue.default') !== 'sync') {
+        $pushable = collect($recipients)->whereIn('type', ['admin', 'teacher'])
+            ->map(fn($r) => ['type' => $r['type'], 'id' => $r['id']])->unique()->values()->all();
+
+        if ($pushable) {
+            \App\Jobs\SendPushNotifications::dispatch($pushable, $payload)->afterCommit();
+        }
+
+        return;
+    }
+
+    self::pushNow($recipients, $payload);
+}
+
+/** The actual push delivery (called inline, or by the SendPushNotifications job). */
+public static function pushNow(array $recipients, array $payload): void
 {
     try {
         $pushNotification = new \App\Notifications\SmasaPushNotification(

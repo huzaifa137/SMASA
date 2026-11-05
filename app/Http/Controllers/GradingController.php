@@ -74,6 +74,9 @@ class GradingController extends Controller
 
     public function storeCreatedExamination(Request $request)
     {
+        // Annual (national) examinations are platform-wide: platform admins only.
+        abort_unless(session()->has('LoggedAdmin'), 403);
+
 
         $validator = \Validator::make($request->all(), [
             'ExaminationName' => 'required|string',
@@ -131,6 +134,9 @@ class GradingController extends Controller
 
     public function toggleExamActive(Request $request)
     {
+        // Annual (national) examinations are platform-wide: platform admins only.
+        abort_unless(session()->has('LoggedAdmin'), 403);
+
         $request->validate([
             'exam_id' => 'required|exists:annual_examinations,id',
             'is_active' => 'required|boolean',
@@ -239,6 +245,7 @@ class GradingController extends Controller
                 ->first();
 
             if ($existingExam) {
+                app(GradingService::class)->forgetExamSummary($existingExam->getKey());
                 $existingExam->delete();
             }
 
@@ -250,6 +257,9 @@ class GradingController extends Controller
             ]);
 
             Excel::import(new StudentExamImport($exam, $subjects), $request->file('file'));
+
+            // Compute the ranking rows once, now that the marks are saved.
+            app(GradingService::class)->refreshExamSummary($exam->getKey());
 
             DB::commit();
 
@@ -265,6 +275,19 @@ class GradingController extends Controller
 
     public function showExamResults($examId, GradingService $gradingService)
     {
+        // School staff may only open their own school's exam; anything else is
+        // a 404 (never confirm another school's exam exists).
+        if (!session()->has('LoggedAdmin')) {
+            $schoolId = session('LoggedSchool');
+            abort_unless($schoolId, 403);
+
+            $owner = \Illuminate\Support\Facades\Schema::hasColumn('exams', 'school_id')
+                ? DB::table('exams')->where('id', $examId)->value('school_id')
+                : null;
+
+            abort_unless($owner !== null && (int) $owner === (int) $schoolId, 404);
+        }
+
 
         $results = $gradingService->calculateExamResults($examId);
 
@@ -291,67 +314,60 @@ class GradingController extends Controller
         $academicYear = $request->academic_year;
         $schoolId = $request->school_id;
 
-        $query = Exam::query();
-
-        if ($examType) {
-            $query->where('exam_type', $examType);
+        // School staff may only ever see their own school's results. Only a
+        // platform admin can filter on (or leave open) other schools.
+        $isPlatformAdmin = session()->has('LoggedAdmin');
+        if (!$isPlatformAdmin) {
+            $schoolId = session('LoggedSchool');
+            abort_unless($schoolId, 403);
         }
 
-        if ($academicYear) {
-            $query->where('academic_year', $academicYear);
+        // Ranking comes from the precomputed exam_result_summaries table:
+        // the database sorts and counts, PHP only builds the 10 rows shown.
+        $filters = [
+            'exam_type' => $examType,
+            'academic_year' => $academicYear,
+            'school_id' => $schoolId,
+        ];
+
+        $gradingUnavailable = !$gradingService->summariesAvailable();
+
+        if (!$gradingUnavailable) {
+            $gradingService->ensureSummaries($filters);
         }
 
-        if ($schoolId) {
-            $query->where('school_id', $schoolId);
-        }
-
-        $exams = $query->get();
-
-        $results = collect();
-
-        foreach ($exams as $exam) {
-            $examResults = $gradingService->calculateExamResults($exam->id);
-            $results = $results->merge($examResults);
-        }
-
-        // National ranking across merged results
-        $results = $results->sortByDesc('total_marks')->values();
-
-        $rank = 1;
-        $previousMarks = null;
-
-        foreach ($results as $index => $student) {
-
-            if ($previousMarks !== null && $student->total_marks < $previousMarks) {
-                $rank = $index + 1;
-            }
-
-            $results[$index]->national_rank = $rank;
-
-            $previousMarks = $student->total_marks;
-        }
-
-
-        // The national ranking is computed over everyone first (so ranks stay correct), then shown 10 per page.
-        $page = max(1, (int) request()->query('page', 1));
-        $results = new \Illuminate\Pagination\LengthAwarePaginator(
-            $results->forPage($page, 10)->values(),
-            $results->count(),
-            10,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $results = $gradingUnavailable
+            ? new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1, ['path' => request()->url()])
+            : $gradingService->rankedPage(
+                $filters,
+                max(1, (int) request()->query('page', 1)),
+                10,
+                request()->url(),
+                request()->query()
+            );
 
         // Subject statistics
         $subjectStats = null;
-        if ($examType && $academicYear) {
-            $subjectStats = $gradingService->subjectStatistics($examType, $academicYear);
+        // Subject statistics are computed across all schools: platform admin only.
+        if ($isPlatformAdmin && $examType && $academicYear && !$gradingUnavailable) {
+            try {
+                $subjectStats = $gradingService->subjectStatistics($examType, $academicYear);
+            } catch (\Throwable $e) {
+                // StudentExamResult's subject/exam relations are commented out in the
+                // model, so this can fail; the ranking itself must still render.
+                report($e);
+            }
         }
 
-        $schools = School::all();
-        $years = Exam::select('academic_year')->distinct()->pluck('academic_year');
+        // Only the school currently filtered on is rendered; the picker searches
+        // the rest through admin.schools.lookup.
+        $schools = $schoolId
+            ? School::whereKey((int) $schoolId)->get(['id', 'name'])
+            : collect();
+        $years = $gradingUnavailable ? collect() : DB::table('exams')->whereNotNull('academic_year')->distinct()->pluck('academic_year');
 
         return view('Grading.dashboard', compact(
+            'gradingUnavailable',
             'results',
             'schools',
             'years',

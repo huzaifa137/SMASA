@@ -317,19 +317,50 @@ class UserRightsController extends Controller
     // Assign Roles to Teachers
     // ──────────────────────────────────────────────
 
-    public function assignRolesIndex()
+    public function assignRolesIndex(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_role_assignments');
 
         $schoolId = session('LoggedSchool');
-        $teachers = Teacher::where('school_id', $schoolId)
+
+        $term = trim((string) $request->query('q', ''));
+        $roleFilter = (string) $request->query('role', '');   // '' | '__none__' | a school_role id
+
+        $base = Teacher::where('school_id', $schoolId);
+
+        // School-wide figures for the pills, from COUNT queries (not from the page of rows).
+        $totalStaff = (clone $base)->count();
+        $assignedCount = (clone $base)->whereHas('schoolRoleAssignment')->count();
+        $stats = [
+            'total' => $totalStaff,
+            'assigned' => $assignedCount,
+            'unassigned' => $totalStaff - $assignedCount,
+        ];
+
+        $teachers = (clone $base)
+            ->when($term !== '', function ($q) use ($term) {
+                $like = '%' . addcslashes($term, '\\%_') . '%';
+                $q->where(function ($w) use ($like) {
+                    $w->whereRaw("CONCAT_WS(' ', firstname, surname) LIKE ?", [$like])
+                        ->orWhereRaw("CONCAT_WS(' ', surname, firstname) LIKE ?", [$like])
+                        ->orWhere('phonenumber', 'like', $like)
+                        ->orWhere('email', 'like', $like);
+                });
+            })
+            ->when($roleFilter === '__none__', fn($q) => $q->whereDoesntHave('schoolRoleAssignment'))
+            ->when(ctype_digit($roleFilter), fn($q) => $q->whereHas(
+                'schoolRoleAssignment',
+                fn($a) => $a->where('school_role_id', (int) $roleFilter)
+            ))
             ->with(['schoolRoleAssignment.schoolRole'])
             ->orderBy('surname')
-            ->get();
+            ->orderBy('id')
+            ->paginate(30)
+            ->withQueryString();
 
         $roles = SchoolRole::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get();
 
-        return view('user-rights.assign-roles.index', compact('teachers', 'roles'));
+        return view('user-rights.assign-roles.index', compact('teachers', 'roles', 'stats', 'term', 'roleFilter'));
     }
 
     public function assignRoleToTeacher(Request $request)
@@ -432,22 +463,40 @@ class UserRightsController extends Controller
 
         $userRightsModuleId = SystemModule::where('key', 'user_rights')->value('id');
 
-        $schoolIdsWithUrpAccess = $userRightsModuleId
-            ? SchoolRole::where('is_active', true)
-                ->whereHas('moduleAccess', fn($q) => $q->where('module_id', $userRightsModuleId)->where('can_access', true))
-                ->pluck('school_id')
-                ->unique()
-                ->toArray()
-            : [];
-
-        $schools = School::query()
+        // Active schools matching the search. Used for the page AND, as a
+        // sub-select, for the summary cards, so no school rows are loaded
+        // just to be counted.
+        $filtered = School::query()
             ->where('school_status', 10)
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
                         ->orWhere('registration_code', 'like', "%{$search}%");
                 });
-            })
+            });
+
+        // Schools that have at least one active role granting User Rights access.
+        $urpAccessQuery = fn() => SchoolRole::query()
+            ->where('is_active', true)
+            ->whereHas('moduleAccess', fn($q) => $q->where('module_id', $userRightsModuleId)->where('can_access', true));
+
+        // ── Summary cards: aggregate queries over ALL matching schools ──
+        $matchingIds = (clone $filtered)->select('schools.id');
+
+        $totalSchools = (clone $filtered)->count();
+        $totalRoles = SchoolRole::whereIn('school_id', $matchingIds)->count();
+        $unassignedTotal = Teacher::whereIn('school_id', $matchingIds)
+            ->whereDoesntHave('schoolRoleAssignment')
+            ->count();
+
+        $atRiskQuery = (clone $filtered)->whereHas('schoolRoles');
+        if ($userRightsModuleId) {
+            $atRiskQuery->whereNotIn('schools.id', $urpAccessQuery()->select('school_id'));
+        }
+        $atRiskSchools = $atRiskQuery->count();
+
+        // ── The page of school cards (24 per page) ──
+        $schools = (clone $filtered)
             ->withCount([
                 'schoolRoles',
                 'teachers',
@@ -455,18 +504,22 @@ class UserRightsController extends Controller
                     $q->whereHas('schoolRoleAssignment'),
             ])
             ->orderBy('name')
-            ->get()
-            ->map(function ($school) use ($schoolIdsWithUrpAccess) {
-                $school->unassigned_teachers_count = max(0, $school->teachers_count - $school->assigned_teachers_count);
-                $school->has_user_rights_role = in_array($school->id, $schoolIdsWithUrpAccess, true);
-                $school->at_risk = $school->school_roles_count > 0 && !$school->has_user_rights_role;
-                return $school;
-            });
+            ->orderBy('id')
+            ->paginate(24)
+            ->withQueryString();
 
-        $totalSchools = $schools->count();
-        $totalRoles = $schools->sum('school_roles_count');
-        $atRiskSchools = $schools->where('at_risk', true)->count();
-        $unassignedTotal = $schools->sum('unassigned_teachers_count');
+        // Which schools ON THIS PAGE have a role granting User Rights access.
+        $pageIds = $schools->getCollection()->pluck('id')->all();
+        $schoolIdsWithUrpAccess = ($userRightsModuleId && $pageIds)
+            ? $urpAccessQuery()->whereIn('school_id', $pageIds)->pluck('school_id')->unique()->all()
+            : [];
+
+        $schools->getCollection()->transform(function ($school) use ($schoolIdsWithUrpAccess) {
+            $school->unassigned_teachers_count = max(0, $school->teachers_count - $school->assigned_teachers_count);
+            $school->has_user_rights_role = in_array($school->id, $schoolIdsWithUrpAccess, true);
+            $school->at_risk = $school->school_roles_count > 0 && !$school->has_user_rights_role;
+            return $school;
+        });
 
         return view('user-rights.admin.schools-index', compact(
             'schools',

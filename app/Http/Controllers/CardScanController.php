@@ -29,6 +29,23 @@ class CardScanController extends Controller
     //  SCAN HUB PAGE
     // ══════════════════════════════════════════════════════════════
 
+    /**
+     * Restrict a query to one calendar day using a range on the raw column
+     * (created_at >= day AND < next day). whereDate() wraps the column in
+     * DATE(), which stops MySQL from using an index on created_at.
+     */
+    private function whereOnDay($query, string $column, $date)
+    {
+        try {
+            $start = Carbon::parse($date)->startOfDay();
+        } catch (\Throwable $e) {
+            $start = Carbon::today();
+        }
+
+        return $query->where($column, '>=', $start)
+            ->where($column, '<', $start->copy()->addDay());
+    }
+
     public function hub()
     {
         PermissionHelper::denyUnlessFeature('view_hub');
@@ -43,8 +60,7 @@ class CardScanController extends Controller
 
         // Today's scan stats
         $today = Carbon::today()->toDateString();
-        $todayStats = CardScanLog::where('school_id', $schoolId)
-            ->whereDate('created_at', $today)
+        $todayStats = $this->whereOnDay(CardScanLog::where('school_id', $schoolId), 'created_at', $today)
             ->selectRaw("
                 scan_category,
                 COUNT(*) as total,
@@ -55,8 +71,7 @@ class CardScanController extends Controller
             ->get()
             ->keyBy('scan_category');
 
-        $todayTotal = CardScanLog::where('school_id', $schoolId)
-            ->whereDate('created_at', $today)
+        $todayTotal = $this->whereOnDay(CardScanLog::where('school_id', $schoolId), 'created_at', $today)
             ->count();
 
         $categories = $this->getScanCategories();
@@ -341,6 +356,22 @@ class CardScanController extends Controller
                 $student, $event,
                 'Parent ' . ($event === 'arrival' ? 'arrival' : 'sign-out') . ' alerts are switched off in Attendance Hours.'
             );
+        }
+
+        // With a real queue the push is sent by a worker so the gate never waits
+        // on the push service; the outcome is recorded in the parent notification
+        // log. With QUEUE_CONNECTION=sync it is sent inline and reported at once.
+        if (config('queue.default') !== 'sync') {
+            \App\Jobs\SendParentAttendanceNotification::dispatch($student->id, $event, $context)->afterCommit();
+
+            return [
+                'status' => 'queued',
+                'code' => 'queued',
+                'reason' => null,
+                'devices_total' => 0,
+                'devices_sent' => 0,
+                'parent_phone' => trim((string) $student->primary_contact),
+            ];
         }
 
         return ParentAttendanceNotifier::notify($student, $event, $context);
@@ -954,8 +985,7 @@ class CardScanController extends Controller
         $date = $request->date ?? Carbon::today()->toDateString();
         $result = $request->result;
 
-        $query = CardScanLog::where('school_id', $schoolId)
-            ->whereDate('created_at', $date);
+        $query = $this->whereOnDay(CardScanLog::where('school_id', $schoolId), 'created_at', $date);
 
         if ($category)
             $query->where('scan_category', $category);
@@ -965,8 +995,7 @@ class CardScanController extends Controller
         $logs = $query->orderByDesc('created_at')->paginate(50);
 
         // Category summary for today
-        $categorySummary = CardScanLog::where('school_id', $schoolId)
-            ->whereDate('created_at', $date)
+        $categorySummary = $this->whereOnDay(CardScanLog::where('school_id', $schoolId), 'created_at', $date)
             ->selectRaw("scan_category, scan_result, COUNT(*) as cnt")
             ->groupBy('scan_category', 'scan_result')
             ->get();

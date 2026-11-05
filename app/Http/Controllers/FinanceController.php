@@ -1766,8 +1766,8 @@ class FinanceController extends Controller
             ->when($filters['term'], fn($q) => $q->where('term', $filters['term']))
             ->when($filters['status'], fn($q) => $q->where('status', $filters['status']), fn($q) => $q->where('status', 'confirmed'))
             ->when($filters['payment_method'], fn($q) => $q->where('payment_method', $filters['payment_method']))
-            ->when($filters['resolved_from'], fn($q) => $q->whereDate('payment_date', '>=', $filters['resolved_from']))
-            ->when($filters['resolved_to'], fn($q) => $q->whereDate('payment_date', '<=', $filters['resolved_to']))
+            ->when($filters['resolved_from'], fn($q) => $q->where('payment_date', '>=', $filters['resolved_from']->toDateString()))
+            ->when($filters['resolved_to'], fn($q) => $q->where('payment_date', '<=', $filters['resolved_to']->toDateString()))
             ->when($filters['class_id'] || $filters['stream_id'], function ($q) use ($filters, $schoolId) {
                 $q->whereHas('student', function ($sq) use ($filters, $schoolId) {
                     $sq->where('school_id', $schoolId)
@@ -1800,8 +1800,8 @@ class FinanceController extends Controller
             ->when($filters['category_id'], fn($q) => $q->where('expenses.category_id', $filters['category_id']))
             ->when($filters['status'], fn($q) => $q->where('expenses.status', $filters['status']), fn($q) => $q->whereIn('expenses.status', ['approved', 'paid']))
             ->when($filters['payment_method'], fn($q) => $q->where('expenses.payment_method', $filters['payment_method']))
-            ->when($filters['resolved_from'], fn($q) => $q->whereDate('expenses.expense_date', '>=', $filters['resolved_from']))
-            ->when($filters['resolved_to'], fn($q) => $q->whereDate('expenses.expense_date', '<=', $filters['resolved_to']))
+            ->when($filters['resolved_from'], fn($q) => $q->where('expenses.expense_date', '>=', $filters['resolved_from']->toDateString()))
+            ->when($filters['resolved_to'], fn($q) => $q->where('expenses.expense_date', '<=', $filters['resolved_to']->toDateString()))
             ->when($filters['search'], function ($q) use ($filters) {
                 $needle = $filters['search'];
                 $q->where(function ($sq) use ($needle) {
@@ -1819,8 +1819,8 @@ class FinanceController extends Controller
             ->whereHas('period', function ($q) use ($filters) {
                 $q->where('academic_year', $filters['year'])
                     ->when($filters['term'], fn($q2) => $q2->where('term', $filters['term']))
-                    ->when($filters['resolved_from'], fn($q2) => $q2->whereDate('period_start', '>=', $filters['resolved_from']))
-                    ->when($filters['resolved_to'], fn($q2) => $q2->whereDate('period_end', '<=', $filters['resolved_to']));
+                    ->when($filters['resolved_from'], fn($q2) => $q2->where('period_start', '>=', $filters['resolved_from']->toDateString()))
+                    ->when($filters['resolved_to'], fn($q2) => $q2->where('period_end', '<=', $filters['resolved_to']->toDateString()));
             })
             ->when($filters['payroll_period_id'], fn($q) => $q->where('payroll_period_id', $filters['payroll_period_id']))
             ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))

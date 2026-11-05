@@ -1,5 +1,11 @@
 <?php
 use App\Http\Controllers\Helper; 
+
+// One class-name lookup per distinct class, not two per row.
+$__className = function ($id) {
+    static $names = [];
+    return $names[$id] ??= Helper::recordMdname($id);
+};
 ?>
 
 @if($students->isEmpty())
@@ -187,7 +193,7 @@ use App\Http\Controllers\Helper;
                         <td>{{ $count + 1}}</td>
                         <!-- <td>{{ $student->admission_number }}</td> -->
                         <td>{{ $student->firstname }} {{ $student->lastname }}</td>
-                        <td>{{ Helper::recordMdname($student->senior) }}</td>
+                        <td>{{ $__className($student->senior) }}</td>
                         <td>{{ $student->stream }}</td>
                         <td>{{ $student->gender }}</td>
                         <td style="text-align: center;">
@@ -195,7 +201,7 @@ use App\Http\Controllers\Helper;
                                 data-target="#viewStudentModal" data-id="{{ $student->id }}"
                                 data-firstname="{{ $student->firstname }}" data-lastname="{{ $student->lastname }}"
                                 data-gender="{{ $student->gender }}" data-admission_number="{{ $student->admission_number }}"
-                                data-senior="{{ Helper::recordMdname($student->senior) }}" data-stream="{{ $student->stream }}"
+                                data-senior="{{ $__className($student->senior) }}" data-stream="{{ $student->stream }}"
                                 data-primary_contact="{{ $student->primary_contact }}"
                                 data-other_contact="{{ $student->other_contact }}"
                                 data-date_of_birth="{{ $student->date_of_birth }}"
@@ -215,6 +221,12 @@ use App\Http\Controllers\Helper;
             </tbody>
         </table>
     </div>
+
+    @if(!empty($truncated))
+        <div class="alert alert-warning py-2">
+            Showing the first {{ $limit }} matches only. Add more of the name, or choose a class and stream, to narrow the search.
+        </div>
+    @endif
 
     <div class="scroll-indicator">
         <i class="fas fa-chevron-left"></i> Swipe to see more columns <i class="fas fa-chevron-right"></i>

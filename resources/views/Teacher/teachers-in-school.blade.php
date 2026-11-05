@@ -456,15 +456,15 @@ $controller = new Controller();
 
                     {{-- ─── Teacher Search Bar ───────────────────────────────────────── --}}
                     <div class="teacher-search-wrapper">
-                        <div class="teacher-search-box" id="teacherSearchBox">
-                            <input type="text" id="teacherSearchInput" autocomplete="off"
+                        <div class="teacher-search-box {{ request('q') ? 'has-value' : '' }}" id="teacherSearchBox">
+                            <input type="text" id="teacherSearchInput" autocomplete="off" value="{{ request('q') }}"
                                 placeholder="Search by name, phone number, role…">
                             <i class="fas fa-search search-icon"></i>
                             <button type="button" class="search-clear" id="teacherSearchClear" title="Clear search">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-                        <div class="teacher-search-meta" id="teacherSearchMeta"></div>
+                        <div class="teacher-search-meta" id="teacherSearchMeta">@if($teachers->total() > 0)Showing <strong>{{ $teachers->firstItem() }}–{{ $teachers->lastItem() }}</strong> of <strong>{{ number_format($teachers->total()) }}</strong> teachers @if(request('q')) matching “{{ request('q') }}” @endif @endif</div>
                     </div>
 
                     <style>
@@ -595,7 +595,7 @@ $controller = new Controller();
                                                         value="{{ $teacher->id }}">
                                                 </td>
                                             @endif
-                                            <td style="width:1px;">{{ $key + 1 }}</td>
+                                            <td style="width:1px;">{{ $teachers->firstItem() + $key }}</td>
                                             <td class="text-center">
                                                 <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
                                                     class="teacher-profile-img" alt="Teacher Profile">
@@ -694,6 +694,10 @@ $controller = new Controller();
                                     @endforelse
                                 </tbody>
                             </table>
+
+                            @if($teachers->hasPages())
+                                <div class="p-3">{{ $teachers->links() }}</div>
+                            @endif
 
                             {{-- Teacher Profile Modal --}}
                             <div class="modal fade" id="teacherProfileModal" tabindex="-1" role="dialog"
@@ -1104,99 +1108,48 @@ $controller = new Controller();
         });
 
         // ─── Teacher Search ──────────────────────────────────────────────────────────
+        // The list is paginated, so search runs on the server (name, phone or role):
+        // typing reloads the list with ?q=… (debounced) instead of hiding rows.
 
-        function getTeacherRowSearchText(row) {
-            const $row = $(row);
-            const surname = $row.find('td').eq(3).text().trim(); // Adjust index based on your columns
-            const firstname = $row.find('td').eq(4).text().trim();
-            const phone = $row.find('td').eq(5).text().trim();
-            const roleText = $row.find('td').eq(6).text().trim();
-            const statusText = $row.find('td').eq(7).text().trim();
+        let teacherSearchTimer = null;
 
-            // Include the select2 rendered text for role if available
-            const $roleSelect = $row.find('.role-select');
-            const selectedRoleText = $roleSelect.find('option:selected').text().trim();
-
-            return `${surname} ${firstname} ${phone} ${roleText} ${statusText} ${selectedRoleText}`.toLowerCase();
-        }
-
-        function filterTeachersTable() {
-            const query = $('#teacherSearchInput').val().trim().toLowerCase();
-            const $rows = $('#teachersTable tbody tr[data-id]'); // only real teacher rows
-            let visibleCount = 0;
-
-            $rows.each(function () {
-                const $row = $(this);
-                const haystack = getTeacherRowSearchText(this);
-                const match = query === '' || haystack.indexOf(query) !== -1;
-                $row.toggle(match);
-                if (match) visibleCount++;
-            });
-
-            // Handle empty state
-            const $emptyRow = $('#teachersTable tbody tr.teacher-no-results-row');
-            if (visibleCount === 0 && query !== '') {
-                if ($emptyRow.length === 0) {
-                    const colspan = $('#teachersTable thead th').length;
-                    $('#teachersTable tbody').append(`
-                                    <tr class="teacher-no-results-row">
-                                        <td colspan="${colspan}" class="teacher-no-results">
-                                            <i class="fas fa-search"></i>
-                                            <h5 class="mb-1">No teachers found</h5>
-                                            <p class="mb-0">Try a different name, phone number, or role.</p>
-                                        </td>
-                                    </tr>
-                                `);
-                }
-            } else {
-                $emptyRow.remove();
-            }
-
-            // Update meta info
-            updateTeacherSearchMeta(visibleCount, $rows.length);
-        }
-
-        function updateTeacherSearchMeta(visibleCount, totalCount) {
-            const $meta = $('#teacherSearchMeta');
-            const query = $('#teacherSearchInput').val().trim();
-
-            if (!$meta.length) return;
-
-            if (query === '') {
-                // Show total count when no search is active
-                if (totalCount === undefined) {
-                    totalCount = $('#teachersTable tbody tr[data-id]').length;
-                }
-                $meta.html(totalCount > 0 ? `Showing all <strong>${totalCount}</strong> teachers` : '');
-                return;
-            }
-
-            if (visibleCount === undefined) {
-                visibleCount = $('#teachersTable tbody tr[data-id]:visible').length;
-            }
-            if (totalCount === undefined) {
-                totalCount = $('#teachersTable tbody tr[data-id]').length;
-            }
-
-            $meta.html(`Showing <strong>${visibleCount}</strong> of <strong>${totalCount}</strong> teachers`);
+        function runTeacherSearch() {
+            const url = new URL(window.location.href);
+            const q = $('#teacherSearchInput').val().trim();
+            if (q) { url.searchParams.set('q', q); } else { url.searchParams.delete('q'); }
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
         }
 
         // Search input handler
         $(document).on('input', '#teacherSearchInput', function () {
-            const $box = $('#teacherSearchBox');
-            $box.toggleClass('has-value', $(this).val().length > 0);
-            filterTeachersTable();
+            $('#teacherSearchBox').toggleClass('has-value', $(this).val().length > 0);
+            clearTimeout(teacherSearchTimer);
+            teacherSearchTimer = setTimeout(runTeacherSearch, 500);
+        });
+
+        // Keep the cursor in the box after the results page loads
+        $(function () {
+            const $in = $('#teacherSearchInput');
+            if ($in.val()) {
+                $in.trigger('focus');
+                $in[0].setSelectionRange($in.val().length, $in.val().length);
+            }
         });
 
         // Clear search
         $(document).on('click', '#teacherSearchClear', function () {
-            $('#teacherSearchInput').val('').trigger('input').focus();
+            $('#teacherSearchInput').val('');
+            clearTimeout(teacherSearchTimer);
+            runTeacherSearch();
         });
 
         // Also clear search on Escape key
         $(document).on('keydown', '#teacherSearchInput', function (e) {
             if (e.key === 'Escape') {
-                $(this).val('').trigger('input').blur();
+                $(this).val('');
+                clearTimeout(teacherSearchTimer);
+                runTeacherSearch();
             }
         });
 

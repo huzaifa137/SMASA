@@ -130,6 +130,64 @@ class ChartOfAccount extends Model
         return $total;
     }
 
+    /**
+     * Own balance (children NOT included) of EVERY account of a school in ONE
+     * grouped query: [account_id => float]. Same rule as balance(): refunds
+     * count negatively. Use this instead of calling balance() in a loop, which
+     * loads every transaction of every account into PHP.
+     */
+    public static function ownBalances(int $schoolId, ?string $academicYear = null, ?string $term = null): array
+    {
+        return FinanceTransaction::query()
+            ->where('school_id', $schoolId)
+            ->when($academicYear, fn($q) => $q->where('academic_year', $academicYear))
+            ->when($term, fn($q) => $q->where('term', $term))
+            ->selectRaw("account_id, SUM(CASE WHEN type = 'refund' THEN -amount ELSE amount END) AS total")
+            ->groupBy('account_id')
+            ->pluck('total', 'account_id')
+            ->map(fn($v) => (float) $v)
+            ->all();
+    }
+
+    /**
+     * Roll own balances up the account tree in memory: each account's total is
+     * its own balance plus all of its descendants (same result as
+     * balanceWithChildren(), without a query per account).
+     *
+     * @param  iterable $accounts all accounts of the school (needs id, parent_id)
+     * @param  array    $own      result of ownBalances()
+     * @return array    [account_id => float]
+     */
+    public static function rollUpBalances(iterable $accounts, array $own): array
+    {
+        $childrenOf = [];
+        foreach ($accounts as $a) {
+            if ($a->parent_id) {
+                $childrenOf[$a->parent_id][] = $a->id;
+            }
+        }
+
+        $totals = [];
+        $walk = function ($id, array $path) use (&$walk, &$totals, $childrenOf, $own) {
+            if (isset($totals[$id])) {
+                return $totals[$id];
+            }
+            $sum = $own[$id] ?? 0.0;
+            foreach ($childrenOf[$id] ?? [] as $childId) {
+                if (!in_array($childId, $path, true)) {          // guard against a bad parent loop
+                    $sum += $walk($childId, [...$path, $id]);
+                }
+            }
+            return $totals[$id] = $sum;
+        };
+
+        foreach ($accounts as $a) {
+            $walk($a->id, []);
+        }
+
+        return $totals;
+    }
+
     // ── Default Chart of Accounts ────────────────────────────────────────
 
     /**

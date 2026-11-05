@@ -660,6 +660,39 @@
                     .filter(o => o.value !== '')
                     .map(o => ({ value: o.value, label: o.textContent.replace(/\s+/g, ' ').trim() }));
 
+                /* Remote mode (opts.remote = JSON URL): the list is fetched from the
+                 * server as the person types, so thousands of schools are never
+                 * rendered up-front. The native <select> is refilled with the
+                 * returned page plus the current choice, so it stays the source of truth. */
+                const remote = opts.remote || null;
+                let remoteSeq = 0, remoteTimer = null, remoteMore = false;
+
+                function loadRemote(term) {
+                    const seq = ++remoteSeq;
+                    foot.textContent = 'Searching…';
+                    fetch(remote + '?q=' + encodeURIComponent((term || '').trim()), {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin'
+                    })
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(d => {
+                        if (seq !== remoteSeq) return;           // a newer keystroke superseded this one
+                        const keep = select.value && select.selectedOptions[0] ? select.selectedOptions[0].cloneNode(true) : null;
+                        const chosen = select.value;
+                        select.innerHTML = '<option value="">' + placeholder + '</option>';
+                        if (keep && !d.results.some(r => String(r.id) === chosen)) select.appendChild(keep);
+                        d.results.forEach(r => {
+                            const o = document.createElement('option');
+                            o.value = r.id; o.textContent = r.text;
+                            select.appendChild(o);
+                        });
+                        select.value = chosen;
+                        remoteMore = !!d.more;
+                        render(term);
+                    })
+                    .catch(() => { if (seq === remoteSeq) foot.textContent = 'Could not load schools.'; });
+                }
+
                 function updateLabel() {
                     const cur = all().find(o => o.value === select.value);
                     valEl.textContent = cur ? cur.label : placeholder;
@@ -675,7 +708,7 @@
                 function render(q) {
                     const term = (q || '').trim().toLowerCase();
                     const everything = all();
-                    shown = everything.filter(o => !term || o.label.toLowerCase().includes(term));
+                    shown = remote ? everything : everything.filter(o => !term || o.label.toLowerCase().includes(term));
                     list.innerHTML = '';
 
                     shown.forEach(o => {
@@ -700,7 +733,9 @@
                     });
 
                     none.style.display = shown.length ? 'none' : 'block';
-                    foot.textContent = 'Showing ' + shown.length + ' of ' + everything.length;
+                    foot.textContent = remote
+                        ? (remoteMore ? 'Showing the first ' + shown.length + ' — type to narrow down' : 'Showing ' + shown.length)
+                        : 'Showing ' + shown.length + ' of ' + everything.length;
 
                     const selIdx = term ? -1 : shown.findIndex(o => o.value === select.value);
                     hl = selIdx > -1 ? selIdx : 0;
@@ -713,6 +748,7 @@
                     btn.setAttribute('aria-expanded', 'true');
                     input.value = '';
                     render('');
+                    if (remote) loadRemote('');
                     setTimeout(() => input.focus(), 0);
                 }
 
@@ -735,7 +771,11 @@
                     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
                 });
 
-                input.addEventListener('input', () => render(input.value));
+                input.addEventListener('input', () => {
+                    if (!remote) { render(input.value); return; }
+                    clearTimeout(remoteTimer);
+                    remoteTimer = setTimeout(() => loadRemote(input.value), 250);
+                });
                 input.addEventListener('keydown', e => {
                     if (e.key === 'ArrowDown') { e.preventDefault(); if (shown.length) { hl = Math.min(hl + 1, shown.length - 1); paintHl(); } }
                     else if (e.key === 'ArrowUp') { e.preventDefault(); if (shown.length) { hl = Math.max(hl - 1, 0); paintHl(); } }
@@ -753,6 +793,7 @@
             }
 
             searchableSelect($('sSchool'), {
+                remote: @json(route('admin.schools.lookup')),
                 placeholder: 'Choose…',
                 searchPlaceholder: 'Type a school name…',
                 emptyText: 'No schools match your search.'

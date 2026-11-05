@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\LookupCache;
 use App\Models\AcademicYear;
 use App\Models\Student;
 use App\Models\StudentBasic;
@@ -485,17 +486,19 @@ class Helper extends Controller
         // saved a profile (or left the name blank there) — same
         // profile-first / schools-second order schoolPhoneBySchoolID()
         // below already uses.
-        $profileName = DB::table('school_profiles')
-            ->where('school_id', $school_id)
-            ->value('name');
+        return LookupCache::remember('school', 'name:' . $school_id, 3600, function () use ($school_id) {
+            $profileName = DB::table('school_profiles')
+                ->where('school_id', $school_id)
+                ->value('name');
 
-        if (!empty(trim((string) $profileName))) {
-            return trim($profileName);
-        }
+            if (!empty(trim((string) $profileName))) {
+                return trim($profileName);
+            }
 
-        return DB::table('schools')
-            ->where('id', $school_id)
-            ->value('name');
+            return DB::table('schools')
+                ->where('id', $school_id)
+                ->value('name');
+        });
     }
 
     /**
@@ -1219,11 +1222,9 @@ class Helper extends Controller
 
     public static function item_md_name($md_id)
     {
-        $md_name = DB::table('master_datas')
+        return LookupCache::remember('master', 'name:' . $md_id, 3600, fn() => DB::table('master_datas')
             ->where('md_id', $md_id)
-            ->value('md_name');
-
-        return $md_name;
+            ->value('md_name'));
     }
 
     public static function item_md_id($md_name)
@@ -1546,21 +1547,19 @@ class Helper extends Controller
         if (is_numeric($md_id) && (int) $md_id >= 9_000_000_000) {
             // O-Level offset (9.5bn) is higher than A-Level (9bn), so test it first.
             if ((int) $md_id >= 9_500_000_000) {
-                return DB::table('school_olevel_electives')
+                return LookupCache::remember('master', 'olevel:' . $md_id, 3600, fn() => DB::table('school_olevel_electives')
                     ->where('id', (int) $md_id - 9_500_000_000)
-                    ->value('subject_name');
+                    ->value('subject_name'));
             }
 
-            return DB::table('school_alevel_subjects')
+            return LookupCache::remember('master', 'alevel:' . $md_id, 3600, fn() => DB::table('school_alevel_subjects')
                 ->where('id', (int) $md_id - 9_000_000_000)
-                ->value('subject_name');
+                ->value('subject_name'));
         }
 
-        $recordName = DB::table('master_datas')
-            ->where('md_id', operator: $md_id)
-            ->value('md_name');
-
-        return $recordName;
+        return LookupCache::remember('master', 'name:' . $md_id, 3600, fn() => DB::table('master_datas')
+            ->where('md_id', $md_id)
+            ->value('md_name'));
     }
 
     /**
@@ -1585,7 +1584,7 @@ class Helper extends Controller
         $source = $row->subject_source ?? 'master';
 
         if ($source === 'custom' && !empty($row->custom_subject_id)) {
-            $name = DB::table('custom_subjects')->where('id', $row->custom_subject_id)->value('subject_name');
+            $name = LookupCache::remember('master', 'custom:' . $row->custom_subject_id, 3600, fn() => DB::table('custom_subjects')->where('id', $row->custom_subject_id)->value('subject_name'));
 
             return $name ?? '';
         }
@@ -1691,11 +1690,9 @@ class Helper extends Controller
 
     public static function MasterRecords($md_master_code_id)
     {
-        $records = DB::table('master_datas')
+        return LookupCache::remember('master', 'records:' . $md_master_code_id, 3600, fn() => DB::table('master_datas')
             ->where('md_master_code_id', $md_master_code_id)
-            ->get();
-
-        return $records;
+            ->get());
     }
 
     public static function schoolStudentsCount($school_id)
@@ -1748,9 +1745,9 @@ class Helper extends Controller
 
     public static function active_year()
     {
-        $activeYear = AcademicYear::where('is_active', 1)
+        $activeYear = LookupCache::remember('year', 'active', 600, fn() => AcademicYear::where('is_active', 1)
             ->orderBy('id', 'desc')
-            ->value('name');
+            ->value('name'));
 
         return $activeYear ?? 'No Active Year Set';
     }

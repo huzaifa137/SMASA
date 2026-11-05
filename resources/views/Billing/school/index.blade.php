@@ -39,7 +39,7 @@
             </div>
         @endif
         {{-- Students added after the term invoice was counted are billed on supplementary invoices --}}
-        @php $suppDue = $current ? $invoices->filter(fn($i) => $i->isSupplementary() && $i->billing_term_id == $current->id && $i->isCollectable()) : collect(); @endphp
+        @php $suppDue = $current ? $currentTermInvoices->filter(fn($i) => $i->isSupplementary() && $i->billing_term_id == $current->id && $i->isCollectable()) : collect(); @endphp
         @foreach ($suppDue as $si)
             <div class="bl-alert {{ $si->isOverdue() ? 'error' : 'warn' }}"><i class="fas fa-user-plus mt-1"></i>
                 <div><strong>{{ $si->student_count }} new {{ \Illuminate\Support\Str::plural('student', $si->student_count) }} added this term:
@@ -152,7 +152,11 @@
                         </tr>@endforeach
                     </tbody>
                 </table>
-            </div>@endif
+            </div>
+            @if ($invoices->hasPages())
+                <div style="padding:12px 16px;">{{ $invoices->links() }}</div>
+            @endif
+            @endif
         </div>
         @if ($payments->count())
             <div class="bl-card">

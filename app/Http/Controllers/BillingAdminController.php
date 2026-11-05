@@ -573,8 +573,8 @@ class BillingAdminController extends Controller
         $q = BillingPayment::with(['school:id,name', 'invoice:id,invoice_number', 'term'])
             ->when($term, fn($q) => $q->where('billing_term_id', $term->id))
             ->when($request->filled('method'), fn($q) => $q->where('method', $request->input('method')))
-            ->when($request->filled('from'), fn($q) => $q->whereDate('paid_on', '>=', $request->input('from')))
-            ->when($request->filled('to'), fn($q) => $q->whereDate('paid_on', '<=', $request->input('to')))
+            ->when($request->filled('from'), fn($q) => $q->where('paid_on', '>=', $request->input('from')))
+            ->when($request->filled('to'), fn($q) => $q->where('paid_on', '<=', $request->input('to')))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('receipt_number', 'like', "%{$search}%")->orWhere('reference', 'like', "%{$search}%")

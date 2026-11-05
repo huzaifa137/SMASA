@@ -932,7 +932,7 @@ class BillingService
             ->whereIn('status', ['issued', 'partial'])
             ->where('balance', '>', 0)
             ->whereNotNull('due_date')
-            ->whereDate('due_date', '<=', today()->addDays($window))
+            ->where('due_date', '<=', today()->addDays($window)->toDateString())
             ->orderBy('due_date')
             ->get()
             ->map(function (BillingInvoice $i) {
@@ -969,7 +969,7 @@ class BillingService
             ->whereIn('status', ['issued', 'partial'])
             ->where('balance', '>', 0.004)
             ->whereNotNull('due_date')
-            ->whereDate('due_date', '<', $cutoff)
+            ->where('due_date', '<', $cutoff->toDateString())
             ->orderBy('due_date')
             ->get();
     }

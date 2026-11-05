@@ -77,12 +77,20 @@ class SchoolBillingController extends Controller
 
         $schoolId = (int) session('LoggedSchool');
 
-        $invoices = BillingInvoice::with('term')
-            ->where('school_id', $schoolId)->visibleToSchool()
-            ->orderByDesc('id')->get();
-
         $current = BillingTerm::current();
-        $currentInvoice = $current ? $invoices->first(fn($i) => $i->billing_term_id == $current->id && !$i->isSupplementary()) : null;
+
+        $schoolInvoices = BillingInvoice::where('school_id', $schoolId)->visibleToSchool();
+
+        // History table: one page at a time (a school gains invoices every term, for years).
+        $invoices = (clone $schoolInvoices)->with('term')
+            ->orderByDesc('id')->paginate(10)->withQueryString();
+
+        // The current term's invoices (few) drive the "pay now" card and supplementary alerts,
+        // so they are loaded on their own, not picked out of the history list.
+        $currentTermInvoices = $current
+            ? (clone $schoolInvoices)->with('term')->where('billing_term_id', $current->id)->orderByDesc('id')->get()
+            : collect();
+        $currentInvoice = $current ? $currentTermInvoices->first(fn($i) => !$i->isSupplementary()) : null;
 
         $payments = BillingPayment::with(['invoice:id,invoice_number', 'term'])
             ->where('school_id', $schoolId)->valid()
@@ -114,6 +122,7 @@ class SchoolBillingController extends Controller
 
         return view('Billing.school.index', [
             'invoices'       => $invoices,
+            'currentTermInvoices' => $currentTermInvoices,
             'current'        => $current,
             'currentInvoice' => $currentInvoice,
             'currentState'   => $currentState,

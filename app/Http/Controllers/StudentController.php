@@ -330,7 +330,10 @@ class StudentController extends Controller
 
         $StreamRecord = Stream::where('school_id', $school_id)->get();
 
-        $schools = School::select('id', 'name')->get();
+        // The form works inside the current school only (its streams and classes
+        // are this school's), so the dropdown holds just that school instead of
+        // every school on the platform.
+        $schools = School::select('id', 'name')->where('id', $school_id)->get();
 
         return view(
             'student.student-portal',
@@ -1093,50 +1096,50 @@ class StudentController extends Controller
 
     public function searchAjax(Request $request)
     {
+        // A search never returns more than this many rows. Searching "a" in a
+        // school of 3,000 pupils used to render all of them into one table.
+        $limit = 50;
+        $schoolId = Session('LoggedSchool');
+        $like = fn($v) => '%' . addcslashes((string) $v, '\\%_') . '%';
+
         $criteria = $request->input('criteria');
+
+        $query = Student::query()->where('school_id', $schoolId);
 
         switch ($criteria) {
             case 'admission_number':
-                $students = Student::where('admission_number', $request->admission_number)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
+                $query->where('admission_number', $request->admission_number);
                 break;
 
             case 'name':
-                $students = Student::query()
-                    ->when($request->filled('firstname'), function ($q) use ($request) {
-                        $q->where('firstname', 'like', '%' . $request->firstname . '%');
-                    })
-                    ->when($request->filled('lastname'), function ($q) use ($request) {
-                        $q->where('lastname', 'like', '%' . $request->lastname . '%');
-                    })
-                    ->when($request->filled('senior'), function ($q) use ($request) {
-                        $q->where('senior', $request->senior);
-                    })
-                    ->when($request->filled('stream'), function ($q) use ($request) {
-                        $q->where('stream', $request->stream);
-                    })
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
+                $query
+                    ->when($request->filled('firstname'), fn($q) => $q->where('firstname', 'like', $like($request->firstname)))
+                    ->when($request->filled('lastname'), fn($q) => $q->where('lastname', 'like', $like($request->lastname)))
+                    ->when($request->filled('senior'), fn($q) => $q->where('senior', $request->senior))
+                    ->when($request->filled('stream'), fn($q) => $q->where('stream', $request->stream));
                 break;
 
             case 'phone':
-                $students = Student::where('primary_contact', $request->phone)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
+                $query->where('primary_contact', $request->phone);
                 break;
 
             case 'student_id':
-                $students = Student::where('id', $request->student_id)
-                    ->where('school_id', Session('LoggedSchool'))
-                    ->get();
+                $query->where('id', $request->student_id);
                 break;
 
             default:
                 return response()->json(['message' => 'Invalid criteria'], 400);
         }
 
-        $html = view('student.partials.results', compact('students'))->render();
+        // Fetch one row more than we show, to know whether the list was cut off.
+        $students = $query->orderBy('firstname')->orderBy('lastname')->orderBy('id')
+            ->limit($limit + 1)
+            ->get();
+
+        $truncated = $students->count() > $limit;
+        $students = $students->take($limit);
+
+        $html = view('student.partials.results', compact('students', 'truncated', 'limit'))->render();
 
         return response()->json(['html' => $html]);
     }

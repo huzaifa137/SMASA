@@ -990,6 +990,7 @@
 
         function parentLine(n) {
             if (!n) return '';
+            if (n.status === 'queued') return '\u23F3 Parent alert on its way';
             if (n.status === 'sent') return '🔔 Parent notified';
             if (n.status === 'skipped') return '🔕 Parent alerts are switched off';
             return '⚠️ Parent NOT notified' + (n.reason ? ': ' + escHtml(n.reason) : '');
@@ -1258,6 +1259,11 @@
                 return `<div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:rgba(5,150,105,.1);color:#047857;font-size:.82rem;font-weight:600">
                     <i class="fas fa-bell"></i> Parent notified (${n.devices_sent} of ${n.devices_total} device${n.devices_total === 1 ? '' : 's'})
                     ${n.reason ? `<div style="font-weight:500;margin-top:.2rem">${escHtml(n.reason)}</div>` : ''}
+                </div>`;
+            }
+            if (n.status === 'queued') {
+                return `<div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:10px;background:#eff6ff;color:#1d4ed8;font-size:.82rem">
+                    <i class="fas fa-paper-plane"></i> Parent alert is being sent
                 </div>`;
             }
             if (n.status === 'skipped') {

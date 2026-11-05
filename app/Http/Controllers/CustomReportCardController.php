@@ -121,18 +121,66 @@ class CustomReportCardController extends Controller
         $this->authorizeAdmin();
 
         $ready = CustomReportCards::tablesReady();
-        $schools = School::orderBy('name')->get(['id', 'name']);
-        $byKey = $ready
-            ? SchoolCustomReportCard::with('template')->get()->keyBy(fn($a) => $a->school_id . '|' . $a->level)
-            : collect();
-        $templates = $ready ? CustomReportTemplate::where('is_active', true)->orderBy('name')->get() : collect();
+
+        $q = trim((string) $request->query('q', ''));
+        $mode = in_array($request->query('mode'), ['custom', 'standard'], true) ? $request->query('mode') : 'all';
+
+        $schools = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 30);
+        $selected = null;
+        $byKey = collect();
+        $templates = collect();
+        $stats = ['schools' => 0, 'with_custom' => 0, 'assignments' => 0, 'active' => 0, 'locked' => 0];
+
+        if ($ready) {
+            $table = (new SchoolCustomReportCard)->getTable();
+            $hasAssignment = fn($sub) => $sub->select(DB::raw(1))->from($table)
+                ->whereColumn($table . '.school_id', 'schools.id');
+
+            // Sidebar: ONE page of schools, filtered and searched in SQL.
+            $schools = School::query()
+                ->when($q !== '', fn($x) => $x->where('name', 'like', '%' . addcslashes($q, '\\%_') . '%'))
+                ->when($mode === 'custom', fn($x) => $x->whereExists($hasAssignment))
+                ->when($mode === 'standard', fn($x) => $x->whereNotExists($hasAssignment))
+                ->orderBy('name')
+                ->orderBy('id')
+                ->paginate(30, ['schools.id', 'schools.name'])
+                ->withQueryString();
+
+            // Workspace: only the selected school (default: first on the page).
+            $selectedId = (int) $request->query('school');
+            $selected = $selectedId
+                ? ($schools->getCollection()->firstWhere('id', $selectedId) ?? School::find($selectedId, ['id', 'name']))
+                : $schools->getCollection()->first();
+
+            // Assignments for the visible schools only.
+            $ids = $schools->getCollection()->pluck('id')->push($selected?->id)->filter()->unique()->values()->all();
+            $byKey = $ids
+                ? SchoolCustomReportCard::with('template')->whereIn('school_id', $ids)->get()
+                    ->keyBy(fn($a) => $a->school_id . '|' . $a->level)
+                : collect();
+
+            $templates = CustomReportTemplate::where('is_active', true)->orderBy('name')->get();
+
+            // Page-wide figures come from aggregate queries, not from loading rows.
+            $stats = [
+                'schools' => School::count(),
+                'with_custom' => SchoolCustomReportCard::distinct()->count('school_id'),
+                'assignments' => SchoolCustomReportCard::count(),
+                'active' => SchoolCustomReportCard::where('is_active', true)->count(),
+                'locked' => SchoolCustomReportCard::where('lock_to_custom', true)->count(),
+            ];
+        }
 
         return view('Admin.custom-report-cards.assignments', [
             'ready' => $ready,
             'schools' => $schools,
+            'selected' => $selected,
             'assignments' => $byKey,
             'templates' => $templates,
             'levels' => CustomReportCards::LEVELS,
+            'stats' => $stats,
+            'q' => $q,
+            'mode' => $mode,
         ]);
     }
 
@@ -202,7 +250,11 @@ class CustomReportCardController extends Controller
 
         return view('Admin.custom-report-cards.studio', [
             'ready' => $ready,
-            'schools' => School::orderBy('name')->get(['id', 'name']),
+            // Only the pre-selected school is rendered; the picker fetches the
+            // rest on demand from admin.schools.lookup.
+            'schools' => $request->query('school_id')
+                ? School::whereKey((int) $request->query('school_id'))->get(['id', 'name'])
+                : collect(),
             'templates' => $ready ? CustomReportTemplate::orderBy('name')->get() : collect(),
             'preselectSlug' => $request->query('slug'),
             'preselectSchool' => $request->query('school_id'),

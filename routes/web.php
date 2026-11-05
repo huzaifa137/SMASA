@@ -71,7 +71,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::group(['middleware' => ['AdminAuth']], function () {
                 Route::get('/forgot-password', [TeacherPasswordResetController::class, 'showForgotPasswordForm'])->name('forgot-password');
                 Route::get('/login', 'login')->name('users.login');
-                Route::post('auth-user-check', 'checkUser')->name('auth-user-check');
+                Route::post('auth-user-check', 'checkUser')->name('auth-user-check')->middleware('throttle:login');
                 Route::get('/users-profile', 'userProfile')->name('users-profile');
                 Route::get('user-account-information/{id}', [UserController::class, 'userAccountInformation'])->name('users.account-information')
                     ->middleware('admin.can:admin_rights.view_users');
@@ -84,22 +84,22 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             });
 
             Route::get('/teacher-password-reset-form', [TeacherPasswordResetController::class, 'showResetPasswordForm'])->name('teacher.password.reset.form');
-            Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link');
-            Route::post('/teacher-password-reset', [TeacherPasswordResetController::class, 'resetPassword'])->name('teacher.password.reset');
+            Route::post('/teacher-send-reset-link', [TeacherPasswordResetController::class, 'sendResetLink'])->name('teacher.send.reset.link')->middleware('throttle:password-reset');
+            Route::post('/teacher-password-reset', [TeacherPasswordResetController::class, 'resetPassword'])->name('teacher.password.reset')->middleware('throttle:password-reset');
             // Hardened (security): now requires the pending login in the session and a school the account really belongs to.
-            Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school');
+            Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school')->middleware('throttle:login');
             Route::post('update-internal-user', 'storeUpdatedInternalUser')->name('update.internal-user');
             Route::post('store-updated-information', 'storeUpdatedInformation')->name('store-updated-information');
         });
 
         Route::get('password/reset/{id}', 'createNewPassword')->name('password/reset');
         Route::get('password/set-password/{id}', 'createFirstPassword')->name('password.FirstPassword');
-        Route::post('auth.save', 'save')->name('auth.save');
-        Route::post('regenerate-otp', 'regenerateOTP')->name('regenerate-otp');
-        Route::post('user-generate-forgot-password-link', 'generateForgotPasswordLink')->name('user-generate-forgot-password-link');
-        Route::post('user-store-new-password', 'store_new_password')->name('user-store-new-password');
-        Route::post('user-store-first-password', 'store_first_password')->name('user-store-first-password');
-        Route::post('user-otp-verification', 'otpVerification')->name('user-otp-verification');
+        Route::post('auth.save', 'save')->name('auth.save')->middleware('throttle:login');
+        Route::post('regenerate-otp', 'regenerateOTP')->name('regenerate-otp')->middleware('throttle:password-reset');
+        Route::post('user-generate-forgot-password-link', 'generateForgotPasswordLink')->name('user-generate-forgot-password-link')->middleware('throttle:password-reset');
+        Route::post('user-store-new-password', 'store_new_password')->name('user-store-new-password')->middleware('throttle:password-reset');
+        Route::post('user-store-first-password', 'store_first_password')->name('user-store-first-password')->middleware('throttle:password-reset');
+        Route::post('user-otp-verification', 'otpVerification')->name('user-otp-verification')->middleware('throttle:login');
         Route::get('reload-captcha', 'reload_captcha')->name('reload-captcha');
     });
 
@@ -351,7 +351,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         ->name('parents.')
         ->group(function () {
             Route::get('/login', 'showLogin')->name('login');
-            Route::post('/login', 'login')->name('login.submit');
+            Route::post('/login', 'login')->name('login.submit')->middleware('throttle:login');
             Route::get('/logout', 'logout')->name('logout');
 
             Route::middleware(['ParentAuth'])->group(function () {
@@ -828,6 +828,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{id}/passslips/class', 'passslipClass')->name('passslips.class');
             Route::get('/{id}/passslips/student/{studentId}', 'passslipStudent')->name('passslips.student');
             Route::get('/{id}/passslips/all', 'passslipAll')->name('passslips.all');
+            Route::get('/{id}/passslips/all/status/{token}', 'passslipAllStatus')->name('passslips.all.status');
+            Route::get('/{id}/passslips/all/file/{token}', 'passslipAllFile')->name('passslips.all.file');
             Route::get('/{id}/passslips/customize', 'passslipCustomize')->name('passslips.customize');
             // Arabic report card: assign it to classes (language default + look), same per-class
             // assignment the other designs use. See ExaminationController::passslipArabic().
@@ -1303,7 +1305,7 @@ Route::controller(CardScanController::class)
     ->middleware(['SchoolAuth'])
     ->group(function () {
         Route::get('/', 'hub')->name('hub');
-        Route::post('/scan', 'scan')->name('scan');
+        Route::post('/scan', 'scan')->name('scan')->middleware('throttle:scan');
         Route::get('/logs', 'scanLogs')->name('logs');
         Route::get('/arrival', 'arrivalAttendancePage')->name('arrival');
         Route::post('/arrival/save', 'saveArrivalAttendance')->name('arrival.save');
@@ -1481,6 +1483,7 @@ Route::middleware(['AdminAuth'])->group(function () {
         ->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/create', 'create')->name('create');
+            Route::get('/recipients/search', 'recipientSearch')->middleware('throttle:90,1')->name('recipients.search');
             Route::post('/store', 'store')->name('store');
             Route::get('/my', 'myNotifications')->name('my');
 
@@ -1545,24 +1548,32 @@ Route::controller(StudentPromotionController::class)
         });
     });
 
-Route::get('/dev/passslip-preview/kindergarten', function () {
-    return view('Examination.passslips.preview-kindergarten', [
-        'child_name' => 'Aaron Kiberu',
-        'class_name' => 'Kindergarten — Red',
-        'stream' => 'Red',
-        'term' => 'Term 2',
-        'academic_year' => '2026 – 2027',
-        'attendance' => '92%',
-        'teacher' => 'Ms. Namono',
-        'dob' => '14 Mar 2021',
-    ]);
-});
+// Design previews with dummy data: local/staging only, never production.
+if (!app()->environment('production')) {
+    Route::get('/dev/passslip-preview/kindergarten', function () {
+        return view('Examination.passslips.preview-kindergarten', [
+            'child_name' => 'Aaron Kiberu',
+            'class_name' => 'Kindergarten — Red',
+            'stream' => 'Red',
+            'term' => 'Term 2',
+            'academic_year' => '2026 – 2027',
+            'attendance' => '92%',
+            'teacher' => 'Ms. Namono',
+            'dob' => '14 Mar 2021',
+        ]);
+    });
 
-Route::get('/dev/passslip-preview/kindergarten2', function () {
-    return view('Examination.passslips.preview-kindergarten-2', [
-        'academic_year' => '2026 – 2027',
-    ]);
-});
+    Route::get('/dev/passslip-preview/kindergarten2', function () {
+        return view('Examination.passslips.preview-kindergarten-2', [
+            'academic_year' => '2026 – 2027',
+        ]);
+    });
+}
+
+// ─── Type-ahead school search for platform-admin screens (JSON) ─────────────
+Route::get('/admin/schools/lookup', [\App\Http\Controllers\SchoolLookupController::class, 'search'])
+    ->middleware(['AdminAuth', 'throttle:60,1'])
+    ->name('admin.schools.lookup');
 
 // ─── SaaS BILLING MODULE (platform invoices to schools) ─────────────────────
 require __DIR__ . '/billing.php';

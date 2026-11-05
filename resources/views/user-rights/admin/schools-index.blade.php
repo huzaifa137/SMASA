@@ -522,6 +522,9 @@
             </div>
         @if($loop->last)
         </div>
+        @if($schools->hasPages())
+            <div style="margin-top:1.25rem;">{{ $schools->links() }}</div>
+        @endif
         @endif
         @empty
             <div class="empty-state">

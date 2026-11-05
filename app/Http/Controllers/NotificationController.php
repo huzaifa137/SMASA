@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\PermissionHelper;
 use App\Models\SmasaNotification;
 use App\Models\SmasaNotificationRecipient;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -34,7 +35,7 @@ class NotificationController extends Controller
         $stats = [
             'total' => SmasaNotification::where('school_id', $school_id)->count(),
             'today' => SmasaNotification::where('school_id', $school_id)
-                ->whereDate('created_at', today())->count(),
+                ->where('created_at', '>=', today())->where('created_at', '<', today()->addDay())->count(),
             'unread' => SmasaNotificationRecipient::where('school_id', $school_id)
                 ->where('is_read', false)->count(),
             'byType' => SmasaNotification::where('school_id', $school_id)
@@ -55,16 +56,9 @@ class NotificationController extends Controller
         $school_id = session('LoggedSchool');
         $types = SmasaNotification::typeConfig();
 
-        // Recipient group options
-        $teachers = DB::table('teachers')->where('school_id', $school_id)
-            ->selectRaw("id, TRIM(CONCAT(firstname, ' ', surname)) as name")
-            ->orderBy('firstname')->get();
-
-        $students = DB::table('students')->where('school_id', $school_id)
-            ->selectRaw("id, TRIM(CONCAT(firstname, ' ', lastname)) as name")
-            ->orderBy('firstname')->get();
-
-        return view('notifications.create', compact('types', 'teachers', 'students'));
+        // Specific recipients are searched on demand (see recipientSearch()),
+        // not pre-loaded: a school can have thousands of students.
+        return view('notifications.create', compact('types'));
     }
 
     /**
@@ -85,7 +79,7 @@ class NotificationController extends Controller
                 'all', 'all_teachers', 'all_students', 'all_admins', 'all_staff',
                 'specific_teachers', 'specific_students',
             ])],
-            'recipient_ids' => 'nullable|array',
+            'recipient_ids' => 'nullable|array|max:500',
             'recipient_ids.*' => 'integer',
             'url' => 'nullable|url|max:500',
         ]);
@@ -123,14 +117,15 @@ class NotificationController extends Controller
                 break;
 
             case 'specific_teachers':
-                $recipients = collect($request->recipient_ids ?? [])
+                // Only ids that really belong to THIS school are accepted.
+                $recipients = $this->ownIds(Teacher::class, $request->recipient_ids, $school_id)
                     ->map(fn($id) => ['type' => 'teacher', 'id' => $id, 'school_id' => $school_id])
                     ->toArray();
                 NotificationService::send($data, $recipients);
                 break;
 
             case 'specific_students':
-                $recipients = collect($request->recipient_ids ?? [])
+                $recipients = $this->ownIds(Student::class, $request->recipient_ids, $school_id)
                     ->map(fn($id) => ['type' => 'student', 'id' => $id, 'school_id' => $school_id])
                     ->toArray();
                 NotificationService::send($data, $recipients);
@@ -139,6 +134,78 @@ class NotificationController extends Controller
 
         return redirect()->route('notifications.index')
             ->with('success', 'Notification sent successfully!');
+    }
+
+    /** Keep only the given ids that belong to $schoolId (one query). */
+    private function ownIds(string $model, $ids, $schoolId)
+    {
+        $ids = collect($ids ?? [])->map(fn($i) => (int) $i)->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return $model::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $ids)
+            ->pluck('id');
+    }
+
+    /**
+     * AJAX: search-as-you-type recipients for the "specific teachers / students"
+     * pickers. Returns at most 30 matches of the current school.
+     */
+    public function recipientSearch(Request $request)
+    {
+        PermissionHelper::denyUnlessFeature('create_notification');
+
+        $schoolId = session('LoggedSchool');
+        abort_unless($schoolId, 403);
+
+        $type = $request->query('type');
+        abort_unless(in_array($type, ['teacher', 'student'], true), 422);
+
+        $term = mb_substr(trim((string) $request->query('q', '')), 0, 60);
+        $like = '%' . addcslashes($term, '\\%_') . '%';
+        $limit = 30;
+
+        if ($type === 'teacher') {
+            $rows = Teacher::query()
+                ->where('school_id', $schoolId)
+                ->when($term !== '', fn($q) => $q->whereRaw("CONCAT_WS(' ', firstname, surname) LIKE ?", [$like]))
+                ->orderBy('firstname')->orderBy('id')
+                ->limit($limit + 1)
+                ->get(['id', 'firstname', 'surname']);
+
+            $items = $rows->map(fn($t) => [
+                'id' => $t->id,
+                'name' => trim($t->firstname . ' ' . $t->surname),
+                'detail' => '',
+            ]);
+        } else {
+            $rows = Student::query()
+                ->where('school_id', $schoolId)
+                ->when($term !== '', function ($q) use ($like) {
+                    $q->where(function ($w) use ($like) {
+                        $w->whereRaw("CONCAT_WS(' ', firstname, lastname) LIKE ?", [$like])
+                            ->orWhere('admission_number', 'like', $like);
+                    });
+                })
+                ->orderBy('firstname')->orderBy('id')
+                ->limit($limit + 1)
+                ->get(['id', 'firstname', 'lastname', 'admission_number']);
+
+            $items = $rows->map(fn($s) => [
+                'id' => $s->id,
+                'name' => trim($s->firstname . ' ' . $s->lastname),
+                'detail' => (string) $s->admission_number,
+            ]);
+        }
+
+        return response()->json([
+            'results' => $items->take($limit)->values(),
+            'more' => $items->count() > $limit,
+        ]);
     }
 
     /**

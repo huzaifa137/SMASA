@@ -599,23 +599,28 @@ class StudentIdCardController extends Controller
             $query->where('stream', $request->stream);
         }
 
-        $students = $query->get();
+        $students = $query
+            ->orderBy('firstname')->orderBy('lastname')->orderBy('id')
+            ->get(['id', 'firstname', 'lastname', 'admission_number', 'registration_number']);
 
-        $studentsData = $students->map(function ($student) use ($schoolId, $activeYear) {
-            $existingCard = StudentIdCard::where('student_id', $student->id)
-                ->where('school_id', $schoolId)
+        // ONE query for "who already has an active card this year" instead of
+        // one exists() per student.
+        $withCard = $students->isEmpty()
+            ? collect()
+            : StudentIdCard::where('school_id', $schoolId)
                 ->where('academic_year', $activeYear)
                 ->where('status', 'active')
-                ->exists();
+                ->whereIn('student_id', $students->pluck('id'))
+                ->pluck('student_id')
+                ->flip();
 
-            return [
-                'id' => $student->id,
-                'firstname' => $student->firstname,
-                'lastname' => $student->lastname,
-                'admission_number' => $student->admission_number ?? $student->registration_number,
-                'has_active_card' => $existingCard,
-            ];
-        });
+        $studentsData = $students->map(fn($student) => [
+            'id' => $student->id,
+            'firstname' => $student->firstname,
+            'lastname' => $student->lastname,
+            'admission_number' => $student->admission_number ?? $student->registration_number,
+            'has_active_card' => $withCard->has($student->id),
+        ]);
 
         return response()->json(['students' => $studentsData]);
     }

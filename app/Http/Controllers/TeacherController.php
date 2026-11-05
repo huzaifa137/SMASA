@@ -103,12 +103,41 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function allTeachers()
+    public function allTeachers(Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_teachers');
-        $teachers = Teacher::orderBy('surname')->get();
+
+        // School users are always limited to their own school (explicitly, not only
+        // through the global scope). Platform admins see every teacher, one page at a time.
+        $query = Teacher::query()->when(
+            session('LoggedSchool'),
+            fn($q, $schoolId) => $q->where('school_id', $schoolId)
+        );
+
+        $teachers = $this->pagedTeachers($query, $request);
 
         return view('Teacher.teachers-in-school', compact('teachers'));
+    }
+
+    /**
+     * Shared by every teacher list: server-side search (name, phone, role) and
+     * 25 teachers per page, so a large school never renders hundreds of rows.
+     */
+    private function pagedTeachers($query, Request $request)
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        if ($term !== '') {
+            $like = '%' . addcslashes($term, '\\%_') . '%';
+            $query->where(function ($w) use ($like) {
+                $w->whereRaw("CONCAT_WS(' ', surname, firstname) LIKE ?", [$like])
+                    ->orWhereRaw("CONCAT_WS(' ', firstname, surname) LIKE ?", [$like])
+                    ->orWhere('phonenumber', 'like', $like)
+                    ->orWhereIn('teacher_role', Role::select('id')->where('name', 'like', $like));
+            });
+        }
+
+        return $query->orderBy('surname')->orderBy('id')->paginate(25)->withQueryString();
     }
 
     public function teacherProfile($id)
@@ -210,16 +239,13 @@ class TeacherController extends Controller
         return response()->json(['message' => 'Teacher updated successfully']);
     }
 
-    public function schoolTeachers()
+    public function schoolTeachers(Request $request)
     {
-         PermissionHelper::denyUnlessFeature('view_teachers');
-    Helper::requireSchool();
+        PermissionHelper::denyUnlessFeature('view_teachers');
 
         $school_id = Helper::requireSchool();
 
-        $teachers = Teacher::where('school_id', $school_id)
-            ->orderBy('surname')
-            ->get();
+        $teachers = $this->pagedTeachers(Teacher::where('school_id', $school_id), $request);
 
         // Fetch roles with scope 'school'
         $schoolRoles = Role::where('scope', 'school')
@@ -311,14 +337,12 @@ class TeacherController extends Controller
         return response()->json(['message' => 'Role assigned successfully', 'teacher' => $teacher]);
     }
 
-    public function individualSchoolTeachers($schoolId)
+    public function individualSchoolTeachers($schoolId, Request $request)
     {
         PermissionHelper::denyUnlessFeature('view_teachers');
         SchoolContext::abortUnlessOwns($schoolId);
-        $teachers = Teacher::with('school')
-            ->where('school_id', $schoolId)
-            ->orderBy('id')
-            ->get();
+
+        $teachers = $this->pagedTeachers(Teacher::where('school_id', $schoolId), $request);
 
         $school_id = $schoolId;
 

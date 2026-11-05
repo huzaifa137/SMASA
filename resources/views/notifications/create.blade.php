@@ -259,6 +259,14 @@
             user-select: none;
         }
 
+        .chip-note {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 0.8rem;
+            padding: 0.4rem;
+        }
+
         .chip-item:hover {
             border-color: var(--lib-blue);
             background: var(--lib-blue-l);
@@ -501,15 +509,12 @@
                             <input type="text" id="teacherSearch" class="form-control" placeholder="Search teacher..."
                                 style="padding-left:2rem;" oninput="filterChips('teacher')">
                         </div>
+                        <div id="teacherSelectedChips" class="chip-grid" style="display:none; margin-bottom:0.5rem;"></div>
                         <div id="teacherChipGrid" class="chip-grid">
-                            @foreach($teachers as $teacher)
-                                <div class="chip-item" data-id="{{ $teacher->id }}" onclick="toggleChip(this)">
-                                    {{ $teacher->name }}
-                                </div>
-                            @endforeach
+                            <div class="chip-note">Loading…</div>
                         </div>
                         <div id="selectedTeachersContainer"></div>
-                        <span class="form-text">Click on a teacher to toggle selection.</span>
+                        <span class="form-text">Type to search, then click a teacher to add or remove them. Selected teachers stay selected while you search.</span>
                     </div>
 
                     {{-- Specific Students (Chips) --}}
@@ -521,15 +526,12 @@
                             <input type="text" id="studentSearch" class="form-control" placeholder="Search student..."
                                 style="padding-left:2rem;" oninput="filterChips('student')">
                         </div>
+                        <div id="studentSelectedChips" class="chip-grid" style="display:none; margin-bottom:0.5rem;"></div>
                         <div id="studentChipGrid" class="chip-grid">
-                            @foreach($students as $student)
-                                <div class="chip-item" data-id="{{ $student->id }}" onclick="toggleChip(this)">
-                                    {{ $student->name }}
-                                </div>
-                            @endforeach
+                            <div class="chip-note">Loading…</div>
                         </div>
                         <div id="selectedStudentsContainer"></div>
-                        <span class="form-text">Click on a student to toggle selection.</span>
+                        <span class="form-text">Type a name or admission number, then click a student to add or remove them. Selected students stay selected while you search.</span>
                     </div>
                 </div>
 
@@ -562,38 +564,83 @@
             document.getElementById('specificStudentsBox').style.display = (group === 'specific_students') ? 'block' : 'none';
         }
 
-        // ── Chip toggle functions ──
-        function toggleChip(element) {
-            element.classList.toggle('selected');
-            const container = element.closest('.form-group').querySelector('[id$="Container"]');
-            const id = element.dataset.id;
-            const name = element.textContent.trim();
+        // ── Recipient pickers: search on the server as the person types ──
+        // Selections live in `picked` (id -> name) and as hidden recipient_ids[]
+        // inputs, so they survive every new search.
+        const RECIPIENT_SEARCH_URL = @json(route('notifications.recipients.search'));
+        const picked = { teacher: new Map(), student: new Map() };
+        const searchSeq = { teacher: 0, student: 0 };
+        const searchTimer = {};
 
-            if (element.classList.contains('selected')) {
-                // Add hidden input
+        const containerFor = type => document.getElementById(type === 'teacher' ? 'selectedTeachersContainer' : 'selectedStudentsContainer');
+
+        function makeChip(type, id, name, detail) {
+            const el = document.createElement('div');
+            el.className = 'chip-item' + (picked[type].has(String(id)) ? ' selected' : '');
+            el.dataset.id = id;
+            el.dataset.type = type;
+            el.dataset.name = name;
+            if (detail) el.title = detail;
+            el.textContent = name;
+            el.addEventListener('click', () => toggleChip(el));
+            return el;
+        }
+
+        function renderSelected(type) {
+            const box = document.getElementById(type + 'SelectedChips');
+            const holder = containerFor(type);
+            box.innerHTML = '';
+            holder.innerHTML = '';
+            picked[type].forEach((name, id) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'recipient_ids[]';
                 input.value = id;
                 input.setAttribute('data-chip-id', id);
-                container.appendChild(input);
-            } else {
-                // Remove hidden input
-                const inputs = container.querySelectorAll(`input[data-chip-id="${id}"]`);
-                inputs.forEach(inp => inp.remove());
-            }
+                holder.appendChild(input);
+                box.appendChild(makeChip(type, id, name, ''));
+            });
+            box.style.display = picked[type].size ? '' : 'none';
+        }
+
+        function toggleChip(el) {
+            const type = el.dataset.type, id = String(el.dataset.id);
+            if (picked[type].has(id)) picked[type].delete(id);
+            else picked[type].set(id, el.dataset.name);
+            renderSelected(type);
+            document.querySelectorAll('#' + type + 'ChipGrid .chip-item').forEach(c => {
+                c.classList.toggle('selected', picked[type].has(String(c.dataset.id)));
+            });
+        }
+
+        function runSearch(type) {
+            const grid = document.getElementById(type + 'ChipGrid');
+            const q = document.getElementById(type + 'Search').value;
+            const seq = ++searchSeq[type];
+
+            fetch(RECIPIENT_SEARCH_URL + '?type=' + type + '&q=' + encodeURIComponent(q.trim()), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(d => {
+                if (seq !== searchSeq[type]) return;
+                grid.innerHTML = '';
+                d.results.forEach(r => grid.appendChild(makeChip(type, r.id, r.name, r.detail)));
+                const note = document.createElement('div');
+                note.className = 'chip-note';
+                if (!d.results.length) note.textContent = 'No matches found.';
+                else if (d.more) note.textContent = 'Showing the first ' + d.results.length + ' matches — keep typing to narrow down.';
+                if (note.textContent) grid.appendChild(note);
+            })
+            .catch(() => {
+                if (seq === searchSeq[type]) grid.innerHTML = '<div class="chip-note">Could not load the list. Please try again.</div>';
+            });
         }
 
         function filterChips(type) {
-            const searchInput = document.getElementById(type + 'Search');
-            const query = searchInput.value.toLowerCase();
-            const grid = document.getElementById(type + 'ChipGrid');
-            const chips = grid.querySelectorAll('.chip-item');
-
-            chips.forEach(chip => {
-                const text = chip.textContent.toLowerCase();
-                chip.style.display = text.includes(query) ? '' : 'none';
-            });
+            clearTimeout(searchTimer[type]);
+            searchTimer[type] = setTimeout(() => runSearch(type), 250);
         }
 
         // ── When recipient group changes, reset selections ──
@@ -601,20 +648,16 @@
         toggleRecipientBoxes = function () {
             originalToggle();
 
-            // Clear any previously selected chips and hidden inputs when switching groups
-            document.querySelectorAll('#specificTeachersBox .chip-item, #specificStudentsBox .chip-item')
-                .forEach(chip => chip.classList.remove('selected'));
+            ['teacher', 'student'].forEach(type => {
+                picked[type].clear();
+                renderSelected(type);
+                const input = document.getElementById(type + 'Search');
+                if (input) input.value = '';
+            });
 
-            document.querySelectorAll('#specificTeachersBox input[data-chip-id], #specificStudentsBox input[data-chip-id]')
-                .forEach(inp => inp.remove());
-
-            // Reset search
-            const tSearch = document.getElementById('teacherSearch');
-            const sSearch = document.getElementById('studentSearch');
-            if (tSearch) { tSearch.value = ''; }
-            if (sSearch) { sSearch.value = ''; }
-            document.querySelectorAll('#teacherChipGrid .chip-item, #studentChipGrid .chip-item')
-                .forEach(chip => chip.style.display = '');
+            const group = document.getElementById('recipientGroup').value;
+            if (group === 'specific_teachers') runSearch('teacher');
+            if (group === 'specific_students') runSearch('student');
         };
 
         // ── Ensure toggle works after DOM load ──
