@@ -31,24 +31,27 @@ class ExaminationController extends Controller
 {
     // ─── Code Generator ────────────────────────────────────────────────────────
 
-    private function generateExamCode(): string
+    private function generateExamCode(int $skip = 0): string
     {
         $year = date('Y');
+        $prefix = 'EXAM-' . $year . '-';
 
-        $last = Examination::whereYear('created_at', $year)
-            ->where('exam_code', 'like', 'EXAM-' . $year . '-%')
-            ->orderBy('id', 'desc')
-            ->first();
+        // exam_code is UNIQUE across the WHOLE table (all schools), so the next
+        // number must be computed across all schools too. Model queries are
+        // normally confined to the logged-in school (SchoolScope) and hide
+        // report cards, which made two schools generate the same code.
+        $max = (int) Examination::withoutGlobalScopes()
+            ->where('exam_code', 'like', $prefix . '%')
+            ->selectRaw("MAX(CAST(SUBSTRING_INDEX(exam_code, '-', -1) AS UNSIGNED)) AS max_no")
+            ->value('max_no');
 
-        if ($last && $last->exam_code) {
-            preg_match('/(\d+)$/', $last->exam_code, $matches);
-            $lastNumber = isset($matches[1]) ? (int) $matches[1] : 0;
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+        return $prefix . str_pad($max + 1 + $skip, 4, '0', STR_PAD_LEFT);
+    }
 
-        return 'EXAM-' . $year . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    private function isExamCodeDuplicate(\Illuminate\Database\QueryException $e): bool
+    {
+        return ($e->errorInfo[1] ?? null) === 1062
+            && str_contains($e->getMessage(), 'exam_code');
     }
 
     // ─── List all examinations ─────────────────────────────────────────────────
@@ -153,8 +156,9 @@ class ExaminationController extends Controller
 
         DB::beginTransaction();
         try {
-            $exam = Examination::create([
-                'exam_code' => $examCode,
+            // Two schools saving at the same moment can still draw the same
+            // number; on a duplicate exam_code take the next one and retry.
+            $examData = [
                 'exam_name' => $validated['exam_name'],
                 'exam_type' => $validated['exam_type'],
                 'term' => $validated['term'],
@@ -170,7 +174,20 @@ class ExaminationController extends Controller
                 'o_level_mode' => $validated['o_level_mode'] ?? null,
                 'school_id' => $schoolId,
                 'created_by' => Session('LoggedTeacher'),
-            ]);
+            ];
+
+            $exam = null;
+            for ($attempt = 0; $attempt < 5; $attempt++) {
+                try {
+                    $examCode = $this->generateExamCode($attempt);
+                    $exam = Examination::create(['exam_code' => $examCode] + $examData);
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (!$this->isExamCodeDuplicate($e) || $attempt === 4) {
+                        throw $e;
+                    }
+                }
+            }
 
             // Each class_stream value is encoded as "classId_streamId"
             foreach ($validated['class_streams'] as $cs) {
