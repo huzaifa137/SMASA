@@ -90,5 +90,5 @@
         @empty
             <div class="ex-card"><p class="ex-help" style="margin:0;">No nursery subjects found for this school yet.</p></div>
         @endforelse
-    </div>
+    </div></div></div></div>
 @endsection
