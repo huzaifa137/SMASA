@@ -160,7 +160,13 @@ use App\Http\Controllers\Helper;
                             {{ $exam->statusLabel() }}
                         </span>
 
-                        {{-- RIGHT: BUTTON --}}
+                        {{-- RIGHT: BUTTONS --}}
+                        <div class="d-flex flex-wrap" style="gap: 10px;">
+                        @if (\App\Helpers\PermissionHelper::canFeature('enter_marks') && in_array($exam->status, ['marks_entry', 'active'], true))
+                            <a href="{{ route('examination.marks.import', $exam->id) }}" class="btn fw-semibold mt-2 mt-md-0" style="border-radius: 1rem; padding: 0.7rem 1.5rem; background: #fff; color: #2C29CA; border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-file-excel me-2"></i> Import marks from Excel
+                            </a>
+                        @endif
                         <a href="{{ route('examination.index') }}" class="btn fw-semibold mt-2 mt-md-0" style="border-radius: 1rem; padding: 0.7rem 1.5rem;
                       background: rgba(255,255,255,0.2);
                       backdrop-filter: blur(10px);
@@ -172,6 +178,7 @@ use App\Http\Controllers\Helper;
 
                             <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                         </a>
+                        </div>
 
                     </div>
                 </div>
