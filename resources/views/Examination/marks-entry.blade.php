@@ -151,7 +151,7 @@ use App\Http\Controllers\Helper;
                 <span class="exh-chip exh-chip--{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
             </x-slot:chips>
             <x-slot:actions>
-                @if (\App\Helpers\PermissionHelper::canFeature('enter_marks') && in_array($exam->status, ['marks_entry', 'active'], true))
+                @if (\App\Helpers\PermissionHelper::canFeature('enter_marks') && in_array($exam->status, ['marks_entry', 'active'], true) && $assignedSubjects->isNotEmpty())
                     <a href="{{ route('examination.marks.import', $exam->id) }}" class="exh-btn exh-btn--primary">
                         <i class="fas fa-file-excel"></i><span>Import marks from Excel</span>
                     </a>

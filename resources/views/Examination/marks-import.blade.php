@@ -41,6 +41,14 @@
             </div>
         @endif
 
+        @if ($classOptions->isEmpty())
+            <div class="ex-card">
+                <p class="ex-help" style="margin:0;">
+                    <i class="fas fa-info-circle me-2 mr-2"></i>You have no subjects assigned to you in this examination, so there is nothing for you to import.
+                    Subjects are assigned to teachers under Classes &rarr; Subjects. You only see and import the subjects assigned to you, exactly as on Marks Entry.
+                </p>
+            </div>
+        @else
         {{-- STEP 1 --}}
         <div class="ex-card">
             <h5 class="ex-card-title"><span class="ex-step">1</span> Choose the class and the file</h5>
@@ -52,7 +60,7 @@
                         <select id="impClass" name="cs" class="ex-input" required>
                             @foreach ($classOptions as $o)
                                 <option value="{{ $o['class_id'] }}|{{ $o['stream_id'] }}"
-                                    @selected($selected && $selected['class_id'] == $o['class_id'] && $selected['stream_id'] == $o['stream_id'])>{{ $o['label'] }}</option>
+                                    @selected($selected ? ($selected['class_id'] == $o['class_id'] && $selected['stream_id'] == $o['stream_id']) : old('cs') === $o['class_id'] . '|' . $o['stream_id'])>{{ $o['label'] }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -69,9 +77,11 @@
                 <p class="ex-help">
                     The <strong>template</strong> lists the class's pupils (with their system ID) and one column per subject, with any marks already entered.
                     You can also upload the school's own marklist: pupil names and subject columns are detected for you and can be corrected in the preview.
+                    You only see the classes and subjects assigned to you, the same as on Marks Entry.
                 </p>
             </form>
         </div>
+        @endif
 
         {{-- STEP 2 --}}
         @if ($plan)

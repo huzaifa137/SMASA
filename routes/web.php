@@ -825,6 +825,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/{examId}/marks-import', [\App\Http\Controllers\ExaminationMarksImportController::class, 'index'])->name('marks.import');
             Route::get('/{examId}/marks-import/template', [\App\Http\Controllers\ExaminationMarksImportController::class, 'template'])->name('marks.import.template');
             Route::post('/{examId}/marks-import/preview', [\App\Http\Controllers\ExaminationMarksImportController::class, 'preview'])->name('marks.import.preview');
+            Route::get('/{examId}/marks-import/preview', [\App\Http\Controllers\ExaminationMarksImportController::class, 'backToImportPage']);
+            Route::get('/{examId}/marks-import/commit', [\App\Http\Controllers\ExaminationMarksImportController::class, 'backToImportPage']);
             Route::post('/{examId}/marks-import/commit', [\App\Http\Controllers\ExaminationMarksImportController::class, 'commit'])->name('marks.import.commit');
             Route::post('/{examId}/classes/{examClassId}/release', 'releaseClassResults')->name('classes.release');
 

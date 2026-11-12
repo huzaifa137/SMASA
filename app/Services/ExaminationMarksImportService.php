@@ -34,10 +34,13 @@ class ExaminationMarksImportService
         $schoolId = $exam->school_id;
         $examClass = $this->examClass($exam, $classId, $streamId);
 
+        // Only the subjects assigned to THIS user (subject teacher 1/2 or a paper teacher) - exactly what the
+        // Marks Entry screen lists for them. Nobody gets another teacher's subjects through the import.
         $rows = DB::table('class_subjects')
             ->where('school_id', $schoolId)
             ->where('class_id', $classId)
             ->where('stream_id', $streamId)
+            ->tap(fn($q) => PaperTeacherAccess::scopeTeacherSubjects($q, $teacherId))
             ->orderBy('id')
             ->get();
 
@@ -53,6 +56,10 @@ class ExaminationMarksImportService
 
             if (!ExaminationSubjectSetting::marksEntryOpen($exam->id, $cs)) {
                 $skipped[] = ['name' => $name, 'reason' => 'not being examined in this examination'];
+                continue;
+            }
+            if (Helper::choiceSubjectHasNoStudents($schoolId, $cs)) {
+                $skipped[] = ['name' => $name, 'reason' => 'no pupil takes this subject'];
                 continue;
             }
             if ($cs->subject_type === 'secondary_olevel' && $exam->usesNlscAssessments()) {
@@ -88,6 +95,28 @@ class ExaminationMarksImportService
         }
 
         return ['subjects' => $subjects, 'skipped' => $skipped];
+    }
+
+    /**
+     * The class-streams of this examination in which $teacherId has at least one subject to enter marks for -
+     * the same list, and the same filters, as the Marks Entry screen. [['class_id'=>int,'stream_id'=>string], ...]
+     */
+    public function teacherClassStreams(Examination $exam, $teacherId)
+    {
+        $examClasses = ExaminationClass::where('examination_id', $exam->id)->where('school_id', $exam->school_id)->get();
+        $valid = $examClasses->map(fn($ec) => $ec->class_id . '_' . $ec->stream_id)->all();
+
+        return DB::table('class_subjects')
+            ->where('school_id', $exam->school_id)
+            ->tap(fn($q) => PaperTeacherAccess::scopeTeacherSubjects($q, $teacherId))
+            ->whereIn('class_id', $examClasses->pluck('class_id'))
+            ->get()
+            ->filter(fn($s) => in_array($s->class_id . '_' . $s->stream_id, $valid, true))
+            ->filter(fn($s) => ExaminationSubjectSetting::marksEntryOpen($exam->id, $s))
+            ->filter(fn($s) => !Helper::choiceSubjectHasNoStudents($exam->school_id, $s))
+            ->map(fn($s) => ['class_id' => (int) $s->class_id, 'stream_id' => (string) $s->stream_id])
+            ->unique(fn($p) => $p['class_id'] . '_' . $p['stream_id'])
+            ->values();
     }
 
     public function students(Examination $exam, int $classId, string $streamId): array

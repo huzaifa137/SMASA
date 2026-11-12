@@ -8,8 +8,10 @@ use App\Models\Examination;
 use App\Models\ExaminationClass;
 use App\Models\ExaminationMark;
 use App\Services\ExaminationMarksImportService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -39,6 +41,12 @@ class ExaminationMarksImportController extends Controller
         ]);
     }
 
+    /** Someone opened / refreshed a POST-only address (preview, import): send them to the import page. */
+    public function backToImportPage($examId)
+    {
+        return redirect()->route('examination.marks.import', $examId);
+    }
+
     public function template(Request $request, $examId)
     {
         $exam = $this->exam($examId);
@@ -46,6 +54,9 @@ class ExaminationMarksImportController extends Controller
 
         $ctx = $this->service->importableSubjects($exam, $classId, $streamId, Session('LoggedTeacher'));
         $subjects = $ctx['subjects'];
+        if (!$subjects) {
+            $this->backToImport($request, 'You have no subjects to enter marks for in this class, so there is nothing to export.');
+        }
 
         $marks = ExaminationMark::where('examination_id', $exam->id)
             ->where('school_id', $exam->school_id)
@@ -76,10 +87,13 @@ class ExaminationMarksImportController extends Controller
         [$classId, $streamId] = $this->classStream($request, $exam);
         $this->requireOpen($exam);
 
-        $request->validate([
+        $check = Validator::make($request->all(), [
             'file' => 'nullable|file|mimes:xlsx,xls,csv,txt|max:8192',
             'token' => ['nullable', 'regex:/^[A-Za-z0-9]{40}\.(xlsx|xls|csv|txt)$/'],
-        ]);
+        ], ['file.mimes' => 'The file must be an Excel (.xlsx, .xls) or CSV file.', 'file.max' => 'The file is too large (8 MB maximum).', 'file.uploaded' => 'The file could not be uploaded. Please try again.']);
+        if ($check->fails()) {
+            $this->backToImport($request, $check->errors()->first());
+        }
 
         $schoolId = $exam->school_id;
         $token = $request->input('token');
@@ -90,14 +104,14 @@ class ExaminationMarksImportController extends Controller
             $request->file('file')->storeAs("marks-imports/{$schoolId}", $token, 'local');
         }
         if (!$token || !Storage::disk('local')->exists("marks-imports/{$schoolId}/{$token}")) {
-            return back()->with('error', 'Please choose the file to import.')->withInput();
+            $this->backToImport($request, 'There is no file to preview. Please attach the Excel or CSV file first (it has to be attached again each time you start from the first step, e.g. after choosing another class), then click Preview import.');
         }
 
         try {
             [$sheetNames, $rows, $sheetIndex] = $this->readSheet($schoolId, $token, $request->input('sheet'), $classId, $streamId);
         } catch (\Throwable $e) {
             report($e);
-            return back()->with('error', 'That file could not be read. Please upload an .xlsx or .csv file.')->withInput();
+            $this->backToImport($request, 'That file could not be read. Please upload an .xlsx or .csv file.');
         }
 
         $mapping = $request->has('map') ? $this->cleanMapping($request->input('map')) : null;
@@ -117,7 +131,9 @@ class ExaminationMarksImportController extends Controller
         [$classId, $streamId] = $this->classStream($request, $exam);
         $this->requireOpen($exam);
 
-        $request->validate(['token' => ['required', 'regex:/^[A-Za-z0-9]{40}\.(xlsx|xls|csv|txt)$/']]);
+        if (!preg_match('/^[A-Za-z0-9]{40}\.(xlsx|xls|csv|txt)$/', (string) $request->input('token'))) {
+            $this->backToImport($request, 'The uploaded file could not be found. Please attach it again.');
+        }
 
         $schoolId = $exam->school_id;
         $token = $request->input('token');
@@ -173,7 +189,7 @@ class ExaminationMarksImportController extends Controller
         }
     }
 
-    /** The class-stream must be one of this examination's own. */
+    /** The class-stream must be one of this examination's own AND one the logged-in user has subjects in. */
     private function classStream(Request $request, Examination $exam): array
     {
         if ($request->filled('cs')) {                       // the class dropdown sends "classId|stream"
@@ -181,26 +197,39 @@ class ExaminationMarksImportController extends Controller
             $request->merge(['class_id' => $c, 'stream_id' => $st]);
         }
 
-        $data = $request->validate(['class_id' => 'required|integer', 'stream_id' => 'required|string|max:50']);
+        $check = Validator::make($request->all(), ['class_id' => 'required|integer', 'stream_id' => 'required|string|max:50'],
+            ['class_id.required' => 'Please choose the class.', 'stream_id.required' => 'Please choose the class.']);
+        if ($check->fails()) {
+            $this->backToImport($request, $check->errors()->first());
+        }
 
-        ExaminationClass::where('examination_id', $exam->id)
-            ->where('school_id', $exam->school_id)
-            ->where('class_id', $data['class_id'])
-            ->where('stream_id', $data['stream_id'])
-            ->firstOrFail();
+        $mine = $this->service->teacherClassStreams($exam, Session('LoggedTeacher'))
+            ->first(fn($p) => $p['class_id'] === (int) $request->input('class_id') && $p['stream_id'] === (string) $request->input('stream_id'));
+        if (!$mine) {
+            $this->backToImport($request, 'You have no subjects assigned to you in that class for this examination.');
+        }
 
-        return [(int) $data['class_id'], (string) $data['stream_id']];
+        return [$mine['class_id'], $mine['stream_id']];
     }
 
+    /** Go back to the import page (a normal GET page) with a message, remembering the chosen class. */
+    private function backToImport(Request $request, string $message): void
+    {
+        throw new HttpResponseException(
+            redirect()->route('examination.marks.import', $request->route('examId'))
+                ->with('error', $message)
+                ->withInput($request->only('cs'))
+        );
+    }
+
+    /** The classes in the dropdown: only those where the logged-in user has subjects in this examination. */
     private function classOptions(Examination $exam)
     {
-        return ExaminationClass::where('examination_id', $exam->id)
-            ->where('school_id', $exam->school_id)
-            ->get()
-            ->map(function ($ec) {
-                $stream = ($ec->stream_id && !in_array($ec->stream_id, ['-', 'NO_STREAM'], true)) ? ' ' . $ec->stream_id : '';
+        return $this->service->teacherClassStreams($exam, Session('LoggedTeacher'))
+            ->map(function ($p) {
+                $stream = ($p['stream_id'] && !in_array($p['stream_id'], ['-', 'NO_STREAM'], true)) ? ' ' . $p['stream_id'] : '';
 
-                return ['class_id' => $ec->class_id, 'stream_id' => $ec->stream_id, 'label' => Helper::recordMdname($ec->class_id) . $stream];
+                return ['class_id' => $p['class_id'], 'stream_id' => $p['stream_id'], 'label' => Helper::recordMdname($p['class_id']) . $stream];
             })
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
