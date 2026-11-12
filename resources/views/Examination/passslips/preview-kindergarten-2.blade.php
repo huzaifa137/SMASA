@@ -111,6 +111,7 @@
     $mode = $mode ?? 'single';
     $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($slips[0]['student']->senior ?? null));
     $savedCfg = Helper::getPassslipSettings($schoolId, $settingsClassId, 'nursery-modern');
+    $marksPref = Helper::nurseryMarksPreference($savedCfg);
 
     $cfg = [
       'border' => $on('show_border', true, $savedCfg),
@@ -925,6 +926,15 @@
       text-transform: uppercase;
     }
 
+    .dev-card-marks {
+      margin: 0.8mm 0 0;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      color: var(--dc-color);
+      font-size: 8px;
+      line-height: 1.1;
+    }
+
     .dev-card-sub {
       margin: 0.8mm 0 0;
       font-family: 'Poppins', sans-serif;
@@ -1531,7 +1541,7 @@
           @forelse(($subjectMarks ?? collect()) as $i => $subj)
             @php
               $dp = $devPalette[$i % count($devPalette)];
-              $iconUrl = Helper::nurserySubjectIconUrl($subj->subject_name ?? '');
+              $iconUrl = Helper::nurserySubjectIcon($subj, $settingsClassId);
             @endphp
             <div class="dev-card" style="--dc-color:{{ $dp['color'] }}">
               @if($iconUrl)
@@ -1540,6 +1550,9 @@
                 <i class="fas {{ $dp['icon'] }}" style="font-size:5.5mm;color:{{ $dp['color'] }};margin-bottom:1mm;"></i>
               @endif
               <h4 class="dev-card-title">{{ $subj->subject_name ?? '' }}</h4>
+              @if($mk = Helper::nurseryMarksText($subj, $marksPref))
+                <div class="dev-card-marks">{{ $mk }}</div>
+              @endif
               <p class="dev-card-sub">{{ $subj->grade_remark ?: 'Pending' }}</p>
               <div class="dev-card-divider"><span class="dcd-line"></span><i class="fas {{ $dp['icon'] }}"></i><span class="dcd-line"></span></div>
             </div>

@@ -938,6 +938,17 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
+    // Nursery subject icons (choose from the system library or upload one) shown on the nursery report cards
+    Route::prefix('examinations/subject-icons')
+        ->name('examination.subject-icons.')
+        ->controller(\App\Http\Controllers\SubjectIconController::class)
+        ->middleware(['module:examinations'])
+        ->middleware(['SchoolAuth'])
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/{id}', 'update')->name('update');
+        });
+
     // Which subjects count toward the PLE-style Aggregate/Division, per
     // class + stream (class_subjects.counts_towards_aggregate). See
     // AggregateSubjectsController for the full explanation.

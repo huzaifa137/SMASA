@@ -1539,6 +1539,8 @@
             </div>
 
 
+            {{-- A-Level General Paper / Subsidiary pass-fail grading only exists for schools with Secondary classes --}}
+            @if (\App\Http\Controllers\Helper::schoolHasSecondary($schoolId ?? null))
             {{-- ── A-Level General Paper / Subsidiary: pass (E) / fail (O) ── --}}
             @php
                 $pf = \App\Services\PassFailGradingService::settings($schoolId);
@@ -1572,6 +1574,7 @@
                 </div>
                 <small style="color:#6B7280;">Saved marks keep their old grade until re-graded: run <code>php artisan marks:regrade-pass-fail</code> after changing the pass mark.</small>
             </div>
+            @endif
 
             <style>
                 /* ── Breadcrumb ────────────────────────────────────────────── */

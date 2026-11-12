@@ -90,6 +90,7 @@
         $schoolId = Session('LoggedSchool') ?: ($exam->school_id ?? ($student->school_id ?? null));
 
         $savedCfg = Helper::getPassslipSettings($schoolId, $settingsClassId, 'nursery-classic');
+        $marksPref = Helper::nurseryMarksPreference($savedCfg);
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -756,6 +757,13 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             margin-bottom: 3.5mm;
+        }
+
+        .dev-card .dev-card-marks {
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--c, #2C29CA);
+            margin-bottom: 2px;
         }
 
         .dev-card {
@@ -1536,9 +1544,10 @@
                 // (Helper::nurserySubjectIconUrl()) with a null fallback
                 // handled by the @forelse below.
                 $devPalette = ['#4caf7d', '#f2994a', '#ec6ea8', '#8a5fc7', '#3aa8d8', '#4caf7d', '#f0b429', '#4caf7d'];
-                $devCards = $subjectMarks->values()->map(function ($subj, $i) use ($devPalette) {
+                $devCards = $subjectMarks->values()->map(function ($subj, $i) use ($devPalette, $marksPref, $settingsClassId) {
                     return [
-                        'img' => Helper::nurserySubjectIconUrl($subj->subject_name ?? ''),
+                        'img' => Helper::nurserySubjectIcon($subj, $settingsClassId),
+                        'marks' => Helper::nurseryMarksText($subj, $marksPref),
                         'label' => $subj->subject_name ?? '',
                         'c' => $devPalette[$i % count($devPalette)],
                         'desc' => $subj->grade_remark ?: 'Pending',
@@ -1859,6 +1868,9 @@
                                 <i class="fa-solid fa-heart"></i>
                                 <span class="line"></span>
                             </div>
+                            @if(!empty($card['marks']))
+                                <div class="dev-card-marks">{{ $card['marks'] }}</div>
+                            @endif
                             <p>{{ $card['desc'] }}</p>
                         </div>
                     @empty

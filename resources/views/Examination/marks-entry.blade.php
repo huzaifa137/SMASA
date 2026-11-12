@@ -145,89 +145,28 @@ use App\Http\Controllers\Helper;
 @section('content')
     <div class="side-app">
 
-        {{-- Hero --}}
-        <div class="exam-hero mb-4">
-            <div class="row">
-
-                {{-- TOP ROW (responsive stack with proper spacing) --}}
-                <div class="col-12">
-
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center"
-                        style="gap: 12px;">
-
-                        {{-- LEFT: STATUS --}}
-                        <span class="status-pill status-{{ $exam->status }}">
-                            {{ $exam->statusLabel() }}
-                        </span>
-
-                        {{-- RIGHT: BUTTONS --}}
-                        <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @if (\App\Helpers\PermissionHelper::canFeature('enter_marks') && in_array($exam->status, ['marks_entry', 'active'], true))
-                            <a href="{{ route('examination.marks.import', $exam->id) }}" class="btn fw-semibold mt-2 mt-md-0" style="border-radius: 1rem; padding: 0.7rem 1.5rem; background: #fff; color: #2C29CA; border: 1px solid rgba(255,255,255,0.3);">
-                                <i class="fas fa-file-excel me-2"></i> Import marks from Excel
-                            </a>
-                        @endif
-                        <a href="{{ route('examination.index') }}" class="btn fw-semibold mt-2 mt-md-0" style="border-radius: 1rem; padding: 0.7rem 1.5rem;
-                      background: rgba(255,255,255,0.2);
-                      backdrop-filter: blur(10px);
-                      border: 1px solid rgba(255,255,255,0.3);
-                      color: white;
-                      transition: all 0.2s ease;"
-                            onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
-                            onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)'">
-
-                            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-                        </a>
-                        </div>
-
-                    </div>
-                </div>
-
-                {{-- TITLE --}}
-                <div class="col-12">
-                    <h3 class="text-white fw-bold mb-4"
-                        style="font-size: 1.75rem; line-height: 1.2; word-break: break-word;">
-                        {{ $exam->exam_name }}
-                    </h3>
-                </div>
-
-                {{-- META PILLS --}}
-                <div class="col-12">
-                    <div class="row g-3 gy-3">
-
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-tag"></i>
-                                <span>{{ $exam->exam_type }}</span>
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-calendar"></i>
-                                <span>{{ \App\Support\Term::label($exam->term) }} {{ $exam->academic_year }}</span>
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-code"></i>
-                                <span>{{ $exam->exam_code }}</span>
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-hourglass-end"></i>
-                                <span>Deadline: {{ $exam->marks_entry_deadline->format('d M Y') }}</span>
-                            </span>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        {{-- Banner --}}
+        <x-exam-hero icon="fa-pen-to-square" :title="$exam->exam_name" subtitle="Marks entry · pick a subject below, or import a whole class from Excel">
+            <x-slot:chips>
+                <span class="exh-chip exh-chip--{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
+            </x-slot:chips>
+            <x-slot:actions>
+                @if (\App\Helpers\PermissionHelper::canFeature('enter_marks') && in_array($exam->status, ['marks_entry', 'active'], true))
+                    <a href="{{ route('examination.marks.import', $exam->id) }}" class="exh-btn exh-btn--primary">
+                        <i class="fas fa-file-excel"></i><span>Import marks from Excel</span>
+                    </a>
+                @endif
+                <a href="{{ route('examination.index') }}" class="exh-btn">
+                    <i class="fas fa-arrow-left"></i><span>Back to Dashboard</span>
+                </a>
+            </x-slot:actions>
+            <x-slot:features>
+                <x-exam-hero-tile icon="fa-tag" :title="$exam->exam_type" desc="Examination type" color="#818cf8" />
+                <x-exam-hero-tile icon="fa-calendar" :title="\App\Support\Term::label($exam->term) . ' ' . $exam->academic_year" desc="Term and year" color="#34d399" />
+                <x-exam-hero-tile icon="fa-code" :title="$exam->exam_code" desc="Examination code" color="#60a5fa" />
+                <x-exam-hero-tile icon="fa-hourglass-end" :title="$exam->marks_entry_deadline->format('d M Y')" desc="Marks entry deadline" color="#fbbf24" />
+            </x-slot:features>
+        </x-exam-hero>
 
         @if(!in_array($exam->status, ['active', 'marks_entry']))
             <div class="alert alert-danger rounded-3 mb-4" role="alert">

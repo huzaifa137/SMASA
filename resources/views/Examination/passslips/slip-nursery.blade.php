@@ -145,6 +145,7 @@
         // thing that still needs to be resolved separately for each one.
         $settingsClassId = $mode === 'single' ? ($student->senior ?? null) : ($classId ?? ($renderSlips[0]['student']->senior ?? null));
         $savedCfg = Helper::getPassslipSettings($schoolId, $settingsClassId);
+        $marksPref = Helper::nurseryMarksPreference($savedCfg);
 
         $cfg = [
             'border' => $on('show_border', true, $savedCfg),
@@ -566,6 +567,14 @@
             font-size: 16px;
         }
 
+        .nursery-marks {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--accent);
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+
         .nursery-desc {
             font-size: 13px;
             margin-top: 4px;
@@ -917,13 +926,16 @@
                     @forelse($nurseryLeft as $subj)
                         <div class="nursery-subject-row">
                             <div class="nursery-icon-box">
-                                @if($iconUrl = Helper::nurserySubjectIconUrl($subj->subject_name))
+                                @if($iconUrl = Helper::nurserySubjectIcon($subj, $settingsClassId))
                                     <img src="{{ $iconUrl }}" alt="{{ $subj->subject_name }}">
                                 @endif
                             </div>
                             <div class="nursery-subject-body">
                                 <div class="nursery-subject-name-row">
                                     <span class="nursery-subject-name">{{ $subj->subject_name }}</span>
+                                    @if($mk = Helper::nurseryMarksText($subj, $marksPref))
+                                        <span class="nursery-marks">{{ $mk }}</span>
+                                    @endif
                                 </div>
                                 <div class="nursery-desc">{{ $subj->grade_remark ?: 'Pending' }}</div>
                             </div>
@@ -942,13 +954,16 @@
                     @forelse($nurseryRight as $subj)
                         <div class="nursery-subject-row">
                             <div class="nursery-icon-box">
-                                @if($iconUrl = Helper::nurserySubjectIconUrl($subj->subject_name))
+                                @if($iconUrl = Helper::nurserySubjectIcon($subj, $settingsClassId))
                                     <img src="{{ $iconUrl }}" alt="{{ $subj->subject_name }}">
                                 @endif
                             </div>
                             <div class="nursery-subject-body">
                                 <div class="nursery-subject-name-row">
                                     <span class="nursery-subject-name">{{ $subj->subject_name }}</span>
+                                    @if($mk = Helper::nurseryMarksText($subj, $marksPref))
+                                        <span class="nursery-marks">{{ $mk }}</span>
+                                    @endif
                                 </div>
                                 <div class="nursery-desc">{{ $subj->grade_remark ?: 'Pending' }}</div>
                             </div>

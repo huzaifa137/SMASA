@@ -1198,6 +1198,13 @@ use App\Helpers\PermissionHelper;
                                         <i class="fas fa-ruler-combined mr-2"></i>Assessment Scales
                                     </a>
                                 </li>
+                                @if (\App\Helpers\PermissionHelper::canFeature('manage_report_card_settings') && !empty(\App\Http\Controllers\Helper::nurseryClassIds()))
+                                    <li>
+                                        <a href="{{ route('examination.subject-icons.index') }}">
+                                            <i class="fas fa-icons mr-2"></i>Subject Icons
+                                        </a>
+                                    </li>
+                                @endif
                                 <li>
                                     <a href="{{ url('examinations/aggregate-subjects') }}">
                                         <i class="fas fa-object-ungroup mr-2"></i>

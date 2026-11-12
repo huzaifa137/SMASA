@@ -535,75 +535,22 @@ use App\Helpers\PermissionHelper;
     @endphp
     <div class="side-app">
 
-        {{-- Hero --}}
-        <div class="exam-hero mb-4">
+        {{-- Banner --}}
+        <x-exam-hero icon="fa-pen-to-square" :title="$exam->exam_name . ' › ' . Helper::classSubjectName($classSubject)" subtitle="Enter marks">
+            <x-slot:chips>
+                <span class="exh-chip exh-chip--{{ $exam->status }}">{{ $exam->statusLabel() }}</span>
+            </x-slot:chips>
+            <x-slot:actions>
+                <a href="{{ route('examination.marks.entry', $exam->id) }}" class="exh-btn">
+                    <i class="fas fa-arrow-left"></i><span>Back to Exams</span>
+                </a>
+            </x-slot:actions>
+            <x-slot:features>
+                <x-exam-hero-tile icon="fa-chalkboard-teacher" :title="Helper::recordMdname($classSubject->class_id) . ($classSubject->stream_id && !in_array($classSubject->stream_id, ['-', 'NO_STREAM'], true) ? ' — ' . $classSubject->stream_id : '')" desc="Class" color="#818cf8" />
+                <x-exam-hero-tile icon="fa-star" :title="'Out of ' . $exam->total_marks" desc="Total marks" color="#34d399" />
+                <x-exam-hero-tile icon="fa-hourglass-end" :title="$exam->marks_entry_deadline->format('d M Y')" desc="Marks entry deadline" color="#fbbf24" />
+            </x-slot:features>
             <div class="row">
-                <div class="col-12">
-
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center"
-                        style="gap: 12px;">
-
-                        <span class="status-pill status-{{ $exam->status }}">
-                            {{ $exam->statusLabel() }}
-                        </span>
-
-                        <a href="{{ route('examination.marks.entry', $exam->id) }}" class="btn fw-semibold mt-2 mt-md-0"
-                            style="border-radius: 1rem; padding: 0.7rem 1.5rem;
-                                        background: rgba(255,255,255,0.2);
-                                        backdrop-filter: blur(10px);
-                                        border: 1px solid rgba(255,255,255,0.3);
-                                        color: white;
-                                        transition: all 0.2s ease;"
-                            onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
-                            onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)'">
-                            <i class="fas fa-arrow-left me-2"></i> Back to Exams
-                        </a>
-
-                    </div>
-                </div>
-
-                {{-- TITLE AND BREADCRUMB --}}
-                <div class="col-12">
-                    <div class="mb-1" style="font-size:.82rem; color:rgba(255,255,255,.7); margin-top: 1rem;">
-                        <h3 class="text-white fw-bold mb-3"
-                            style="font-size: 1.75rem; line-height: 1.2; word-break: break-word;">
-                            {{ $exam->exam_name }} &rsaquo;
-                            <strong>{{ Helper::classSubjectName($classSubject) }}</strong>
-                        </h3>
-                        <h5 style="color: color:rgba(255,255,255,.7);">Enter Marks</h5>
-                    </div>
-                </div>
-
-                {{-- META PILLS --}}
-                <div class="col-12">
-                    <div class="row g-3 gy-3">
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-chalkboard-teacher me-1"></i>
-                                <span>{{ Helper::recordMdname($classSubject->class_id) }}
-                                    @if ($classSubject->stream_id)
-                                        — {{ $classSubject->stream_id }}
-                                    @endif
-                                </span>
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-star me-1"></i>
-                                <span>Out of {{ $exam->total_marks }}</span>
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <span class="exam-meta-pill">
-                                <i class="fas fa-hourglass-end me-1"></i>
-                                <span>Deadline: {{ $exam->marks_entry_deadline->format('d M Y') }}</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
                 {{-- PAPERS: say why they are unavailable instead of silently hiding the button --}}
                 @if (!$papersSupported && !empty($papersBlockedReason))
                     <div class="col-12 mt-3">
@@ -685,7 +632,7 @@ use App\Helpers\PermissionHelper;
                     </div>
                 </div>
             </div>
-        </div>
+        </x-exam-hero>
 
         {{-- Marks Table --}}
         <div class="card marks-card mb-5">

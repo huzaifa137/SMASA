@@ -4287,6 +4287,11 @@ use App\Helpers\PermissionHelper;
                                 class="btn btn-outline-purple w-100 mb-2">
                                 <i class="fas fa-ruler-combined mr-2"></i>Assessment Scales
                             </a>@endif
+                            @if(PermissionHelper::canFeature('manage_report_card_settings') && !empty(\App\Http\Controllers\Helper::nurseryClassIds()))<a
+                                href="{{ route('examination.subject-icons.index') }}"
+                                class="btn btn-outline-purple w-100 mb-2">
+                                <i class="fas fa-icons mr-2"></i> Subject Icons
+                            </a>@endif
                         </div>
                         {{-- Recent Activity --}}
                         <div class="mt-4 pt-3" style="border-top: 2px solid #ede9ff;">

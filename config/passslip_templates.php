@@ -171,6 +171,8 @@ return [
         'show_decimals' => ['label' => 'Show decimals (marks, averages, %)', 'icon' => 'fa-calculator', 'group' => 'Marks Table'],
 
         'show_perf_chart' => ['label' => 'Performance-over-time chart', 'icon' => 'fa-chart-bar', 'group' => 'Bottom Section'],
+        // Nursery designs: print each subject's marks (85/100) as well as its comment. Not saved = automatic.
+        'show_subject_marks' => ['label' => 'Show marks for each subject', 'icon' => 'fa-hashtag', 'group' => 'Subjects'],
         'show_remarks' => ['label' => 'Remarks section', 'icon' => 'fa-comment-alt', 'group' => 'Bottom Section'],
         'show_discipline' => ['label' => 'Discipline section', 'icon' => 'fa-user-shield', 'group' => 'Bottom Section'],
         'show_signatures' => ['label' => 'Signature column', 'icon' => 'fa-signature', 'group' => 'Bottom Section'],
@@ -341,6 +343,9 @@ return [
         'nursery-classic' => [
             'show_border', 'show_watermark',
 
+            // Marks printed next to each subject's comment
+            'show_subject_marks',
+
             // Student Info card — Exam field (Teacher:/Term:/Exam: rows)
             'show_stu_exam',
 
@@ -355,6 +360,9 @@ return [
         ],
         'nursery-modern' => [
             'show_border', 'show_watermark',
+
+            // Marks printed next to each subject's comment
+            'show_subject_marks',
 
             // School Header
             'show_logo', 'show_motto',
@@ -381,6 +389,9 @@ return [
         ],
         'nursery-minimal' => [
             'show_border', 'show_watermark',
+
+            // Marks printed next to each subject's comment
+            'show_subject_marks',
 
             // School Header — dual independent logos (each can be
             // removed on its own, same split as Primary Modern/Minimal),

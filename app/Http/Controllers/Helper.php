@@ -1894,6 +1894,94 @@ class Helper extends Controller
     }
 
     /**
+     * Nursery pass slips: should each subject show its MARKS (e.g. 85/100) next to / instead of only the
+     * written comment?  Returns true/false when the school chose (customise panel toggle "Show marks for each
+     * subject", or ?show_subject_marks= in the URL), or null = "not chosen": decide per subject (see
+     * nurseryMarksText()).
+     */
+    public static function nurseryMarksPreference(array $savedCfg): ?bool
+    {
+        if (request()->has('show_subject_marks')) {
+            return in_array(request('show_subject_marks'), ['1', 'true', 1, true], true);
+        }
+        if (array_key_exists('show_subject_marks', $savedCfg)) {
+            return (bool) $savedCfg['show_subject_marks'];
+        }
+
+        return null;
+    }
+
+    /**
+     * "85/100" for one nursery subject, or null when marks should not be printed.
+     * Not chosen ($preference === null): marks are shown when the subject is marked out of more than 3 - i.e. a
+     * normal marks scale - and left as comment-only on the 1-3 Early-Years scale, which is what those schools
+     * already had. A subject with no mark entered never prints a mark.
+     */
+    public static function nurseryMarksText($subj, ?bool $preference = null): ?string
+    {
+        $m = $subj->marks_obtained ?? null;
+        if ($m === null || $m === '') {
+            return null;
+        }
+        $total = (float) ($subj->total_marks ?? 0);
+        $show = $preference ?? ($total > 3);
+        if (!$show) {
+            return null;
+        }
+        $fmt = fn($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+
+        return $total > 0 ? $fmt($m) . '/' . $fmt($total) : $fmt($m);
+    }
+
+    /**
+     * Icon for a nursery subject on the report card: the icon the school picked (or uploaded) for that class
+     * subject under Examinations -> Subject Icons, otherwise the automatic by-name match
+     * (nurserySubjectIconUrl). Safe before the `class_subjects.icon` migration has been run.
+     */
+    public static function nurserySubjectIcon($subj, $classId = null): ?string
+    {
+        static $icons = null;
+        static $hasColumn = null;
+
+        $schoolId = Session('LoggedSchool');
+        if ($hasColumn === null) {
+            try {
+                $hasColumn = \Illuminate\Support\Facades\Schema::hasColumn('class_subjects', 'icon');
+            } catch (\Throwable $e) {
+                $hasColumn = false;
+            }
+        }
+
+        if ($hasColumn && $schoolId) {
+            if ($icons === null) {
+                $icons = DB::table('class_subjects')
+                    ->where('school_id', $schoolId)
+                    ->whereNotNull('icon')->where('icon', '<>', '')
+                    ->get(['class_id', 'subject_id', 'custom_subject_id', 'icon']);
+            }
+            $match = $icons->first(fn($r) => (int) $r->class_id === (int) $classId
+                && (int) ($r->custom_subject_id ?? 0) === (int) ($subj->custom_subject_id ?? 0)
+                && (int) ($r->subject_id ?? 0) === (int) ($subj->subject_id ?? 0));
+            if ($match) {
+                return self::subjectIconPublicUrl($match->icon);
+            }
+        }
+
+        return self::nurserySubjectIconUrl($subj->subject_name ?? '');
+    }
+
+    /** "images/subject-icons/Health Habits.png" or "storage/subject-icons/195/x.png" -> public URL. */
+    public static function subjectIconPublicUrl(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '' || str_contains($path, '..')) {
+            return null;
+        }
+
+        return asset(implode('/', array_map('rawurlencode', explode('/', ltrim($path, '/')))));
+    }
+
+    /**
      * Resolve a Nursery subject's icon image for the pass slip's
      * Cognitive/Social-Emotional Development grid, from
      * public/images/subject-icons. Schools are free to rename or add
