@@ -1,6 +1,13 @@
 @extends('layouts-side-bar.master')
 
 @section('content')
+
+<style>
+    table thead th {
+    background-color: #2C29CA !important;
+    color: #FFFFFF !important;
+}
+</style>
     @php
         $open = in_array($exam->status, ['marks_entry', 'active'], true);
         $fmt = fn($v) => $v === null ? '—' : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
