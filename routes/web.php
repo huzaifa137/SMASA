@@ -412,12 +412,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 Route::delete('/school/{schoolId}', 'deleteSchool')->name('school.delete');
             });
 
-            Route::post('/select-school', 'selectSchool')->name('school.select')
-                ->middleware('admin.can:schools.enter');
-
-            // Leaving a school must always be possible, even if the right was revoked meanwhile.
-            Route::post('/school/clear', 'clearSchool')->name('school.clear');
-
             // Shared with the school portal (admins need the permission)
             Route::get('/school-profile', 'schoolProfile')->name('profile.school')
                 ->middleware('admin.guard:schools.view');

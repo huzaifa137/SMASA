@@ -376,6 +376,11 @@ class UserRightsController extends Controller
             'school_role_id' => 'nullable|integer|exists:school_roles,id',
         ]);
 
+        // Nobody may change their own role (privilege escalation / self lock-out).
+        if (session('LoggedTeacher') && (int) session('LoggedTeacher') === (int) $request->teacher_id) {
+            return response()->json(['success' => false, 'message' => 'You cannot change your own role.'], 403);
+        }
+
         $teacher = Teacher::where('school_id', $schoolId)->findOrFail($request->teacher_id);
 
         if ($request->school_role_id) {
@@ -407,6 +412,11 @@ class UserRightsController extends Controller
         $schoolId = session('LoggedSchool');
 
         $request->validate(['teacher_id' => 'required|integer']);
+
+        // Nobody may strip their own role (self lock-out).
+        if (session('LoggedTeacher') && (int) session('LoggedTeacher') === (int) $request->teacher_id) {
+            return response()->json(['success' => false, 'message' => 'You cannot remove your own role.'], 403);
+        }
 
         $teacher = Teacher::where('school_id', $schoolId)->findOrFail($request->teacher_id);
 
@@ -575,10 +585,8 @@ class UserRightsController extends Controller
      * against, and PermissionHelper's bootstrap allowance only ever kicks
      * in for a teacher who is already logged in. Nobody could ever reach
      * "Add Teacher" for such a school because that screen requires a
-     * LoggedSchool session (Helper::requireSchool()), and setting one via
-     * SchoolController::selectSchool() strips the admin's isSystemAdmin()
-     * bypass without granting the bootstrap allowance in its place (which
-     * needs LoggedTeacher too). This endpoint lets a system admin create
+     * LoggedSchool session (Helper::requireSchool()), which a system admin
+     * does not have. This endpoint lets a system admin create
      * (and optionally immediately assign a role to) a teacher for any
      * school directly, entirely outside the session-based access checks.
      */

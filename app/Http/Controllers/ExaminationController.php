@@ -2381,26 +2381,113 @@ class ExaminationController extends Controller
      * /examinations/passslips[?exam={id}] (no exam required — the page shows an
      * examination picker and swaps the content in when one is chosen).
      */
-    private function passslipExamOptions($schoolId): array
+    /**
+     * Examinations that can have pass slips: closed / results released, or
+     * with at least one class released individually. Every filter on the
+     * pass-slip picker is applied on top of this base query.
+     */
+    private function passslipEligibleQuery($schoolId)
     {
         $releasedIds = DB::table('examination_classes')
+            ->select('examination_id')
             ->where('school_id', $schoolId)
-            ->whereNotNull('results_released_at')
-            ->distinct()
-            ->pluck('examination_id')
-            ->all();
+            ->whereNotNull('results_released_at');
 
         return Examination::withReportCards()
             ->where('school_id', $schoolId)
-            ->where(fn($q) => $q->whereIn('status', ['closed', 'results_released'])->orWhereIn('id', $releasedIds))
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn($e) => [
-                'id' => $e->id,
-                'label' => $e->exam_name . ' — ' . \App\Support\Term::label($e->term) . ' ' . $e->academic_year
-                    . ($e->isReportCard() ? ' (Report Card)' : ''),
-            ])
-            ->all();
+            ->where(fn($q) => $q->whereIn('status', ['closed', 'results_released'])->orWhereIn('id', $releasedIds));
+    }
+
+    /**
+     * Server-side filtered + paginated examination picker for the pass-slip
+     * page, so a school with thousands of examinations never renders them
+     * all at once.
+     */
+    private function passslipExamPicker($schoolId, ?Examination $selected = null): array
+    {
+        $request = request();
+        $perPage = 10;
+
+        // ── Filter choices (distinct values that actually exist) ──
+        $facetRows = $this->passslipEligibleQuery($schoolId)
+            ->select('academic_year', 'term', 'exam_type')
+            ->distinct()
+            ->get();
+
+        $years = $facetRows->pluck('academic_year')->filter()->unique()->sortDesc()->values();
+        $types = $facetRows->pluck('exam_type')->filter()->unique()->sort()->values();
+
+        // Terms are stored in several historical forms; group them by number.
+        $termValues = [];
+        foreach ($facetRows->pluck('term')->filter()->unique() as $storedTerm) {
+            $n = \App\Support\Term::number($storedTerm);
+            if ($n) {
+                $termValues[$n][] = $storedTerm;
+            }
+        }
+        ksort($termValues);
+        $terms = collect($termValues)->map(fn($v, $n) => \App\Support\Term::LABELS[$n] ?? "Term {$n}")->all();
+
+        // ── Current filters ──
+        $year = $request->query('year');
+        if ($year === null) {
+            $year = $years->first() ?? 'all';   // default to the most recent academic year
+        }
+        $filters = [
+            'q'      => trim((string) $request->query('q', '')),
+            'year'   => (string) $year,
+            'term'   => (string) $request->query('term', ''),
+            'type'   => (string) $request->query('type', ''),
+            'kind'   => (string) $request->query('kind', ''),
+            'status' => (string) $request->query('status', ''),
+            'sort'   => (string) $request->query('sort', 'newest'),
+        ];
+
+        $query = $this->passslipEligibleQuery($schoolId)
+            ->when($filters['q'] !== '', function ($w) use ($filters) {
+                $like = '%' . addcslashes($filters['q'], '\\%_') . '%';
+                $w->where(fn($x) => $x->where('exam_name', 'like', $like)->orWhere('exam_code', 'like', $like));
+            })
+            ->when($filters['year'] !== '' && $filters['year'] !== 'all', fn($w) => $w->where('academic_year', $filters['year']))
+            ->when($filters['term'] !== '' && isset($termValues[$filters['term']]), fn($w) => $w->whereIn('term', $termValues[$filters['term']]))
+            ->when($filters['type'] !== '', fn($w) => $w->where('exam_type', $filters['type']))
+            ->when($filters['kind'] === 'report_card', fn($w) => $w->where('o_level_mode', Examination::MODE_REPORT_CARD))
+            ->when($filters['kind'] === 'standard', fn($w) => $w->where(
+                fn($x) => $x->whereNull('o_level_mode')->orWhere('o_level_mode', '!=', Examination::MODE_REPORT_CARD)
+            ))
+            ->when($filters['status'] === 'results_released', fn($w) => $w->where('status', 'results_released'))
+            ->when($filters['status'] === 'closed', fn($w) => $w->where('status', 'closed'))
+            ->when($filters['status'] === 'partial', fn($w) => $w->whereNotIn('status', ['closed', 'results_released']));
+
+        match ($filters['sort']) {
+            'oldest' => $query->orderBy('id'),
+            'name'   => $query->orderBy('exam_name')->orderByDesc('id'),
+            default  => $query->orderByDesc('id'),
+        };
+
+        $page = $query->paginate($perPage)->withQueryString();
+
+        $label = fn($e) => $e->exam_name . ' — ' . \App\Support\Term::label($e->term) . ' ' . $e->academic_year
+            . ($e->isReportCard() ? ' (Report Card)' : '');
+
+        return [
+            'page'          => $page,
+            'filters'       => $filters,
+            'years'         => $years,
+            'terms'         => $terms,
+            'types'         => $types,
+            'hasEligible'   => $facetRows->isNotEmpty(),
+            'selectedLabel' => $selected ? $label($selected) : null,
+            'panelOpen'     => !$selected || $request->hasAny(['q', 'year', 'term', 'type', 'kind', 'status', 'sort', 'page', 'pick']),
+            'activeCount'   => collect([
+                $filters['q'] !== '',
+                $filters['year'] !== 'all' && $request->query('year') !== null,
+                $filters['term'] !== '',
+                $filters['type'] !== '',
+                $filters['kind'] !== '',
+                $filters['status'] !== '',
+            ])->filter()->count(),
+        ];
     }
 
     public function passslipIndex($examId = null)
@@ -2412,7 +2499,6 @@ class ExaminationController extends Controller
 
         $viaHub = $examId === null;
         $examId = $examId ?? request('exam');
-        $examOptions = $this->passslipExamOptions($schoolId);
 
         if (!$examId) {
             return view('Examination.passslips.index', [
@@ -2420,7 +2506,7 @@ class ExaminationController extends Controller
                 'examClasses' => collect(),
                 'allStudents' => collect(),
                 'siblingExams' => collect(),
-                'examOptions' => $examOptions,
+                'examPicker' => $this->passslipExamPicker($schoolId),
             ]);
         }
 
@@ -2508,7 +2594,9 @@ class ExaminationController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents', 'siblingExams', 'examOptions'));
+        $examPicker = $this->passslipExamPicker($schoolId, $exam);
+
+        return view('Examination.passslips.index', compact('exam', 'examClasses', 'allStudents', 'siblingExams', 'examPicker'));
     }
 
     /**

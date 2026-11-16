@@ -28,64 +28,9 @@
                     }
                 }
 
-                @media (max-width: 576px) {
-                    .admin-school-dropdown .dropdown-menu {
-                        width: 95% !important;
-                        left: 2.5% !important;
-                    }
-                }
-
                 .dropdown-menu .form-control {
                     width: 100%;
                     box-sizing: border-box;
-                }
-
-                /* Responsive school dropdown */
-                .admin-school-dropdown {
-                    display: flex !important;
-                    justify-content: center;
-                    align-items: center;
-                    flex: 1 1 auto;
-                    min-width: 0;
-                    max-width: 700px;
-                    padding: 0 10px;
-                }
-
-                .admin-school-dropdown .dropdown {
-                    width: 100%;
-                }
-
-                .admin-school-dropdown .dropdown button {
-                    width: 100%;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .admin-school-dropdown .dropdown-menu {
-                    width: 100% !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                }
-
-                @media (max-width: 989px),
-                (max-height: 702px) {
-                    .admin-school-dropdown {
-                        max-width: 80%;
-                        margin: 6px 0 !important;
-                        padding: 0 6px;
-                    }
-
-                    .admin-school-dropdown .dropdown button {
-                        font-size: 13px;
-                    }
-                }
-
-                @media (max-width: 576px) {
-                    .admin-school-dropdown .dropdown button {
-                        font-size: 12px;
-                        padding: 5px 8px;
-                    }
                 }
 
                 @keyframes blink {
@@ -536,53 +481,6 @@
             <div class="d-none d-md-block">
                 @include('layouts.language-switcher')
             </div>
-
-            @php
-                use Illuminate\Support\Facades\DB;
-
-                // Fetch only id and name for the dropdown
-                $schools = DB::table('schools')
-                    ->select('id', 'name')
-                    ->latest()
-                    ->get();
-
-                // Fetch only id and name for the selected school
-                $selectedSchool = session('LoggedSchool')
-                    ? DB::table('schools')
-                        ->select('id', 'name')
-                        ->where('id', session('LoggedSchool'))
-                        ->first()
-                    : null;
-            @endphp
-
-            @if (session('LoggedAdmin') && \App\Support\AdminAccess::can('schools.enter'))
-                <div class="admin-school-dropdown mt-3">
-                    <div class="dropdown">
-                        <button class="btn btn-outline-primary dropdown-toggle font-weight-bold w-100" type="button"
-                            id="schoolDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            {{ $selectedSchool ? $selectedSchool->name : 'Select School' }}
-                        </button>
-                        <div class="dropdown-menu w-100 p-2" aria-labelledby="schoolDropdownButton"
-                            style="max-height: 300px; overflow-y: auto;">
-                            <input type="text" class="form-control mb-2" id="schoolSearch" placeholder="Search school...">
-                            <div id="schoolList">
-                                <a class="dropdown-item clear-school bg-light text-primary font-weight-bold rounded"
-                                    href="#" style="border: 1px dashed #2C29CA; margin-bottom: 5px;">
-                                    <i class="fas fa-undo-alt mr-2"></i> Clear School Selection
-                                </a>
-                                @forelse ($schools as $school)
-                                    <a class="dropdown-item school-item" href="#" data-id="{{ $school->id }}"
-                                        data-name="{{ $school->name }}">
-                                        {{ $school->name }}
-                                    </a>
-                                @empty
-                                    <a class="dropdown-item" href="#">No schools found.</a>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
 
             <div class="d-flex order-lg-2 ml-auto" style="margin-top:0.7rem;">
                 @if (Session('LoggedSchool'))
@@ -1331,104 +1229,6 @@
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-        const searchInput = document.getElementById('schoolSearch');
-        const schoolItems = document.querySelectorAll('.school-item');
-        const dropdownBtn = document.getElementById('schoolDropdownButton');
-
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function () {
-                const searchValue = this.value.toLowerCase();
-                schoolItems.forEach(item => {
-                    const schoolName = item.textContent.toLowerCase();
-                    item.style.display = schoolName.includes(searchValue) ? '' : 'none';
-                });
-            });
-        }
-
-        schoolItems.forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-                const schoolId = this.dataset.id;
-                const schoolName = this.dataset.name;
-
-                Swal.fire({
-                    title: "Switch School?",
-                    text: `Are you sure you want to switch to "${schoolName}"?`,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, switch",
-                    cancelButtonText: "Cancel"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch("{{ route('school.select') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({ school_id: schoolId })
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.status) {
-                                    SMASA.reload('School changed!', data.message);
-                                } else {
-                                    Swal.fire("Error", data.message, "error");
-                                }
-                            })
-                            .catch(() => {
-                                Swal.fire("Error", "Something went wrong!", "error");
-                            });
-                    }
-                });
-            });
-        });
-
-        const clearSchoolBtn = document.querySelector('.clear-school');
-        if (clearSchoolBtn) {
-            clearSchoolBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                Swal.fire({
-                    title: "Clear School?",
-                    text: "Do you want to clear the selected school?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, clear",
-                    cancelButtonText: "Cancel"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch("{{ route('school.clear') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.status) {
-                                    Swal.fire({
-                                        title: "Cleared!",
-                                        text: data.message,
-                                        icon: "success",
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        window.location.href = '/';
-                                    });
-                                } else {
-                                    Swal.fire("Error", data.message, "error");
-                                }
-                            })
-                            .catch(() => {
-                                Swal.fire("Error", "Something went wrong!", "error");
-                            });
-                    }
-                });
-            });
-        }
-
         // Sidebar state persistence
         // NOTE: on mobile (<768px) the "sidenav-toggled" class means the off-canvas
         // menu is OPEN, whereas on desktop it means the sidebar is MINIMIZED.

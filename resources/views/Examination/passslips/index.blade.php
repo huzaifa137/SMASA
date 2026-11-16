@@ -709,319 +709,228 @@ use App\Http\Controllers\Helper;
             </div>
         </div>
 
-       {{-- ── Examination picker (no exam is required to open this page) ── --}}
-<div class="ps-picker">
-    <label for="psExamPicker" class="ps-picker-label">
-        <span class="ps-picker-icon"><i class="fas fa-file-signature"></i></span>
-        <span>Examination</span>
-    </label>
+{{-- ── Examination picker: server-side filters + pagination (scales to thousands of exams) ── --}}
+@php
+    $px = $examPicker;
+    $pf = $px['filters'];
+    $pPage = $px['page'];
+    $pLang = request('lang');
+    $pStatusPill = fn($st) => match ($st) {
+        'results_released' => ['Results released', 'psx-pill-green'],
+        'closed' => ['Closed', 'psx-pill-grey'],
+        default => ['Class-level release', 'psx-pill-amber'],
+    };
+@endphp
+<div class="psx" id="psExamPicker">
+    @if($exam)
+        <div class="psx-current">
+            <span class="psx-current-icon"><i class="fas fa-file-signature"></i></span>
+            <div class="psx-current-text">
+                <span class="psx-eyebrow">Selected examination</span>
+                <strong>{{ $px['selectedLabel'] }}</strong>
+            </div>
+            <button type="button" class="psx-btn psx-btn-outline" id="psxToggle" aria-expanded="{{ $px['panelOpen'] ? 'true' : 'false' }}">
+                <i class="fas fa-exchange-alt"></i> Change examination
+            </button>
+        </div>
+    @endif
 
-    <div class="ps-picker-search">
-        <i class="fas fa-search ps-search-icon"></i>
-        <input type="text" id="psExamSearch" placeholder="Type to search examinations…"
-            autocomplete="off" oninput="filterExamOptions(this)" onkeydown="examSearchKey(event, this)">
-        <button type="button" class="ps-search-clear" onclick="clearExamSearch(this)" title="Clear">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="ps-search-empty">No examination matches your search.</div>
-    </div>
+    <div class="psx-panel {{ $px['panelOpen'] ? '' : 'is-collapsed' }}" id="psxPanel">
+        <form method="GET" action="{{ route('examination.passslips.hub') }}" id="psxForm" autocomplete="off">
+            @if($exam)<input type="hidden" name="exam" value="{{ $exam->id }}">@endif
+            @if($pLang)<input type="hidden" name="lang" value="{{ $pLang }}">@endif
 
-    <div class="ps-input-wrap">
-        <i class="fas fa-file-signature ps-input-icon"></i>
-        <select id="psExamPicker" class="form-control" onchange="selectPassslipExam(this.value)">
-            <option value="">-- Select an examination --</option>
-            @foreach($examOptions as $opt)
-                <option value="{{ $opt['id'] }}" {{ $exam && $exam->id == $opt['id'] ? 'selected' : '' }}>{{ $opt['label'] }}</option>
-            @endforeach
-        </select>
+            <div class="psx-filters">
+                <div class="psx-field psx-field-search">
+                    <label for="psxQ">Search</label>
+                    <div class="psx-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="psxQ" name="q" value="{{ $pf['q'] }}" placeholder="Examination name or code…">
+                    </div>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxYear">Academic year</label>
+                    <select id="psxYear" name="year" class="psx-auto">
+                        <option value="all" @selected($pf['year'] === 'all')>All years</option>
+                        @foreach($px['years'] as $y)
+                            <option value="{{ $y }}" @selected($pf['year'] === (string) $y)>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxTerm">Term</label>
+                    <select id="psxTerm" name="term" class="psx-auto">
+                        <option value="">All terms</option>
+                        @foreach($px['terms'] as $n => $lbl)
+                            <option value="{{ $n }}" @selected($pf['term'] === (string) $n)>{{ $lbl }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxType">Exam type</label>
+                    <select id="psxType" name="type" class="psx-auto">
+                        <option value="">All types</option>
+                        @foreach($px['types'] as $t)
+                            <option value="{{ $t }}" @selected($pf['type'] === $t)>{{ str_replace('-', ' ', $t) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxKind">Kind</label>
+                    <select id="psxKind" name="kind" class="psx-auto">
+                        <option value="">Exams &amp; report cards</option>
+                        <option value="standard" @selected($pf['kind'] === 'standard')>Examinations only</option>
+                        <option value="report_card" @selected($pf['kind'] === 'report_card')>Report cards only</option>
+                    </select>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxStatus">Status</label>
+                    <select id="psxStatus" name="status" class="psx-auto">
+                        <option value="">Any status</option>
+                        <option value="results_released" @selected($pf['status'] === 'results_released')>Results released</option>
+                        <option value="closed" @selected($pf['status'] === 'closed')>Closed</option>
+                        <option value="partial" @selected($pf['status'] === 'partial')>Class-level release</option>
+                    </select>
+                </div>
+
+                <div class="psx-field">
+                    <label for="psxSort">Sort by</label>
+                    <select id="psxSort" name="sort" class="psx-auto">
+                        <option value="newest" @selected($pf['sort'] === 'newest')>Newest first</option>
+                        <option value="oldest" @selected($pf['sort'] === 'oldest')>Oldest first</option>
+                        <option value="name" @selected($pf['sort'] === 'name')>Name (A–Z)</option>
+                    </select>
+                </div>
+
+                <div class="psx-field psx-field-actions">
+                    <button type="submit" class="psx-btn psx-btn-primary"><i class="fas fa-filter"></i> Apply</button>
+                    <a class="psx-btn psx-btn-ghost"
+                        href="{{ route('examination.passslips.hub', array_filter(['exam' => $exam?->id, 'lang' => $pLang, 'pick' => 1])) }}">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <div class="psx-summary">
+            @if($pPage->total() > 0)
+                Showing <strong>{{ $pPage->firstItem() }}–{{ $pPage->lastItem() }}</strong> of <strong>{{ $pPage->total() }}</strong>
+                {{ \Illuminate\Support\Str::plural('examination', $pPage->total()) }}
+                @if($px['activeCount'] > 0)<span class="psx-chip">{{ $px['activeCount'] }} {{ \Illuminate\Support\Str::plural('filter', $px['activeCount']) }} active</span>@endif
+            @else
+                No examinations to show.
+            @endif
+        </div>
+
+        <div class="psx-list">
+            @forelse($pPage as $e)
+                @php [$stLabel, $stClass] = $pStatusPill($e->status); @endphp
+                <a class="psx-row {{ $exam && $exam->id === $e->id ? 'is-selected' : '' }}"
+                    href="{{ route('examination.passslips.hub', array_filter(['exam' => $e->id, 'lang' => $pLang])) }}">
+                    <span class="psx-row-main">
+                        <span class="psx-row-name">{{ $e->exam_name }}</span>
+                        <span class="psx-row-meta">
+                            @if($e->exam_code)<span>{{ $e->exam_code }}</span>@endif
+                            <span>{{ \App\Support\Term::label($e->term) }} {{ $e->academic_year }}</span>
+                            @if($e->exam_type)<span>{{ str_replace('-', ' ', $e->exam_type) }}</span>@endif
+                        </span>
+                    </span>
+                    <span class="psx-row-tags">
+                        @if($e->isReportCard())<span class="psx-pill psx-pill-blue">Report card</span>@endif
+                        <span class="psx-pill {{ $stClass }}">{{ $stLabel }}</span>
+                        <span class="psx-row-go">{{ $exam && $exam->id === $e->id ? 'Selected' : 'Open' }} <i class="fas fa-chevron-right"></i></span>
+                    </span>
+                </a>
+            @empty
+                <div class="psx-empty">
+                    <i class="fas fa-folder-open"></i>
+                    @if(!$px['hasEligible'])
+                        <div>No examination has been closed or released yet.</div>
+                    @else
+                        <div>No examination matches these filters.</div>
+                        <a href="{{ route('examination.passslips.hub', array_filter(['exam' => $exam?->id, 'lang' => $pLang, 'pick' => 1])) }}">Reset filters</a>
+                    @endif
+                </div>
+            @endforelse
+        </div>
+
+        @if($pPage->hasPages())
+            <div class="psx-pager">{{ $pPage->links() }}</div>
+        @endif
     </div>
 </div>
 
 <style>
-    /* ── Examination picker ── */
-.ps-picker {
-    display: flex;
-    flex-direction: column;
-    gap: .45rem;
-    margin-bottom: 1rem;
-}
-.ps-picker-label {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #5a5a80;
-    margin: 0;
-}
-.ps-picker-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: .4rem;
-    background: #eef0ff;
-    color: var(--brand, #2C29CA);
-    font-size: .6rem;
-    flex-shrink: 0;
-}
-
-.ps-input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-.ps-input-icon {
-    position: absolute;
-    left: .7rem;
-    font-size: .78rem;
-    color: var(--brand, #2C29CA);
-    opacity: .7;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.ps-input-wrap .form-control {
-    padding-left: 2.1rem !important;
-    padding-right: 2.25rem !important;
-    padding-top: .55rem;
-    padding-bottom: .55rem;
-    border-radius: .55rem !important;
-    border: 1.5px solid #c9cdf0 !important;
-    background-color: #f3f4ff !important;
-    color: #1a1a3a;
-    font-size: .85rem;
-    font-weight: 600;
-    height: auto;
-    box-shadow: inset 0 1px 2px rgba(44, 41, 202, .05);
-    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right .7rem center !important;
-    background-size: 12px !important;
-}
-.ps-input-wrap .form-control:hover {
-    border-color: #a8adde !important;
-    background-color: #eef0ff !important;
-}
-.ps-input-wrap .form-control:focus {
-    border-color: var(--brand, #2C29CA) !important;
-    background-color: #fff !important;
-    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15);
-    outline: none;
-}
-</style>
-
-<style>
-/* ── Examination picker — full-width override + text fix ── */
-.ps-picker {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: .5rem !important;
-    width: 100% !important;
-    padding: 1rem 1.25rem !important;
-    background: #fff !important;
-    border: 1px solid rgba(44, 41, 202, .08) !important;
-    border-radius: 1.25rem !important;
-    box-shadow: 0 4px 24px rgba(44, 41, 202, .10) !important;
-    margin-bottom: 1.1rem !important;
-    flex-wrap: nowrap !important;
-}
-
-.ps-picker-label {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: .45rem !important;
-    font-size: .72rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: .05em !important;
-    color: #5a5a80 !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
-}
-
-.ps-picker-icon {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 22px !important;
-    height: 22px !important;
-    border-radius: .4rem !important;
-    background: #eef0ff !important;
-    color: var(--brand, #2C29CA) !important;
-    font-size: .62rem !important;
-    flex-shrink: 0 !important;
-}
-
-.ps-input-wrap {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-}
-
-.ps-input-icon {
-    position: absolute !important;
-    left: .8rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    font-size: .82rem !important;
-    color: var(--brand, #2C29CA) !important;
-    opacity: .7 !important;
-    pointer-events: none !important;
-    z-index: 2 !important;
-}
-
-/* Widen to full section + fix clipping */
-.ps-input-wrap .form-control {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 46px !important;
-    height: auto !important;
-    padding: .65rem 2.6rem .65rem 2.35rem !important;
-    line-height: 1.4 !important;
-    border-radius: .6rem !important;
-    border: 1.5px solid #c9cdf0 !important;
-    background-color: #f3f4ff !important;
-    color: #1a1a3a !important;
-    font-size: .9rem !important;
-    font-weight: 600 !important;
-    box-shadow: inset 0 1px 2px rgba(44, 41, 202, .05) !important;
-    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232C29CA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right .9rem center !important;
-    background-size: 12px !important;
-    text-overflow: ellipsis !important;
-}
-
-.ps-input-wrap .form-control:hover {
-    border-color: #a8adde !important;
-    background-color: #eef0ff !important;
-}
-
-.ps-input-wrap .form-control:focus {
-    border-color: var(--brand, #2C29CA) !important;
-    background-color: #fff !important;
-    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15) !important;
-    outline: none !important;
-}
-
-/* Ensure long option labels don't get clipped on some browsers */
-.ps-input-wrap select.form-control option {
-    padding: .4rem .6rem !important;
-    line-height: 1.4 !important;
-}
-
-/* Small screens: keep comfortable height, allow wrap-safe text */
-@media (max-width: 575.98px) {
-    .ps-picker { padding: .9rem 1rem !important; }
-    .ps-input-wrap .form-control {
-        font-size: .85rem !important;
-        padding: .6rem 2.4rem .6rem 2.2rem !important;
+    .psx { margin-bottom: 1rem; }
+    .psx-current { display: flex; align-items: center; gap: .8rem; padding: .7rem .9rem; background: #fff; border: 1px solid #e3e5f5; border-radius: .7rem; margin-bottom: .6rem; }
+    .psx-current-icon { width: 34px; height: 34px; border-radius: .55rem; background: #eef0ff; color: var(--brand, #2C29CA); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .psx-current-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .psx-current-text strong { font-size: .92rem; color: #1d1d3a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .psx-eyebrow { font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b6b90; }
+    .psx-panel { background: #fff; border: 1px solid #e3e5f5; border-radius: .8rem; padding: .9rem 1rem 1rem; }
+    .psx-panel.is-collapsed { display: none; }
+    .psx-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; align-items: end; }
+    .psx-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+    .psx-field-search { grid-column: span 2; }
+    .psx-field label { margin: 0; font-size: .65rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #5a5a80; }
+    .psx-field select, .psx-search input { width: 100%; height: 38px; padding: 0 .7rem; font-size: .85rem; color: #1d1d3a; background: #f7f8ff; border: 1px solid #dcdff3; border-radius: .55rem; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .psx-field select:focus, .psx-search input:focus { border-color: var(--brand, #2C29CA); box-shadow: 0 0 0 3px rgba(44, 41, 202, .13); background: #fff; }
+    .psx-search { position: relative; }
+    .psx-search i { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); font-size: .75rem; color: #8a8ab0; }
+    .psx-search input { padding-left: 2rem; }
+    .psx-field-actions { flex-direction: row; gap: .4rem; }
+    .psx-btn { display: inline-flex; align-items: center; gap: .4rem; height: 38px; padding: 0 .9rem; font-size: .8rem; font-weight: 700; border-radius: .55rem; border: 1px solid transparent; cursor: pointer; text-decoration: none !important; white-space: nowrap; }
+    .psx-btn-primary { background: var(--brand, #2C29CA); color: #fff !important; }
+    .psx-btn-outline { background: #fff; border-color: var(--brand, #2C29CA); color: var(--brand, #2C29CA) !important; }
+    .psx-btn-ghost { background: #f1f2fb; color: #4a4a70 !important; }
+    .psx-summary { margin: .8rem 0 .5rem; font-size: .78rem; color: #5a5a80; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .psx-chip { background: #eef0ff; color: var(--brand, #2C29CA); font-weight: 700; font-size: .68rem; padding: .1rem .5rem; border-radius: 999px; }
+    .psx-list { display: flex; flex-direction: column; gap: .4rem; }
+    .psx-row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .6rem .8rem; border: 1px solid #e8eaf7; border-radius: .6rem; background: #fff; text-decoration: none !important; color: inherit; transition: border-color .15s, background .15s; }
+    .psx-row:hover { border-color: var(--brand, #2C29CA); background: #fafaff; }
+    .psx-row.is-selected { border-color: var(--brand, #2C29CA); background: #eef0ff; }
+    .psx-row-main { display: flex; flex-direction: column; min-width: 0; }
+    .psx-row-name { font-weight: 700; font-size: .88rem; color: #1d1d3a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .psx-row-meta { display: flex; flex-wrap: wrap; gap: .2rem .7rem; font-size: .72rem; color: #6b6b90; }
+    .psx-row-tags { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
+    .psx-row-go { font-size: .72rem; font-weight: 700; color: var(--brand, #2C29CA); }
+    .psx-pill { font-size: .65rem; font-weight: 700; padding: .12rem .5rem; border-radius: 999px; white-space: nowrap; }
+    .psx-pill-green { background: #dcfce7; color: #15803d; }
+    .psx-pill-grey { background: #eceef5; color: #4a4a70; }
+    .psx-pill-amber { background: #fef3c7; color: #a16207; }
+    .psx-pill-blue { background: #e0e7ff; color: #3730a3; }
+    .psx-empty { text-align: center; padding: 1.6rem 1rem; color: #6b6b90; font-size: .85rem; }
+    .psx-empty i { display: block; font-size: 1.6rem; margin-bottom: .4rem; color: #b5b8d6; }
+    .psx-pager { margin-top: .8rem; display: flex; justify-content: center; }
+    @media (max-width: 767px) {
+        .psx-field-search { grid-column: 1 / -1; }
+        .psx-row { flex-direction: column; align-items: flex-start; }
+        .psx-row-tags { flex-wrap: wrap; }
+        .psx-current { flex-wrap: wrap; }
     }
-}
-
-/* ── Inline search inside the exam picker ── */
-.ps-picker-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    margin-top: .15rem;
-}
-.ps-picker-search .ps-search-icon {
-    position: absolute;
-    left: .8rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: .8rem;
-    color: var(--brand, #2C29CA);
-    opacity: .7;
-    pointer-events: none;
-    z-index: 2;
-}
-.ps-picker-search input {
-    width: 100%;
-    padding: .55rem 2.4rem .55rem 2.35rem;
-    border-radius: .55rem;
-    border: 1.5px solid #dfe2f5;
-    background: #fbfbff;
-    color: #1a1a3a;
-    font-size: .84rem;
-    font-weight: 600;
-    height: auto;
-    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-}
-.ps-picker-search input::placeholder {
-    color: #9496b8;
-    font-weight: 500;
-}
-.ps-picker-search input:hover {
-    border-color: #a8adde;
-    background: #f3f4ff;
-}
-.ps-picker-search input:focus {
-    border-color: var(--brand, #2C29CA);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(44, 41, 202, .15);
-    outline: none;
-}
-.ps-picker-search .ps-search-clear {
-    position: absolute;
-    right: .6rem;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    background: #eef0ff;
-    color: #2C29CA;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: .65rem;
-    cursor: pointer;
-    transition: background .15s ease;
-    z-index: 2;
-}
-.ps-picker-search .ps-search-clear:hover {
-    background: #2C29CA;
-    color: #fff;
-}
-.ps-picker-search.has-value .ps-search-clear {
-    display: inline-flex;
-}
-.ps-picker-search .ps-search-empty {
-    position: absolute;
-    top: calc(100% + .4rem);
-    left: 0;
-    right: 0;
-    padding: .55rem .75rem;
-    font-size: .74rem;
-    color: #b45309;
-    background: #fff8ec;
-    border: 1px solid #fbd9a0;
-    border-radius: .5rem;
-    display: none;
-    z-index: 5;
-}
-.ps-picker-search.no-results .ps-search-empty {
-    display: block;
-}
 </style>
+<script>
+    (function () {
+        var form = document.getElementById('psxForm');
+        if (!form) return;
+        form.querySelectorAll('select.psx-auto').forEach(function (el) {
+            el.addEventListener('change', function () { form.submit(); });
+        });
+        var q = document.getElementById('psxQ'), t;
+        if (q) q.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { form.submit(); }, 600); });
+        var toggle = document.getElementById('psxToggle'), panel = document.getElementById('psxPanel');
+        if (toggle && panel) toggle.addEventListener('click', function () {
+            var collapsed = panel.classList.toggle('is-collapsed');
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        });
+        if (q && q.value) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+    })();
+</script>
         @if($exam)
         {{-- ── Title ── --}}
         <div class="ps-title-row">
@@ -1193,26 +1102,6 @@ use App\Http\Controllers\Helper;
     .rc-editorial-card .rc-go i { transition: transform .22s ease; }
     .rc-editorial-card:hover .rc-go i { transform: translateX(3px); }
 
-    /* Select becomes a visible list while searching */
-.ps-input-wrap select.form-control.is-listbox {
-    background-image: none !important;
-    padding-right: .8rem !important;
-    padding-left: .8rem !important;
-    overflow-y: auto !important;
-}
-.ps-input-wrap select.form-control.is-listbox + .ps-input-icon,
-.ps-input-wrap:has(select.is-listbox) .ps-input-icon {
-    display: none !important;
-}
-.ps-input-wrap select.form-control.is-listbox option {
-    padding: .5rem .6rem !important;
-    border-radius: .4rem;
-}
-.ps-input-wrap select.form-control.is-listbox option:checked {
-    background: var(--brand, #2C29CA) linear-gradient(0deg, var(--brand, #2C29CA), var(--brand, #2C29CA));
-    color: #fff;
-}
-.ps-picker-search { margin-bottom: .1rem; }
 </style>
 <div class="rc-editorial mb-4">
     <div class="rc-editorial-intro">
@@ -1497,9 +1386,6 @@ use App\Http\Controllers\Helper;
             <div class="ps-empty">
                 <div><i class="fas fa-id-card"></i></div>
                 <div class="fw-semibold">Select an examination above to generate pass slips.</div>
-                @if(empty($examOptions))
-                    <div class="mt-1" style="font-size:.82rem;">No examination has been closed or released yet.</div>
-                @endif
             </div>
         @endif
     </div>{{-- /.side-app --}}
@@ -1517,100 +1403,6 @@ use App\Http\Controllers\Helper;
     machinery left to keep in sync.
     ═══════════════════════════════════════════════════════════ --}}
     <script>
-        const PS_HUB_URL = @json(route('examination.passslips.hub', [], false));
-
-        async function selectPassslipExam(id) {
-            const url = new URL(PS_HUB_URL, window.location.origin);
-            if (id) url.searchParams.set('exam', id);
-            const lang = new URLSearchParams(window.location.search).get('lang');
-            if (lang) url.searchParams.set('lang', lang);
-
-            showLoading('Loading pass slips…');
-            try {
-                const res = await fetch(url.toString(), { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-                const fresh = doc.getElementById('ps-bento-app');
-                if (!res.ok || !fresh) throw new Error('bad response');
-
-                document.getElementById('ps-bento-app').innerHTML = fresh.innerHTML;
-                activeClassFilter = 'all';
-                window.history.replaceState(null, '', url.toString());
-            } catch (e) {
-                window.location.href = url.toString(); // fall back to a normal page load
-            }
-            const ov = document.getElementById('loadingOverlay');
-            if (ov) ov.classList.remove('active');
-        }
-
-        function filterExamOptions(input) {
-    const select = document.getElementById('psExamPicker');
-    if (!select) return;
-    const wrap = input.closest('.ps-picker-search');
-
-    // Cache the full option list once per select element
-    if (!select._allOptions) {
-        select._allOptions = Array.from(select.options).map(o => ({
-            value: o.value,
-            label: o.text,
-            selected: o.defaultSelected
-        }));
-    }
-
-    const q = input.value.toLowerCase().trim();
-    const terms = q.split(/\s+/).filter(Boolean);
-    const current = select.value;
-
-    const list = q
-        ? select._allOptions.filter(o => o.value !== '' && terms.every(t => o.label.toLowerCase().includes(t)))
-        : select._allOptions;
-
-    select.innerHTML = '';
-    list.forEach(o => {
-        const opt = new Option(o.label, o.value, false, false);
-        if (!q && o.value === current) opt.selected = true;
-        select.add(opt);
-    });
-
-    if (q && list.length) {
-        select.size = Math.min(Math.max(list.length, 2), 7);
-        select.classList.add('is-listbox');
-        select.selectedIndex = -1;
-    } else {
-        select.size = 1;
-        select.classList.remove('is-listbox');
-        if (!q) select.value = current;
-    }
-
-    wrap.classList.toggle('has-value', !!q);
-    wrap.classList.toggle('no-results', !!q && list.length === 0);
-}
-
-function clearExamSearch(btn) {
-    const input = btn.closest('.ps-picker-search').querySelector('input');
-    input.value = '';
-    filterExamOptions(input);
-    input.focus();
-}
-
-function examSearchKey(e, input) {
-    const select = document.getElementById('psExamPicker');
-    if (e.key === 'Escape') {
-        input.value = '';
-        filterExamOptions(input);
-    } else if (e.key === 'Enter') {
-        e.preventDefault();
-        const first = Array.from(select.options).find(o => o.value !== '');
-        if (first) {
-            select.value = first.value;
-            select.dispatchEvent(new Event('change'));
-        }
-    } else if (e.key === 'ArrowDown' && select.classList.contains('is-listbox')) {
-        e.preventDefault();
-        select.focus();
-        select.selectedIndex = 0;
-    }
-}
-
         function setLanguage(lang) {
             const url = new URL(window.location.href);
             url.searchParams.set('lang', lang);

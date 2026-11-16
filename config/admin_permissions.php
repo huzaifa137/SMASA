@@ -31,7 +31,6 @@ return [
                 'change_status' => 'Activate / suspend a school',
                 'delete' => 'Delete a school',
                 'toggle_custom_subjects' => 'Lock / unlock custom subjects for a school',
-                'enter' => 'Select / switch into a school',
             ],
         ],
 

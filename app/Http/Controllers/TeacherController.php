@@ -262,6 +262,10 @@ class TeacherController extends Controller
         return response()->json(['status' => false, 'message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
     }
 
+        if ($this->isOwnAccount($id)) {
+            return $this->denySelfAction('change the role of');
+        }
+
         try {
             $teacher = Teacher::forCurrentSchool()->findOrFail($id);
 
@@ -323,6 +327,10 @@ class TeacherController extends Controller
             'alias' => 'nullable|string|max:100',
         ]);
 
+        if ($this->isOwnAccount($request->teacher_id)) {
+            return $this->denySelfAction('change the role of');
+        }
+
         $teacher = Teacher::forCurrentSchool()->findOrFail($request->teacher_id);
 
         // Ensure teacher belongs to this school
@@ -349,10 +357,35 @@ class TeacherController extends Controller
         return view('Teacher.teachers-in-school', compact('teachers', 'school_id'));
     }
 
+    /**
+     * True when the given teacher id is the account currently logged in.
+     * Self-service destructive actions (delete / suspend / block / change own
+     * role) are refused so nobody can remove or lock out their own access.
+     */
+    private function isOwnAccount($teacherId): bool
+    {
+        $me = session('LoggedTeacher');
+
+        return $me && (int) $me === (int) $teacherId;
+    }
+
+    private function denySelfAction(string $action)
+    {
+        return response()->json([
+            'status'  => false,
+            'success' => false,
+            'message' => "You cannot {$action} your own account.",
+        ], 403);
+    }
+
     public function destroyTeacher($id, TeacherDeletionService $deletionService)
     {
         if (!PermissionHelper::canFeature('delete_teacher')) {
             return response()->json(['message' => 'Unauthorized Access. You do not have permission to delete teachers.'], 403);
+        }
+
+        if ($this->isOwnAccount($id)) {
+            return $this->denySelfAction('delete');
         }
 
         $teacher = Teacher::forCurrentSchool()->findOrFail($id);
@@ -382,10 +415,19 @@ class TeacherController extends Controller
             'teacher_ids.*' => ['integer', SchoolRule::exists('teachers')],
         ]);
 
-        $teacherIds = Teacher::whereIn('id', $validated['teacher_ids'])
+        $requestedIds = collect($validated['teacher_ids'])->map(fn ($v) => (int) $v);
+        $ownId = (int) session('LoggedTeacher');
+        $selfIncluded = $ownId && $requestedIds->contains($ownId);
+
+        // Never let a user delete their own account, even inside a bulk selection.
+        $teacherIds = Teacher::whereIn('id', $requestedIds->reject(fn ($v) => $v === $ownId)->all())
             ->where('school_id', $schoolId)
             ->pluck('id')
             ->all();
+
+        if (empty($teacherIds) && $selfIncluded) {
+            return $this->denySelfAction('delete');
+        }
 
         if (empty($teacherIds)) {
             return response()->json([
@@ -398,7 +440,9 @@ class TeacherController extends Controller
 
         return response()->json([
             'success' => $result['failed'] === 0,
-            'message' => "{$result['deleted']} teacher(s) deleted." . ($result['failed'] ? " {$result['failed']} failed." : ''),
+            'message' => "{$result['deleted']} teacher(s) deleted."
+                . ($result['failed'] ? " {$result['failed']} failed." : '')
+                . ($selfIncluded ? ' Your own account was skipped (you cannot delete yourself).' : ''),
             'deleted' => $result['deleted'],
             'failed'  => $result['failed'],
             'errors'  => $result['errors'],
@@ -529,6 +573,10 @@ class TeacherController extends Controller
             'account_status' => 'required|in:active,suspended,blocked',
             'status_reason' => 'nullable|string|max:500',
         ]);
+
+        if ($this->isOwnAccount($id)) {
+            return $this->denySelfAction('suspend or block');
+        }
 
         $teacher = \App\Models\Teacher::forCurrentSchool()->findOrFail($id);
 

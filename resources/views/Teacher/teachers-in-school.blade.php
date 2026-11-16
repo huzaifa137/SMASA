@@ -588,11 +588,14 @@ $controller = new Controller();
                                 </thead>
                                 <tbody>
                                     @forelse ($teachers as $key => $teacher)
+                                        @php $isOwnRow = (int) session('LoggedTeacher') === (int) $teacher->id; @endphp
                                         <tr data-id="{{ $teacher->id }}" data-role="{{ $teacher->teacher_role }}">
                                             @if(PermissionHelper::canFeature('delete_teacher'))
                                                 <td style="width:1px;">
-                                                    <input type="checkbox" class="teacher-select-checkbox"
-                                                        value="{{ $teacher->id }}">
+                                                    @unless($isOwnRow)
+                                                        <input type="checkbox" class="teacher-select-checkbox"
+                                                            value="{{ $teacher->id }}">
+                                                    @endunless
                                                 </td>
                                             @endif
                                             <td style="width:1px;">{{ $teachers->firstItem() + $key }}</td>
@@ -600,12 +603,12 @@ $controller = new Controller();
                                                 <img src="{{ asset($teacher->teacher_profile ?? 'assets/images/brand/uplogolight.png') }}"
                                                     class="teacher-profile-img" alt="Teacher Profile">
                                             </td>
-                                            <td>{{ $teacher->surname }}</td>
+                                            <td>{{ $teacher->surname }}@if($isOwnRow) <span class="badge badge-info ml-1">You</span>@endif</td>
                                             <td>{{ $teacher->firstname }}</td>
                                             <td>{{ $teacher->phonenumber }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @if(PermissionHelper::canFeature('change_teacher_role'))
+                                                    @if(PermissionHelper::canFeature('change_teacher_role') && !$isOwnRow)
                                                         <select class="form-select form-control role-select text-white"
                                                             data-teacher-id="{{ $teacher->id }}"
                                                             style="width:220px; background:#5351e4; color:#FFF;">
@@ -644,7 +647,7 @@ $controller = new Controller();
                                                 <span class="badge {{ $sc['badge'] }} status-badge-{{ $teacher->id }}">
                                                     <i class="fas {{ $sc['icon'] }} me-1"></i>{{ $sc['label'] }}
                                                 </span>
-                                                @if(PermissionHelper::canFeature('manage_teacher_status'))
+                                                @if(PermissionHelper::canFeature('manage_teacher_status') && !$isOwnRow)
                                                     <br>
                                                     <button class="btn btn-xs btn-outline-secondary mt-1 btn-manage-status"
                                                         data-id="{{ $teacher->id }}"
@@ -662,7 +665,7 @@ $controller = new Controller();
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                     @endif
-                                                    @if(PermissionHelper::canFeature('delete_teacher'))
+                                                    @if(PermissionHelper::canFeature('delete_teacher') && !$isOwnRow)
                                                         <button class="btn btn-sm btn-danger btn-delete-teacher" title="Delete"
                                                             data-id="{{ $teacher->id }}">
                                                             <i class="fas fa-trash-alt"></i>

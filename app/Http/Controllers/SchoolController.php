@@ -987,44 +987,6 @@ class SchoolController extends Controller
         return response()->json(['message' => 'Term deleted successfully.']);
     }
 
-    public function selectSchool(Request $request)
-    {
-
-        $schoolId = $request->input('school_id');
-        $school = School::find($schoolId);
-        // dd($school);
-        if (!$school) {
-            return response()->json([
-                'status' => false,
-                'message' => 'School not found.',
-            ]);
-        }
-
-        $request->session()->put('LoggedSchool', $schoolId);
-
-        return response()->json([
-            'status' => true,
-            'message' => "School switched to {$school->name}",
-        ]);
-    }
-
-    public function clearSchool(Request $request)
-    {
-        if ($request->session()->has('LoggedSchool')) {
-            $request->session()->forget('LoggedSchool'); // remove the session
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Selected school has been cleared.',
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'No school is currently selected.',
-            ]);
-        }
-    }
-
     public function toggleActive(Request $request)
     {
         $this->requireCalendarManager();
