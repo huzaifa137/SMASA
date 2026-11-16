@@ -1309,6 +1309,19 @@ Route::controller(LibraryController::class)
         Route::post('/settings', 'updateSettings')->name('settings.update');
     });
 
+// Offline pages screen. The site worker (public/sw.js) answers this URL itself, even with no
+// internet; this only shows when the worker is not active on the device yet.
+Route::get('/offline-pages', function () {
+    return response(
+        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        . '<title>Offline pages</title></head><body style="font-family:system-ui,sans-serif;background:#f1f5f9;padding:24px">'
+        . '<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:14px;padding:22px 26px">'
+        . '<h2 style="margin-top:0">Offline pages</h2><p>Offline pages are being set up on this device. '
+        . 'Open the system while online, wait a few seconds, then reload this page.</p>'
+        . '<p><a href="/">Back to the system</a></p></div></body></html>'
+    )->header('Cache-Control', 'no-store');
+})->name('offline.pages');
+
 // ═══════════════════════════════════════════════════════════════════════════
 // CARD SCAN HUB ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
