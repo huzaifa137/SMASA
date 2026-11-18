@@ -350,9 +350,27 @@ class AdminRightsController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'username' => ['required', 'string', 'max:100', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($user->id)],
+            'silent_login_block' => ['sometimes', 'boolean'],
         ]);
 
         $attributes = ['username' => $data['username'], 'email' => $data['email']];
+
+        // Silent login block: account stays, but sign-in just returns to the login page.
+        $silentChanged = false;
+        if (array_key_exists('silent_login_block', $data) && Schema::hasColumn('users', 'silent_login_block')) {
+            $block = (bool) $data['silent_login_block'];
+
+            if ($block && (int) $user->id === AdminAccess::userId()) {
+                return $this->fail('You cannot silently block your own account.', 403);
+            }
+
+            if ($block && $user->is_super_admin && $this->isLastActiveSuper($user)) {
+                return $this->fail('This is the last active Super Administrator and cannot be blocked.', 422);
+            }
+
+            $silentChanged = $block !== (bool) $user->silent_login_block;
+            $attributes['silent_login_block'] = $block ? 1 : 0;
+        }
 
         if (Schema::hasColumn('users', 'name')) {
             $attributes['name'] = $data['name'];
@@ -366,6 +384,16 @@ class AdminRightsController extends Controller
         $user->forceFill($attributes)->save();
 
         AdminAuditLog::record('user.updated', "Admin user {$user->username} updated.", 'user', $user->id);
+
+        if ($silentChanged) {
+            \App\Support\SilentLoginBlock::forget();
+            AdminAuditLog::record(
+                !empty($attributes['silent_login_block']) ? 'user.silent_block_on' : 'user.silent_block_off',
+                "Silent login block " . (!empty($attributes['silent_login_block']) ? 'enabled' : 'removed') . " for admin user {$user->username}.",
+                'user',
+                $user->id
+            );
+        }
 
         return $this->ok('Admin user updated.');
     }

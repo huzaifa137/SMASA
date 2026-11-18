@@ -58,6 +58,14 @@ class AdminAuth
             return redirect()->route('parents.dashboard');
         }
 
+        // Silently blocked admin / teacher: drop the session and show the plain
+        // login page — no message of any kind.
+        if (\App\Support\SilentLoginBlock::currentSessionBlocked()) {
+            session()->flush();
+
+            return redirect('/users/login');
+        }
+
         // A deactivated / deleted / non-admin account must lose its session
         // immediately, not at the next login.
         if (session()->has('LoggedAdmin') && !\App\Support\AdminAccess::isAdminSession()) {

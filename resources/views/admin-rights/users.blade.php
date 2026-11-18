@@ -501,7 +501,7 @@
                         $initials = strtoupper(mb_substr($displayName ?: $u->username, 0, 1) . mb_substr(explode(' ', $displayName ?: $u->username)[1] ?? '', 0, 1));
                     @endphp
                     <tr data-id="{{ $u->id }}" data-name="{{ $displayName }}" data-username="{{ $u->username }}" data-email="{{ $u->email }}"
-                        data-role="{{ $u->admin_role_id }}" data-super="{{ $u->is_super_admin ? 1 : 0 }}" data-active="{{ (int) $u->is_active !== 0 ? 1 : 0 }}"
+                        data-role="{{ $u->admin_role_id }}" data-super="{{ $u->is_super_admin ? 1 : 0 }}" data-active="{{ (int) $u->is_active !== 0 ? 1 : 0 }}" data-silent="{{ $u->silent_login_block ? 1 : 0 }}"
                         class="arp-row {{ $isMe ? 'is-me' : '' }} {{ (int) $u->is_active !== 0 ? '' : 'is-inactive' }}">
                         <td>
                             <div class="arp-user-cell">
@@ -535,6 +535,9 @@
                                 <span class="arp-status-dot"></span>
                                 {{ (int) $u->is_active !== 0 ? 'Active' : 'Deactivated' }}
                             </span>
+                            @if ($u->silent_login_block)
+                                <span class="arp-badge off" title="Silent login block is ON"><i class="fa fa-eye-slash"></i> Login blocked</span>
+                            @endif
                         </td>
                         <td style="text-align:right;white-space:nowrap">
                             @if ($locked)
@@ -602,17 +605,20 @@
     const roleOptions = (cur) => '<option value="">— No role (dashboard only) —</option>' +
         ROLES.map(r => `<option value="${r.id}" ${String(cur) === String(r.id) ? 'selected' : ''}>${arpEsc(r.name)}</option>`).join('');
 
-    const userForm = (u, creating) => `
+    const userForm = (u, creating, canSilentBlock = false) => `
         <div class="arp-field"><label>Full name</label><input id="uf-name" class="arp-input" value="${arpEsc(u.name || '')}"></div>
         <div class="arp-field"><label>Username</label><input id="uf-username" class="arp-input" value="${arpEsc(u.username || '')}"></div>
         <div class="arp-field"><label>E-mail</label><input id="uf-email" class="arp-input" type="email" value="${arpEsc(u.email || '')}"></div>
         ${creating ? `<div class="arp-field"><label>Password <span class="arp-muted">(leave empty to generate one)</span></label><input id="uf-pass" class="arp-input" type="text" autocomplete="off"></div>
         <div class="arp-field"><label>Role</label><select id="uf-role" class="arp-input">${roleOptions('')}</select></div>
-        ${IS_SUPER ? '<div class="arp-field arp-check-field"><label><input type="checkbox" id="uf-super"> <span>Super Administrator (every right, no role)</span></label></div>' : ''}` : ''}`;
+        ${IS_SUPER ? '<div class="arp-field arp-check-field"><label><input type="checkbox" id="uf-super"> <span>Super Administrator (every right, no role)</span></label></div>' : ''}` : ''}
+        ${(!creating && canSilentBlock) ? `<div class="arp-field arp-check-field"><label><input type="checkbox" id="uf-silent" ${u.silent ? 'checked' : ''}> <span>Silent login block</span></label>
+            <div class="arp-muted" style="font-size:.8rem;margin-top:4px">Keeps the account, but when this person tries to log in they are sent back to the login page with no message. Untick to restore access.</div></div>` : ''}`;
 
     const readUser = (creating) => ({
         name: document.getElementById('uf-name').value, username: document.getElementById('uf-username').value,
         email: document.getElementById('uf-email').value,
+        ...(!creating && document.getElementById('uf-silent') ? { silent_login_block: document.getElementById('uf-silent').checked } : {}),
         ...(creating ? { password: document.getElementById('uf-pass').value || null, admin_role_id: document.getElementById('uf-role').value || null,
                          is_super_admin: !!document.getElementById('uf-super')?.checked } : {}),
     });
@@ -629,7 +635,7 @@
     document.querySelectorAll('tr[data-id]').forEach(tr => {
         const id = tr.dataset.id, name = tr.dataset.username;
         tr.querySelector('.a-edit')?.addEventListener('click', async () => {
-            const f = await Swal.fire({ title: 'Edit ' + name, html: userForm({ name: tr.dataset.name, username: tr.dataset.username, email: tr.dataset.email }, false),
+            const f = await Swal.fire({ title: 'Edit ' + name, html: userForm({ name: tr.dataset.name, username: tr.dataset.username, email: tr.dataset.email, silent: tr.dataset.silent === '1' }, false, !tr.classList.contains('is-me')),
                 showCancelButton: true, confirmButtonText: 'Save', preConfirm: () => readUser(false) });
             if (!f.isConfirmed) return;
             if ((await arpAct(U + '/' + id, 'PUT', f.value)).ok) location.reload();

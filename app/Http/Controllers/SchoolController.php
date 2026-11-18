@@ -323,7 +323,7 @@ class SchoolController extends Controller
         $HouseID = House::where('ID', $id)->value('Number');
 
         $schoolID = School::where('registration_code', $HouseID)->value('id');
-        $school = School::where('id', $schoolID)->first();
+        $school = School::where('id', $schoolID)->firstOrFail();
         $school_id = $schoolID;
 
         return view('School.edit-school', compact(['school', 'school_id']));

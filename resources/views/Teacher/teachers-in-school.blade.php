@@ -647,12 +647,18 @@ $controller = new Controller();
                                                 <span class="badge {{ $sc['badge'] }} status-badge-{{ $teacher->id }}">
                                                     <i class="fas {{ $sc['icon'] }} me-1"></i>{{ $sc['label'] }}
                                                 </span>
+                                                <span class="badge badge-secondary silent-badge-{{ $teacher->id }}"
+                                                    style="{{ $teacher->silent_login_block ? '' : 'display:none' }}"
+                                                    title="Silent login block is ON">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
                                                 @if(PermissionHelper::canFeature('manage_teacher_status') && !$isOwnRow)
                                                     <br>
                                                     <button class="btn btn-xs btn-outline-secondary mt-1 btn-manage-status"
                                                         data-id="{{ $teacher->id }}"
                                                         data-name="{{ $teacher->surname }} {{ $teacher->firstname }}"
-                                                        data-status="{{ $status }}" title="Manage Status">
+                                                        data-status="{{ $status }}"
+                                                        data-silent="{{ $teacher->silent_login_block ? 1 : 0 }}" title="Manage Status">
                                                         <i class="fas fa-sliders-h"></i>
                                                     </button>
                                                 @endif
@@ -1065,6 +1071,7 @@ $controller = new Controller();
             $('#status-teacher-name').text(name);
             $('#new_status').val(status);
             $('#status_reason').val('');
+            $('#silent_login_block').prop('checked', String($(this).attr('data-silent')) === '1');
             $('#status-result').hide().removeClass('alert-success alert-danger');
             $('#statusModal').modal('show');
         });
@@ -1082,6 +1089,7 @@ $controller = new Controller();
                     _token: '{{ csrf_token() }}',
                     account_status: $('#new_status').val(),
                     status_reason: $('#status_reason').val(),
+                    silent_login_block: $('#silent_login_block').is(':checked') ? 1 : 0,
                 },
                 success: function (res) {
                     spinner.hide();
@@ -1097,6 +1105,10 @@ $controller = new Controller();
                         .html(`<i class="fas ${icons[newStatus]} me-1"></i>${labels[newStatus]}`);
 
                     $(`.btn-manage-status[data-id="${currentStatusTeacherId}"]`).data('status', newStatus);
+
+                    const silentOn = $('#silent_login_block').is(':checked');
+                    $(`.btn-manage-status[data-id="${currentStatusTeacherId}"]`).attr('data-silent', silentOn ? 1 : 0);
+                    $(`.silent-badge-${currentStatusTeacherId}`).toggle(silentOn);
 
                     $('#status-result').show().removeClass('alert-danger').addClass('alert-success').text(res.message);
                     setTimeout(() => $('#statusModal').modal('hide'), 1500);
@@ -1183,6 +1195,18 @@ $controller = new Controller();
                         <option value="suspended">⏸️ Suspended – Temporarily blocked, can be re-activated</option>
                         <option value="blocked">🚫 Blocked – Permanently disabled until unlocked</option>
                     </select>
+                </div>
+                <div class="mb-3 p-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="silent_login_block">
+                        <label class="custom-control-label fw-bold" for="silent_login_block">
+                            <i class="fas fa-eye-slash me-1"></i> Silent login block
+                        </label>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        Keeps the account in the system. When this teacher tries to log in they are simply
+                        sent back to the login page — no message is shown. Switch it off to restore access.
+                    </small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Reason <small

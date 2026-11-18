@@ -398,7 +398,8 @@ class ParentPortalController extends Controller
         $student = Student::where('id', $studentId)->where('primary_contact', $phone)->first();
 
         if (!$student) {
-            abort(403, "That student isn't linked to your account.");
+            // Someone else's child (or a made-up id): back to the parent's own dashboard, no error page.
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect()->route('parents.dashboard'));
         }
 
         $student->school_name = Helper::schoolNameBySchoolID($student->school_id);

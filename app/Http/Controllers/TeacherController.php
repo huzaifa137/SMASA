@@ -146,9 +146,31 @@ class TeacherController extends Controller
         Helper::requireSchool();
 
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
+
+        // Unknown id, or a teacher of another school: no error page, just go back.
+        if (!$teacher) {
+            return $this->backFromMissingTeacher();
+        }
+
         $school_id = Helper::requireSchool();
 
         return view('Teacher.teacher-profile', compact('teacher', 'school_id'));
+    }
+
+    /**
+     * Quiet exit for a teacher id that does not exist in the current school:
+     * return to the page the person came from (same site only), otherwise to
+     * the school's teacher list. No error and no message.
+     */
+    private function backFromMissingTeacher()
+    {
+        $fallback = route('school.teachers');
+        $previous = url()->previous($fallback);
+
+        $sameSite = parse_url($previous, PHP_URL_HOST) === request()->getHost();
+        $isThisPage = rtrim($previous, '/') === rtrim(request()->fullUrl(), '/');
+
+        return redirect()->to($sameSite && !$isThisPage ? $previous : $fallback);
     }
 
     public function updateteacherProfile($id)
@@ -160,6 +182,10 @@ class TeacherController extends Controller
         $roles = Role::all();
 
         $teacher = Teacher::where('school_id', Helper::requireSchool())->where('id', $id)->first();
+
+        if (!$teacher) {
+            return $this->backFromMissingTeacher();
+        }
 
         return view('users.update-user-info', compact('teacher', 'roles'));
     }
@@ -457,6 +483,15 @@ class TeacherController extends Controller
     // }
 
         try {
+            // SECURITY: this is the "change MY password" action. It used to accept any
+            // teacher_id of the school and then log the caller in as that teacher.
+            if (!$this->isOwnAccount($request->input('teacher_id'))) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only change your own password here.',
+                ], 403);
+            }
+
             // Validate request
             $request->validate([
                 // 'password' => 'required|min:8|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
@@ -473,9 +508,6 @@ class TeacherController extends Controller
             $teacher->password = Hash::make($request->password);
             $teacher->must_change_password = false; // Set to false after password change
             $teacher->save();
-
-            // Update session if needed
-            Session::put('LoggedTeacher', $teacher->id);
 
             return response()->json([
                 'status' => true,
@@ -572,6 +604,7 @@ class TeacherController extends Controller
         $request->validate([
             'account_status' => 'required|in:active,suspended,blocked',
             'status_reason' => 'nullable|string|max:500',
+            'silent_login_block' => 'nullable|boolean',
         ]);
 
         if ($this->isOwnAccount($id)) {
@@ -588,7 +621,15 @@ class TeacherController extends Controller
         $teacher->status_reason = $request->status_reason;
         $teacher->status_changed_at = now();
         $teacher->status_changed_by = session('LoggedAdmin') ?? session('LoggedTeacher');
+
+        // Silent login block: keep the account, but the teacher is sent back to
+        // the login page (no message) whenever they try to sign in.
+        if ($request->has('silent_login_block')) {
+            $teacher->silent_login_block = $request->boolean('silent_login_block');
+        }
+
         $teacher->save();
+        \App\Support\SilentLoginBlock::forget();
 
         $label = ucfirst($request->account_status);
 
@@ -596,6 +637,7 @@ class TeacherController extends Controller
             'status' => true,
             'message' => "Teacher account has been {$label}.",
             'new_status' => $request->account_status,
+            'silent_login_block' => (bool) $teacher->silent_login_block,
         ]);
     }
 
@@ -611,6 +653,7 @@ class TeacherController extends Controller
             'account_status' => $teacher->account_status ?? 'active',
             'status_reason' => $teacher->status_reason,
             'status_changed_at' => $teacher->status_changed_at,
+            'silent_login_block' => (bool) $teacher->silent_login_block,
         ]);
     }
 
@@ -621,6 +664,27 @@ class TeacherController extends Controller
      */
     public function updateUserInformation(Request $request)
     {
+        // SECURITY: authorise BEFORE anything else. This endpoint used to update any
+        // teacher of the school (including their password) for any logged-in user.
+        // Allowed: your own profile, or another teacher only with the edit_teacher right.
+        $targetTeacher = Teacher::forCurrentSchool()->find($request->input('teacher_id'));
+
+        if (!$targetTeacher) {
+            return response()->json(['message' => 'Teacher not found.'], 404);
+        }
+
+        $isOwn = $this->isOwnAccount($targetTeacher->id);
+
+        if (!$isOwn && !PermissionHelper::canFeature('edit_teacher')) {
+            return response()->json(['message' => 'Unauthorized Access. You do not have permission to edit teachers.'], 403);
+        }
+
+        // Setting someone else's password is reserved for school / platform administrators.
+        if (!$isOwn && $request->filled('password')
+            && !Helper::isTechSateAdminOrSchoolAdminsAlone() && !Helper::isPlatformAdmin()) {
+            return response()->json(['message' => "Only a school administrator can set another teacher's password."], 403);
+        }
+
         $teacherFields = [
             'school_id',
             'staff_number',
@@ -664,7 +728,10 @@ class TeacherController extends Controller
             'password' => 'nullable|string|min:4|confirmed', // Add password validation
         ]);
 
-        $teacher = Teacher::forCurrentSchool()->findOrFail($request->teacher_id);
+        $teacher = $targetTeacher;
+
+        // A profile form must never move a teacher to another school.
+        unset($data['school_id']);
 
         // Handle profile image upload
         if ($request->hasFile('teacher_profile')) {

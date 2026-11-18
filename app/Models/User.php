@@ -36,6 +36,7 @@ class User extends Authenticatable
         'is_active',
         'attached_company_role',
         'admin_role_id',
+        'silent_login_block',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -43,6 +44,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_super_admin' => 'boolean',
+        'silent_login_block' => 'boolean',
     ];
 
     public function adminRole()

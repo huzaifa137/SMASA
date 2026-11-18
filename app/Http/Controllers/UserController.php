@@ -26,7 +26,7 @@ class UserController extends Controller
                 if (now()->diffInMinutes($resetEntry->created_at) <= 30) {
                     return view('users.reset-password-2', compact(['generated_id']));
                 } else {
-                    return 'users.login'->with('fail', 'This reset password link has expired');
+                    return redirect()->route('users.login')->with('fail', 'This reset password link has expired');
                 }
             } else {
                 return redirect()->route('users.login')->with('fail', 'This link has already been used, request for a new link');
@@ -40,14 +40,15 @@ class UserController extends Controller
     {
         $generated_id = url('password/set-password/' . $id);
         $resetEntry = DB::table('password_reset_tables')->where('token', $generated_id)->first();
-        $useremail = $resetEntry->email;
 
         if ($resetEntry) {
+            $useremail = $resetEntry->email;
+
             if ($resetEntry->link_status == 0) {
                 if (now()->diffInMinutes($resetEntry->created_at) <= 30) {
                     return view('users.set-first-pasword', compact(['generated_id', 'useremail']));
                 } else {
-                    return 'users.login'->with('fail', 'This reset password link has expired');
+                    return redirect()->route('users.login')->with('fail', 'This reset password link has expired');
                 }
             } else {
                 return redirect()->route('users.login')->with('fail', 'This link has already been used, request for a new link');
@@ -318,6 +319,12 @@ class UserController extends Controller
             ], 422);
         }
 
+        // Silently blocked account: correct credentials, but no session and no
+        // message — the login page just loads again.
+        if (!empty($user->silent_login_block)) {
+            return $this->silentLoginRedirect();
+        }
+
         $user->update([
             'last_login_at' => now(),
         ]);
@@ -393,6 +400,11 @@ class UserController extends Controller
         }
         // ─────────────────────────────────────────────────────────────────
 
+        // Silently blocked teacher: back to the login page, no message, no session.
+        if (!empty($schoolTeacher->silent_login_block)) {
+            return $this->silentLoginRedirect();
+        }
+
         $request->session()->regenerate();
         // dd($school->id);
         $request->session()->put('LoggedSchool', $school->id);
@@ -410,6 +422,19 @@ class UserController extends Controller
             'status' => true,
             'message' => 'School login successful',
             'redirect' => '/school/home',
+        ]);
+    }
+
+    /**
+     * Answer a login attempt of a silently blocked account. The login form
+     * follows `redirect`, so the visitor lands on a fresh login page with
+     * nothing shown. No session is created.
+     */
+    private function silentLoginRedirect()
+    {
+        return response()->json([
+            'status' => true,
+            'redirect' => '/users/login',
         ]);
     }
 
@@ -558,6 +583,10 @@ class UserController extends Controller
 
         $user_profile_data = DB::table('users')->where('id', $id)->first();
 
+        if (!$user_profile_data) {
+            throw (new \Illuminate\Database\Eloquent\ModelNotFoundException())->setModel(User::class, [$id]);
+        }
+
         $data = ['LoggedUserAdmin' => User::where('id', '=', session('LoggedAdmin'))->first()];
 
         return view('users.user-account-information', $data, compact(['user_profile_data']))
@@ -569,6 +598,15 @@ class UserController extends Controller
     {
 
         $id = $request->hidden_id;
+
+        // Only a Super Administrator may touch a Super Administrator account.
+        $target = User::find($id);
+        abort_unless($target, 404, 'User not found.');
+        abort_if(
+            $target->is_super_admin && !\App\Support\AdminAccess::isSuperAdmin(),
+            403,
+            'Only a Super Administrator can modify a Super Administrator.'
+        );
 
         $reference = DB::table('users')->where('id', $id)->value('user_reference');
 

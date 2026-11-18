@@ -1059,6 +1059,48 @@ use App\Helpers\PermissionHelper;
         scrollbar-color: #94a3b8 #f1f5f9;
     }
 }
+
+        /* ── Total students pill in the hero ── */
+        .hero-total {
+            display: inline-flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: .45rem;
+            margin-top: .85rem;
+            padding: .45rem .95rem;
+            background: rgba(255, 255, 255, .14);
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 12px;
+            color: #fff;
+        }
+
+        .hero-total i {
+            color: #a5b4fc;
+            align-self: center;
+        }
+
+        .hero-total .ht-num {
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .hero-total .ht-label {
+            font-size: .85rem;
+            color: #e0e7ff;
+        }
+
+        .hero-total .ht-pending {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #fde68a;
+            text-decoration: none;
+        }
+
+        .hero-total a.ht-pending:hover {
+            text-decoration: underline;
+            color: #fef3c7;
+        }
     </style>
 @endsection
 
@@ -1068,6 +1110,22 @@ use App\Helpers\PermissionHelper;
             <div class="hero-badge"><i class="fas fa-user-graduate"></i> Students</div>
             <h1>All Students</h1>
             <p>Browse students by class and stream</p>
+            @if (!empty($studentTotals))
+                <div class="hero-total" title="Each child is counted once. Brackets: records that look like duplicate enrollments and are not consolidated yet.">
+                    <i class="fas fa-users"></i>
+                    <span class="ht-num">{{ number_format($studentTotals['unique_students']) }}</span>
+                    <span class="ht-label">Total {{ $studentTotals['unique_students'] === 1 ? 'Student' : 'Students' }}</span>
+                    @if (($studentTotals['pending_review'] ?? 0) > 0)
+                        @if (PermissionHelper::canFeature('view_student_consolidation'))
+                            <a href="{{ route('students.consolidation') }}" class="ht-pending">
+                                ({{ number_format($studentTotals['pending_review']) }} not yet consolidated)
+                            </a>
+                        @else
+                            <span class="ht-pending">({{ number_format($studentTotals['pending_review']) }} not yet consolidated)</span>
+                        @endif
+                    @endif
+                </div>
+            @endif
         </div>
         <div class="hero-buttons" style="position:relative;z-index:1;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
             @if(PermissionHelper::canFeature('import_students'))

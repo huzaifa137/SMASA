@@ -89,7 +89,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             // Hardened (security): now requires the pending login in the session and a school the account really belongs to.
             Route::post('auth-user-selected-school', 'authUserSelectedSchool')->name('auth-user-selected-school')->middleware('throttle:login');
             Route::post('update-internal-user', 'storeUpdatedInternalUser')->name('update.internal-user');
-            Route::post('store-updated-information', 'storeUpdatedInformation')->name('store-updated-information');
+            // SECURITY: rewrote any users row (role, status, e-mail) from the request body with
+            // no login check. Nothing in the views calls it; now it needs an admin with edit rights.
+            Route::post('store-updated-information', 'storeUpdatedInformation')->name('store-updated-information')
+                ->middleware(['AdminAuth', 'admin.can:admin_rights.edit_user']);
         });
 
         Route::get('password/reset/{id}', 'createNewPassword')->name('password/reset');

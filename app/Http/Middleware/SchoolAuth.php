@@ -28,6 +28,13 @@ public function handle(Request $request, Closure $next): Response
          return redirect('/school/home');
         }
 
+    // Silently blocked teacher: drop the session, plain login page, no message.
+    if (\App\Support\SilentLoginBlock::currentSessionBlocked()) {
+        session()->flush();
+
+        return redirect('/users/login');
+    }
+
     $response = $next($request);
 
     // Prevent caching

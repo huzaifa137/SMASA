@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Models\StudentIdCard;
 use App\Services\GradingService;
 use App\Services\StudentDeletionService;
+use App\Services\StudentConsolidationService;
 use Illuminate\Support\Facades\Log;
 use DB;
 use Illuminate\Http\Request;
@@ -725,7 +726,17 @@ class StudentController extends Controller
             }
         }
 
-        return view('student.all-students', compact('groupedStudents'));
+        // Banner totals. `unique_students` = every child counted once (consolidated
+        // records only); `pending_review` = records that look like duplicates / double
+        // enrollments and are NOT consolidated yet. Same numbers as the dashboard.
+        $studentTotals = null;
+        try {
+            $studentTotals = (new StudentConsolidationService())->stats((int) $schoolId);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return view('student.all-students', compact('groupedStudents', 'studentTotals'));
     }
 
     public function viewStudent($id)

@@ -37,6 +37,7 @@ class Teacher extends Model
         'status_changed_at',
         'status_changed_by',
         'must_change_password',
+        'silent_login_block',
     ];
 
     public function school()
