@@ -1178,7 +1178,7 @@ $controller = new Controller();
         <div class="modal-content" style="border-radius:16px;overflow:hidden;">
             <div class="modal-header"
                 style="background:linear-gradient(135deg,#1e40af,#6d28d9);color:#fff;border:none;">
-                <h5 class="modal-title"><i class="fas fa-user-shield me-2"></i>Manage Teacher Account Status</h5>
+                <h5 class="modal-title"><i class="fas fa-user-shield me-2"></i> Manage Teacher Account Status</h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -1197,12 +1197,49 @@ $controller = new Controller();
                     </select>
                 </div>
                 <div class="mb-3 p-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="silent_login_block">
-                        <label class="custom-control-label fw-bold" for="silent_login_block">
-                            <i class="fas fa-eye-slash me-1"></i> Silent login block
-                        </label>
-                    </div>
+                    <div class="silent-block-banner" id="silentBanner">
+  <div class="silent-block-banner-icon"><i class="fas fa-user-shield"></i></div>
+  <div class="silent-block-banner-content">
+    <div class="silent-block-banner-head">
+      <strong>Silent Login Block</strong>
+      <span class="silent-block-banner-status" id="silentStatusLabel">Off</span>
+    </div>
+    <p>Keeps the account in the system. When this teacher tries to log in they are simply sent back to the login page — no message is shown. Switch it off to restore access.</p>
+  </div>
+  <label class="silent-toggle">
+    <input type="checkbox" id="silent_login_block">
+    <span class="silent-toggle-track"><span class="silent-toggle-thumb"></span></span>
+  </label>
+</div>
+
+<style>
+.silent-block-banner{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;transition:all .3s ease;}
+.silent-block-banner.is-active{background:#fffbeb;border-color:#fde68a;}
+.silent-block-banner-icon{flex-shrink:0;width:38px;height:38px;border-radius:10px;background:#e2e8f0;color:#475569;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s ease;}
+.silent-block-banner.is-active .silent-block-banner-icon{background:#fde68a;color:#b45309;}
+.silent-block-banner-content{flex:1;min-width:0;}
+.silent-block-banner-head{display:flex;align-items:center;gap:10px;margin-bottom:3px;}
+.silent-block-banner-head strong{font-size:.9rem;color:#0f172a;}
+.silent-block-banner-status{font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:#e2e8f0;color:#64748b;transition:all .3s ease;}
+.silent-block-banner.is-active .silent-block-banner-status{background:#f59e0b;color:#fff;}
+.silent-block-banner-content p{font-size:.78rem;line-height:1.5;color:#64748b;margin:0;}
+.silent-toggle{flex-shrink:0;cursor:pointer;}
+.silent-toggle input{display:none;}
+.silent-toggle-track{display:block;width:42px;height:22px;border-radius:22px;background:#cbd5e1;position:relative;transition:background .3s;}
+.silent-toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .3s;}
+.silent-toggle input:checked + .silent-toggle-track{background:#f59e0b;}
+.silent-toggle input:checked + .silent-toggle-track .silent-toggle-thumb{transform:translateX(20px);}
+</style>
+
+<script>
+(function(){
+  var cb = document.getElementById('silent_login_block');
+  var banner = document.getElementById('silentBanner');
+  var label = document.getElementById('silentStatusLabel');
+  function sync(){ var on = cb.checked; banner.classList.toggle('is-active', on); label.textContent = on ? 'On' : 'Off'; }
+  cb.addEventListener('change', sync); sync();
+})();
+</script>
                     <small class="text-muted d-block mt-1">
                         Keeps the account in the system. When this teacher tries to log in they are simply
                         sent back to the login page — no message is shown. Switch it off to restore access.

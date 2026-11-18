@@ -416,6 +416,91 @@
 .swal2-popup .arp-check-field label { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .swal2-popup .arp-check-field input { width: auto; }
 
+/* ============================================================
+   SILENT LOGIN TOGGLE SWITCH
+   ============================================================ */
+.swal2-popup .arp-silent-field {
+    background: #f8fafc;
+    border: 1px solid #e6ebf4;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    transition: background .25s, border-color .25s;
+}
+.swal2-popup .arp-silent-field.is-on {
+    background: rgba(44, 41, 202, .04);
+    border-color: rgba(44, 41, 202, .25);
+}
+.swal2-popup .arp-silent-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+.swal2-popup .arp-silent-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.swal2-popup .arp-silent-label strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1c2b52;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.swal2-popup .arp-silent-label small {
+    font-size: 11px;
+    color: #8a94a6;
+    line-height: 1.4;
+}
+
+/* The toggle */
+.arp-toggle {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.arp-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.arp-toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 999px;
+    transition: background .25s ease;
+}
+.arp-toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .25);
+    transition: transform .25s ease;
+}
+.arp-toggle input:checked + .arp-toggle-slider {
+    background: #2C29CA;
+}
+.arp-toggle input:checked + .arp-toggle-slider::before {
+    transform: translateX(20px);
+}
+.arp-toggle input:focus-visible + .arp-toggle-slider {
+    box-shadow: 0 0 0 3px rgba(44, 41, 202, .25);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
     .arp-users-toolbar { flex-direction: column; align-items: stretch; }
@@ -612,8 +697,19 @@
         ${creating ? `<div class="arp-field"><label>Password <span class="arp-muted">(leave empty to generate one)</span></label><input id="uf-pass" class="arp-input" type="text" autocomplete="off"></div>
         <div class="arp-field"><label>Role</label><select id="uf-role" class="arp-input">${roleOptions('')}</select></div>
         ${IS_SUPER ? '<div class="arp-field arp-check-field"><label><input type="checkbox" id="uf-super"> <span>Super Administrator (every right, no role)</span></label></div>' : ''}` : ''}
-        ${(!creating && canSilentBlock) ? `<div class="arp-field arp-check-field"><label><input type="checkbox" id="uf-silent" ${u.silent ? 'checked' : ''}> <span>Silent login block</span></label>
-            <div class="arp-muted" style="font-size:.8rem;margin-top:4px">Keeps the account, but when this person tries to log in they are sent back to the login page with no message. Untick to restore access.</div></div>` : ''}`;
+        ${(!creating && canSilentBlock) ? `
+        <div class="arp-silent-field ${u.silent ? 'is-on' : ''}" id="uf-silent-field">
+            <div class="arp-silent-row">
+                <div class="arp-silent-label">
+                    <strong><i class="fa fa-eye-slash"></i> Silent login block</strong>
+                    <small>Keeps the account, but when this person tries to log in they are sent back to the login page with no message. Untick to restore access.</small>
+                </div>
+                <label class="arp-toggle">
+                    <input type="checkbox" id="uf-silent" ${u.silent ? 'checked' : ''}>
+                    <span class="arp-toggle-slider"></span>
+                </label>
+            </div>
+        </div>` : ''}`;
 
     const readUser = (creating) => ({
         name: document.getElementById('uf-name').value, username: document.getElementById('uf-username').value,
@@ -636,7 +732,16 @@
         const id = tr.dataset.id, name = tr.dataset.username;
         tr.querySelector('.a-edit')?.addEventListener('click', async () => {
             const f = await Swal.fire({ title: 'Edit ' + name, html: userForm({ name: tr.dataset.name, username: tr.dataset.username, email: tr.dataset.email, silent: tr.dataset.silent === '1' }, false, !tr.classList.contains('is-me')),
-                showCancelButton: true, confirmButtonText: 'Save', preConfirm: () => readUser(false) });
+                showCancelButton: true, confirmButtonText: 'Save', preConfirm: () => readUser(false),
+                didOpen: () => {
+                    // Live tint the silent block when the toggle flips
+                    const cb = document.getElementById('uf-silent');
+                    const field = document.getElementById('uf-silent-field');
+                    if (cb && field) {
+                        cb.addEventListener('change', () => field.classList.toggle('is-on', cb.checked));
+                    }
+                }
+            });
             if (!f.isConfirmed) return;
             if ((await arpAct(U + '/' + id, 'PUT', f.value)).ok) location.reload();
         });
