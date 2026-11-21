@@ -267,7 +267,7 @@
         .marks tr.grand td { background: var(--tint); border-top: 2px solid var(--ink); }
         .marks.d2 td { font-size: 15px; padding: 3px 7px; } .marks.d2 td.subj, .marks.d2 td.rem { font-size: 14px; } .marks.d2 th { font-size: 14px; padding: 7px 5px; }
         .marks.d3 td { font-size: 13px; padding: 1px 6px; } .marks.d3 td.subj, .marks.d3 td.rem { font-size: 12.5px; } .marks.d3 th { font-size: 12.5px; padding: 5px 4px; }
-        .col-subj { width: 24%; } .col-avg { width: 15%; } .col-obt { width: 15%; } .col-tot { width: 15%; } .col-rem { width: 31%; }
+        .col-subj { width: 32%; } .col-obt { width: 20%; } .col-tot { width: 20%; } .col-rem { width: 28%; }
 
         /* footer — remarks / signatures / term dates (all dynamic) */
         .remarks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 2px; }
@@ -504,12 +504,11 @@
                     <div class="tbl-wrap">
                         <table class="marks {{ $density }}">
                             <colgroup>
-                                <col class="col-subj"><col class="col-avg"><col class="col-obt"><col class="col-tot"><col class="col-rem">
+                                <col class="col-subj"><col class="col-obt"><col class="col-tot"><col class="col-rem">
                             </colgroup>
                             <thead>
                                 <tr>
                                     <th>{{ $L['subject'] }}</th>
-                                    <th>{{ $L['class_average'] }}</th>
                                     <th>{{ $L['obtained'] }}</th>
                                     <th>{{ $L['total'] }}</th>
                                     <th>{{ $L['remarks'] }}</th>
@@ -523,17 +522,15 @@
                                     @endphp
                                     <tr>
                                         <td class="subj"><bdi>{{ $sm->subject_name }}</bdi></td>
-                                        <td class="{{ ($sm->class_average ?? null) === null ? 'na' : '' }}">{{ $fmt($sm->class_average ?? null) }}</td>
                                         <td class="{{ $hasMark ? '' : 'na' }}">{{ $hasMark ? $fmt($sm->marks_obtained) : '—' }}</td>
                                         <td>{{ $fmt($sm->total_marks ?? null) }}</td>
                                         <td class="rem"><bdi>{{ $remarkText !== '' ? $remarkText : '—' }}</bdi></td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5" class="na">—</td></tr>
+                                    <tr><td colspan="4" class="na">—</td></tr>
                                 @endforelse
                                 <tr class="grand">
                                     <td class="subj">{{ $L['grand_total'] }}</td>
-                                    <td class="na">—</td>
                                     <td>{{ $fmt($slipData['totalObtained'] ?? null) }}</td>
                                     <td>{{ $fmt($slipData['totalMax'] ?? null) }}</td>
                                     <td class="rem"><bdi>{{ $overallRemark !== '' ? $overallRemark : '—' }}</bdi></td>

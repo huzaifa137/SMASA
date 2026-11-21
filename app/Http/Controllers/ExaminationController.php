@@ -3367,6 +3367,35 @@ class ExaminationController extends Controller
         $student->head_teacher_remark = $remark->head_teacher_remark ?? null;
     }
 
+    /**
+     * Average mark per subject for one class + stream in one examination
+     * (subjects hidden from the report excluded, blank marks ignored).
+     * Keyed 's:<subject_id>' / 'c:<custom_subject_id>'. Cached for the request
+     * because printing a whole class builds one slip per student.
+     */
+    private function classSubjectAverages($examId, $classId, $streamId, $schoolId)
+    {
+        static $cache = [];
+        $key = implode('|', [$examId, $classId, (string) $streamId, $schoolId]);
+
+        return $cache[$key] ??= ExaminationMark::where('examination_id', $examId)
+            ->where('class_id', $classId)
+            ->where('school_id', $schoolId)
+            ->when(
+                $streamId === null,
+                fn($q) => $q->whereNull('stream_id'),
+                fn($q) => $q->where('stream_id', $streamId)
+            )
+            ->visibleOnReport()
+            ->whereNotNull('marks_obtained')
+            ->selectRaw('subject_id, custom_subject_id, AVG(marks_obtained) as avg_mark')
+            ->groupBy('subject_id', 'custom_subject_id')
+            ->get()
+            ->mapWithKeys(fn($r) => [
+                (!empty($r->subject_id) ? 's:' . $r->subject_id : 'c:' . $r->custom_subject_id) => round((float) $r->avg_mark, 2),
+            ]);
+    }
+
     public function buildPassslipData($examId, $studentId, $schoolId, $exam, $student = null): array
     {
         // This student's marks. An O-Level report card has no examination_marks
@@ -3476,7 +3505,14 @@ class ExaminationController extends Controller
             ? $examClass->resolvedGradingBands()
             : $exam->resolvedGradingBandsForClass($classId, $streamId);
 
-        $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears) {
+        // ── Class average per subject ─────────────────────────────────────────
+        // examination_marks has no class_average column, so the slips' "Class Average"
+        // column was always empty. Work it out from the same students the class rank
+        // uses (this exam, class and stream), one average per subject, keyed the same
+        // way as $subjectTeachers (master subject_id or custom_subject_id).
+        $classAverages = $exam->isReportCard() ? collect() : $this->classSubjectAverages($examId, $classId, $streamId, $schoolId);
+
+        $subjectMarks = $marks->map(function ($m) use ($gradingScale, $subjectTeachers, $isEarlyYears, $classAverages) {
             $subjectScale = \App\Services\PassFailGradingService::scale($m->school_id ?? Session('LoggedSchool'), $gradingScale, $m->subject_id, $m->custom_subject_id ?? null);
             $pct = $m->total_marks > 0
                 ? round(($m->marks_obtained / $m->total_marks) * 100, 1)
@@ -3512,7 +3548,8 @@ class ExaminationController extends Controller
                 'grade_remark' => $m->teacher_comment ?: ($remark ?? '—'),
                 'grade_points' => $points,
                 'percentage' => $pct,
-                'class_average' => $m->class_average ?? null,
+                'class_average' => $m->class_average
+                    ?? ($classAverages[!empty($m->subject_id) ? 's:' . $m->subject_id : 'c:' . $m->custom_subject_id] ?? null),
                 'teacher_name' => Helper::teacherFullName($teacherId),
                 'teacher_initials' => Helper::teacherInitials($teacherId),
                 'teacher_comment' => $m->teacher_comment,
