@@ -446,6 +446,219 @@ selected classes" is clicked. --}}
             line-height: 1.4;
         }
 
+        /* ── Header Layout card ───────────────────────────────────────── */
+        .cz-hdr-card {
+            margin: .9rem 0 .6rem;
+            padding: .85rem;
+            border: 1.5px solid #e0dcff;
+            border-radius: var(--radius-md);
+            background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 75%);
+            box-shadow: 0 2px 12px rgba(44, 41, 202, .08);
+        }
+
+        .cz-hdr-head {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            margin-bottom: .75rem;
+        }
+
+        .cz-hdr-badge {
+            flex: 0 0 auto;
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e1b4b, #2f2ccb);
+            color: #fff;
+            font-size: .95rem;
+            box-shadow: 0 4px 10px rgba(47, 44, 203, .30);
+        }
+
+        .cz-hdr-title {
+            font-size: .88rem;
+            font-weight: 800;
+            color: #1e1b4b;
+            line-height: 1.1;
+        }
+
+        .cz-hdr-sub {
+            font-size: .68rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .cz-hdr-cta {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            width: 100%;
+            margin: 0 0 .65rem;
+            padding: .65rem .8rem;
+            border: none;
+            border-radius: 12px;
+            text-align: left;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, #1e1b4b 0%, #2f2ccb 60%, #5351e4 100%);
+            box-shadow: 0 6px 16px rgba(47, 44, 203, .28);
+            transition: transform .15s, box-shadow .15s, filter .15s;
+        }
+
+        .cz-hdr-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 9px 20px rgba(47, 44, 203, .36);
+            filter: brightness(1.06);
+        }
+
+        .cz-hdr-cta:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 8px rgba(47, 44, 203, .28);
+        }
+
+        .cz-hdr-cta-ic {
+            flex: 0 0 auto;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, .18);
+            font-size: .85rem;
+        }
+
+        .cz-hdr-cta-tx {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .cz-hdr-cta-tx strong {
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .cz-hdr-cta-tx small {
+            font-size: .68rem;
+            opacity: .85;
+        }
+
+        .cz-hdr-cta-arrow {
+            font-size: .7rem;
+            opacity: .8;
+        }
+
+        .cz-hdr-cta-on {
+            display: none;
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            padding: .2rem .5rem;
+            border-radius: 999px;
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .cz-hdr-cta.is-on .cz-hdr-cta-on {
+            display: inline-block;
+        }
+
+        .cz-hdr-cta.is-on .cz-hdr-cta-arrow {
+            display: none;
+        }
+
+        .cz-hdr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .4rem;
+            padding: .45rem 0;
+            border-top: 1px dashed #dcd8ff;
+        }
+
+        .cz-hdr-lbl {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .cz-hdr-lbl i {
+            width: 16px;
+            text-align: center;
+            color: var(--brand-mid);
+        }
+
+        .cz-seg {
+            display: inline-flex;
+            gap: 2px;
+            padding: 3px;
+            border-radius: 11px;
+            background: #eceaff;
+        }
+
+        .cz-seg-btn {
+            border: none;
+            background: transparent;
+            color: #64748b;
+            min-width: 34px;
+            padding: .32rem .55rem;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s, color .15s, box-shadow .15s;
+        }
+
+        .cz-seg-btn.cz-seg-auto {
+            font-size: .68rem;
+            letter-spacing: .02em;
+        }
+
+        .cz-seg-btn:hover {
+            color: var(--brand);
+            background: rgba(255, 255, 255, .7);
+        }
+
+        .cz-seg-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, #1e1b4b, #2f2ccb);
+            box-shadow: 0 2px 6px rgba(47, 44, 203, .35);
+        }
+
+        .cz-hdr-card .cz-size-row {
+            padding: .45rem 0 .1rem;
+            border-top: 1px dashed #dcd8ff;
+            flex-wrap: wrap;
+        }
+
+        .cz-hdr-card .cz-size-row label {
+            flex: 0 0 100%;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .cz-hdr-card input[type="range"] {
+            accent-color: #2f2ccb;
+        }
+
+        .cz-hdr-card .cz-hint {
+            margin: .45rem 0 0;
+            padding: .5rem .6rem;
+            border-radius: 8px;
+            background: #f1efff;
+            color: #4b5563;
+        }
+
         .cz-class-chip {
             padding: .4rem .8rem;
             border-radius: 20px;
@@ -871,39 +1084,59 @@ selected classes" is clicked. --}}
                 a class until someone picks a value here. Motto and contact
                 line follow the school name unless set on their own. --}}
                 @if(in_array($template, ['classic', 'modern', 'minimal', 'secondary-classic'], true))
-                    <div class="cz-group-label"><i class="fas fa-align-center"></i> Header Layout</div>
-                    @foreach([['HdrNameAlign', 'hdr_name_align', 'School name', 'Template default'], ['HdrMottoAlign', 'hdr_motto_align', 'Motto', 'Follow school name'], ['HdrDetailsAlign', 'hdr_details_align', 'Contact line', 'Follow school name']] as [$hid, $hkey, $hlbl, $hauto])
-                        @php $hcur = in_array(request($hkey), ['left', 'center', 'right'], true) ? request($hkey) : 'auto'; @endphp
-                        <div class="cz-color-row">
-                            <label for="cz{{ $hid }}">{{ $hlbl }}</label>
-                            <select id="cz{{ $hid }}" class="cz-select cz-hdr-align" data-key="{{ $hkey }}">
-                                <option value="auto" @selected($hcur === 'auto')>{{ $hauto }}</option>
-                                <option value="left" @selected($hcur === 'left')>Left</option>
-                                <option value="center" @selected($hcur === 'center')>Centre</option>
-                                <option value="right" @selected($hcur === 'right')>Right</option>
-                            </select>
+                    <div class="cz-hdr-card" id="czHdrCard">
+                        <div class="cz-hdr-head">
+                            <span class="cz-hdr-badge"><i class="fas fa-heading"></i></span>
+                            <div>
+                                <div class="cz-hdr-title">Header Layout</div>
+                                <div class="cz-hdr-sub">Align the school name, motto &amp; contact line</div>
+                            </div>
                         </div>
-                    @endforeach
-                    @php $hscale = is_numeric(request('hdr_name_scale')) ? request('hdr_name_scale') : ''; @endphp
-                    <div class="cz-size-row">
-                        <label for="czHdrScaleNum">School name size</label>
-                        <input type="range" id="czHdrScaleRange" min="0.8" max="1.8" step="0.05"
-                            value="{{ $hscale !== '' ? $hscale : 1 }}" data-default="1">
-                        <input type="number" id="czHdrScaleNum" class="cz-size-num" min="0.8" max="1.8" step="0.05"
-                            placeholder="1" value="{{ $hscale }}" data-default="1">
-                        <span class="cz-size-unit">×</span>
-                        <button type="button" class="cz-size-reset" data-target="HdrScale" title="Back to default">
-                            <i class="fas fa-rotate-left"></i>
+
+                        <button type="button" class="cz-hdr-cta" id="czHdrBalance">
+                            <span class="cz-hdr-cta-ic"><i class="fas fa-wand-magic-sparkles"></i></span>
+                            <span class="cz-hdr-cta-tx">
+                                <strong>Balanced header</strong>
+                                <small>Centre everything · school name ×1.15</small>
+                            </span>
+                            <span class="cz-hdr-cta-on"><i class="fas fa-check"></i> Applied</span>
+                            <i class="fas fa-chevron-right cz-hdr-cta-arrow"></i>
                         </button>
+
+                        @foreach([['HdrNameAlign', 'hdr_name_align', 'School name', 'Template default', 'school'], ['HdrMottoAlign', 'hdr_motto_align', 'Motto', 'Follow school name', 'quote-left'], ['HdrDetailsAlign', 'hdr_details_align', 'Contact line', 'Follow school name', 'address-card']] as [$hid, $hkey, $hlbl, $hauto, $hicon])
+                            @php $hcur = in_array(request($hkey), ['left', 'center', 'right'], true) ? request($hkey) : 'auto'; @endphp
+                            <div class="cz-hdr-row">
+                                <span class="cz-hdr-lbl"><i class="fas fa-{{ $hicon }}"></i> {{ $hlbl }}</span>
+                                <div class="cz-seg" role="group" aria-label="{{ $hlbl }} alignment">
+                                    {{-- Hidden input is what collectSettings()/applySettingsToPanel() read and write. --}}
+                                    <input type="hidden" class="cz-hdr-align" id="cz{{ $hid }}" data-key="{{ $hkey }}" value="{{ $hcur }}">
+                                    <button type="button" class="cz-seg-btn cz-seg-auto{{ $hcur === 'auto' ? ' active' : '' }}" data-value="auto" title="{{ $hauto }}">Auto</button>
+                                    <button type="button" class="cz-seg-btn{{ $hcur === 'left' ? ' active' : '' }}" data-value="left" title="Left"><i class="fas fa-align-left"></i></button>
+                                    <button type="button" class="cz-seg-btn{{ $hcur === 'center' ? ' active' : '' }}" data-value="center" title="Centre"><i class="fas fa-align-center"></i></button>
+                                    <button type="button" class="cz-seg-btn{{ $hcur === 'right' ? ' active' : '' }}" data-value="right" title="Right"><i class="fas fa-align-right"></i></button>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        @php $hscale = is_numeric(request('hdr_name_scale')) ? request('hdr_name_scale') : ''; @endphp
+                        <div class="cz-size-row">
+                            <label for="czHdrScaleNum">School name size</label>
+                            <input type="range" id="czHdrScaleRange" min="0.8" max="1.8" step="0.05"
+                                value="{{ $hscale !== '' ? $hscale : 1 }}" data-default="1">
+                            <input type="number" id="czHdrScaleNum" class="cz-size-num" min="0.8" max="1.8" step="0.05"
+                                placeholder="1" value="{{ $hscale }}" data-default="1">
+                            <span class="cz-size-unit">×</span>
+                            <button type="button" class="cz-size-reset" data-target="HdrScale" title="Back to default">
+                                <i class="fas fa-rotate-left"></i>
+                            </button>
+                        </div>
+
+                        <p class="cz-hint">
+                            <i class="fas fa-circle-info"></i>
+                            The motto and contact line follow the school name unless you set them separately.
+                            A very long name is still shrunk to fit the page.
+                        </p>
                     </div>
-                    <button type="button" class="cz-btn-sm" id="czHdrBalance" style="margin:.2rem 0 .3rem;">
-                        <i class="fas fa-align-center"></i> Balanced header (centre all, name ×1.15)
-                    </button>
-                    <p class="cz-hint">
-                        Centre the school name, motto and contact line, and make the name a little
-                        larger. The motto and contact line follow the school name unless you set
-                        them separately. A very long name is still shrunk to fit on the page.
-                    </p>
                 @endif
 
                 {{-- ── Dynamically-filtered toggle groups ──
@@ -1300,14 +1533,44 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
 
         document.getElementById('czPageSize').addEventListener('change', scheduleRefresh);
         // Text sizes: slider and number box stay in sync; empty number = default.
-        document.querySelectorAll('.cz-hdr-align').forEach(sel => sel.addEventListener('change', scheduleRefresh));
+        /* Header Layout: segmented controls drive the hidden .cz-hdr-align inputs.
+           syncHdrSeg() repaints them (and the "Applied" badge on the Balanced
+           header button) from the current values — called after every change,
+           after a saved profile is loaded, and once on page load. */
+        function syncHdrSeg() {
+            document.querySelectorAll('.cz-hdr-align').forEach(inp => {
+                inp.parentElement.querySelectorAll('.cz-seg-btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.value === inp.value);
+                });
+            });
+            const cta = document.getElementById('czHdrBalance');
+            if (cta) {
+                const all = Array.from(document.querySelectorAll('.cz-hdr-align'));
+                const num = document.getElementById('czHdrScaleNum');
+                cta.classList.toggle('is-on',
+                    all.length > 0 && all.every(i => i.value === 'center') &&
+                    num && Math.abs(parseFloat(num.value) - 1.15) < 0.001);
+            }
+        }
+        document.querySelectorAll('.cz-seg-btn').forEach(btn => btn.addEventListener('click', () => {
+            btn.parentElement.querySelector('.cz-hdr-align').value = btn.dataset.value;
+            syncHdrSeg();
+            scheduleRefresh();
+        }));
         const hdrBalanceBtn = document.getElementById('czHdrBalance');
         if (hdrBalanceBtn) hdrBalanceBtn.addEventListener('click', () => {
             document.querySelectorAll('.cz-hdr-align').forEach(sel => { sel.value = 'center'; });
             document.getElementById('czHdrScaleNum').value = '1.15';
             document.getElementById('czHdrScaleRange').value = '1.15';
+            syncHdrSeg();
             scheduleRefresh();
         });
+        ['czHdrScaleNum', 'czHdrScaleRange'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => setTimeout(syncHdrSeg, 0));
+        });
+        document.querySelectorAll('.cz-size-reset[data-target="HdrScale"]').forEach(b => b.addEventListener('click', () => setTimeout(syncHdrSeg, 0)));
+        syncHdrSeg();
         ['Lbl', 'Val', 'CapSize', 'HdrScale'].forEach(id => {
             const range = document.getElementById('cz' + id + 'Range');
             const num = document.getElementById('cz' + id + 'Num');
@@ -1390,6 +1653,7 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 const v = saved[sel.dataset.key];
                 sel.value = ['left', 'center', 'right'].includes(v) ? v : 'auto';
             });
+            syncHdrSeg();
             {
                 const hr = document.getElementById('czHdrScaleRange');
                 const hn = document.getElementById('czHdrScaleNum');
