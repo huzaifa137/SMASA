@@ -318,6 +318,9 @@ class SchoolDeletionService
             ['fee_payment_items', 'fee_payment_id', 'fee_payments'],
             ['assessment_scale_presets', 'assessment_scale_id', 'assessment_scales'],
             ['division_bands', 'grading_scheme_id', 'grading_schemes'],
+            // Scheme bands are created without a school_id, so the school_id sweep
+            // never reaches them and they were left orphaned.
+            ['grading_scales', 'grading_scheme_id', 'grading_schemes'],
             ['role_feature_access', 'school_role_id', 'school_roles'],
             ['role_module_access', 'school_role_id', 'school_roles'],
             ['timetable_slots', 'timetable_id', 'timetables'],
